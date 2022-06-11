@@ -437,8 +437,14 @@ namespace Neon.Common
         /// </summary>
         /// <param name="variable">The variable name.</param>
         /// <param name="value">The invalid variable value.</param>
-        private void LogVariable(string variable, string value)
+        /// <param name="redacted">Whether to redact the log output.</param>
+        private void LogVariable(string variable, string value, bool redacted = false)
         {
+            if (redacted)
+            {
+                value = "REDACTED";
+            }
+
             if (log != null)
             {
                 log.LogInfo(() => $"{variable}={value}");
@@ -464,10 +470,11 @@ namespace Neon.Common
         /// <param name="required">Optionally specifies that the variable is required to exist.</param>
         /// <param name="parser">The parser function.</param>
         /// <param name="validator">Optional validation function.</param>
+        /// <param name="redacted">Optionally redact log output of the variable.</param>
         /// <returns>The parsed value.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if the variable does not exists and <paramref name="required"/>=<c>true</c>.</exception>
         /// <exception cref="FormatException">Thrown if the variable could not be parsed or the <paramref name="validator"/> returned an error.</exception>
-        public T Parse<T>(string variable, string defaultInput, Parser<T> parser, bool required = false, Validator<T> validator = null)
+        public T Parse<T>(string variable, string defaultInput, Parser<T> parser, bool required = false, Validator<T> validator = null, bool redacted = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(variable), nameof(variable));
             Covenant.Requires<ArgumentNullException>(parser != null, nameof(parser));
@@ -501,7 +508,7 @@ namespace Neon.Common
                 input = defaultInput;
             }
 
-            LogVariable(variable, input);
+            LogVariable(variable, input, redacted);
 
             if (!parser(input, out var value, out error))
             {
@@ -551,12 +558,13 @@ namespace Neon.Common
         /// value is valid.  This should return <c>null</c> for valid values and an error
         /// message for invalid ones.
         /// </param>
+        /// <param name="redacted">Optionally redact log output of the variable.</param>
         /// <returns>The parsed value.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if the variable does not exists and <paramref name="required"/>=<c>true</c>.</exception>
         /// <exception cref="FormatException">Thrown if the variable could not be parsed or the <paramref name="validator"/> returned an error.</exception>
-        public string Get(string variable, string defaultInput, bool required = false, Validator<string> validator = null)
+        public string Get(string variable, string defaultInput, bool required = false, Validator<string> validator = null, bool redacted = false)
         {
-            return Parse<string>(variable, defaultInput, StringParser, required, validator);
+            return Parse<string>(variable, defaultInput, StringParser, required, validator, redacted);
         }
 
         /// <summary>
