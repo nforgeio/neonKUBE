@@ -70,30 +70,30 @@
           </label>
         </div>
       </div>
-      <div class="grid grid-cols-1 col-span-6 bg-card rounded-4 py-2 space-y-2 divide-y divide-slate-500">
-        <div class="px-3 ">
+      <div class="grid grid-cols-1 grid-rows-3 h-[30rem] col-span-6 bg-card rounded-4 py-2 space-y-2 divide-y divide-slate-500">
+        <div class="px-3 grid grid-cols-2 content-border">
             <label class="text-2 text-slate-300">Memory</label>
               @if (memoryChartConfig != null)
               {
-                <div id="header" class="w-1/2 h-auto">
+                <div id="header" class="w-full h-5/6">
                   <Chart Config="memoryChartConfig" @ref="memoryChart"></Chart>
                 </div>
               }
         </div>
-        <div class="px-3 ">
+        <div class="px-3 grid grid-cols-2">
           <label class="text-2 text-slate-300">CPU</label>
             @if (cpuChartConfig != null)
             {
-              <div id="header" class="w-1/2 h-auto">
+              <div id="header" class="w-full h-5/6">
                 <Chart Config="cpuChartConfig" @ref="cpuChart"></Chart>
               </div>
             }
         </div>
-        <div class="px-3 ">
+        <div class="px-3 grid grid-cols-2">
             <label class="text-2 text-slate-300">Utilization</label>
             @if (diskChartConfig != null)
             {
-                <div id="header" class="w-1/2 h-auto">
+                <div id="header" class="w-full  h-5/6">
                     <Chart Config="diskChartConfig" @ref="diskChart"></Chart>
                 </div>
             }

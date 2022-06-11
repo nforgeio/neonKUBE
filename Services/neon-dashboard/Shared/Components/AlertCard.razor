@@ -3,7 +3,7 @@
 // CONTRIBUTOR: Simon Zhang
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.*@
 
-<div class="py-2 px-4 space-x-1 rounded-4 flex w-full @CardStyle[Type] @(Body!= null ? "" : "items-center")">
+<div class="py-2 px-4 space-x-1 rounded-4 flex w-full @CardStyle[Type] @(ChildContent!= null ? "" : "items-center")">
   @Left
   <div class="">
         @if (Title != "")
@@ -14,7 +14,7 @@
             
         }
         
-    @Body
+    @ChildContent
   </div>
   @Right
 </div>
