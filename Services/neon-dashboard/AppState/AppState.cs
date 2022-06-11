@@ -139,11 +139,6 @@ namespace NeonDashboard
         /// </summary>
         public string UserId = null;
 
-        /// <summary>
-        /// Option to disable analytics tracking.
-        /// </summary>
-        public bool DoNotTrack = false;
-
         public AppState(
             Service                 neonDashboardService,
             IHttpContextAccessor    httpContextAccessor,
@@ -168,10 +163,7 @@ namespace NeonDashboard
             this.Metrics              = new __Metrics(this);
             this.Cache                = new __Cache(this);
 
-            bool.TryParse(neonDashboardService.GetEnvironmentVariable("DO_NOT_TRACK"), out DoNotTrack);
-
-            Segment.Analytics.Client.Config.SetSend(DoNotTrack);
-            if (DoNotTrack)
+            if (NeonDashboardService.DoNotTrack)
             {
                 Analytics.Disable();
             }

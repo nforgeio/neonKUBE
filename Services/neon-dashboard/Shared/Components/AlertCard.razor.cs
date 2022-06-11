@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 
 namespace NeonDashboard.Shared.Components
-
 {
      public enum StyleType
     {
@@ -14,9 +13,7 @@ namespace NeonDashboard.Shared.Components
         Warning
     };
 
- 
-
-    public partial class AlertCard: ComponentBase, IDisposable
+    public partial class AlertCard : ComponentBase, IDisposable
     {
         /// <summary>
         /// alert card css style one of StyleType
@@ -46,7 +43,7 @@ namespace NeonDashboard.Shared.Components
         /// main body content. eg. description 
         /// </summary>
         [Parameter]
-        public RenderFragment Body { get; set; }
+        public RenderFragment ChildContent { get; set; }
 
         private static  Dictionary<StyleType, string> CardStyle = new Dictionary<StyleType, string>()
         {
@@ -57,10 +54,9 @@ namespace NeonDashboard.Shared.Components
             {StyleType.Warning,"" },
         };
 
-
+        /// <inheritdoc/>
         public void Dispose()
         {
         }
-
     }
 }
