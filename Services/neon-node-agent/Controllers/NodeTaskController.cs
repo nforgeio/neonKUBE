@@ -318,7 +318,7 @@ log.LogDebug($"*** RECONCILE: 13");
 
                         // Execute the task if it's pending.
 
-log.LogDebug($"*** RECONCILE: 14: phase = {nodeTask.Status.Phase}");
+log.LogDebug($"*** RECONCILE: 14: phase={nodeTask.Status.Phase}");
                         if (nodeTask.Status.Phase == V1NodeTask.Phase.Pending)
                         {
 log.LogDebug($"*** RECONCILE: 15");
@@ -327,6 +327,7 @@ log.LogDebug($"*** RECONCILE: 16");
                         }
                     }
 
+log.LogDebug($"*** RECONCILE: 17: EXIT");
                     return null;
                 },
                 errorCounter: reconciledErrorCounter);

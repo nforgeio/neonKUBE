@@ -245,7 +245,7 @@ namespace Neon.Kube.Operator
         private AsyncReentrantMutex             mutex               = new AsyncReentrantMutex();
         private Dictionary<string, TResource>   resources           = new Dictionary<string, TResource>(StringComparer.InvariantCultureIgnoreCase);
         private bool                            started             = false;
-        private bool                            haveReconciled      = false;
+        private bool                            reconcileReceived   = false;
         private bool                            discovering         = false;
         private bool                            skipChangeDetection = false;
         private IKubernetes                     k8s;
@@ -592,7 +592,11 @@ log.LogDebug($"MGR_START: 4");
         {
             await SyncContext.Clear;
 
-log.LogDebug($"MGR_RECONCILE: 0");
+log.LogDebug($"MGR_RECONCILE: 0:");
+foreach (var item in resources)
+{
+    log.LogDebug(item.Key);
+}
             EnsureNotDisposed();
 
             if (resource != null && !filter(resource))
@@ -602,7 +606,7 @@ log.LogDebug($"MGR_RECONCILE: 1: EXIT");
             }
 log.LogDebug($"MGR_RECONCILE: 2: name = [{resource?.Metadata.Name}]");
 
-            haveReconciled = true;
+            reconcileReceived = true;
 
             try
             {
@@ -639,24 +643,10 @@ log.LogDebug($"MGR_RECONCILE: 6: changed = NEW");
                             resources[name] = resource;
                         }
 
-log.LogDebug($"MGR_RECONCILE: 7:");
-                        if (discovering && !changed)
-                        {
-                            // Looks like we're tracking all of the existing resources now, so stop
-                            // waiting for resources and configure to raise an immediate NO-CHANGE
-                            // event below.
-
-                            log.LogInfo($"All resources discovered.");
-
-                            discovering              = false;
-                            changed                  = true;
-                            nextNoChangeReconcileUtc = utcNow + ReconcileNoChangeInterval;
-                        }
-log.LogDebug($"MGR_RECONCILE: 8");
-
+log.LogDebug($"MGR_RECONCILE: 7: discovering={discovering}");
                         if (discovering)
                         {
-log.LogDebug($"MGR_RECONCILE: 9: EXIT");
+log.LogDebug($"MGR_RECONCILE: 8: EXIT");
                             // We're still receiving known resources.
 
                             log.LogInfo($"RECONCILED: {name} (discovering resources)");
@@ -668,38 +658,32 @@ log.LogDebug($"MGR_RECONCILE: 10");
 
                         if (!changed && utcNow < nextNoChangeReconcileUtc)
                         {
-log.LogDebug($"MGR_RECONCILE: 11: EXIT");
+log.LogDebug($"MGR_RECONCILE: 11: EXIT (wait={nextNoChangeReconcileUtc - utcNow})");
                             // It's not time yet for another NO-CHANGE handler call.
 
-                            return ResourceControllerResult.RequeueEvent(nextNoChangeReconcileUtc - utcNow);
+                            return ResourceControllerResult.RequeueEvent(ReconcileNoChangeInterval);
                         }
 log.LogDebug($"MGR_RECONCILE: 12");
 
-                        if (reconciledNoChangeInterval > TimeSpan.Zero)
-                        {
-log.LogDebug($"MGR_RECONCILE: 13");
-                            nextNoChangeReconcileUtc = utcNow + ReconcileNoChangeInterval;
-                        }
-
                         var result = await handler(changed ? name : null, resources);
 
-log.LogDebug($"MGR_RECONCILE: 14A: result is null: {result == null}");
+log.LogDebug($"MGR_RECONCILE: 134A: result is null: {result == null}");
 
                         reconciledErrorBackoff = TimeSpan.Zero;   // Reset after a success
 
-log.LogDebug($"MGR_RECONCILE: 14B: EXIT");
+log.LogDebug($"MGR_RECONCILE: 13B: EXIT");
                         return result ?? defaultReconcileResult;
                     });
             }
             catch (Exception e)
             {
-log.LogDebug($"MGR_RECONCILE: 15");
+log.LogDebug($"MGR_RECONCILE: 14");
                 log.LogError(e);
                 errorCounter?.Inc();
 
                 return ResourceControllerResult.RequeueEvent(ComputeErrorBackoff(ref reconciledErrorBackoff));
             }
-log.LogDebug($"MGR_RECONCILE: 16: EXIT");
+log.LogDebug($"MGR_RECONCILE: 15: EXIT");
         }
 
         /// <summary>
@@ -880,7 +864,7 @@ log.LogDebug($"MGR_STATUS-MODIFIED: 0");
                 });
         }
 
-        /// <summary>d
+        /// <summary>
         /// <para>
         /// Returns a deep clone the current set of resources being managed or of the specific dictionary passed.
         /// </para>
@@ -999,7 +983,7 @@ log.LogDebug($"MGR_CHANGE-LOOP: 0");
             while (!isDisposed)
             {
                 await Task.Delay(loopDelay);
-log.LogDebug($"MGR_CHANGE-LOOP: 1A: nextNoChangeReconcileUtc={nextNoChangeReconcileUtc} ({nextNoChangeReconcileUtc - DateTime.UtcNow})");
+//log.LogDebug($"MGR_CHANGE-LOOP: 1A: nextNoChangeReconcileUtc={nextNoChangeReconcileUtc} ({nextNoChangeReconcileUtc - DateTime.UtcNow})");
 
                 var reconcileDiscovered = false;
 
@@ -1008,8 +992,8 @@ log.LogDebug($"MGR_CHANGE-LOOP: 1A: nextNoChangeReconcileUtc={nextNoChangeReconc
                     nextNoChangeReconcileUtc = DateTime.UtcNow + reconciledNoChangeInterval;
 
 log.LogDebug($"MGR_CHANGE-LOOP: 1B: RECONCILE_NOCHANGE!!!");
-log.LogDebug($"MGR_CHANGE-LOOP: 1C: haveReconciled={haveReconciled} discovering={discovering}");
-                    if (haveReconciled)
+log.LogDebug($"MGR_CHANGE-LOOP: 1C: reconcileReceived={reconcileReceived} discovering={discovering}");
+                    if (reconcileReceived)
                     {
                         // It's been [reconciledNoChangeInterval] since we saw the last 
                         // resource from KubeOps, so we're going to assume that we have
@@ -1059,6 +1043,8 @@ log.LogDebug($"MGR_CHANGE-LOOP: 1E: ITEMS EXIST");
 log.LogDebug($"MGR_CHANGE-LOOP: 1F: discovering={discovering} reconcileDiscovered={reconcileDiscovered}");
                             reconcileDiscovered = discovering;
                             discovering         = false;
+
+                            log.LogInfo($"All resources discovered.");
 log.LogDebug($"MGR_CHANGE-LOOP: 1G: discovering={discovering} reconcileDiscovered={reconcileDiscovered}");
                         }
                         catch (Exception e)
@@ -1070,13 +1056,14 @@ log.LogDebug($"MGR_CHANGE-LOOP: 1G: discovering={discovering} reconcileDiscovere
 
                     // Don't send a NO-CHANGE RECONCILE while we're still discovering resources.
 
+log.LogDebug($"MGR_CHANGE-LOOP: 1H: discovering={discovering}");
                     if (discovering)
                     {
-log.LogDebug($"MGR_CHANGE-LOOP: 1H: STILL DISCOVERING");
+log.LogDebug($"MGR_CHANGE-LOOP: 1I:");
                         continue;
                     }
 
-log.LogDebug($"MGR_CHANGE-LOOP: 2: RECONCILE_NOCHANGE!!!");
+log.LogDebug($"MGR_CHANGE-LOOP: 2:");
                     // We're going to log and otherwise ignore any exceptions thrown by the 
                     // the operator's controller or any code above called by the controller.
 
@@ -1087,11 +1074,13 @@ log.LogDebug($"MGR_CHANGE-LOOP: 3");
 
                             try
                             {
-                                // $todo(jefflill): https://github.com/nforgeio/neonKUBE/issues/1589
+                                // $todo(jefflill):
                                 //
                                 // We're currently assuming that operator controllers all have a constructor
                                 // that accepts a single [IKubernetes] parameter.  We should change this to
                                 // doing real dependency injection when we have the time.
+                                //
+                                //       https://github.com/nforgeio/neonKUBE/issues/1589
 
 log.LogDebug($"MGR_CHANGE-LOOP: 4A");
                                 var controller = (IResourceController<TResource>)controllerConstructor.Invoke(new object[] { k8s });
@@ -1114,7 +1103,9 @@ log.LogDebug($"MGR_CHANGE-LOOP: 4C: count={resources.Count}");
 
                                         foreach (var resource in resources.Values)
                                         {
+log.LogDebug("=======================================================================");
 log.LogDebug($"MGR_CHANGE-LOOP: 4D: name={resource.Metadata.Name}");
+log.LogDebug("=======================================================================");
                                             await controller.ReconcileAsync(resource);
                                         }
                                     }
@@ -1126,9 +1117,13 @@ log.LogDebug($"MGR_CHANGE-LOOP: 4D: name={resource.Metadata.Name}");
                                     {
                                         skipChangeDetection = false;
                                     }
+
+log.LogDebug($"MGR_CHANGE-LOOP: 4D:");
                                 }
 
-log.LogDebug($"MGR_CHANGE-LOOP: 4E");
+log.LogDebug("=======================================================================");
+log.LogDebug($"MGR_CHANGE-LOOP: 4E: NULL");
+log.LogDebug("=======================================================================");
                                 await controller.ReconcileAsync(null);
 log.LogDebug($"MGR_CHANGE-LOOP: 4F");
                             }
@@ -1151,7 +1146,7 @@ log.LogDebug($"MGR_CHANGE-LOOP: 5: {NeonHelper.ExceptionError(e)}");
 log.LogDebug($"MGR_CHANGE-LOOP: 6");
                 }
 
-log.LogDebug($"MGR_CHANGE-LOOP: 7");
+//log.LogDebug($"MGR_CHANGE-LOOP: 7");
             }
         }
     }
