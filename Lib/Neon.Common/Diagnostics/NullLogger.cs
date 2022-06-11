@@ -277,6 +277,14 @@ namespace Neon.Diagnostics
                     return LogLevel.None;
 
                 case Microsoft.Extensions.Logging.LogLevel.Debug:
+
+                // $todo(jefflill):
+                //
+                // We really need to implement this at some point instead of 
+                // treating this the same as DEBUG:
+                //
+                //      https://github.com/nforgeio/neonKUBE/issues/1593
+
                 case Microsoft.Extensions.Logging.LogLevel.Trace:
 
                     return LogLevel.Debug;
