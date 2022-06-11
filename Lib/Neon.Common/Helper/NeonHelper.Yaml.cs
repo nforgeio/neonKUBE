@@ -216,7 +216,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Deserializes YAML to an object via JSON.NET. This allows the use of <see cref="JsonConverter"/>s to deserialize complex types.
+        /// Deserializes YAML to an object via JSON.NET. This allows the use of <see cref="Newtonsoft.Json.JsonConverter"/>s to deserialize complex types.
         /// Strict requires mapping of input properties in the target type.
         /// </summary>
         /// <typeparam name="T">The desired output type.</typeparam>
