@@ -42,6 +42,8 @@ using Segment;
 
 using StackExchange.Redis;
 
+using Tailwind;
+
 namespace NeonDashboard
 {
     /// <summary>
@@ -76,6 +78,9 @@ namespace NeonDashboard
                 new Config()
                 .SetAsync(!NeonHelper.IsDevWorkstation));
 
+            bool.TryParse(NeonDashboardService.GetEnvironmentVariable("DO_NOT_TRACK", "false"), out var doNotTrack);
+            Analytics.Client.Config.SetSend(doNotTrack);
+            
             if (NeonHelper.IsDevWorkstation)
             {
                 services.AddDistributedMemoryCache();
@@ -111,7 +116,7 @@ namespace NeonDashboard
             .AddOpenIdConnect("oidc", options =>
             {
                 options.ClientId                      = "kubernetes";
-                options.ClientSecret                  = NeonDashboardService.GetEnvironmentVariable("SSO_CLIENT_SECRET");
+                options.ClientSecret                  = NeonDashboardService.SsoClientSecret;
                 options.Authority                     = $"https://{ClusterDomain.Sso}.{NeonDashboardService.ClusterInfo.Domain}";
                 options.ResponseType                  = OpenIdConnectResponseType.Code;
                 options.SignInScheme                  = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -154,6 +159,11 @@ namespace NeonDashboard
         /// <param name="env">Specifies the web hosting environment.</param>
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            if (NeonHelper.IsDevWorkstation)
+            {
+                app.RunTailwind("dev", "./");
+            }
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

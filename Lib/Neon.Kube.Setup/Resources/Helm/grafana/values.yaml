@@ -326,6 +326,7 @@ plugins:
   - grafana-timestream-datasource
   - grafana-polystat-panel
   - grafana-salesforce-datasource
+  - marcusolsson-json-datasource
 
 ## Configure grafana datasources
 ## ref: http://docs.grafana.org/administration/provisioning/#datasources

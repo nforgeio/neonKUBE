@@ -5,9 +5,9 @@
 
 @inherits LayoutComponentBase
 
-<div class="mainlayout" >
-  <div class="container">
-      <main class="main">
+<div class="mainlayout " >
+  <div class="containermain text-slate-50  font-sans antialiased tracking-wide">
+      <main class="main bg-bg justify-center grid">
               @Body
       </main>
        <div class="bottom">
@@ -17,7 +17,7 @@
 
 </div>
 
-<div class="top-row px-4" style="display: none">
+<div class="top-row px-4 " style="display: none">
     <AuthorizeView>
         <Authorized>
             <form method="get" action="logout">

@@ -136,7 +136,7 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object list.</returns>
         [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
-        public static async Task<T> JNET_ListNamespacedCustomObjectAsync<T>(
+        public static async Task<V1CustomObjectList<T>> JNET_ListNamespacedCustomObjectAsync<T>(
             this IKubernetes    k8s,
             string              namespaceParameter,
             bool?               allowWatchBookmarks  = null,
@@ -173,7 +173,7 @@ namespace Neon.Kube
                 pretty:               false,
                 cancellationToken:    cancellationToken);
 
-            return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
+            return NeonHelper.JsonDeserialize<V1CustomObjectList<T>>(((JsonElement)result).GetRawText());
         }
 
         /// <summary>

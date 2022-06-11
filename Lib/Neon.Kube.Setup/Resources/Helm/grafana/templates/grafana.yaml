@@ -71,6 +71,10 @@ spec:
     nodeSelector:
       {{- toYaml .Values.nodeSelector | nindent 8 }}
     priorityClassName: {{ .Values.priorityClassName }}
+    {{- with .Values.tolerations }}
+    tolerations:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
     affinity:
       podAntiAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:

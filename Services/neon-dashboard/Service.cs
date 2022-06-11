@@ -18,9 +18,11 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
-using Neon.Service;
 using Neon.Common;
+using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Service;
+using Neon.Tasks;
 
 using k8s;
 using k8s.Models;
@@ -49,6 +51,21 @@ namespace NeonDashboard
         public ClusterInfo ClusterInfo;
 
         /// <summary>
+        /// SSO Client Secret.
+        /// </summary>
+        public string SsoClientSecret;
+
+        /// <summary>
+        /// USe to turn off Segment tracking.
+        /// </summary>
+        public bool DoNotTrack;
+
+        /// <summary>
+        /// Prometheus Client.
+        /// </summary>
+        public PrometheusClient PrometheusClient;
+
+        /// <summary>
         /// Session cookie name.
         /// </summary>
         public const string sessionCookieName = ".NeonKUBE.Dashboard.Session.Cookie";
@@ -70,9 +87,6 @@ namespace NeonDashboard
                 {
                     LabelNames = new[] { "dashboard" }
                 });
-
-            Kubernetes = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
-            var n = Kubernetes.ListNamespaceAsync().Result;
         }
 
         /// <inheritdoc/>
@@ -96,33 +110,30 @@ namespace NeonDashboard
 
             var port = 80;
 
+            Kubernetes = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
+
+            _ = Kubernetes.WatchAsync<V1ConfigMap>(async (@event) =>
+            {
+                await SyncContext.Clear;
+
+                ClusterInfo = TypeSafeConfigMap<ClusterInfo>.From(@event.Value).Config;
+                Log.LogInfo($"Updated cluster info");
+            },
+            KubeNamespace.NeonStatus,
+            fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
+
             if (NeonHelper.IsDevWorkstation)
             {
                 port = 11001;
                 SetEnvironmentVariable("LOG_LEVEL", "debug");
-                await ConfigureSsoAsync();
+                SetEnvironmentVariable("DO_NOT_TRACK", "true");
+                await ConfigureDevAsync();
             }
 
-            _ = Kubernetes.WatchAsync<V1ConfigMap>(async (watchEvent) =>
-            {
-                try
-                {
-                    await Task.CompletedTask;
+            var metricsHost = GetEnvironmentVariable("METRICS_HOST", "http://mimir-query-frontend.neon-monitor.svc.cluster.local:8080");
+            PrometheusClient = new PrometheusClient($"{metricsHost}/prometheus/");
 
-                    if (watchEvent.Object.Name() == KubeConfigMapName.ClusterInfo)
-                    {
-                        ClusterInfo = TypeSafeConfigMap<ClusterInfo>.From(watchEvent.Object).Config;
-                        Log.LogInfo($"Updated cluster info");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.LogError("Error updating cluster info", ex);
-                }
-            },
-            namespaceParameter: KubeNamespace.NeonStatus,
-            updatesOnly: false,
-            cancellationToken: Terminator.CancellationToken);
+            SsoClientSecret = GetEnvironmentVariable("SSO_CLIENT_SECRET", redacted: true);
 
             // Start the web service.
 
@@ -154,8 +165,22 @@ namespace NeonDashboard
             return 0;
         }
 
-        public async Task ConfigureSsoAsync()
+        public async Task ConfigureDevAsync()
         {
+            await SyncContext.Clear;
+
+            Log.LogInfo("Configuring cluster SSO for development.");
+
+            // wait for cluster info to be set
+            await NeonHelper.WaitForAsync(async () =>
+            {
+                await SyncContext.Clear;
+
+                return (ClusterInfo != null);
+            }, 
+            timeout: TimeSpan.FromSeconds(60),
+            pollInterval: TimeSpan.FromMilliseconds(250));
+
             try
             {
                 // set config map
@@ -168,10 +193,9 @@ namespace NeonDashboard
                 SetEnvironmentVariable("SSO_CLIENT_SECRET", Encoding.UTF8.GetString(secret.Data["KUBERNETES_CLIENT_SECRET"]));
 
                 // Configure cluster callback url to allow local dev
-
+                
                 var dexConfigMap = await Kubernetes.ReadNamespacedConfigMapAsync("neon-sso-dex", KubeNamespace.NeonSystem);
-                var yamlConfig   = NeonHelper.YamlDeserialize<dynamic>(dexConfigMap.Data["config.yaml"]);
-                var dexConfig    = (DexConfig)NeonHelper.JsonDeserialize<DexConfig>(NeonHelper.JsonSerialize(yamlConfig));
+                var dexConfig    = NeonHelper.YamlDeserializeViaJson<DexConfig>(dexConfigMap.Data["config.yaml"]);
                 var clientConfig = dexConfig.StaticClients.Where(c => c.Id == "kubernetes").First();
 
                 if (!clientConfig.RedirectUris.Contains("http://localhost:11001/oauth2/callback"))
@@ -180,11 +204,66 @@ namespace NeonDashboard
                     dexConfigMap.Data["config.yaml"] = NeonHelper.ToLinuxLineEndings(NeonHelper.YamlSerialize(dexConfig));
                     await Kubernetes.ReplaceNamespacedConfigMapAsync(dexConfigMap, dexConfigMap.Metadata.Name, KubeNamespace.NeonSystem);
                 }
+
+                Log.LogInfo("SSO configured.");
             }
             catch (Exception e)
             {
                 Log.LogError("Error configuring SSO", e);
             }
+
+            Log.LogInfo("Configure metrics.");
+
+            var virtualServices = await Kubernetes.ListNamespacedCustomObjectAsync<VirtualService>(KubeNamespace.NeonIngress);
+            if (!virtualServices.Items.Any(vs => vs.Name() == "metrics-external"))
+            {
+                var virtualService = new VirtualService()
+                {
+                    Metadata = new V1ObjectMeta()
+                    {
+                        Name = "metrics-external",
+                        NamespaceProperty = KubeNamespace.NeonIngress
+                    },
+                    Spec = new VirtualServiceSpec()
+                    {
+                        Gateways = new List<string>() { "neoncluster-gateway" },
+                        Hosts = new List<string>() { $"metrics.{ClusterInfo.Domain}" },
+                        Http = new List<HTTPRoute>()
+                    {
+                        new HTTPRoute()
+                        {
+                            Match = new List<HTTPMatchRequest>()
+                            {
+                                new HTTPMatchRequest()
+                                {
+                                    Uri = new StringMatch()
+                                    {
+                                        Prefix = "/"
+                                    }
+                                }
+                            },
+                            Route = new List<HTTPRouteDestination>()
+                            {
+                                new HTTPRouteDestination()
+                                {
+                                    Destination = new Destination()
+                                    {
+                                        Host = "mimir-query-frontend.neon-monitor.svc.cluster.local",
+                                        Port = new PortSelector()
+                                        {
+                                            Number = 8080
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    }
+                };
+
+                await Kubernetes.JNET_CreateNamespacedCustomObjectAsync<VirtualService>(virtualService, KubeNamespace.NeonIngress);
+            }
+            SetEnvironmentVariable("METRICS_HOST", $"https://metrics.{ClusterInfo.Domain}");
         }
     }
 }
