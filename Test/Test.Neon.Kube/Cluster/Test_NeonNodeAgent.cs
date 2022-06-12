@@ -30,6 +30,7 @@ using Neon.Common;
 using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Operator;
 using Neon.Kube.Resources;
 using Neon.Kube.Xunit;
 using Neon.Xunit;
@@ -116,16 +117,17 @@ namespace TestKube
             // succeeded.
 
             // Create a string dictionary that maps cluster node names to the unique
-            // name to use for the test task targeting each node.
+            // name to use for the test tasks targeting each node.
 
             var nodeToTaskName = new Dictionary<string, string>();
 
             foreach (var node in fixture.Cluster.Nodes)
             {
-                nodeToTaskName.Add(node.Name, $"test-basic-{node.Name}-{Guid.NewGuid().ToString("d")}");
+                nodeToTaskName.Add(node.Name, $"test-basic-{node.Name}-{NeonHelper.CreateBase36Guid()}");
             }
 
-            // Initalize the nodes and submit a node task for each.
+            // Initalize a test folder on each node where the task will update a file
+            // indicating that it ran and then submit a task for each node.
 
             foreach (var node in fixture.Cluster.Nodes)
             {
@@ -141,13 +143,21 @@ namespace TestKube
                 var metadata = nodeTask.Metadata;
                 var spec     = nodeTask.Spec;
 
-                metadata.Name = nodeToTaskName[node.Name];
                 metadata.SetLabel(NeonLabel.RemoveOnClusterReset);
 
-                spec.Node       = node.Name;
-                spec.BashScript = $"touch {GetTestFilePath(node.Name)}";
+                var filePath   = GetTestFilePath(node.Name);
+                var folderPath = LinuxPath.GetDirectoryName(filePath);
 
-                await fixture.K8s.CreateClusterCustomObjectAsync(nodeTask);
+                spec.Node          = node.Name;
+                spec.RetainSeconds = 30;
+                spec.BashScript    = 
+$@"
+set -euo pipefail
+
+mkdir -p $NODE_ROOT{folderPath}
+touch $NODE_ROOT{filePath}
+";
+                await fixture.K8s.CreateClusterCustomObjectAsync<V1NodeTask>(nodeTask, name: nodeToTaskName[node.Name]);
             }
 
             // Wait for all of the node tasks to report completion.
@@ -164,10 +174,11 @@ namespace TestKube
                 {
                     foreach (var nodeTask in (await fixture.K8s.ListClusterCustomObjectAsync<V1NodeTask>()).Items.Where(task => taskNames.Contains(task.Metadata.Name)))
                     {
-                        switch (nodeTask.Status.State)
+                        switch (nodeTask.Status.Phase)
                         {
-                            case V1NodeTaskState.Pending:
-                            case V1NodeTaskState.Running:
+                            case V1NodeTask.Phase.New:
+                            case V1NodeTask.Phase.Pending:
+                            case V1NodeTask.Phase.Running:
 
                                 return false;
                         }

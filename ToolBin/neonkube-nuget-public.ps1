@@ -159,6 +159,7 @@ SetVersion Neon.Cryptography        $libraryVersion
 SetVersion Neon.CSharp              $libraryVersion
 SetVersion Neon.Deployment          $libraryVersion
 SetVersion Neon.Docker              $libraryVersion
+SetVersion Neon.JsonConverters      $libraryVersion
 SetVersion Neon.HyperV              $libraryVersion
 SetVersion Neon.Service             $libraryVersion
 SetVersion Neon.ModelGen            $libraryVersion
@@ -205,6 +206,7 @@ Publish Neon.Cryptography           $libraryVersion
 Publish Neon.CSharp                 $libraryVersion
 Publish Neon.Deployment             $libraryVersion
 Publish Neon.Docker                 $libraryVersion
+Publish Neon.JsonConverters         $libraryVersion
 Publish Neon.HyperV                 $libraryVersion
 Publish Neon.Service                $libraryVersion
 Publish Neon.ModelGen               $libraryVersion

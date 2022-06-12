@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    JsonExtensions.cs
+// FILE:	    NewtonsoftExtensions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -20,22 +20,45 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
-
-namespace Neon.Data
+namespace Newtonsoft.Json.Linq
 {
     /// <summary>
-    /// Newtonsoft related extension methods.
+    /// Newtonsoft JSON Linq extensions.
     /// </summary>
-    public static class JsonExtensions
+    public static class NewtonsoftExtensions
     {
+        //---------------------------------------------------------------------
+        // JObject extensions
+
+        /// <summary>
+        /// Attempts to return the value of a specified <see cref="JObject"/> property
+        /// converted to a specific type.
+        /// </summary>
+        /// <typeparam name="T">The desired type.</typeparam>
+        /// <param name="jObject">The <see cref="JObject"/> instance.</param>
+        /// <param name="propertyName">The property name.</param>
+        /// <param name="value">Returns as the property value if present.</param>
+        /// <returns><c>true</c> if the property was present and returned.</returns>
+        public static bool TryGetValue<T>(this JObject jObject, string propertyName, out T value)
+        {
+            Covenant.Requires<ArgumentNullException>(jObject != null, nameof(jObject));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(propertyName), nameof(propertyName));
+
+            if (!jObject.TryGetValue(propertyName, out var jToken))
+            {
+                value = default(T);
+                return false;
+            }
+
+            value = jObject.Value<T>(propertyName);
+            return true;
+        }
+
         //---------------------------------------------------------------------
         // JsonSerializerSettings extensions
 

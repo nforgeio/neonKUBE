@@ -32,7 +32,7 @@ using Newtonsoft.Json.Serialization;
 namespace Neon.Data
 {
     /// <summary>
-    /// Implements a type converter for <see cref="DateTimeOffset"/> using the culture
+    /// <b>Newtonsoft:</b> Implements a type converter for <see cref="DateTimeOffset"/> using the culture
     /// invariant <b>yyyy-MM-ddTHH:mm:ss.fffzzz</b> format.
     /// </summary>
     public class DateTimeOffsetJsonConverter : JsonConverter<DateTimeOffset>, IEnhancedJsonConverter

@@ -79,7 +79,7 @@ namespace Neon.Kube.Resources
         /// {
         ///     public V1ContainerRegistry()
         ///     {
-        ///         ((IKubernetesObject)this).InitializeMetadata();
+        ///         this.InitializeMetadata();
         ///     }
         ///
         ///     ...

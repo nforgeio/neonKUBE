@@ -66,7 +66,6 @@ namespace NeonDashboard.Pages
         /// </summary>
         public Home()
         {
-            
         }
 
         /// <inheritdoc/>

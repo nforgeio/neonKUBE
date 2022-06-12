@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -24,6 +25,7 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -35,6 +37,14 @@ using Neon.Tasks;
 using KubeOps.Operator;
 using KubeOps.Operator.Builder;
 
+using k8s;
+using k8s.Models;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
+using System.Net.Http;
+
 namespace Neon.Kube.Operator
 {
     /// <summary>
@@ -42,7 +52,7 @@ namespace Neon.Kube.Operator
     /// </summary>
     public static class OperatorHelper
     {
-        private static Assembly     operatorAssembly;
+        private static readonly JsonSerializerSettings  k8sSerializerSettings;
 
         /// <summary>
         /// Static constructor.
@@ -54,8 +64,11 @@ namespace Neon.Kube.Operator
                 {
                     switch (logEvent.LogLevel)
                     {
+// $debug(jefflill): RESTORE THIS!
+#if DISABLED
                         case LogLevel.Info:
 
+                            //---------------------------------------------
                             // KubeOps spams the logs with unnecessary INFO events when events are raised to
                             // the controller.  We're going to filter these and do our own logging using this
                             // filter.  The filter returns TRUE for events to be logged and FALSE for events
@@ -63,16 +76,22 @@ namespace Neon.Kube.Operator
 
                             if (logEvent.Module == "KubeOps.Operator.Controller.ManagedResourceController")
                             {
+                                // This is SPAM because we're logging info like this ourselves.
+
                                 if (logEvent.Message.Contains("successfully reconciled"))
                                 {
                                     return false;
                                 }
                             }
 
+                            //---------------------------------------------
                             // KubeOPs also spams the logs with reconnection attempts.
 
                             if (logEvent.Module == "KubeOps.Operator.Kubernetes.ResourceWatcher")
                             {
+                                // I believe we're seeing this when there are no resources for given watch.
+                                // KubeOps seems to be having trouble with empty list responses.
+
                                 if (logEvent.Message.StartsWith("Trying to reconnect with exponential backoff"))
                                 {
                                     return false;
@@ -82,22 +101,51 @@ namespace Neon.Kube.Operator
 
                         case LogLevel.Error:
 
-                            // Kubernetes client is not handling watches correctly when there are no objects
-                            // to be watched.  I read that the API server is returning a blank body in this
-                            // case but the Kubernetes client is expecting valid JSON, like an empty array.
-
                             if (logEvent.Module == "KubeOps.Operator.Kubernetes.ResourceWatcher")
                             {
+                                //---------------------------------------------
+                                // Kubernetes client is not handling watches correctly when there are no objects
+                                // to be watched.  I read that the API server is returning a blank body in this
+                                // case but the Kubernetes client is expecting valid JSON, like an empty array.
+
                                 if (logEvent.Message.Contains("The input does not contain any JSON tokens"))
+                                {
+                                    return false;
+                                }
+
+                                //---------------------------------------------
+                                // These seem to be a transient problems happens occasionally on operator start.
+
+                                if (logEvent.Exception != null &&
+                                    logEvent.Exception.InnerException != null &&
+                                    logEvent.Exception.InnerException is IOException &&
+                                    logEvent.Exception.InnerException.Message.Contains("Unable to read data from the transport connection: Connection reset by peer."))
+                                {
+                                    return false;
+                                }
+
+                                if (logEvent.Exception != null &&
+                                    logEvent.Exception.InnerException != null &&
+                                    logEvent.Exception.InnerException is IOException &&
+                                    logEvent.Exception.InnerException.Message.Contains("The request was aborted."))
                                 {
                                     return false;
                                 }
                             }
                             break;
+#endif
                     }
 
                     return true;
                 };
+
+            // Create a NewtonSoft JSON serializer with settings compatible with Kubernetes.
+
+            k8sSerializerSettings = new JsonSerializerSettings()
+            { 
+                DateFormatString = "yyyy-MM-ddTHH:mm:ssZ",
+                Converters       = new List<JsonConverter>() { new Newtonsoft.Json.Converters.StringEnumConverter() }
+            };
         }
 
         /// <summary>
@@ -108,7 +156,7 @@ namespace Neon.Kube.Operator
 
         /// <summary>
         /// Handles <b>generator</b> commands invoked on an operator application
-        /// during build by the built-in KubrOps build targets.
+        /// during build by the built-in KubeOps build targets.
         /// </summary>
         /// <typeparam name="TStartup">Specifies the operator's ASP.NET startup type.</typeparam>
         /// <param name="args">The command line arguments.</param>
@@ -157,8 +205,6 @@ namespace Neon.Kube.Operator
                     return false;
                 }
 
-                OperatorHelper.operatorAssembly = Assembly.GetCallingAssembly();
-
                 await Host.CreateDefaultBuilder(args)
                     .ConfigureWebHostDefaults(builder => { builder.UseStartup<TStartup>(); })
                     .Build()
@@ -172,6 +218,41 @@ namespace Neon.Kube.Operator
                 Environment.Exit(1);
                 return true;
             }
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="JsonPatchDocument"/> that can be used to specify modifications
+        /// to a <typeparamref name="T"/> custom object.
+        /// </summary>
+        /// <typeparam name="T">Specifies the custom object type.</typeparam>
+        /// <returns>The <see cref="JsonPatchDocument"/>.</returns>
+        public static JsonPatchDocument<T> CreatePatch<T>()
+            where T : class
+        {
+            return new JsonPatchDocument<T>()
+            {
+                ContractResolver = new DefaultContractResolver()
+                {
+                    NamingStrategy = new CamelCaseNamingStrategy()
+                }
+            };
+        }
+
+        /// <summary>
+        /// Converts a <see cref="JsonPatchDocument"/> into a <see cref="V1Patch"/> that
+        /// can be submitted to the Kubernetes API.
+        /// </summary>
+        /// <typeparam name="T">Identifies the type being patched.</typeparam>
+        /// <param name="patchDoc">The configured patch document.</param>
+        /// <returns>The <see cref="V1Patch"/> instance.</returns>
+        public static V1Patch ToV1Patch<T>(JsonPatchDocument<T> patchDoc)
+            where T : class
+        {
+            Covenant.Requires<ArgumentNullException>(patchDoc != null, nameof(patchDoc));
+
+            var patchJson = JsonConvert.SerializeObject(patchDoc, Formatting.None, k8sSerializerSettings);
+
+            return new V1Patch(patchJson, V1Patch.PatchType.JsonPatch);
         }
     }
 }

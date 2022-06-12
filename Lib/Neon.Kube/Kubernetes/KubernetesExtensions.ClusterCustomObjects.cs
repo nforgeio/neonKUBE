@@ -27,16 +27,11 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Threading;
 
-using Microsoft.AspNetCore.JsonPatch;
-using Microsoft.Rest;
-
 using Neon.Common;
 using Neon.Tasks;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
 using k8s;
+using k8s.Autorest;
 using k8s.Models;
 
 namespace Neon.Kube
@@ -165,7 +160,7 @@ namespace Neon.Kube
                 pretty: false,
                 cancellationToken: cancellationToken);
 
-            return NeonHelper.JsonDeserialize<V1CustomObjectList<T>>(((JsonElement)result).GetRawText());
+            return ((JsonElement)result).Deserialize<V1CustomObjectList<T>>(options: serializeOptions);
         }
 
         /// <summary>
@@ -412,7 +407,7 @@ namespace Neon.Kube
                 pretty:                 false,
                 cancellationToken:      cancellationToken);
 
-            return NeonHelper.JsonDeserialize<V1CustomObjectList<KubernetesObjectMetadata>>(((JsonElement)result).GetRawText());
+            return ((JsonElement)result).Deserialize<V1CustomObjectList<KubernetesObjectMetadata>>(options: serializeOptions);
         }
 
         /// <summary>
@@ -421,6 +416,7 @@ namespace Neon.Kube
         /// <typeparam name="T">The custom object type.</typeparam>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
         /// <param name="body">The object data.</param>
+        /// <param name="name">Specifies the object name.</param>
         /// <param name="dryRun">
         /// When present, indicates that modifications should not be persisted. An invalid
         /// or unrecognized dryRun directive will result in an error response and no further
@@ -437,6 +433,7 @@ namespace Neon.Kube
         public static async Task<T> CreateClusterCustomObjectAsync<T>(
             this IKubernetes    k8s,
             T                   body,
+            string              name,
             string              dryRun            = null,
             string              fieldManager      = null,
             CancellationToken   cancellationToken = default) 
@@ -444,7 +441,10 @@ namespace Neon.Kube
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
             await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(body.Metadata.Name), nameof(body.Metadata.Name));
+            Covenant.Requires<ArgumentNullException>(body != null, nameof(body));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            body.Metadata.Name = name;
 
             var typeMetadata = body.GetKubernetesTypeMetadata();
             var result       = await k8s.CreateClusterCustomObjectAsync(
@@ -457,7 +457,7 @@ namespace Neon.Kube
                 pretty:            false, 
                 cancellationToken: cancellationToken);
 
-            return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
+            return ((JsonElement)result).Deserialize<T>(options: serializeOptions);
         }
 
         /// <summary>
@@ -485,7 +485,7 @@ namespace Neon.Kube
                 name:              name,
                 cancellationToken: cancellationToken);
 
-            return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
+            return ((JsonElement)result).Deserialize<T>(options: serializeOptions);
         }
 
         /// <summary>
@@ -531,7 +531,7 @@ namespace Neon.Kube
                 fieldManager:      fieldManager,
                 cancellationToken: cancellationToken);
 
-            return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
+            return ((JsonElement)result).Deserialize<T>(options: serializeOptions);
         }
 
         /// <summary>
@@ -571,8 +571,6 @@ namespace Neon.Kube
             // 
             //      https://github.com/nforgeio/neonKUBE/issues/1578 
 
-            body.Metadata.Name = name;
-
             // We're going to try fetching the resource first.  If it doesn't exist, we'll
             // create a new resource otherwise we'll replace the existing resource.
 
@@ -584,7 +582,7 @@ namespace Neon.Kube
             {
                 if (e.Response.StatusCode == HttpStatusCode.NotFound)
                 {
-                    return await k8s.CreateClusterCustomObjectAsync<T>(body, dryRun, fieldManager, cancellationToken);
+                    return await k8s.CreateClusterCustomObjectAsync<T>(body, name, dryRun, fieldManager, cancellationToken);
                 }
                 else
                 {
@@ -606,7 +604,6 @@ namespace Neon.Kube
         /// </summary>
         /// <typeparam name="T">The custom object type.</typeparam>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
-        /// <param name="body">Specifies the new object data.</param>
         /// <param name="patch">
         /// Specifies the patch to be applied to the object status.  This is typically a 
         /// <see cref="V1Patch"/> instance but additional patch types may be supported in 
@@ -628,11 +625,10 @@ namespace Neon.Kube
         /// fields owned by other people. Force flag must be unset for non-apply patch requests.
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
-        /// <returns>The updated object.</returns>
+        /// <returns>The updated custom object.</returns>
         public static async Task<T> PatchClusterCustomObjectStatusAsync<T>(
             this IKubernetes    k8s,
-            T                   body,
-            object              patch,
+            V1Patch             patch,
             string              name,
             string              dryRun            = null,
             string              fieldManager      = null,
@@ -642,13 +638,11 @@ namespace Neon.Kube
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
             await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(body != null, nameof(body));
             Covenant.Requires<ArgumentNullException>(patch != null, nameof(patch));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
-
-            return (T)await k8s.PatchClusterCustomObjectStatusAsync(
+            var result       = await k8s.PatchClusterCustomObjectStatusAsync(
                 body:              patch,
                 group:             typeMetadata.Group,
                 version:           typeMetadata.ApiVersion,
@@ -658,6 +652,8 @@ namespace Neon.Kube
                 fieldManager:      fieldManager,
                 force:             force,
                 cancellationToken: cancellationToken);
+
+            return ((JsonElement)result).Deserialize<T>(options: serializeOptions);
         }
 
         /// <summary>

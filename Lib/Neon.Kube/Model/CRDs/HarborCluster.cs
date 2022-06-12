@@ -18,13 +18,18 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+
 using k8s;
 using k8s.Models;
+
 using Neon.Common;
+using Neon.JsonConverters;
+
 using Newtonsoft.Json;
 
 namespace Neon.Kube
@@ -101,9 +106,7 @@ namespace Neon.Kube
         /// <summary>
         /// Validate the object.
         /// </summary>
-        /// <exception cref="Microsoft.Rest.ValidationException">
-        /// Thrown if validation fails
-        /// </exception>
+        /// <exception cref="ValidationException">Thrown if validation fails.</exception>
         public virtual void Validate()
         {
         }

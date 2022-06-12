@@ -43,7 +43,7 @@ namespace Neon.Kube.Resources
     /// <see cref="V1ContainerRegistry"/> resources in the <b>neon-system</b> namespace.
     /// </para>
     /// </remarks>
-    [KubernetesEntity(Group = Helper.NeonKubeResourceGroup, ApiVersion = "v1alpha1", Kind = "ContainerRegistry", PluralName = "containerregistries")]
+    [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
 #if KUBEOPS
     [KubernetesEntityShortNames]
     [EntityScope(EntityScope.Cluster)]
@@ -52,11 +52,31 @@ namespace Neon.Kube.Resources
     public class V1ContainerRegistry : CustomKubernetesEntity<V1ContainerRegistry.V1ContainerRegistrySpec>
     {
         /// <summary>
+        /// Object API group.
+        /// </summary>
+        public const string KubeGroup = Helper.NeonKubeResourceGroup;
+
+        /// <summary>
+        /// Object API version.
+        /// </summary>
+        public const string KubeApiVersion = "v1alpha1";
+
+        /// <summary>
+        /// Object API kind.
+        /// </summary>
+        public const string KubeKind = "ContainerRegistry";
+
+        /// <summary>
+        /// Object plural name.
+        /// </summary>
+        public const string KubePlural = "containerregistries";
+
+        /// <summary>
         /// Default constructor.
         /// </summary>
         public V1ContainerRegistry()
         {
-            ((IKubernetesObject)this).SetMetadata();
+            this.SetMetadata();
         }
 
         /// <summary>

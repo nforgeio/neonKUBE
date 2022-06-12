@@ -268,6 +268,20 @@ namespace Neon.Common
         }
 
         /// <summary>
+        /// Returns the actual command line that will be executed from the command 
+        /// and arguments passed.
+        /// </summary>
+        /// <param name="command">The command to be executed.</param>
+        /// <param name="args">Optional command arguments.</param>
+        /// <returns>The actual command line to be executed.</returns>
+        public static string GetExecuteCommandLine(string command, params object[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command), nameof(command));
+
+            return $"{command} {NeonHelper.NormalizeExecArgs()}";
+        }
+
+        /// <summary>
         /// Starts a process with an array of arguments to run an executable file and
         /// then waits for the process to terminate.
         /// </summary>
@@ -300,7 +314,7 @@ namespace Neon.Common
         /// to the process as input.
         /// </param>
         /// <param name="processCallback">
-        /// Optionally passed to obtain the details of the procvess created to execute the command.
+        /// Optionally passed to obtain the details of the process created to execute the command.
         /// When a non-null value is passed, the callback will be called with the <see cref="Process"/> 
         /// instances just after it is launched.
         /// </param>
@@ -317,12 +331,12 @@ namespace Neon.Common
         public static int Execute(
             string                      path, 
             object[]                    args, 
-            TimeSpan?                   timeout = null, 
-            Process                     process = null, 
-            string                      workingDirectory = null, 
+            TimeSpan?                   timeout              = null, 
+            Process                     process              = null, 
+            string                      workingDirectory     = null, 
             Dictionary<string, string>  environmentVariables = null, 
-            TextReader                  input = null, 
-            Action<Process>             processCallback = null)
+            TextReader                  input                = null, 
+            Action<Process>             processCallback      = null)
         {
             return Execute(path, NormalizeExecArgs(args), timeout, process, workingDirectory, environmentVariables, input, processCallback: processCallback);
         }
@@ -359,7 +373,7 @@ namespace Neon.Common
         /// to the process as input.
         /// </param>
         /// <param name="processCallback">
-        /// Optionally passed to obtain the details of the procvess created to execute the command.
+        /// Optionally passed to obtain the details of the process created to execute the command.
         /// When a non-null value is passed, the callback will be called with the <see cref="Process"/> 
         /// instances just after it is launched.
         /// </param>
@@ -548,7 +562,7 @@ namespace Neon.Common
         /// to the process as input.
         /// </param>
         /// <param name="processCallback">
-        /// Optionally passed to obtain the details of the procvess created to execute the command.
+        /// Optionally passed to obtain the details of the process created to execute the command.
         /// When a non-null value is passed, the callback will be called with the <see cref="Process"/> 
         /// instances just after it is launched.
         /// </param>
@@ -608,7 +622,7 @@ namespace Neon.Common
         /// Optionally specifies a <see cref="TextReader"/> with text to be sent 
         /// to the process as input.
         /// <param name="processCallback">
-        /// Optionally passed to obtain the details of the procvess created to execute the command.
+        /// Optionally passed to obtain the details of the process created to execute the command.
         /// When a non-null value is passed, the callback will be called with the <see cref="Process"/> 
         /// instances just after it is launched.
         /// </param>
@@ -744,7 +758,7 @@ namespace Neon.Common
         /// <c>null</c> which sets the default system codepage.
         /// </param>
         /// <param name="processCallback">
-        /// Optionally passed to obtain the details of the procvess created to execute the command.
+        /// Optionally passed to obtain the details of the process created to execute the command.
         /// When a non-null value is passed, the callback will be called with the <see cref="Process"/> 
         /// instances just after it is launched.
         /// </param>
@@ -822,7 +836,7 @@ namespace Neon.Common
         /// <c>null</c> which sets the default system codepage.
         /// </param>
         /// <param name="processCallback">
-        /// Optionally passed to obtain the details of the procvess created to execute the command.
+        /// Optionally passed to obtain the details of the process created to execute the command.
         /// When a non-null value is passed, the callback will be called with the <see cref="Process"/> 
         /// instances just after it is launched.
         /// </param>
@@ -1001,7 +1015,7 @@ namespace Neon.Common
         /// <c>null</c> which sets the default system codepage.
         /// </param>
         /// <param name="processCallback">
-        /// Optionally passed to obtain the details of the procvess created to execute the command.
+        /// Optionally passed to obtain the details of the process created to execute the command.
         /// When a non-null value is passed, the callback will be called with the <see cref="Process"/> 
         /// instances just after it is launched.
         /// </param>
@@ -1071,7 +1085,7 @@ namespace Neon.Common
         /// <c>null</c> which sets the default system codepage.
         /// </param>
         /// <param name="processCallback">
-        /// Optionally passed to obtain the details of the procvess created to execute the command.
+        /// Optionally passed to obtain the details of the process created to execute the command.
         /// When a non-null value is passed, the callback will be called with the <see cref="Process"/> 
         /// instances just after it is launched.
         /// </param>

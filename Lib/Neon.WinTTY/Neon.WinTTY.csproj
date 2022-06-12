@@ -7,7 +7,7 @@
 		<Authors>neonFORGE Team</Authors>
 		<Version>10000.0.1650-dev-jeff</Version>
 		<Company>neonFORGE LLC</Company>
-		<Product>neonLIBRARY</Product>
+		<Product>neonSDK</Product>
 		<Description>Windows WinTTY support for .NET</Description>
 		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
 		<Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>

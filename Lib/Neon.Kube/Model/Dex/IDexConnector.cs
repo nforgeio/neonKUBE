@@ -21,8 +21,11 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 
+using Neon.Common;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
 using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
 
@@ -85,15 +88,16 @@ namespace Neon.Kube
         /// <param name="serializer"></param>
         /// <returns></returns>
         public override object ReadJson(JsonReader reader,
-               Type objectType, object existingValue,
-               JsonSerializer serializer)
+               Type             objectType, 
+               object           existingValue,
+               JsonSerializer   serializer)
         {
             var jsonObject = JObject.Load(reader);
             var connector = default(IDexConnector);
 
             var value = jsonObject.Value<string>("Type");
-            DexConnectorType type;
-            Enum.TryParse(value, out type);
+            var type  = NeonHelper.ParseEnum<DexConnectorType>(value);
+
             switch (type)
             {
                 case DexConnectorType.Ldap:

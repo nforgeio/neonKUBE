@@ -25,12 +25,12 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Threading;
 
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.JsonPatch;
-using Microsoft.Rest;
 
 using Neon.Common;
 using Neon.Diagnostics;
@@ -41,6 +41,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using k8s;
+using k8s.Autorest;
 using k8s.Models;
 
 namespace Neon.Kube
@@ -50,6 +51,24 @@ namespace Neon.Kube
     /// </summary>
     public static partial class KubernetesExtensions
     {
+        //---------------------------------------------------------------------
+        // Shared fields
+
+        private static readonly JsonSerializerOptions serializeOptions;
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static KubernetesExtensions()
+        {
+            serializeOptions = new JsonSerializerOptions()
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
+
+            serializeOptions.Converters.Add(new JsonStringEnumMemberConverter());
+        }
+
         //---------------------------------------------------------------------
         // V1ObjectMeta extensions
 

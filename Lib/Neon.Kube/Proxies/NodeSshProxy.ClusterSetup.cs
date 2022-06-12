@@ -422,7 +422,7 @@ service ntp restart
             sb.AppendLine($"NEON_CONFIG_FOLDER={KubeNodeFolder.Config}");
             sb.AppendLine($"NEON_SETUP_FOLDER={KubeNodeFolder.Setup}");
             sb.AppendLine($"NEON_STATE_FOLDER={KubeNodeFolder.State}");
-            sb.AppendLine($"NEON_TASK_FOLDER={KubeNodeFolder.NodeTasks}");
+            sb.AppendLine($"NEON_RUN_FOLDER={KubeNodeFolder.NeonRun}");
             sb.AppendLine($"NEON_TMPFS_FOLDER={KubeNodeFolder.Tmpfs}");
 
             // Kubernetes related variables for masters.

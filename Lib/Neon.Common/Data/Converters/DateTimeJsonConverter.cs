@@ -33,7 +33,7 @@ namespace Neon.Data
 {
     /// <summary>
     /// <para>
-    /// Implements a type converter for <see cref="DateTime"/> using the culture
+    /// <b>Newtonsoft:</b> Implements a type converter for <see cref="DateTime"/> using the culture
     /// invariant <b>yyyy-MM-ddTHH:mm:ss.fffZ</b> format.
     /// </para>
     /// <note>

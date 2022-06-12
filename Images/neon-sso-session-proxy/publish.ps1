@@ -46,6 +46,14 @@ function Build
 	$tag         = "$version"
 	$tagAsLatest = TagAsLatest
 
+	$tagOverride = $env:DEBUG_TAG
+
+	if (![string]::IsNullOrEmpty($tagOverride))
+	{
+		$tag    = $tagOverride
+		$latest = $false
+	}
+
 	Log-ImageBuild $registry $tag
 
 	# Build and publish the images.

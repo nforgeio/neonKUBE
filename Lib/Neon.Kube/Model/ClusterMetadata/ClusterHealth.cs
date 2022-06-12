@@ -41,10 +41,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.Rest;
-using Microsoft.Win32;
-using SharpCompress.Readers;
-
 using Newtonsoft.Json;
 
 using Neon.Common;

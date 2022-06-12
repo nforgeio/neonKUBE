@@ -24,15 +24,13 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.Rest;
-using Microsoft.Rest.Serialization;
-
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Tasks;
 
 using k8s;
 using k8s.Models;
+using k8s.Autorest;
 
 namespace Neon.Kube
 {
@@ -150,25 +148,25 @@ namespace Neon.Kube
                         if (string.IsNullOrEmpty(namespaceParameter))
                         {
                             listResponse = k8s.ListClusterCustomObjectWithHttpMessagesAsync<TObject>(
-                            allowWatchBookmarks: true,
-                            fieldSelector: fieldSelector,
-                            labelSelector: labelSelector,
-                            resourceVersion: ResourceVersion,
-                            resourceVersionMatch: resourceVersionMatch,
-                            timeoutSeconds: timeoutSeconds,
-                            watch: true);
+                                allowWatchBookmarks:  true,
+                                fieldSelector:        fieldSelector,
+                                labelSelector:        labelSelector,
+                                resourceVersion:      ResourceVersion,
+                                resourceVersionMatch: resourceVersionMatch,
+                                timeoutSeconds:       timeoutSeconds,
+                                watch:                true);
                         }
                         else
                         {
                             listResponse = k8s.ListNamespacedCustomObjectWithHttpMessagesAsync<TObject>(
                             namespaceParameter,
-                            allowWatchBookmarks: true,
-                            fieldSelector: fieldSelector,
-                            labelSelector: labelSelector,
-                            resourceVersion: ResourceVersion,
+                            allowWatchBookmarks:  true,
+                            fieldSelector:        fieldSelector,
+                            labelSelector:        labelSelector,
+                            resourceVersion:      ResourceVersion,
                             resourceVersionMatch: resourceVersionMatch,
-                            timeoutSeconds: timeoutSeconds,
-                            watch: true);
+                            timeoutSeconds:       timeoutSeconds,
+                            watch:                true);
                         }
 
                         using (listResponse.Watch<TObject, object>(
@@ -266,11 +264,11 @@ namespace Neon.Kube
         /// <returns></returns>
         public async Task ValidateResourceVersionAsync(
             string resourceVersion,
-            string namespaceParameter = null,
-            string fieldSelector = null,
-            string labelSelector = null,
+            string namespaceParameter   = null,
+            string fieldSelector        = null,
+            string labelSelector        = null,
             string resourceVersionMatch = null,
-            int? timeoutSeconds = null)
+            int? timeoutSeconds         = null)
         {
             await SyncContext.Clear;
 
@@ -279,25 +277,25 @@ namespace Neon.Kube
                 if (string.IsNullOrEmpty(namespaceParameter))
                 {
                     await k8s.ListClusterCustomObjectWithHttpMessagesAsync<TObject>(
-                    fieldSelector: fieldSelector,
-                    labelSelector: labelSelector,
-                    limit: 1,
-                    resourceVersion: resourceVersion,
+                    fieldSelector:        fieldSelector,
+                    labelSelector:        labelSelector,
+                    limit:                1,
+                    resourceVersion:      resourceVersion,
                     resourceVersionMatch: resourceVersionMatch,
-                    timeoutSeconds: timeoutSeconds,
-                    watch: false);
+                    timeoutSeconds:       timeoutSeconds,
+                    watch:                false);
                 }
                 else
                 {
                     await k8s.ListNamespacedCustomObjectWithHttpMessagesAsync<TObject>(
                     namespaceParameter,
-                    fieldSelector: fieldSelector,
-                    labelSelector: labelSelector,
-                    limit: 1,
-                    resourceVersion: resourceVersion,
+                    fieldSelector:        fieldSelector,
+                    labelSelector:        labelSelector,
+                    limit:                1,
+                    resourceVersion:      resourceVersion,
                     resourceVersionMatch: resourceVersionMatch,
-                    timeoutSeconds: timeoutSeconds,
-                    watch: false);
+                    timeoutSeconds:       timeoutSeconds,
+                    watch:                false);
                 }
             }
             catch (KubernetesException kubernetesException)

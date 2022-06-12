@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
@@ -99,15 +100,10 @@ namespace Neon.Kube
         /// <summary>
         /// Validate the object.
         /// </summary>
-        /// <exception cref="Microsoft.Rest.ValidationException">
-        /// Thrown if validation fails
-        /// </exception>
+        /// <exception cref="ValidationException">Thrown if validation fails.</exception>
         public virtual void Validate()
         {
-            Covenant.Assert(
-                Spec.WorkloadSelector != null && Spec.Location != Location.MeshInternal, 
-                "Workload selector is only applicable for MESH_INTERNAL services"
-             );
+            Covenant.Assert(Spec.WorkloadSelector != null && Spec.Location != Location.MeshInternal, "Workload selector is only applicable for MESH_INTERNAL services");
         }
     }
 }

@@ -41,11 +41,9 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.Rest;
 using Microsoft.Win32;
-using SharpCompress.Readers;
-
 using Newtonsoft.Json;
+using SharpCompress.Readers;
 
 using k8s;
 using k8s.Models;
@@ -3072,7 +3070,7 @@ TCPKeepAlive yes
                 };
             }
             
-            using (var k8s = new KubernetesClient(config))
+            using (var k8s = new Kubernetes(config))
             {
                 // Cluster status is persisted to the [neon-status/cluster-health] configmap
                 // during cluster setup and is maintained there after by [neon-cluster-operator].

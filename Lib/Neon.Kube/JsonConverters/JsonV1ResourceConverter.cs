@@ -3,9 +3,17 @@
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
-// The contents of this repository are for private use by neonFORGE, LLC. and may not be
-// divulged or used for any purpose by other organizations or individuals without a
-// formal written and signed agreement with neonFORGE, LLC.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -23,9 +31,9 @@ using k8s.Models;
 namespace Neon.Kube
 {
     /// <summary>
-    /// A JSON converter for converting generic types using JSON.NET.
+    /// <see cref="System.Text.Json"/>: Converts <see cref="V1ResourceRequirements"/>.
     /// </summary>
-    public class V1ResourceConverter : JsonConverter<V1ResourceRequirements>
+    public class JsonV1ResourceConverter : JsonConverter<V1ResourceRequirements>
     {
         /// <inheritdoc/>
         public override bool CanConvert(Type typeToConvert)
@@ -34,10 +42,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override V1ResourceRequirements Read(
-            ref Utf8JsonReader      reader,
-            Type                    typeToConvert,
-            JsonSerializerOptions   options)
+        public override V1ResourceRequirements Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             if (reader.TokenType != JsonTokenType.StartObject)
             {
@@ -98,10 +103,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void Write(
-            Utf8JsonWriter          writer,
-            V1ResourceRequirements  value,
-            JsonSerializerOptions   options)
+        public override void Write(Utf8JsonWriter writer, V1ResourceRequirements value, JsonSerializerOptions options)
         {
             var stringValue = NeonHelper.JsonSerialize(value);
 

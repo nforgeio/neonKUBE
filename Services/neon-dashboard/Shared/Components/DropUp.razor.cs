@@ -38,8 +38,10 @@ namespace NeonDashboard.Shared.Components
 
 		protected override void OnInitialized()
 		{
-            AppState.OnDashboardChange += StateHasChanged;
+			AppState.OnDashboardChange += StateHasChanged;
 		}
+
+		public DropUp() { }
 
 		public void Dispose()
 		{

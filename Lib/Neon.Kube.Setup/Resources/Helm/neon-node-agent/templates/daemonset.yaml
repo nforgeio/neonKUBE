@@ -52,7 +52,7 @@ spec:
         - name: CONTAINERREGISTRY_ERROR_MAX_REQUEUE_INTERVAL
           value: 10m
         - name: NODETASK_RECONCILED_NOCHANGE_INTERVAL
-          value: 5m
+          value: 1m
         - name: NODETASK_ERROR_MIN_REQUEUE_INTERVAL
           value: 15s
         - name: NODETASK_ERROR_MAX_REQUEUE_INTERVAL
@@ -65,6 +65,9 @@ spec:
         securityContext: 
           privileged: true
         volumeMounts:
+        # This is where the host node file system will be mounted to the 
+        # [neon-node-agent] container.  This corresponds the the [HostMount]
+        # constant defined in [neon-node-agent/Node.cs].
         - name: host
           mountPath: /mnt/host
         startupProbe:

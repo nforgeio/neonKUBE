@@ -30,8 +30,7 @@ using System.Threading.Tasks;
 
 using k8s;
 using k8s.Models;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using k8s.Util.Common;
 
 using Neon.Common;
 using Neon.IO;
@@ -531,27 +530,37 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the <see cref="IKubernetes"/> client for the cluster.
         /// </summary>
-        /// <returns>The cached <see cref="IKubernetes"/> client.</returns>
-        /// <exception cref="InvalidOperationException">Thrown when there isn't a current Kubernetes context.</exception>
         public IKubernetes K8s
         {
             get
             {
-                if (context == null)
-                {
-                    context = KubeHelper.Config.Context;
-
-                    if (context == null)
-                    {
-                        throw new InvalidOperationException($"There is no current Kubernetes context.");
-                    }
-                }
+                // $note(jefflill):
+                //
+                // The lock here may be a bit excessive, but there's a slight chance that
+                // multiple client could be created without it.  [ClusterProxy] isn't really
+                // intended for super high transaction volumes and even for applications 
+                // doing that, they can mitigate this by save the client instance to a
+                // local variable (or something) and using that instead.
+                //
+                // I thought briefly about adding a [ConnectK8s()] method that would need
+                // to be called explicitly first, but that would make the class harder to
+                // use and probably break things.
 
                 lock (syncLock)
                 {
                     if (cachedK8s != null)
                     {
                         return cachedK8s;
+                    }
+
+                    if (context == null)
+                    {
+                        context = KubeHelper.Config.Context;
+
+                        if (context == null)
+                        {
+                            throw new InvalidOperationException($"There is no current Kubernetes context.");
+                        }
                     }
 
                     var kubeConfigPath = Environment.GetEnvironmentVariable("KUBECONFIG");
@@ -570,7 +579,9 @@ namespace Neon.Kube
 
                     var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath: kubeConfigPath, currentContext: context.Name);
 
-                    return cachedK8s = new KubernetesWithRetry(new KubernetesClient(config));
+                    cachedK8s = new KubernetesWithRetry(new Kubernetes(config));
+
+                    return cachedK8s;
                 }
             }
         }
@@ -727,7 +738,7 @@ namespace Neon.Kube
                 clusterRegistry.Spec.Username    = registry.Username;
                 clusterRegistry.Spec.Password    = registry.Password;
 
-                await K8s.UpsertClusterCustomObjectAsync(clusterRegistry, registry.Name);
+                await K8s.CreateClusterCustomObjectAsync(clusterRegistry, registry.Name);
             }
         }
 
@@ -1128,7 +1139,7 @@ namespace Neon.Kube
                 .ToArray();
 
             // Remove any cluster scoped neonKUBE resources that are labeled indicating that
-            // they removed on cluster reset.
+            // they should be removed on cluster reset.
 
             foreach (var crd in neonKubeCrds)
             {
