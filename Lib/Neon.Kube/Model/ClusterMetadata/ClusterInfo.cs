@@ -50,6 +50,7 @@ namespace Neon.Kube
 
             
             ClusterId          = Guid.NewGuid().ToString("d");
+            CreationTimestamp  = DateTime.UtcNow;
             ClusterVersion     = clusterDefinition.ClusterVersion;
             Name               = clusterDefinition.Name;
             Description        = clusterDefinition.Description;
@@ -68,6 +69,13 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "ClusterId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string ClusterId { get; set; } = null;
+
+        /// <summary>
+        /// Timestamp representing the date that the cluster was created.
+        /// </summary>
+        [JsonProperty(PropertyName = "CreationTimestamp", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public DateTime? CreationTimestamp { get; set; }
 
         /// <summary>
         /// The neonKUBE version of the cluster.  This is formatted as a <see cref="SemanticVersion"/>.

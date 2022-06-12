@@ -21,6 +21,10 @@ spec:
   logLevel: info
   logFormat: json
   serviceAccountName: grafana-agent
+  {{- with .Values.tolerations }}
+  tolerations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   nodeSelector:
   {{- toYaml .Values.nodeSelector | nindent 4 }}
   metrics:

@@ -21,9 +21,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <None Remove="Shared\Components\LoadingCircle.razor.css" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="Analytics" Version="3.8.0" />
 		<PackageReference Include="Blazor-Analytics" Version="3.10.0" />
 		<PackageReference Include="Blazored.LocalStorage" Version="4.1.5" />
+		<PackageReference Include="ChartJs.Blazor.Fork" Version="2.0.2" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="6.0.1" />
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="6.0.1" />
     <PackageReference Include="GitInfo" Version="2.2.0">
@@ -37,7 +42,7 @@
 		<PackageReference Include="prometheus-net" Version="6.0.0" />
 		<PackageReference Include="prometheus-net.AspNetCore" Version="6.0.0" />
 		<PackageReference Include="prometheus-net.DotNetRuntime" Version="4.2.2" />
-		<PackageReference Include="PSC.Blazor.Components.Chartjs" Version="6.0.8" />
+		<PackageReference Include="Tailwind.Extensions.AspNetCore" Version="1.0.0-beta3" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -56,16 +61,28 @@
 	<ItemGroup>
 		<!-- Include the PDB in the nuget so stack traces can include line numbers -->
 		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
+		<Content Include="Shared\Components\LoadingCircle.razor.css" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="wwwroot\css\" />
+	  <Folder Include="wwwroot\fonts\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="wwwroot\fonts\PPPangramSans-Bold.otf" />
+	  <None Include="wwwroot\fonts\PPPangramSans-Medium.otf" />
+
 	</ItemGroup>
 
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-		<Exec Command="sass Styles:wwwroot/css Pages:Pages Shared:Shared --style compressed --load-path=Styles --update" />
+		<Exec Command="pwsh -f ./prebuild.ps1" ContinueOnError="true" />
 	</Target>
 
-	<Target Name="SassCheck" BeforeTargets="PreBuild">
-		<Exec Command="sass --version" ContinueOnError="true">
-			<Output TaskParameter="ExitCode" PropertyName="ErrorCodeSass" />
+	<Target Name="NodeCheck" BeforeTargets="PreBuild">
+		<Exec Command="npm --version" ContinueOnError="true">
+			<Output TaskParameter="ExitCode" PropertyName="ErrorCodeNode" />
 		</Exec>
-		<Error Condition="'$(ErrorCodeSass)' != '0'" Text="dart-sass is required for this project. https://github.com/sass/dart-sass/releases" />
+		<Error Condition="'$(ErrorCodeNode)' != '0'" Text="NPM is required for this project. please install Node.js" />
 	</Target>
 </Project>

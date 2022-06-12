@@ -2,6 +2,18 @@
 // FILE:	    AppState.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -34,12 +46,35 @@ using Blazored.LocalStorage;
 
 namespace NeonDashboard
 {
+    /// <summary>
+    /// App state scoped to the user session.
+    /// </summary>
     public partial class AppState
     {
         /// <summary>
         /// The Neon Dashboard Service.
         /// </summary>
         public Service NeonDashboardService;
+
+        /// <summary>
+        /// Cluster Info
+        /// </summary>
+        public ClusterInfo ClusterInfo => NeonDashboardService.ClusterInfo;
+
+        /// <summary>
+        /// Kubernetes related state.
+        /// </summary>
+        public __Kube Kube;
+
+        /// <summary>
+        /// Metrics related state.
+        /// </summary>
+        public __Metrics Metrics;
+
+        /// <summary>
+        /// Metrics related state.
+        /// </summary>
+        public __Cache Cache;
 
         /// <summary>
         /// The Navigation Manager.
@@ -84,7 +119,7 @@ namespace NeonDashboard
         /// <summary>
         /// Redis Cache.
         /// </summary>
-        public IDistributedCache Cache;
+        public IDistributedCache DistributedCache;
 
         /// <summary>
         /// Bool to check whether it's ok to run javascript.
@@ -116,11 +151,6 @@ namespace NeonDashboard
         /// </summary>
         public string UserId = null;
 
-        /// <summary>
-        /// Option to disable analytics tracking.
-        /// </summary>
-        public bool DoNotTrack = false;
-
         public AppState(
             Service                 neonDashboardService,
             IHttpContextAccessor    httpContextAccessor,
@@ -140,12 +170,12 @@ namespace NeonDashboard
             this.WebHostEnvironment   = webHostEnv;
             this.Analytics            = analytics;
             this.LocalStorage         = localStorage;
-            this.Cache                = cache;
+            this.DistributedCache     = cache;
+            this.Kube                 = new __Kube(this);
+            this.Metrics              = new __Metrics(this);
+            this.Cache                = new __Cache(this);
 
-            bool.TryParse(neonDashboardService.GetEnvironmentVariable("DO_NOT_TRACK"), out DoNotTrack);
-
-            Segment.Analytics.Client.Config.SetSend(DoNotTrack);
-            if (DoNotTrack)
+            if (NeonDashboardService.DoNotTrack)
             {
                 Analytics.Disable();
             }
@@ -215,6 +245,8 @@ namespace NeonDashboard
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task TrackExceptionAsync(MethodBase method, Exception exception, bool? isFatal = false)
         {
+            await SyncContext.Clear;
+
             Logger.LogError(exception);
 
             await Analytics.TrackEvent(method.Name, new 
