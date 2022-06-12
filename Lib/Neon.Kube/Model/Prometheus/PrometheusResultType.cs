@@ -42,8 +42,10 @@ namespace Neon.Kube
     /// <summary>
     /// Specifies the result type.
     /// </summary>
+    [JsonConverter(typeof(StringEnumConverter))]
     public enum PrometheusResultType
     {
+#pragma warning disable CS1570 // XML comment has badly formed XML
         /// <summary>
         /// The result is a matrix value.
         /// [
@@ -81,5 +83,6 @@ namespace Neon.Kube
         /// </summary>
         [EnumMember(Value = "string")]
         String
+#pragma warning restore CS1570 // XML comment has badly formed XML
     }
 }

@@ -62,7 +62,5 @@ namespace NeonDashboard.Shared.Components
 		{
 			HideMenu = true;
 		}
-
-
     }
 }

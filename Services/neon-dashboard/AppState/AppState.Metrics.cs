@@ -10,7 +10,6 @@ using System.Net.Http;
 using System.IO;
 using System.Reflection;
 using System.Security.Claims;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -45,27 +44,264 @@ namespace NeonDashboard
 {
     public partial class AppState
     {
-        public class __Metrics 
+        /// <summary>
+        /// Metrics related state.
+        /// </summary>
+        public class __Metrics : AppStateBase
         {
-            private AppState AppState;
-            private Service NeonDashboardService => AppState.NeonDashboardService;
-            private __Cache Cache => AppState.Cache;
-            private INeonLogger Logger => AppState.Logger;
-            private PrometheusClient mimirClient;
+            /// <summary>
+            /// Event action for updates to Kube properties.
+            /// </summary>
+            public event Action OnChange;
+            private void NotifyStateChanged() => OnChange?.Invoke();
 
+            private PrometheusClient PrometheusClient => NeonDashboardService.PrometheusClient;
 
+            /// <summary>
+            /// Prometheis result containing the total memory usage for the cluster.
+            /// </summary>
+            public PrometheusResponse<PrometheusMatrixResult> MemoryUsageBytes;
+            
+            /// <summary>
+            /// The total amount of memory available to the cluster.
+            /// </summary>
+            public decimal MemoryTotalBytes;
+
+            /// <summary>
+            /// Prometheus result containing the CPU use percentage for the cluster.
+            /// </summary>
+            public PrometheusResponse<PrometheusMatrixResult> CPUUsagePercent;
+            
+            /// <summary>
+            /// The total number of CPU cores available to the cluster.
+            /// </summary>
+            public decimal CPUTotal;
+
+            /// <summary>
+            /// Prometheus result containing the total disk usage for the cluster.
+            /// </summary>
+            public PrometheusResponse<PrometheusMatrixResult> DiskUsageBytes;
+            
+            /// <summary>
+            /// The total amount of disk space available to the cluster.
+            /// </summary>
+            public decimal DiskTotalBytes;
+
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="state"></param>
             public __Metrics(AppState state)
+                : base(state)
             {
-                AppState = state;
-                mimirClient = new PrometheusClient("http://localhost:1234/prometheus/");
+                
             }
 
+            /// <summary>
+            /// Get the total memory usage for the cluster.
+            /// </summary>
+            /// <param name="start"></param>
+            /// <param name="end"></param>
+            /// <param name="stepSize"></param>
+            /// <returns></returns>
             public async Task<PrometheusResponse<PrometheusMatrixResult>> GetMemoryUsageAsync(DateTime start, DateTime end, string stepSize = "15s")
             {
-                var query = $@"sum(container_memory_working_set_bytes{{cluster=~""{NeonDashboardService.ClusterInfo.Name}""}})";
-                var result = await mimirClient.QueryRangeAsync(query, start, end, stepSize);
+                await SyncContext.Clear;
 
-                return result;
+                var query = $@"sum(node_memory_MemTotal_bytes{{cluster=~""{NeonDashboardService.ClusterInfo.Name}""}}) - sum(node_memory_MemFree_bytes{{cluster=~""{NeonDashboardService.ClusterInfo.Name}""}})";
+                MemoryUsageBytes = await QueryRangeAsync(query, start, end, stepSize);
+
+                NotifyStateChanged();
+
+                return MemoryUsageBytes;
+            }
+
+            /// <summary>
+            /// Gets the total amount of memory available to the cluster.
+            /// </summary>
+            /// <returns></returns>
+            public async Task<decimal> GetMemoryTotalAsync()
+            {
+                await SyncContext.Clear;
+
+                var query = $@"sum(node_memory_MemTotal_bytes{{cluster=~""{NeonDashboardService.ClusterInfo.Name}""}})";
+                MemoryTotalBytes = decimal.Parse((await QueryAsync(query)).Data.Result.First().Value.Value);
+
+                NotifyStateChanged();
+
+                return MemoryTotalBytes;
+            }
+
+            /// <summary>
+            /// Gets the CPU usage from the cluster.
+            /// </summary>
+            /// <param name="start"></param>
+            /// <param name="end"></param>
+            /// <param name="stepSize"></param>
+            /// <returns></returns>
+            public async Task<PrometheusResponse<PrometheusMatrixResult>> GetCpuUsageAsync(DateTime start, DateTime end, string stepSize = "15s")
+            {
+                await SyncContext.Clear;
+
+                var query = $@"(avg(irate(node_cpu_seconds_total{{mode = ""idle"", cluster=~""{NeonDashboardService.ClusterInfo.Name}""}}[5m])))";
+                CPUUsagePercent = await QueryRangeAsync(query, start, end, stepSize);
+
+                NotifyStateChanged();
+
+                return CPUUsagePercent;
+            }
+
+            /// <summary>
+            /// Gets the total number of CPUs available to the cluster.
+            /// </summary>
+            /// <returns></returns>
+            public async Task<decimal> GetCpuTotalAsync()
+            {
+                await SyncContext.Clear;
+
+                var query = $@"sum(count without(cpu, mode) (node_cpu_seconds_total{{mode = ""idle"", cluster=~""{NeonDashboardService.ClusterInfo.Name}""}}))";
+                CPUTotal = decimal.Parse((await QueryAsync(query)).Data.Result.First().Value.Value);
+
+                NotifyStateChanged();
+
+                return CPUTotal;
+            }
+
+            /// <summary>
+            /// Gets the total disk usage for the cluster.
+            /// </summary>
+            /// <param name="start"></param>
+            /// <param name="end"></param>
+            /// <param name="stepSize"></param>
+            /// <returns></returns>
+            public async Task<PrometheusResponse<PrometheusMatrixResult>> GetDiskUsageAsync(DateTime start, DateTime end, string stepSize = "15s")
+            {
+                await SyncContext.Clear;
+
+                var query = $@"sum(node_filesystem_size_bytes{{cluster=~""{NeonDashboardService.ClusterInfo.Name}"", mountpoint=""/"",fstype!=""rootfs""}}) - sum(node_filesystem_avail_bytes{{cluster=~""{NeonDashboardService.ClusterInfo.Name}"", mountpoint=""/"",fstype!=""rootfs""}})";
+                DiskUsageBytes = await QueryRangeAsync(query, start, end, stepSize);
+
+                NotifyStateChanged();
+
+                return DiskUsageBytes;
+            }
+
+            /// <summary>
+            /// Gets the total amount of disk space available to the cluster.
+            /// </summary>
+            /// <returns></returns>
+            public async Task<decimal> GetDiskTotalAsync()
+            {
+                await SyncContext.Clear;
+
+                var query = $@"sum(node_filesystem_avail_bytes{{cluster=~""{NeonDashboardService.ClusterInfo.Name}"", mountpoint=""/"",fstype!=""rootfs""}})";
+                DiskTotalBytes = decimal.Parse((await QueryAsync(query)).Data.Result.First().Value.Value);
+
+                NotifyStateChanged();
+
+                return DiskTotalBytes;
+            }
+
+            /// <summary>
+            /// Executes a range query.
+            /// </summary>
+            /// <param name="query">The query to be executed</param>
+            /// <param name="start">The start time.</param>
+            /// <param name="end">The end time.</param>
+            /// <param name="stepSize">The optional step size</param>
+            /// <param name="cacheInterval">The cache interval</param>
+            /// <returns></returns>
+            public async Task<PrometheusResponse<PrometheusMatrixResult>> QueryRangeAsync(string query, DateTime start, DateTime end, string stepSize = "15s", int cacheInterval = 1)
+            {
+                await SyncContext.Clear;
+
+                // round intervals so that they cache better.
+                start = start.RoundDown(TimeSpan.FromMinutes(cacheInterval));
+                end   = end.RoundDown(TimeSpan.FromMinutes(cacheInterval));
+
+                Logger.LogDebug($"[Metrics] Executing range query. Query: [{query}], Start [{start}], End: [{end}], StepSize: [{stepSize}], CacheInterval: [{cacheInterval}]");
+
+                var key = $"neon-dashboard_{Neon.Cryptography.CryptoHelper.ComputeMD5String(query)}";
+
+                try
+                {
+                    var value = await Cache.GetAsync<PrometheusResponse<PrometheusMatrixResult>>(key);
+                    if (value != null)
+                    {
+                        Logger.LogDebug($"[Metrics] Returning from Cache. Query: [{query}], Start [{start}], End: [{end}], StepSize: [{stepSize}], CacheInterval: [{cacheInterval}]");
+
+                        return value;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.LogError(e);
+                }
+
+                try
+                {
+                    var result = await PrometheusClient.QueryRangeAsync(query, start, end, stepSize);
+
+                    _ = Cache.SetAsync(key, result);
+
+                    return result;
+                }
+                catch (Exception e)
+                {
+                    Logger.LogError(e);
+                    throw;
+                }
+            }
+
+            private async Task<PrometheusResponse<PrometheusVectorResult>> QueryAsync(string query)
+            {
+                await SyncContext.Clear;
+
+                Logger.LogDebug($"[Metrics] Executing query. Query: [{query}]");
+
+                var key = Neon.Cryptography.CryptoHelper.ComputeMD5String(query);
+
+                try
+                {
+                    var value = await Cache.GetAsync<PrometheusResponse<PrometheusVectorResult>>(key);
+                    if (value != null)
+                    {
+                        Logger.LogDebug($"[Metrics] Returning from Cache. Query: [{query}]");
+
+                        return value;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.LogError(e);
+                }
+
+                try
+                {
+                    var result = await PrometheusClient.QueryAsync(query);
+
+                    _ = Cache.SetAsync(key, result);
+
+                    return result;
+                }
+                catch (Exception e)
+                {
+                    Logger.LogError(e);
+                    throw;
+                }
+            }
+
+            /// <summary>
+            /// Converts unix timestamp to <see cref="DateTime"/>.
+            /// </summary>
+            /// <param name="unixTimeStamp"></param>
+            /// <returns></returns>
+            public DateTime UnixTimeStampToDateTime(double unixTimeStamp)
+            {
+                // Unix timestamp is seconds past epoch
+                DateTime dateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+                dateTime = dateTime.AddSeconds(unixTimeStamp).ToLocalTime();
+                return dateTime;
             }
         }
     }

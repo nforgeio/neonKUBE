@@ -39,20 +39,75 @@ namespace NeonDashboard
 {
     public partial class AppState
     {
-        public class __Kube 
+        /// <summary>
+        /// Kubernetes related state.
+        /// </summary>
+        public class __Kube : AppStateBase
         {
-            private AppState AppState;
-            private Service NeonDashboardService => AppState.NeonDashboardService;
-            private __Cache Cache => AppState.Cache;
-            private INeonLogger Logger => AppState.Logger;
+            /// <summary>
+            /// Event action for updates to Kube properties.
+            /// </summary>
+            public event Action OnChange;
+            private void NotifyStateChanged() => OnChange?.Invoke();
 
-            public __Kube(AppState state)
+            /// <summary>
+            /// The total number of nodes in the current cluster.
+            /// </summary>
+            public int TotalNodes { get; private set; }
+
+            /// <summary>
+            /// The total number of active nodes in the cluster.
+            /// </summary>
+            public int ActiveNodes { get; private set; }
+
+            /// <summary>
+            /// The number of failed nodes in the cluster.
+            /// </summary>
+            public int FailedNodes { get; private set; }
+
+            /// <summary>
+            /// The date that the cluster was created.
+            /// </summary>
+            public DateTime CreationTimestamp { get; private set; }
+
+            /// <summary>
+            /// The list of nodes. This contains node related metadata.
+            /// </summary>
+            public V1NodeList Nodes;
+
+            private static List<string> negativeNodeConditions = new List<string>()
             {
-                AppState = state;
+                "KubeletUnhealthy",
+                "ContainerRuntimeUnhealthy",
+                "KernelDeadlock",
+                "NetworkUnavailable",
+                "MemoryPressure",
+                "DiskPressure",
+                "PIDPressure",
+            };
+
+            private static List<string> positiveNodeConditions = new List<string>()
+            {
+                "Ready"
+            };            
+            
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="state"></param>
+            public __Kube(AppState state)
+                : base(state)
+            {
             }
 
-            public async Task<V1NodeList> GetNodesAsync()
+            /// <summary>
+            /// Get node status from the Kubernetes API server.
+            /// </summary>
+            /// <returns></returns>
+            public async Task GetNodesStatusAsync()
             {
+                await SyncContext.Clear;
+
                 var key = "nodes";
 
                 try
@@ -60,7 +115,7 @@ namespace NeonDashboard
                     var value = await Cache.GetAsync<V1NodeList>(key);
                     if (value != null)
                     {
-                        return value;
+                        Nodes = value;
                     }
                 }
                 catch (Exception e)
@@ -68,38 +123,14 @@ namespace NeonDashboard
                     Logger.LogError(e);
                 }
 
-                var nodes = await NeonDashboardService.Kubernetes.ListNodeAsync();
+                Nodes = await K8s.ListNodeAsync();
 
-                _ = Cache.SetAsync("nodes", nodes);
+                TotalNodes = Nodes.Items.Count();
+                FailedNodes = Nodes.Items.Where(node => node.Status.Conditions.Any(condition => negativeNodeConditions.Contains(condition.Type) && condition.Status == "True")).Count();
+                ActiveNodes = Nodes.Items.Where(node => node.Status.Conditions.Any(condition => condition.Type == "Ready" && condition.Status == "True")).Count();
 
-                return nodes;
+                NotifyStateChanged();
             }
-
-            public async Task<NodeMetricsList> GetNodeMetricsAsync()
-            {
-                var key = "node-metrics";
-
-                try
-                {
-                    var value = await Cache.GetAsync<NodeMetricsList>(key);
-                    if (value != null)
-                    {
-                        return value;
-                    }
-                }
-                catch (Exception e)
-                {
-                    Logger.LogError(e);
-                }
-
-                var nodeMetricsList = await NeonDashboardService.Kubernetes.GetKubernetesNodesMetricsAsync();
-
-                _ = Cache.SetAsync(key, nodeMetricsList);
-
-                return nodeMetricsList;
-            }
-
-            
         }
     }
 }

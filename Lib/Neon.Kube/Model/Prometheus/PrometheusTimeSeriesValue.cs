@@ -54,7 +54,14 @@ namespace Neon.Kube
             Value = value;
         }
 
+        /// <summary>
+        ///  The Time.
+        /// </summary>
         public int Time { get; set; }
+
+        /// <summary>
+        /// The value.
+        /// </summary>
         public string Value { get; set; }
     }
 
@@ -82,8 +89,12 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            var list = (List<object>)value;
-            serializer.Serialize(writer, value);
+            var list = new List<object>()
+            {
+                ((PrometheusTimeSeriesValue)value).Time,
+                ((PrometheusTimeSeriesValue)value).Value
+            };
+            serializer.Serialize(writer, list);
         }
     }
 }

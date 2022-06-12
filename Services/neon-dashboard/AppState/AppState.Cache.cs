@@ -37,38 +37,63 @@ using k8s.Models;
 
 namespace NeonDashboard
 {
-    public partial class AppState
+    public partial class AppState 
     {
-        public class __Cache 
+        /// <summary>
+        /// Handles the Cache.
+        /// </summary>
+        public class __Cache : AppStateBase
         {
-            private AppState AppState;
-            private Service NeonDashboardService => AppState.NeonDashboardService;
-            private IDistributedCache Cache => AppState.DistributedCache;
-            private INeonLogger Logger => AppState.Logger;
-
             private static DistributedCacheEntryOptions cacheEntryOptions;
+            private IDistributedCache cache => AppState.DistributedCache;
+
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="state"></param>
             public __Cache(AppState state)
+                : base(state)
             {
-                AppState = state;
                 cacheEntryOptions = new DistributedCacheEntryOptions()
                 {
                     AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1)
                 };
             }
 
-            public async Task SetAsync(string key, object value)
-            {
-                await Cache.SetAsync(key, NeonHelper.JsonSerializeToBytes(value), cacheEntryOptions);
-            }
-
+            /// <summary>
+            /// Generate a cache key.
+            /// </summary>
+            /// <param name="key"></param>
+            /// <returns></returns>
             public string CreateKey(string key)
             {
                 return $"neon-dashboard_{key}";
             }
 
+            /// <summary>
+            /// Add an object to the cache.
+            /// </summary>
+            /// <param name="key"></param>
+            /// <param name="value"></param>
+            /// <returns></returns>
+            public async Task SetAsync(string key, object value)
+            {
+                await SyncContext.Clear;
+
+                await cache.SetAsync(key, NeonHelper.JsonSerializeToBytes(value), cacheEntryOptions);
+            }
+
+            /// <summary>
+            /// Get a generic object from the cache.
+            /// </summary>
+            /// <typeparam name="T"></typeparam>
+            /// <param name="key"></param>
+            /// <returns></returns>
             public async Task<T> GetAsync<T>(string key)
             {
-                var value = await Cache.GetAsync(key);
+                await SyncContext.Clear;
+                
+                var value = await cache.GetAsync(key);
 
                 if (value != null)
                 {

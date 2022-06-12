@@ -7,16 +7,6 @@
 @using System.IO;
 @using System; 
 
-@using Neon.Common;
-
-<div class="icon">
-    @((MarkupString)content)
+<div class="icon @Color">
+    @((MarkupString)Content)
 </div>
-
-@code {
-    /// <summary>
-    /// type of icon to display
-    /// </summary>
-    [Parameter]
-    public string content { get; set; }
-}
