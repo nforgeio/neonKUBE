@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Dashboard.razor.cs
-// CONTRIBUTOR: Marcus Bowyer
+// FILE:	    DropUp.razor.cs
+// CONTRIBUTOR: Simon Zhang, Marcus Bowyer
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 
 using System;

@@ -1,4 +1,9 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿//-----------------------------------------------------------------------------
+// FILE:	    Icons.cs
+// CONTRIBUTOR: Simon Zhang
+// COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+
+using Microsoft.AspNetCore.Components;
 
 namespace NeonDashboard
 {
