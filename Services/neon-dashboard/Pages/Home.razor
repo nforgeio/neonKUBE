@@ -75,7 +75,7 @@
             <label class="text-2 text-slate-300">Memory</label>
               @if (memoryChartConfig != null)
               {
-                <div id="header" class="w-full h-5/6">
+                <div id="header" class="w-full h-4/6">
                   <Chart Config="memoryChartConfig" @ref="memoryChart"></Chart>
                 </div>
               }
@@ -84,7 +84,7 @@
           <label class="text-2 text-slate-300">CPU</label>
             @if (cpuChartConfig != null)
             {
-              <div id="header" class="w-full h-5/6">
+              <div id="header" class="w-full h-4/6">
                 <Chart Config="cpuChartConfig" @ref="cpuChart"></Chart>
               </div>
             }
@@ -93,7 +93,7 @@
             <label class="text-2 text-slate-300">Utilization</label>
             @if (diskChartConfig != null)
             {
-                <div id="header" class="w-full  h-5/6">
+                <div id="header" class="w-full  h-4/6">
                     <Chart Config="diskChartConfig" @ref="diskChart"></Chart>
                 </div>
             }

@@ -118,7 +118,8 @@ namespace NeonDashboard.Pages
                                 MaxTicksLimit = 4,
                                 BeginAtZero = true,
                                 AutoSkip = true,
-                            }                        
+                                Max = 1
+                            },    
                         }
                     },
                 },
@@ -196,8 +197,6 @@ namespace NeonDashboard.Pages
                 BorderWidth= 1,
                 PointBorderWidth = 0,
                 PointRadius = 0,
-                
-                
             }) ;
 
             try
@@ -224,7 +223,7 @@ namespace NeonDashboard.Pages
             await Task.WhenAll(tasks);
 
             var memoryUsageX = AppState.Metrics.MemoryUsageBytes.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time)).ToList();
-            var memoryUsageY = AppState.Metrics.MemoryUsageBytes.Data.Result.First().Values.Select(x => Math.Round(decimal.Parse(x.Value) / 1000000000, 2)).ToList();
+            var memoryUsageY = AppState.Metrics.MemoryUsageBytes.Data.Result.First().Values.Select(x => Math.Round(decimal.Parse(x.Value) / AppState.Metrics.MemoryTotalBytes, 2)).ToList();
 
             await UpdateChartAsync(memoryUsageX, memoryUsageY, memoryChartConfig, memoryChart, $"Memory usage (total memory: {ByteUnits.ToGB(AppState.Metrics.MemoryTotalBytes)})");
         }
@@ -242,7 +241,7 @@ namespace NeonDashboard.Pages
             await Task.WhenAll(tasks);
 
             var cpuUsageX = AppState.Metrics.CPUUsagePercent.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time)).ToList();
-            var cpuUsageY = AppState.Metrics.CPUUsagePercent.Data.Result.First().Values.Select(x => Math.Round(decimal.Parse(x.Value) * AppState.Metrics.CPUTotal,2)).ToList();
+            var cpuUsageY = AppState.Metrics.CPUUsagePercent.Data.Result.First().Values.Select(x => Math.Round(decimal.Parse(x.Value) ,2)).ToList();
 
             await UpdateChartAsync(cpuUsageX, cpuUsageY, cpuChartConfig, cpuChart, $"CPU usage (total cores: {AppState.Metrics.CPUTotal})");
         }
@@ -260,7 +259,7 @@ namespace NeonDashboard.Pages
             await Task.WhenAll(tasks);
 
             var diskUsageX = AppState.Metrics.DiskUsageBytes.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time)).ToList();
-            var diskUsageY = AppState.Metrics.DiskUsageBytes.Data.Result.First().Values.Select(x => Math.Round(decimal.Parse(x.Value) / 1000000000,2)).ToList();
+            var diskUsageY = AppState.Metrics.DiskUsageBytes.Data.Result.First().Values.Select(x => Math.Round(decimal.Parse(x.Value) / AppState.Metrics.DiskTotalBytes, 2)).ToList();
 
             await UpdateChartAsync(diskUsageX, diskUsageY, diskChartConfig, diskChart, $"Disk usage (total disk: {ByteUnits.ToGB(AppState.Metrics.DiskTotalBytes)})");
         }
