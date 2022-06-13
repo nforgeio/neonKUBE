@@ -31,7 +31,7 @@ namespace Neon.Kube
     /// <summary>
     /// Holds a list of generic custom object instances returned by the API server.
     /// </summary>
-    /// <typeparam name="T">The custom obecj type.</typeparam>
+    /// <typeparam name="T">The custom object type.</typeparam>
     public class V1CustomObjectList<T> : IKubernetesObject<V1ListMeta>, IKubernetesObject, IMetadata<V1ListMeta>, IItems<T>, IValidate
         where T : IKubernetesObject
     {

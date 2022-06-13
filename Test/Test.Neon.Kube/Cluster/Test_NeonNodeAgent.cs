@@ -157,7 +157,16 @@ set -euo pipefail
 mkdir -p $NODE_ROOT{folderPath}
 touch $NODE_ROOT{filePath}
 ";
-                await fixture.K8s.CreateClusterCustomObjectAsync<V1NodeTask>(nodeTask, name: nodeToTaskName[node.Name]);
+                //##############################################################
+                // $debug(jefflill): DELETE THE LOOP AND RESTORE THE LINE BELOW!
+
+                for (int i = 0; i < 500; i++)
+                {
+                    await fixture.K8s.CreateClusterCustomObjectAsync<V1NodeTask>(nodeTask, name: $"test-task-{NeonHelper.CreateBase36Guid()}");
+                }
+
+                //await fixture.K8s.CreateClusterCustomObjectAsync<V1NodeTask>(nodeTask, name: nodeToTaskName[node.Name]);
+                //##############################################################
             }
 
             // Wait for all of the node tasks to report completion.

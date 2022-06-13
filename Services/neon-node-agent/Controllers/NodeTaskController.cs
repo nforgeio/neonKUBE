@@ -242,12 +242,12 @@ rm $0
         {
             reconciledReceivedCounter.Inc();
 log.LogInfo("#######################################################################");
-log.LogInfo($"*** RECONCILE-RECEIVED: tasknull={task == null} name=[{task?.Metadata.Name}]");
+log.LogInfo($"*** RECONCILE-RECEIVED: NO-CHANGE={task == null} name=[{task?.Metadata.Name}]");
 log.LogInfo("#######################################################################");
             await resourceManager.ReconciledAsync(task,
                 async (name, resources) =>
                 {
-                    log.LogInfo($"RECONCILED: {name ?? "[NO-CHANGE]}"}");
+                    log.LogInfo($"RECONCILED: {name ?? "[NO-CHANGE]"}");
                     reconciledProcessedCounter.Inc();
 log.LogDebug($"*** RECONCILE: 0: count={resources.Count}");
 
@@ -298,10 +298,7 @@ log.LogDebug($"*** RECONCILE: 6");
 log.LogDebug($"*** RECONCILE: 7");
                         if (nodeTask.Status.Phase == V1NodeTask.Phase.New)
                         {
-log.LogDebug($"*** RECONCILE: 8A");
-                            //nodeTask.Status.State = V1NodeTask.NodeTaskState.Pending;
-
-log.LogDebug($"*** RECONCILE: 8B");
+log.LogDebug($"*** RECONCILE: 8");
                             var patch = OperatorHelper.CreatePatch<V1NodeTask>();
 
                             patch.Replace(path => path.Status, new V1NodeTask.TaskStatus());
@@ -344,7 +341,7 @@ log.LogDebug($"*** RECONCILE: 17: EXIT");
                 },
                 errorCounter: reconciledErrorCounter);
 
-            return ResourceControllerResult.RequeueEvent(errorMinRequeueInterval);
+            return null;
         }
 
         /// <summary>
@@ -359,7 +356,7 @@ log.LogDebug($"*** RECONCILE: 17: EXIT");
             deletedReceivedCounter.Inc();
             
 log.LogInfo("#######################################################################");
-log.LogInfo($"*** DELETE-RECEIVED: tasknull={task == null} name= [{task?.Metadata.Name}]");
+log.LogInfo($"*** DELETE-RECEIVED: NO-CHANGE={task == null} name= [{task?.Metadata.Name}]");
 log.LogInfo("#######################################################################");
             await resourceManager.DeletedAsync(task,
                 async (name, resources) =>
@@ -379,15 +376,15 @@ log.LogDebug($"*** DELETE: 0: count={resources.Count}");
         /// Called when a custom resource's status has been modified.
         /// </summary>
         /// <param name="task">The updated entity.</param>
-        /// <returns>The controller result.</returns>
-        public async Task<ResourceControllerResult> StatusModifiedAsync(V1NodeTask task)
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task StatusModifiedAsync(V1NodeTask task)
         {
             Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
 
             statusModifiedReceivedCounter.Inc();
 
 log.LogInfo("#######################################################################");
-log.LogInfo($"*** STATUSMODIFIED-RECEIVED: tasknull={task == null} name = [{task?.Metadata.Name}]");
+log.LogInfo($"*** STATUSMODIFIED-RECEIVED: NO-CHANGE={task == null} name = [{task?.Metadata.Name}]");
 log.LogInfo("#######################################################################");
             await resourceManager.DeletedAsync(task,
                 async (name, resources) =>
@@ -401,8 +398,6 @@ log.LogDebug($"*** STATUSMODIFIED: 0: count={resources.Count}");
                     return await Task.FromResult<ResourceControllerResult>(null);
                 },
                 errorCounter: statusModifiedErrorCounter);
-
-            return ResourceControllerResult.RequeueEvent(errorMinRequeueInterval);
         }
 
         /// <summary>
@@ -422,21 +417,20 @@ log.LogDebug($"*** STATUSMODIFIED: 0: count={resources.Count}");
         /// </item>
         /// </list>
         /// </summary>
-        /// <param name="resources">The current known tasks.</param>
+        /// <param name="nodeTasks">The existing tasks.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task CleanupTasksAsync(IReadOnlyDictionary<string, V1NodeTask> resources)
+        private async Task CleanupTasksAsync(IReadOnlyDictionary<string, V1NodeTask> nodeTasks)
         {
-            Covenant.Requires<ArgumentNullException>(resources != null, nameof(resources));
+            Covenant.Requires<ArgumentNullException>(nodeTasks != null, nameof(nodeTasks));
 
-            var tasks = await resourceManager.CloneResourcesAsync(resources);
+            var utcNow = DateTime.UtcNow;
 
             //-----------------------------------------------------------------
             // Terminate orphaned tasks as well as any tasks that have been executing past their timeout.
 
-            foreach (var nodeTask in tasks.Values)
+            foreach (var nodeTask in nodeTasks.Values)
             {
                 var taskName = nodeTask.Name();
-                var utcNow   = DateTime.UtcNow;
 
                 // Remove invalid tasks.
 
@@ -496,11 +490,21 @@ log.LogDebug($"*** STATUSMODIFIED: 0: count={resources.Count}");
             }
 
             //-----------------------------------------------------------------
+            // Remove tasks that have been retained long enough.
+
+            foreach (var nodeTask in nodeTasks.Values
+                .Where(task => task.Status.Phase != V1NodeTask.Phase.New && task.Status.Phase != V1NodeTask.Phase.Running)
+                .Where(task => (utcNow - task.Status.FinishTimestamp) >= TimeSpan.FromSeconds(task.Spec.RetainSeconds)))
+            {
+                await k8s.DeleteClusterCustomObjectAsync<V1NodeTask>(nodeTask.Name());
+            }
+
+            //-----------------------------------------------------------------
             // Remove any script folders whose node task no longer exists.
 
             var nodeTaskExecuteIds = new HashSet<string>();
 
-            foreach (var nodeTask in tasks.Values.Where(task => !string.IsNullOrEmpty(task.Status.ExecutionId)))
+            foreach (var nodeTask in nodeTasks.Values.Where(task => !string.IsNullOrEmpty(task.Status.ExecutionId)))
             {
                 nodeTaskExecuteIds.Add(nodeTask.Status.ExecutionId);
             }
@@ -617,6 +621,7 @@ export SCRIPT_DIR={taskFolder}
 
             // Start the command process.
 
+log.LogDebug($"*** EXECUTE: 4");
             var task = (Task<ExecuteResponse>)null;
 
             try
@@ -630,7 +635,7 @@ log.LogDebug($"*** EXECUTE: 5");
                     (Process newProcess) =>
                     {
 log.LogDebug($"*** EXECUTE: 6A: processID is NULL: {newProcess == null}");
-log.LogDebug($"*** EXECUTE: 6B: processID = {newProcess.Id}");
+log.LogDebug($"*** EXECUTE: 6B: processID={newProcess.Id}");
                         process = newProcess;
 
 log.LogDebug($"*** EXECUTE: 7");

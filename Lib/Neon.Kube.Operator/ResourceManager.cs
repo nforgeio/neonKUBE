@@ -261,7 +261,6 @@ namespace Neon.Kube.Operator
         private LeaderElectionConfig            leaderConfig;
         private LeaderElector                   leaderElector;
         private Task                            leaderTask;
-        private ResourceControllerResult        defaultReconcileResult;
 
         /// <summary>
         /// Default constructor.
@@ -350,7 +349,6 @@ namespace Neon.Kube.Operator
             this.deletedErrorBackoff        = TimeSpan.Zero;
             this.statusModifiedErrorBackoff = TimeSpan.Zero;
             this.leaderConfig               = leaderConfig;
-            this.defaultReconcileResult     = ResourceControllerResult.RequeueEvent(reconciledNoChangeInterval);
 
 log.LogDebug($"MGR_CONSTRUCTOR: 0: reconcileNoChangeInterval = {reconcileNoChangeInterval}");
             // $todo(jefflill): https://github.com/nforgeio/neonKUBE/issues/1589
@@ -593,10 +591,6 @@ log.LogDebug($"MGR_START: 4");
             await SyncContext.Clear;
 
 log.LogDebug($"MGR_RECONCILE: 0:");
-foreach (var item in resources)
-{
-    log.LogDebug(item.Key);
-}
             EnsureNotDisposed();
 
             if (resource != null && !filter(resource))
@@ -623,10 +617,17 @@ log.LogDebug($"MGR_RECONCILE: 3:");
                         if (resource == null)
                         {
 log.LogDebug($"MGR_RECONCILE: 4:");
-                            changed = false;
+                            // The [NoChangeAsync] loop below is sending these now so we're
+                            // going always treat this as a change such that the user's operator
+                            // will see these.
+
+                            changed = true;
                         }
                         else
                         {
+                            // Determine whether the object has actually changed unless we're
+                            // still discovering resources and change detection is disabled.
+
 log.LogDebug($"MGR_RECONCILE: 4: generation = {resource.Metadata.Generation}");
                             if (resources.TryGetValue(resource.Metadata.Name, out var existing))
                             {
@@ -652,27 +653,27 @@ log.LogDebug($"MGR_RECONCILE: 8: EXIT");
                             log.LogInfo($"RECONCILED: {name} (discovering resources)");
 log.LogDebug($"MGR_RECONCILE: 9: EXIT");
 
-                            return defaultReconcileResult;
+                            return null;
                         }
 log.LogDebug($"MGR_RECONCILE: 10");
 
-                        if (!changed && utcNow < nextNoChangeReconcileUtc)
+                        if (!changed)
                         {
-log.LogDebug($"MGR_RECONCILE: 11: EXIT (wait={nextNoChangeReconcileUtc - utcNow})");
+log.LogDebug($"MGR_RECONCILE: 11: EXIT");
                             // It's not time yet for another NO-CHANGE handler call.
 
-                            return ResourceControllerResult.RequeueEvent(ReconcileNoChangeInterval);
+                            return null;
                         }
 log.LogDebug($"MGR_RECONCILE: 12");
 
                         var result = await handler(changed ? name : null, resources);
 
-log.LogDebug($"MGR_RECONCILE: 134A: result is null: {result == null}");
+log.LogDebug($"MGR_RECONCILE: 13A: result is null: {result == null}");
 
                         reconciledErrorBackoff = TimeSpan.Zero;   // Reset after a success
 
 log.LogDebug($"MGR_RECONCILE: 13B: EXIT");
-                        return result ?? defaultReconcileResult;
+                        return result;
                     });
             }
             catch (Exception e)
@@ -862,54 +863,6 @@ log.LogDebug($"MGR_STATUS-MODIFIED: 0");
                         return await Task.FromResult<TResource>(null);
                     }
                 });
-        }
-
-        /// <summary>
-        /// <para>
-        /// Returns a deep clone the current set of resources being managed or of the specific dictionary passed.
-        /// </para>
-        /// <note>
-        /// This can be an expensive operation when you're tracking a lot of resources.
-        /// </note>
-        /// </summary>
-        /// <param name="resources">Optionally specifies the resource dictionary to be copied.</param>
-        /// <returns>A deep clone of the current set of resources being managed or the dictionary passed..</returns>
-        public async Task<IReadOnlyDictionary<string, TResource>> CloneResourcesAsync(IReadOnlyDictionary<string, TResource> resources = null)
-        {
-            await SyncContext.Clear;
-
-            if (resources == null)
-            {
-                return await mutex.ExecuteFuncAsync(async () => await Task.FromResult(DeepClone(this.resources)));
-            }
-            else
-            {
-                return DeepClone(resources);
-            }
-        }
-
-        /// <summary>
-        /// Returns a deep clone of the resource dictionary passed.
-        /// </summary>
-        /// <param name="source">The source dictionary.</param>
-        /// <returns></returns>
-        private IReadOnlyDictionary<string, TResource> DeepClone(IReadOnlyDictionary<string, TResource> source)
-        {
-            Covenant.Requires<ArgumentNullException>(source != null, nameof(source));
-
-            var target = new Dictionary<string, TResource>(StringComparer.InvariantCultureIgnoreCase);
-
-            foreach (var item in source)
-            {
-                // $note(jefflill): 
-                //
-                // NeonHelper.JsonClone() is going to serialize and deserialize each 
-                // item value which will be somewhat expensive.
-
-                target.Add(item.Key, NeonHelper.JsonClone(item.Value));
-            }
-
-            return (IReadOnlyDictionary<string, TResource>)target;
         }
 
         //---------------------------------------------------------------------
