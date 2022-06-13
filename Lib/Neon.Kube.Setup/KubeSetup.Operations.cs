@@ -4568,6 +4568,7 @@ $@"- name: StorageType
                     values.Add($"cluster.datacenter", cluster.Definition.Datacenter);
                     values.Add($"cluster.version", cluster.Definition.ClusterVersion);
                     values.Add($"cluster.hostingEnvironment", cluster.Definition.Hosting.Environment);
+                    values.Add($"ingress.subdomain", ClusterDomain.NeonDashboard);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add("dashboards.kiali.enabled", cluster.Definition.Features.Kiali);
 
