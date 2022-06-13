@@ -37,41 +37,41 @@ namespace Neon.Kube
         /// <summary>
         /// Alertmanager service.
         /// </summary>
-        public const string AlertManager = "alertmanager";
+        public const string AlertManager = "neon-alertmanager";
 
         /// <summary>
         /// Single sign on service.
         /// </summary>
-        public const string Sso = "sso";
+        public const string Sso = "neon-sso";
 
         /// <summary>
         /// Grafana dashboard.
         /// </summary>
-        public const string Grafana = "grafana";
+        public const string Grafana = "neon-grafana";
 
         /// <summary>
         /// Harbor Notary service.
         /// </summary>
-        public const string HarborNotary = "notary";
+        public const string HarborNotary = "neon-notary";
 
         /// <summary>
         /// Harbor registry service.
         /// </summary>
-        public const string HarborRegistry = "registry";
+        public const string HarborRegistry = "neon-registry";
 
         /// <summary>
         /// Kiali dashboard.
         /// </summary>
-        public const string Kiali = "kiali";
+        public const string Kiali = "neon-kiali";
 
         /// <summary>
         /// Kubernetes dashboard service.
         /// </summary>
-        public const string KubernetesDashboard = "k8s";
+        public const string KubernetesDashboard = "neon-k8s";
 
         /// <summary>
         /// Minio Operator dashboard.
         /// </summary>
-        public const string Minio = "minio";
+        public const string Minio = "neon-minio";
     }
 }
