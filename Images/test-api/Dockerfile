@@ -23,7 +23,7 @@
 ARG         ORGANIZATION
 ARG         BASE_ORGANIZATION
 ARG         CLUSTER_VERSION
-FROM        mcr.microsoft.com/dotnet/aspnet:6.0.1-focal-amd64
+FROM        mcr.microsoft.com/dotnet/aspnet:6.0.5-focal-amd64
 MAINTAINER  marcus@neonforge.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME
