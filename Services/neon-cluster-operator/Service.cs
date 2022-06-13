@@ -64,11 +64,10 @@ namespace NeonClusterOperator
     /// </para>
     /// <list type="table">
     /// <item>
-    ///     <term><b>CONTAINERREGISTRY_RECONCILED_NOCHANGE_INTERVAL</b></term>
+    ///     <term><b>CONTAINERREGISTRY_IDLE_INTERVAL</b></term>
     ///     <description>
-    ///     <b>timespan:</b> Specifies the interval at which <b>reconcile</b> events will be requeued
-    ///     for <b>ContainerRegistry</b> resources as a backstop to ensure that the operator state
-    ///     remains in sync with the API server.  This defaults to <b>5 minutes</b>.
+    ///     <b>timespan:</b> Specifies the interval at IDLE RECONCILE events will be raised.  
+    ///     This defaults to <b>5 minutes</b>.
     ///     </description>
     /// </item>
     /// <item>
@@ -89,7 +88,7 @@ namespace NeonClusterOperator
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>NODETASK_RECONCILED_NOCHANGE_INTERVAL</b></term>
+    ///     <term><b>NODETASK_IDLE_INTERVAL</b></term>
     ///     <description>
     ///     <b>timespan:</b> Specifies the interval at which <b>reconcile</b> events will be requeued
     ///     for <b>NodeTask</b> resources as a backstop to ensure that the operator state

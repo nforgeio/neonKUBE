@@ -62,11 +62,10 @@ namespace NeonNodeAgent
     /// </para>
     /// <list type="table">
     /// <item>
-    ///     <term><b>CONTAINERREGISTRY_RECONCILED_NOCHANGE_INTERVAL</b></term>
+    ///     <term><b>CONTAINERREGISTRY_IDLE_INTERVAL</b></term>
     ///     <description>
-    ///     <b>timespan:</b> Specifies the interval at which <b>reconcile</b> events will be requeued
-    ///     for <b>ContainerRegistry</b> resources as a backstop to ensure that the operator state
-    ///     remains in sync with the API server.  This defaults to <b>5 minutes</b>.
+    ///     <b>timespan:</b> Specifies the interval at which IDLE reconcile events will be raised
+    ///     for <b>ContainerRegistry</b>.  This defaults to <b>5 minutes</b>.
     ///     </description>
     /// </item>
     /// <item>
@@ -82,12 +81,12 @@ namespace NeonNodeAgent
     /// <item>
     ///     <term><b>CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL</b></term>
     ///     <description>
-    ///     <b>timespan:</b> Specifies the maximum requeue time for ContainerRegistry
-    ///     handler exceptions.  This defaults to <b>10</b> minutes.
+    ///     <b>timespan:</b> Specifies the interval at which IDLE reconcile events will be raised
+    ///     for <b>ContainerRegistry</b>.  This defaults to <b>5 minutes</b>.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>NODETASK_RECONCILED_NOCHANGE_INTERVAL</b></term>
+    ///     <term><b>NODETASK_IDLE_INTERVAL</b></term>
     ///     <description>
     ///     <b>timespan:</b> Specifies the interval at which <b>reconcile</b> events will be requeued
     ///     for <b>NodeTask</b> resources as a backstop to ensure that the operator state

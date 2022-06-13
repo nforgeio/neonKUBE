@@ -76,38 +76,15 @@ namespace NeonNodeAgent
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly INeonLogger                             log = Program.Service.LogManager.GetLogger<NodeTaskController>();
+        private static readonly INeonLogger log = Program.Service.LogManager.GetLogger<NodeTaskController>();
+
         private static ResourceManager<V1NodeTask, NodeTaskController>  resourceManager;
 
         // Paths to relevant folders in the host file system.
 
-        private static readonly string hostNeonRunFolder;
-        private static readonly string hostAgentFolder;
-        private static readonly string hostAgentTasksFolder;
-
-        // Configuration settings
-
-        private static TimeSpan     reconciledNoChangeInterval;
-        private static TimeSpan     errorMinRequeueInterval;
-        private static TimeSpan     errorMaxRequeueInterval;
-
-        // Metrics counters
-
-        private static readonly Counter reconciledReceivedCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconciled_received", "Received NodeTask reconcile events.");
-        private static readonly Counter deletedReceivedCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_deleted_received", "Received NodeTask deleted events.");
-        private static readonly Counter statusModifiedReceivedCounter  = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodified_received", "Received NodeTask status-modified events.");
-
-        private static readonly Counter reconciledProcessedCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconciled_changes", "Processed NodeTask reconcile events due to change.");
-        private static readonly Counter deletedProcessedCounter        = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_deleted_changes", "Processed NodeTask deleted events due to change.");
-        private static readonly Counter statusModifiedProcessedCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodified_changes", "Processed NodeTask status-modified events due to change.");
-
-        private static readonly Counter reconciledErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconciled_error", "Failed NodeTask reconcile event processing.");
-        private static readonly Counter deletedErrorCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_deleted_error", "Failed NodeTask deleted event processing.");
-        private static readonly Counter statusModifiedErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodified_error", "Failed NodeTask status-modified events processing.");
-
-        private static readonly Counter promotionCounter               = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_promoted", "Leader promotions");
-        private static readonly Counter demotedCounter                 = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_demoted", "Leader demotions");
-        private static readonly Counter newLeaderCounter               = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_newLeader", "Leadership changes");
+        private static readonly string      hostNeonRunFolder;
+        private static readonly string      hostAgentFolder;
+        private static readonly string      hostAgentTasksFolder;
 
         /// <summary>
         /// Static constructor.
@@ -172,34 +149,38 @@ rm $0
 
             // Load the configuration settings.
 
-            //################################
-            // $debug(jefflill): RESTORE THIS!
-            //reconciledNoChangeInterval = Program.Service.Environment.Get("NODETASK_RECONCILED_NOCHANGE_INTERVAL", TimeSpan.FromMinutes(1));
-            //errorMinRequeueInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15));
-            //errorMaxRequeueInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromMinutes(10));
-
-            reconciledNoChangeInterval = TimeSpan.FromMinutes(0.25);
-            errorMinRequeueInterval    = TimeSpan.FromSeconds(15);
-            errorMaxRequeueInterval    = TimeSpan.FromMinutes(10);
-            //################################
-
             var leaderConfig = 
                 new LeaderElectionConfig(
                     k8s,
                     @namespace: KubeNamespace.NeonSystem,
                     leaseName:        $"{Program.Service.Name}.nodetask-{Node.Name}",
                     identity:         Pod.Name,
-                    promotionCounter: promotionCounter,
-                    demotionCounter:  demotedCounter,
-                    newLeaderCounter: newLeaderCounter);
+                    promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_promoted", "Leader promotions"),
+                    demotionCounter:  Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_demoted", "Leader demotions"),
+                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_newLeader", "Leadership changes"));
+
+            var options = new ResourceManagerOptions()
+            {
+                Mode                       = ResourceManagerMode.Normal,
+                //################################
+                // $debug(jefflill): RESTORE THIS!
+                //IdleInterval               = Program.Service.Environment.Get("NODETASK_IDLE_INTERVAL", TimeSpan.FromMinutes(1)),
+                //ErrorMinRequeueInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15)),
+                //ErrorMaxRetryInterval      = Program.Service.Environment.Get("NODETASK_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromMinutes(10)),
+                //################################
+                IdleInterval               = TimeSpan.FromMinutes(0.25),
+                ErrorMinRequeueInterval    = TimeSpan.FromSeconds(15),
+                ErrorMaxRetryInterval      = TimeSpan.FromMinutes(10),
+                ReconcileErrorCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconciled_error", "Failed NodeTask reconcile event processing."),
+                DeleteErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_deleted_error", "Failed NodeTask deleted event processing."),
+                StatusModifiedErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodified_error", "Failed NodeTask status-modified events processing.")
+            };
 
             resourceManager = new ResourceManager<V1NodeTask, NodeTaskController>(
                 k8s,
-                filter:                    NodeTaskFilter,
-                leaderConfig:              leaderConfig,
-                reconcileNoChangeInterval: reconciledNoChangeInterval,
-                errorMinRequeueInterval:   errorMinRequeueInterval,
-                errorMaxRequeueInterval:   errorMaxRequeueInterval);
+                options:      options,
+                filter:       NodeTaskFilter,
+                leaderConfig: leaderConfig);
 
             await resourceManager.StartAsync();
         }
@@ -240,20 +221,20 @@ rm $0
         /// <returns>The controller result.</returns>
         public async Task<ResourceControllerResult> ReconcileAsync(V1NodeTask task)
         {
-            reconciledReceivedCounter.Inc();
 log.LogInfo("#######################################################################");
-log.LogInfo($"*** RECONCILE-RECEIVED: NO-CHANGE={task == null} name=[{task?.Metadata.Name}]");
+log.LogInfo($"*** RECONCILE-RECEIVED: IDLE={task == null} name=[{task?.Metadata.Name}]");
 log.LogInfo("#######################################################################");
             await resourceManager.ReconciledAsync(task,
-                async (name, resources) =>
+                async (resource, resources) =>
                 {
-                    log.LogInfo($"RECONCILED: {name ?? "[NO-CHANGE]"}");
-                    reconciledProcessedCounter.Inc();
+                    var name = resource?.Name();
+
+                    log.LogInfo($"RECONCILED: {name ?? "[IDLE]"}");
 log.LogDebug($"*** RECONCILE: 0: count={resources.Count}");
 
                     if (name == null)
                     {
-                        // This is a NO-CHANGE event: we'll use this as a signal to do any cleanup.
+                        // This is a IDLE event: we'll use this as a signal to do any cleanup.
 
                         // Execute the youngest node task that's pending (if there is one).
 
@@ -338,8 +319,7 @@ log.LogDebug($"*** RECONCILE: 16");
 
 log.LogDebug($"*** RECONCILE: 17: EXIT");
                     return null;
-                },
-                errorCounter: reconciledErrorCounter);
+                });
 
             return null;
         }
@@ -352,24 +332,20 @@ log.LogDebug($"*** RECONCILE: 17: EXIT");
         public async Task DeletedAsync(V1NodeTask task)
         {
             Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
-
-            deletedReceivedCounter.Inc();
             
 log.LogInfo("#######################################################################");
-log.LogInfo($"*** DELETE-RECEIVED: NO-CHANGE={task == null} name= [{task?.Metadata.Name}]");
+log.LogInfo($"*** DELETE-RECEIVED: IDLE={task == null} name= [{task?.Metadata.Name}]");
 log.LogInfo("#######################################################################");
             await resourceManager.DeletedAsync(task,
                 async (name, resources) =>
                 {
                     log.LogInfo($"DELETED: {name}");
 log.LogDebug($"*** DELETE: 0: count={resources.Count}");
-                    deletedProcessedCounter.Inc();
 
                     // This is a NOP.
 
-                    return await Task.FromResult<ResourceControllerResult>(null);
-                },
-                errorCounter: deletedErrorCounter);
+                    await Task.CompletedTask;
+                });
         }
 
         /// <summary>
@@ -381,23 +357,19 @@ log.LogDebug($"*** DELETE: 0: count={resources.Count}");
         {
             Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
 
-            statusModifiedReceivedCounter.Inc();
-
 log.LogInfo("#######################################################################");
-log.LogInfo($"*** STATUSMODIFIED-RECEIVED: NO-CHANGE={task == null} name = [{task?.Metadata.Name}]");
+log.LogInfo($"*** STATUSMODIFIED-RECEIVED: IDLE={task == null} name = [{task?.Metadata.Name}]");
 log.LogInfo("#######################################################################");
             await resourceManager.DeletedAsync(task,
                 async (name, resources) =>
                 {
                     log.LogInfo($"STATUS-MODIFIED: {name}");
 log.LogDebug($"*** STATUSMODIFIED: 0: count={resources.Count}");
-                    statusModifiedProcessedCounter.Inc();
 
                     // This is a NOP.
 
-                    return await Task.FromResult<ResourceControllerResult>(null);
-                },
-                errorCounter: statusModifiedErrorCounter);
+                    await Task.CompletedTask;
+                });
         }
 
         /// <summary>
