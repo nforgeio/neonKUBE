@@ -80,10 +80,10 @@ namespace Microsoft.Net.Http.Client
                 // Receive body
                 return CreateResponseMessage(responseLines);
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
                 Dispose(); // Any errors at this layer abort the connection.
-                throw new HttpRequestException("The requested failed, see inner exception for details.", ex);
+                throw new HttpRequestException("The requested failed, see inner exception for details.", e);
             }
         }
 
