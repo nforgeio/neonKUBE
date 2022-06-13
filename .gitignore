@@ -158,3 +158,4 @@ Go/**/__debug_bin
 cluster-manifest.json
 KubernetesWithRetry.cs
 /**/*.gitignore/**
+/UpgradeLog.htm
