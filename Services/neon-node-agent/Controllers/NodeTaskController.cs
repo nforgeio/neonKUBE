@@ -275,7 +275,8 @@ log.LogDebug($"*** RECONCILE: 6");
                             return null;
                         }
 
-                        // For new tasks, update the status to: PENDING
+                        // For new tasks, update the status to PENDING and also add the
+                        // node's owner reference to the object.
                         
 log.LogDebug($"*** RECONCILE: 7");
                         if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.New)
@@ -287,7 +288,13 @@ log.LogDebug($"*** RECONCILE: 8");
                             patch.Replace(path => path.Status.Phase, V1NeonNodeTask.Phase.Pending);
 
                             nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
-                            log.LogDebug($"*** RECONCILE: 9");
+log.LogDebug($"*** RECONCILE: 9A");
+
+                            nodeTask.OwnerReferences().Add(await Node.GetOwnerReferenceAsync(k8s));
+log.LogDebug($"*** RECONCILE: 9B");
+
+                            nodeTask = await k8s.ReplaceNamespacedCustomObjectAsync<V1NeonNodeTask>(nodeTask, nodeTask.Namespace(), nodeTask.Name());
+log.LogDebug($"*** RECONCILE: 9C");
                         }
 log.LogDebug($"*** RECONCILE: 10");
 
