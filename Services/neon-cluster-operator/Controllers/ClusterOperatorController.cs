@@ -51,17 +51,17 @@ namespace NeonClusterOperator
 {
     /// <summary>
     /// <para>
-    /// Manages the <see cref="V1ClusterOperator"/> resource on the Kubernetes API Server.
+    /// Manages the <see cref="V1NeonClusterOperator"/> resource on the Kubernetes API Server.
     /// </para>
-    [EntityRbac(typeof(V1ClusterOperator), Verbs = RbacVerb.Get | RbacVerb.Patch | RbacVerb.List | RbacVerb.Watch | RbacVerb.Update)]
-    public class ClusterOperatorController : IResourceController<V1ClusterOperator>
+    [EntityRbac(typeof(V1NeonClusterOperator), Verbs = RbacVerb.Get | RbacVerb.Patch | RbacVerb.List | RbacVerb.Watch | RbacVerb.Update)]
+    public class ClusterOperatorController : IResourceController<V1NeonClusterOperator>
     {
         //---------------------------------------------------------------------
         // Static members
 
         private static readonly INeonLogger log = Program.Service.LogManager.GetLogger<ClusterOperatorController>();
 
-        private static ResourceManager<V1ClusterOperator, ClusterOperatorController> resourceManager;
+        private static ResourceManager<V1NeonClusterOperator, ClusterOperatorController> resourceManager;
 
         /// <summary>
         /// Starts the controller.
@@ -98,7 +98,7 @@ namespace NeonClusterOperator
                 StatusModifiedErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}clusteroperator_statusmodified_error", "Failed NodeTask status-modified events processing.")
             };
 
-            resourceManager = new ResourceManager<V1ClusterOperator, ClusterOperatorController>(
+            resourceManager = new ResourceManager<V1NeonClusterOperator, ClusterOperatorController>(
                 k8s,
                 options:      options,
                 leaderConfig: leaderConfig);
@@ -128,7 +128,7 @@ namespace NeonClusterOperator
         /// </summary>
         /// <param name="registry">The new entity or <c>null</c> when nothing has changed.</param>
         /// <returns>The controller result.</returns>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1ClusterOperator registry)
+        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonClusterOperator registry)
         {
             await resourceManager.ReconciledAsync(registry,
                 async (resource, resources) =>
@@ -148,7 +148,7 @@ namespace NeonClusterOperator
         /// </summary>
         /// <param name="registry">The deleted entity.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task DeletedAsync(V1ClusterOperator registry)
+        public async Task DeletedAsync(V1NeonClusterOperator registry)
         {
             await resourceManager.DeletedAsync(registry,
                 async (name, resources) =>
@@ -164,7 +164,7 @@ namespace NeonClusterOperator
         /// </summary>
         /// <param name="registry">The updated entity.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task StatusModifiedAsync(V1ClusterOperator registry)
+        public async Task StatusModifiedAsync(V1NeonClusterOperator registry)
         {
             await resourceManager.StatusModifiedAsync(registry,
                 async (name, resources) =>

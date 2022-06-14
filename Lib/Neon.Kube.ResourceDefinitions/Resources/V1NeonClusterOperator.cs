@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    V1ClusterOperator.cs
+// FILE:	    V1NeonClusterOperator.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -43,7 +43,7 @@ namespace Neon.Kube.Resources
     [EntityScope(EntityScope.Cluster)]
     [Description("Used to specify settings for the [neon-cluster-operator] and for the operator to report status.")]
 #endif
-    public class V1ClusterOperator : CustomKubernetesEntity<V1ClusterOperator.OperatorSpec, V1ClusterOperator.OperatorStatus>
+    public class V1NeonClusterOperator : CustomKubernetesEntity<V1NeonClusterOperator.OperatorSpec, V1NeonClusterOperator.OperatorStatus>
     {
         /// <summary>
         /// Object API group.
@@ -68,7 +68,7 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public V1ClusterOperator()
+        public V1NeonClusterOperator()
         {
             this.SetMetadata();
         }

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    V1NodeTask.cs
+// FILE:	    V1NeonNodeTask.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -103,7 +103,7 @@ namespace Neon.Kube.Resources
     /// <list type="number">
     /// <item>
     /// <b>neon-cluster-operator</b> or other entity determines that a script needs to be run on a
-    /// specific node and creates a <see cref="V1NodeTask"/> specifiying the name of the target node
+    /// specific node and creates a <see cref="V1NeonNodeTask"/> specifiying the name of the target node
     /// as well as the Bash script to be executed.
     /// </item>
     /// <item>
@@ -111,7 +111,7 @@ namespace Neon.Kube.Resources
     /// watching for node tasks assigned to its node.
     /// </item>
     /// <item>
-    /// When a <b>neon-node-agent</b> sees a pending <see cref="V1NodeTask"/> assigned to the
+    /// When a <b>neon-node-agent</b> sees a pending <see cref="V1NeonNodeTask"/> assigned to the
     /// node it's managing, the agent will assign its unique ID to the task status, set the
     /// <see cref="TaskStatus.StartTimestamp"/> to the current time and change the state to
     /// <see cref="Phase.Running"/>.
@@ -143,10 +143,10 @@ namespace Neon.Kube.Resources
     /// <see cref="TaskStatus.Output"/> and <see cref="TaskStatus.Error"/> to the command results.
     /// </item>
     /// <note>
-    /// The <see cref="V1NodeTask.TaskSpec.CaptureOutput"/> property controls whether the standard
-    /// output and error streams are captured.  This defaults to <c>true</c>.  <see cref="V1NodeTask"/>
+    /// The <see cref="V1NeonNodeTask.TaskSpec.CaptureOutput"/> property controls whether the standard
+    /// output and error streams are captured.  This defaults to <c>true</c>.  <see cref="V1NeonNodeTask"/>
     /// supports only text output encoded as UTF-8 or ASCII.  Binary output is not supported.  You should
-    /// set <see cref="V1NodeTask.TaskSpec.CaptureOutput"/><c>=false</c> in these cases or when
+    /// set <see cref="V1NeonNodeTask.TaskSpec.CaptureOutput"/><c>=false</c> in these cases or when
     /// the output may include secrets.
     /// </note>
     /// <item>
@@ -179,7 +179,7 @@ namespace Neon.Kube.Resources
     [EntityScope(EntityScope.Cluster)]
     [Description("Describes a neonKUBE task to be executed on a specific cluster node.")]
 #endif
-    public class V1NodeTask : CustomKubernetesEntity<V1NodeTask.TaskSpec, V1NodeTask.TaskStatus>
+    public class V1NeonNodeTask : CustomKubernetesEntity<V1NeonNodeTask.TaskSpec, V1NeonNodeTask.TaskStatus>
     {
         /// <summary>
         /// Object API group.
@@ -205,7 +205,7 @@ namespace Neon.Kube.Resources
         // Local types
 
         /// <summary>
-        /// Enumerates the possible status of a <see cref="V1NodeTask"/>.
+        /// Enumerates the possible status of a <see cref="V1NeonNodeTask"/>.
         /// </summary>
         public enum Phase
         {
@@ -254,7 +254,7 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public V1NodeTask()
+        public V1NeonNodeTask()
         {
             this.SetMetadata();
         }
@@ -297,32 +297,70 @@ namespace Neon.Kube.Resources
             public DateTime? StartAfterTimestamp { get; set; }
 
             /// <summary>
-            /// Specifies the maximum time in seconds the command will be allowed to execute.
-            /// This defaults to 300 seconds (5 minutes).
+            /// Specifies the maximum time the command will be allowed to execute.
+            /// This is formatted as a GO duration and defaults to <b>5 minutes</b>.
             /// </summary>
 #if KUBEOPS
             [Required]
+            [Pattern(GoDuration.RegEx)]
 #endif
-            public int Timeout { get; set; } = 300;
+            public string Timeout { get; set; } = "5m";
+
+            /// <summary>
+            /// Gets the <see cref="Timeout"/> property as a GOLANG formatted <see cref="TimeSpan"/>.
+            /// </summary>
+            /// <returns>The parsed <see cref="TimeSpan"/>.</returns>
+            public TimeSpan GetTimeout()
+            {
+                return GoDuration.Parse(Timeout ?? "0s");
+            }
+
+            /// <summary>
+            /// Sets the <see cref="Timeout"/> property as a GOLANG formatted <see cref="TimeSpan"/>.
+            /// </summary>
+            /// <param name="value">The value veing set.</param>
+            public void SetTimeout(TimeSpan value)
+            {
+                Timeout = GoDuration.FromTimeSpan(value).ToString();
+            }
 
             /// <summary>
             /// Specifies the maximum time to retain the task after it has been
             /// ended, for any reason.  <b>neon-cluster-operator</b> will add
             /// this to <see cref="TaskStatus.FinishTimestamp"/> to determine
-            /// when it should delete the task.  This defaults to 600 seconds
-            /// (10 minutes).
+            /// when it should delete the task.  This is formatted as a GO
+            /// duration and defaults to <b>10 minutes</b>.
             /// </summary>
 #if KUBEOPS
             [Required]
+            [Pattern(GoDuration.RegEx)]
 #endif
-            public int RetentionTime { get; set; } = 600;
+            public string RetentionTime { get; set; } = "10m";
+
+            /// <summary>
+            /// Gets the <see cref="RetentionTime"/> property as a GOLANG formatted <see cref="TimeSpan"/>.
+            /// </summary>
+            /// <returns>The parsed <see cref="TimeSpan"/>.</returns>
+            public TimeSpan GetRetentionTime()
+            {
+                return GoDuration.Parse(RetentionTime ?? "0s");
+            }
+
+            /// <summary>
+            /// Sets the <see cref="RetentionTime"/> property as a GOLANG formatted <see cref="TimeSpan"/>.
+            /// </summary>
+            /// <param name="value">The value being set.</param>
+            public void SetRetentionTime(TimeSpan value)
+            {
+                RetentionTime = GoDuration.FromTimeSpan(value).ToString();
+            }
 
             /// <summary>
             /// <para>
             /// Controls whether the command output is to be captured.  This defaults to <c>true</c>.
             /// </para>
             /// <note>
-            /// <see cref="V1NodeTask"/> is designed to capture command output as UTF-8 or
+            /// <see cref="V1NeonNodeTask"/> is designed to capture command output as UTF-8 or
             /// ASCII text.  Binary output or other text encodings are not supported.  You
             /// should set this to <c>false</c> for commands with unsupported output or
             /// when the command output may include secrets.
@@ -339,21 +377,21 @@ namespace Neon.Kube.Resources
             /// <exception cref="CustomResourceException">Thrown when the resource is not valid.</exception>
             public void Validate()
             {
-                var specPrefix = $"{nameof(V1NodeTask)}.Spec";
+                var specPrefix = $"{nameof(V1NeonNodeTask)}.Spec";
 
                 if (string.IsNullOrEmpty(BashScript))
                 {
                     throw new CustomResourceException($"[{specPrefix}.{nameof(BashScript)}]: cannot be NULL or empty.");
                 }
 
-                if (Timeout <= 0)
+                if (GetTimeout() <= TimeSpan.Zero)
                 {
                     throw new CustomResourceException($"[{specPrefix}.{nameof(Timeout)}={Timeout}]: Must be greater than zero.");
                 }
 
-                if (RetentionTime < 0)
+                if (GetRetentionTime() < TimeSpan.Zero)
                 {
-                    throw new CustomResourceException($"[{specPrefix}.{nameof(Timeout)}={Timeout}]: Cannot be negative.");
+                    throw new CustomResourceException($"[{specPrefix}.{nameof(RetentionTime)}={RetentionTime}]: Cannot be negative.");
                 }
             }
         }
@@ -390,9 +428,31 @@ namespace Neon.Kube.Resources
             public DateTime? FinishTimestamp { get; set;}
 
             /// <summary>
-            /// Set to the task execution time serialized as seconds.
+            /// Set to the task execution time.
             /// </summary>
-            public double Runtime { get; set; }
+#if KUBEOPS
+            [Required]
+            [Pattern(GoDuration.RegEx)]
+#endif
+            public string Runtime { get; set; } = "0s";
+
+            /// <summary>
+            /// Gets the <see cref="Runtime"/> property as a GOLANG formatted <see cref="TimeSpan"/>.
+            /// </summary>
+            /// <returns>The parsed <see cref="TimeSpan"/>.</returns>
+            public TimeSpan GetRuntime()
+            {
+                return GoDuration.Parse(Runtime ?? "0s");
+            }
+
+            /// <summary>
+            /// Sets the <see cref="Runtime"/> property as a GOLANG formatted <see cref="TimeSpan"/>.
+            /// </summary>
+            /// <param name="value">The value being set.</param>
+            public void SetRuntime(TimeSpan value)
+            {
+                Runtime = GoDuration.FromTimeSpan(value).ToString();
+            }
 
             /// <summary>
             /// The command line invoked for the task.  This is used for detecting orphaned tasks.

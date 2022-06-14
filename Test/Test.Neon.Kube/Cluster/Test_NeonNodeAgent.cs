@@ -139,7 +139,7 @@ namespace TestKube
 
                 // Create the node task for the target node.
 
-                var nodeTask = new V1NodeTask();
+                var nodeTask = new V1NeonNodeTask();
                 var metadata = nodeTask.Metadata;
                 var spec     = nodeTask.Spec;
 
@@ -148,9 +148,9 @@ namespace TestKube
                 var filePath   = GetTestFilePath(node.Name);
                 var folderPath = LinuxPath.GetDirectoryName(filePath);
 
-                spec.Node          = node.Name;
-                spec.RetentionTime = 30;
-                spec.BashScript    = 
+                spec.Node = node.Name;
+                spec.SetRetentionTime(TimeSpan.FromSeconds(30));
+                spec.BashScript = 
 $@"
 set -euo pipefail
 
@@ -162,10 +162,10 @@ touch $NODE_ROOT{filePath}
 
                 for (int i = 0; i < 500; i++)
                 {
-                    await fixture.K8s.CreateClusterCustomObjectAsync<V1NodeTask>(nodeTask, name: $"test-task-{NeonHelper.CreateBase36Guid()}");
+                    await fixture.K8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: $"test-task-{NeonHelper.CreateBase36Guid()}");
                 }
 
-                //await fixture.K8s.CreateClusterCustomObjectAsync<V1NodeTask>(nodeTask, name: nodeToTaskName[node.Name]);
+                //await fixture.K8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: nodeToTaskName[node.Name]);
                 //##############################################################
             }
 
@@ -181,13 +181,13 @@ touch $NODE_ROOT{filePath}
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
-                    foreach (var nodeTask in (await fixture.K8s.ListClusterCustomObjectAsync<V1NodeTask>()).Items.Where(task => taskNames.Contains(task.Metadata.Name)))
+                    foreach (var nodeTask in (await fixture.K8s.ListClusterCustomObjectAsync<V1NeonNodeTask>()).Items.Where(task => taskNames.Contains(task.Metadata.Name)))
                     {
                         switch (nodeTask.Status.Phase)
                         {
-                            case V1NodeTask.Phase.New:
-                            case V1NodeTask.Phase.Pending:
-                            case V1NodeTask.Phase.Running:
+                            case V1NeonNodeTask.Phase.New:
+                            case V1NeonNodeTask.Phase.Pending:
+                            case V1NeonNodeTask.Phase.Running:
 
                                 return false;
                         }

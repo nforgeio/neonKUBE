@@ -4633,7 +4633,7 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Adds custom <see cref="V1ContainerRegistry"/> resources defined in the cluster definition to
+        /// Adds custom <see cref="V1NeonContainerRegistry"/> resources defined in the cluster definition to
         /// the cluster.  <b>neon-node-agent</b> will pick these up and regenerate the CRI-O configuration.
         /// </summary>
         /// <param name="controller">The setup controller.</param>

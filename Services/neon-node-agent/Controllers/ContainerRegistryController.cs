@@ -52,7 +52,7 @@ namespace NeonNodeAgent
 {
     /// <summary>
     /// <para>
-    /// Manages <see cref="V1ContainerRegistry"/> resources on the Kubernetes API Server.
+    /// Manages <see cref="V1NeonContainerRegistry"/> resources on the Kubernetes API Server.
     /// </para>
     /// <note>
     /// This controller relies on a lease named like <b>neon-node-agent.containerregistry-NODENAME</b>
@@ -76,7 +76,7 @@ namespace NeonNodeAgent
     /// </para>
     /// <list type="bullet">
     /// <item>
-    /// Monitoring the <see cref="V1ContainerRegistry"/> resources for potential changes
+    /// Monitoring the <see cref="V1NeonContainerRegistry"/> resources for potential changes
     /// and then performing the steps below a change is detected.
     /// </item>
     /// <item>
@@ -91,8 +91,8 @@ namespace NeonNodeAgent
     /// </item>
     /// </list>
     /// </remarks>
-    [EntityRbac(typeof(V1ContainerRegistry), Verbs = RbacVerb.Get | RbacVerb.Patch | RbacVerb.List | RbacVerb.Watch | RbacVerb.Update)]
-    public class ContainerRegistryController : IResourceController<V1ContainerRegistry>
+    [EntityRbac(typeof(V1NeonContainerRegistry), Verbs = RbacVerb.Get | RbacVerb.Patch | RbacVerb.List | RbacVerb.Watch | RbacVerb.Update)]
+    public class ContainerRegistryController : IResourceController<V1NeonContainerRegistry>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -100,7 +100,7 @@ namespace NeonNodeAgent
         private static readonly INeonLogger log             = Program.Service.LogManager.GetLogger<ContainerRegistryController>();
         private static readonly string      configMountPath = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
 
-        private static ResourceManager<V1ContainerRegistry, ContainerRegistryController> resourceManager;
+        private static ResourceManager<V1NeonContainerRegistry, ContainerRegistryController> resourceManager;
 
         // Metrics counters
 
@@ -142,7 +142,7 @@ namespace NeonNodeAgent
                 StatusModifiedErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_statusmodified_error", "Failed NodeTask status-modified events processing.")
             };
 
-            resourceManager = new ResourceManager<V1ContainerRegistry, ContainerRegistryController>(
+            resourceManager = new ResourceManager<V1NeonContainerRegistry, ContainerRegistryController>(
                 k8s,
                 options:      options,
                 leaderConfig: leaderConfig);
@@ -172,7 +172,7 @@ namespace NeonNodeAgent
         /// </summary>
         /// <param name="registry">The new entity or <c>null</c> when nothing has changed.</param>
         /// <returns>The controller result.</returns>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1ContainerRegistry registry)
+        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonContainerRegistry registry)
         {
             await resourceManager.ReconciledAsync(registry,
                 async (resource, resources) =>
@@ -193,7 +193,7 @@ namespace NeonNodeAgent
         /// </summary>
         /// <param name="registry">The deleted entity.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task DeletedAsync(V1ContainerRegistry registry)
+        public async Task DeletedAsync(V1NeonContainerRegistry registry)
         {
             await resourceManager.DeletedAsync(registry,
                 async (name, resources) =>
@@ -209,7 +209,7 @@ namespace NeonNodeAgent
         /// </summary>
         /// <param name="registry">The updated entity.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task StatusModifiedAsync(V1ContainerRegistry registry)
+        public async Task StatusModifiedAsync(V1NeonContainerRegistry registry)
         {
             await resourceManager.StatusModifiedAsync(registry,
                 async (name, resources) =>
@@ -225,7 +225,7 @@ namespace NeonNodeAgent
         /// using the container registries passed and then signals CRI-O to reload any changes.
         /// </summary>
         /// <param name="registries">The current registry configurations.</param>
-        private async Task UpdateContainerRegistriesAsync(IReadOnlyDictionary<string, V1ContainerRegistry> registries)
+        private async Task UpdateContainerRegistriesAsync(IReadOnlyDictionary<string, V1NeonContainerRegistry> registries)
         {
             // NOTE: Here's the documentation for the config file we're generating:
             //
