@@ -551,7 +551,7 @@ namespace Neon.Time
             }
             else if (Ticks == long.MinValue)
             {
-                // Special case the minimum negative duration so we negate Ticks
+                // Special case the minimum negative duration so we can negate [Ticks]
                 // below without worrying about 64-bit wrap around.  I computed this
                 // by hand.
 
@@ -599,6 +599,60 @@ namespace Neon.Time
             if (absolute.Nanoseconds > 0)
             {
                 output += $"{absolute.Nanoseconds}ns";
+            }
+
+            return output;
+        }
+
+        /// <summary>
+        /// Renders the duration into a string including hour, minute, and seconds with
+        /// fractions as required, avoiding millisecond, microsecond, and nanosecond units.
+        /// </summary>
+        /// <returns>The pretty string.</returns>
+        public string ToPretty()
+        {
+            if (Ticks == 0)
+            {
+                return "0";
+            }
+            else if (Ticks == long.MinValue)
+            {
+                // Special case the minimum negative duration so we can negate [Ticks]
+                // below without worrying about 64-bit wrap around.  I computed this
+                // by hand.
+
+                return MinValueString;  // $hack(jefflill): I'm not going to worry about malking this pretty.
+            }
+
+            string      output = string.Empty;
+            GoDuration  absolute;
+
+            if (Ticks < 0)
+            {
+                output  += "-";
+                absolute = FromNanoseconds(-this.Ticks);
+            }
+            else
+            {
+                absolute = FromNanoseconds(this.Ticks);
+            }
+
+            if (absolute.Hours > 0)
+            {
+                output += $"{absolute.Hours}h";
+            }
+
+            if (absolute.Minutes > 0)
+            {
+                output += $"{absolute.Minutes}m";
+            }
+
+            var hoursAndMinutes = TimeSpan.FromHours(absolute.Hours) + TimeSpan.FromMinutes(absolute.Minutes);
+            var seconds         = ((TimeSpan)absolute - hoursAndMinutes).TotalSeconds;
+
+            if (seconds > 0)
+            {
+                output += $"{seconds}s";
             }
 
             return output;

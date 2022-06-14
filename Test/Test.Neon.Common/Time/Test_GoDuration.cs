@@ -139,6 +139,48 @@ namespace TestCommon
 
             Assert.Equal("1000h30m", GoDuration.Parse("1000h30m").ToString());
             Assert.Equal("-1000h30m", GoDuration.Parse("-1000h30m").ToString());
+
+            //-----------------------------------------------------------------
+            // Pretty
+
+            Assert.Equal("0", GoDuration.Parse("0").ToPretty());
+            Assert.Equal("0", GoDuration.Parse("-0s").ToPretty());
+
+            Assert.Equal("0.123s", GoDuration.Parse("0.123s").ToPretty());
+            Assert.Equal("-0.123s", GoDuration.Parse("-0.123s").ToPretty());
+
+            Assert.Equal("10s", GoDuration.Parse("10s").ToPretty());
+            Assert.Equal("-10s", GoDuration.Parse("-10s").ToPretty());
+
+            Assert.Equal("10m", GoDuration.Parse("10m").ToPretty());
+            Assert.Equal("-10m", GoDuration.Parse("-10m").ToPretty());
+
+            Assert.Equal("10h", GoDuration.Parse("10h").ToPretty());
+            Assert.Equal("-10h", GoDuration.Parse("-10h").ToPretty());
+
+            Assert.Equal("20m10s", GoDuration.Parse("20m10s").ToPretty());
+            Assert.Equal("-20m10s", GoDuration.Parse("-20m10s").ToPretty());
+
+            Assert.Equal("20m10.123s", GoDuration.Parse("20m10.123s").ToPretty());
+            Assert.Equal("-20m10.123s", GoDuration.Parse("-20m10.123s").ToPretty());
+
+            Assert.Equal("2h20m10s", GoDuration.Parse("2h20m10s").ToPretty());
+            Assert.Equal("-2h20m10s", GoDuration.Parse("-2h20m10s").ToPretty());
+
+            Assert.Equal("2h20m10.123s", GoDuration.Parse("2h20m10.123s").ToPretty());
+            Assert.Equal("-2h20m10.123s", GoDuration.Parse("-2h20m10.123s").ToPretty());
+
+            Assert.Equal("2h20m0.123s", GoDuration.Parse("2h20m0.123s").ToPretty());
+            Assert.Equal("-2h20m0.123s", GoDuration.Parse("-2h20m0.123s").ToPretty());
+
+            Assert.Equal("1h30m", GoDuration.Parse("1h30m").ToPretty());
+            Assert.Equal("-1h30m", GoDuration.Parse("-1h30m").ToPretty());
+
+            Assert.Equal("1h30s", GoDuration.Parse("1h30s").ToPretty());
+            Assert.Equal("-1h30s", GoDuration.Parse("-1h30s").ToPretty());
+
+            Assert.Equal("1h0.123s", GoDuration.Parse("1h0.123s").ToPretty());
+            Assert.Equal("-1h0.123s", GoDuration.Parse("-1h0.123s").ToPretty());
         }
 
         [Fact]
