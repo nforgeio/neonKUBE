@@ -25,9 +25,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using Neon.Kube;
+using Neon.Kube.Operator;
 
-using KubeOps.Operator;
 using k8s;
+using KubeOps.Operator;
 
 namespace NeonNodeAgent
 {
@@ -56,8 +57,14 @@ namespace NeonNodeAgent
                 watcherRetrySeconds = Math.Max(1, (int)Math.Ceiling(Program.Service.Environment.Get("WATCHER_MAX_RETRY_INTERVAL", TimeSpan.FromSeconds(5)).TotalSeconds));
             }
 
-            var operatorBuilder = services
-                .AddSingleton<IKubernetes>(new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig()))
+            var _services = services;
+
+            if (!OperatorHelper.GeneratingCRDs)
+            {
+                _services = _services.AddSingleton<IKubernetes>(new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig()));
+            }
+
+            var operatorBuilder = _services
                 .AddKubernetesOperator(
                     settings =>
                     {

@@ -431,7 +431,6 @@ namespace Neon.Kube.Resources
             /// Set to the task execution time.
             /// </summary>
 #if KUBEOPS
-            [Required]
             [Pattern(GoDuration.RegEx)]
 #endif
             public string Runtime { get; set; } = "0s";

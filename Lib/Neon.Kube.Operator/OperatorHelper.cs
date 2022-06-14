@@ -155,6 +155,13 @@ namespace Neon.Kube.Operator
         public static Func<LogEvent, bool> LogFilter { get; private set; }
 
         /// <summary>
+        /// Returns <c>true</c> when <see cref="HandleGeneratorCommand{TStartup}(string[])"/> has been
+        /// called to generate CRDs and other configuration related files.  This means that the operator
+        /// won't be starting normally.
+        /// </summary>
+        public static bool GeneratingCRDs { get; private set; } = false;
+
+        /// <summary>
         /// Handles <b>generator</b> commands invoked on an operator application
         /// during build by the built-in KubeOps build targets.
         /// </summary>
@@ -196,7 +203,9 @@ namespace Neon.Kube.Operator
             where TStartup: class, new()
         {
             await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));;
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
+
+            GeneratingCRDs = true;
 
             try
             {

@@ -23,9 +23,10 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Kube;
+using Neon.Kube.Operator;
 
-using KubeOps.Operator;
 using k8s;
+using KubeOps.Operator;
 
 namespace NeonClusterOperator
 {
@@ -54,8 +55,14 @@ namespace NeonClusterOperator
                 watcherRetrySeconds = Math.Max(1, (int)Math.Ceiling(Program.Service.Environment.Get("WATCHER_MAX_RETRY_INTERVAL", TimeSpan.FromSeconds(5)).TotalSeconds));
             }
 
-            var operatorBuilder = services
-                .AddSingleton<IKubernetes>(new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig()))
+            var _services = services;
+
+            if (!OperatorHelper.GeneratingCRDs)
+            {
+                _services = _services.AddSingleton<IKubernetes>(new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig()));
+            }
+
+            var operatorBuilder = _services
                 .AddKubernetesOperator(
                     settings =>
                     {

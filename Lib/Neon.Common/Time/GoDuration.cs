@@ -50,7 +50,7 @@ namespace Neon.Time
         /// <summary>
         /// A regular expression that can be used to validate GOLANG duration strings.
         /// </summary>
-        public const string RegEx = @"^.*$";
+        public const string RegEx = @".*";
 
         /// <summary>
         /// The number of nanosecond ticks per micrososecond.
