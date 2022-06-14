@@ -43,7 +43,7 @@ namespace Neon.Kube.Resources
     [EntityScope(EntityScope.Cluster)]
     [Description("Used internally by the neonKUBE Team for testing purposes.")]
 #endif
-    public class V1NeonTestObject : CustomKubernetesEntity<V1NeonTestObject.V1TestObjectSpec, V1NeonTestObject.V1TestObjectStatus>
+    public class V1NeonTestObject : CustomKubernetesEntity<V1NeonTestObject.TestSpec, V1NeonTestObject.TestStatus>
     {
         /// <summary>
         /// Object API group.
@@ -76,7 +76,7 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// The node execute task specification.
         /// </summary>
-        public class V1TestObjectSpec
+        public class TestSpec
         {
             /// <summary>
             /// A test string.
@@ -87,7 +87,7 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// The node execute task status.
         /// </summary>
-        public class V1TestObjectStatus
+        public class TestStatus
         {
             /// <summary>
             /// Testing <see cref="DateTime"/> .

@@ -49,7 +49,7 @@ namespace Neon.Kube.Resources
     [EntityScope(EntityScope.Cluster)]
     [Description("Describes a neonKUBE cluster upstream container registry.")]
 #endif
-    public class V1ContainerRegistry : CustomKubernetesEntity<V1ContainerRegistry.V1ContainerRegistrySpec>
+    public class V1ContainerRegistry : CustomKubernetesEntity<V1ContainerRegistry.RegistrySpec>
     {
         /// <summary>
         /// Object API group.
@@ -82,7 +82,7 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// The container registry specification.
         /// </summary>
-        public class V1ContainerRegistrySpec
+        public class RegistrySpec
         {
             private const string prefixRegex = @"^(\*\.)?([a-zA-Z0-9-_]+\.)*([a-zA-Z0-9-_]+)(/[a-zA-Z0-9-\._~\[\]@\!&'\(\)\*+,;%=\$]+)*$";
 

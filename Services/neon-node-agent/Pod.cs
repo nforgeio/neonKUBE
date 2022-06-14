@@ -28,7 +28,7 @@ using Neon.Common;
 namespace NeonNodeAgent
 {
     /// <summary>
-    /// Abstracts access to the executing pod properties.
+    /// Abstracts access to the host pod properties.
     /// </summary>
     public static class Pod
     {

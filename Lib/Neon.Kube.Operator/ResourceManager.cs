@@ -58,9 +58,9 @@ namespace Neon.Kube.Operator
     /// (passing any custom settings as parameters) and then call <see cref="StartAsync(string)"/>.
     /// </para>
     /// <para>
-    /// After the resource manager starts, your controller's <see cref="ReconciledAsync(TResource, ResourceManager{TResource, TController}.EventHandlerAsync, Counter)"/>, 
-    /// <see cref="DeletedAsync(TResource, ResourceManager{TResource, TController}.EventHandlerAsync, Counter)"/>, and
-    /// <see cref="StatusModifiedAsync(TResource, ResourceManager{TResource, TController}.EventHandlerAsync, Counter)"/> 
+    /// After the resource manager starts, your controller's <see cref="ReconciledAsync(TResource, ResourceManager{TResource, TController}.ReconcileHandlerAsync)"/>, 
+    /// <see cref="DeletedAsync(TResource, ResourceManager{TResource, TController}.NoResultHandlerAsync)"/>, and
+    /// <see cref="StatusModifiedAsync(TResource, ResourceManager{TResource, TController}.NoResultHandlerAsync)"/> 
     /// methods will be called as related resource related events are received.
     /// </para>
     /// <para><b>KUBEOPS INTEGRATION</b></para>
@@ -69,16 +69,16 @@ namespace Neon.Kube.Operator
     /// Kubernetes Operator SDK for .NET.  You'll instantiate a <see cref="ResourceManager{TResource, IController}"/>
     /// instance for each controller, passing the custom resource type as the type parameter and then set this
     /// as a static field in your controller.  Then you'll need to add a call to 
-    /// <see cref="ReconciledAsync(TResource, ResourceManager{TResource, TController}.EventHandlerAsync, Counter)"/>
+    /// <see cref="ReconciledAsync(TResource, ResourceManager{TResource, TController}.ReconcileHandlerAsync)"/>
     /// in your controller's <b>ReconcileAsync()</b> method, a call to 
-    /// <see cref="DeletedAsync(TResource, ResourceManager{TResource, TController}.EventHandlerAsync, Counter)"/>
+    /// <see cref="DeletedAsync(TResource, ResourceManager{TResource, TController}.NoResultHandlerAsync)"/>
     /// in your controller's <b>DeletedAsync()</b> method and a call to 
-    /// <see cref="StatusModifiedAsync(TResource, ResourceManager{TResource, TController}.EventHandlerAsync, Counter)"/>
+    /// <see cref="StatusModifiedAsync(TResource, ResourceManager{TResource, TController}.NoResultHandlerAsync)"/>
     /// on your controller <b>StatusModifiedAsync()</b> method.
     /// </para>
     /// <para>
     /// You'll also need to pass a callback to each method to handle any resource changes for that operation.
-    /// The callback signature for your handler is <see cref="ResourceManager{TResource, TController}.EventHandlerAsync"/>,
+    /// The callback signature for your handler is <see cref="ResourceManager{TResource, TController}.ReconcileHandlerAsync"/>,
     /// where the <c>name</c> parameter will be passed as the name of the changed resource or <c>null</c> when
     /// the event was raised when nothing changed.  The <b>resources</b> parameter will be passed as a read-only
     /// dictionary holding the current set of resources keyed by name.
@@ -115,10 +115,6 @@ namespace Neon.Kube.Operator
     /// doing it's thing.
     /// </para>
     /// <note>
-    /// <para>
-    /// We currently use the first NO-CHANGE reconciled event raised by KubeOps to determine that
-    /// all resources have been received.
-    /// </para>
     /// <para>
     /// Holding back calls to your reconciled handler is important in many situations by ensuring
     /// that the entire set of resources is known before the first handler call.  Without this,
@@ -174,18 +170,18 @@ namespace Neon.Kube.Operator
     /// <item>
     /// By default, <see cref="ResourceManager{TResource, TController}"/> does nothing special to enforce
     /// processing exclusivity; it just relies on the the <b>KubeOps</b> SDK leader lease when enabled.
-    /// This means that the <see cref="ReconciledAsync(TResource, ResourceManager{TResource, TController}.EventHandlerAsync, Counter)"/>,
-    /// <see cref="DeletedAsync(TResource, EventHandlerAsync, Counter)"/>, and
-    /// <see cref="StatusModifiedAsync(TResource, ResourceManager{TResource, TController}.EventHandlerAsync, Counter)"/>
+    /// This means that the <see cref="ReconciledAsync(TResource, ResourceManager{TResource, TController}.ReconcileHandlerAsync)"/>,
+    /// <see cref="DeletedAsync(TResource, NoResultHandlerAsync)"/>, and
+    /// <see cref="StatusModifiedAsync(TResource, ResourceManager{TResource, TController}.NoResultHandlerAsync)"/>
     /// methods will only return managed resources when <b>KubeOps</b> is the leader for the current pod.
     /// </item>
     /// </list>
     /// <para>
     /// By default, <see cref="ResourceManager{TResource, TController}"/> does nothing special to enforce
     /// processing exclusivity; it just relies on the the <b>KubeOps</b> SDK leader lease when enabled.
-    /// This means that the <see cref="ReconciledAsync(TResource, ResourceManager{TResource, TController}.EventHandlerAsync, Counter)"/>,
-    /// <see cref="DeletedAsync(TResource, ResourceManager{TResource, TController}.EventHandlerAsync, Counter)"/>, and
-    /// <see cref="StatusModifiedAsync(TResource, ResourceManager{TResource, TController}.EventHandlerAsync, Counter)"/>
+    /// This means that the <see cref="ReconciledAsync(TResource, ResourceManager{TResource, TController}.ReconcileHandlerAsync)"/>,
+    /// <see cref="DeletedAsync(TResource, ResourceManager{TResource, TController}.NoResultHandlerAsync)"/>, and
+    /// <see cref="StatusModifiedAsync(TResource, ResourceManager{TResource, TController}.NoResultHandlerAsync)"/>
     /// methods will only return when <b>KubeOps</b> is the leader for the current pod.
     /// </para>
     /// <para>
@@ -215,10 +211,74 @@ namespace Neon.Kube.Operator
     /// Then you'll need to pass a <see cref="LeaderElectionConfig"/> to the <see cref="ResourceManager{TResource, TController}"/>
     /// constructor when resource processing needs to be restricted to a single operator instance (the leader).  Then 
     /// <see cref="ResourceManager{TResource, TController}"/> instances with this config will allow methods like 
-    /// <see cref="ReconciledAsync(TResource, ResourceManager{TResource, TController}.EventHandlerAsync, Counter)"/> to
+    /// <see cref="ReconciledAsync(TResource, ResourceManager{TResource, TController}.ReconcileHandlerAsync)"/> to
     /// return only when the instance holds the lease and all <see cref="ResourceManager{TResource, TController}"/> 
     /// instances without a leader config will continue returning changes.
     /// </para>
+    /// <para><b>RESOURCE MANAGER MODES</b></para>
+    /// <para>
+    /// The resource manager operates in one of two modes, specified by the <see cref="ResourceManagerOptions.Mode"/>
+    /// which defaults to <see cref="ResourceManagerMode.Normal"/>.  These modes control when your handler sees resource
+    /// reconcile events:
+    /// </para>
+    /// <list type="table">
+    /// <item>
+    ///     <term><see cref="ResourceManagerMode.Normal"/></term>
+    ///     <description>
+    ///     <para>
+    ///     This mode is the default and is intended for scenarios where individual resources
+    ///     can be processed completely independently.
+    ///     </para>
+    ///     <para>
+    ///     The resource manager operates similarily most other operator SDKs in this mode, where
+    ///     reconcile events are passed to your handler immediately when detected.
+    ///     </para>
+    ///     <para>
+    ///     Differences from other SDKs include:
+    ///     </para>
+    ///     <list type="bullet">
+    ///         <item>
+    ///         The resource manager maintains a dictionary of resources it's seen, keyed
+    ///         by name and passes this to the operator's handlers.
+    ///         </item>
+    ///         <item>
+    ///         The resource also calls the operator's reconcile handler periodically, passing a 
+    ///         <c>null</c> resource as well as the resource dictionary.  We refer to this as 
+    ///         and <b>IDLE reconcile</b> event.  This is a good opportunity for your operator to
+    ///         perform operations across a number of resources.  For example, your operator may 
+    ///         implement job resources that coordinate database backups and the operator may need 
+    ///         to periodically check the status of each backup and update and/or delete related 
+    ///         resources when backups complete.
+    ///         </item>
+    ///     </list>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><see cref="ResourceManagerMode.Collection"/></term>
+    ///     <description>
+    ///     <para>
+    ///     This mode is intended for scenarios where resources need to be processed together
+    ///     for example, when individual load balancer ingress rules need to be applied to
+    ///     the load balancer together.
+    ///     </para>
+    ///     <para>
+    ///     The resource manager needs to wait for all existing resources to be detected by
+    ///     the underlying KubeOps Operator SDK and add them to an internal cache before 
+    ///     relaying <b>reconcile</b> and <b>status-modified</b> event to your handler.
+    ///     The resource manager collects resources for <see cref="ResourceManagerOptions.CollectInterval"/>
+    ///     after receiving the last reconcile event from the SDK.
+    ///     </para>
+    ///     <para>
+    ///     Once all existing resources have been collected, your handler will be called as
+    ///     resources are reconciled, passing the name of the resource along with the 
+    ///     collection of known resources.  This mode also generated <b>IDLE reconcile</b> events
+    ///     where your handler is called periodically  <see cref="ResourceManagerOptions.IdleInterval"/>
+    ///     passing <b>resource</b><c>=null</c>, giving your handler the chance to perform periodic 
+    ///     maintenance operations across all known resources.
+    ///     </para>
+    ///     </description>
+    /// </item>
+    /// </list>
     /// </remarks>
     public sealed class ResourceManager<TResource, TController> : IDisposable
         where TResource : CustomKubernetesEntity, new()
@@ -228,45 +288,63 @@ namespace Neon.Kube.Operator
         // Private types
 
         /// <summary>
-        /// Defines the event handler you'll need to implement to handle custom resource events.
+        /// Defines the event handler you'll need to implement to handle <b>RECONCILE</b> events.
         /// </summary>
-        /// <param name="name">Passed as name of the the changed resource or <c>null</c> when nothing has changed.</param>
-        /// <param name="resources">Passed a dictionary holding the current resources.  This is keyed by resource name.</param>
+        /// <param name="resource">Passed as impacted resource or <c>null</c> for IDLE events.</param>
+        /// <param name="resources">Passed a dictionary holding the currently known resources.  This is keyed by resource name.</param>
         /// <returns>
         /// Returns a <see cref="ResourceControllerResult"/> controlling how events may be requeued or
         /// <c>null</c> such that nothing will be explicitly requeued.
         /// </returns>
-        public delegate Task<ResourceControllerResult> EventHandlerAsync(string name, IReadOnlyDictionary<string, TResource> resources);
+        /// <remarks>
+        /// <paramref name="resource"/> will never be passed as <c>null</c> for <see cref="ResourceManagerMode.Normal"/>
+        /// mode.  <paramref name="resources"/> will always be passed.
+        /// </remarks>
+        public delegate Task<ResourceControllerResult> ReconcileHandlerAsync(TResource resource, IReadOnlyDictionary<string, TResource> resources);
+
+        /// <summary>
+        /// Defines the event handler you'll need to implement to handle <b>DELETE</b> and <b>STATUS-MODIFIED</b> events.
+        /// </summary>
+        /// <param name="resource">Passed as impacted resource.</param>
+        /// <param name="resources">Passed a dictionary holding the currently known resources.  This is keyed by resource name.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <remarks>
+        /// <paramref name="resource"/> will never be passed as <c>null</c> for <see cref="ResourceManagerMode.Normal"/>
+        /// mode.  <paramref name="resources"/> will always be passed.
+        /// </remarks>
+        public delegate Task NoResultHandlerAsync(TResource resource, IReadOnlyDictionary<string, TResource> resources);
 
         //---------------------------------------------------------------------
         // Implementation
 
-        private bool                            isDisposed          = false;
-        private AsyncReentrantMutex             mutex               = new AsyncReentrantMutex();
-        private Dictionary<string, TResource>   resources           = new Dictionary<string, TResource>(StringComparer.InvariantCultureIgnoreCase);
-        private bool                            started             = false;
-        private bool                            reconcileReceived   = false;
-        private bool                            discovering         = false;
-        private bool                            skipChangeDetection = false;
+        private bool                            isDisposed            = false;
+        private AsyncReentrantMutex             mutex                 = new AsyncReentrantMutex();
+        private Dictionary<string, TResource>   resources             = new Dictionary<string, TResource>(StringComparer.InvariantCultureIgnoreCase);
+        private bool                            started               = false;
+        private bool                            reconcileReceived     = false;
+        private bool                            discovering           = false;
+        private bool                            skipChangeDetection   = false;
+        private TimeSpan                        notStartedRequeDelay = TimeSpan.FromSeconds(10);
+        private ResourceManagerOptions          options;
         private IKubernetes                     k8s;
         private string                          resourceNamespace;
         private ConstructorInfo                 controllerConstructor;
         private Func<TResource, bool>           filter;
         private INeonLogger                     log;
         private DateTime                        nextNoChangeReconcileUtc;
-        private TimeSpan                        reconciledNoChangeInterval;
         private TimeSpan                        reconciledErrorBackoff;
-        private TimeSpan                        deletedErrorBackoff;
-        private TimeSpan                        statusModifiedErrorBackoff;
         private LeaderElectionConfig            leaderConfig;
         private LeaderElector                   leaderElector;
         private Task                            leaderTask;
-        private ResourceControllerResult        defaultReconcileResult;
 
         /// <summary>
         /// Default constructor.
         /// </summary>
         /// <param name="k8s">The <see cref="IKubernetes"/> client used by the controller.</param>
+        /// <param name="options">
+        /// Optionally specifies options that customize the resource manager's behavior.  This
+        /// defaults to <see cref="ResourceManagerMode.Normal"/> mode with reasonable timing settings.
+        /// </param>
         /// <param name="filter">
         /// <para>
         /// Optionally specifies a predicate to be use for filtering the resources to be managed.
@@ -286,73 +364,26 @@ namespace Neon.Kube.Operator
         /// the <b>LEADER ELECTION SECTION</b> in the <see cref="ResourceManager{TResource, TController}"/>
         /// remarks for more information.
         /// </param>
-        /// <param name="discover">
-        /// <para>
-        /// Controls whether the resource manager will absorb all reconciled events until we
-        /// detect we've discovered all existing resources.  This means that your handler can
-        /// depend on all of the resources being present when <see cref="ReconciledAsync(TResource, EventHandlerAsync, Counter)"/> 
-        /// returns resources the for the first time.
-        /// </para>
-        /// <para>
-        /// This defaults to <c>true</c> which will work for most scenarios.
-        /// </para>
-        /// </param>
-        /// <param name="reconcileNoChangeInterval">
-        /// <para>
-        /// Specifies the amount of time after processing a reconcile event before processing
-        /// a new event that does not change any resources.  Set <see cref="TimeSpan.Zero"/> 
-        /// to disable reconcile event processing when there are no changes.  This defaults 
-        /// to <b>1 minute</b>.
-        /// </para>
-        /// <para>
-        /// This is useful as a fallback to ensure that current custom resource state actually
-        /// matches the corresponding cluster or physical state.  For example, if you have 
-        /// custom resources that map to running pods and one of the pods was manually deleted,
-        /// after <see cref="ReconcileNoChangeInterval"/> and up to minute or so more, your 
-        /// operator will receive a NO-CHANGE reconciled event which your handler can take as
-        /// an opportunity to ensure that all of the expected pods actually exist.
-        /// </para>
-        /// </param>
-        /// <param name="errorMinRequeueInterval">
-        /// We capture and log any exceptions thrown by your event handlers and also schedule 
-        /// the event to be retried in the future using an exponential backoff.  This property 
-        /// specifies  the initial backoff time which will be doubled for every successive error
-        /// until the backoff maxes out at <see cref="ErrorMaxRequeueInterval"/>.  This defaults
-        /// to <b>15 seconds</b>.
-        /// </param>
-        /// <param name="errorMaxRequeueInterval">
-        /// We capture and log any exceptions thrown by your event handlers and also schedule the event
-        /// to be retried in the future using an exponential backoff.  The <see cref="ErrorMinRequeueInterval"/>
-        /// property specifies the initial backoff time which will be doubled for every successive error until
-        /// the backoff maxes out at <see cref="ErrorMaxRequeueInterval"/>.  This defaults to <b>5 minutes</b>.
-        /// </param>
         public ResourceManager(
             IKubernetes             k8s,
-            Func<TResource, bool>   filter                    = null,
-            INeonLogger             logger                    = null,
-            LeaderElectionConfig    leaderConfig              = null,
-            bool                    discover                  = true,
-            TimeSpan?               reconcileNoChangeInterval = null,
-            TimeSpan?               errorMinRequeueInterval   = null,
-            TimeSpan?               errorMaxRequeueInterval   = null)
+            ResourceManagerOptions  options      = null,
+            Func<TResource, bool>   filter       = null,
+            INeonLogger             logger       = null,
+            LeaderElectionConfig    leaderConfig = null)
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
-            this.k8s                        = k8s;  // $todo(jefflill): Can we obtain this from KubeOps or the [IServiceProvider] somehow?
-            this.filter                     = filter ?? new Func<TResource, bool>(resource => true);
-            this.log                        = logger ?? LogManager.Default.GetLogger($"Neon.Kube.Operator.ResourceManager({typeof(TResource).Name})");
-            this.discovering                = discover;
-            this.reconciledNoChangeInterval = reconcileNoChangeInterval ?? TimeSpan.FromMinutes(1);
-            this.nextNoChangeReconcileUtc   = DateTime.UtcNow + reconciledNoChangeInterval;
-            this.ErrorMinRequeueInterval    = errorMinRequeueInterval ?? TimeSpan.FromSeconds(15);
-            this.ErrorMaxRequeueInterval    = errorMaxRequeueInterval ?? TimeSpan.FromMinutes(5);
-            this.reconciledErrorBackoff     = TimeSpan.Zero;
-            this.deletedErrorBackoff        = TimeSpan.Zero;
-            this.statusModifiedErrorBackoff = TimeSpan.Zero;
-            this.leaderConfig               = leaderConfig;
-            this.defaultReconcileResult     = ResourceControllerResult.RequeueEvent(reconciledNoChangeInterval);
+            this.k8s                    = k8s;  // $todo(jefflill): Can we obtain this from KubeOps or the [IServiceProvider] somehow?
+            this.options                = options ?? new ResourceManagerOptions();
+            this.filter                 = filter ?? new Func<TResource, bool>(resource => true);
+            this.log                    = logger ?? LogManager.Default.GetLogger($"Neon.Kube.Operator.ResourceManager({typeof(TResource).Name})");
+            this.discovering            = options.Mode == ResourceManagerMode.Collection;
+            this.reconciledErrorBackoff = TimeSpan.Zero;
+            this.leaderConfig           = leaderConfig;
 
-log.LogDebug($"MGR_CONSTRUCTOR: 0: reconcileNoChangeInterval = {reconcileNoChangeInterval}");
+            options.Validate();
+
+log.LogDebug($"MGR_CONSTRUCTOR: 0: reconcileNoChangeInterval = {options.IdleInterval}");
             // $todo(jefflill): https://github.com/nforgeio/neonKUBE/issues/1589
             //
             // Locate the controller's constructor that has a single [IKubernetes] parameter.
@@ -401,9 +432,12 @@ log.LogDebug($"MGR_START: 2");
             }
 
 log.LogDebug($"MGR_START: 3");
-            // Start the NO-CHANGE reconcile loop.
+            // Start the IDLE reconcile loop for [collection] mode.
 
-            _ = NoChangeLoopAsync();
+            if (options.Mode == ResourceManagerMode.Collection)
+            {
+                _ = IdleLoopAsync();
+            }
 log.LogDebug($"MGR_START: 4");
 
             await Task.CompletedTask;
@@ -496,76 +530,24 @@ log.LogDebug($"MGR_START: 4");
         public string LeaderIdentity { get; private set; }
 
         /// <summary>
-        /// Specifies the amount of time after processing a reconcile event before processing
-        /// a new event that does not change any resources.  Set <see cref="TimeSpan.Zero"/> 
-        /// to disable reconcile event processing when there are no changes.  This defaults 
-        /// to <b>1 minute</b>.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// This is useful as a fallback to ensure that current custom resource state actually
-        /// matches the corresponding cluster or physical state.  For example, if you have 
-        /// custom resources that map to running pods and one of the pods was manually deleted,
-        /// after <see cref="ReconcileNoChangeInterval"/> and up to minute or so more, your 
-        /// operator will receive a NO-CHANGE reconciled event which your handler can take as
-        /// an opportunity to ensure that all of the expected pods actually exist.
-        /// </para>
-        /// </remarks>
-        public TimeSpan ReconcileNoChangeInterval
-        {
-            get => this.reconciledNoChangeInterval;
-
-            private set
-            {
-                this.reconciledNoChangeInterval = value;
-
-                if (value >= TimeSpan.Zero)
-                {
-                    this.nextNoChangeReconcileUtc = DateTime.UtcNow + value;
-                }
-                else
-                {
-                    this.nextNoChangeReconcileUtc = DateTime.MinValue;
-                }
-            }
-        }
-
-        /// <summary>
-        /// We capture and log any exceptions thrown by your event handlers and also schedule 
-        /// the event to be retried in the future using an exponential backoff.  This property 
-        /// specifies  the initial backoff time which will be doubled for every successive error
-        /// until the backoff maxes out at <see cref="ErrorMaxRequeueInterval"/>.  This defaults
-        /// to <b>15 seconds</b>.
-        /// </summary>
-        public TimeSpan ErrorMinRequeueInterval { get; private set; } = TimeSpan.FromSeconds(15);
-
-        /// <summary>
-        /// We capture and log any exceptions thrown by your event handlers and also schedule the event
-        /// to be retried in the future using an exponential backoff.  The <see cref="ErrorMinRequeueInterval"/>
-        /// property specifies the initial backoff time which will be doubled for every successive error until
-        /// the backoff maxes out at <see cref="ErrorMaxRequeueInterval"/>.  This defaults to <b>5 minutes</b>.
-        /// </summary>
-        public TimeSpan ErrorMaxRequeueInterval { get; private set; } = TimeSpan.FromMinutes(5);
-
-        /// <summary>
         /// Computes the backoff timeout for exceptions caught by the event handlers.
         /// </summary>
         /// <param name="errorBackoff">
-        /// Passed as the current error backoff time being tracked for the event.  This
-        /// will be increased honoring in the <see cref="ErrorMinRequeueInterval"/> and
-        /// <see cref="ErrorMaxRequeueInterval"/> constraints and will also be returned
-        /// as the backoff.
+        /// Passed as the current error backoff time being tracked for the event.  This with
+        /// be increased honoring <see cref="ResourceManagerOptions.ErrorMinRequeueInterval"/> 
+        /// and <see cref="ResourceManagerOptions.ErrorMaxRetryInterval"/> constraints and will
+        /// also be returned as the backoff.
         /// </param>
         /// <returns>The backoff <see cref="TimeSpan"/>.</returns>
         private TimeSpan ComputeErrorBackoff(ref TimeSpan errorBackoff)
         {
             if (reconciledErrorBackoff <= TimeSpan.Zero)
             {
-                return errorBackoff = ErrorMinRequeueInterval;
+                return errorBackoff = options.ErrorMinRequeueInterval;
             }
             else
             {
-                return errorBackoff = NeonHelper.Min(TimeSpan.FromTicks(reconciledErrorBackoff.Ticks * 2), ErrorMaxRequeueInterval);
+                return errorBackoff = NeonHelper.Min(TimeSpan.FromTicks(reconciledErrorBackoff.Ticks * 2), options.ErrorMaxRetryInterval);
             }
         }
 
@@ -578,8 +560,7 @@ log.LogDebug($"MGR_START: 4");
         /// collected.
         /// </summary>
         /// <param name="resource">The custom resource received or <c>null</c> when nothing has changed.</param>
-        /// <param name="handler">Your custom event handler.</param>
-        /// <param name="errorCounter">Optionally specifies the counter to be incremented for caught exceptions.</param>
+        /// <param name="handlerAsync">Your custom event handler.</param>
         /// <returns>The <see cref="ResourceControllerResult"/> returned by your handler.</returns>
         /// <remarks>
         /// <para>
@@ -587,17 +568,29 @@ log.LogDebug($"MGR_START: 4");
         /// existing resources have been receieved.  You can disable this behavior by passing
         /// <c>discover: false</c> to the constructor.
         /// </para>
+        /// <note>
+        /// The reconciled resource will be already added to the resource dictionary before
+        /// your handler is called.
+        /// </note>
         /// </remarks>
-        public async Task<ResourceControllerResult> ReconciledAsync(TResource resource, EventHandlerAsync handler, Counter errorCounter = null)
+        public async Task<ResourceControllerResult> ReconciledAsync(TResource resource, ReconcileHandlerAsync handlerAsync)
         {
             await SyncContext.Clear;
 
 log.LogDebug($"MGR_RECONCILE: 0:");
-foreach (var item in resources)
-{
-    log.LogDebug(item.Key);
-}
             EnsureNotDisposed();
+
+            // KubeOps will start watching and processing resources immediately after the operator
+            // starts running.  This happens even before the [StartAsync()] method is called.  We
+            // don't want to handle any resource related events until after the resource manager
+            // is formally started, so we'll just requeue any received events here.
+
+            if (!started)
+            {
+                return ResourceControllerResult.RequeueEvent(notStartedRequeDelay);
+            }
+
+            // Filter desired resources.
 
             if (resource != null && !filter(resource))
             {
@@ -606,15 +599,49 @@ log.LogDebug($"MGR_RECONCILE: 1: EXIT");
             }
 log.LogDebug($"MGR_RECONCILE: 2: name = [{resource?.Metadata.Name}]");
 
+            //-----------------------------------------------------------------
+            // NORMAL MODE: We're just going to pass the resource directly to the handler
+            // in a new dictionary in this case.  Note that the [IdleLoopAsync()] loop
+            // isn't running, so we don't need to worry about the mutex.
+
+            if (options.Mode == ResourceManagerMode.Normal)
+            {
+                try
+                {
+                    options.ReconcileCounter?.Inc();
+                    resources[resource.Name()] = resource;
+
+                    var result = await handlerAsync(resource, resources);
+
+                    reconciledErrorBackoff = TimeSpan.Zero;   // Reset after a success
+
+                    return result;
+                }
+                catch (Exception e)
+                {
+                    log.LogError(e);
+                    options.ReconcileErrorCounter?.Inc();
+
+                    return ResourceControllerResult.RequeueEvent(ComputeErrorBackoff(ref reconciledErrorBackoff));
+                }
+            }
+
+            //-----------------------------------------------------------------
+            // COLLECTION MODE:
+
+            Covenant.Assert(options.Mode == ResourceManagerMode.Collection);
+
             reconcileReceived = true;
 
             try
             {
-                Covenant.Requires<ArgumentNullException>(handler != null, nameof(handler));
+                Covenant.Requires<ArgumentNullException>(handlerAsync != null, nameof(handlerAsync));
 
                 return await mutex.ExecuteFuncAsync(
                     async () =>
                     {
+                        options.ReconcileCounter?.Inc();
+
 log.LogDebug($"MGR_RECONCILE: 3:");
                         var name    = resource?.Metadata.Name;
                         var changed = false;
@@ -623,12 +650,19 @@ log.LogDebug($"MGR_RECONCILE: 3:");
                         if (resource == null)
                         {
 log.LogDebug($"MGR_RECONCILE: 4:");
-                            changed = false;
+                            // The [NoChangeAsync] loop below is sending these now so we're
+                            // going always treat this as a change to pass this through to
+                            // the user's handler.
+
+                            changed = true;
                         }
                         else
                         {
+                            // Determine whether the object has actually changed unless we're
+                            // still discovering resources and change detection is disabled.
+
 log.LogDebug($"MGR_RECONCILE: 4: generation = {resource.Metadata.Generation}");
-                            if (resources.TryGetValue(resource.Metadata.Name, out var existing))
+                            if (resources.TryGetValue(resource.Name(), out var existing))
                             {
 log.LogDebug($"MGR_RECONCILE: 5A: skipChangeDetection={skipChangeDetection}");
                                 changed = skipChangeDetection || resource.Metadata.Generation != existing.Metadata.Generation;
@@ -652,34 +686,34 @@ log.LogDebug($"MGR_RECONCILE: 8: EXIT");
                             log.LogInfo($"RECONCILED: {name} (discovering resources)");
 log.LogDebug($"MGR_RECONCILE: 9: EXIT");
 
-                            return defaultReconcileResult;
+                            return null;
                         }
 log.LogDebug($"MGR_RECONCILE: 10");
 
-                        if (!changed && utcNow < nextNoChangeReconcileUtc)
+                        if (!changed)
                         {
-log.LogDebug($"MGR_RECONCILE: 11: EXIT (wait={nextNoChangeReconcileUtc - utcNow})");
-                            // It's not time yet for another NO-CHANGE handler call.
+log.LogDebug($"MGR_RECONCILE: 11: EXIT");
+                            // It's not time yet for another IDLE handler call.
 
-                            return ResourceControllerResult.RequeueEvent(ReconcileNoChangeInterval);
+                            return null;
                         }
 log.LogDebug($"MGR_RECONCILE: 12");
 
-                        var result = await handler(changed ? name : null, resources);
+                        var result = await handlerAsync(changed ? resource : null, resources);
 
-log.LogDebug($"MGR_RECONCILE: 134A: result is null: {result == null}");
+log.LogDebug($"MGR_RECONCILE: 13A: result is null: {result == null}");
 
                         reconciledErrorBackoff = TimeSpan.Zero;   // Reset after a success
 
 log.LogDebug($"MGR_RECONCILE: 13B: EXIT");
-                        return result ?? defaultReconcileResult;
+                        return result;
                     });
             }
             catch (Exception e)
             {
 log.LogDebug($"MGR_RECONCILE: 14");
                 log.LogError(e);
-                errorCounter?.Inc();
+                options.ReconcileErrorCounter?.Inc();
 
                 return ResourceControllerResult.RequeueEvent(ComputeErrorBackoff(ref reconciledErrorBackoff));
             }
@@ -693,9 +727,8 @@ log.LogDebug($"MGR_RECONCILE: 15: EXIT");
         /// or while we're still discovering existing resources.
         /// </summary>
         /// <param name="resource">The custom resource received.</param>
-        /// <param name="handler">Your custom event handler.</param>
-        /// <param name="errorCounter">Optionally specifies the counter to be incremented for caught exceptions.</param>
-        /// <returns>The <see cref="ResourceControllerResult"/> returned by your handler.</returns>
+        /// <param name="handlerAsync">Your custom event handler.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if the named resource is not currently present.</exception>
         /// <remarks>
         /// <para>
@@ -703,57 +736,96 @@ log.LogDebug($"MGR_RECONCILE: 15: EXIT");
         /// existing resources have been receieved.  You can disable this behavior by passing
         /// <c>discover: false</c> to the constructor.
         /// </para>
+        /// <note>
+        /// The reconciled resource will be already fromved from the resource dictionary before
+        /// your handler is called.
+        /// </note>
         /// </remarks>
-        public async Task<ResourceControllerResult> DeletedAsync(TResource resource, EventHandlerAsync handler, Counter errorCounter = null)
+        public async Task DeletedAsync(TResource resource, NoResultHandlerAsync handlerAsync)
         {
             await SyncContext.Clear;
 
 log.LogDebug($"MGR_DELETED: 0");
             EnsureNotDisposed();
 
+            // KubeOps will start watching and processing resources immediately after the operator
+            // starts running.  This happens even before the [StartAsync()] method is called.  We
+            // don't want to handle any resource related events until after the resource manager
+            // is formally started, so we'll ignore any events received.
+
+            if (!started)
+            {
+                return;
+            }
+
+            // Filter desired resources.
+
             if (resource != null && !filter(resource))
             {
-                return null;
+                return;
             }
+
+            //-----------------------------------------------------------------
+            // NORMAL MODE: We're just going to pass the resource directly to the handler
+            // in a new dictionary in this case.  Note that the [IdleLoopAsync()] loop
+            // isn't running, so we don't need to worry about the mutex.
+
+            if (options.Mode == ResourceManagerMode.Normal)
+            {
+                try
+                {
+                    options.DeleteCounter?.Inc();
+                    resources.Remove(resource.Name());
+                    await handlerAsync(resource, resources);
+                }
+                catch (Exception e)
+                {
+                    log.LogError(e);
+                    options.DeleteErrorCounter?.Inc();
+                }
+            }
+
+            //-----------------------------------------------------------------
+            // COLLECTION MODE:
+
+            Covenant.Assert(options.Mode == ResourceManagerMode.Collection);
 
             try
             {
                 Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
-                Covenant.Requires<ArgumentNullException>(handler != null, nameof(handler));
+                Covenant.Requires<ArgumentNullException>(handlerAsync != null, nameof(handlerAsync));
 
-                return await mutex.ExecuteFuncAsync(
+                await mutex.ExecuteActionAsync(
                     async () =>
                     {
-                        var name = resource.Metadata.Name;
+                        options.DeleteCounter?.Inc();
+
+                        var name = resource.Name();
 
                         if (!resources.ContainsKey(name))
                         {
-                            return null;
+                            return;
                         }
 
                         resources.Remove(name);
 
+                        // Wait until after we've finished discovering resources before calling
+                        // the user's handler.
+
                         if (!discovering)
                         {
-                            var result = await handler(resource.Metadata.Name, resources);
-
-                            deletedErrorBackoff = TimeSpan.Zero;   // Reset after a success
-
-                            return result;
+                            await handlerAsync(resource, resources);
                         }
                         else
                         {
-                            log.LogInfo($"DELETED: {resource.Metadata.Name} (discovering resources)");
-                            return null;
+                            log.LogInfo($"DELETED: {resource.Name()} (discovering resources)");
                         }
                     });
             }
             catch (Exception e)
             {
                 log.LogError(e);
-                errorCounter?.Inc();
-
-                return ResourceControllerResult.RequeueEvent(ComputeErrorBackoff(ref deletedErrorBackoff));
+                options.DeleteErrorCounter?.Inc();
             }
         }
 
@@ -764,71 +836,111 @@ log.LogDebug($"MGR_DELETED: 0");
         /// collection or while we're still discovering existing resources.
         /// </summary>
         /// <param name="resource">The custom resource received.</param>
-        /// <param name="handler">Your custom event handler.</param>
-        /// <param name="errorCounter">Optionally specifies the counter to be incremented for caught exceptions.</param>
-        /// <returns>The <see cref="ResourceControllerResult"/> returned by your handler.</returns>
+        /// <param name="handlerAsync">Your custom event handler.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// <para>
         /// By default, the resource manager will hold off calling your handler until all
         /// existing resources have been receieved.  You can disable this behavior by passing
         /// <c>discover: false</c> to the constructor.
         /// </para>
+        /// <note>
+        /// The reconciled resource will be already updated in the resource dictionary before
+        /// your handler is called.
+        /// </note>
         /// </remarks>
-        public async Task<ResourceControllerResult> StatusModifiedAsync(TResource resource, EventHandlerAsync handler, Counter errorCounter = null)
+        public async Task StatusModifiedAsync(TResource resource, NoResultHandlerAsync handlerAsync)
         {
             await SyncContext.Clear;
 
 log.LogDebug($"MGR_STATUS-MODIFIED: 0");
             EnsureNotDisposed();
 
+            // KubeOps will start watching and processing resources immediately after the operator
+            // starts running.  This happens even before the [StartAsync()] method is called.  We
+            // don't want to handle any resource related events until after the resource manager
+            // is formally started, so we'll ignore any events received.
+
+            if (!started)
+            {
+                return;
+            }
+
+            // Filter desired resources.
+
             if (resource != null && !filter(resource))
             {
-                return null;
+                return;
             }
+
+            //-----------------------------------------------------------------
+            // NORMAL MODE: We're just going to pass the resource directly to the handler
+            // in a new dictionary in this case.  Note that the [IdleLoopAsync()] loop
+            // isn't running, so we don't need to worry about the mutex.
+
+            if (options.Mode == ResourceManagerMode.Normal)
+            {
+                try
+                {
+                    options.StatusModifiedCounter?.Inc();
+
+                    resources[resource.Name()] = resource;
+
+                    await handlerAsync(resource, resources);
+                }
+                catch (Exception e)
+                {
+                    log.LogError(e);
+                    options.StatusModifiedErrorCounter?.Inc();
+                }
+            }
+
+            //-----------------------------------------------------------------
+            // COLLECTION MODE:
+
+            Covenant.Assert(options.Mode == ResourceManagerMode.Collection);
 
             try
             {
                 Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
-                Covenant.Requires<ArgumentNullException>(handler != null, nameof(handler));
+                Covenant.Requires<ArgumentNullException>(handlerAsync != null, nameof(handlerAsync));
 
-                return await mutex.ExecuteFuncAsync(
+                await mutex.ExecuteActionAsync(
                     async () =>
                     {
-                        var name = resource.Metadata.Name;
+                        options.StatusModifiedCounter?.Inc();
+
+                        var name = resource.Name();
 
                         if (!resources.ContainsKey(name))
                         {
-                            return null;
+                            return;
                         }
 
                         resources[name] = resource;
 
+                        // Wait until after we've finished discovering resources before calling
+                        // the user's handler.
+
                         if (!discovering)
                         {
-                            var result = await handler(resource.Metadata.Name, resources);
-
-                            statusModifiedErrorBackoff = TimeSpan.Zero;   // Reset after a success
-
-                            return result;
+                            await handlerAsync(resource, resources);
                         }
                         else
                         {
-                            log.LogInfo($"STATUS-MODIFIED: {resource.Metadata.Name} (discovering resources)");
-                            return null;
+                            log.LogInfo($"STATUS-MODIFIED: {resource.Name()} (discovering resources)");
                         }
                     });
             }
             catch (Exception e)
             {
                 log.LogError(e);
-                errorCounter?.Inc();
-
-                return ResourceControllerResult.RequeueEvent(ComputeErrorBackoff(ref statusModifiedErrorBackoff));
+                options.StatusModifiedErrorCounter?.Inc();
             }
         }
 
         /// <summary>
-        /// Determines whether a custom resource with the specific name exists.
+        /// Determines whether a custom resource with a specific name exists.
         /// </summary>
         /// <param name="name">The resource name.</param>
         /// <returns><c>true</c> when the name exists.</returns>
@@ -864,54 +976,6 @@ log.LogDebug($"MGR_STATUS-MODIFIED: 0");
                 });
         }
 
-        /// <summary>
-        /// <para>
-        /// Returns a deep clone the current set of resources being managed or of the specific dictionary passed.
-        /// </para>
-        /// <note>
-        /// This can be an expensive operation when you're tracking a lot of resources.
-        /// </note>
-        /// </summary>
-        /// <param name="resources">Optionally specifies the resource dictionary to be copied.</param>
-        /// <returns>A deep clone of the current set of resources being managed or the dictionary passed..</returns>
-        public async Task<IReadOnlyDictionary<string, TResource>> CloneResourcesAsync(IReadOnlyDictionary<string, TResource> resources = null)
-        {
-            await SyncContext.Clear;
-
-            if (resources == null)
-            {
-                return await mutex.ExecuteFuncAsync(async () => await Task.FromResult(DeepClone(this.resources)));
-            }
-            else
-            {
-                return DeepClone(resources);
-            }
-        }
-
-        /// <summary>
-        /// Returns a deep clone of the resource dictionary passed.
-        /// </summary>
-        /// <param name="source">The source dictionary.</param>
-        /// <returns></returns>
-        private IReadOnlyDictionary<string, TResource> DeepClone(IReadOnlyDictionary<string, TResource> source)
-        {
-            Covenant.Requires<ArgumentNullException>(source != null, nameof(source));
-
-            var target = new Dictionary<string, TResource>(StringComparer.InvariantCultureIgnoreCase);
-
-            foreach (var item in source)
-            {
-                // $note(jefflill): 
-                //
-                // NeonHelper.JsonClone() is going to serialize and deserialize each 
-                // item value which will be somewhat expensive.
-
-                target.Add(item.Key, NeonHelper.JsonClone(item.Value));
-            }
-
-            return (IReadOnlyDictionary<string, TResource>)target;
-        }
-
         //---------------------------------------------------------------------
         // $todo(jefflill): At least support dependency injection when constructing the controller.
         //
@@ -925,24 +989,24 @@ log.LogDebug($"MGR_STATUS-MODIFIED: 0");
         // NOTE: It's very possible that the old KubeOps behavior was invalid and the current
         //       behavior actually is correct.
         //
-        // This completely breaks our logic where we expect to see a NO-CHANGE event after
+        // This completely breaks our logic where we expect to see a IDLE event after
         // all of the existing resources have been discovered or when no resources were
         // discovered.
         //
         // We're going to work around this with a pretty horrible hack for the time being:
         //
         //      1. We're going to use the [nextNoChangeReconcileUtc] field to track
-        //         when the next NO-CHANGE event should be raised.  This will default
+        //         when the next IDLE event should be raised.  This will default
         //         to the current time plus 1 minute when the resource manager is 
         //         constructed.  This gives KubeOps a chance to discover existing
-        //         resources before we start raising NO-CHANGE events.
+        //         resources before we start raising IDLE events.
         //
         //      2. After RECONCILE events are handled by the operator's controller,
         //         we'll reset the [nextNoChangeReconcileUtc] property to be the current
         //         time plus the [reconciledNoChangeInterval].
         //
         //      3. The [NoChangeLoop()] method below loops watching for when [nextNoChangeReconcileUtc]
-        //         indicates that a NO-CHANGE RECONCILE event should be raised.  The loop
+        //         indicates that a IDLE RECONCILE event should be raised.  The loop
         //         will instantiate an instance of the controller, hardcoding the [IKubernetes]
         //         constructor parameter for now, rather than supporting real dependency
         //         injection.  We'll then call [ReconcileAsync()] ourselves.
@@ -959,23 +1023,23 @@ log.LogDebug($"MGR_STATUS-MODIFIED: 0");
         //
         // This hack can result in a problem when KubeOps is not able to watch the resource
         // for some reason.  The problem is that if this continutes for the first 1 minute
-        // delay, then the loop below will tragger a NO-CHANGE RECONCILE event with no including
+        // delay, then the loop below will tragger a IDLE RECONCILE event with no including
         // no items, and then the operator could react by deleting any existing related physical
         // resources, which would be REALLY BAD.
         //
-        // To mitigate this, I'm going to special case the first NO-CHANGE reconcile to query the
-        // custom resources and only trigger the NO-CHANGE reconcile when the query succeeded and
+        // To mitigate this, I'm going to special case the first IDLE reconcile to query the
+        // custom resources and only trigger the IDLE reconcile when the query succeeded and
         // no items were returned.  Otherwise KubeOps may be having trouble communicating with 
         // Kubernetes or when there are items, we should expect KubeOps to reconcile those for us.
         //
         // This is somewhat FRAGILE!
 
         /// <summary>
-        /// This loop handles raising of <see cref="ReconciledAsync(TResource, EventHandlerAsync, Counter)"/> 
+        /// This loop handles raising of <see cref="ReconciledAsync(TResource, ReconcileHandlerAsync)"/> 
         /// events when there's been no changes to any of the monitored resources.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task NoChangeLoopAsync()
+        private async Task IdleLoopAsync()
         {
 log.LogDebug($"MGR_CHANGE-LOOP: 0");
             var loopDelay = TimeSpan.FromSeconds(1);
@@ -989,7 +1053,7 @@ log.LogDebug($"MGR_CHANGE-LOOP: 0");
 
                 if (DateTime.UtcNow >= nextNoChangeReconcileUtc)
                 {
-                    nextNoChangeReconcileUtc = DateTime.UtcNow + reconciledNoChangeInterval;
+                    nextNoChangeReconcileUtc = DateTime.UtcNow + options.IdleInterval;
 
 log.LogDebug($"MGR_CHANGE-LOOP: 1B: RECONCILE_NOCHANGE!!!");
 log.LogDebug($"MGR_CHANGE-LOOP: 1C: reconcileReceived={reconcileReceived} discovering={discovering}");
@@ -1006,7 +1070,7 @@ log.LogDebug($"MGR_CHANGE-LOOP: 1D: ITEMS EXIST");
                     }
                     else
                     {
-                        // If we're going to trigger the first NO-CHANGE RECONCILE, and
+                        // If we're going to trigger the first IDLE RECONCILE, and
                         // we haven't seen an resources from KubeOps, we need to ensure
                         // that we have connectivity to Kubernetes and that there really
                         // aren't any known resources for the operator.
@@ -1054,7 +1118,7 @@ log.LogDebug($"MGR_CHANGE-LOOP: 1G: discovering={discovering} reconcileDiscovere
                         }
                     }
 
-                    // Don't send a NO-CHANGE RECONCILE while we're still discovering resources.
+                    // Don't send a IDLE RECONCILE while we're still discovering resources.
 
 log.LogDebug($"MGR_CHANGE-LOOP: 1H: discovering={discovering}");
                     if (discovering)
@@ -1087,7 +1151,7 @@ log.LogDebug($"MGR_CHANGE-LOOP: 4A");
 log.LogDebug($"MGR_CHANGE-LOOP: 4B");
 
                                 // Reconcile all of the resources when we just finished discovering them
-                                // otherwise send a NO-CHANGE RECONCILE.
+                                // otherwise send a IDLE RECONCILE.
                                 //
                                 // We're going to set [skipChangeDetection=true] while we're doing this so
                                 // that all off the discovered resources will be considered as new when
@@ -1104,7 +1168,7 @@ log.LogDebug($"MGR_CHANGE-LOOP: 4C: count={resources.Count}");
                                         foreach (var resource in resources.Values)
                                         {
 log.LogDebug("=======================================================================");
-log.LogDebug($"MGR_CHANGE-LOOP: 4D: name={resource.Metadata.Name}");
+log.LogDebug($"MGR_CHANGE-LOOP: 4D: name={resource.Name()}");
 log.LogDebug("=======================================================================");
                                             await controller.ReconcileAsync(resource);
                                         }
@@ -1142,11 +1206,11 @@ log.LogDebug($"MGR_CHANGE-LOOP: 5: {NeonHelper.ExceptionError(e)}");
                             }
                         });
 
-                    nextNoChangeReconcileUtc = DateTime.UtcNow + reconciledNoChangeInterval;
+                    nextNoChangeReconcileUtc = DateTime.UtcNow + options.IdleInterval;
 log.LogDebug($"MGR_CHANGE-LOOP: 6");
                 }
 
-//log.LogDebug($"MGR_CHANGE-LOOP: 7");
+log.LogDebug($"MGR_CHANGE-LOOP: 7");
             }
         }
     }
