@@ -53,7 +53,6 @@ namespace NeonNodeAgent
         public const string HostMount = "/mnt/host";
 
         private static AsyncMutex           mutex = new AsyncMutex();
-        private static bool?                cachedNodeInfo;
         private static V1Node               cachedNode;
         private static V1OwnerReference     cachedOwnerReference;
 
@@ -96,36 +95,27 @@ namespace NeonNodeAgent
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
+// $debug(jefflill): DELETE THESE!
+Console.WriteLine($"NODE-OWNER: 0:");
             using (await mutex.AcquireAsync())
             {
+Console.WriteLine($"NODE-OWNER: 1:");
                 // Return any cached information.
 
-                if (cachedNodeInfo.HasValue && cachedNodeInfo.Value)
+                if (cachedOwnerReference != null)
                 {
-                    if (cachedNode == null)
-                    {
-                        return null;
-                    }
-
+Console.WriteLine($"NODE-OWNER: 2:");
                     return cachedOwnerReference;
                 }
+Console.WriteLine($"NODE-OWNER: 3:");
 
                 // Query Kubernetes for the node information based on the the node's hostname.
 
-                try
-                {
-                    cachedNode           = await k8s.ReadNodeAsync(Name);
-                    cachedNodeInfo       = true;
-                    cachedOwnerReference = new V1OwnerReference(apiVersion: cachedNode.ApiVersion, name: cachedNode.Name(), kind: cachedNode.Kind, uid: cachedNode.Uid());
-                }
-                catch
-                {
-                    // We're going to treat this as if the node is somehow now in the cluster.
-
-                    cachedNodeInfo       = true;
-                    cachedNode           = null;
-                    cachedOwnerReference = null;
-                }
+Console.WriteLine($"NODE-OWNER: 4: name={Name}");
+                cachedNode           = await k8s.ReadNodeAsync(Name);
+Console.WriteLine($"NODE-OWNER: 5:");
+                cachedOwnerReference = new V1OwnerReference(apiVersion: cachedNode.ApiVersion, name: cachedNode.Name(), kind: cachedNode.Kind, uid: cachedNode.Uid());
+Console.WriteLine($"NODE-OWNER: 6:");
 
                 return cachedOwnerReference;
             }

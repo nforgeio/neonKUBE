@@ -302,7 +302,7 @@ namespace Neon.Kube.Resources
             /// </summary>
 #if KUBEOPS
             [Required]
-            [Pattern(GoDuration.RegEx)]
+            [Pattern(GoDuration.PartialRegEx)]
 #endif
             public string Timeout { get; set; } = "5m";
 
@@ -333,7 +333,7 @@ namespace Neon.Kube.Resources
             /// </summary>
 #if KUBEOPS
             [Required]
-            [Pattern(GoDuration.RegEx)]
+            [Pattern(GoDuration.PartialRegEx)]
 #endif
             public string RetentionTime { get; set; } = "10m";
 
@@ -431,7 +431,7 @@ namespace Neon.Kube.Resources
             /// Set to the task execution time.
             /// </summary>
 #if KUBEOPS
-            [Pattern(GoDuration.RegEx)]
+            [Pattern(GoDuration.PartialRegEx)]
 #endif
             public string Runtime { get; set; } = "0s";
 

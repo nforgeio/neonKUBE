@@ -205,14 +205,14 @@ namespace Neon.Kube.Operator
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
-            GeneratingCRDs = true;
-
             try
             {
                 if (args.FirstOrDefault() != "generator")
                 {
                     return false;
                 }
+
+                GeneratingCRDs = true;
 
                 await Host.CreateDefaultBuilder(args)
                     .ConfigureWebHostDefaults(builder => { builder.UseStartup<TStartup>(); })

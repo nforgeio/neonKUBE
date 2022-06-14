@@ -290,11 +290,23 @@ log.LogDebug($"*** RECONCILE: 8");
                             nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
 log.LogDebug($"*** RECONCILE: 9A");
 
-                            nodeTask.OwnerReferences().Add(await Node.GetOwnerReferenceAsync(k8s));
-log.LogDebug($"*** RECONCILE: 9B");
+                            var nodeOwnerReference = await Node.GetOwnerReferenceAsync(k8s);
 
-                            nodeTask = await k8s.ReplaceNamespacedCustomObjectAsync<V1NeonNodeTask>(nodeTask, nodeTask.Namespace(), nodeTask.Name());
+log.LogDebug($"*** RECONCILE: 9B");
+                            if (nodeOwnerReference != null)
+                            {
 log.LogDebug($"*** RECONCILE: 9C");
+                                if (nodeTask.Metadata.OwnerReferences == null)
+                                {
+                                    nodeTask.Metadata.OwnerReferences = new List<V1OwnerReference>();
+                                }
+
+                                nodeTask.Metadata.OwnerReferences.Add(await Node.GetOwnerReferenceAsync(k8s));
+                            }
+log.LogDebug($"*** RECONCILE: 9D");
+
+                            nodeTask = await k8s.ReplaceClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, nodeTask.Name());
+log.LogDebug($"*** RECONCILE: 9E");
                         }
 log.LogDebug($"*** RECONCILE: 10");
 
@@ -460,7 +472,7 @@ log.LogDebug($"*** STATUSMODIFIED: 0: count={resources.Count}");
 
                         patch.Replace(path => path.Status.Phase, V1NeonNodeTask.Phase.Timeout);
                         patch.Replace(path => path.Status.FinishTimestamp, utcNow);
-                        patch.Replace(path => path.Status.Runtime, GoDuration.FromTimeSpan((utcNow - nodeTask.Status.StartTimestamp.Value)).ToString());
+                        patch.Replace(path => path.Status.Runtime, GoDuration.FromTimeSpan((utcNow - nodeTask.Status.StartTimestamp.Value)).ToPretty());
                         patch.Replace(path => path.Status.ExitCode, -1);
 
                         await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
@@ -738,13 +750,13 @@ log.LogDebug($"*** EXECUTE: 19");
                     else if (result.ExitCode != 0)
                     {
                         patch.Replace(path => path.Status.Phase, V1NeonNodeTask.Phase.Failed);
-                        patch.Replace(path => path.Status.Runtime, GoDuration.FromTimeSpan(nodeTask.Status.FinishTimestamp.Value - nodeTask.Status.StartTimestamp.Value).ToString());
+                        patch.Replace(path => path.Status.Runtime, GoDuration.FromTimeSpan(nodeTask.Status.FinishTimestamp.Value - nodeTask.Status.StartTimestamp.Value).ToPretty());
                         patch.Replace(path => path.Status.ExitCode, result.ExitCode);
                     }
                     else
                     {
                         patch.Replace(path => path.Status.Phase, V1NeonNodeTask.Phase.Finished);
-                        patch.Replace(path => path.Status.Runtime, GoDuration.FromTimeSpan(nodeTask.Status.FinishTimestamp.Value - nodeTask.Status.StartTimestamp.Value).ToString());
+                        patch.Replace(path => path.Status.Runtime, GoDuration.FromTimeSpan(nodeTask.Status.FinishTimestamp.Value - nodeTask.Status.StartTimestamp.Value).ToPretty());
 
                         if (nodeTask.Spec.CaptureOutput)
                         {

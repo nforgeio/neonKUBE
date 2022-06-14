@@ -160,7 +160,7 @@ touch $NODE_ROOT{filePath}
                 //##############################################################
                 // $debug(jefflill): DELETE THE LOOP AND RESTORE THE LINE BELOW!
 
-                for (int i = 0; i < 500; i++)
+                for (int i = 0; i < 1; i++)
                 {
                     await fixture.K8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: $"test-task-{NeonHelper.CreateBase36Guid()}");
                 }

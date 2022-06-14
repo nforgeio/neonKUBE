@@ -25,6 +25,17 @@ rules:
   - get
   - list
   - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  - nodes/status
+  verbs:
+  - get
+  - list
+  - update
+  - watch
 - apiGroups:
   - coordination.k8s.io
   resources:
