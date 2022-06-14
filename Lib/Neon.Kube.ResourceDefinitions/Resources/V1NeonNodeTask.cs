@@ -321,7 +321,7 @@ namespace Neon.Kube.Resources
             /// <param name="value">The value veing set.</param>
             public void SetTimeout(TimeSpan value)
             {
-                Timeout = GoDuration.FromTimeSpan(value).ToString();
+                Timeout = GoDuration.FromTimeSpan(value).ToPretty();
             }
 
             /// <summary>
@@ -352,7 +352,7 @@ namespace Neon.Kube.Resources
             /// <param name="value">The value being set.</param>
             public void SetRetentionTime(TimeSpan value)
             {
-                RetentionTime = GoDuration.FromTimeSpan(value).ToString();
+                RetentionTime = GoDuration.FromTimeSpan(value).ToPretty();
             }
 
             /// <summary>
@@ -450,7 +450,7 @@ namespace Neon.Kube.Resources
             /// <param name="value">The value being set.</param>
             public void SetRuntime(TimeSpan value)
             {
-                Runtime = GoDuration.FromTimeSpan(value).ToString();
+                Runtime = GoDuration.FromTimeSpan(value).ToPretty();
             }
 
             /// <summary>
