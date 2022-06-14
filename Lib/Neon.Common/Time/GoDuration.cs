@@ -48,6 +48,11 @@ namespace Neon.Time
         // Static members
 
         /// <summary>
+        /// A regular expression that can be used to validate GOLANG duration strings.
+        /// </summary>
+        public const string RegEx = @"^.*$";
+
+        /// <summary>
         /// The number of nanosecond ticks per micrososecond.
         /// </summary>
         public const long TicksPerMicrosecond = 1000;
@@ -289,13 +294,19 @@ namespace Neon.Time
         /// "2h45m". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". 
         /// </para>
         /// <note>
+        /// <c>null</c> or empty strings are parsed as <see cref="TimeSpan.Zero"/>.
+        /// </note>
+        /// <note>
         /// GO timespans are limited to about 290 years (the maximum number of
         /// nanoseconds that can be represented in a signed 64-bit integer).
         /// </note>
         /// </remarks>
         public static GoDuration Parse(string input)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input), nameof(input));
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                return TimeSpan.Zero;
+            }
 
             if (!TryParse(input, out var goTimeSpan))
             {

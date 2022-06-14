@@ -383,10 +383,10 @@ namespace Microsoft.Net.Http.Client
                 // TODO:? await connectResponse.Content.LoadIntoBufferAsync(); // Drain any body
                 // There's no danger of accidently consuming real response data because the real request hasn't been sent yet.
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
                 transport.Dispose();
-                throw new HttpRequestException("SSL Tunnel failed to initialize", ex);
+                throw new HttpRequestException("SSL Tunnel failed to initialize", e);
             }
 
             // Listen for a response. Any 2XX is considered success, anything else is considered a failure.

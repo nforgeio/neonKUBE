@@ -49,7 +49,7 @@ namespace Neon.Kube.Operator
     /// <summary>
     /// Used by custom <b>KubeOps</b> based operators to manage a collection of custom resources.
     /// </summary>
-    /// <typeparam name="TResource">Specifies the custom Kubernetes entity type.</typeparam>
+    /// <typeparam name="TEntity">Specifies the custom Kubernetes entity type.</typeparam>
     /// <typeparam name="TController">Specifies the entity controller type.</typeparam>
     /// <remarks>
     /// <para>
@@ -58,9 +58,9 @@ namespace Neon.Kube.Operator
     /// (passing any custom settings as parameters) and then call <see cref="StartAsync(string)"/>.
     /// </para>
     /// <para>
-    /// After the resource manager starts, your controller's <see cref="ReconciledAsync(TResource, ResourceManager{TResource, TController}.ReconcileHandlerAsync)"/>, 
-    /// <see cref="DeletedAsync(TResource, ResourceManager{TResource, TController}.NoResultHandlerAsync)"/>, and
-    /// <see cref="StatusModifiedAsync(TResource, ResourceManager{TResource, TController}.NoResultHandlerAsync)"/> 
+    /// After the resource manager starts, your controller's <see cref="ReconciledAsync(TEntity, ResourceManager{TEntity, TController}.ReconcileHandlerAsync)"/>, 
+    /// <see cref="DeletedAsync(TEntity, ResourceManager{TEntity, TController}.NoResultHandlerAsync)"/>, and
+    /// <see cref="StatusModifiedAsync(TEntity, ResourceManager{TEntity, TController}.NoResultHandlerAsync)"/> 
     /// methods will be called as related resource related events are received.
     /// </para>
     /// <para><b>KUBEOPS INTEGRATION</b></para>
@@ -69,11 +69,11 @@ namespace Neon.Kube.Operator
     /// Kubernetes Operator SDK for .NET.  You'll instantiate a <see cref="ResourceManager{TResource, IController}"/>
     /// instance for each controller, passing the custom resource type as the type parameter and then set this
     /// as a static field in your controller.  Then you'll need to add a call to 
-    /// <see cref="ReconciledAsync(TResource, ResourceManager{TResource, TController}.ReconcileHandlerAsync)"/>
+    /// <see cref="ReconciledAsync(TEntity, ResourceManager{TEntity, TController}.ReconcileHandlerAsync)"/>
     /// in your controller's <b>ReconcileAsync()</b> method, a call to 
-    /// <see cref="DeletedAsync(TResource, ResourceManager{TResource, TController}.NoResultHandlerAsync)"/>
+    /// <see cref="DeletedAsync(TEntity, ResourceManager{TEntity, TController}.NoResultHandlerAsync)"/>
     /// in your controller's <b>DeletedAsync()</b> method and a call to 
-    /// <see cref="StatusModifiedAsync(TResource, ResourceManager{TResource, TController}.NoResultHandlerAsync)"/>
+    /// <see cref="StatusModifiedAsync(TEntity, ResourceManager{TEntity, TController}.NoResultHandlerAsync)"/>
     /// on your controller <b>StatusModifiedAsync()</b> method.
     /// </para>
     /// <para>
@@ -99,7 +99,7 @@ namespace Neon.Kube.Operator
     /// <para><b>OPERATOR LIFECYCLE</b></para>
     /// <para>
     /// Kubernetes operators work by watching cluster resources via the API server.  The KubeOps Operator SDK
-    /// starts watching the resource specified by <typeparamref name="TResource"/> and raises the
+    /// starts watching the resource specified by <typeparamref name="TEntity"/> and raises the
     /// controller events as they are received, handling any failures seamlessly.  The <see cref="ResourceManager{TResource, TController}"/> 
     /// class helps keep track of the existing resources as well reducing the complexity of determining why
     /// an event was raised.  KubeOps also periodically raises reconciled events even when nothing has 
@@ -107,7 +107,7 @@ namespace Neon.Kube.Operator
     /// </para>
     /// <para>
     /// When your operator first starts, a reconciled event will be raised for each custom resource of 
-    /// type <typeparamref name="TResource"/> in the cluster and the resource manager will add
+    /// type <typeparamref name="TEntity"/> in the cluster and the resource manager will add
     /// these resources to its internal dictionary.  By default, the resource manager will not call 
     /// your handler until all existing resources have been added to this dictionary.  Then after the 
     /// resource manager has determined that it has collected all of the existing resources, it will call 
@@ -170,18 +170,18 @@ namespace Neon.Kube.Operator
     /// <item>
     /// By default, <see cref="ResourceManager{TResource, TController}"/> does nothing special to enforce
     /// processing exclusivity; it just relies on the the <b>KubeOps</b> SDK leader lease when enabled.
-    /// This means that the <see cref="ReconciledAsync(TResource, ResourceManager{TResource, TController}.ReconcileHandlerAsync)"/>,
-    /// <see cref="DeletedAsync(TResource, NoResultHandlerAsync)"/>, and
-    /// <see cref="StatusModifiedAsync(TResource, ResourceManager{TResource, TController}.NoResultHandlerAsync)"/>
+    /// This means that the <see cref="ReconciledAsync(TEntity, ResourceManager{TEntity, TController}.ReconcileHandlerAsync)"/>,
+    /// <see cref="DeletedAsync(TEntity, NoResultHandlerAsync)"/>, and
+    /// <see cref="StatusModifiedAsync(TEntity, ResourceManager{TEntity, TController}.NoResultHandlerAsync)"/>
     /// methods will only return managed resources when <b>KubeOps</b> is the leader for the current pod.
     /// </item>
     /// </list>
     /// <para>
     /// By default, <see cref="ResourceManager{TResource, TController}"/> does nothing special to enforce
     /// processing exclusivity; it just relies on the the <b>KubeOps</b> SDK leader lease when enabled.
-    /// This means that the <see cref="ReconciledAsync(TResource, ResourceManager{TResource, TController}.ReconcileHandlerAsync)"/>,
-    /// <see cref="DeletedAsync(TResource, ResourceManager{TResource, TController}.NoResultHandlerAsync)"/>, and
-    /// <see cref="StatusModifiedAsync(TResource, ResourceManager{TResource, TController}.NoResultHandlerAsync)"/>
+    /// This means that the <see cref="ReconciledAsync(TEntity, ResourceManager{TEntity, TController}.ReconcileHandlerAsync)"/>,
+    /// <see cref="DeletedAsync(TEntity, ResourceManager{TEntity, TController}.NoResultHandlerAsync)"/>, and
+    /// <see cref="StatusModifiedAsync(TEntity, ResourceManager{TEntity, TController}.NoResultHandlerAsync)"/>
     /// methods will only return when <b>KubeOps</b> is the leader for the current pod.
     /// </para>
     /// <para>
@@ -211,7 +211,7 @@ namespace Neon.Kube.Operator
     /// Then you'll need to pass a <see cref="LeaderElectionConfig"/> to the <see cref="ResourceManager{TResource, TController}"/>
     /// constructor when resource processing needs to be restricted to a single operator instance (the leader).  Then 
     /// <see cref="ResourceManager{TResource, TController}"/> instances with this config will allow methods like 
-    /// <see cref="ReconciledAsync(TResource, ResourceManager{TResource, TController}.ReconcileHandlerAsync)"/> to
+    /// <see cref="ReconciledAsync(TEntity, ResourceManager{TEntity, TController}.ReconcileHandlerAsync)"/> to
     /// return only when the instance holds the lease and all <see cref="ResourceManager{TResource, TController}"/> 
     /// instances without a leader config will continue returning changes.
     /// </para>
@@ -280,9 +280,9 @@ namespace Neon.Kube.Operator
     /// </item>
     /// </list>
     /// </remarks>
-    public sealed class ResourceManager<TResource, TController> : IDisposable
-        where TResource : CustomKubernetesEntity, new()
-        where TController : IResourceController<TResource>
+    public sealed class ResourceManager<TEntity, TController> : IDisposable
+        where TEntity : CustomKubernetesEntity, new()
+        where TController : IResourceController<TEntity>
     {
         //---------------------------------------------------------------------
         // Private types
@@ -300,7 +300,7 @@ namespace Neon.Kube.Operator
         /// <paramref name="resource"/> will never be passed as <c>null</c> for <see cref="ResourceManagerMode.Normal"/>
         /// mode.  <paramref name="resources"/> will always be passed.
         /// </remarks>
-        public delegate Task<ResourceControllerResult> ReconcileHandlerAsync(TResource resource, IReadOnlyDictionary<string, TResource> resources);
+        public delegate Task<ResourceControllerResult> ReconcileHandlerAsync(TEntity resource, IReadOnlyDictionary<string, TEntity> resources);
 
         /// <summary>
         /// Defines the event handler you'll need to implement to handle <b>DELETE</b> and <b>STATUS-MODIFIED</b> events.
@@ -312,14 +312,14 @@ namespace Neon.Kube.Operator
         /// <paramref name="resource"/> will never be passed as <c>null</c> for <see cref="ResourceManagerMode.Normal"/>
         /// mode.  <paramref name="resources"/> will always be passed.
         /// </remarks>
-        public delegate Task NoResultHandlerAsync(TResource resource, IReadOnlyDictionary<string, TResource> resources);
+        public delegate Task NoResultHandlerAsync(TEntity resource, IReadOnlyDictionary<string, TEntity> resources);
 
         //---------------------------------------------------------------------
         // Implementation
 
         private bool                            isDisposed            = false;
         private AsyncReentrantMutex             mutex                 = new AsyncReentrantMutex();
-        private Dictionary<string, TResource>   resources             = new Dictionary<string, TResource>(StringComparer.InvariantCultureIgnoreCase);
+        private Dictionary<string, TEntity>     resources             = new Dictionary<string, TEntity>(StringComparer.InvariantCultureIgnoreCase);
         private bool                            started               = false;
         private bool                            reconcileReceived     = false;
         private bool                            discovering           = false;
@@ -329,9 +329,9 @@ namespace Neon.Kube.Operator
         private IKubernetes                     k8s;
         private string                          resourceNamespace;
         private ConstructorInfo                 controllerConstructor;
-        private Func<TResource, bool>           filter;
+        private Func<TEntity, bool>             filter;
         private INeonLogger                     log;
-        private DateTime                        nextNoChangeReconcileUtc;
+        private DateTime                        nextIdleReconcileUtc;
         private TimeSpan                        reconciledErrorBackoff;
         private LeaderElectionConfig            leaderConfig;
         private LeaderElector                   leaderElector;
@@ -367,7 +367,7 @@ namespace Neon.Kube.Operator
         public ResourceManager(
             IKubernetes             k8s,
             ResourceManagerOptions  options      = null,
-            Func<TResource, bool>   filter       = null,
+            Func<TEntity, bool>   filter       = null,
             INeonLogger             logger       = null,
             LeaderElectionConfig    leaderConfig = null)
         {
@@ -375,15 +375,15 @@ namespace Neon.Kube.Operator
 
             this.k8s                    = k8s;  // $todo(jefflill): Can we obtain this from KubeOps or the [IServiceProvider] somehow?
             this.options                = options ?? new ResourceManagerOptions();
-            this.filter                 = filter ?? new Func<TResource, bool>(resource => true);
-            this.log                    = logger ?? LogManager.Default.GetLogger($"Neon.Kube.Operator.ResourceManager({typeof(TResource).Name})");
+            this.filter                 = filter ?? new Func<TEntity, bool>(resource => true);
+            this.log                    = logger ?? LogManager.Default.GetLogger($"Neon.Kube.Operator.ResourceManager({typeof(TEntity).Name})");
             this.discovering            = options.Mode == ResourceManagerMode.Collection;
             this.reconciledErrorBackoff = TimeSpan.Zero;
             this.leaderConfig           = leaderConfig;
 
             options.Validate();
 
-log.LogDebug($"MGR_CONSTRUCTOR: 0: reconcileNoChangeInterval = {options.IdleInterval}");
+log.LogDebug($"MGR_CONSTRUCTOR: 0: IdleInterval = {options.IdleInterval}");
             // $todo(jefflill): https://github.com/nforgeio/neonKUBE/issues/1589
             //
             // Locate the controller's constructor that has a single [IKubernetes] parameter.
@@ -396,6 +396,7 @@ log.LogDebug($"MGR_CONSTRUCTOR: 0: reconcileNoChangeInterval = {options.IdleInte
             {
                 throw new NotSupportedException($"Controller type [{controllerType.FullName}] does not have a constructor accepting a single [{nameof(IKubernetes)}] parameter.  This is currently required.");
             }
+log.LogDebug($"MGR_CONSTRUCTOR: 1: IdleInterval = {options.IdleInterval}");
         }
 
         /// <summary>
@@ -411,7 +412,7 @@ log.LogDebug($"MGR_START: 0");
             if (started)
             {
 log.LogDebug($"MGR_START: 1");
-                throw new InvalidOperationException($"[{nameof(ResourceManager<TResource, TController>)}] is already running.");
+                throw new InvalidOperationException($"[{nameof(ResourceManager<TEntity, TController>)}] is already running.");
             }
 
 log.LogDebug($"MGR_START: 2");
@@ -486,7 +487,21 @@ log.LogDebug($"MGR_START: 4");
         {
             if (isDisposed)
             {
-                throw new ObjectDisposedException($"ResourceManager[{typeof(TResource).FullName}]");
+                throw new ObjectDisposedException($"ResourceManager[{typeof(TEntity).FullName}]");
+            }
+        }
+
+        /// <summary>
+        /// Ensures that the controller has been started before KubeOps.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when KubeOps is running before <see cref="StartAsync(string)"/> is called for this controller.
+        /// </exception>
+        private void EnsureStarted()
+        {
+            if (!started)
+            {
+                throw new InvalidOperationException($"You must call [{nameof(TController)}.{nameof(StartAsync)}()] before starting KubeOps.");
             }
         }
 
@@ -562,6 +577,10 @@ log.LogDebug($"MGR_START: 4");
         /// <param name="resource">The custom resource received or <c>null</c> when nothing has changed.</param>
         /// <param name="handlerAsync">Your custom event handler.</param>
         /// <returns>The <see cref="ResourceControllerResult"/> returned by your handler.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the instance has been disposed.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when KubeOps is running before <see cref="StartAsync(string)"/> is called for this controller.
+        /// </exception>
         /// <remarks>
         /// <para>
         /// By default, the resource manager will hold off calling your handler until all
@@ -573,22 +592,13 @@ log.LogDebug($"MGR_START: 4");
         /// your handler is called.
         /// </note>
         /// </remarks>
-        public async Task<ResourceControllerResult> ReconciledAsync(TResource resource, ReconcileHandlerAsync handlerAsync)
+        public async Task<ResourceControllerResult> ReconciledAsync(TEntity resource, ReconcileHandlerAsync handlerAsync)
         {
             await SyncContext.Clear;
 
 log.LogDebug($"MGR_RECONCILE: 0:");
             EnsureNotDisposed();
-
-            // KubeOps will start watching and processing resources immediately after the operator
-            // starts running.  This happens even before the [StartAsync()] method is called.  We
-            // don't want to handle any resource related events until after the resource manager
-            // is formally started, so we'll just requeue any received events here.
-
-            if (!started)
-            {
-                return ResourceControllerResult.RequeueEvent(notStartedRequeDelay);
-            }
+            EnsureStarted();
 
             // Filter desired resources.
 
@@ -693,8 +703,6 @@ log.LogDebug($"MGR_RECONCILE: 10");
                         if (!changed)
                         {
 log.LogDebug($"MGR_RECONCILE: 11: EXIT");
-                            // It's not time yet for another IDLE handler call.
-
                             return null;
                         }
 log.LogDebug($"MGR_RECONCILE: 12");
@@ -729,7 +737,10 @@ log.LogDebug($"MGR_RECONCILE: 15: EXIT");
         /// <param name="resource">The custom resource received.</param>
         /// <param name="handlerAsync">Your custom event handler.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="KeyNotFoundException">Thrown if the named resource is not currently present.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the instance has been disposed.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when KubeOps is running before <see cref="StartAsync(string)"/> is called for this controller.
+        /// </exception>
         /// <remarks>
         /// <para>
         /// By default, the resource manager will hold off calling your handler until all
@@ -741,21 +752,17 @@ log.LogDebug($"MGR_RECONCILE: 15: EXIT");
         /// your handler is called.
         /// </note>
         /// </remarks>
-        public async Task DeletedAsync(TResource resource, NoResultHandlerAsync handlerAsync)
+        public async Task DeletedAsync(TEntity resource, NoResultHandlerAsync handlerAsync)
         {
             await SyncContext.Clear;
 
 log.LogDebug($"MGR_DELETED: 0");
             EnsureNotDisposed();
-
-            // KubeOps will start watching and processing resources immediately after the operator
-            // starts running.  This happens even before the [StartAsync()] method is called.  We
-            // don't want to handle any resource related events until after the resource manager
-            // is formally started, so we'll ignore any events received.
+            EnsureStarted();
 
             if (!started)
             {
-                return;
+                throw new InvalidOperationException($"You must call [{nameof(TController)}.{nameof(StartAsync)}()] before starting KubeOps.");
             }
 
             // Filter desired resources.
@@ -783,6 +790,8 @@ log.LogDebug($"MGR_DELETED: 0");
                     log.LogError(e);
                     options.DeleteErrorCounter?.Inc();
                 }
+
+                return;
             }
 
             //-----------------------------------------------------------------
@@ -838,6 +847,10 @@ log.LogDebug($"MGR_DELETED: 0");
         /// <param name="resource">The custom resource received.</param>
         /// <param name="handlerAsync">Your custom event handler.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the instance has been disposed.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when KubeOps is running before <see cref="StartAsync(string)"/> is called for this controller.
+        /// </exception>
         /// <remarks>
         /// <para>
         /// By default, the resource manager will hold off calling your handler until all
@@ -849,22 +862,13 @@ log.LogDebug($"MGR_DELETED: 0");
         /// your handler is called.
         /// </note>
         /// </remarks>
-        public async Task StatusModifiedAsync(TResource resource, NoResultHandlerAsync handlerAsync)
+        public async Task StatusModifiedAsync(TEntity resource, NoResultHandlerAsync handlerAsync)
         {
             await SyncContext.Clear;
 
 log.LogDebug($"MGR_STATUS-MODIFIED: 0");
             EnsureNotDisposed();
-
-            // KubeOps will start watching and processing resources immediately after the operator
-            // starts running.  This happens even before the [StartAsync()] method is called.  We
-            // don't want to handle any resource related events until after the resource manager
-            // is formally started, so we'll ignore any events received.
-
-            if (!started)
-            {
-                return;
-            }
+            EnsureStarted();
 
             // Filter desired resources.
 
@@ -893,6 +897,8 @@ log.LogDebug($"MGR_STATUS-MODIFIED: 0");
                     log.LogError(e);
                     options.StatusModifiedErrorCounter?.Inc();
                 }
+
+                return;
             }
 
             //-----------------------------------------------------------------
@@ -957,7 +963,7 @@ log.LogDebug($"MGR_STATUS-MODIFIED: 0");
         /// </summary>
         /// <param name="name">The resource name.</param>
         /// <returns>Returns the resource if it exists or <c>null</c>.</returns>
-        public async Task<TResource> GetResourceAsync(string name)
+        public async Task<TEntity> GetResourceAsync(string name)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
@@ -971,7 +977,7 @@ log.LogDebug($"MGR_STATUS-MODIFIED: 0");
                     }
                     else
                     {
-                        return await Task.FromResult<TResource>(null);
+                        return await Task.FromResult<TEntity>(null);
                     }
                 });
         }
@@ -1035,7 +1041,7 @@ log.LogDebug($"MGR_STATUS-MODIFIED: 0");
         // This is somewhat FRAGILE!
 
         /// <summary>
-        /// This loop handles raising of <see cref="ReconciledAsync(TResource, ReconcileHandlerAsync)"/> 
+        /// This loop handles raising of <see cref="ReconciledAsync(TEntity, ReconcileHandlerAsync)"/> 
         /// events when there's been no changes to any of the monitored resources.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -1051,9 +1057,9 @@ log.LogDebug($"MGR_CHANGE-LOOP: 0");
 
                 var reconcileDiscovered = false;
 
-                if (DateTime.UtcNow >= nextNoChangeReconcileUtc)
+                if (DateTime.UtcNow >= nextIdleReconcileUtc)
                 {
-                    nextNoChangeReconcileUtc = DateTime.UtcNow + options.IdleInterval;
+                    nextIdleReconcileUtc = DateTime.UtcNow + options.IdleInterval;
 
 log.LogDebug($"MGR_CHANGE-LOOP: 1B: RECONCILE_NOCHANGE!!!");
 log.LogDebug($"MGR_CHANGE-LOOP: 1C: reconcileReceived={reconcileReceived} discovering={discovering}");
@@ -1087,15 +1093,15 @@ log.LogDebug($"MGR_CHANGE-LOOP: 1D: ITEMS EXIST");
 
                         try
                         {
-                            IList<TResource> items;
+                            IList<TEntity> items;
 
                             if (resourceNamespace != null)
                             {
-                                items = (await k8s.ListNamespacedCustomObjectAsync<TResource>(resourceNamespace)).Items;
+                                items = (await k8s.ListNamespacedCustomObjectAsync<TEntity>(resourceNamespace)).Items;
                             }
                             else
                             {
-                                items = (await k8s.ListClusterCustomObjectAsync<TResource>()).Items;
+                                items = (await k8s.ListClusterCustomObjectAsync<TEntity>()).Items;
                             }
 
                             if (items.Any(filter))
@@ -1147,7 +1153,7 @@ log.LogDebug($"MGR_CHANGE-LOOP: 3");
                                 //       https://github.com/nforgeio/neonKUBE/issues/1589
 
 log.LogDebug($"MGR_CHANGE-LOOP: 4A");
-                                var controller = (IResourceController<TResource>)controllerConstructor.Invoke(new object[] { k8s });
+                                var controller = (IResourceController<TEntity>)controllerConstructor.Invoke(new object[] { k8s });
 log.LogDebug($"MGR_CHANGE-LOOP: 4B");
 
                                 // Reconcile all of the resources when we just finished discovering them
@@ -1206,7 +1212,7 @@ log.LogDebug($"MGR_CHANGE-LOOP: 5: {NeonHelper.ExceptionError(e)}");
                             }
                         });
 
-                    nextNoChangeReconcileUtc = DateTime.UtcNow + options.IdleInterval;
+                    nextIdleReconcileUtc = DateTime.UtcNow + options.IdleInterval;
 log.LogDebug($"MGR_CHANGE-LOOP: 6");
                 }
 

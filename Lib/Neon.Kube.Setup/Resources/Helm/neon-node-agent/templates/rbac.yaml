@@ -6,9 +6,9 @@ rules:
 - apiGroups:
   - neonkube.io
   resources:
-  - containerregistries
-  - nodetasks
-  - nodetasks/status
+  - neoncontainerregistries
+  - neonnodetasks
+  - neonnodetasks/status
   verbs:
   - get
   - list

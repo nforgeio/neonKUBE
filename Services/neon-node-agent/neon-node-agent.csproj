@@ -16,12 +16,6 @@
 		<AnalysisLevel>5.0</AnalysisLevel>
 	</PropertyGroup>
 
-	<PropertyGroup>
-		<!-- Write generated installation YAML to an git-ignored folder -->
-		<KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
-		<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
-	</PropertyGroup>
-
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<DefineConstants />
 		<Optimize>False</Optimize>
@@ -62,6 +56,13 @@
 		<!-- Include the PDB in the nuget so stack traces can include line numbers -->
 		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
 	</ItemGroup>
+
+	<!--  CRD generation settings. -->
+
+	<PropertyGroup>
+		<KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
+		<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
+	</PropertyGroup>
 
 	<!-- 
 	This target removes any existing generated CRDs to avoid having old ones accumulate and

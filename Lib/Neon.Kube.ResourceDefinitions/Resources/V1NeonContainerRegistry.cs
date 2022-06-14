@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    V1ContainerRegistry.cs
+// FILE:	    V1NeonContainerRegistry.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -40,7 +40,7 @@ namespace Neon.Kube.Resources
     /// <remarks>
     /// <para>
     /// The <b>neon-node-agent</b> pods running as a daemonset on all cluster nodes monitor the  
-    /// <see cref="V1ContainerRegistry"/> resources in the <b>neon-system</b> namespace.
+    /// <see cref="V1NeonContainerRegistry"/> resources in the <b>neon-system</b> namespace.
     /// </para>
     /// </remarks>
     [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
@@ -49,7 +49,7 @@ namespace Neon.Kube.Resources
     [EntityScope(EntityScope.Cluster)]
     [Description("Describes a neonKUBE cluster upstream container registry.")]
 #endif
-    public class V1ContainerRegistry : CustomKubernetesEntity<V1ContainerRegistry.RegistrySpec>
+    public class V1NeonContainerRegistry : CustomKubernetesEntity<V1NeonContainerRegistry.RegistrySpec>
     {
         /// <summary>
         /// Object API group.
@@ -64,17 +64,17 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// Object API kind.
         /// </summary>
-        public const string KubeKind = "ContainerRegistry";
+        public const string KubeKind = "NeonContainerRegistry";
 
         /// <summary>
         /// Object plural name.
         /// </summary>
-        public const string KubePlural = "containerregistries";
+        public const string KubePlural = "neoncontainerregistries";
 
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public V1ContainerRegistry()
+        public V1NeonContainerRegistry()
         {
             this.SetMetadata();
         }

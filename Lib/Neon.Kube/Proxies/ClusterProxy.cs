@@ -693,7 +693,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Adds custom <see cref="V1ContainerRegistry"/> resources defined in the cluster definition to
+        /// Adds custom <see cref="V1NeonContainerRegistry"/> resources defined in the cluster definition to
         /// the cluster.  <b>neon-node-agent</b> will pick these up and regenerate the CRI-O configuration.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -728,7 +728,7 @@ namespace Neon.Kube
 
             foreach (var registry in localRegistries)
             {
-                var clusterRegistry = new V1ContainerRegistry();
+                var clusterRegistry = new V1NeonContainerRegistry();
 
                 clusterRegistry.Spec.SearchOrder = Definition.Container.SearchRegistries.IndexOf(registry.Location);
                 clusterRegistry.Spec.Prefix      = registry.Prefix;
@@ -759,7 +759,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Determines whether the cluster is considered to be locked for potentially distructive operations
+        /// Determines whether the cluster is considered to be locked to prevent potentially distructive operations
         /// such as <b>Pause</b>, <b>Remove</b>, <b>Reset</b>, <b>Resume</b>, or <b>Stop</b>.  This is used
         /// to help prevent impacting production clusters by accident.
         /// </summary>
@@ -1160,7 +1160,7 @@ namespace Neon.Kube
 
             if (options.ResetCrio)
             {
-                await Parallel.ForEachAsync((await K8s.ListClusterCustomObjectAsync<V1ContainerRegistry>()).Items,
+                await Parallel.ForEachAsync((await K8s.ListClusterCustomObjectAsync<V1NeonContainerRegistry>()).Items,
                     async (item, cancellationToken) =>
                     {
                         var metadata = item.GetKubernetesTypeMetadata();
