@@ -1,5 +1,5 @@
 ﻿apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
   labels:
     app: neon-cluster-operator
@@ -7,7 +7,6 @@ metadata:
   annotations:
     reloader.stakater.com/auto: "true"
 spec:
-  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: neon-cluster-operator
@@ -22,6 +21,8 @@ spec:
         prometheus.io/port: "9762"
         sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
     spec:
+      nodeSelector: 
+        neonkube.io/node.role: master
       serviceAccountName: neon-cluster-operator
       tolerations:
       - operator: Exists
