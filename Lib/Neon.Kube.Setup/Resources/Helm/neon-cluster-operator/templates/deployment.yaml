@@ -39,6 +39,14 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
+        - name: WATCHER_MAX_RETRY_INTERVAL
+          value: 15s
+        - name: CLUSTEROPERATOR_IDLE_INTERVAL
+          value: 60s
+        - name: CLUSTEROPERATOR_ERROR_MIN_REQUEUE_INTERVAL
+          value: 15s
+        - name: CLUSTEROPERATOR_ERROR_MAX_REQUEUE_INTERVAL
+          value: 60s
         envFrom:
         - configMapRef:
             name: neon-cluster-operator-webhook

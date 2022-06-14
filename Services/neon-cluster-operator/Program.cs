@@ -61,6 +61,7 @@ namespace NeonClusterOperator
 
             try
             {
+                //-------------------------------------------------------------
                 // Intercept and handle KubeOps [generator] commands executed by the 
                 // KubeOps MSBUILD tasks.
 
@@ -68,6 +69,9 @@ namespace NeonClusterOperator
                 {
                     return;
                 }
+
+                //-------------------------------------------------------------
+                // Start the operator service.
 
                 Service = new Service(KubeService.NeonClusterOperator);
 

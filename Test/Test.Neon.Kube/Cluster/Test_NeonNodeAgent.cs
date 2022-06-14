@@ -149,7 +149,7 @@ namespace TestKube
                 var folderPath = LinuxPath.GetDirectoryName(filePath);
 
                 spec.Node          = node.Name;
-                spec.RetainSeconds = 30;
+                spec.RetentionTime = 30;
                 spec.BashScript    = 
 $@"
 set -euo pipefail

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Helper.cs
+// FILE:	    Stub.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -19,23 +19,24 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-using k8s;
-using k8s.Models;
+using Neon.Kube;
 
-#if KUBEOPS
 namespace Neon.Kube.ResourceDefinitions
-#else
-namespace Neon.Kube.Resources
-#endif
 {
     /// <summary>
-    /// Internal helpers.
+    /// Called by operators to ensure that the <b>Neon.Kube.ResourceDefinitions</b>
+    /// assembly loaded into the current <see cref="AppDomain"/> so KubeOps will be
+    /// able to reflect the resource definitions and generate the CRDs etc.
     /// </summary>
-    internal static class Helper
+    public static class ResourcesAssemblyLoader
     {
         /// <summary>
-        /// Identifies the standard neonKUBE Kubernetes resource group.
+        /// Ensures that the <b>Neon.Kube.ResourceDefinitions</b> assembly is loaded.
         /// </summary>
-        internal const string NeonKubeResourceGroup = "neonkube.io";
+        public static void Load()
+        {
+            // This is a NOP because just calling this ensures that the 
+            // assembly is loaded.
+        }
     }
 }

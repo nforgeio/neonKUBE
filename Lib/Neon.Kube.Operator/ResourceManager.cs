@@ -492,6 +492,20 @@ log.LogDebug($"MGR_START: 4");
         }
 
         /// <summary>
+        /// Ensures that the controller has been started before KubeOps.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when KubeOps is running before <see cref="StartAsync(string)"/> is called for this controller.
+        /// </exception>
+        private void EnsureStarted()
+        {
+            if (!started)
+            {
+                throw new InvalidOperationException($"You must call [{nameof(TController)}.{nameof(StartAsync)}()] before starting KubeOps.");
+            }
+        }
+
+        /// <summary>
         /// Called when the instance has a <see cref="LeaderElector"/> and this instance has
         /// assumed leadership.
         /// </summary>
@@ -563,6 +577,10 @@ log.LogDebug($"MGR_START: 4");
         /// <param name="resource">The custom resource received or <c>null</c> when nothing has changed.</param>
         /// <param name="handlerAsync">Your custom event handler.</param>
         /// <returns>The <see cref="ResourceControllerResult"/> returned by your handler.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the instance has been disposed.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when KubeOps is running before <see cref="StartAsync(string)"/> is called for this controller.
+        /// </exception>
         /// <remarks>
         /// <para>
         /// By default, the resource manager will hold off calling your handler until all
@@ -580,16 +598,7 @@ log.LogDebug($"MGR_START: 4");
 
 log.LogDebug($"MGR_RECONCILE: 0:");
             EnsureNotDisposed();
-
-            // KubeOps will start watching and processing resources immediately after the operator
-            // starts running.  This happens even before the [StartAsync()] method is called.  We
-            // don't want to handle any resource related events until after the resource manager
-            // is formally started, so we'll just requeue any received events here.
-
-            if (!started)
-            {
-                return ResourceControllerResult.RequeueEvent(notStartedRequeDelay);
-            }
+            EnsureStarted();
 
             // Filter desired resources.
 
@@ -728,7 +737,10 @@ log.LogDebug($"MGR_RECONCILE: 15: EXIT");
         /// <param name="resource">The custom resource received.</param>
         /// <param name="handlerAsync">Your custom event handler.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="KeyNotFoundException">Thrown if the named resource is not currently present.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the instance has been disposed.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when KubeOps is running before <see cref="StartAsync(string)"/> is called for this controller.
+        /// </exception>
         /// <remarks>
         /// <para>
         /// By default, the resource manager will hold off calling your handler until all
@@ -746,15 +758,11 @@ log.LogDebug($"MGR_RECONCILE: 15: EXIT");
 
 log.LogDebug($"MGR_DELETED: 0");
             EnsureNotDisposed();
-
-            // KubeOps will start watching and processing resources immediately after the operator
-            // starts running.  This happens even before the [StartAsync()] method is called.  We
-            // don't want to handle any resource related events until after the resource manager
-            // is formally started, so we'll ignore any events received.
+            EnsureStarted();
 
             if (!started)
             {
-                return;
+                throw new InvalidOperationException($"You must call [{nameof(TController)}.{nameof(StartAsync)}()] before starting KubeOps.");
             }
 
             // Filter desired resources.
@@ -839,6 +847,10 @@ log.LogDebug($"MGR_DELETED: 0");
         /// <param name="resource">The custom resource received.</param>
         /// <param name="handlerAsync">Your custom event handler.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the instance has been disposed.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when KubeOps is running before <see cref="StartAsync(string)"/> is called for this controller.
+        /// </exception>
         /// <remarks>
         /// <para>
         /// By default, the resource manager will hold off calling your handler until all
@@ -856,16 +868,7 @@ log.LogDebug($"MGR_DELETED: 0");
 
 log.LogDebug($"MGR_STATUS-MODIFIED: 0");
             EnsureNotDisposed();
-
-            // KubeOps will start watching and processing resources immediately after the operator
-            // starts running.  This happens even before the [StartAsync()] method is called.  We
-            // don't want to handle any resource related events until after the resource manager
-            // is formally started, so we'll ignore any events received.
-
-            if (!started)
-            {
-                return;
-            }
+            EnsureStarted();
 
             // Filter desired resources.
 

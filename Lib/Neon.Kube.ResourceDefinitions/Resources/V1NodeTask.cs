@@ -122,7 +122,7 @@ namespace Neon.Kube.Resources
     /// The agent will then execute the script on the node, persisting the process ID to the node task 
     /// status along with the command line used to execute the script.  When the script finishes, the
     /// agent will capture its exit code and standard output and error streams as text.  The command 
-    /// execution time will be limited by <see cref="TaskSpec.TimeoutSeconds"/>.
+    /// execution time will be limited by <see cref="TaskSpec.Timeout"/>.
     /// </item>
     /// <note>
     /// <para>
@@ -194,12 +194,12 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// Object API kind.
         /// </summary>
-        public const string KubeKind = "NodeTask";
+        public const string KubeKind = "NeonNodeTask";
 
         /// <summary>
         /// Object plural name.
         /// </summary>
-        public const string KubePlural = "nodetasks";
+        public const string KubePlural = "neonnodetasks";
 
         //---------------------------------------------------------------------
         // Local types
@@ -303,7 +303,7 @@ namespace Neon.Kube.Resources
 #if KUBEOPS
             [Required]
 #endif
-            public int TimeoutSeconds { get; set; } = 300;
+            public int Timeout { get; set; } = 300;
 
             /// <summary>
             /// Specifies the maximum time to retain the task after it has been
@@ -315,7 +315,7 @@ namespace Neon.Kube.Resources
 #if KUBEOPS
             [Required]
 #endif
-            public int RetainSeconds { get; set; } = 600;
+            public int RetentionTime { get; set; } = 600;
 
             /// <summary>
             /// <para>
@@ -346,14 +346,14 @@ namespace Neon.Kube.Resources
                     throw new CustomResourceException($"[{specPrefix}.{nameof(BashScript)}]: cannot be NULL or empty.");
                 }
 
-                if (TimeoutSeconds <= 0)
+                if (Timeout <= 0)
                 {
-                    throw new CustomResourceException($"[{specPrefix}.{nameof(TimeoutSeconds)}={TimeoutSeconds}]: Must be greater than zero.");
+                    throw new CustomResourceException($"[{specPrefix}.{nameof(Timeout)}={Timeout}]: Must be greater than zero.");
                 }
 
-                if (RetainSeconds < 0)
+                if (RetentionTime < 0)
                 {
-                    throw new CustomResourceException($"[{specPrefix}.{nameof(TimeoutSeconds)}={TimeoutSeconds}]: Cannot be negative.");
+                    throw new CustomResourceException($"[{specPrefix}.{nameof(Timeout)}={Timeout}]: Cannot be negative.");
                 }
             }
         }
@@ -392,7 +392,7 @@ namespace Neon.Kube.Resources
             /// <summary>
             /// Set to the task execution time serialized as seconds.
             /// </summary>
-            public double ExecutionSeconds { get; set; }
+            public double Runtime { get; set; }
 
             /// <summary>
             /// The command line invoked for the task.  This is used for detecting orphaned tasks.
@@ -400,11 +400,11 @@ namespace Neon.Kube.Resources
             public string CommandLine { get; set; }
 
             /// <summary>
-            /// Set to a UUID identifying the execution.  This will be used to name the Bash
+            /// Set to a UUID identifying the task execution.  This will be used to name the Bash
             /// script when persisted to the host node as well as to help identify the process
             /// when it's running.
             /// </summary>
-            public string ExecutionId { get; set; }
+            public string RunId { get; set; }
 
             /// <summary>
             /// Set to the ID of the task process while its running.

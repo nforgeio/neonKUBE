@@ -62,10 +62,17 @@ namespace NeonNodeAgent
     /// </para>
     /// <list type="table">
     /// <item>
+    ///     <term><b>WATCHER_MAX_RETRY_INTERVAL</b></term>
+    ///     <description>
+    ///     <b>timespan:</b> Specifies the maximum time the KubeOps resource watcher will wait
+    ///     after a watch failure.  This defaults to <b>15</b> seconds.
+    ///     </description>
+    /// </item>
+    /// <item>
     ///     <term><b>CONTAINERREGISTRY_IDLE_INTERVAL</b></term>
     ///     <description>
     ///     <b>timespan:</b> Specifies the interval at which IDLE reconcile events will be raised
-    ///     for <b>ContainerRegistry</b>.  This defaults to <b>5 minutes</b>.
+    ///     for <b>ContainerRegistry</b>.  This defaults to <b>60 seconds</b>.
     ///     </description>
     /// </item>
     /// <item>
@@ -82,7 +89,7 @@ namespace NeonNodeAgent
     ///     <term><b>CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL</b></term>
     ///     <description>
     ///     <b>timespan:</b> Specifies the interval at which IDLE reconcile events will be raised
-    ///     for <b>ContainerRegistry</b>.  This defaults to <b>5 minutes</b>.
+    ///     for <b>ContainerRegistry</b>.  This defaults to <b>5 seconds</b>.
     ///     </description>
     /// </item>
     /// <item>
@@ -90,7 +97,7 @@ namespace NeonNodeAgent
     ///     <description>
     ///     <b>timespan:</b> Specifies the interval at which <b>reconcile</b> events will be requeued
     ///     for <b>NodeTask</b> resources as a backstop to ensure that the operator state
-    ///     remains in sync with the API server.  This defaults to <b>5 minutes</b>.
+    ///     remains in sync with the API server.  This defaults to <b>60 seconds</b>.
     ///     </description>
     /// </item>
     /// <item>
@@ -100,17 +107,16 @@ namespace NeonNodeAgent
     ///     exception is thrown when handling NodeTask events.  This
     ///     value will be doubled when subsequent events also fail until the
     ///     requeue time maxes out at <b>CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL</b>.
-    ///     This defaults to <b>15 seconds</b>.
+    ///     This defaults to <b>5 seconds</b>.
     ///     </description>
     /// </item>
     /// <item>
     ///     <term><b>NODETASK_ERROR_MIN_REQUEUE_INTERVAL</b></term>
     ///     <description>
     ///     <b>timespan:</b> Specifies the maximum requeue time for NodeTask
-    ///     handler exceptions.  This defaults to <b>10</b> minutes.
+    ///     handler exceptions.  This defaults to <b>60 seconds</b>.
     ///     </description>
     /// </item>
-    /// <item>
     /// </list>
     /// </remarks>
     public partial class Service : NeonService
@@ -135,8 +141,16 @@ namespace NeonNodeAgent
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
-            // Start the operator controllers.  Note that we're not going to await
-            // this and will use the termination signal to exit.
+            //-----------------------------------------------------------------
+            // Start the controllers: these need to be started before starting KubeOps
+
+            var k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
+
+            await ContainerRegistryController.StartAsync(k8s);
+            await NodeTaskController.StartAsync(k8s);
+
+            //-----------------------------------------------------------------
+            // Start KubeOps.
 
             _ = Host.CreateDefaultBuilder()
                     .ConfigureHostOptions(
@@ -169,17 +183,6 @@ namespace NeonNodeAgent
                     .ConfigureWebHostDefaults(builder => builder.UseStartup<Startup>())
                     .Build()
                     .RunOperatorAsync(Array.Empty<string>());
-
-            // Start the controllers.
-
-            var k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
-
-            //###############################
-            // $debug(jefflill): RESTORE THIS
-            // await ContainerRegistryController.StartAsync(k8s);
-            //###############################
-
-            await NodeTaskController.StartAsync(k8s);
 
             // Indicate that the service is running.
 

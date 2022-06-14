@@ -41,5 +41,11 @@ namespace NeonClusterOperator
         /// Returns the name of the executing pod.
         /// </summary>
         public static readonly string Name = Environment.GetEnvironmentVariable("POD_NAME");
+
+        /// <summary>
+        /// Returns the UUID that will be used as the operator's identity for leader
+        /// election purposes.
+        /// </summary>
+        public static readonly string AgentId = NeonHelper.CreateBase36Guid();
     }
 }

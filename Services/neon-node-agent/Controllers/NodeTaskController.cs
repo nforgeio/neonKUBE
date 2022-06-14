@@ -166,11 +166,11 @@ rm $0
                 // $debug(jefflill): RESTORE THIS!
                 //IdleInterval               = Program.Service.Environment.Get("NODETASK_IDLE_INTERVAL", TimeSpan.FromMinutes(1)),
                 //ErrorMinRequeueInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15)),
-                //ErrorMaxRetryInterval      = Program.Service.Environment.Get("NODETASK_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromMinutes(10)),
+                //ErrorMaxRetryInterval      = Program.Service.Environment.Get("NODETASK_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromSeconds(60)),
                 //################################
                 IdleInterval               = TimeSpan.FromMinutes(0.25),
                 ErrorMinRequeueInterval    = TimeSpan.FromSeconds(15),
-                ErrorMaxRetryInterval      = TimeSpan.FromMinutes(10),
+                ErrorMaxRetryInterval      = TimeSpan.FromSeconds(60),
                 ReconcileErrorCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconciled_error", "Failed NodeTask reconcile event processing."),
                 DeleteErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_deleted_error", "Failed NodeTask deleted event processing."),
                 StatusModifiedErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodified_error", "Failed NodeTask status-modified events processing.")
@@ -295,7 +295,7 @@ log.LogDebug($"*** RECONCILE: 10");
 log.LogDebug($"*** RECONCILE: 11");
                             var retentionTime = DateTime.UtcNow - nodeTask.Status.FinishTimestamp;
 
-                            if (retentionTime >= TimeSpan.FromSeconds(nodeTask.Spec.RetainSeconds))
+                            if (retentionTime >= TimeSpan.FromSeconds(nodeTask.Spec.RetentionTime))
                             {
 log.LogDebug($"*** RECONCILE: 12");
                                 log.LogInfo($"NodeTask [{name}] retained for [{retentionTime}] (deleting now).");
@@ -384,7 +384,7 @@ log.LogDebug($"*** STATUSMODIFIED: 0: count={resources.Count}");
         /// deletion.
         /// </item>
         /// <item>
-        /// Tasks with a finish time that is older than <see cref="V1NodeTask.TaskSpec.RetainSeconds"/>
+        /// Tasks with a finish time that is older than <see cref="V1NodeTask.TaskSpec.RetentionTime"/>
         /// will be removed.
         /// </item>
         /// </list>
@@ -441,9 +441,9 @@ log.LogDebug($"*** STATUSMODIFIED: 0: count={resources.Count}");
 
                     // Kill tasks that have been running for too long.
 
-                    if (utcNow - nodeTask.Status.StartTimestamp >= TimeSpan.FromSeconds(nodeTask.Spec.TimeoutSeconds))
+                    if (utcNow - nodeTask.Status.StartTimestamp >= TimeSpan.FromSeconds(nodeTask.Spec.Timeout))
                     {
-                        log.LogWarn($"Detected timeout [nodetask={taskName}]: execution time exceeds [{nodeTask.Spec.TimeoutSeconds}].");
+                        log.LogWarn($"Detected timeout [nodetask={taskName}]: execution time exceeds [{nodeTask.Spec.Timeout}].");
                         await KillTaskAsync(nodeTask);
 
                         // Update the node task status to: TIMEOUT
@@ -452,7 +452,7 @@ log.LogDebug($"*** STATUSMODIFIED: 0: count={resources.Count}");
 
                         patch.Replace(path => path.Status.Phase, V1NodeTask.Phase.Timeout);
                         patch.Replace(path => path.Status.FinishTimestamp, utcNow);
-                        patch.Replace(path => path.Status.ExecutionSeconds, (utcNow - nodeTask.Status.StartTimestamp.Value).TotalSeconds);
+                        patch.Replace(path => path.Status.Runtime, (utcNow - nodeTask.Status.StartTimestamp.Value).TotalSeconds);
                         patch.Replace(path => path.Status.ExitCode, -1);
 
                         await k8s.PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
@@ -466,7 +466,7 @@ log.LogDebug($"*** STATUSMODIFIED: 0: count={resources.Count}");
 
             foreach (var nodeTask in nodeTasks.Values
                 .Where(task => task.Status.Phase != V1NodeTask.Phase.New && task.Status.Phase != V1NodeTask.Phase.Running)
-                .Where(task => (utcNow - task.Status.FinishTimestamp) >= TimeSpan.FromSeconds(task.Spec.RetainSeconds)))
+                .Where(task => (utcNow - task.Status.FinishTimestamp) >= TimeSpan.FromSeconds(task.Spec.RetentionTime)))
             {
                 await k8s.DeleteClusterCustomObjectAsync<V1NodeTask>(nodeTask.Name());
             }
@@ -476,9 +476,9 @@ log.LogDebug($"*** STATUSMODIFIED: 0: count={resources.Count}");
 
             var nodeTaskExecuteIds = new HashSet<string>();
 
-            foreach (var nodeTask in nodeTasks.Values.Where(task => !string.IsNullOrEmpty(task.Status.ExecutionId)))
+            foreach (var nodeTask in nodeTasks.Values.Where(task => !string.IsNullOrEmpty(task.Status.RunId)))
             {
-                nodeTaskExecuteIds.Add(nodeTask.Status.ExecutionId);
+                nodeTaskExecuteIds.Add(nodeTask.Status.RunId);
             }
 
             foreach (var scriptFolderPath in Directory.GetDirectories(hostAgentTasksFolder, "*", SearchOption.TopDirectoryOnly))
@@ -617,7 +617,7 @@ log.LogDebug($"*** EXECUTE: 7");
 log.LogDebug($"*** EXECUTE: 9");
                 task = Node.BashExecuteCaptureAsync(
                     path:            scriptPath, 
-                    timeout:         TimeSpan.FromSeconds(nodeTask.Spec.TimeoutSeconds), 
+                    timeout:         TimeSpan.FromSeconds(nodeTask.Spec.Timeout), 
                     processCallback: processCallback);
 log.LogDebug($"*** EXECUTE: 10");
             }
@@ -666,7 +666,7 @@ log.LogDebug($"*** EXECUTE: 13");
             patch.Replace(path => path.Status.StartTimestamp, DateTime.UtcNow);
             patch.Replace(path => path.Status.AgentId, Node.AgentId);
             patch.Replace(path => path.Status.CommandLine, Node.GetBashCommandLine(scriptPath));
-            patch.Replace(path => path.Status.ExecutionId, executionId);
+            patch.Replace(path => path.Status.RunId, executionId);
 
             nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NodeTask>(OperatorHelper.ToV1Patch<V1NodeTask>(patch), nodeTask.Name());
 
@@ -696,7 +696,7 @@ log.LogDebug($"*** EXECUTE: 15");
                 {
 log.LogDebug($"*** EXECUTE: 16");
                     nodeTask.Status.FinishTimestamp  = DateTime.UtcNow;
-                    nodeTask.Status.ExecutionSeconds = (nodeTask.Status.FinishTimestamp.Value - nodeTask.Status.StartTimestamp.Value).TotalSeconds;
+                    nodeTask.Status.Runtime = (nodeTask.Status.FinishTimestamp.Value - nodeTask.Status.StartTimestamp.Value).TotalSeconds;
 
                     if (timeout)
                     {
@@ -730,13 +730,13 @@ log.LogDebug($"*** EXECUTE: 19");
                     else if (result.ExitCode != 0)
                     {
                         patch.Replace(path => path.Status.Phase, V1NodeTask.Phase.Failed);
-                        patch.Replace(path => path.Status.ExecutionSeconds, (nodeTask.Status.FinishTimestamp.Value - nodeTask.Status.StartTimestamp.Value).TotalSeconds);
+                        patch.Replace(path => path.Status.Runtime, (nodeTask.Status.FinishTimestamp.Value - nodeTask.Status.StartTimestamp.Value).TotalSeconds);
                         patch.Replace(path => path.Status.ExitCode, result.ExitCode);
                     }
                     else
                     {
                         patch.Replace(path => path.Status.Phase, V1NodeTask.Phase.Finished);
-                        patch.Replace(path => path.Status.ExecutionSeconds, (nodeTask.Status.FinishTimestamp.Value - nodeTask.Status.StartTimestamp.Value).TotalSeconds);
+                        patch.Replace(path => path.Status.Runtime, (nodeTask.Status.FinishTimestamp.Value - nodeTask.Status.StartTimestamp.Value).TotalSeconds);
 
                         if (nodeTask.Spec.CaptureOutput)
                         {

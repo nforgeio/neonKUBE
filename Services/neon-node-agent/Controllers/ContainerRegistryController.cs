@@ -15,9 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// $debug(jefflill): RESTORE THIS!
-#if DISABLED
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -136,7 +133,7 @@ namespace NeonNodeAgent
                 Mode                       = ResourceManagerMode.Normal,
                 IdleInterval               = Program.Service.Environment.Get("CONTAINERREGISTRY_IDLE_INTERVAL", TimeSpan.FromMinutes(5)),
                 ErrorMinRequeueInterval    = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15)),
-                ErrorMaxRetryInterval      = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromMinutes(10)),
+                ErrorMaxRetryInterval      = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromSeconds(60)),
                 ReconcileCounter           = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_reconciled_changes", "Processed ContainerRegistry reconcile events due to change."),
                 DeleteCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_deleted_received", "Received ContainerRegistry deleted events."),
                 StatusModifiedCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_statusmodified_received", "Received ContainerRegistry status-modified events."),
@@ -214,7 +211,7 @@ namespace NeonNodeAgent
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task StatusModifiedAsync(V1ContainerRegistry registry)
         {
-            await resourceManager.DeletedAsync(registry,
+            await resourceManager.StatusModifiedAsync(registry,
                 async (name, resources) =>
                 {
                     // This is a NO-OP
@@ -370,5 +367,3 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
         }
     }
 }
-
-#endif

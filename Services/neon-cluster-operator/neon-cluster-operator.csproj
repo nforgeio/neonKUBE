@@ -40,6 +40,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.ResourceDefinitions\Neon.Kube.ResourceDefinitions.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
@@ -48,7 +52,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="Controllers\" />
+		<Folder Include="config.gitignore\" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -78,16 +82,23 @@
 		<Exec Command="neon-build download-const-uri &quot;%NF_ROOT%\Lib\Neon.Kube\bin\$(Configuration)\net6.0\Neon.Kube.dll&quot; Neon.Kube.KubeDownloads NeonClusterManifestUri &quot;$(ProjectDir)Resources\cluster-manifest.json" />
 	</Target>
 
+	<!--  CRD generation settings. -->
+	
+	<PropertyGroup>
+		<KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
+		<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
+	</PropertyGroup>
+
 	<!-- 
     The KubeOps config file generator doesn't rebuild the files when the config output
     directory already exists.  We're going to delete this folder to ensure that these
     files are always regenerated.
     -->
 
-	<Target Name="RemoveConfig">
+	<Target Name="RemoveConfig" BeforeTargets="GenerateAfterBuild">
 		<RemoveDir Directories="$(ProjectDir)config.gitignore" />
 	</Target>
-	
+
 	<!-- 
 	This target removes any existing generated CRDs to avoid having old ones accumulate and
 	cause problems.

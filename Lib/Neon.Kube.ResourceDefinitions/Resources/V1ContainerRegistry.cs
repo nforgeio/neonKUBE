@@ -64,12 +64,12 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// Object API kind.
         /// </summary>
-        public const string KubeKind = "ContainerRegistry";
+        public const string KubeKind = "NeonContainerRegistry";
 
         /// <summary>
         /// Object plural name.
         /// </summary>
-        public const string KubePlural = "containerregistries";
+        public const string KubePlural = "neoncontainerregistries";
 
         /// <summary>
         /// Default constructor.
