@@ -21,10 +21,8 @@ image:
 
 resource:
   limits:
-    cpu: 100m
     memory: 110Mi
   requests:
-    cpu: 100m
     memory: 64Mi
 
 serviceMesh:

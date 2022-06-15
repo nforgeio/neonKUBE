@@ -4506,8 +4506,10 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var k8s = GetK8sClient(controller);
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s           = GetK8sClient(controller);
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonClusterOperator);
 
             controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/cluster-operator",
@@ -4520,6 +4522,8 @@ $@"- name: StorageType
                     values.Add("image.organization", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add("resource.requests.memory", serviceAdvice[KubeServiceAdvice.PodMemoryRequestProperty]);
+                    values.Add("resource.limits.memory", serviceAdvice[KubeServiceAdvice.PodMemoryLimitProperty]);
 
                     await master.InstallHelmChartAsync(controller, "neon-cluster-operator",
                         releaseName:  "neon-cluster-operator",
@@ -4535,6 +4539,54 @@ $@"- name: StorageType
                     controller.LogProgress(master, verb: "wait for", message: "neon-cluster-operator");
 
                     await k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-cluster-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                });
+        }
+
+        /// <summary>
+        /// Installs <b>neon-node-agent</b>.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallNodeAgentAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            var k8s           = GetK8sClient(controller);
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonNodeAgent);
+
+            controller.ThrowIfCancelled();
+            await master.InvokeIdempotentAsync("setup/neon-node-agent",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "setup", message: "neon-node-agent");
+
+                    var values = new Dictionary<string, object>();
+
+                    values.Add("image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
+                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add("resource.requests.memory", serviceAdvice[KubeServiceAdvice.PodMemoryRequestProperty]);
+                    values.Add("resource.limits.memory", serviceAdvice[KubeServiceAdvice.PodMemoryLimitProperty]);
+
+                    await master.InstallHelmChartAsync(controller, "neon-node-agent",
+                        releaseName:  "neon-node-agent",
+                        @namespace:   KubeNamespace.NeonSystem,
+                        prioritySpec: PriorityClass.NeonOperator.Name,
+                        values:       values);
+                });
+
+            controller.ThrowIfCancelled();
+            await master.InvokeIdempotentAsync("setup/neon-node-agent-ready",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "wait for", message: "neon-node-agent");
+
+                    await k8s.WaitForDaemonsetAsync(KubeNamespace.NeonSystem, "neon-node-agent", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
         }
 
@@ -4585,50 +4637,6 @@ $@"- name: StorageType
                     controller.LogProgress(master, verb: "wait for", message: "neon-dashboard");
 
                     await k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-dashboard", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
-                });
-        }
-
-        /// <summary>
-        /// Installs <b>neon-node-agent</b>.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="master">The master node where the operation will be performed.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallNodeAgentAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
-
-            var k8s     = GetK8sClient(controller);
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-
-            controller.ThrowIfCancelled();
-            await master.InvokeIdempotentAsync("setup/neon-node-agent",
-                async () =>
-                {
-                    controller.LogProgress(master, verb: "setup", message: "neon-node-agent");
-
-                    var values = new Dictionary<string, object>();
-
-                    values.Add("image.organization", KubeConst.LocalClusterRegistry);
-                    values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
-                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
-
-                    await master.InstallHelmChartAsync(controller, "neon-node-agent",
-                        releaseName:  "neon-node-agent",
-                        @namespace:   KubeNamespace.NeonSystem,
-                        prioritySpec: PriorityClass.NeonOperator.Name,
-                        values:       values);
-                });
-
-            controller.ThrowIfCancelled();
-            await master.InvokeIdempotentAsync("setup/neon-node-agent-ready",
-                async () =>
-                {
-                    controller.LogProgress(master, verb: "wait for", message: "neon-node-agent");
-
-                    await k8s.WaitForDaemonsetAsync(KubeNamespace.NeonSystem, "neon-node-agent", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
         }
 
