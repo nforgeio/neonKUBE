@@ -384,6 +384,11 @@ namespace Neon.Kube
         public static string NeonClusterOperator = "neon-cluster-operator";
 
         /// <summary>
+        /// Identifies the neonKUBE cluster's <b>neon-node-agent</b> service.
+        /// </summary>
+        public static string NeonNodeAgent = "neon-node-agent";
+
+        /// <summary>
         /// Identifies the neonKUBE cluster's <b>neon-dashboard</b> service.
         /// </summary>
         public static string NeonDashboard = "neon-dashboard";
@@ -639,27 +644,27 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the <see cref="KubeServiceAdvice"/> for the specified service.
         /// </summary>
-        /// <param name="identity">Identifies the service (one of the constants defined by this class).</param>
+        /// <param name="serviceName">Identifies the service (one of the constants defined by this class).</param>
         /// <returns>The <see cref="KubeServiceAdvice"/> instance for the service.</returns>
         /// <exception cref="KeyNotFoundException">Thrown when there's no advice for the service.</exception>
-        public KubeServiceAdvice GetServiceAdvice(string identity)
+        public KubeServiceAdvice GetServiceAdvice(string serviceName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(identity));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(serviceName));
 
-            return services[identity];
+            return services[serviceName];
         }
 
         /// <summary>
         /// Adds the <see cref="KubeServiceAdvice"/> for the specified service.
         /// </summary>
-        /// <param name="identity">Identifies the service (one of the constants defined by this class).</param>
+        /// <param name="serviceName">Identifies the service (one of the constants defined by this class).</param>
         /// <param name="advice">The <see cref="KubeServiceAdvice"/> instance for the service</param>
-        public void AddServiceAdvice(string identity, KubeServiceAdvice advice)
+        public void AddServiceAdvice(string serviceName, KubeServiceAdvice advice)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(identity));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(serviceName));
             Covenant.Requires<ArgumentNullException>(advice != null);
 
-            services.Add(identity, advice);
+            services.Add(serviceName, advice);
         }
     }
 }

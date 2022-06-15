@@ -132,6 +132,7 @@ namespace Neon.Kube
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Minio, CalculateMinioAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.MinioOperator, CalculateMinioOperatorAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.NeonClusterOperator, CalculateNeonClusterOperatorAdvice(cluster));
+            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.NeonNodeAgent, CalculateNeonNodeAgentAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.NeonDashboard, CalculateNeonDashboardAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.NeonSsoSessionProxy, CalculateNeonSsoSessionProxyAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.NeonSystemDb, CalculateNeonSystemDbAdvice(cluster));
@@ -876,9 +877,17 @@ namespace Neon.Kube
 
             return advice;
         }
+
         private static KubeServiceAdvice CalculateNeonClusterOperatorAdvice(ClusterProxy cluster)
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.NeonClusterOperator);
+
+            return advice;
+        }
+
+        private static KubeServiceAdvice CalculateNeonNodeAgentAdvice(ClusterProxy cluster)
+        {
+            var advice = new KubeServiceAdvice(KubeClusterAdvice.NeonNodeAgent);
 
             return advice;
         }
