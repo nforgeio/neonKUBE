@@ -36,6 +36,8 @@ using Neon.Kube;
 using Neon.Service;
 using Neon.Tasks;
 
+using NeonDashboard.Shared.Components;
+
 using k8s;
 using k8s.Models;
 
@@ -61,6 +63,11 @@ namespace NeonDashboard
         /// Information about the cluster.
         /// </summary>
         public ClusterInfo ClusterInfo;
+
+        /// <summary>
+        /// Dashboards available.
+        /// </summary>
+        public List<Dashboard> Dashboards;
 
         /// <summary>
         /// SSO Client Secret.
@@ -146,6 +153,28 @@ namespace NeonDashboard
             PrometheusClient = new PrometheusClient($"{metricsHost}/prometheus/");
 
             SsoClientSecret = GetEnvironmentVariable("SSO_CLIENT_SECRET", redacted: true);
+
+            Dashboards = new List<Dashboard>();
+
+            Dashboards.Add(new Dashboard("neonkube", "neonKUBE"));
+            Dashboards.Add(new Dashboard("kubernetes", "Kubernetes", $"https://{ClusterDomain.KubernetesDashboard}.{ClusterInfo.Domain}"));
+
+            if (ClusterInfo.FeatureOptions.Grafana)
+            {
+                Dashboards.Add(new Dashboard("grafana", "Grafana", $"https://{ClusterDomain.Grafana}.{ClusterInfo.Domain}"));
+            }
+            if (ClusterInfo.FeatureOptions.Minio)
+            {
+                Dashboards.Add(new Dashboard("minio", "Minio", $"https://{ClusterDomain.Minio}.{ClusterInfo.Domain}"));
+            }
+            if (ClusterInfo.FeatureOptions.Harbor.Enabled)
+            {
+                Dashboards.Add(new Dashboard("harbor", "Harbor", $"https://{ClusterDomain.HarborRegistry}.{ClusterInfo.Domain}"));
+            }
+            if (ClusterInfo.FeatureOptions.Kiali)
+            {
+                Dashboards.Add(new Dashboard("kiali", "Kiali", $"https://{ClusterDomain.Kiali}.{ClusterInfo.Domain}"));
+            }
 
             // Start the web service.
 

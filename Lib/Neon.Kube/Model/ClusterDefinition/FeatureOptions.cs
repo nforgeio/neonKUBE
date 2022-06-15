@@ -52,6 +52,14 @@ namespace Neon.Kube
         public class HarborOptions
         {
             /// <summary>
+            /// Optionally installs Harbor. This defaults to <c>false</c>.
+            /// </summary>
+            [JsonProperty(PropertyName = "Enabled", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            [YamlMember(Alias = "enabled", ApplyNamingConventions = false)]
+            [DefaultValue(true)]
+            public bool Enabled { get; set; } = true;
+
+            /// <summary>
             /// Optionally installs the Harbor Chart Museum.  This defaults to <c>false</c>.
             /// </summary>
             [JsonProperty(PropertyName = "ChartMuseum", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -90,12 +98,28 @@ namespace Neon.Kube
         // Implementation
 
         /// <summary>
+        /// Indicates whether <b>Grafana</b> is installed.
+        /// </summary>
+        [JsonProperty(PropertyName = "Grafana", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "grafana", ApplyNamingConventions = false)]
+        [DefaultValue(true)]
+        public bool Grafana { get; set; } = true;
+
+        /// <summary>
         /// Specifies optional Harbor related components to be installed in the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "Harbor", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "harbor", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public HarborOptions Harbor { get; set; } = new HarborOptions();
+
+        /// <summary>
+        /// Indicates whether <b>Loki</b> is installed.
+        /// </summary>
+        [JsonProperty(PropertyName = "Loki", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "loki", ApplyNamingConventions = false)]
+        [DefaultValue(true)]
+        public bool Loki { get; set; } = true;
 
         /// <summary>
         /// Optionally installs the Node Problem Detector.  This defaults to <c>false</c>.
@@ -120,6 +144,22 @@ namespace Neon.Kube
         [YamlMember(Alias = "kiali", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool Kiali { get; set; } = false;
+
+        /// <summary>
+        /// Indicates whether <b>Mimir</b> is installed.
+        /// </summary>
+        [JsonProperty(PropertyName = "Mimir", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "mimir", ApplyNamingConventions = false)]
+        [DefaultValue(true)]
+        public bool Mimir { get; set; } = true;
+
+        /// <summary>
+        /// Indicates whether <b>Minio</b> is installed.
+        /// </summary>
+        [JsonProperty(PropertyName = "Minio", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "minio", ApplyNamingConventions = false)]
+        [DefaultValue(true)]
+        public bool Minio { get; set; } = true;
 
         /// <summary>
         /// Optionally installs Tempo.  This defaults to <c>false</c>.
