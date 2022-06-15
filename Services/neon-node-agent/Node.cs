@@ -95,27 +95,19 @@ namespace NeonNodeAgent
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
-// $debug(jefflill): DELETE THESE!
-Console.WriteLine($"NODE-OWNER: 0:");
             using (await mutex.AcquireAsync())
             {
-Console.WriteLine($"NODE-OWNER: 1:");
                 // Return any cached information.
 
                 if (cachedOwnerReference != null)
                 {
-Console.WriteLine($"NODE-OWNER: 2:");
                     return cachedOwnerReference;
                 }
-Console.WriteLine($"NODE-OWNER: 3:");
 
                 // Query Kubernetes for the node information based on the the node's hostname.
 
-Console.WriteLine($"NODE-OWNER: 4: name={Name}");
                 cachedNode           = await k8s.ReadNodeAsync(Name);
-Console.WriteLine($"NODE-OWNER: 5:");
                 cachedOwnerReference = new V1OwnerReference(apiVersion: cachedNode.ApiVersion, name: cachedNode.Name(), kind: cachedNode.Kind, uid: cachedNode.Uid());
-Console.WriteLine($"NODE-OWNER: 6:");
 
                 return cachedOwnerReference;
             }

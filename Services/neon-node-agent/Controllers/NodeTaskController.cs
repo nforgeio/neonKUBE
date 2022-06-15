@@ -109,7 +109,7 @@ namespace NeonNodeAgent
             // Ensure that the [/var/run/neonkube/neon-node-agent/nodetask] folder exists on the node.
 
             var scriptPath = Path.Combine(Node.HostMount, $"tmp/node-agent-folder-{NeonHelper.CreateBase36Guid()}.sh");
-            var script     =
+            var script =
 $@"#!/bin/bash
 
 set -euo pipefail
@@ -163,15 +163,6 @@ rm $0
             var options = new ResourceManagerOptions()
             {
                 Mode                       = ResourceManagerMode.Normal,
-                //################################
-                // $debug(jefflill): RESTORE THIS!
-                //IdleInterval               = Program.Service.Environment.Get("NODETASK_IDLE_INTERVAL", TimeSpan.FromMinutes(1)),
-                //ErrorMinRequeueInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15)),
-                //ErrorMaxRetryInterval      = Program.Service.Environment.Get("NODETASK_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromSeconds(60)),
-                //################################
-                IdleInterval               = TimeSpan.FromMinutes(0.25),
-                ErrorMinRequeueInterval    = TimeSpan.FromSeconds(15),
-                ErrorMaxRetryInterval      = TimeSpan.FromSeconds(60),
                 ReconcileErrorCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconciled_error", "Failed NodeTask reconcile event processing."),
                 DeleteErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_deleted_error", "Failed NodeTask deleted event processing."),
                 StatusModifiedErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodified_error", "Failed NodeTask status-modified events processing.")

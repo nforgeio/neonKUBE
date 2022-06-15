@@ -54,7 +54,7 @@ namespace NeonNodeAgent
 
             if (Program.Service != null)
             {
-                watcherRetrySeconds = Math.Max(1, (int)Math.Ceiling(Program.Service.Environment.Get("WATCHER_MAX_RETRY_INTERVAL", TimeSpan.FromSeconds(5)).TotalSeconds));
+                watcherRetrySeconds = Math.Max(1, (int)Math.Ceiling(Program.Service.Environment.Get("WATCHER_MAX_RETRY_INTERVAL", TimeSpan.FromSeconds(watcherRetrySeconds)).TotalSeconds));
             }
 
             var _services = services;

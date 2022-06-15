@@ -41,5 +41,25 @@ namespace NeonNodeAgent
         /// Returns the name of the executing pod.
         /// </summary>
         public static readonly string Name = Environment.GetEnvironmentVariable("POD_NAME");
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static Pod()
+        {
+            // Initializes these properties from environment variables when we're running 
+            // in a cluster, otherwise configure test values when running on workstation.
+
+            if (NeonHelper.IsDevWorkstation)
+            {
+                Namespace = "default";
+                Name      = "test-pod";
+            }
+            else
+            {
+                Namespace = Environment.GetEnvironmentVariable("POD_NAMESPACE");
+                Name      = Environment.GetEnvironmentVariable("POD_NAME");
+            }
+        }
     }
 }
