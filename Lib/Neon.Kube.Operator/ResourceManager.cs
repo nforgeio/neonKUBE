@@ -43,6 +43,7 @@ using KubeOps.Operator.Entities;
 using k8s;
 using Prometheus;
 using k8s.Models;
+using k8s.Autorest;
 
 namespace Neon.Kube.Operator
 {
@@ -427,12 +428,9 @@ namespace Neon.Kube.Operator
                 leaderTask = leaderElector.RunAsync();
             }
 
-            // Start the IDLE reconcile loop for [collection] mode.
+            // Start the IDLE reconcile loop.
 
-            if (options.Mode == ResourceManagerMode.Collection)
-            {
-                _ = IdleLoopAsync();
-            }
+            _ = IdleLoopAsync();
 
             await Task.CompletedTask;
         }
@@ -589,6 +587,17 @@ namespace Neon.Kube.Operator
         {
             await SyncContext.Clear;
 
+log.LogDebug($"RECONCILE: 0: resource-is-null=[{resource == null}]");
+
+            // Ignore IDLE events from the idle loop.
+
+            if (resource == null)
+            {
+log.LogDebug($"RECONCILE: 1: IDLE");
+                return null;
+            }
+
+log.LogDebug($"RECONCILE: 2: resource name=[{resource?.Name()}]");
             EnsureNotDisposed();
             EnsureStarted();
 
@@ -1020,18 +1029,22 @@ namespace Neon.Kube.Operator
         {
             var loopDelay = TimeSpan.FromSeconds(1);
 
+log.LogDebug($"IDLE-LOOP: 0: nextIdleReconcileUtc={nextIdleReconcileUtc} now={DateTime.UtcNow}");
             while (!isDisposed)
             {
+log.LogDebug($"IDLE-LOOP: 1:");
                 await Task.Delay(loopDelay);
 
                 var reconcileDiscovered = false;
 
                 if (DateTime.UtcNow >= nextIdleReconcileUtc)
                 {
+log.LogDebug($"IDLE-LOOP: 2:");
                     nextIdleReconcileUtc = DateTime.UtcNow + options.IdleInterval;
 
                     if (reconcileReceived)
                     {
+log.LogDebug($"IDLE-LOOP: 3:");
                         // It's been [reconciledNoChangeInterval] since we saw the last 
                         // resource from KubeOps, so we're going to assume that we have
                         // all of them.  So we're ready to send RECONCILE events for all
@@ -1039,13 +1052,16 @@ namespace Neon.Kube.Operator
 
                         reconcileDiscovered = discovering;
                         discovering         = false;
+
+                        log.LogInfo($"No resources discovered.");
                     }
                     else
                     {
-                        // If we're going to trigger the first IDLE RECONCILE, and
-                        // we haven't seen an resources from KubeOps, we need to ensure
-                        // that we have connectivity to Kubernetes and that there really
-                        // aren't any known resources for the operator.
+log.LogDebug($"IDLE-LOOP: 4A:");
+                        // If we're going to trigger the first IDLE RECONCILE, and we haven't
+                        // seen any resources from KubeOps, we need to that we have connectivity
+                        // to Kubernetes and that there really aren't any known resources for
+                        // the operator.
                         //
                         // We'll continue the loop for resource listing falures and also
                         // when resources do exist.  We do the latter with the expection
@@ -1061,36 +1077,57 @@ namespace Neon.Kube.Operator
                         {
                             IList<TEntity> items;
 
+log.LogDebug($"IDLE-LOOP: 4B:");
                             if (resourceNamespace != null)
                             {
+log.LogDebug($"IDLE-LOOP: 4C:");
                                 items = (await k8s.ListNamespacedCustomObjectAsync<TEntity>(resourceNamespace)).Items;
                             }
                             else
                             {
+log.LogDebug($"IDLE-LOOP: 4D:");
                                 items = (await k8s.ListClusterCustomObjectAsync<TEntity>()).Items;
                             }
+log.LogDebug($"IDLE-LOOP: 4E:");
 
                             if (items.Any(filter))
                             {
+                                if (discovering)
+                                {
+                                    log.LogWarn($"Undiscovered resources.");
+                                }
+
                                 continue;
                             }
+log.LogDebug($"IDLE-LOOP: 4F:");
 
                             reconcileDiscovered = discovering;
                             discovering         = false;
 
-                            log.LogInfo($"All resources discovered.");
+                            if (reconcileDiscovered)
+                            {
+                                log.LogInfo($"All resources discovered.");
+                            }
+                        }
+                        catch (HttpOperationException e)
+                        {
+log.LogDebug($"IDLE-LOOP: 5A: {e.Response.Content}");
+                            log.LogWarn(e);
                         }
                         catch (Exception e)
                         {
+log.LogDebug($"IDLE-LOOP: 5B:");
                             log.LogWarn(e);
                             continue;
                         }
+log.LogDebug($"IDLE-LOOP: 6:");
                     }
 
                     // Don't send an IDLE RECONCILE while we're still discovering resources.
 
                     if (discovering)
                     {
+log.LogDebug($"IDLE-LOOP: 7:");
                         continue;
                     }
 
@@ -1100,20 +1137,20 @@ namespace Neon.Kube.Operator
                     await mutex.ExecuteActionAsync(
                         async () =>
                         {
-
                             try
                             {
+log.LogDebug($"IDLE-LOOP: 8:");
                                 // $todo(jefflill):
                                 //
                                 // We're currently assuming that operator controllers all have a constructor
                                 // that accepts a single [IKubernetes] parameter.  We should change this to
-                                // doing real dependency injection when we have the time.
+                                // doing actual dependency injection when we have the time.
                                 //
                                 //       https://github.com/nforgeio/neonKUBE/issues/1589
 
                                 var controller = (IResourceController<TEntity>)controllerConstructor.Invoke(new object[] { k8s });
 
-                                // Reconcile all of the resources when we just finished discovering them
+                                // Reconcile all of the resources when we just finished discovering them,
                                 // otherwise send an IDLE RECONCILE.
                                 //
                                 // We're going to set [skipChangeDetection=true] while we're doing this so
@@ -1123,6 +1160,7 @@ namespace Neon.Kube.Operator
 
                                 if (reconcileDiscovered)
                                 {
+log.LogDebug($"IDLE-LOOP: 9:");
                                     try
                                     {
                                         skipChangeDetection = true;
@@ -1134,32 +1172,40 @@ namespace Neon.Kube.Operator
                                     }
                                     catch (Exception e)
                                     {
+log.LogDebug($"IDLE-LOOP: 10:");
                                         log.LogWarn(e);
                                     }
                                     finally
                                     {
+log.LogDebug($"IDLE-LOOP: 11:");
                                         skipChangeDetection = false;
                                     }
                                 }
 
+log.LogDebug($"IDLE-LOOP: 12:");
                                 await controller.ReconcileAsync(null);
+log.LogDebug($"IDLE-LOOP: 13:");
                             }
                             catch (OperationCanceledException)
                             {
                                 // Exit the loop when the [mutex] is disposed which happens
                                 // when the resource manager is disposed.
 
+log.LogDebug($"IDLE-LOOP: 14:");
                                 return;
                             }
                             catch (Exception e)
                             {
+log.LogDebug($"IDLE-LOOP: 15:");
                                 log.LogError(e);
                             }
                         });
 
                     nextIdleReconcileUtc = DateTime.UtcNow + options.IdleInterval;
+log.LogDebug($"IDLE-LOOP: 16: nextIdleReconcileUtc={nextIdleReconcileUtc}");
                 }
             }
+log.LogDebug($"IDLE-LOOP: 17:");
         }
     }
 }

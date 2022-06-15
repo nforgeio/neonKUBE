@@ -62,6 +62,13 @@ namespace NeonNodeAgent
     /// </para>
     /// <list type="table">
     /// <item>
+    ///     <term><b>WATCHER_TIMEOUT_INTERVAL</b></term>
+    ///     <description>
+    ///     <b>timespan:</b> Specifies the maximum time the resource watcher will wait without
+    ///     a response before creating a new request.  This defaults to <b>2 minutes</b>.
+    ///     </description>
+    /// </item>
+    /// <item>
     ///     <term><b>WATCHER_MAX_RETRY_INTERVAL</b></term>
     ///     <description>
     ///     <b>timespan:</b> Specifies the maximum time the KubeOps resource watcher will wait
@@ -146,7 +153,10 @@ namespace NeonNodeAgent
 
             var k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
 
+// $debug(jefflill): RESTORE THIS!
+#if DISABLED
             await ContainerRegistryController.StartAsync(k8s);
+#endif
             await NodeTaskController.StartAsync(k8s);
 
             //-----------------------------------------------------------------

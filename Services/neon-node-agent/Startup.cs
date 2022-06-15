@@ -50,12 +50,17 @@ namespace NeonNodeAgent
             // [WATCHER_MAX_RETRY_INTERVAL] environment variable.  Unfortunately, [Program.Service]
             // won't be set when generating CRDs, so we'll just set a default value.
 
-            var watcherRetrySeconds = 15;
+            var watcherTimeout = TimeSpan.FromMinutes(2);
+            var watcherRetry   = TimeSpan.FromSeconds(15);
 
             if (Program.Service != null)
             {
-                watcherRetrySeconds = Math.Max(1, (int)Math.Ceiling(Program.Service.Environment.Get("WATCHER_MAX_RETRY_INTERVAL", TimeSpan.FromSeconds(watcherRetrySeconds)).TotalSeconds));
+                watcherTimeout = Program.Service.Environment.Get("WATCHER_TIMEOUT_INTERVAL", watcherTimeout);
+                watcherRetry   = Program.Service.Environment.Get("WATCHER_MAX_RETRY_INTERVAL", watcherRetry);
             }
+
+            var watcherTimeoutSeconds = Math.Max(1, Math.Max(ushort.MaxValue, (int)Math.Ceiling(watcherTimeout.TotalSeconds)));
+            var watcherRetrySeconds   = Math.Max(1, (int)Math.Ceiling(watcherTimeout.TotalSeconds));
 
             var _services = services;
 
@@ -70,6 +75,7 @@ namespace NeonNodeAgent
                     {
                         settings.EnableAssemblyScanning = true;
                         settings.EnableLeaderElection   = false;    // ResourceManager is managing leader election
+                        settings.WatcherHttpTimeout     = (ushort)watcherTimeoutSeconds;
                         settings.WatcherMaxRetrySeconds = watcherRetrySeconds;
                     });
 
