@@ -389,6 +389,11 @@ namespace Neon.Kube
         public static string NeonDashboard = "neon-dashboard";
 
         /// <summary>
+        /// Identifies the neonKUBE cluster's <b>neon-node-agent</b> service.
+        /// </summary>
+        public static string NeonNodeAgent = "neon-node-agent";
+
+        /// <summary>
         /// Identifies the neonKUBE cluster's <b>neon-sso-session-proxy</b> service.
         /// </summary>
         public static string NeonSsoSessionProxy = "neon-sso-session-proxy";
