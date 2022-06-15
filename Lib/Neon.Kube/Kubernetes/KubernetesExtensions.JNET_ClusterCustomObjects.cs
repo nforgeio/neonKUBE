@@ -627,5 +627,64 @@ namespace Neon.Kube
                 }
             }
         }
+
+        /// <summary>
+        /// Updates the <b>spec</b> of a cluster scoped custom object of the specified generic 
+        /// object type and name.
+        /// </summary>
+        /// <typeparam name="T">The custom object type.</typeparam>
+        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
+        /// <param name="patch">
+        /// Specifies the patch to be applied to the object spec.  This is typically a 
+        /// <see cref="V1Patch"/> instance but additional patch types may be supported in 
+        /// </param>
+        /// <param name="name">Specifies the object name.</param>
+        /// <param name="dryRun">
+        /// When present, indicates that modifications should not be persisted. An invalid
+        /// or unrecognized dryRun directive will result in an error response and no further
+        /// processing of the request. Valid values are: - All: all dry run stages will be
+        /// processed
+        /// </param>
+        /// <param name="fieldManager">
+        /// fieldManager is a name associated with the actor or entity that is making these
+        /// changes. The value must be less than or 128 characters long, and only contain
+        /// printable characters, as defined by https://golang.org/pkg/unicode/#IsPrint.
+        /// </param>
+        /// <param name="force">
+        /// Force is going to "force" Apply requests. It means user will re-acquire conflicting
+        /// fields owned by other people. Force flag must be unset for non-apply patch requests.
+        /// </param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <returns>The updated custom object.</returns>
+        [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
+        public static async Task<T> JNET_PatchClusterCustomObjectAsync<T>(
+            this IKubernetes  k8s,
+            V1Patch           patch,
+            string            name,
+            string            dryRun = null,
+            string            fieldManager = null,
+            bool?             force = null,
+            CancellationToken cancellationToken = default(CancellationToken))
+
+            where T : IKubernetesObject<V1ObjectMeta>, new()
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(patch != null, nameof(patch));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
+            var result = await k8s.PatchClusterCustomObjectAsync(
+                body:              patch,
+                group:             typeMetadata.Group,
+                version:           typeMetadata.ApiVersion,
+                plural:            typeMetadata.PluralName,
+                name:              name,
+                dryRun:            dryRun,
+                fieldManager:      fieldManager,
+                force:             force,
+                cancellationToken: cancellationToken);
+
+            return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
+        }
     }
 }
