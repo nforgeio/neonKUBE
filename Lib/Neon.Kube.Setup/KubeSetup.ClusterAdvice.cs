@@ -133,6 +133,7 @@ namespace Neon.Kube
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.MinioOperator, CalculateMinioOperatorAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.NeonClusterOperator, CalculateNeonClusterOperatorAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.NeonDashboard, CalculateNeonDashboardAdvice(cluster));
+            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.NeonNodeAgent, CalculateNeonNodeAgentAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.NeonSsoSessionProxy, CalculateNeonSsoSessionProxyAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.NeonSystemDb, CalculateNeonSystemDbAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.NodeProblemDetector, CalculateNodeProblemDetectorAdvice(cluster));
@@ -154,6 +155,7 @@ namespace Neon.Kube
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.OpenEbsProvisioner, CalculateOpenEbsProvisionerAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.OpenEbsSnapshotOperator, CalculateOpenEbsSnapshotOperatorAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.OpenEbsWebhook, CalculateOpenEbsWebhookAdvice(cluster));
+            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.KubeStateMetrics, CalculateKubeStateMetricsAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Prometheus, CalculatePrometheusAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.PrometheusOperator, CalculatePrometheusOperatorAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Reloader, CalculateReloaderAdvice(cluster));
@@ -508,7 +510,8 @@ namespace Neon.Kube
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.KubeStateMetrics);
 
-            advice.ReplicaCount = Math.Max(1, cluster.Definition.Nodes.Count() / 10);
+            advice.ReplicaCount   = Math.Max(1, cluster.Definition.Nodes.Count() / 10);
+            advice.MetricsEnabled = true;
 
             if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.Masters.Count() == 1)
             {
@@ -886,6 +889,18 @@ namespace Neon.Kube
         private static KubeServiceAdvice CalculateNeonDashboardAdvice(ClusterProxy cluster)
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.NeonDashboard);
+
+            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.Masters.Count() == 1)
+            {
+                advice.MetricsEnabled = false;
+            }
+
+            return advice;
+        }
+
+        private static KubeServiceAdvice CalculateNeonNodeAgentAdvice(ClusterProxy cluster)
+        {
+            var advice = new KubeServiceAdvice(KubeClusterAdvice.NeonNodeAgent);
 
             if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.Masters.Count() == 1)
             {

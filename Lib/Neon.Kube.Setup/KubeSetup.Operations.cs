@@ -1290,9 +1290,15 @@ kubectl apply -f priorityclasses.yaml
                 {
                     controller.LogProgress(master, verb: "setup", message: "calico");
 
+                    var cluster       = master.Cluster;
+                    var k8s           = GetK8sClient(controller);
+                    var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+                    var calicoAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Calico);
+
                     var values = new Dictionary<string, object>();
 
                     values.Add("images.organization", KubeConst.LocalClusterRegistry);
+                    values.Add($"serviceMonitor.enabled", calicoAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
 
                     controller.ThrowIfCancelled();
                     await master.InstallHelmChartAsync(controller, "calico", releaseName: "calico", @namespace: KubeNamespace.KubeSystem, values: values);
@@ -1385,11 +1391,9 @@ kubectl apply -f priorityclasses.yaml
                                 timeout: TimeSpan.FromSeconds(120),
                                 pollInterval: TimeSpan.FromMilliseconds(500));
 
-
                             await k8s.DeleteNamespacedPodAsync("dnsutils", KubeNamespace.NeonSystem);
                         });
                 });
-
 
             controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/calico-metrics",
@@ -1397,16 +1401,14 @@ kubectl apply -f priorityclasses.yaml
                 {
                     await NeonHelper.WaitForAsync(async () =>
                     {
-                        var configs = await k8s.JNET_ListClusterCustomObjectAsync<FelixConfiguration>();
+                        var configs = await k8s.ListClusterCustomObjectAsync<FelixConfiguration>();
                         return configs.Items.Count() > 0;
                     },
                     timeout: clusterOpTimeout,
                     pollInterval: clusterOpPollInterval,
                     cancellationToken: controller.CancellationToken);
 
-                    var configs = await k8s.JNET_ListClusterCustomObjectAsync<FelixConfiguration>();
-
-                    //'{"spec":{"prometheusMetricsEnabled": true}}'
+                    var configs = await k8s.ListClusterCustomObjectAsync<FelixConfiguration>();
 
                     dynamic patchContent = new JObject();
                     patchContent.spec = new JObject();
@@ -1416,8 +1418,8 @@ kubectl apply -f priorityclasses.yaml
 
                     foreach (var felix in configs.Items)
                     {
-                        var f = await k8s.JNET_GetClusterCustomObjectAsync<FelixConfiguration>(felix.Name());
-                        await k8s.JNET_PatchClusterCustomObjectAsync<FelixConfiguration>(patch, felix.Name());
+                        var f = await k8s.GetClusterCustomObjectAsync<FelixConfiguration>(felix.Name());
+                        await k8s.PatchClusterCustomObjectAsync<FelixConfiguration>(patch, felix.Name());
                     }
 
                 });
@@ -1524,8 +1526,10 @@ kubectl apply -f priorityclasses.yaml
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = master.Cluster;
-            var k8s     = GetK8sClient(controller);
+            var cluster       = master.Cluster;
+            var k8s           = GetK8sClient(controller);
+            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MetricsServer);
 
             controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/kubernetes-metrics-server",
@@ -1536,6 +1540,8 @@ kubectl apply -f priorityclasses.yaml
                     var values = new Dictionary<string, object>();
 
                     values.Add("image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add("serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
                     int i = 0;
 
@@ -3686,10 +3692,15 @@ $@"- name: StorageType
                     values.Add($"cluster.version", cluster.Definition.ClusterVersion);
                     values.Add($"cluster.hostingEnvironment", cluster.Definition.Hosting.Environment);
 
+                    values.Add($"metrics.global.enabled", clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.global.scrapeInterval", clusterAdvice.MetricsInterval);
+                    values.Add($"metrics.crio.enabled", clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.crio.scrapeInterval", clusterAdvice.MetricsInterval);
+                    values.Add($"metrics.istio.enabled", istioAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.istio.scrapeInterval", istioAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"metrics.kubelet.enabled", clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.kubelet.scrapeInterval", clusterAdvice.MetricsInterval);
+                    values.Add($"metrics.cadvisor.enabled", clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.cadvisor.scrapeInterval", clusterAdvice.MetricsInterval);
                     values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
@@ -4230,7 +4241,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s           = GetK8sClient(controller);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.KubeStateMetrics);
@@ -4243,6 +4254,7 @@ $@"- name: StorageType
 
                     var values = new Dictionary<string, object>();
 
+                    values.Add($"prometheus.monitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"prometheus.monitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
 
@@ -5019,11 +5031,14 @@ $@"- name: StorageType
         public static async Task InstallClusterOperatorAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var k8s = GetK8sClient(controller);
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s           = GetK8sClient(controller);
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonClusterOperator);
 
             controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/cluster-operator",
@@ -5036,6 +5051,8 @@ $@"- name: StorageType
                     values.Add("image.organization", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
                     await master.InstallHelmChartAsync(controller, "neon-cluster-operator",
                         releaseName:  "neon-cluster-operator",
@@ -5066,8 +5083,10 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var k8s     = GetK8sClient(controller);
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s           = GetK8sClient(controller);
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonDashboard);
 
             controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/neon-dashboard",
@@ -5087,6 +5106,8 @@ $@"- name: StorageType
                     values.Add($"neonkube.clusterDomain.neonDashboard", ClusterDomain.NeonDashboard);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add("dashboards.kiali.enabled", cluster.Definition.Features.Kiali);
+                    values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
                     await master.InstallHelmChartAsync(controller, "neon-dashboard",
                         releaseName:  "neon-dashboard",
@@ -5117,8 +5138,10 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var k8s     = GetK8sClient(controller);
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s           = GetK8sClient(controller);
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonNodeAgent);
 
             controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/neon-node-agent",
@@ -5131,6 +5154,8 @@ $@"- name: StorageType
                     values.Add("image.organization", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
                     await master.InstallHelmChartAsync(controller, "neon-node-agent",
                         releaseName:  "neon-node-agent",
