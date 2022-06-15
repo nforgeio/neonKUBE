@@ -1421,11 +1421,50 @@ kubectl apply -f priorityclasses.yaml
                         var f = await k8s.GetClusterCustomObjectAsync<FelixConfiguration>(felix.Name());
                         await k8s.PatchClusterCustomObjectAsync<FelixConfiguration>(patch, felix.Name());
                     }
-
                 });
 
-                    
+            if (coreDnsAdvice.MetricsEnabled ?? false)
+            {
+                controller.ThrowIfCancelled();
+                await master.InvokeIdempotentAsync("setup/coredns-metrics",
+                    async () =>
+                    {
+                        var serviceMonitor = new ServiceMonitor()
+                        {
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Name = "kube-dns",
+                                NamespaceProperty = "kube-system"
+                            },
+                            Spec = new ServiceMonitorSpec()
+                            {
+                                Endpoints = new List<Endpoint>()
+                                {
+                                new Endpoint()
+                                {
+                                    Interval      = coreDnsAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval,
+                                    Path          = "/metrics",
+                                    ScrapeTimeout = "10s",
+                                    TargetPort    = 9153
+                                }
+                                },
+                                NamespaceSelector = new NamespaceSelector()
+                                {
+                                    MatchNames = new List<string>() { "kube-system" }
+                                },
+                                Selector = new V1LabelSelector()
+                                {
+                                    MatchLabels = new Dictionary<string, string>()
+                                    {
+                                    { "k8s-app", "kube-dns"}
+                                    }
+                                }
+                            }
+                        };
 
+                        await k8s.CreateNamespacedCustomObjectAsync<ServiceMonitor>(serviceMonitor, serviceMonitor.Name(), serviceMonitor.Namespace());
+                    });
+            }
         }
 
         /// <summary>
