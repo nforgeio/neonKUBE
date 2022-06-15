@@ -43,6 +43,10 @@ spec:
               value: node
             - name: DATASTORE_TYPE
               value: kubernetes
+          ports:
+            - containerPort: 9094
+              name: http-metrics
+              protocol: TCP
           readinessProbe:
             exec:
               command:

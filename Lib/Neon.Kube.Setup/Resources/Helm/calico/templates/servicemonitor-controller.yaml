@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    k8s-app: calico-kube-controllers
+  name: calico-kube-controllers
+  namespace: kube-system
+spec:
+  endpoints:
+    - interval: 5m
+      path: /metrics
+      scrapeTimeout: 30s
+      targetPort: 9094
+  jobLabel: calico-kube-controllers
+  namespaceSelector:
+    matchNames:
+      - kube-system
+  selector:
+    matchLabels:
+      k8s-app: calico-kube-controllers

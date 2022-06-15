@@ -200,6 +200,10 @@ spec:
               value: "info"
             - name: FELIX_HEALTHENABLED
               value: "true"
+          ports:
+            - containerPort: 9091
+              name: http-metrics
+              protocol: TCP
           securityContext:
             privileged: true
           resources:
