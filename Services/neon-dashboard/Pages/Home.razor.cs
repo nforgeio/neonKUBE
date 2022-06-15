@@ -183,7 +183,6 @@ namespace NeonDashboard.Pages
             catch (Exception e)
             {
             }
-            
         }
 
         private async Task UpdateMemoryAsync()

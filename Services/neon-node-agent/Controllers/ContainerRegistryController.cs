@@ -170,11 +170,11 @@ namespace NeonNodeAgent
         /// can maintain the status of all resources and then afterwards, this will be called whenever
         /// a resource is added or has a non-status update.
         /// </summary>
-        /// <param name="registry">The new entity or <c>null</c> when nothing has changed.</param>
+        /// <param name="respource">The new entity or <c>null</c> when nothing has changed.</param>
         /// <returns>The controller result.</returns>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonContainerRegistry registry)
+        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonContainerRegistry respource)
         {
-            await resourceManager.ReconciledAsync(registry,
+            await resourceManager.ReconciledAsync(respource,
                 async (resource, resources) =>
                 {
                     var name = resource?.Name();
@@ -191,14 +191,14 @@ namespace NeonNodeAgent
         /// <summary>
         /// Called when a custom resource is removed from the API Server.
         /// </summary>
-        /// <param name="registry">The deleted entity.</param>
+        /// <param name="resource">The deleted entity.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task DeletedAsync(V1NeonContainerRegistry registry)
+        public async Task DeletedAsync(V1NeonContainerRegistry resource)
         {
-            await resourceManager.DeletedAsync(registry,
-                async (name, resources) =>
+            await resourceManager.DeletedAsync(resource,
+                async (resource, resources) =>
                 {
-                    log.LogInfo($"DELETED: {name}");
+                    log.LogInfo($"DELETED: {resource}");
 
                     await UpdateContainerRegistriesAsync(resources);
                 });
@@ -207,12 +207,12 @@ namespace NeonNodeAgent
         /// <summary>
         /// Called when a custom resource's status has been modified.
         /// </summary>
-        /// <param name="registry">The updated entity.</param>
+        /// <param name="resource">The updated entity.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task StatusModifiedAsync(V1NeonContainerRegistry registry)
+        public async Task StatusModifiedAsync(V1NeonContainerRegistry resource)
         {
-            await resourceManager.StatusModifiedAsync(registry,
-                async (name, resources) =>
+            await resourceManager.StatusModifiedAsync(resource,
+                async (resource, resources) =>
                 {
                     // This is a NO-OP
 

@@ -6,7 +6,7 @@ rules:
 - apiGroups:
   - neonkube.io
   resources:
-  - neoncontainerregistries
+  - neonclusteroperators
   - neonnodetasks
   - neonnodetasks/status
   verbs:

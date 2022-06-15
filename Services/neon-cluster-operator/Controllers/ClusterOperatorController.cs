@@ -53,6 +53,12 @@ namespace NeonClusterOperator
     /// <para>
     /// Manages the <see cref="V1NeonClusterOperator"/> resource on the Kubernetes API Server.
     /// </para>
+    /// </summary>
+    /// <remarks>
+    /// This controller relies on a lease named <b>neon-cluster-operator.clusteroperator</b>.  
+    /// This lease will be persisted in the <see cref="KubeNamespace.NeonSystem"/> namespace
+    /// and will be used to a leader to manage these resources.
+    /// </remarks>
     [EntityRbac(typeof(V1NeonClusterOperator), Verbs = RbacVerb.Get | RbacVerb.Patch | RbacVerb.List | RbacVerb.Watch | RbacVerb.Update)]
     public class ClusterOperatorController : IResourceController<V1NeonClusterOperator>
     {
@@ -78,7 +84,7 @@ namespace NeonClusterOperator
                 new LeaderElectionConfig(
                     k8s,
                     @namespace:       KubeNamespace.NeonSystem,
-                    leaseName:        $"{Program.Service.Name}.clusteroperator-{Pod.AgentId}",
+                    leaseName:        $"{Program.Service.Name}.clusteroperator",
                     identity:         Pod.Name,
                     promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}clusteroperator_promoted", "Leader promotions"),
                     demotionCounter:  Metrics.CreateCounter($"{Program.Service.MetricsPrefix}clusteroperator_demoted", "Leader demotions"),
@@ -126,11 +132,11 @@ namespace NeonClusterOperator
         /// can maintain the status of all resources and then afterwards, this will be called whenever
         /// a resource is added or has a non-status update.
         /// </summary>
-        /// <param name="registry">The new entity or <c>null</c> when nothing has changed.</param>
+        /// <param name="resource">The new entity or <c>null</c> when nothing has changed.</param>
         /// <returns>The controller result.</returns>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonClusterOperator registry)
+        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonClusterOperator resource)
         {
-            await resourceManager.ReconciledAsync(registry,
+            await resourceManager.ReconciledAsync(resource,
                 async (resource, resources) =>
                 {
                     var name = resource?.Name();
@@ -146,11 +152,11 @@ namespace NeonClusterOperator
         /// <summary>
         /// Called when a custom resource is removed from the API Server.
         /// </summary>
-        /// <param name="registry">The deleted entity.</param>
+        /// <param name="resource">The deleted entity.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task DeletedAsync(V1NeonClusterOperator registry)
+        public async Task DeletedAsync(V1NeonClusterOperator resource)
         {
-            await resourceManager.DeletedAsync(registry,
+            await resourceManager.DeletedAsync(resource,
                 async (name, resources) =>
                 {
                     log.LogInfo($"DELETED: {name}");
@@ -162,11 +168,11 @@ namespace NeonClusterOperator
         /// <summary>
         /// Called when a custom resource's status has been modified.
         /// </summary>
-        /// <param name="registry">The updated entity.</param>
+        /// <param name="resource">The updated entity.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task StatusModifiedAsync(V1NeonClusterOperator registry)
+        public async Task StatusModifiedAsync(V1NeonClusterOperator resource)
         {
-            await resourceManager.StatusModifiedAsync(registry,
+            await resourceManager.StatusModifiedAsync(resource,
                 async (name, resources) =>
                 {
                     // This is a NO-OP

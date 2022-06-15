@@ -157,6 +157,9 @@ rm $0
             var options = new ResourceManagerOptions()
             {
                 Mode                       = ResourceManagerMode.Normal,
+                IdleInterval               = Program.Service.Environment.Get("NODETASK_IDLE_INTERVAL", TimeSpan.FromSeconds(60)),
+                ErrorMinRequeueInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15)),
+                ErrorMaxRetryInterval      = Program.Service.Environment.Get("NODETASK_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromSeconds(60)),
                 ReconcileErrorCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconciled_error", "Failed NodeTask reconcile event processing."),
                 DeleteErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_deleted_error", "Failed NodeTask deleted event processing."),
                 StatusModifiedErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodified_error", "Failed NodeTask status-modified events processing.")
@@ -203,11 +206,11 @@ rm $0
         /// can maintain the status of all resources and then afterwards, this will be called whenever
         /// a resource is added or has a non-status update.
         /// </summary>
-        /// <param name="task">The new entity or <c>null</c> when nothing has changed.</param>
+        /// <param name="resource">The new entity or <c>null</c> when nothing has changed.</param>
         /// <returns>The controller result.</returns>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonNodeTask task)
+        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonNodeTask resource)
         {
-            await resourceManager.ReconciledAsync(task,
+            await resourceManager.ReconciledAsync(resource,
                 async (resource, resources) =>
                 {
                     var name = resource?.Name();
@@ -216,7 +219,7 @@ rm $0
 
                     if (name == null)
                     {
-                        // This is a IDLE event: we'll use this as a signal to do any cleanup.
+                        // This is an IDLE event: we'll use this as a signal to do any cleanup.
 
                         // Execute the youngest node task that's pending (if there is one).
 
@@ -305,13 +308,13 @@ rm $0
         /// <summary>
         /// Called when a custom resource is removed from the API Server.
         /// </summary>
-        /// <param name="task">The deleted entity.</param>
+        /// <param name="resource">The deleted entity.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task DeletedAsync(V1NeonNodeTask task)
+        public async Task DeletedAsync(V1NeonNodeTask resource)
         {
-            Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
+            Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
             
-            await resourceManager.DeletedAsync(task,
+            await resourceManager.DeletedAsync(resource,
                 async (name, resources) =>
                 {
                     log.LogInfo($"DELETED: {name}");
@@ -325,13 +328,13 @@ rm $0
         /// <summary>
         /// Called when a custom resource's status has been modified.
         /// </summary>
-        /// <param name="task">The updated entity.</param>
+        /// <param name="resource">The updated entity.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task StatusModifiedAsync(V1NeonNodeTask task)
+        public async Task StatusModifiedAsync(V1NeonNodeTask resource)
         {
-            Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
+            Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
 
-            await resourceManager.DeletedAsync(task,
+            await resourceManager.DeletedAsync(resource,
                 async (name, resources) =>
                 {
                     log.LogInfo($"STATUS-MODIFIED: {name}");

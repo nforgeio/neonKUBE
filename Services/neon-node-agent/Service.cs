@@ -65,7 +65,7 @@ namespace NeonNodeAgent
     ///     <term><b>WATCHER_MAX_RETRY_INTERVAL</b></term>
     ///     <description>
     ///     <b>timespan:</b> Specifies the maximum time the KubeOps resource watcher will wait
-    ///     after a watch failure.  This defaults to <b>15</b> seconds.
+    ///     after a watch failure.  This defaults to <b>15 seconds</b>.
     ///     </description>
     /// </item>
     /// <item>
@@ -95,9 +95,9 @@ namespace NeonNodeAgent
     /// <item>
     ///     <term><b>NODETASK_IDLE_INTERVAL</b></term>
     ///     <description>
-    ///     <b>timespan:</b> Specifies the interval at which <b>reconcile</b> events will be requeued
-    ///     for <b>NodeTask</b> resources as a backstop to ensure that the operator state
-    ///     remains in sync with the API server.  This defaults to <b>60 seconds</b>.
+    ///     <b>timespan:</b> Specifies the interval at which IDLE events will be raised
+    ///     for <b>NodeTask</b> resources, giving the operator the chance to manage tasks
+    ///     assigned to the node.  This defaults to <b>60 seconds</b>.
     ///     </description>
     /// </item>
     /// <item>

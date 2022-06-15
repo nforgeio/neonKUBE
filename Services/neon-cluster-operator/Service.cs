@@ -67,7 +67,32 @@ namespace NeonClusterOperator
     ///     <term><b>WATCHER_MAX_RETRY_INTERVAL</b></term>
     ///     <description>
     ///     <b>timespan:</b> Specifies the maximum time the KubeOps resource watcher will wait
-    ///     after a watch failure.  This defaults to <b>15</b> seconds.
+    ///     after a watch failure.  This defaults to <b>15 seconds</b>.
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>NODETASK_IDLE_INTERVAL</b></term>
+    ///     <description>
+    ///     <b>timespan:</b> Specifies the interval at which IDLE events will be raised
+    ///     for <b>NodeTask</b> giving the operator the chance to delete node tasks assigned
+    ///     to nodes that don't exist.  This defaults to <b>60 seconds/b>.
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>NODETASK_ERROR_MIN_REQUEUE_INTERVAL</b></term>
+    ///     <description>
+    ///     <b>timespan:</b> Specifies the minimum requeue interval to use when an
+    ///     exception is thrown when handling NodeTask events.  This
+    ///     value will be doubled when subsequent events also fail until the
+    ///     requeue time maxes out at <b>CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL</b>.
+    ///     This defaults to <b>5 seconds</b>.
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>NODETASK_ERROR_MIN_REQUEUE_INTERVAL</b></term>
+    ///     <description>
+    ///     <b>timespan:</b> Specifies the maximum requeue time for NodeTask
+    ///     handler exceptions.  This defaults to <b>60 seconds</b>.
     ///     </description>
     /// </item>
     /// </list>
@@ -99,6 +124,7 @@ namespace NeonClusterOperator
             var k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
 
             await ClusterOperatorController.StartAsync(k8s);
+            await NodeTaskController.StartAsync(k8s);
 
             //-----------------------------------------------------------------
             // Start the operator controllers.  Note that we're not going to await

@@ -64,8 +64,6 @@ namespace Neon.Kube.Operator
                 {
                     switch (logEvent.LogLevel)
                     {
-// $debug(jefflill): RESTORE THIS!
-#if DISABLED
                         case LogLevel.Info:
 
                             //---------------------------------------------
@@ -133,7 +131,6 @@ namespace Neon.Kube.Operator
                                 }
                             }
                             break;
-#endif
                     }
 
                     return true;
