@@ -7,7 +7,7 @@ spec:
   gateways:
     - neoncluster-gateway
   hosts:
-    - {{ .Values.ingress.operator.subdomain }}.{{ .Values.cluster.domain }}
+    - {{ .Values.neonkube.clusterDomain.minio }}.{{ .Values.cluster.domain }}
   http:
     - match:
         - uri:

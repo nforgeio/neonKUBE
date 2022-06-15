@@ -14,7 +14,7 @@ spec:
             prefix: /
       route:
         - destination:
-            host: {{ .Values.ingress.subdomain }}.{{ include "neon-dashboard.fullname" . }}.neon-system.svc.cluster.local
+            host: {{ .Values.neonkube.clusterDomain.neonDashboard }}.{{ include "neon-dashboard.fullname" . }}.neon-system.svc.cluster.local
             port:
               number: {{ .Values.service.port }}
 ---

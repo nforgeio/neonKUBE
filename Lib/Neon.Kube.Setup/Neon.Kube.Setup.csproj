@@ -58,6 +58,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<None Remove="Resources\Helm\calico\templates\service-controller.yaml" />
+		<None Remove="Resources\Helm\calico\templates\service-node.yaml" />
+		<None Remove="Resources\Helm\calico\templates\servicemonitor-controller.yaml" />
+		<None Remove="Resources\Helm\calico\templates\servicemonitor-node.yaml" />
 		<None Remove="Resources\Helm\cert-manager\crds\certificates.yaml" />
 		<None Remove="Resources\Helm\cert-manager\crds\challenges.yaml" />
 		<None Remove="Resources\Helm\cert-manager\crds\clusterissuers.yaml" />
@@ -136,6 +140,7 @@
 		<ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
 		<ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
 		<ProjectReference Include="..\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
+		<ProjectReference Include="..\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
 		<ProjectReference Include="..\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
 		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
 		<ProjectReference Include="..\Neon.Postgres\Neon.Postgres.csproj" />

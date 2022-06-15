@@ -26,8 +26,8 @@ spec:
     - neoncluster-gateway
     - registry-gateway
   hosts:
-    - {{ .Values.ingress.registry.subdomain }}.{{ .Values.cluster.domain }}
-    - {{ .Values.ingress.notary.subdomain }}.{{ .Values.cluster.domain }}
+    - {{ .Values.neonkube.clusterDomain.harborRegistry }}.{{ .Values.cluster.domain }}
+    - {{ .Values.neonkube.clusterDomain.harborNotary }}.{{ .Values.cluster.domain }}
     - neon-registry.node.local
   http:
     - match:

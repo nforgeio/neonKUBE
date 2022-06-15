@@ -7,8 +7,8 @@ metadata:
     app: minio
     {{- include "minio-operator.labels" . | nindent 4 }}
 data:
-  CONSOLE_IDP_URL: "https://sso.{{ .Values.cluster.domain }}/.well-known/openid-configuration"
-  CONSOLE_IDP_CALLBACK: "https://{{ .Values.ingress.operator.subdomain }}.{{ .Values.cluster.domain }}/oauth_callback"
-  CONSOLE_PROMETHEUS_URL: http://cortex.neon-monitor:9009/api/prom
+  CONSOLE_IDP_URL: "https://{{ .Values.neonkube.clusterDomain.sso }}.{{ .Values.cluster.domain }}/.well-known/openid-configuration"
+  CONSOLE_IDP_CALLBACK: "https://{{ .Values.neonkube.clusterDomain.sso }}.{{ .Values.cluster.domain }}/oauth_callback"
+  CONSOLE_PROMETHEUS_URL: http://mimir-query-frontend.neon-monitor:8080/api/prom
   CONSOLE_PROMETHEUS_AUTH_TYPE: public
   CONSOLE_PROMETHEUS_JOB_ID: integrations/agent

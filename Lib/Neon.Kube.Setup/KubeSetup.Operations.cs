@@ -37,6 +37,9 @@ using Neon.Kube.Resources;
 using Neon.Net;
 using Neon.SSH;
 using Neon.Tasks;
+using Neon.Kube.Operator;
+using System.Dynamic;
+using Newtonsoft.Json.Linq;
 
 namespace Neon.Kube
 {
@@ -447,7 +450,7 @@ apiServer:
     service-account-issuer: https://kubernetes.default.svc
     service-account-key-file: /etc/kubernetes/pki/sa.key
     service-account-signing-key-file: /etc/kubernetes/pki/sa.key
-    oidc-issuer-url: https://sso.{cluster.Definition.Domain}
+    oidc-issuer-url: https://{ClusterDomain.Sso}.{cluster.Definition.Domain}
     oidc-client-id: kubernetes
     oidc-username-claim: email
     oidc-groups-claim: groups
@@ -956,7 +959,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             //      - --oidc-client-id=kubernetes
             //      - --oidc-groups-claim=groups
             //      - --oidc-groups-prefix=
-            //      - --oidc-issuer-url=https://sso.f4ef74204ee34bbb888e823b3f0c8e3b.neoncluster.io
+            //      - --oidc-issuer-url=https://neon-sso.f4ef74204ee34bbb888e823b3f0c8e3b.neoncluster.io
             //      - --oidc-username-claim=email
             //      - --oidc-username-prefix=-
             //      - --proxy-client-cert-file=/etc/kubernetes/pki/front-proxy-client.crt
@@ -1386,6 +1389,41 @@ kubectl apply -f priorityclasses.yaml
                             await k8s.DeleteNamespacedPodAsync("dnsutils", KubeNamespace.NeonSystem);
                         });
                 });
+
+
+            controller.ThrowIfCancelled();
+            await master.InvokeIdempotentAsync("setup/calico-metrics",
+                async () =>
+                {
+                    await NeonHelper.WaitForAsync(async () =>
+                    {
+                        var configs = await k8s.JNET_ListClusterCustomObjectAsync<FelixConfiguration>();
+                        return configs.Items.Count() > 0;
+                    },
+                    timeout: clusterOpTimeout,
+                    pollInterval: clusterOpPollInterval,
+                    cancellationToken: controller.CancellationToken);
+
+                    var configs = await k8s.JNET_ListClusterCustomObjectAsync<FelixConfiguration>();
+
+                    //'{"spec":{"prometheusMetricsEnabled": true}}'
+
+                    dynamic patchContent = new JObject();
+                    patchContent.spec = new JObject();
+                    patchContent.spec.prometheusMetricsEnabled = true;
+
+                    var patch = new V1Patch(NeonHelper.JsonSerialize(patchContent), V1Patch.PatchType.MergePatch);
+
+                    foreach (var felix in configs.Items)
+                    {
+                        var f = await k8s.JNET_GetClusterCustomObjectAsync<FelixConfiguration>(felix.Name());
+                        await k8s.JNET_PatchClusterCustomObjectAsync<FelixConfiguration>(patch, felix.Name());
+                    }
+
+                });
+
+                    
+
         }
 
         /// <summary>
@@ -1839,7 +1877,7 @@ subjects:
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("settings.clusterName", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
-                    values.Add("ingress.subdomain", ClusterDomain.KubernetesDashboard);
+                    values.Add("neonkube.clusterDomain.kubernetesDashboard", ClusterDomain.KubernetesDashboard);
                     values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
                     values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
@@ -2459,6 +2497,482 @@ status:
     plural: """"
   conditions: []
   storedVersions: []
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.6.2
+  creationTimestamp: null
+  name: servicemonitors.monitoring.coreos.com
+spec:
+  group: monitoring.coreos.com
+  names:
+    categories:
+    - prometheus-operator
+    kind: ServiceMonitor
+    listKind: ServiceMonitorList
+    plural: servicemonitors
+    singular: servicemonitor
+  scope: Namespaced
+  versions:
+  - name: v1
+    schema:
+      openAPIV3Schema:
+        description: ServiceMonitor defines monitoring for a set of services.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: Specification of desired Service selection for target discovery
+              by Prometheus.
+            properties:
+              endpoints:
+                description: A list of endpoints allowed as part of this ServiceMonitor.
+                items:
+                  description: Endpoint defines a scrapeable endpoint serving Prometheus
+                    metrics.
+                  properties:
+                    basicAuth:
+                      description: 'BasicAuth allow an endpoint to authenticate over
+                        basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints'
+                      properties:
+                        password:
+                          description: The secret in the service monitor namespace
+                            that contains the password for authentication.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                        username:
+                          description: The secret in the service monitor namespace
+                            that contains the username for authentication.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                      type: object
+                    bearerTokenFile:
+                      description: File to read bearer token for scraping targets.
+                      type: string
+                    bearerTokenSecret:
+                      description: Secret to mount to read bearer token for scraping
+                        targets. The secret needs to be in the same namespace as the
+                        service monitor and accessible by the Prometheus Operator.
+                      properties:
+                        key:
+                          description: The key of the secret to select from.  Must
+                            be a valid secret key.
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            TODO: Add other useful fields. apiVersion, kind, uid?'
+                          type: string
+                        optional:
+                          description: Specify whether the Secret or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
+                    honorLabels:
+                      description: HonorLabels chooses the metric's labels on collisions
+                        with target labels.
+                      type: boolean
+                    honorTimestamps:
+                      description: HonorTimestamps controls whether Prometheus respects
+                        the timestamps present in scraped data.
+                      type: boolean
+                    interval:
+                      description: Interval at which metrics should be scraped
+                      type: string
+                    metricRelabelings:
+                      description: MetricRelabelConfigs to apply to samples before
+                        ingestion.
+                      items:
+                        description: 'RelabelConfig allows dynamic rewriting of the
+                          label set, being applied to samples before ingestion. It
+                          defines `<metric_relabel_configs>`-section of Prometheus
+                          configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs'
+                        properties:
+                          action:
+                            description: Action to perform based on regex matching.
+                              Default is 'replace'
+                            type: string
+                          modulus:
+                            description: Modulus to take of the hash of the source
+                              label values.
+                            format: int64
+                            type: integer
+                          regex:
+                            description: Regular expression against which the extracted
+                              value is matched. Default is '(.*)'
+                            type: string
+                          replacement:
+                            description: Replacement value against which a regex replace
+                              is performed if the regular expression matches. Regex
+                              capture groups are available. Default is '$1'
+                            type: string
+                          separator:
+                            description: Separator placed between concatenated source
+                              label values. default is ';'.
+                            type: string
+                          sourceLabels:
+                            description: The source labels select values from existing
+                              labels. Their content is concatenated using the configured
+                              separator and matched against the configured regular
+                              expression for the replace, keep, and drop actions.
+                            items:
+                              type: string
+                            type: array
+                          targetLabel:
+                            description: Label to which the resulting value is written
+                              in a replace action. It is mandatory for replace actions.
+                              Regex capture groups are available.
+                            type: string
+                        type: object
+                      type: array
+                    params:
+                      additionalProperties:
+                        items:
+                          type: string
+                        type: array
+                      description: Optional HTTP URL parameters
+                      type: object
+                    path:
+                      description: HTTP path to scrape for metrics.
+                      type: string
+                    port:
+                      description: Name of the service port this endpoint refers to.
+                        Mutually exclusive with targetPort.
+                      type: string
+                    proxyUrl:
+                      description: ProxyURL eg http://proxyserver:2195 Directs scrapes
+                        to proxy through this endpoint.
+                      type: string
+                    relabelings:
+                      description: 'RelabelConfigs to apply to samples before scraping.
+                        Prometheus Operator automatically adds relabelings for a few
+                        standard Kubernetes fields and replaces original scrape job
+                        name with __tmp_prometheus_job_name. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config'
+                      items:
+                        description: 'RelabelConfig allows dynamic rewriting of the
+                          label set, being applied to samples before ingestion. It
+                          defines `<metric_relabel_configs>`-section of Prometheus
+                          configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs'
+                        properties:
+                          action:
+                            description: Action to perform based on regex matching.
+                              Default is 'replace'
+                            type: string
+                          modulus:
+                            description: Modulus to take of the hash of the source
+                              label values.
+                            format: int64
+                            type: integer
+                          regex:
+                            description: Regular expression against which the extracted
+                              value is matched. Default is '(.*)'
+                            type: string
+                          replacement:
+                            description: Replacement value against which a regex replace
+                              is performed if the regular expression matches. Regex
+                              capture groups are available. Default is '$1'
+                            type: string
+                          separator:
+                            description: Separator placed between concatenated source
+                              label values. default is ';'.
+                            type: string
+                          sourceLabels:
+                            description: The source labels select values from existing
+                              labels. Their content is concatenated using the configured
+                              separator and matched against the configured regular
+                              expression for the replace, keep, and drop actions.
+                            items:
+                              type: string
+                            type: array
+                          targetLabel:
+                            description: Label to which the resulting value is written
+                              in a replace action. It is mandatory for replace actions.
+                              Regex capture groups are available.
+                            type: string
+                        type: object
+                      type: array
+                    scheme:
+                      description: HTTP scheme to use for scraping.
+                      type: string
+                    scrapeTimeout:
+                      description: Timeout after which the scrape is ended
+                      type: string
+                    targetPort:
+                      anyOf:
+                      - type: integer
+                      - type: string
+                      description: Name or number of the target port of the Pod behind
+                        the Service, the port must be specified with container port
+                        property. Mutually exclusive with port.
+                      x-kubernetes-int-or-string: true
+                    tlsConfig:
+                      description: TLS configuration to use when scraping the endpoint
+                      properties:
+                        ca:
+                          description: Struct containing the CA cert to use for the
+                            targets.
+                          properties:
+                            configMap:
+                              description: ConfigMap containing data to use for the
+                                targets.
+                              properties:
+                                key:
+                                  description: The key to select.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the ConfigMap or its
+                                    key must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                            secret:
+                              description: Secret containing data to use for the targets.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                          type: object
+                        caFile:
+                          description: Path to the CA cert in the Prometheus container
+                            to use for the targets.
+                          type: string
+                        cert:
+                          description: Struct containing the client cert file for
+                            the targets.
+                          properties:
+                            configMap:
+                              description: ConfigMap containing data to use for the
+                                targets.
+                              properties:
+                                key:
+                                  description: The key to select.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the ConfigMap or its
+                                    key must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                            secret:
+                              description: Secret containing data to use for the targets.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                          type: object
+                        certFile:
+                          description: Path to the client cert file in the Prometheus
+                            container for the targets.
+                          type: string
+                        insecureSkipVerify:
+                          description: Disable target certificate validation.
+                          type: boolean
+                        keyFile:
+                          description: Path to the client key file in the Prometheus
+                            container for the targets.
+                          type: string
+                        keySecret:
+                          description: Secret containing the client key file for the
+                            targets.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                        serverName:
+                          description: Used to verify the hostname for the targets.
+                          type: string
+                      type: object
+                  type: object
+                type: array
+              jobLabel:
+                description: The label to use to retrieve the job name from.
+                type: string
+              namespaceSelector:
+                description: Selector to select which namespaces the Endpoints objects
+                  are discovered from.
+                properties:
+                  any:
+                    description: Boolean describing whether all namespaces are selected
+                      in contrast to a list restricting them.
+                    type: boolean
+                  matchNames:
+                    description: List of namespace names.
+                    items:
+                      type: string
+                    type: array
+                type: object
+              podTargetLabels:
+                description: PodTargetLabels transfers labels on the Kubernetes Pod
+                  onto the target.
+                items:
+                  type: string
+                type: array
+              sampleLimit:
+                description: SampleLimit defines per-scrape limit on number of scraped
+                  samples that will be accepted.
+                format: int64
+                type: integer
+              selector:
+                description: Selector to select Endpoints objects.
+                properties:
+                  matchExpressions:
+                    description: matchExpressions is a list of label selector requirements.
+                      The requirements are ANDed.
+                    items:
+                      description: A label selector requirement is a selector that
+                        contains values, a key, and an operator that relates the key
+                        and values.
+                      properties:
+                        key:
+                          description: key is the label key that the selector applies
+                            to.
+                          type: string
+                        operator:
+                          description: operator represents a key's relationship to
+                            a set of values. Valid operators are In, NotIn, Exists
+                            and DoesNotExist.
+                          type: string
+                        values:
+                          description: values is an array of string values. If the
+                            operator is In or NotIn, the values array must be non-empty.
+                            If the operator is Exists or DoesNotExist, the values
+                            array must be empty. This array is replaced during a strategic
+                            merge patch.
+                          items:
+                            type: string
+                          type: array
+                      required:
+                      - key
+                      - operator
+                      type: object
+                    type: array
+                  matchLabels:
+                    additionalProperties:
+                      type: string
+                    description: matchLabels is a map of {key,value} pairs. A single
+                      {key,value} in the matchLabels map is equivalent to an element
+                      of matchExpressions, whose key field is ""key"", the operator
+                      is ""In"", and the values array contains only ""value"". The requirements
+                      are ANDed.
+                    type: object
+                type: object
+              targetLabels:
+                description: TargetLabels transfers labels on the Kubernetes Service
+                  onto the target.
+                items:
+                  type: string
+                type: array
+              targetLimit:
+                description: TargetLimit defines a limit on the number of scraped
+                  targets that will be accepted.
+                format: int64
+                type: integer
+            required:
+            - endpoints
+            - selector
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: """"
+    plural: """"
+  conditions: []
+  storedVersions: []
 EOF
 ";
 
@@ -2497,7 +3011,9 @@ EOF
                     values.Add("image.kiali.repository", "kiali-kiali");
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
-                    values.Add("ingress.subdomain", ClusterDomain.Kiali);
+                    values.Add("neonkube.clusterDomain.sso", ClusterDomain.Sso);
+                    values.Add("neonkube.clusterDomain.kiali", ClusterDomain.Kiali);
+                    values.Add($"neonkube.clusterDomain.grafana", ClusterDomain.Grafana);
                     values.Add("grafanaPassword", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
 
                     int i = 0;
@@ -3829,7 +4345,8 @@ $@"- name: StorageType
 
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
-                    values.Add("ingress.subdomain", ClusterDomain.Grafana);
+                    values.Add("neonkube.clusterDomain.grafana", ClusterDomain.Grafana);
+                    values.Add("neonkube.clusterDomain.sso", ClusterDomain.Sso);
                     values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
@@ -4010,6 +4527,7 @@ $@"- name: StorageType
 
                             values.Add("cluster.name", cluster.Definition.Name);
                             values.Add("cluster.domain", cluster.Definition.Domain);
+                            values.Add("neonkube.clusterDomain.minio", ClusterDomain.Minio);
                             values.Add($"metrics.serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                             values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                             values.Add("image.organization", KubeConst.LocalClusterRegistry);
@@ -4025,8 +4543,6 @@ $@"- name: StorageType
                                 removeByteUnit:  true);
 
                             values.Add($"tenants[0].pools[0].size", volumesize);
-
-                            values.Add("ingress.operator.subdomain", ClusterDomain.Minio);
 
                             if (serviceAdvice.ReplicaCount > 1)
                             {
@@ -4377,8 +4893,8 @@ $@"- name: StorageType
                     values.Add($"components.notary.enabled", cluster.Definition.Features.Harbor.Notary);
                     values.Add($"components.trivy.enabled", cluster.Definition.Features.Harbor.Trivy);
                     
-                    values.Add("ingress.notary.subdomain", ClusterDomain.HarborNotary);
-                    values.Add("ingress.registry.subdomain", ClusterDomain.HarborRegistry);
+                    values.Add("neonkube.clusterDomain.harborNotary", ClusterDomain.HarborNotary);
+                    values.Add("neonkube.clusterDomain.harborRegistry", ClusterDomain.HarborRegistry);
 
                     values.Add($"storage.s3.accessKey", Encoding.UTF8.GetString(minioSecret.Data["accesskey"]));
                     values.Add($"storage.s3.secretKeyRef", "registry-minio");
@@ -4568,7 +5084,7 @@ $@"- name: StorageType
                     values.Add($"cluster.datacenter", cluster.Definition.Datacenter);
                     values.Add($"cluster.version", cluster.Definition.ClusterVersion);
                     values.Add($"cluster.hostingEnvironment", cluster.Definition.Hosting.Environment);
-                    values.Add($"ingress.subdomain", ClusterDomain.NeonDashboard);
+                    values.Add($"neonkube.clusterDomain.neonDashboard", ClusterDomain.NeonDashboard);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add("dashboards.kiali.enabled", cluster.Definition.Features.Kiali);
 
@@ -4877,7 +5393,13 @@ $@"- name: StorageType
 
             values.Add("cluster.name", cluster.Definition.Name);
             values.Add("cluster.domain", cluster.Definition.Domain);
-            values.Add("ingress.subdomain", ClusterDomain.Sso);
+            values.Add("neonkube.clusterDomain.grafana", ClusterDomain.Grafana);
+            values.Add("neonkube.clusterDomain.kiali", ClusterDomain.Kiali);
+            values.Add("neonkube.clusterDomain.minio", ClusterDomain.Minio);
+            values.Add("neonkube.clusterDomain.harborRegistry", ClusterDomain.HarborRegistry);
+            values.Add("neonkube.clusterDomain.neonDashboard", ClusterDomain.NeonDashboard);
+            values.Add("neonkube.clusterDomain.kubernetesDashboard", ClusterDomain.KubernetesDashboard);
+            values.Add("neonkube.clusterDomain.sso", ClusterDomain.Sso);
             values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
 
             values.Add("secrets.grafana", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
@@ -4946,7 +5468,7 @@ $@"- name: StorageType
             values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
             values.Add("cluster.name", cluster.Definition.Name);
             values.Add("cluster.domain", cluster.Definition.Domain);
-            values.Add("ingress.subdomain", ClusterDomain.Sso);
+            values.Add("neonkube.clusterDomain.sso", ClusterDomain.Sso);
             values.Add("secrets.cipherKey", AesCipher.GenerateKey(256));
             values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
             values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
@@ -5165,6 +5687,7 @@ $@"- name: StorageType
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
                     values.Add("config.cookieSecret", NeonHelper.ToBase64(NeonHelper.GetCryptoRandomPassword(24)));
+                    values.Add("neonkube.clusterDomain.sso", ClusterDomain.Sso);
                     values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
