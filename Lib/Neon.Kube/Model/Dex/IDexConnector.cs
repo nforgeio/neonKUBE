@@ -95,7 +95,7 @@ namespace Neon.Kube
             var jsonObject = JObject.Load(reader);
             var connector = default(IDexConnector);
 
-            var value = jsonObject.Value<string>("Type");
+            var value = jsonObject.Value<string>("type");
             var type  = NeonHelper.ParseEnum<DexConnectorType>(value);
 
             switch (type)
