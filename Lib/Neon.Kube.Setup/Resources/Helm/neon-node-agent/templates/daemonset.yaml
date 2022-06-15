@@ -99,10 +99,5 @@ spec:
           containerPort: 9762
           protocol: TCP
         resources:
-          limits:
-            cpu: {{ .Values.resource.limits.cpu }}
-            memory: {{ .Values.resource.limits.memory }}
-          requests:
-            cpu: {{ .Values.resource.requests.cpu }}
-            memory: {{ .Values.resource.requests.memory }}
+          {{- toYaml .Values.resources | nindent 10 }}
       terminationGracePeriodSeconds: 10

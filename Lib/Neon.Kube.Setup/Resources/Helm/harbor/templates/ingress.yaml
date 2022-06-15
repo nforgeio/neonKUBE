@@ -20,11 +20,11 @@ apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
   name: harbor-virtual-service
-  namespace: neon-ingress
+  namespace: {{ .Release.Namespace }}
 spec:
   gateways:
-    - neoncluster-gateway
-    - registry-gateway
+    - neon-ingress/neoncluster-gateway
+    - neon-ingress/registry-gateway
   hosts:
     - {{ .Values.neonkube.clusterDomain.harborRegistry }}.{{ .Values.cluster.domain }}
     - {{ .Values.neonkube.clusterDomain.harborNotary }}.{{ .Values.cluster.domain }}

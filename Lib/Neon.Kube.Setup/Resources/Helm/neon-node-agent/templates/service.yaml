@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "neon-node-agent.fullname" . }}
+  labels:
+    {{- include "neon-node-agent.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      protocol: TCP
+      name: http-web
+    - port: {{ .Values.metrics.port }}
+      protocol: TCP
+      name: http-metrics
+  selector:
+    {{- include "neon-node-agent.selectorLabels" . | nindent 4 }}

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "neon-cluster-operator.fullname" . }}
+  labels:
+    {{- include "neon-cluster-operator.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      protocol: TCP
+      name: http-web
+    - port: {{ .Values.metrics.port }}
+      protocol: TCP
+      name: http-metrics
+  selector:
+    {{- include "neon-cluster-operator.selectorLabels" . | nindent 4 }}

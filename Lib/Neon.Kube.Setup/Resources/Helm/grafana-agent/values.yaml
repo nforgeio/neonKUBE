@@ -81,13 +81,18 @@ affinity: {}
 
 metrics:
   global:
+    enabled: true
     scrapeInterval: 60s
   crio:
+    enabled: true
     scrapeInterval: 60s
   istio:
+    enabled: true
     scrapeInterval: 60s
   kubelet:
+    enabled: true
     scrapeInterval: 60s
   cadvisor:
+    enabled: true
     scrapeInterval: 60s
 

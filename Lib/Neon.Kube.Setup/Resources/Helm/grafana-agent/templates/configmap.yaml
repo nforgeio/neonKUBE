@@ -45,8 +45,10 @@ data:
       wal_directory: /var/lib/agent/data
       wal_cleanup_age: 15m
       wal_cleanup_period: 15m
+      {{- if .Values.metrics.global.enabled }}
       configs:
-        - name: node
+        {{- if .Values.metrics.istio.enabled }}
+        - name: crio
           host_filter: false
           wal_truncate_frequency: 15m
           max_wal_time: 15m
@@ -58,8 +60,10 @@ data:
                 - targets: [${HOST_IP}:9090]
                   labels:
                     instance: ${HOSTNAME}
+        {{- end -}}
+        {{- if .Values.metrics.istio.enabled }}
         - host_filter: true
-          name: agent
+          name: istio
           wal_truncate_frequency: 5m
           max_wal_time: 15m
           scrape_configs:
@@ -86,6 +90,13 @@ data:
                   - __meta_kubernetes_pod_container_port_name
                 action: keep
                 regex: '.*-envoy-prom'
+        {{- end -}}
+        {{- if .Values.metrics.kubelet.enabled }}
+        - host_filter: true
+          name: kubelet
+          wal_truncate_frequency: 5m
+          max_wal_time: 15m
+          scrape_configs:
             - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
               job_name: integrations/kubernetes/kubelet
               scrape_interval:  {{ .Values.metrics.kubelet.scrapeInterval | default "60s" }}
@@ -101,6 +112,13 @@ data:
               scheme: https
               tls_config:
                 ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        {{- end -}}
+        {{- if .Values.metrics.cadvisor.enabled }}
+        - host_filter: true
+          name: cadvisor
+          wal_truncate_frequency: 5m
+          max_wal_time: 15m
+          scrape_configs:
             - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
               job_name: integrations/kubernetes/cadvisor
               scrape_interval:  {{ .Values.metrics.cadvisor.scrapeInterval | default "60s" }}
@@ -117,6 +135,8 @@ data:
               scheme: https
               tls_config:
                 ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          {{- end -}}
+        {{- end -}}
     logs:
       configs:
         - clients:

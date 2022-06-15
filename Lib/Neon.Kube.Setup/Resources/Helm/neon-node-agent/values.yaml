@@ -13,19 +13,27 @@ image:
   repository: neon-node-agent
   pullPolicy: IfNotPresent
 
-# Resource requests and limits
-
-resource:
-  limits:
-    cpu: 100m
-    memory: 110Mi
-  requests:
-    cpu: 100m
-    memory: 50Mi
+resources: {}
 
 serviceMesh:
   enabled: true
-
 # Log level: none, critical, serror, error, warn, sinfo, info, transient, debug
 
 logLevel: info
+
+metrics:
+  # Enable Prometheus metrics endpoint
+  enabled: true
+  # Serve Prometheus metrics on this port
+  port: 9762
+  servicemonitor:
+    # Enable Prometheus Operator ServiceMonitor
+    enabled: true
+    # Define the namespace where to deploy the ServiceMonitor resource
+    namespace: ""
+    # Prometheus scrape interval
+    interval: 60s
+    # Prometheus scrape timeout
+    scrapeTimeout: 30s
+    # Add custom labels to the ServiceMonitor resource
+    labels: {}

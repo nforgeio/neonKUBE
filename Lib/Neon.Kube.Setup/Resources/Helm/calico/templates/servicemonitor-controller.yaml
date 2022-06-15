@@ -1,3 +1,4 @@
+{{- if .Values.serviceMonitor.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -7,9 +8,9 @@ metadata:
   namespace: kube-system
 spec:
   endpoints:
-    - interval: 5m
+    - interval: {{ .Values.serviceMonitor.interval }}
       path: /metrics
-      scrapeTimeout: 30s
+      scrapeTimeout: {{ .Values.serviceMonitor.scrapeTimeout }}
       targetPort: 9094
   jobLabel: calico-kube-controllers
   namespaceSelector:
@@ -18,3 +19,4 @@ spec:
   selector:
     matchLabels:
       k8s-app: calico-kube-controllers
+{{- end -}}

@@ -40,32 +40,6 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
-dashboards:
-  kubernetes:
-    enabled: true
-    id: kubernetes
-    name: Kubernetes
-    prefix: k8s
-  grafana:
-    enabled: true
-    id: grafana
-    name: Grafana
-    prefix: grafana
-  minio:
-    enabled: true
-    id: minio
-    name: Minio
-    prefix: minio
-  kiali:
-    enabled: true
-    id: kiali
-    name: Kiali
-    prefix: kiali
-  harbor:
-    enabled: true
-    id: harbor
-    name: Harbor
-    prefix: harbor
 
 service:
   type: ClusterIP
@@ -122,8 +96,6 @@ metrics:
     enabled: true
     # Define the namespace where to deploy the ServiceMonitor resource
     namespace: ""
-    # Prometheus Instance definition
-    prometheusInstance: default
     # Prometheus scrape interval
     interval: 60s
     # Prometheus scrape timeout

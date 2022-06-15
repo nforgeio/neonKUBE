@@ -2,25 +2,25 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ template "neon-dashboard.fullname" . }}
+  name: {{ template "neon-node-agent.fullname" . }}
 {{- if .Values.metrics.servicemonitor.namespace }}
   namespace: {{ .Values.metrics.servicemonitor.namespace }}
 {{- else }}
   namespace: {{ .Release.Namespace | quote }}
 {{- end }}
   labels:
-    app: {{ template "neon-dashboard.name" . }}
-    chart: {{ template "neon-dashboard.chart" . }}
+    app: {{ template "neon-node-agent.name" . }}
+    chart: {{ template "neon-node-agent.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 {{- if .Values.metrics.servicemonitor.labels }}
 {{ toYaml .Values.metrics.servicemonitor.labels | indent 4}}
 {{- end }}
 spec:
-  jobLabel: {{ template "neon-dashboard.fullname" . }}
+  jobLabel: {{ template "neon-node-agent.fullname" . }}
   selector:
     matchLabels:
-    {{- include "neon-dashboard.labels" . | nindent 6 }}
+    {{- include "neon-node-agent.labels" . | nindent 6 }}
   namespaceSelector:
     matchNames:
       - {{ .Release.Namespace }}

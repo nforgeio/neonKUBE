@@ -32,7 +32,6 @@ operator:
   tolerations: []
   resources:
     requests:
-      cpu: 200m
       memory: 64Mi
       ephemeral-storage: 500Mi
 

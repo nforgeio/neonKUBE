@@ -378,7 +378,6 @@ distributor:
 
   resources:
     requests:
-      cpu: 100m
       memory: 512Mi
 
   # Additional distributor container arguments, e.g. log level (debug, info, warn, error)
@@ -452,7 +451,6 @@ ingester:
 
   resources:
     requests:
-      cpu: 100m
       memory: 512Mi
 
   # Additional ingester container arguments, e.g. log level (debug, info, warn, error)
@@ -604,7 +602,6 @@ overrides_exporter:
 
   resources:
     requests:
-      cpu: 100m
       memory: 128Mi
 
   extraContainers: []
@@ -624,7 +621,6 @@ ruler:
 
   resources:
     requests:
-      cpu: 100m
       memory: 128Mi
 
   # Additional ruler container arguments, e.g. log level (debug, info, warn, error)
@@ -700,7 +696,6 @@ querier:
 
   resources:
     requests:
-      cpu: 100m
       memory: 128Mi
 
   # Additional querier container arguments, e.g. log level (debug, info, warn, error)
@@ -785,7 +780,6 @@ query_frontend:
 
   resources:
     requests:
-      cpu: 100m
       memory: 128Mi
 
   # Additional query-frontend container arguments, e.g. log level (debug, info, warn, error)
@@ -858,7 +852,6 @@ store_gateway:
 
   resources:
     requests:
-      cpu: 100m
       memory: 128Mi
 
   # Additional store-gateway container arguments, e.g. log level (debug, info, warn, error)
@@ -974,7 +967,6 @@ compactor:
 
   resources:
     requests:
-      cpu: 100m
       memory: 128Mi
 
   # Additional compactor container arguments, e.g. log level (debug, info, warn, error)

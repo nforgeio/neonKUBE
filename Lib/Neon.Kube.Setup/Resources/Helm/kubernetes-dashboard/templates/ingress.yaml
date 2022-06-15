@@ -2,10 +2,10 @@
 kind: VirtualService
 metadata:
   name: k8s-dashboard-virtual-service
-  namespace: neon-ingress
+  namespace: {{ .Release.Namespace }}
 spec:
   gateways:
-    - neoncluster-gateway
+    - neon-ingress/neoncluster-gateway
   hosts:
     - {{ .Values.neonkube.clusterDomain.kubernetesDashboard }}.{{ .Values.cluster.domain }}
   http:
