@@ -130,7 +130,6 @@ namespace NeonClusterOperator
 
             var k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
 
-            await ClusterOperatorController.StartAsync(k8s);
             await NodeTaskController.StartAsync(k8s);
 
             //-----------------------------------------------------------------

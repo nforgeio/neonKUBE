@@ -15,9 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// $debug(jefflill): RESTORE THIS!
-#if DISABLED
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -183,7 +180,7 @@ namespace NeonNodeAgent
                 {
                     var name = resource?.Name();
 
-                    log.LogInfo($"RECONCILED: {name ?? "[IDLE]"}");
+                    log.LogInfo($"RECONCILED: {name ?? "[IDLE]"} count={resources.Count}");
                     await UpdateContainerRegistriesAsync(resources);
 
                     return null;
@@ -373,11 +370,9 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
         {
             var ignorable = new V1NeonContainerRegistry();
 
-            ignorable.Spec.IgnoreThis = true;
+            ignorable.Spec.Prefix = "no.where";
 
             return ignorable;
         }
     }
 }
-
-#endif

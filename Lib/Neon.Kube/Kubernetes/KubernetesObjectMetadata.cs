@@ -31,7 +31,7 @@ namespace Neon.Kube
     /// <summary>
     /// Describes a Kubernetes object by its basic properties, <see cref="ApiVersion"/>, <see cref="Kind"/>, and <see cref="Metadata"/>.
     /// </summary>
-    public class KubernetesObjectMetadata : IKubernetesObject, IMetadata<V1ObjectMeta>, IValidate
+    public class KubernetesObjectMetadata : IKubernetesObject<V1ObjectMeta>, IMetadata<V1ObjectMeta>, IValidate
     {
         /// <inheritdoc/>
         public string ApiVersion { get; set; }

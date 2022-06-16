@@ -159,7 +159,7 @@ namespace NeonClusterOperator
                 {
                     var name = resource?.Name();
 
-                    log.LogInfo($"RECONCILED: {name ?? "[IDLE]"}");
+                    log.LogInfo($"RECONCILED: {name ?? "[IDLE]"} count={resources.Count}");
 
                     if (name == null)
                     {
@@ -295,7 +295,6 @@ namespace NeonClusterOperator
         {
             var ignorable = new V1NeonNodeTask();
 
-            ignorable.Spec.IgnoreThis    = true;
             ignorable.Spec.Node          = "ignored";
             ignorable.Spec.BashScript    = "ignored";
             ignorable.Spec.Timeout       = "0s";

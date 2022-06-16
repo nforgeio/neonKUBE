@@ -118,7 +118,7 @@ namespace TestKube
 
             foreach (var resource in existingTasks)
             {
-                if (!resource.IsIgnorable())
+                if (resource.Metadata.Name != KubeHelper.IgnorableResourceName)
                 {
                     await fixture.K8s.DeleteClusterCustomObjectAsync(resource);
                 }

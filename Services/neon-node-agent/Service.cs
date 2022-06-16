@@ -153,10 +153,7 @@ namespace NeonNodeAgent
 
             var k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
 
-// $debug(jefflill): RESTORE THIS!
-#if DISABLED
             await ContainerRegistryController.StartAsync(k8s);
-#endif
             await NodeTaskController.StartAsync(k8s);
 
             //-----------------------------------------------------------------

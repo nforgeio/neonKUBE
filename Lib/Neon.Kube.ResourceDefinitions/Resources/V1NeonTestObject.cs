@@ -26,6 +26,7 @@ using k8s.Models;
 using DotnetKubernetesClient.Entities;
 using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
+using Neon.Kube;
 #endif
 
 #if KUBEOPS
@@ -43,12 +44,12 @@ namespace Neon.Kube.Resources
     [EntityScope(EntityScope.Cluster)]
     [Description("Used internally by the neonKUBE Team for testing purposes.")]
 #endif
-    public class V1NeonTestObject : CustomKubernetesEntity<V1NeonTestObject.TestSpec, V1NeonTestObject.TestStatus>, IIgnorableResource
+    public class V1NeonTestObject : CustomKubernetesEntity<V1NeonTestObject.TestSpec, V1NeonTestObject.TestStatus>
     {
         /// <summary>
         /// Object API group.
         /// </summary>
-        public const string KubeGroup = Helper.NeonKubeResourceGroup;
+        public const string KubeGroup = ResourceHelper.NeonKubeResourceGroup;
 
         /// <summary>
         /// Object API version.
@@ -82,15 +83,6 @@ namespace Neon.Kube.Resources
             /// A test string.
             /// </summary>
             public string Message { get; set; }
-
-            //-----------------------------------------------------------------
-            // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1599
-
-            /// <summary>
-            /// Set to <c>true</c> to indicate that the resource should be ignored by the
-            /// <b>ResourceManager</b> and operators.
-            /// </summary>
-            public bool IgnoreThis { get; set; }
         }
 
         /// <summary>
@@ -102,18 +94,6 @@ namespace Neon.Kube.Resources
             /// Testing <see cref="DateTime"/> .
             /// </summary>
             public DateTime? Timestamp { get; set; }
-        }
-
-        //-----------------------------------------------------------------
-        // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1599
-
-        /// <summary>
-        /// Indicates whether the resource should be ignored by the <b>ResourceManager</b> and operators.
-        /// </summary>
-        /// <returns></returns>
-        public bool IsIgnorable()
-        {
-            return Spec.IgnoreThis;
         }
     }
 }

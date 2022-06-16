@@ -26,6 +26,7 @@ using k8s.Models;
 using DotnetKubernetesClient.Entities;
 using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
+using Neon.Kube;
 #endif
 
 #if KUBEOPS
@@ -49,12 +50,12 @@ namespace Neon.Kube.Resources
     [EntityScope(EntityScope.Cluster)]
     [Description("Describes a neonKUBE cluster upstream container registry.")]
 #endif
-    public class V1NeonContainerRegistry : CustomKubernetesEntity<V1NeonContainerRegistry.RegistrySpec>, IIgnorableResource
+    public class V1NeonContainerRegistry : CustomKubernetesEntity<V1NeonContainerRegistry.RegistrySpec>
     {
         /// <summary>
         /// Object API group.
         /// </summary>
-        public const string KubeGroup = Helper.NeonKubeResourceGroup;
+        public const string KubeGroup = ResourceHelper.NeonKubeResourceGroup;
 
         /// <summary>
         /// Object API version.
@@ -149,27 +150,6 @@ namespace Neon.Kube.Resources
             /// Optionally specifies the password to be used to authenticate against the upstream registry.
             /// </summary>
             public string Password { get; set; } = null;
-
-            //-----------------------------------------------------------------
-            // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1599
-
-            /// <summary>
-            /// Set to <c>true</c> to indicate that the resource should be ignored by the
-            /// <b>ResourceManager</b> and operators.
-            /// </summary>
-            public bool IgnoreThis { get; set; }
-        }
-
-        //-----------------------------------------------------------------
-        // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1599
-
-        /// <summary>
-        /// Indicates whether the resource should be ignored by the <b>ResourceManager</b> and operators.
-        /// </summary>
-        /// <returns></returns>
-        public bool IsIgnorable()
-        {
-            return Spec.IgnoreThis;
         }
     }
 }

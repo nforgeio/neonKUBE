@@ -102,10 +102,8 @@ namespace NeonNodeAgent
 
             // Ensure that the [/var/run/neonkube/neon-node-agent/nodetask] folder exists on the node.
 
-            if (NeonHelper.IsLinux)
-            {
-                var scriptPath = Path.Combine(Node.HostMount, $"tmp/node-agent-folder-{NeonHelper.CreateBase36Guid()}.sh");
-                var script     =
+            var scriptPath = Path.Combine(Node.HostMount, $"tmp/node-agent-folder-{NeonHelper.CreateBase36Guid()}.sh");
+            var script     =
 $@"#!/bin/bash
 
 set -euo pipefail
@@ -134,15 +132,14 @@ fi
 
 rm $0
 ";
-                File.WriteAllText(scriptPath, NeonHelper.ToLinuxLineEndings(script));
-                try
-                {
-                    Node.BashExecuteCapture(scriptPath).EnsureSuccess();
-                }
-                finally
-                {
-                    NeonHelper.DeleteFile(scriptPath);
-                }
+            File.WriteAllText(scriptPath, NeonHelper.ToLinuxLineEndings(script));
+            try
+            {
+                Node.BashExecuteCapture(scriptPath).EnsureSuccess();
+            }
+            finally
+            {
+                NeonHelper.DeleteFile(scriptPath);
             }
 
             // Load the configuration settings.
@@ -219,7 +216,7 @@ rm $0
                 {
                     var name = resource?.Name();
 
-                    log.LogInfo($"RECONCILED: {name ?? "[IDLE]"}");
+                    log.LogInfo($"RECONCILED: {name ?? "[IDLE]"} count={resources.Count}");
 
                     if (name == null)
                     {
@@ -297,11 +294,6 @@ rm $0
 
                         // Execute the task if it's pending.
 
-                        if (!NeonHelper.IsLinux)
-                        {
-                            return null;
-                        }
-
                         if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.Pending)
                         {
                             await ExecuteTaskAsync(nodeTask);
@@ -375,11 +367,6 @@ rm $0
         {
             Covenant.Requires<ArgumentNullException>(nodeTasks != null, nameof(nodeTasks));
 
-            if (!NeonHelper.IsLinux)
-            {
-                return;
-            }
-
             var utcNow = DateTime.UtcNow;
 
             //-----------------------------------------------------------------
@@ -388,7 +375,6 @@ rm $0
             foreach (var nodeTask in nodeTasks.Values)
             {
                 var taskName = nodeTask.Name();
-log.LogDebug($"CONTROLLER-0: {taskName} *******************************************************");
 
                 // Remove invalid tasks.
 
@@ -725,7 +711,6 @@ export SCRIPT_DIR={taskFolder}
         {
             var ignorable = new V1NeonNodeTask();
 
-            ignorable.Spec.IgnoreThis    = true;
             ignorable.Spec.Node          = "ignored";
             ignorable.Spec.BashScript    = "ignored";
             ignorable.Spec.Timeout       = "0s";

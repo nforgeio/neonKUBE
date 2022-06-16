@@ -33,7 +33,7 @@ namespace Neon.Kube
     /// </summary>
     /// <typeparam name="T">The custom object type.</typeparam>
     public class V1CustomObjectList<T> : IKubernetesObject<V1ListMeta>, IKubernetesObject, IMetadata<V1ListMeta>, IItems<T>, IValidate
-        where T : IKubernetesObject
+        where T : IKubernetesObject<V1ObjectMeta>
     {
         /// <inheritdoc/>
         public string ApiVersion { get; set; }

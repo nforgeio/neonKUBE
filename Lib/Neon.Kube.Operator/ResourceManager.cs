@@ -33,7 +33,7 @@ using Microsoft.Extensions.Hosting;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
-using Neon.Kube.ResourceDefinitions;
+using Neon.Kube;
 using Neon.Tasks;
 
 using KubeOps.Operator;
@@ -321,8 +321,6 @@ namespace Neon.Kube.Operator
         //---------------------------------------------------------------------
         // Implementation
 
-        private const string IgnorableResourceName = "ignore-this";
-
         private bool                            isDisposed            = false;
         private AsyncReentrantMutex             mutex                 = new AsyncReentrantMutex();
         private Dictionary<string, TEntity>     resources             = new Dictionary<string, TEntity>(StringComparer.InvariantCultureIgnoreCase);
@@ -520,17 +518,7 @@ namespace Neon.Kube.Operator
         /// <returns><c>true</c> if the resource is ignorable, <c>false</c> if not ignorable or <c>null</c>.</returns>
         private bool IsIgnorable(TEntity resource)
         {
-            if (resource == null)
-            {
-                return false;
-            }
-
-            if (resource is IIgnorableResource ignorable)
-            {
-                return ignorable.IsIgnorable();
-            }
-
-            return false;
+            return resource?.Name() == KubeHelper.IgnorableResourceName;
         }
 
         /// <summary>
@@ -553,49 +541,25 @@ namespace Neon.Kube.Operator
 
                 if (entity != null)
                 {
-var type = entity.GetType();
-log.LogWarn($"0A: controller needs ignorable");
-log.LogWarn($"0B: entityType={entity.GetType().FullName}");
-log.LogWarn($"0C: implements IIgnorableResource={entity.GetType().Implements<IIgnorableResource>()}");
-                    // Ensure that the entity returned is actually configured to be ignorable.
-
-                    var ignorableEntity = entity as IIgnorableResource;
-
-                    if (ignorableEntity == null)
-                    {
-                        throw new NotSupportedException($"Entity returned by [{typeof(TController).FullName}.{nameof(IExtendedController<TEntity>.CreateIgnorable)}()] does not implement [{nameof(IIgnorableResource)}].");
-                    }
-
-                    if (!ignorableEntity.IsIgnorable())
-                    {
-                        throw new NotSupportedException($"Entity returned by [{typeof(TController).FullName}.{nameof(IExtendedController<TEntity>.CreateIgnorable)}()] does not report being ignorable.");
-                    }
-
                     // The controller needs us to ensure that at least one ignorable
                     // resource exists.  We'll do that here.  Note that ignorable
                     // resources will always have the same name.
 
                     try
                     {
-log.LogWarn($"1: check for existing");
-                        await k8s.GetClusterCustomObjectAsync<TEntity>(IgnorableResourceName);
+                        await k8s.GetClusterCustomObjectAsync<TEntity>(KubeHelper.IgnorableResourceName);
 
-log.LogWarn($"2: ignorable exists");
                     }
                     catch (HttpOperationException e)
                     {
-log.LogWarn($"3: ignorable doesn't exist");
                         if (e.Response.StatusCode == HttpStatusCode.NotFound)
                         {
                             try
                             {
-log.LogWarn($"4: creating");
-                                await k8s.CreateClusterCustomObjectAsync(entity, IgnorableResourceName);
-log.LogWarn($"5: created");
+                                await k8s.CreateClusterCustomObjectAsync(entity, KubeHelper.IgnorableResourceName);
                             }
                             catch (HttpOperationException e2)
                             {
-log.LogWarn($"6: create failed: {e.Response.Content}", e2);
                                 // Any errors here will probably be due to other controller instances
                                 // creating an ignorable between the time we checked above and the
                                 // time Kubernetes actually handled the create.
@@ -678,9 +642,7 @@ log.LogWarn($"6: create failed: {e.Response.Content}", e2);
         /// <param name="resource">The resource being added.</param>
         private void AddResource(TEntity resource)
         {
-            Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
-
-            if (!IsIgnorable(resource))
+            if (resource != null && !IsIgnorable(resource))
             {
                 resources[resource.Name()] = resource;
             }
@@ -717,7 +679,6 @@ log.LogWarn($"6: create failed: {e.Response.Content}", e2);
             await SyncContext.Clear;
             Covenant.Requires<InvalidOperationException>(started, $"You must call [{nameof(TController)}.{nameof(StartAsync)}()] before starting KubeOps.");
 
-            log.LogDebug($"RECONCILE: 0: resource-is-null=[{resource == null}]");
             //-----------------------------------------------------------------
             // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1599
             //
@@ -725,23 +686,12 @@ log.LogWarn($"6: create failed: {e.Response.Content}", e2);
 
             if (IsIgnorable(resource))
             {
-log.LogDebug($"RECONCILE: 1A: *** IGNORABLE ***");
-                return null;
-            }
-
-            //-----------------------------------------------------------------
-            // Ignore IDLE events from the idle loop.
-
-            if (resource == null)
-            {
-log.LogDebug($"RECONCILE: 1B: IDLE");
                 return null;
             }
 
             //-----------------------------------------------------------------
             // Handle the resource.
 
-            log.LogDebug($"RECONCILE: 2: resource name=[{resource?.Name()}]");
             EnsureNotDisposed();
             EnsureStarted();
 
@@ -890,7 +840,6 @@ log.LogDebug($"RECONCILE: 1B: IDLE");
 
             if (IsIgnorable(resource))
             {
-                log.LogDebug($"DELETE: 0: *** IGNORABLE *********************************************************************");
                 return;
             }
 
@@ -1005,7 +954,6 @@ log.LogDebug($"RECONCILE: 1B: IDLE");
 
             if (IsIgnorable(resource))
             {
-                log.LogDebug($"STATUS-MODIFIED: 1B: *** IGNORABLE ***");
                 return;
             }
 
@@ -1149,17 +1097,14 @@ log.LogDebug($"RECONCILE: 1B: IDLE");
         {
             var loopDelay = TimeSpan.FromSeconds(1);
 
-log.LogDebug($"IDLE-LOOP: 0: nextIdleReconcileUtc={nextIdleReconcileUtc} now={DateTime.UtcNow}");
             while (!isDisposed)
             {
-log.LogDebug($"IDLE-LOOP: 1:");
                 await Task.Delay(loopDelay);
 
                 var reconcileDiscovered = false;
 
                 if (DateTime.UtcNow >= nextIdleReconcileUtc)
                 {
-log.LogDebug($"IDLE-LOOP: 2A:");
                     nextIdleReconcileUtc = DateTime.UtcNow + options.IdleInterval;
 
                     //-----------------------------------------------------------------
@@ -1171,11 +1116,9 @@ log.LogDebug($"IDLE-LOOP: 2A:");
 
                     // $debug(jefflill): RESTORE THIS!
                     //await EnsureIgnorableResource();
-log.LogDebug($"IDLE-LOOP: 2B:");
 
                     if (reconcileReceived)
                     {
-log.LogDebug($"IDLE-LOOP: 3:");
                         // It's been [reconciledNoChangeInterval] since we saw the last 
                         // resource from KubeOps, so we're going to assume that we have
                         // all of them.  So we're ready to send RECONCILE events for all
@@ -1188,8 +1131,7 @@ log.LogDebug($"IDLE-LOOP: 3:");
                     }
                     else
                     {
-log.LogDebug($"IDLE-LOOP: 4A:");
-                        // If we're going to trigger the first IDLE RECONCILE, and we haven't
+                        // If we're going to trigger the first IDLE RECONCILE and we haven't
                         // seen any resources from KubeOps, we need to that we have connectivity
                         // to Kubernetes and that there really aren't any known resources for
                         // the operator.
@@ -1202,35 +1144,31 @@ log.LogDebug($"IDLE-LOOP: 4A:");
                         // This is a bit risky because we're assuming that KubeOps is
                         // seeing the same resources from Kubernetes that we are here.
                         // I believe that waiting a minute for KubeOps to stablize and
-                        // these other mitigations will be pretty safe though.
+                        // the other mitigations will be pretty safe though.
 
                         try
                         {
                             IList<TEntity> items;
 
-log.LogDebug($"IDLE-LOOP: 4B:");
                             if (resourceNamespace != null)
                             {
-log.LogDebug($"IDLE-LOOP: 4C:");
                                 items = (await k8s.ListNamespacedCustomObjectAsync<TEntity>(resourceNamespace)).Items;
                             }
                             else
                             {
-log.LogDebug($"IDLE-LOOP: 4D:");
                                 items = (await k8s.ListClusterCustomObjectAsync<TEntity>()).Items;
                             }
-log.LogDebug($"IDLE-LOOP: 4E:");
 
-                            if (items.Any(filter))
+                            if (items
+                                .Where(item => item.Name() != KubeHelper.IgnorableResourceName)
+                                .Any(filter))
                             {
                                 if (discovering)
                                 {
                                     log.LogWarn($"Undiscovered resources.");
+                                    continue;
                                 }
-
-                                continue;
                             }
-log.LogDebug($"IDLE-LOOP: 4F:");
 
                             reconcileDiscovered = discovering;
                             discovering         = false;
@@ -1242,23 +1180,19 @@ log.LogDebug($"IDLE-LOOP: 4F:");
                         }
                         catch (HttpOperationException e)
                         {
-log.LogDebug($"IDLE-LOOP: 5A: {e.Response.Content}");
                             log.LogWarn(e);
                         }
                         catch (Exception e)
                         {
-log.LogDebug($"IDLE-LOOP: 5B:");
                             log.LogWarn(e);
                             continue;
                         }
-log.LogDebug($"IDLE-LOOP: 6:");
                     }
 
                     // Don't send an IDLE RECONCILE while we're still discovering resources.
 
                     if (discovering)
                     {
-log.LogDebug($"IDLE-LOOP: 7:");
                         continue;
                     }
 
@@ -1270,7 +1204,6 @@ log.LogDebug($"IDLE-LOOP: 7:");
                         {
                             try
                             {
-log.LogDebug($"IDLE-LOOP: 8:");
                                 // $todo(jefflill):
                                 //
                                 // We're currently assuming that operator controllers all have a constructor
@@ -1291,7 +1224,6 @@ log.LogDebug($"IDLE-LOOP: 8:");
 
                                 if (reconcileDiscovered)
                                 {
-log.LogDebug($"IDLE-LOOP: 9:");
                                     try
                                     {
                                         skipChangeDetection = true;
@@ -1303,40 +1235,32 @@ log.LogDebug($"IDLE-LOOP: 9:");
                                     }
                                     catch (Exception e)
                                     {
-log.LogDebug($"IDLE-LOOP: 10:");
                                         log.LogWarn(e);
                                     }
                                     finally
                                     {
-log.LogDebug($"IDLE-LOOP: 11:");
                                         skipChangeDetection = false;
                                     }
                                 }
 
-log.LogDebug($"IDLE-LOOP: 12:");
                                 await controller.ReconcileAsync(null);
-log.LogDebug($"IDLE-LOOP: 13:");
                             }
                             catch (OperationCanceledException)
                             {
                                 // Exit the loop when the [mutex] is disposed which happens
                                 // when the resource manager is disposed.
 
-log.LogDebug($"IDLE-LOOP: 14:");
                                 return;
                             }
                             catch (Exception e)
                             {
-log.LogDebug($"IDLE-LOOP: 15:");
                                 log.LogError(e);
                             }
                         });
 
                     nextIdleReconcileUtc = DateTime.UtcNow + options.IdleInterval;
-log.LogDebug($"IDLE-LOOP: 16: nextIdleReconcileUtc={nextIdleReconcileUtc}");
                 }
             }
-log.LogDebug($"IDLE-LOOP: 17:");
         }
     }
 }
