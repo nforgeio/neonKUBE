@@ -4,6 +4,7 @@ REM neon delete crd neoncontainerregistries.neonkube.io
 REM neon delete crd neonnodetasks.neonkube.io
 REM neon delete crd neonclusteroperator.neonkube.io
 REM neon delete crd neontestobjects.neonkube.io
+REM neon delete crd neondashboards.neonkube.io
 
 set DEBUG_LOGLEVEL=debug
 set DEBUG_ORG=ghcr.io/neonkube-dev

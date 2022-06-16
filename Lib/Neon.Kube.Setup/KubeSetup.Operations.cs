@@ -5126,6 +5126,58 @@ $@"- name: StorageType
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonDashboard);
+            
+            controller.ThrowIfCancelled();
+            await master.InvokeIdempotentAsync("setup/neon-dashboard-resources",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "setup", message: "neon-dashboard");
+
+                    if (cluster.Definition.Features.Grafana)
+                    {
+                        await CreateNeonDashboardAsync(
+                            controller,
+                            master,
+                            name:         "grafana",
+                            url:          $"https://{ClusterDomain.Grafana}.{cluster.Definition.Domain}",
+                            displayName:  "Grafana",
+                            enabled:      true,
+                            displayOrder: 10);
+                    }
+                    if (cluster.Definition.Features.Minio)
+                    {
+                        await CreateNeonDashboardAsync(
+                            controller,
+                            master,
+                            name:         "minio",
+                            url:          $"https://{ClusterDomain.Minio}.{cluster.Definition.Domain}",
+                            displayName:  "Minio",
+                            enabled:      true,
+                            displayOrder: 10);
+                    }
+                    if (cluster.Definition.Features.Harbor.Enabled)
+                    {
+                        await CreateNeonDashboardAsync(
+                            controller,
+                            master,
+                            name:         "harbor",
+                            url:          $"https://{ClusterDomain.HarborRegistry}.{cluster.Definition.Domain}",
+                            displayName:  "Harbor",
+                            enabled:      true,
+                            displayOrder: 10);
+                    }
+                    if (cluster.Definition.Features.Kiali)
+                    {
+                        await CreateNeonDashboardAsync(
+                            controller,
+                            master,
+                            name:         "kiali",
+                            url:          $"https://{ClusterDomain.Kiali}.{cluster.Definition.Domain}",
+                            displayName:  "Kiali",
+                            enabled:      true,
+                            displayOrder: 10);
+                    }
+                });
 
             controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/neon-dashboard",
@@ -5812,19 +5864,19 @@ $@"- name: StorageType
 
             master.Status = $"create: [{name}] minio bucket";
 
-            var cluster     = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var minioSecret = await GetK8sClient(controller).ReadNamespacedSecretAsync("minio", KubeNamespace.NeonSystem);
-            var accessKey   = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
-            var secretKey   = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
-            var k8s         = GetK8sClient(controller);
-            
+            var accessKey = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
+            var secretKey = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
+            var k8s = GetK8sClient(controller);
+
             controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync($"setup/minio-bucket-{name}",
                 async () =>
                 {
                     await cluster.ExecMinioCommandAsync(
                         retryPolicy: podExecRetry,
-                        mcCommand:   $"mb minio/{name}");
+                        mcCommand: $"mb minio/{name}");
                 });
 
             controller.ThrowIfCancelled();
@@ -5835,9 +5887,60 @@ $@"- name: StorageType
                     {
                         await cluster.ExecMinioCommandAsync(
                             retryPolicy: podExecRetry,
-                            mcCommand:   $"admin bucket quota minio/{name} --hard {quota}");
+                            mcCommand: $"admin bucket quota minio/{name} --hard {quota}");
                     });
             }
+        }
+
+        /// <summary>
+        /// Creates a <see cref="V1NeonDashboard"/> idempotently.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <param name="name">The new bucket name.</param>
+        /// <param name="url">The dashboard URL</param>
+        /// <param name="displayName">The Dashboard display name.</param>
+        /// <param name="enabled">Optionally specify whether the dashboard is enabled.</param>
+        /// <param name="displayOrder">Optionally specify the display order.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task CreateNeonDashboardAsync(
+            ISetupController controller, 
+            NodeSshProxy<NodeDefinition> master, 
+            string name,
+            string url, 
+            string displayName  = null,
+            bool   enabled      = true,
+            int    displayOrder = int.MaxValue)
+        {
+            await SyncContext.Clear;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(url), nameof(url));
+
+            master.Status = $"create: [{name}] minio bucket";
+
+            var cluster     = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s         = GetK8sClient(controller);
+
+            var dashboard = new V1NeonDashboard()
+            {
+                Spec = new V1NeonDashboard.NeonDashboardSpec()
+                {
+                    DisplayName  = displayName, 
+                    Enabled      = enabled,
+                    DisplayOrder = displayOrder,
+                    Url          = url
+                }
+            };
+
+            controller.ThrowIfCancelled();
+            await master.InvokeIdempotentAsync($"setup/neon-dashboard-{name}",
+                async () =>
+                {
+                    await k8s.CreateClusterCustomObjectAsync<V1NeonDashboard>(dashboard, dashboard.Name());
+                });
         }
 
 
