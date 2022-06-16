@@ -198,8 +198,13 @@ namespace NeonDashboard.Pages
 
             await Task.WhenAll(tasks);
 
+            if (AppState.Metrics.MemoryTotalBytes == null || AppState.Metrics.MemoryUsageBytes == null)
+            {
+                return;
+            }
+
             var memoryUsageX = AppState.Metrics.MemoryUsageBytes.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time).ToShortTimeString()).ToList();
-            var memoryUsageY = AppState.Metrics.MemoryUsageBytes.Data.Result.First().Values.Select(x => decimal.Parse(x.Value) / 1000000000).ToList();
+            var memoryUsageY = AppState.Metrics.MemoryUsageBytes.Data.Result?.First().Values.Select(x => decimal.Parse(x.Value) / 1000000000).ToList();
 
             await UpdateChartAsync(memoryUsageX, memoryUsageY, memoryChartConfig, memoryChart, $"Memory usage (total memory: {ByteUnits.ToGB(AppState.Metrics.MemoryTotalBytes)})");
         }
@@ -215,6 +220,11 @@ namespace NeonDashboard.Pages
             };
 
             await Task.WhenAll(tasks);
+
+            if (AppState.Metrics.CPUUsagePercent == null || AppState.Metrics.CPUTotal == null)
+            {
+                return;
+            }
 
             var cpuUsageX = AppState.Metrics.CPUUsagePercent.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time).ToShortTimeString()).ToList();
             var cpuUsageY = AppState.Metrics.CPUUsagePercent.Data.Result.First().Values.Select(x => decimal.Parse(x.Value) * AppState.Metrics.CPUTotal).ToList();
@@ -233,6 +243,11 @@ namespace NeonDashboard.Pages
             };
 
             await Task.WhenAll(tasks);
+
+            if (AppState.Metrics.DiskUsageBytes == null || AppState.Metrics.DiskTotalBytes == null)
+            {
+                return;
+            }
 
             var diskUsageX = AppState.Metrics.DiskUsageBytes.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time).ToShortTimeString()).ToList();
             var diskUsageY = AppState.Metrics.DiskUsageBytes.Data.Result.First().Values.Select(x => decimal.Parse(x.Value) / 1000000000).ToList();

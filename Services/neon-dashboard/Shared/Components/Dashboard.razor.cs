@@ -37,13 +37,15 @@ namespace NeonDashboard.Shared.Components
         public Dashboard(
             string id,
             string name,
-            string uri = null, 
-            string description = null)
+            string url = null, 
+            string description = null,
+            int    displayOrder = int.MaxValue)
         {
-            Id          = id;
-            Name        = name;
-            Uri         = uri;
-            Description = description;
+            Id           = id;
+            Name         = name;
+            Url          = url;
+            Description  = description;
+            DisplayOrder = displayOrder;
         }
 
         [CascadingParameter(Name = "CurrentDashboard")]
@@ -62,16 +64,22 @@ namespace NeonDashboard.Shared.Components
         public string Name { get; set; } = null;
 
         [Parameter]
-        [JsonProperty(PropertyName = "Uri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "uri", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Url", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "url", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string Uri { get; set; } = null;
+        public string Url { get; set; } = null;
 
         [Parameter]
         [JsonProperty(PropertyName = "Description", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "description", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Description { get; set; }
+
+        [Parameter]
+        [JsonProperty(PropertyName = "DisplayOrder", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "displayOrder", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public int? DisplayOrder { get; set; }
 
         /// <summary>
         /// The height of the current frame. If this is the currently selected dashboard, return the max height.
@@ -124,9 +132,9 @@ namespace NeonDashboard.Shared.Components
         }
 
         /// <inheritdoc />
-        public string GetUri()
+        public string GetUrl()
         {
-            return Uri;
+            return Url;
         }
 
         /// <inheritdoc />

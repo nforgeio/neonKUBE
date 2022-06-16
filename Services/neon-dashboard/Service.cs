@@ -33,6 +33,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.Resources;
 using Neon.Service;
 using Neon.Tasks;
 
@@ -141,6 +142,37 @@ namespace NeonDashboard
             KubeNamespace.NeonStatus,
             fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
 
+            Dashboards = new List<Dashboard>();
+            Dashboards.Add(
+                new Dashboard(
+                    id:           "neonkube", 
+                    name:         "neonKUBE",
+                    displayOrder: 0));
+
+            _ = Kubernetes.WatchAsync<V1NeonDashboard>(async (@event) =>
+            {
+                await SyncContext.Clear;
+
+                switch (@event.Type)
+                {
+                    case WatchEventType.Added:
+                        await AddDashboardAsync(@event.Value);
+                        break;
+                    case WatchEventType.Deleted:
+                        await RemoveDashboardAsync(@event.Value);
+                        break;
+                    case WatchEventType.Modified:
+                        await RemoveDashboardAsync(@event.Value);
+                        await AddDashboardAsync(@event.Value);
+                        break;
+                    default:
+                        break;
+                }
+
+                Dashboards = Dashboards.OrderBy(d => d.DisplayOrder)
+                                        .ThenBy(d => d.Name).ToList();
+            });
+
             if (NeonHelper.IsDevWorkstation)
             {
                 port = 11001;
@@ -153,28 +185,6 @@ namespace NeonDashboard
             PrometheusClient = new PrometheusClient($"{metricsHost}/prometheus/");
 
             SsoClientSecret = GetEnvironmentVariable("SSO_CLIENT_SECRET", redacted: true);
-
-            Dashboards = new List<Dashboard>();
-
-            Dashboards.Add(new Dashboard("neonkube", "neonKUBE"));
-            Dashboards.Add(new Dashboard("kubernetes", "Kubernetes", $"https://{ClusterDomain.KubernetesDashboard}.{ClusterInfo.Domain}"));
-
-            if (ClusterInfo.FeatureOptions.Grafana)
-            {
-                Dashboards.Add(new Dashboard("grafana", "Grafana", $"https://{ClusterDomain.Grafana}.{ClusterInfo.Domain}"));
-            }
-            if (ClusterInfo.FeatureOptions.Minio)
-            {
-                Dashboards.Add(new Dashboard("minio", "Minio", $"https://{ClusterDomain.Minio}.{ClusterInfo.Domain}"));
-            }
-            if (ClusterInfo.FeatureOptions.Harbor.Enabled)
-            {
-                Dashboards.Add(new Dashboard("harbor", "Harbor", $"https://{ClusterDomain.HarborRegistry}.{ClusterInfo.Domain}"));
-            }
-            if (ClusterInfo.FeatureOptions.Kiali)
-            {
-                Dashboards.Add(new Dashboard("kiali", "Kiali", $"https://{ClusterDomain.Kiali}.{ClusterInfo.Domain}"));
-            }
 
             // Start the web service.
 
@@ -206,6 +216,31 @@ namespace NeonDashboard
             return 0;
         }
 
+        private async Task AddDashboardAsync(V1NeonDashboard dashboard)
+        {
+            await SyncContext.Clear;
+
+            if (string.IsNullOrEmpty(dashboard.Spec.DisplayName))
+            {
+                dashboard.Spec.DisplayName = dashboard.Name();
+            }
+
+            Dashboards.Add(
+                new Dashboard(
+                    id:           dashboard.Name(),
+                    name:         dashboard.Spec.DisplayName,
+                    url:          dashboard.Spec.Url,
+                    displayOrder: dashboard.Spec.DisplayOrder));
+        }
+        private async Task RemoveDashboardAsync(V1NeonDashboard dashboard)
+        {
+            await SyncContext.Clear;
+
+            Dashboards.Remove(
+                Dashboards.Where(
+                    d => d.Id == dashboard.Name())?.First());
+        }
+
         public async Task ConfigureDevAsync()
         {
             await SyncContext.Clear;
@@ -224,11 +259,6 @@ namespace NeonDashboard
 
             try
             {
-                // set config map
-                var configMap = await Kubernetes.ReadNamespacedConfigMapAsync("neon-dashboard", KubeNamespace.NeonSystem);
-
-                SetConfigFile("/etc/neon-dashboard/dashboards.yaml", configMap.Data["dashboards.yaml"]);
-
                 var secret = await Kubernetes.ReadNamespacedSecretAsync("neon-sso-dex", KubeNamespace.NeonSystem);
 
                 SetEnvironmentVariable("SSO_CLIENT_SECRET", Encoding.UTF8.GetString(secret.Data["KUBERNETES_CLIENT_SECRET"]));
@@ -302,7 +332,7 @@ namespace NeonDashboard
                     }
                 };
 
-                await Kubernetes.JNET_CreateNamespacedCustomObjectAsync<VirtualService>(virtualService, KubeNamespace.NeonIngress);
+                await Kubernetes.CreateNamespacedCustomObjectAsync<VirtualService>(virtualService, virtualService.Name(), KubeNamespace.NeonIngress);
             }
             SetEnvironmentVariable("METRICS_HOST", $"https://metrics.{ClusterInfo.Domain}");
         }

@@ -133,16 +133,27 @@ namespace NeonDashboard
             /// Gets the total amount of memory available to the cluster.
             /// </summary>
             /// <returns></returns>
-            public async Task<decimal> GetMemoryTotalAsync()
+            public async Task GetMemoryTotalAsync()
             {
                 await SyncContext.Clear;
 
                 var query = $@"sum(node_memory_MemTotal_bytes{{cluster=~""{NeonDashboardService.ClusterInfo.Name}""}})";
-                MemoryTotalBytes = decimal.Parse((await QueryAsync(query)).Data.Result.First().Value.Value);
+                
+                var result = await QueryAsync(query);
+
+                if (result == null)
+                {
+                    return;
+                }
+
+                if (decimal.TryParse(result.Data.Result.First().Value.Value, out var memoryTotal)) 
+                {
+                    MemoryTotalBytes = memoryTotal;
+                }
 
                 NotifyStateChanged();
 
-                return MemoryTotalBytes;
+                return;
             }
 
             /// <summary>
@@ -168,16 +179,26 @@ namespace NeonDashboard
             /// Gets the total number of CPUs available to the cluster.
             /// </summary>
             /// <returns></returns>
-            public async Task<decimal> GetCpuTotalAsync()
+            public async Task GetCpuTotalAsync()
             {
                 await SyncContext.Clear;
 
                 var query = $@"sum(count without(cpu, mode) (node_cpu_seconds_total{{mode = ""idle"", cluster=~""{NeonDashboardService.ClusterInfo.Name}""}}))";
-                CPUTotal = decimal.Parse((await QueryAsync(query)).Data.Result.First().Value.Value);
+                
+                var result = await QueryAsync(query);
+
+                if (result == null)
+                {
+                    return;
+                }
+
+                if (decimal.TryParse(result.Data.Result.First().Value.Value, out var cpu)){
+                    CPUTotal = cpu;
+                }
 
                 NotifyStateChanged();
 
-                return CPUTotal;
+                return;
             }
 
             /// <summary>
@@ -203,16 +224,27 @@ namespace NeonDashboard
             /// Gets the total amount of disk space available to the cluster.
             /// </summary>
             /// <returns></returns>
-            public async Task<decimal> GetDiskTotalAsync()
+            public async Task GetDiskTotalAsync()
             {
                 await SyncContext.Clear;
 
                 var query = $@"sum(node_filesystem_avail_bytes{{cluster=~""{NeonDashboardService.ClusterInfo.Name}"", mountpoint=""/"",fstype!=""rootfs""}})";
-                DiskTotalBytes = decimal.Parse((await QueryAsync(query)).Data.Result.First().Value.Value);
+
+                var result = await QueryAsync(query);
+
+                if (result == null)
+                {
+                    return;
+                }
+
+                if (decimal.TryParse(result.Data.Result.First().Value.Value, out var disk))
+                {
+                    DiskTotalBytes = disk;
+                }
 
                 NotifyStateChanged();
 
-                return DiskTotalBytes;
+                return;
             }
 
             /// <summary>
@@ -262,7 +294,7 @@ namespace NeonDashboard
                 catch (Exception e)
                 {
                     Logger.LogError(e);
-                    throw;
+                    return null;
                 }
             }
 
@@ -300,7 +332,7 @@ namespace NeonDashboard
                 catch (Exception e)
                 {
                     Logger.LogError(e);
-                    throw;
+                    return null;
                 }
             }
 

@@ -48,9 +48,6 @@ spec:
             - name: http-metrics
               containerPort: {{ .Values.metrics.port }}
               protocol: TCP
-          volumeMounts:
-            - name: config
-              mountPath: /etc/neon-dashboard
           startupProbe:
             exec:
               command:
@@ -87,7 +84,3 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      volumes:
-        - name: config
-          configMap:
-            name: neon-dashboard

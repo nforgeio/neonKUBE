@@ -20,7 +20,7 @@ namespace NeonDashboard
     public interface IDropUpItem
     {
         string GetName();
-        string GetUri();
+        string GetUrl();
         string GetId();
     }
 }
