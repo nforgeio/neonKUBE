@@ -47,14 +47,14 @@ data:
       wal_cleanup_period: 15m
       {{- if .Values.metrics.global.enabled }}
       configs:
-        {{- if .Values.metrics.istio.enabled }}
+        {{- if .Values.metrics.crio.enabled }}
         - name: crio
           host_filter: false
           wal_truncate_frequency: 15m
           max_wal_time: 15m
           scrape_configs:
             - job_name: crio
-              scrape_interval:  {{ .Values.metrics.crio.scrapeInterval | default "60s" }}
+              scrape_interval: {{ .Values.metrics.crio.scrapeInterval | default "60s" }}
               metrics_path: /metrics
               static_configs:
                 - targets: [${HOST_IP}:9090]
@@ -68,7 +68,7 @@ data:
           max_wal_time: 15m
           scrape_configs:
             - job_name: 'istiod'
-              scrape_interval:  {{ .Values.metrics.istio.scrapeInterval | default "60s" }}
+              scrape_interval: {{ .Values.metrics.istio.scrapeInterval | default "60s" }}
               kubernetes_sd_configs:
               - role: endpoints
                 namespaces:
@@ -81,7 +81,7 @@ data:
                 action: keep
                 regex: istiod;http-monitoring
             - job_name: 'envoy-stats'
-              scrape_interval:  {{ .Values.metrics.istio.scrapeInterval | default "60s" }}
+              scrape_interval: {{ .Values.metrics.istio.scrapeInterval | default "60s" }}
               metrics_path: /stats/prometheus
               kubernetes_sd_configs:
               - role: pod
@@ -99,7 +99,7 @@ data:
           scrape_configs:
             - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
               job_name: integrations/kubernetes/kubelet
-              scrape_interval:  {{ .Values.metrics.kubelet.scrapeInterval | default "60s" }}
+              scrape_interval: {{ .Values.metrics.kubelet.scrapeInterval | default "60s" }}
               kubernetes_sd_configs:
               - role: node
               relabel_configs:
@@ -121,7 +121,7 @@ data:
           scrape_configs:
             - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
               job_name: integrations/kubernetes/cadvisor
-              scrape_interval:  {{ .Values.metrics.cadvisor.scrapeInterval | default "60s" }}
+              scrape_interval: {{ .Values.metrics.cadvisor.scrapeInterval | default "60s" }}
               kubernetes_sd_configs:
               - role: node
               relabel_configs:
@@ -136,7 +136,7 @@ data:
               tls_config:
                 ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
           {{- end -}}
-        {{- end -}}
+        {{- end }}
     logs:
       configs:
         - clients:
