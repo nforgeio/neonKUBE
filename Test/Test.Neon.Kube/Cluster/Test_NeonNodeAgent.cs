@@ -108,6 +108,23 @@ namespace TestKube
             return LinuxPath.Combine(testFolderPath, fileName);
         }
 
+        /// <summary>
+        /// Removes all non-ignorable node tasks.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task DeleteExistingTasksAsync()
+        {
+            var existingTasks = (await fixture.K8s.ListClusterCustomObjectAsync<V1NeonNodeTask>()).Items;
+
+            foreach (var resource in existingTasks)
+            {
+                if (!resource.IsIgnorable())
+                {
+                    await fixture.K8s.DeleteClusterCustomObjectAsync(resource);
+                }
+            }
+        }
+
         [ClusterFact]
         public async Task NodeTask_Basic()
         {
@@ -115,6 +132,8 @@ namespace TestKube
             // touches a temporary file and then verify that the file was written
             // to the nodes and that the node task status indicates the the operation
             // succeeded.
+
+            await DeleteExistingTasksAsync();
 
             // Create a string dictionary that maps cluster node names to the unique
             // name to use for the test tasks targeting each node.

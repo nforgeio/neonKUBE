@@ -179,7 +179,7 @@ namespace Neon.Kube.Resources
     [EntityScope(EntityScope.Cluster)]
     [Description("Describes a neonKUBE task to be executed on a specific cluster node.")]
 #endif
-    public class V1NeonNodeTask : CustomKubernetesEntity<V1NeonNodeTask.TaskSpec, V1NeonNodeTask.TaskStatus>
+    public class V1NeonNodeTask : CustomKubernetesEntity<V1NeonNodeTask.TaskSpec, V1NeonNodeTask.TaskStatus>, IIgnorableResource
     {
         /// <summary>
         /// Object API group.
@@ -394,6 +394,15 @@ namespace Neon.Kube.Resources
                     throw new CustomResourceException($"[{specPrefix}.{nameof(RetentionTime)}={RetentionTime}]: Cannot be negative.");
                 }
             }
+
+            //-----------------------------------------------------------------
+            // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1599
+
+            /// <summary>
+            /// Set to <c>true</c> to indicate that the resource should be ignored by the
+            /// <b>ResourceManager</b> and operators.
+            /// </summary>
+            public bool IgnoreThis { get; set; }
         }
 
         /// <summary>
@@ -502,6 +511,18 @@ namespace Neon.Kube.Resources
         {
             Spec?.Validate();
             Status?.Validate();
+        }
+
+        //-----------------------------------------------------------------
+        // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1599
+
+        /// <summary>
+        /// Indicates whether the resource should be ignored by the <b>ResourceManager</b> and operators.
+        /// </summary>
+        /// <returns></returns>
+        public bool IsIgnorable()
+        {
+            return Spec.IgnoreThis;
         }
     }
 }

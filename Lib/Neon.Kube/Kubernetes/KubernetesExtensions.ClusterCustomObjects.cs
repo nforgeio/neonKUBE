@@ -126,17 +126,17 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object list.</returns>
         public static async Task<V1CustomObjectList<T>> ListClusterCustomObjectAsync<T>(
-            this IKubernetes k8s,
-            bool? allowWatchBookmarks = null,
-            string continueParameter = null,
-            string fieldSelector = null,
-            string labelSelector = null,
-            int? limit = null,
-            string resourceVersion = null,
-            string resourceVersionMatch = null,
-            int? timeoutSeconds = null,
-            bool? watch = null,
-            CancellationToken cancellationToken = default(CancellationToken))
+            this IKubernetes    k8s,
+            bool?               allowWatchBookmarks  = null,
+            string              continueParameter    = null,
+            string              fieldSelector        = null,
+            string              labelSelector        = null,
+            int?                limit                = null,
+            string              resourceVersion      = null,
+            string              resourceVersionMatch = null,
+            int?                timeoutSeconds       = null,
+            bool?               watch                = null,
+            CancellationToken   cancellationToken    = default(CancellationToken))
 
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
@@ -145,20 +145,20 @@ namespace Neon.Kube
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
             var result = await k8s.ListClusterCustomObjectAsync(
-                group: typeMetadata.Group,
-                version: typeMetadata.ApiVersion,
-                plural: typeMetadata.PluralName,
-                allowWatchBookmarks: allowWatchBookmarks,
-                continueParameter: continueParameter,
-                fieldSelector: fieldSelector,
-                labelSelector: labelSelector,
-                limit: limit,
-                resourceVersion: resourceVersion,
+                group:                typeMetadata.Group,
+                version:              typeMetadata.ApiVersion,
+                plural:               typeMetadata.PluralName,
+                allowWatchBookmarks:  allowWatchBookmarks,
+                continueParameter:    continueParameter,
+                fieldSelector:        fieldSelector,
+                labelSelector:        labelSelector,
+                limit:                limit,
+                resourceVersion:      resourceVersion,
                 resourceVersionMatch: resourceVersionMatch,
-                timeoutSeconds: timeoutSeconds,
-                watch: watch,
-                pretty: false,
-                cancellationToken: cancellationToken);
+                timeoutSeconds:       timeoutSeconds,
+                watch:                watch,
+                pretty:               false,
+                cancellationToken:    cancellationToken);
 
             return ((JsonElement)result).Deserialize<V1CustomObjectList<T>>(options: serializeOptions);
         }
@@ -248,17 +248,17 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object list.</returns>
         public static async Task<HttpOperationResponse<object>> ListClusterCustomObjectWithHttpMessagesAsync<T>(
-            this IKubernetes k8s,
-            bool? allowWatchBookmarks = null,
-            string continueParameter = null,
-            string fieldSelector = null,
-            string labelSelector = null,
-            int? limit = null,
-            string resourceVersion = null,
-            string resourceVersionMatch = null,
-            int? timeoutSeconds = null,
-            bool? watch = null,
-            CancellationToken cancellationToken = default(CancellationToken))
+            this                IKubernetes k8s,
+            bool?               allowWatchBookmarks  = null,
+            string              continueParameter    = null,
+            string              fieldSelector        = null,
+            string              labelSelector        = null,
+            int?                limit                = null,
+            string              resourceVersion      = null,
+            string              resourceVersionMatch = null,
+            int?                timeoutSeconds       = null,
+            bool?               watch                = null,
+            CancellationToken   cancellationToken    = default(CancellationToken))
 
             where T : IKubernetesObject, new()
         {
@@ -267,20 +267,20 @@ namespace Neon.Kube
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
             return await k8s.ListClusterCustomObjectWithHttpMessagesAsync(
-                group: typeMetadata.Group,
-                version: typeMetadata.ApiVersion,
-                plural: typeMetadata.PluralName,
-                allowWatchBookmarks: allowWatchBookmarks,
-                continueParameter: continueParameter,
-                fieldSelector: fieldSelector,
-                labelSelector: labelSelector,
-                limit: limit,
-                resourceVersion: resourceVersion,
+                group:                typeMetadata.Group,
+                version:              typeMetadata.ApiVersion,
+                plural:               typeMetadata.PluralName,
+                allowWatchBookmarks:  allowWatchBookmarks,
+                continueParameter:    continueParameter,
+                fieldSelector:        fieldSelector,
+                labelSelector:        labelSelector,
+                limit:                limit,
+                resourceVersion:      resourceVersion,
                 resourceVersionMatch: resourceVersionMatch,
-                timeoutSeconds: timeoutSeconds,
-                watch: watch,
-                pretty: false,
-                cancellationToken: cancellationToken);
+                timeoutSeconds:       timeoutSeconds,
+                watch:                watch,
+                pretty:               false,
+                cancellationToken:    cancellationToken);
         }
 
         /// <summary>
@@ -657,8 +657,8 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Deletes a namespace scoped custom object of the specified generic object type,
-        /// and doesn't throw any exceptions if the object doesn't exist.
+        /// Deletes a namespace scoped custom object passed, and doesn't throw any exceptions
+        /// if the object doesn't exist.
         /// </summary>
         /// <typeparam name="T">The custom object type.</typeparam>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
@@ -689,7 +689,7 @@ namespace Neon.Kube
         /// processed
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
-        /// <returns>The updated object.</returns>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task DeleteClusterCustomObjectAsync<T>(
             this                IKubernetes k8s,
             string              name,
@@ -700,7 +700,7 @@ namespace Neon.Kube
             string              dryRun             = null,
             CancellationToken   cancellationToken  = default(CancellationToken))
 
-            where T : IKubernetesObject, new()
+            where T : IKubernetesObject<V1ObjectMeta>, new()
         {
             await SyncContext.Clear;
 
@@ -713,6 +713,84 @@ namespace Neon.Kube
                     version:            typeMetadata.ApiVersion, 
                     plural:             typeMetadata.PluralName, 
                     name:               name,
+                    body:               body,
+                    gracePeriodSeconds: gracePeriodSeconds,
+                    orphanDependents:   orphanDependents,
+                    propagationPolicy:  propagationPolicy,
+                    dryRun:             dryRun,
+                    cancellationToken:  cancellationToken);
+            }
+            catch (HttpOperationException e)
+            {
+                if (e.Response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Deletes a namespace scoped custom object of the specified generic object type,
+        /// and doesn't throw any exceptions if the object doesn't exist.
+        /// </summary>
+        /// <typeparam name="T">The custom object type.</typeparam>
+        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
+        /// <param name="object">Specifies the object being deleted.</param>
+        /// <param name="body">Optionally specifies deletion options.</param>
+        /// <param name="gracePeriodSeconds">
+        /// Optionally specifies the duration in seconds before the object should be deleted. Value must be
+        /// non-negative integer. The value zero indicates delete immediately. If this value
+        /// is nil, the default grace period for the specified type will be used. Defaults
+        /// to a per object value if not specified. zero means delete immediately.
+        /// </param>
+        /// <param name="orphanDependents">
+        /// Deprecated: please use the PropagationPolicy, this field will be deprecated in
+        /// 1.7. Should the dependent objects be orphaned. If true/false, the &quot;orphan&quot;
+        /// finalizer will be added to/removed from the object&apos;s finalizers list. Either
+        /// this field or PropagationPolicy may be set, but not both.
+        /// </param>
+        /// <param name="propagationPolicy">
+        /// Optionally specifies ehether and how garbage collection will be performed. Either 
+        /// this field or OrphanDependents may be set, but not both. The default policy is 
+        /// decided by the existing finalizer set in the metadata.finalizers and the resource-specific
+        /// default policy.
+        /// </param>
+        /// <param name="dryRun">
+        /// Optionally specifies that modifications should not be persisted. An invalid
+        /// or unrecognized dryRun directive will result in an error response and no further
+        /// processing of the request. Valid values are: - All: all dry run stages will be
+        /// processed
+        /// </param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task DeleteClusterCustomObjectAsync<T>(
+            this                IKubernetes k8s,
+            T                   @object,
+            V1DeleteOptions     body               = null,
+            int?                gracePeriodSeconds = null,
+            bool?               orphanDependents   = null,
+            string              propagationPolicy  = null,
+            string              dryRun             = null,
+            CancellationToken   cancellationToken  = default(CancellationToken))
+
+            where T : IKubernetesObject<V1ObjectMeta>, new()
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(@object != null, nameof(@object));
+
+            try
+            {
+                var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
+
+                await k8s.DeleteClusterCustomObjectAsync(
+                    group:              typeMetadata.Group, 
+                    version:            typeMetadata.ApiVersion, 
+                    plural:             typeMetadata.PluralName, 
+                    name:               @object.Name(),
                     body:               body,
                     gracePeriodSeconds: gracePeriodSeconds,
                     orphanDependents:   orphanDependents,

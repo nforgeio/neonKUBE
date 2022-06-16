@@ -74,7 +74,7 @@ namespace NeonClusterOperator
     /// </para>
     /// </remarks>
     [EntityRbac(typeof(V1NeonNodeTask), Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Patch | RbacVerb.Watch | RbacVerb.Update)]
-    public class NodeTaskController : IResourceController<V1NeonNodeTask>
+    public class NodeTaskController : IResourceController<V1NeonNodeTask>, IExtendedController<V1NeonNodeTask>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -140,6 +140,7 @@ namespace NeonClusterOperator
         public NodeTaskController(IKubernetes k8s)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
+            Covenant.Requires<InvalidOperationException>(resourceManager != null, $"[{nameof(NodeTaskController)}] must be started before KubeOps.");
 
             this.k8s = k8s;
         }
@@ -153,7 +154,7 @@ namespace NeonClusterOperator
         /// <returns>The controller result.</returns>
         public async Task<ResourceControllerResult> ReconcileAsync(V1NeonNodeTask resource)
         {
-            await resourceManager.ReconciledAsync(resource,
+            return await resourceManager.ReconciledAsync(resource,
                 async (resource, resources) =>
                 {
                     var name = resource?.Name();
@@ -190,7 +191,7 @@ namespace NeonClusterOperator
 
                                     try
                                     {
-                                        await k8s.DeleteClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask.Name());
+                                        await k8s.DeleteClusterCustomObjectAsync(nodeTask);
                                     }
                                     catch (Exception e)
                                     {
@@ -235,7 +236,7 @@ namespace NeonClusterOperator
 
                                 try
                                 {
-                                    await k8s.DeleteClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask.Name());
+                                    await k8s.DeleteClusterCustomObjectAsync(nodeTask);
                                 }
                                 catch (Exception e)
                                 {
@@ -247,8 +248,6 @@ namespace NeonClusterOperator
 
                     return null;
                 });
-
-            return null;
         }
 
         /// <summary>
@@ -289,6 +288,21 @@ namespace NeonClusterOperator
 
                     await Task.CompletedTask;
                 });
+        }
+
+        /// <inheritdoc/>
+        public V1NeonNodeTask CreateIgnorable()
+        {
+            var ignorable = new V1NeonNodeTask();
+
+            ignorable.Spec.IgnoreThis    = true;
+            ignorable.Spec.Node          = "ignored";
+            ignorable.Spec.BashScript    = "ignored";
+            ignorable.Spec.Timeout       = "0s";
+            ignorable.Spec.RetentionTime = "0s";
+            ignorable.Spec.CaptureOutput = false;
+
+            return ignorable;
         }
     }
 }

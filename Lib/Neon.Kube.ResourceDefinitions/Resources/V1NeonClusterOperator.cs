@@ -43,7 +43,7 @@ namespace Neon.Kube.Resources
     [EntityScope(EntityScope.Cluster)]
     [Description("Used to specify settings for the [neon-cluster-operator] and for the operator to report status.")]
 #endif
-    public class V1NeonClusterOperator : CustomKubernetesEntity<V1NeonClusterOperator.OperatorSpec, V1NeonClusterOperator.OperatorStatus>
+    public class V1NeonClusterOperator : CustomKubernetesEntity<V1NeonClusterOperator.OperatorSpec, V1NeonClusterOperator.OperatorStatus>, IIgnorableResource
     {
         /// <summary>
         /// Object API group.
@@ -82,6 +82,15 @@ namespace Neon.Kube.Resources
             /// A test string.
             /// </summary>
             public string Message { get; set; }
+
+            //-----------------------------------------------------------------
+            // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1599
+
+            /// <summary>
+            /// Set to <c>true</c> to indicate that the resource should be ignored by the
+            /// <b>ResourceManager</b> and operators.
+            /// </summary>
+            public bool IgnoreThis { get; set; }
         }
 
         /// <summary>
@@ -93,6 +102,18 @@ namespace Neon.Kube.Resources
             /// Testing <see cref="DateTime"/> .
             /// </summary>
             public DateTime? Timestamp { get; set; }
+        }
+
+        //-----------------------------------------------------------------
+        // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1599
+
+        /// <summary>
+        /// Indicates whether the resource should be ignored by the <b>ResourceManager</b> and operators.
+        /// </summary>
+        /// <returns></returns>
+        public bool IsIgnorable()
+        {
+            return Spec.IgnoreThis;
         }
     }
 }

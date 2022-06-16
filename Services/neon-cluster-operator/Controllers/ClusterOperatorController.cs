@@ -60,7 +60,7 @@ namespace NeonClusterOperator
     /// and will be used to a leader to manage these resources.
     /// </remarks>
     [EntityRbac(typeof(V1NeonClusterOperator), Verbs = RbacVerb.Get | RbacVerb.Patch | RbacVerb.List | RbacVerb.Watch | RbacVerb.Update)]
-    public class ClusterOperatorController : IResourceController<V1NeonClusterOperator>
+    public class ClusterOperatorController : IResourceController<V1NeonClusterOperator>, IExtendedController<V1NeonContainerRegistry>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -123,6 +123,7 @@ namespace NeonClusterOperator
         public ClusterOperatorController(IKubernetes k8s)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
+            Covenant.Requires<InvalidOperationException>(resourceManager != null, $"[{nameof(ClusterOperatorController)}] must be started before KubeOps.");
 
             this.k8s = k8s;
         }
@@ -136,7 +137,7 @@ namespace NeonClusterOperator
         /// <returns>The controller result.</returns>
         public async Task<ResourceControllerResult> ReconcileAsync(V1NeonClusterOperator resource)
         {
-            await resourceManager.ReconciledAsync(resource,
+            return await resourceManager.ReconciledAsync(resource,
                 async (resource, resources) =>
                 {
                     var name = resource?.Name();
@@ -145,8 +146,6 @@ namespace NeonClusterOperator
 
                     return await Task.FromResult< ResourceControllerResult>(null);
                 });
-
-            return null;
         }
 
         /// <summary>
@@ -179,6 +178,16 @@ namespace NeonClusterOperator
 
                     await Task.CompletedTask;
                 });
+        }
+
+        /// <inheritdoc/>
+        public V1NeonContainerRegistry CreateIgnorable()
+        {
+            var ignorable = new V1NeonContainerRegistry();
+
+            ignorable.Spec.IgnoreThis = true;
+
+            return ignorable;
         }
     }
 }

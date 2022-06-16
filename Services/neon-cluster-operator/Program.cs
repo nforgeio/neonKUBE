@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    Program.cs
-// CONTRIBUTOR: Marcus Bowyer, Jeff Lill
+// CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");

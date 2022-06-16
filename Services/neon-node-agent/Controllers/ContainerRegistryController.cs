@@ -15,6 +15,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// $debug(jefflill): RESTORE THIS!
+#if DISABLED
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -92,7 +95,7 @@ namespace NeonNodeAgent
     /// </list>
     /// </remarks>
     [EntityRbac(typeof(V1NeonContainerRegistry), Verbs = RbacVerb.Get | RbacVerb.Patch | RbacVerb.List | RbacVerb.Watch | RbacVerb.Update)]
-    public class ContainerRegistryController : IResourceController<V1NeonContainerRegistry>
+    public class ContainerRegistryController : IResourceController<V1NeonContainerRegistry>, IExtendedController<V1NeonContainerRegistry>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -161,6 +164,7 @@ namespace NeonNodeAgent
         public ContainerRegistryController(IKubernetes k8s)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
+            Covenant.Requires<InvalidOperationException>(resourceManager != null, $"[{nameof(ContainerRegistryController)}] must be started before KubeOps.");
 
             this.k8s = k8s;
         }
@@ -174,7 +178,7 @@ namespace NeonNodeAgent
         /// <returns>The controller result.</returns>
         public async Task<ResourceControllerResult> ReconcileAsync(V1NeonContainerRegistry respource)
         {
-            await resourceManager.ReconciledAsync(respource,
+            return await resourceManager.ReconciledAsync(respource,
                 async (resource, resources) =>
                 {
                     var name = resource?.Name();
@@ -184,8 +188,6 @@ namespace NeonNodeAgent
 
                     return null;
                 });
-
-            return null;
         }
 
         /// <summary>
@@ -365,5 +367,17 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                 }
             }
         }
+
+        /// <inheritdoc/>
+        public V1NeonContainerRegistry CreateIgnorable()
+        {
+            var ignorable = new V1NeonContainerRegistry();
+
+            ignorable.Spec.IgnoreThis = true;
+
+            return ignorable;
+        }
     }
 }
+
+#endif

@@ -1,10 +1,5 @@
 ﻿REM MAINTAINERS ONLY: Rebuild and install: neon-cluster-operator
 
-REM neon delete crd neoncontainerregistries.neonkube.io
-REM neon delete crd neonnodetasks.neonkube.io
-REM neon delete crd neonclusteroperator.neonkube.io
-REM neon delete crd neontestobjects.neonkube.io
-
 set DEBUG_LOGLEVEL=debug
 set DEBUG_ORG=ghcr.io/neonkube-dev
 set DEBUG_REPO=neon-cluster-operator
@@ -17,3 +12,13 @@ cd %NF_ROOT%\Lib\Neon.Kube.Setup\Resources\Helm\neon-cluster-operator
 neon delete clusterrole/neon-cluster-operator-role
 neon helm uninstall neon-cluster-operator --namespace neon-system
 neon helm install neon-cluster-operator --namespace neon-system -f values.yaml --set logLevel=%DEBUG_LOGLEVEL% --set image.pullPolicy=Always --set image.organization=%DEBUG_ORG% --set image.repository=%DEBUG_REPO% --set image.tag=%DEBUG_TAG% .
+
+REM =================================================================
+REM Be careful with these:
+
+neon delete crd neoncontainerregistries.neonkube.io
+neon delete crd neonnodetasks.neonkube.io
+neon delete crd neonclusteroperator.neonkube.io
+neon delete crd neontestobjects.neonkube.io
+
+

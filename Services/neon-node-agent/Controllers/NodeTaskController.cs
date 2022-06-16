@@ -66,7 +66,7 @@ namespace NeonNodeAgent
     /// node for some reason.
     /// </remarks>
     [EntityRbac(typeof(V1NeonNodeTask), Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Patch | RbacVerb.Watch | RbacVerb.Update)]
-    public class NodeTaskController : IResourceController<V1NeonNodeTask>
+    public class NodeTaskController : IResourceController<V1NeonNodeTask>, IExtendedController<V1NeonNodeTask>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -102,8 +102,10 @@ namespace NeonNodeAgent
 
             // Ensure that the [/var/run/neonkube/neon-node-agent/nodetask] folder exists on the node.
 
-            var scriptPath = Path.Combine(Node.HostMount, $"tmp/node-agent-folder-{NeonHelper.CreateBase36Guid()}.sh");
-            var script =
+            if (NeonHelper.IsLinux)
+            {
+                var scriptPath = Path.Combine(Node.HostMount, $"tmp/node-agent-folder-{NeonHelper.CreateBase36Guid()}.sh");
+                var script     =
 $@"#!/bin/bash
 
 set -euo pipefail
@@ -132,14 +134,15 @@ fi
 
 rm $0
 ";
-            File.WriteAllText(scriptPath, NeonHelper.ToLinuxLineEndings(script));
-            try
-            {
-                Node.BashExecuteCapture(scriptPath).EnsureSuccess();
-            }
-            finally
-            {
-                NeonHelper.DeleteFile(scriptPath);
+                File.WriteAllText(scriptPath, NeonHelper.ToLinuxLineEndings(script));
+                try
+                {
+                    Node.BashExecuteCapture(scriptPath).EnsureSuccess();
+                }
+                finally
+                {
+                    NeonHelper.DeleteFile(scriptPath);
+                }
             }
 
             // Load the configuration settings.
@@ -197,6 +200,7 @@ rm $0
         public NodeTaskController(IKubernetes k8s)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
+            Covenant.Requires<InvalidOperationException>(resourceManager != null, $"[{nameof(NodeTaskController)}] must be started before KubeOps.");
 
             this.k8s = k8s;
         }
@@ -210,7 +214,7 @@ rm $0
         /// <returns>The controller result.</returns>
         public async Task<ResourceControllerResult> ReconcileAsync(V1NeonNodeTask resource)
         {
-            await resourceManager.ReconciledAsync(resource,
+            return await resourceManager.ReconciledAsync(resource,
                 async (resource, resources) =>
                 {
                     var name = resource?.Name();
@@ -227,7 +231,7 @@ rm $0
                     }
                     else
                     {
-                        // We have a new node task targeting this node:
+                        // We have a new node task targeting the host node:
                         //
                         //      1. Ensure that it's valid, delete if bad
                         //      2. Add a status property as necessary
@@ -246,7 +250,7 @@ rm $0
                         {
                             log.LogWarn($"Invalid NodeTask: [{name}]", e);
                             log.LogWarn($"Deleting invalid NodeTask: [{name}]");
-                            await k8s.DeleteClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask.Name());
+                            await k8s.DeleteClusterCustomObjectAsync(nodeTask);
 
                             return null;
                         }
@@ -285,13 +289,18 @@ rm $0
                             if (retentionTime >= nodeTask.Spec.GetRetentionTime())
                             {
                                 log.LogInfo($"NodeTask [{name}] retained for [{retentionTime}] (deleting now).");
-                                await k8s.DeleteClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask.Name());
+                                await k8s.DeleteClusterCustomObjectAsync(nodeTask);
 
                                 return null;
                             }
                         }
 
                         // Execute the task if it's pending.
+
+                        if (!NeonHelper.IsLinux)
+                        {
+                            return null;
+                        }
 
                         if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.Pending)
                         {
@@ -301,8 +310,6 @@ rm $0
 
                     return null;
                 });
-
-            return null;
         }
 
         /// <summary>
@@ -368,6 +375,11 @@ rm $0
         {
             Covenant.Requires<ArgumentNullException>(nodeTasks != null, nameof(nodeTasks));
 
+            if (!NeonHelper.IsLinux)
+            {
+                return;
+            }
+
             var utcNow = DateTime.UtcNow;
 
             //-----------------------------------------------------------------
@@ -376,6 +388,7 @@ rm $0
             foreach (var nodeTask in nodeTasks.Values)
             {
                 var taskName = nodeTask.Name();
+log.LogDebug($"CONTROLLER-0: {taskName} *******************************************************");
 
                 // Remove invalid tasks.
 
@@ -387,7 +400,7 @@ rm $0
                 {
                     log.LogWarn($"Invalid NodeTask: [{taskName}]", e);
                     log.LogWarn($"Deleting invalid NodeTask: [{taskName}]");
-                    await k8s.DeleteClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask.Name());
+                    await k8s.DeleteClusterCustomObjectAsync(nodeTask);
                     continue;
                 }
 
@@ -441,7 +454,7 @@ rm $0
                 .Where(task => task.Status.Phase != V1NeonNodeTask.Phase.New && task.Status.Phase != V1NeonNodeTask.Phase.Running)
                 .Where(task => (utcNow - task.Status.FinishTimestamp) >= task.Spec.GetRetentionTime()))
             {
-                await k8s.DeleteClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask.Name());
+                await k8s.DeleteClusterCustomObjectAsync(nodeTask);
             }
 
             //-----------------------------------------------------------------
@@ -705,6 +718,21 @@ export SCRIPT_DIR={taskFolder}
             {
                 log.LogWarn(e);
             }
+        }
+
+        /// <inheritdoc/>
+        public V1NeonNodeTask CreateIgnorable()
+        {
+            var ignorable = new V1NeonNodeTask();
+
+            ignorable.Spec.IgnoreThis    = true;
+            ignorable.Spec.Node          = "ignored";
+            ignorable.Spec.BashScript    = "ignored";
+            ignorable.Spec.Timeout       = "0s";
+            ignorable.Spec.RetentionTime = "0s";
+            ignorable.Spec.CaptureOutput = false;
+
+            return ignorable;
         }
     }
 }
