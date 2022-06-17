@@ -15,6 +15,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// $hack(jefflill):
+//
+// Define [IGNORABLE] to ensure that an "ignorable" resource exists on the API
+// server.  This was useful when [KubernetesClient] had trouble watching empty
+// resource list responses (fixed for v7.2.19)
+//
+// This should be removed at some point in the future when we're sure we won't
+// need it again.
+
+#undef IGNORABLE_RESOURCE
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -519,7 +530,11 @@ namespace Neon.Kube.Operator
         /// <returns><c>true</c> if the resource is ignorable, <c>false</c> if not ignorable or <c>null</c>.</returns>
         private bool IsIgnorable(TEntity resource)
         {
+#if IGNORABLE_RESOURCE
             return resource?.Name() == KubeHelper.IgnorableResourceName;
+#else
+            return false;
+#endif
         }
 
         /// <summary>
@@ -528,6 +543,7 @@ namespace Neon.Kube.Operator
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task EnsureIgnorableResource()
         {
+#if IGNORABLE_RESOURCE
             // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1599
             //
             // For controllers that implement [IExtendedController], determine whether the
@@ -549,7 +565,6 @@ namespace Neon.Kube.Operator
                     try
                     {
                         await k8s.GetClusterCustomObjectAsync<TEntity>(KubeHelper.IgnorableResourceName);
-
                     }
                     catch (HttpOperationException e)
                     {
@@ -573,6 +588,7 @@ namespace Neon.Kube.Operator
                     }
                 }
             }
+#endif
         }
 
         /// <summary>
@@ -1115,8 +1131,7 @@ namespace Neon.Kube.Operator
                     // controller wants an ignorable resource to always exist.  This works around
                     // watch problems.
 
-                    // $debug(jefflill): RESTORE THIS!
-                    //await EnsureIgnorableResource();
+                    await EnsureIgnorableResource();
 
                     if (reconcileReceived)
                     {
