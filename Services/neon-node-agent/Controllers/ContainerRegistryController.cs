@@ -165,7 +165,6 @@ namespace NeonNodeAgent
         public ContainerRegistryController(IKubernetes k8s)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
-            Covenant.Requires<InvalidOperationException>(resourceManager != null, $"[{nameof(ContainerRegistryController)}] must be started before KubeOps.");
 
             this.k8s = k8s;
         }
@@ -179,6 +178,13 @@ namespace NeonNodeAgent
         /// <returns>The controller result.</returns>
         public async Task<ResourceControllerResult> ReconcileAsync(V1NeonContainerRegistry respource)
         {
+            // Ignore all events when the controller hasn't been started.
+
+            if (resourceManager == null)
+            {
+                return null;
+            }
+
             return await resourceManager.ReconciledAsync(respource,
                 async (resource, resources) =>
                 {
@@ -198,6 +204,13 @@ namespace NeonNodeAgent
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task DeletedAsync(V1NeonContainerRegistry resource)
         {
+            // Ignore all events when the controller hasn't been started.
+
+            if (resourceManager == null)
+            {
+                return;
+            }
+
             await resourceManager.DeletedAsync(resource,
                 async (resource, resources) =>
                 {
@@ -213,6 +226,13 @@ namespace NeonNodeAgent
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task StatusModifiedAsync(V1NeonContainerRegistry resource)
         {
+            // Ignore all events when the controller hasn't been started.
+
+            if (resourceManager == null)
+            {
+                return;
+            }
+
             await resourceManager.StatusModifiedAsync(resource,
                 async (resource, resources) =>
                 {

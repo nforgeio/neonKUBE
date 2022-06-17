@@ -221,6 +221,13 @@ rm $0
         /// <returns>The controller result.</returns>
         public async Task<ResourceControllerResult> ReconcileAsync(V1NeonNodeTask resource)
         {
+            // Ignore all events when the controller hasn't been started.
+
+            if (resourceManager == null)
+            {
+                return null;
+            }
+
             return await resourceManager.ReconciledAsync(resource,
                 async (resource, resources) =>
                 {
@@ -319,8 +326,13 @@ rm $0
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task DeletedAsync(V1NeonNodeTask resource)
         {
-            Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
-            
+            // Ignore all events when the controller hasn't been started.
+
+            if (resourceManager == null)
+            {
+                return;
+            }
+
             await resourceManager.DeletedAsync(resource,
                 async (name, resources) =>
                 {
@@ -339,7 +351,12 @@ rm $0
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task StatusModifiedAsync(V1NeonNodeTask resource)
         {
-            Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
+            // Ignore all events when the controller hasn't been started.
+
+            if (resourceManager == null)
+            {
+                return;
+            }
 
             await resourceManager.DeletedAsync(resource,
                 async (name, resources) =>
@@ -595,8 +612,11 @@ export SCRIPT_DIR={taskFolder}
 
 {nodeTask.Spec.BashScript}
 ";
-            Directory.CreateDirectory(taskFolder);
-            File.WriteAllText(scriptPath, NeonHelper.ToLinuxLineEndings(deployedScript));
+            if (NeonHelper.IsLinux)
+            {
+                Directory.CreateDirectory(taskFolder);
+                File.WriteAllText(scriptPath, NeonHelper.ToLinuxLineEndings(deployedScript));
+            }
 
             // Start the command process.
 
