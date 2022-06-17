@@ -851,7 +851,7 @@ namespace Neon.Kube
         public static async Task WatchAsync<T>(
             this IKubernetes            k8s,
             Func<WatchEvent<T>, Task>   action,
-            string                      namespaceParameter  = null,
+            string                      namespaceParameter   = null,
             string                      fieldSelector        = null,
             string                      labelSelector        = null,
             string                      resourceVersion      = null,

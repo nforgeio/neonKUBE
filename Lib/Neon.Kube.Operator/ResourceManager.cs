@@ -562,27 +562,57 @@ namespace Neon.Kube.Operator
                     // resource exists.  We'll do that here.  Note that ignorable
                     // resources will always have the same name.
 
-                    try
+                    if (string.IsNullOrEmpty(resourceNamespace))
                     {
-                        await k8s.GetClusterCustomObjectAsync<TEntity>(KubeHelper.IgnorableResourceName);
-                    }
-                    catch (HttpOperationException e)
-                    {
-                        if (e.Response.StatusCode == HttpStatusCode.NotFound)
+                        try
                         {
-                            try
+                            await k8s.GetNamespacedCustomObjectAsync<TEntity>(resourceNamespace, KubeHelper.IgnorableResourceName);
+                        }
+                        catch (HttpOperationException e)
+                        {
+                            if (e.Response.StatusCode == HttpStatusCode.NotFound)
                             {
-                                await k8s.CreateClusterCustomObjectAsync(entity, KubeHelper.IgnorableResourceName);
-                            }
-                            catch (HttpOperationException e2)
-                            {
-                                // Any errors here will probably be due to other controller instances
-                                // creating an ignorable between the time we checked above and the
-                                // time Kubernetes actually handled the create.
-                                //
-                                // We're going to ignore these and take the watcher bug performance hit.
+                                try
+                                {
+                                    await k8s.CreateNamespacedCustomObjectAsync(entity, resourceNamespace, KubeHelper.IgnorableResourceName);
+                                }
+                                catch (HttpOperationException e2)
+                                {
+                                    // Any errors here will probably be due to other controller instances
+                                    // creating an ignorable between the time we checked above and the
+                                    // time Kubernetes actually handled the create.
+                                    //
+                                    // We're going to ignore these and take the watcher bug performance hit.
 
-                                log.LogWarn("Cannot create ignorable resource.", e2);
+                                    log.LogWarn("Cannot create ignorable resource.", e2);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            await k8s.GetClusterCustomObjectAsync<TEntity>(KubeHelper.IgnorableResourceName);
+                        }
+                        catch (HttpOperationException e)
+                        {
+                            if (e.Response.StatusCode == HttpStatusCode.NotFound)
+                            {
+                                try
+                                {
+                                    await k8s.CreateClusterCustomObjectAsync(entity, KubeHelper.IgnorableResourceName);
+                                }
+                                catch (HttpOperationException e2)
+                                {
+                                    // Any errors here will probably be due to other controller instances
+                                    // creating an ignorable between the time we checked above and the
+                                    // time Kubernetes actually handled the create.
+                                    //
+                                    // We're going to ignore these and take the watcher bug performance hit.
+
+                                    log.LogWarn("Cannot create ignorable resource.", e2);
+                                }
                             }
                         }
                     }
