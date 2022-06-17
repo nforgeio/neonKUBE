@@ -434,7 +434,6 @@ namespace Neon.Kube.Operator
             // watch problems.
 
             await EnsureIgnorableResource();
-            await Task.Delay(TimeSpan.FromSeconds(1));
 
             //-----------------------------------------------------------------
             // Start the leader elector if enabled.
@@ -458,6 +457,15 @@ namespace Neon.Kube.Operator
             // Start the IDLE reconcile loop.
 
             _ = IdleLoopAsync();
+
+            // $hack(jefflill):
+            //
+            // We're going to implement our own event watcher until KubeOps has
+            // a chance to fix this bug:
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1599
+
+            _ = WatchAsync();
 
             await Task.CompletedTask;
         }
@@ -1307,6 +1315,20 @@ namespace Neon.Kube.Operator
                     nextIdleReconcileUtc = DateTime.UtcNow + options.IdleInterval;
                 }
             }
+        }
+
+        /// <summary>
+        /// Temporarily implements our own resource watcher.
+        /// </summary>
+        /// <returns></returns>
+        private async Task WatchAsync()
+        {
+            // We're going to implement our own event watcher until KubeOps has
+            // a chance to fix this bug:
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1599
+
+
         }
     }
 }

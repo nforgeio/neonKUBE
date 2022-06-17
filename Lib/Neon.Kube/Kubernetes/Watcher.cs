@@ -58,11 +58,11 @@ namespace Neon.Kube
     public sealed class Watcher<T> : IDisposable 
         where T : IKubernetesObject<V1ObjectMeta>, new()
     {
-        private string                      resourceVersion;
-        private AsyncAutoResetEvent         eventReady;
-        private Queue<WatchEvent<T>>  eventQueue;
-        private IKubernetes                 k8s;
-        private INeonLogger                 logger;
+        private string                  resourceVersion;
+        private AsyncAutoResetEvent     eventReady;
+        private Queue<WatchEvent<T>>    eventQueue;
+        private IKubernetes             k8s;
+        private INeonLogger             logger;
 
         /// <summary>
         /// Constructor.
@@ -102,6 +102,7 @@ namespace Neon.Kube
         /// <param name="resourceVersion">The start resource version.</param>
         /// <param name="resourceVersionMatch">The optional resourceVersionMatch setting.</param>
         /// <param name="timeoutSeconds">Optional timeout override.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task WatchAsync(
             Func<WatchEvent<T>, Task>   actionAsync, 
@@ -110,7 +111,8 @@ namespace Neon.Kube
             string                      labelSelector        = null,
             string                      resourceVersion      = null,
             string                      resourceVersionMatch = null,
-            int?                        timeoutSeconds       = null)
+            int?                        timeoutSeconds       = null,
+            CancellationToken           cancellationToken    = default)
         {
             await SyncContext.Clear;
 
@@ -151,7 +153,8 @@ namespace Neon.Kube
                                 resourceVersion:      this.resourceVersion,
                                 resourceVersionMatch: resourceVersionMatch,
                                 timeoutSeconds:       timeoutSeconds,
-                                watch:                true);
+                                watch:                true,
+                                cancellationToken:    cancellationToken);
                         }
                         else
                         {
@@ -163,6 +166,7 @@ namespace Neon.Kube
                             resourceVersion:      this.resourceVersion,
                             resourceVersionMatch: resourceVersionMatch,
                             timeoutSeconds:       timeoutSeconds,
+                            cancellationToken:    cancellationToken,
                             watch:                true);
                         }
 
@@ -182,6 +186,12 @@ namespace Neon.Kube
                             }
                         }
                     }
+                    catch (OperationCanceledException)
+                    {
+                        // This is the signal to quit.
+
+                        return;
+                    }
                     catch (KubernetesException kubernetesException)
                     {
                         logger?.LogError(kubernetesException);
@@ -193,12 +203,6 @@ namespace Neon.Kube
                             // force control back to outer loop
                             this.resourceVersion = null;
                         }
-                    }
-                    catch (TaskCanceledException canceledException)
-                    {
-                        logger?.LogError(canceledException);
-
-                        break;
                     }
                 }
             }
