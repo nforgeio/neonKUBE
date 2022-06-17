@@ -66,6 +66,8 @@ namespace Neon.Kube.Operator
                     {
                         case LogLevel.Info:
 
+// $debug(jefflill): reenable this?
+#if DISABLED
                             //---------------------------------------------
                             // KubeOps spams the logs with unnecessary INFO events when events are raised to
                             // the controller.  We're going to filter these and do our own logging using this
@@ -95,13 +97,18 @@ namespace Neon.Kube.Operator
                                     return false;
                                 }
                             }
+#endif
                             break;
 
                         case LogLevel.Error:
 
+// $debug(jefflill): reenable this?
+#if DISABLED
                             if (logEvent.Module == "KubeOps.Operator.Kubernetes.ResourceWatcher")
                             {
                                 //---------------------------------------------
+                                // $hack(jefflill):
+                                //
                                 // Kubernetes client is not handling watches correctly when there are no objects
                                 // to be watched.  I read that the API server is returning a blank body in this
                                 // case but the Kubernetes client is expecting valid JSON, like an empty array.
@@ -130,6 +137,7 @@ namespace Neon.Kube.Operator
                                     return false;
                                 }
                             }
+#endif
                             break;
                     }
 

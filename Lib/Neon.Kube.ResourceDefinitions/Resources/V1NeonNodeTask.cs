@@ -152,8 +152,8 @@ namespace Neon.Kube.Resources
     /// </note>
     /// <item>
     /// When the command execution timesout, the agent will kill the process and set the node task state to
-    /// <see cref="Phase.Timeout"/> and set <see cref="TaskStatus.FinishTimestamp"/> to the
-    /// current time.
+    /// <see cref="Phase.Timeout"/> and set <see cref="TaskStatus.FinishTimestamp"/> to the time when the
+    /// timeout was detected.
     /// </item>
     /// <item>
     /// <b>neon-node-agents</b> also look for running tasks that are assigned to its node but include a 

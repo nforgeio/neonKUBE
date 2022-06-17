@@ -423,6 +423,7 @@ namespace Neon.Kube.Operator
             // watch problems.
 
             await EnsureIgnorableResource();
+            await Task.Delay(TimeSpan.FromSeconds(1));
 
             //-----------------------------------------------------------------
             // Start the leader elector if enabled.

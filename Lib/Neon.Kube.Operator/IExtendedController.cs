@@ -58,9 +58,10 @@ namespace Neon.Kube.Operator
     {
         /// <summary>
         /// <para>
-        /// Optionally creates an entity configured such that <see cref="IIgnorableResource.IsIgnorable()"/> 
-        /// returns <c>true</c>.  This is used by the <see cref="ResourceManager{TEntity, TController}"/> to ensure
-        /// that at least one resource exists at all times.  This works around: https://github.com/nforgeio/neonKUBE/issues/1599
+        /// Optionally creates a valid resource that will be persisted by the <see cref="ResourceManager{TEntity, TController}"/> 
+        /// to ensure that at least one resource exists at all times.  This works around: https://github.com/nforgeio/neonKUBE/issues/1599.
+        /// This resource will be named <see cref="KubeHelper.IgnorableResourceName"/> and will be ignored by the resource manager
+        /// and its controllers.
         /// </para>
         /// <para>
         /// Controllers can return <c>null</c> here to prevent <see cref="ResourceManager{TEntity, TController}"/>

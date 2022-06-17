@@ -48,7 +48,7 @@ namespace TestKube
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly TimeSpan timeout      = TimeSpan.FromSeconds(30);
+        private static readonly TimeSpan timeout = TimeSpan.FromMinutes(5);        // $hack(jefflill): We need long timeouts because: https://github.com/nforgeio/neonKUBE/issues/1599
         private static readonly TimeSpan pollInterval = TimeSpan.FromSeconds(1);
 
         private const string testFolderPath = $"/tmp/{nameof(Test_NeonNodeAgent)}";
@@ -70,7 +70,7 @@ namespace TestKube
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterFixture      fixture;
+        private ClusterFixture fixture;
 
         public Test_NeonNodeAgent(ClusterFixture fixture, ITestOutputHelper testOutputHelper)
         {
@@ -128,85 +128,333 @@ namespace TestKube
         [ClusterFact]
         public async Task NodeTask_Basic()
         {
-            // We're going to schedule simple node tasks for all cluster nodes that 
-            // touches a temporary file and then verify that the file was written
-            // to the nodes and that the node task status indicates the the operation
-            // succeeded.
-
-            await DeleteExistingTasksAsync();
-
-            // Create a string dictionary that maps cluster node names to the unique
-            // name to use for the test tasks targeting each node.
-
-            var nodeToTaskName = new Dictionary<string, string>();
-
-            foreach (var node in fixture.Cluster.Nodes)
+            try
             {
-                nodeToTaskName.Add(node.Name, $"test-basic-{node.Name}-{NeonHelper.CreateBase36Guid()}");
-            }
+                //-----------------------------------------------------------------
+                // We're going to schedule simple node tasks for all cluster nodes that 
+                // touch a temporary file and then verify that the file was written
+                // to the nodes and that the node task status indicates the the operation
+                // succeeded.
 
-            // Initalize a test folder on each node where the task will update a file
-            // indicating that it ran and then submit a task for each node.
+                await DeleteExistingTasksAsync();
 
-            foreach (var node in fixture.Cluster.Nodes)
-            {
-                // Clear and recreate the node test folder.
+                // Create a string dictionary that maps cluster node names to the unique
+                // name to use for the test tasks targeting each node.
 
-                node.Connect();
-                node.SudoCommand($"rm -rf {testFolderPath}");
-                node.SudoCommand($"mkdir -p {testFolderPath}");
+                var nodeToTaskName = new Dictionary<string, string>();
 
-                // Create the node task for the target node.
+                foreach (var node in fixture.Cluster.Nodes)
+                {
+                    nodeToTaskName.Add(node.Name, $"test-basic-{node.Name}-{NeonHelper.CreateBase36Guid()}");
+                }
 
-                var nodeTask = new V1NeonNodeTask();
-                var metadata = nodeTask.Metadata;
-                var spec     = nodeTask.Spec;
+                // Initalize a test folder on each node where the task will update a file
+                // indicating that it ran and then submit a task for each node.
 
-                metadata.SetLabel(NeonLabel.RemoveOnClusterReset);
+                foreach (var node in fixture.Cluster.Nodes)
+                {
+                    // Clear and recreate the node test folder.
 
-                var filePath   = GetTestFilePath(node.Name);
-                var folderPath = LinuxPath.GetDirectoryName(filePath);
+                    node.Connect();
+                    node.SudoCommand($"rm -rf {testFolderPath}");
+                    node.SudoCommand($"mkdir -p {testFolderPath}");
 
-                spec.Node = node.Name;
-                spec.SetRetentionTime(TimeSpan.FromSeconds(30));
-                spec.BashScript = 
-$@"
+                    // Create the node task for the target node.
+
+                    var nodeTask = new V1NeonNodeTask();
+                    var metadata = nodeTask.Metadata;
+                    var spec     = nodeTask.Spec;
+
+                    metadata.SetLabel(NeonLabel.RemoveOnClusterReset);
+
+                    var filePath = GetTestFilePath(node.Name);
+                    var folderPath = LinuxPath.GetDirectoryName(filePath);
+
+                    spec.Node = node.Name;
+                    spec.SetRetentionTime(TimeSpan.FromSeconds(30));
+                    spec.BashScript =
+ $@"
 set -euo pipefail
 
 mkdir -p $NODE_ROOT{folderPath}
 touch $NODE_ROOT{filePath}
 ";
-                await fixture.K8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: nodeToTaskName[node.Name]);
+                    await fixture.K8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: nodeToTaskName[node.Name]);
+                }
+
+                // Wait for all of the node tasks to report completion.
+
+                var taskNames = new HashSet<string>();
+
+                foreach (var taskName in nodeToTaskName.Values)
+                {
+                    taskNames.Add(taskName);
+                }
+
+                await NeonHelper.WaitForAsync(
+                    async () =>
+                    {
+                        foreach (var task in (await fixture.K8s.ListClusterCustomObjectAsync<V1NeonNodeTask>()).Items.Where(task => taskNames.Contains(task.Metadata.Name)))
+                        {
+                            switch (task.Status.Phase)
+                            {
+                                case V1NeonNodeTask.Phase.New:
+                                case V1NeonNodeTask.Phase.Pending:
+                                case V1NeonNodeTask.Phase.Running:
+
+                                    return false;
+                            }
+                        }
+
+                        return true;
+                    },
+                    timeout:      timeout,
+                    pollInterval: pollInterval);
+
+                //-----------------------------------------------------------------
+                // Verify that the node tasks completeted successfully and are being
+                // retained for a while.
+
+                var nodeTasks = await fixture.K8s.ListClusterCustomObjectAsync<V1NeonNodeTask>();
+
+                foreach (var task in nodeTasks.Items)
+                {
+                    if (taskNames.Contains(task.Metadata.Name))
+                    {
+                        Assert.Equal(V1NeonNodeTask.Phase.Finished, task.Status.Phase);
+                        Assert.Equal(0, task.Status.ExitCode);
+                        Assert.Equal(string.Empty, task.Status.Output);
+                        Assert.Equal(string.Empty, task.Status.Error);
+                    }
+                }
+
+                //-----------------------------------------------------------------
+                // Connect to each of the nodes and verify that the files touched by
+                // the scripts actually exist.
+
+                foreach (var node in fixture.Cluster.Nodes)
+                {
+                    var filePath = GetTestFilePath(node.Name);
+
+                    // Clear and recreate the node test folder.
+
+                    node.Connect();
+                    Assert.True(node.FileExists(filePath));
+                }
             }
-
-            // Wait for all of the node tasks to report completion.
-
-            var taskNames = new HashSet<string>();
-
-            foreach (var taskName in nodeToTaskName.Values)
+            finally
             {
-                taskNames.Add(taskName);
+                // Remove the test folders on the nodes.
+
+                foreach (var node in fixture.Cluster.Nodes)
+                {
+                    var filePath = GetTestFilePath(node.Name);
+
+                    // Clear and recreate the node test folder.
+
+                    node.Connect();
+                    node.SudoCommand($"rm -rf {testFolderPath}");
+                }
             }
+        }
+
+        [ClusterFact]
+        public async Task NodeTask_ExitCodeAndStreams()
+        {
+            //-----------------------------------------------------------------
+            // Submit a task to the first master node that returns a non-zero
+            // exit code as well as writes to the standard output and error
+            // streams.
+            //
+            // Then we'll verify that the task [Phase==Failed] and confirm that
+            // the exitcode and streams are present in the task status.
+
+            await DeleteExistingTasksAsync();
+
+            var taskName = $"test-exitcode-{NeonHelper.CreateBase36Guid()}";
+            var nodeTask = new V1NeonNodeTask();
+            var metadata = nodeTask.Metadata;
+            var spec     = nodeTask.Spec;
+
+            spec.Node = fixture.Cluster.FirstMaster.Name;
+            spec.SetRetentionTime(TimeSpan.FromSeconds(30));
+            spec.BashScript =
+@"
+echo 'HELLO WORLD!'   >&1
+echo 'GOODBYE WORLD!' >&2
+
+exit 123
+";
+            metadata.SetLabel(NeonLabel.RemoveOnClusterReset);
+
+            await fixture.K8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: taskName);
+
+            //-----------------------------------------------------------------
+            // Wait the node task to report completion.
 
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
-                    foreach (var nodeTask in (await fixture.K8s.ListClusterCustomObjectAsync<V1NeonNodeTask>()).Items.Where(task => taskNames.Contains(task.Metadata.Name)))
+                    var task = await fixture.K8s.GetClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
+
+                    switch (task.Status.Phase)
                     {
-                        switch (nodeTask.Status.Phase)
-                        {
-                            case V1NeonNodeTask.Phase.New:
-                            case V1NeonNodeTask.Phase.Pending:
-                            case V1NeonNodeTask.Phase.Running:
+                        case V1NeonNodeTask.Phase.New:
+                        case V1NeonNodeTask.Phase.Pending:
+                        case V1NeonNodeTask.Phase.Running:
 
-                                return false;
-                        }
+                            return false;
+
+                        default:
+
+                            return true;
                     }
-
-                    return true;
                 },
                 timeout:      timeout,
                 pollInterval: pollInterval);
+
+            //-----------------------------------------------------------------
+            // Verify that the node task failed (due to the non-zero exit code)
+            // and that the exit code as well as the output/error streams were
+            // captured.
+
+            var task = await fixture.K8s.GetClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
+
+            Assert.Equal(V1NeonNodeTask.Phase.Failed, task.Status.Phase);
+            Assert.Equal(123, task.Status.ExitCode);
+            Assert.StartsWith("HELLO WORLD!", task.Status.Output);
+            Assert.StartsWith("GOODBYE WORLD!", task.Status.Error);
+        }
+
+        [Fact]
+        public async Task NeonTask_Timeout()
+        {
+            //-----------------------------------------------------------------
+            // Verify that task timeouts are honored.  
+
+            await DeleteExistingTasksAsync();
+
+            var taskName = $"test-timeout-{NeonHelper.CreateBase36Guid()}";
+            var nodeTask = new V1NeonNodeTask();
+            var metadata = nodeTask.Metadata;
+            var spec     = nodeTask.Spec;
+
+            spec.Node = fixture.Cluster.FirstMaster.Name;
+            spec.SetTimeout(TimeSpan.FromSeconds(15));
+            spec.SetRetentionTime(TimeSpan.FromSeconds(30));
+            spec.BashScript =
+@"
+sleep 30
+";
+            metadata.SetLabel(NeonLabel.RemoveOnClusterReset);
+
+            await fixture.K8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: taskName);
+
+            //-----------------------------------------------------------------
+            // Wait the node task to report completion.
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    var task = await fixture.K8s.GetClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
+
+                    switch (task.Status.Phase)
+                    {
+                        case V1NeonNodeTask.Phase.New:
+                        case V1NeonNodeTask.Phase.Pending:
+                        case V1NeonNodeTask.Phase.Running:
+
+                            return false;
+
+                        default:
+
+                            return true;
+                    }
+                },
+                timeout:      timeout,
+                pollInterval: pollInterval);
+
+            //-----------------------------------------------------------------
+            // Verify that the node task timed out.
+
+            var task = await fixture.K8s.GetClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
+
+            Assert.Equal(V1NeonNodeTask.Phase.Timeout, task.Status.Phase);
+            Assert.Equal(-1, task.Status.ExitCode);
+        }
+
+        [Fact]
+        public async Task NeonTask_Orphan()
+        {
+            //-----------------------------------------------------------------
+            // Verify that orphaned tasks are detected.  An orphaned task is one
+            // whose [Status.AgentId] doesn't match the ID of the current [neon-node-agent].
+            // This can happen if the [neon-node-agent] was restarted while the node task
+            // was still running.
+            //
+            // We're going to simulate this by starting a node task with a long runtime,
+            // waiting for its status to change to RUNNING and then we're going to set
+            // update the task's [Status.AgentId] to a new GUID.
+
+            await DeleteExistingTasksAsync();
+
+            var taskName = $"test-orphan-{NeonHelper.CreateBase36Guid()}";
+            var nodeTask = new V1NeonNodeTask();
+            var metadata = nodeTask.Metadata;
+            var spec     = nodeTask.Spec;
+
+            spec.Node = fixture.Cluster.FirstMaster.Name;
+            spec.SetTimeout(TimeSpan.FromMinutes(15));
+            spec.SetRetentionTime(TimeSpan.FromSeconds(30));
+            spec.BashScript =
+@"
+sleep 600
+";
+            metadata.SetLabel(NeonLabel.RemoveOnClusterReset);
+
+            await fixture.K8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: taskName);
+
+            //-----------------------------------------------------------------
+            // Wait the node task to report RUNNING.
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    var task = await fixture.K8s.GetClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
+
+                    return task.Status.Phase == V1NeonNodeTask.Phase.Running;
+                },
+                timeout:      timeout,
+                pollInterval: pollInterval);
+
+            //-----------------------------------------------------------------
+            // Tweak the AgentId
+
+            var patch = OperatorHelper.CreatePatch<V1NeonNodeTask>();
+
+            patch.Replace(path => path.Status.AgentId, "***NO-MATCH***");
+
+            nodeTask = await fixture.K8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), taskName);
+
+            //-----------------------------------------------------------------
+            // Wait the node task to report orphan status.
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    var task = await fixture.K8s.GetClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
+
+                    return task.Status.Phase == V1NeonNodeTask.Phase.Orphaned;
+                },
+                timeout:      timeout,
+                pollInterval: pollInterval);
+
+            //-----------------------------------------------------------------
+            // Verify that the process no longer exists on the node.
+
+            //  ps -p $PID
+
+            throw new NotImplementedException("$todo(jefflill): verify that the process no longer exists on the node");
         }
     }
 }
