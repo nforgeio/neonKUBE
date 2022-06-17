@@ -108,8 +108,8 @@ namespace Neon.Service
     /// Services are generally configured using environment variables and/or configuration
     /// files.  In production, environment variables will actually come from the environment
     /// after having been initialized by the container image or passed by Kubernetes when
-    /// starting the service container.  Environment variables are retrieved by name
-    /// (case sensitive).
+    /// starting the service container.  Environment variables are retrieved by case sensitive
+    /// name.
     /// </para>
     /// <para>
     /// Configuration files work the same way.  They are either present in the service 
@@ -496,6 +496,8 @@ namespace Neon.Service
 
                     logger.LogCritical($"Unhandled exception [terminating={a.IsTerminating}]", exception);
                 };
+
+            isInitalized = true;
         }
 
         /// <summary>
@@ -726,7 +728,7 @@ namespace Neon.Service
             this.InProduction           = !NeonHelper.IsDevWorkstation;
             this.Terminator             = new ProcessTerminator(gracefulShutdownTimeout: gracefulShutdownTimeout, minShutdownTime: minShutdownTime);
             this.Version                = global::Neon.Diagnostics.LogManager.VersionRegex.IsMatch(Version) ? version : "unknown";
-            this.Environment            = new EnvironmentParser(null, VariableSource);  // Temporarily setting a NULL logger until we create the logger below
+            this.Environment            = new EnvironmentParser(null, VariableSource);  // Temporarily setting a NULL logger until we create the service logger below
             this.environmentVariables   = new Dictionary<string, string>();
             this.configFiles            = new Dictionary<string, FileInfo>();
             this.healthFolder           = healthFolder ?? "/";
