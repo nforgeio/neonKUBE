@@ -59,11 +59,18 @@ namespace NeonNodeAgent
     /// Manages <see cref="V1NeonNodeTask"/> command execution on cluster nodes.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// This controller relies on a lease named like <b>neon-node-agent.nodetask-NODENAME</b> where <b>NODENAME</b>
     /// is the name of the node where the <b>neon-node-agent</b> operator is running.  This lease will be
     /// persisted in the <see cref="KubeNamespace.NeonSystem"/> namespace and will be used to
     /// elect a leader for the node in case there happens to be two agents running on the same
     /// node for some reason.
+    /// </para>
+    /// <note>
+    /// This controller provides limited functionality when running on Windows to facilitate debugging.
+    /// Node tasks on the host node will be simulated in this case by simply returning a zero exit code
+    /// and empty output and error streams.
+    /// </note>
     /// </remarks>
     [EntityRbac(typeof(V1NeonNodeTask), Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Patch | RbacVerb.Watch | RbacVerb.Update)]
     public class NodeTaskController : IResourceController<V1NeonNodeTask>, IExtendedController<V1NeonNodeTask>
@@ -100,10 +107,12 @@ namespace NeonNodeAgent
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
-            // Ensure that the [/var/run/neonkube/neon-node-agent/nodetask] folder exists on the node.
+            if (NeonHelper.IsLinux)
+            {
+                // Ensure that the [/var/run/neonkube/neon-node-agent/nodetask] folder exists on the node.
 
-            var scriptPath = Path.Combine(Node.HostMount, $"tmp/node-agent-folder-{NeonHelper.CreateBase36Guid()}.sh");
-            var script     =
+                var scriptPath = Path.Combine(Node.HostMount, $"tmp/node-agent-folder-{NeonHelper.CreateBase36Guid()}.sh");
+                var script      =
 $@"#!/bin/bash
 
 set -euo pipefail
@@ -132,14 +141,15 @@ fi
 
 rm $0
 ";
-            File.WriteAllText(scriptPath, NeonHelper.ToLinuxLineEndings(script));
-            try
-            {
-                Node.BashExecuteCapture(scriptPath).EnsureSuccess();
-            }
-            finally
-            {
-                NeonHelper.DeleteFile(scriptPath);
+                File.WriteAllText(scriptPath, NeonHelper.ToLinuxLineEndings(script));
+                try
+                {
+                    Node.BashExecuteCapture(scriptPath).EnsureSuccess();
+                }
+                finally
+                {
+                    NeonHelper.DeleteFile(scriptPath);
+                }
             }
 
             // Load the configuration settings.
@@ -221,8 +231,6 @@ rm $0
                     if (name == null)
                     {
                         // This is an IDLE event: we'll use this as a signal to do any cleanup.
-
-                        // Execute the youngest node task that's pending (if there is one).
 
                         await CleanupTasksAsync(resources);
                     }
@@ -457,21 +465,24 @@ log.LogDebug($"CLEANUP: 9:");
             //-----------------------------------------------------------------
             // Remove any script folders whose node task no longer exists.
 
-            var nodeTaskExecuteIds = new HashSet<string>();
-
-            foreach (var nodeTask in nodeTasks.Values.Where(task => !string.IsNullOrEmpty(task.Status.RunId)))
+            if (NeonHelper.IsLinux)
             {
-                nodeTaskExecuteIds.Add(nodeTask.Status.RunId);
-            }
+                var nodeTaskExecuteIds = new HashSet<string>();
 
-            foreach (var scriptFolderPath in Directory.GetDirectories(hostAgentTasksFolder, "*", SearchOption.TopDirectoryOnly))
-            {
-                var scriptFolderName = LinuxPath.GetFileName(scriptFolderPath);
-
-                if (!nodeTaskExecuteIds.Contains(scriptFolderName))
+                foreach (var nodeTask in nodeTasks.Values.Where(task => !string.IsNullOrEmpty(task.Status.RunId)))
                 {
-                    log.LogWarn($"Removing node task host script folder: {scriptFolderName}");
-                    NeonHelper.DeleteFolder(scriptFolderPath);
+                    nodeTaskExecuteIds.Add(nodeTask.Status.RunId);
+                }
+
+                foreach (var scriptFolderPath in Directory.GetDirectories(hostAgentTasksFolder, "*", SearchOption.TopDirectoryOnly))
+                {
+                    var scriptFolderName = LinuxPath.GetFileName(scriptFolderPath);
+
+                    if (!nodeTaskExecuteIds.Contains(scriptFolderName))
+                    {
+                        log.LogWarn($"Removing node task host script folder: {scriptFolderName}");
+                        NeonHelper.DeleteFolder(scriptFolderPath);
+                    }
                 }
             }
 log.LogDebug($"CLEANUP: 10:");
@@ -485,6 +496,11 @@ log.LogDebug($"CLEANUP: 10:");
         private async Task KillTaskAsync(V1NeonNodeTask nodeTask)
         {
             Covenant.Requires<ArgumentNullException>(nodeTask != null, nameof(nodeTask));
+
+            if (!NeonHelper.IsLinux)
+            {
+                return;
+            }
 
             var taskName = nodeTask.Name();
 
@@ -556,7 +572,7 @@ log.LogDebug($"KILL: 8:");
             // Start and execute the command.  The trick here is that we need the
             // ID of the process launched before we can update the status.
 
-            var process = (Process)null;
+            int? processId = null;
 
             // Generate the execution UUID and determine where the script will be located.
 
@@ -586,41 +602,56 @@ export SCRIPT_DIR={taskFolder}
 
             var task = (Task<ExecuteResponse>)null;
 
-            try
+            if (NeonHelper.IsLinux)
             {
-                // This callback will be executed once the [Node.ExecuteCaptureAsync()]
-                // call has the process details.  We'll save the details, update the node task
-                // status and persist the status changes to the API server.
-
-                var processCallback =
-                    (Process newProcess) =>
+                processId = 1234;
+                
+                task = Task.Run<ExecuteResponse>(
+                    async () =>
                     {
-                        process = newProcess;
+                        await Task.Delay(TimeSpan.FromSeconds(1));
 
-                        log.LogInfo($"Starting [nodetask={taskName}]: [command={nodeTask.Status.CommandLine}] [processID={process.Id}]");
-                    };
-
-                task = Node.BashExecuteCaptureAsync(
-                    path:            scriptPath, 
-                    timeout:         nodeTask.Spec.GetTimeout(),
-                    processCallback: processCallback);
+                        return new ExecuteResponse(0);
+                    });
             }
-            catch (Exception e)
+            else
             {
-                // We shouldn't ever see an error here because [/bin/bash] should always
-                // exist, but we'll log something just in case.
+                try
+                {
+                    // This callback will be executed once the [Node.ExecuteCaptureAsync()]
+                    // call has the process details.  We'll save the details, update the node task
+                    // status and persist the status changes to the API server.
 
-                log.LogWarn(e);
+                    var processCallback =
+                        (Process newProcess) =>
+                        {
+                            processId = newProcess.Id;
 
-                var failedPatch = OperatorHelper.CreatePatch<V1NeonNodeTask>();
+                            log.LogInfo($"Starting [nodetask={taskName}]: [command={nodeTask.Status.CommandLine}] [processID={processId}]");
+                        };
 
-                failedPatch.Replace(path => path.Status.Phase, V1NeonNodeTask.Phase.Failed);
-                failedPatch.Replace(path => path.Status.FinishTimestamp, DateTime.UtcNow);
-                failedPatch.Replace(path => path.Status.ExitCode, -1);
-                failedPatch.Replace(path => path.Status.Error, $"EXECUTE FAILED: {e.Message}");
+                    task = Node.BashExecuteCaptureAsync(
+                        path:            scriptPath,
+                        timeout:         nodeTask.Spec.GetTimeout(),
+                        processCallback: processCallback);
+                }
+                catch (Exception e)
+                {
+                    // We shouldn't ever see an error here because [/bin/bash] should always
+                    // exist, but we'll log something just in case.
 
-                await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(failedPatch), nodeTask.Name());
-                return;
+                    log.LogWarn(e);
+
+                    var failedPatch = OperatorHelper.CreatePatch<V1NeonNodeTask>();
+
+                    failedPatch.Replace(path => path.Status.Phase, V1NeonNodeTask.Phase.Failed);
+                    failedPatch.Replace(path => path.Status.FinishTimestamp, DateTime.UtcNow);
+                    failedPatch.Replace(path => path.Status.ExitCode, -1);
+                    failedPatch.Replace(path => path.Status.Error, $"EXECUTE FAILED: {e.Message}");
+
+                    await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(failedPatch), nodeTask.Name());
+                    return;
+                }
             }
 
             // We need to wait for the [Node.BashExecuteCaptureAsync()] call above to 
@@ -628,7 +659,7 @@ export SCRIPT_DIR={taskFolder}
 
             try
             {
-                NeonHelper.WaitFor(() => process != null, timeout: TimeSpan.FromSeconds(15), pollInterval: TimeSpan.FromMilliseconds(150));
+                NeonHelper.WaitFor(() => processId != null, timeout: TimeSpan.FromSeconds(15), pollInterval: TimeSpan.FromMilliseconds(150));
             }
             catch (TimeoutException e)
             {
@@ -645,6 +676,7 @@ export SCRIPT_DIR={taskFolder}
             patch.Replace(path => path.Status.Phase, V1NeonNodeTask.Phase.Running);
             patch.Replace(path => path.Status.StartTimestamp, DateTime.UtcNow);
             patch.Replace(path => path.Status.AgentId, Node.AgentId);
+            patch.Replace(path => path.Status.ProcessId, processId);
             patch.Replace(path => path.Status.CommandLine, Node.GetBashCommandLine(scriptPath).Trim());
             patch.Replace(path => path.Status.RunId, executionId);
 

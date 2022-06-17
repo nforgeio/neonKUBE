@@ -90,6 +90,10 @@ namespace NeonNodeAgent
     /// CRI-O to reload its configuration.
     /// </item>
     /// </list>
+    /// <note>
+    /// This controller provides limited functionality when running on Windows to facilitate debugging.
+    /// Node tasks on the host node will be simulated in this case by simply doing nothing.
+    /// </note>
     /// </remarks>
     [EntityRbac(typeof(V1NeonContainerRegistry), Verbs = RbacVerb.Get | RbacVerb.Patch | RbacVerb.List | RbacVerb.Watch | RbacVerb.Update)]
     public class ContainerRegistryController : IResourceController<V1NeonContainerRegistry>, IExtendedController<V1NeonContainerRegistry>
@@ -198,7 +202,6 @@ namespace NeonNodeAgent
                 async (resource, resources) =>
                 {
                     log.LogInfo($"DELETED: {resource}");
-
                     await UpdateContainerRegistriesAsync(resources);
                 });
         }
@@ -226,6 +229,11 @@ namespace NeonNodeAgent
         /// <param name="registries">The current registry configurations.</param>
         private async Task UpdateContainerRegistriesAsync(IReadOnlyDictionary<string, V1NeonContainerRegistry> registries)
         {
+            if (!NeonHelper.IsLinux)
+            {
+                return;
+            }
+
             // NOTE: Here's the documentation for the config file we're generating:
             //
             //      https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md
