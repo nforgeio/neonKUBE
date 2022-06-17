@@ -193,6 +193,15 @@ rm $0
         {
             Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
 
+            // Handle all tasks when debugging.
+
+            if (!NeonHelper.IsLinux)
+            {
+                return true;
+            }
+
+            // ...otherwise, just for the tasks assigned to the host node.
+
             return task.Spec.Node.Equals(Node.Name, StringComparison.InvariantCultureIgnoreCase);
         }
 

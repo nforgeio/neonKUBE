@@ -696,7 +696,7 @@ namespace Neon.Kube.Operator
             EnsureNotDisposed();
             EnsureStarted();
 
-            // Filter desired resources.
+            // Filter out undesired resources.
 
             if (resource != null && !filter(resource))
             {
