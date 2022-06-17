@@ -834,7 +834,6 @@ namespace Neon.Kube
                 });
         }
 
-
         /// <summary>
         /// Watches a Kubernetes resource with a callback.
         /// </summary>
@@ -850,23 +849,25 @@ namespace Neon.Kube
         /// <param name="logger">Optional <see cref="INeonLogger"/></param>
         /// <returns></returns>
         public static async Task WatchAsync<T>(
-            this IKubernetes k8s,
-            Func<WatchEvent<T>, Task> action,
-            string namespaceParameter = null,
-            string fieldSelector = null,
-            string labelSelector = null,
-            string resourceVersion = null,
-            string resourceVersionMatch = null,
-            int? timeoutSeconds = null,
-            INeonLogger logger = null) where T : IKubernetesObject<V1ObjectMeta>, new()
+            this IKubernetes            k8s,
+            Func<WatchEvent<T>, Task>   action,
+            string                      namespaceParameter  = null,
+            string                      fieldSelector        = null,
+            string                      labelSelector        = null,
+            string                      resourceVersion      = null,
+            string                      resourceVersionMatch = null,
+            int?                        timeoutSeconds       = null,
+            INeonLogger                 logger               = null) 
+            
+            where T : IKubernetesObject<V1ObjectMeta>, new()
         {
-            await new Neon.Kube.Watcher<T>(k8s, logger).WatchAsync(action,
+            await new Watcher<T>(k8s, logger).WatchAsync(action,
                 namespaceParameter,
-                fieldSelector: fieldSelector,
-                labelSelector: labelSelector,
-                resourceVersion: resourceVersion,
+                fieldSelector:        fieldSelector,
+                labelSelector:        labelSelector,
+                resourceVersion:      resourceVersion,
                 resourceVersionMatch: resourceVersionMatch,
-                timeoutSeconds: timeoutSeconds);
+                timeoutSeconds:       timeoutSeconds);
         }
     }
 }
