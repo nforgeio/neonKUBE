@@ -839,18 +839,18 @@ namespace Neon.Kube
         /// </summary>
         /// <typeparam name="T">The type parameter.</typeparam>
         /// <param name="k8s">The <see cref="IKubernetes"/> instance.</param>
-        /// <param name="action">The function to handle updates.</param>
+        /// <param name="actionAsync">The async action called as watch events are received..</param>
         /// <param name="namespaceParameter">That target Kubernetes namespace.</param>
         /// <param name="fieldSelector">The optional field selector</param>
         /// <param name="labelSelector">The optional label selector</param>
         /// <param name="resourceVersion">The start resource version.</param>
-        /// <param name="resourceVersionMatch">The optional resourceVersionMatch setting.</param>
+        /// <param name="resourceVersionMatch">The optional <b>resourceVersionMatch</b> setting.</param>
         /// <param name="timeoutSeconds">Optional timeout override.</param>
         /// <param name="logger">Optional <see cref="INeonLogger"/></param>
-        /// <returns></returns>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task WatchAsync<T>(
             this IKubernetes            k8s,
-            Func<WatchEvent<T>, Task>   action,
+            Func<WatchEvent<T>, Task>   actionAsync,
             string                      namespaceParameter   = null,
             string                      fieldSelector        = null,
             string                      labelSelector        = null,
@@ -861,7 +861,7 @@ namespace Neon.Kube
             
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
-            await new Watcher<T>(k8s, logger).WatchAsync(action,
+            await new Watcher<T>(k8s, logger).WatchAsync(actionAsync,
                 namespaceParameter,
                 fieldSelector:        fieldSelector,
                 labelSelector:        labelSelector,
