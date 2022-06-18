@@ -64,10 +64,10 @@ namespace Neon.Kube.Operator
                 {
                     switch (logEvent.LogLevel)
                     {
-// $debug(jefflill): RESTORE THIS!
-#if DISABLED
                         case LogLevel.Info:
 
+// $debug(jefflill): reenable this?
+#if DISABLED
                             //---------------------------------------------
                             // KubeOps spams the logs with unnecessary INFO events when events are raised to
                             // the controller.  We're going to filter these and do our own logging using this
@@ -97,13 +97,18 @@ namespace Neon.Kube.Operator
                                     return false;
                                 }
                             }
+#endif
                             break;
 
                         case LogLevel.Error:
 
+// $debug(jefflill): reenable this?
+#if DISABLED
                             if (logEvent.Module == "KubeOps.Operator.Kubernetes.ResourceWatcher")
                             {
                                 //---------------------------------------------
+                                // $hack(jefflill):
+                                //
                                 // Kubernetes client is not handling watches correctly when there are no objects
                                 // to be watched.  I read that the API server is returning a blank body in this
                                 // case but the Kubernetes client is expecting valid JSON, like an empty array.
@@ -132,8 +137,8 @@ namespace Neon.Kube.Operator
                                     return false;
                                 }
                             }
-                            break;
 #endif
+                            break;
                     }
 
                     return true;
@@ -153,6 +158,13 @@ namespace Neon.Kube.Operator
         /// and the Kubernetes client.
         /// </summary>
         public static Func<LogEvent, bool> LogFilter { get; private set; }
+
+        /// <summary>
+        /// Returns <c>true</c> when <see cref="HandleGeneratorCommand{TStartup}(string[])"/> has been
+        /// called to generate CRDs and other configuration related files.  This means that the operator
+        /// won't be starting normally.
+        /// </summary>
+        public static bool GeneratingCRDs { get; private set; } = false;
 
         /// <summary>
         /// Handles <b>generator</b> commands invoked on an operator application
@@ -196,7 +208,7 @@ namespace Neon.Kube.Operator
             where TStartup: class, new()
         {
             await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));;
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
             try
             {
@@ -204,6 +216,8 @@ namespace Neon.Kube.Operator
                 {
                     return false;
                 }
+
+                GeneratingCRDs = true;
 
                 await Host.CreateDefaultBuilder(args)
                     .ConfigureWebHostDefaults(builder => { builder.UseStartup<TStartup>(); })

@@ -407,7 +407,7 @@ namespace Neon.Diagnostics
 
             if (logManager.EmitTimestamp)
             {
-                var timestamp = DateTime.UtcNow.ToString(NeonHelper.DateFormatTZOffset);
+                var timestamp = DateTime.UtcNow.ToString(NeonHelper.DateFormatTZ);
 
                 writer.WriteLine($"[{timestamp}] [{level}]{version}{module}{activity}{context}{index} {message}");
             }

@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    Startup.cs
-// CONTRIBUTOR: Marcus Bowyer, Jeff Lill
+// CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,9 +23,10 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Kube;
+using Neon.Kube.Operator;
 
-using KubeOps.Operator;
 using k8s;
+using KubeOps.Operator;
 
 namespace NeonClusterOperator
 {
@@ -47,20 +48,32 @@ namespace NeonClusterOperator
             // [WATCHER_MAX_RETRY_INTERVAL] environment variable.  Unfortunately, [Program.Service]
             // won't be set when generating CRDs, so we'll just set a default value.
 
-            var watcherRetrySeconds = 15;
+            var watcherTimeout = TimeSpan.FromMinutes(2);
+            var watcherRetry   = TimeSpan.FromSeconds(15);
 
             if (Program.Service != null)
             {
-                watcherRetrySeconds = Math.Max(1, (int)Math.Ceiling(Program.Service.Environment.Get("WATCHER_MAX_RETRY_INTERVAL", TimeSpan.FromSeconds(5)).TotalSeconds));
+                watcherTimeout = Program.Service.Environment.Get("WATCHER_TIMEOUT_INTERVAL", watcherTimeout);
+                watcherRetry   = Program.Service.Environment.Get("WATCHER_MAX_RETRY_INTERVAL", watcherRetry);
             }
 
-            var operatorBuilder = services
-                .AddSingleton<IKubernetes>(new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig()))
+            var watcherTimeoutSeconds = Math.Max(1, Math.Max(ushort.MaxValue, (int)Math.Ceiling(watcherTimeout.TotalSeconds)));
+            var watcherRetrySeconds   = Math.Max(1, (int)Math.Ceiling(watcherTimeout.TotalSeconds));
+
+            var _services = services;
+
+            if (!OperatorHelper.GeneratingCRDs)
+            {
+                _services = _services.AddSingleton<IKubernetes>(new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig()));
+            }
+
+            var operatorBuilder = _services
                 .AddKubernetesOperator(
                     settings =>
                     {
                         settings.EnableAssemblyScanning = true;
                         settings.EnableLeaderElection   = false;    // ResourceManager is managing leader election
+                        settings.WatcherHttpTimeout     = (ushort)watcherTimeoutSeconds;
                         settings.WatcherMaxRetrySeconds = watcherRetrySeconds;
                     });
 

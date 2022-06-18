@@ -71,6 +71,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\Neon.JsonConverters\Neon.JsonConverters.csproj" />
+	  <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
 	</ItemGroup>
 
 </Project>

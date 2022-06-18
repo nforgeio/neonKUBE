@@ -10,6 +10,7 @@ rules:
   - neonnodetasks
   - neonnodetasks/status
   verbs:
+  - create
   - get
   - list
   - watch
@@ -25,6 +26,17 @@ rules:
   - get
   - list
   - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  - nodes/status
+  verbs:
+  - get
+  - list
+  - update
+  - watch
 - apiGroups:
   - coordination.k8s.io
   resources:

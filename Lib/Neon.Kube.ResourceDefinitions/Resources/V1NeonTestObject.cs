@@ -26,6 +26,7 @@ using k8s.Models;
 using DotnetKubernetesClient.Entities;
 using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
+using Neon.Kube;
 #endif
 
 #if KUBEOPS
@@ -48,7 +49,7 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// Object API group.
         /// </summary>
-        public const string KubeGroup = Helper.NeonKubeResourceGroup;
+        public const string KubeGroup = ResourceHelper.NeonKubeResourceGroup;
 
         /// <summary>
         /// Object API version.

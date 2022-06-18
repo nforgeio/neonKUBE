@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -139,6 +140,48 @@ namespace TestCommon
 
             Assert.Equal("1000h30m", GoDuration.Parse("1000h30m").ToString());
             Assert.Equal("-1000h30m", GoDuration.Parse("-1000h30m").ToString());
+
+            //-----------------------------------------------------------------
+            // Pretty
+
+            Assert.Equal("0", GoDuration.Parse("0").ToPretty());
+            Assert.Equal("0", GoDuration.Parse("-0s").ToPretty());
+
+            Assert.Equal("0.123s", GoDuration.Parse("0.123s").ToPretty());
+            Assert.Equal("-0.123s", GoDuration.Parse("-0.123s").ToPretty());
+
+            Assert.Equal("10s", GoDuration.Parse("10s").ToPretty());
+            Assert.Equal("-10s", GoDuration.Parse("-10s").ToPretty());
+
+            Assert.Equal("10m", GoDuration.Parse("10m").ToPretty());
+            Assert.Equal("-10m", GoDuration.Parse("-10m").ToPretty());
+
+            Assert.Equal("10h", GoDuration.Parse("10h").ToPretty());
+            Assert.Equal("-10h", GoDuration.Parse("-10h").ToPretty());
+
+            Assert.Equal("20m10s", GoDuration.Parse("20m10s").ToPretty());
+            Assert.Equal("-20m10s", GoDuration.Parse("-20m10s").ToPretty());
+
+            Assert.Equal("20m10.123s", GoDuration.Parse("20m10.123s").ToPretty());
+            Assert.Equal("-20m10.123s", GoDuration.Parse("-20m10.123s").ToPretty());
+
+            Assert.Equal("2h20m10s", GoDuration.Parse("2h20m10s").ToPretty());
+            Assert.Equal("-2h20m10s", GoDuration.Parse("-2h20m10s").ToPretty());
+
+            Assert.Equal("2h20m10.123s", GoDuration.Parse("2h20m10.123s").ToPretty());
+            Assert.Equal("-2h20m10.123s", GoDuration.Parse("-2h20m10.123s").ToPretty());
+
+            Assert.Equal("2h20m0.123s", GoDuration.Parse("2h20m0.123s").ToPretty());
+            Assert.Equal("-2h20m0.123s", GoDuration.Parse("-2h20m0.123s").ToPretty());
+
+            Assert.Equal("1h30m", GoDuration.Parse("1h30m").ToPretty());
+            Assert.Equal("-1h30m", GoDuration.Parse("-1h30m").ToPretty());
+
+            Assert.Equal("1h30s", GoDuration.Parse("1h30s").ToPretty());
+            Assert.Equal("-1h30s", GoDuration.Parse("-1h30s").ToPretty());
+
+            Assert.Equal("1h0.123s", GoDuration.Parse("1h0.123s").ToPretty());
+            Assert.Equal("-1h0.123s", GoDuration.Parse("-1h0.123s").ToPretty());
         }
 
         [Fact]
@@ -159,6 +202,94 @@ namespace TestCommon
 
             Assert.Throws<ArgumentOutOfRangeException>(() => GoDuration.FromTimeSpan(TimeSpan.MinValue));
             Assert.Throws<ArgumentOutOfRangeException>(() => GoDuration.FromTimeSpan(-TimeSpan.FromDays(500 * 365)));
+        }
+
+        [Fact]
+        public void RegEx()
+        {
+            // Verify the GOLANG duration REGEX pattern.
+
+            //-----------------------------------------------------------------
+            // MATCH verification
+
+            // Nanoseconds
+
+            Assert.Matches(GoDuration.RegEx, "0ns");
+            Assert.Matches(GoDuration.RegEx, "0.123ns");
+            Assert.Matches(GoDuration.RegEx, "123.456ns");
+
+            // Microseconds
+
+            Assert.Matches(GoDuration.RegEx, "0µs");
+            Assert.Matches(GoDuration.RegEx, "0.123µs");
+            Assert.Matches(GoDuration.RegEx, "123.456µs");
+
+            Assert.Matches(GoDuration.RegEx, "0us");
+            Assert.Matches(GoDuration.RegEx, "0.123us");
+            Assert.Matches(GoDuration.RegEx, "123.456us");
+
+            // Milliseconds
+
+            Assert.Matches(GoDuration.RegEx, "0ms");
+            Assert.Matches(GoDuration.RegEx, "0.123ms");
+            Assert.Matches(GoDuration.RegEx, "123.456ms");
+
+            // Seconds
+
+            Assert.Matches(GoDuration.RegEx, "0");
+            Assert.Matches(GoDuration.RegEx, "0s");
+            Assert.Matches(GoDuration.RegEx, "0.123s");
+            Assert.Matches(GoDuration.RegEx, "123.456s");
+
+            // Minutes
+
+            Assert.Matches(GoDuration.RegEx, "0m");
+            Assert.Matches(GoDuration.RegEx, "0.123m");
+            Assert.Matches(GoDuration.RegEx, "123.456m");
+
+            // Hours
+
+            Assert.Matches(GoDuration.RegEx, "0h");
+            Assert.Matches(GoDuration.RegEx, "0.123h");
+            Assert.Matches(GoDuration.RegEx, "123.456h");
+
+            // Combinations
+
+            Assert.Matches(GoDuration.RegEx, "1h2m3s4ms5µs6ns");
+            Assert.Matches(GoDuration.RegEx, "1h2m3s4ms5µs6ns");
+
+            Assert.Matches(GoDuration.RegEx, "1h6ns");
+            Assert.Matches(GoDuration.RegEx, "1h5µs6ns");
+            Assert.Matches(GoDuration.RegEx, "1h3s4ms5µs6ns");
+            Assert.Matches(GoDuration.RegEx, "1h2m3s4ms5µs6ns");
+
+            Assert.Matches(GoDuration.RegEx, "1m6ns");
+            Assert.Matches(GoDuration.RegEx, "1m5µs6ns");
+            Assert.Matches(GoDuration.RegEx, "1m3s4ms5µs6ns");
+
+            Assert.Matches(GoDuration.RegEx, "1s6ns");
+            Assert.Matches(GoDuration.RegEx, "1s5µs6ns");
+            Assert.Matches(GoDuration.RegEx, "3s4ms5µs6ns");
+
+            Assert.Matches(GoDuration.RegEx, "1ms6ns");
+            Assert.Matches(GoDuration.RegEx, "1ms5µs6ns");
+            Assert.Matches(GoDuration.RegEx, "1ms5µs6ns");
+
+            Assert.Matches(GoDuration.RegEx, "5µs6ns");
+
+            Assert.Matches(GoDuration.RegEx, "1.0h2.0m3.0s4.0ms5.0us6.0ns");
+            Assert.Matches(GoDuration.RegEx, "1.0h2.0m3.0s4.0ms5.0µs6.0ns");
+
+            //-----------------------------------------------------------------
+            // NO-MATCH verification
+
+            Assert.DoesNotMatch(GoDuration.RegEx, "");          // <-- empty string not valid
+            Assert.DoesNotMatch(GoDuration.RegEx, "10x0");      // <-- missing unit
+            Assert.DoesNotMatch(GoDuration.RegEx, "x");         // <-- invalid character
+            Assert.DoesNotMatch(GoDuration.RegEx, "10y");       // <-- invalid unit
+            Assert.DoesNotMatch(GoDuration.RegEx, "1h1h");      // <-- duplicate units
+            Assert.DoesNotMatch(GoDuration.RegEx, "1s2h");      // <-- out of order units
+            Assert.DoesNotMatch(GoDuration.RegEx, "1.h");       // <-- improper decimal part
         }
     }
 }

@@ -37,15 +37,8 @@ using Neon.Kube.Resources;
 using Neon.Retry;
 using Neon.Tasks;
 
+using k8s;
 using k8s.Models;
-
-using KubeOps.Operator.Controller;
-using KubeOps.Operator.Controller.Results;
-using KubeOps.Operator.Finalizer;
-using KubeOps.Operator.Rbac;
-
-using Prometheus;
-using Tomlyn;
 
 namespace NeonNodeAgent
 {
@@ -58,6 +51,10 @@ namespace NeonNodeAgent
         /// The Linux path where the host node's file system is mounted into the container.
         /// </summary>
         public const string HostMount = "/mnt/host";
+
+        private static AsyncMutex           mutex = new AsyncMutex();
+        private static V1Node               cachedNode;
+        private static V1OwnerReference     cachedOwnerReference;
 
         /// <summary>
         /// Static constructor.
@@ -85,6 +82,36 @@ namespace NeonNodeAgent
         /// Returns a globally unique ID for the executing node agent.
         /// </summary>
         public static string AgentId { get; private set; }
+
+        /// <summary>
+        /// Returns the <see cref="V1OwnerReference"/> for the host node.
+        /// </summary>
+        /// <param name="k8s">The Kubernetes client to be used to query for the node information.</param>
+        /// <returns>
+        /// The <see cref="V1OwnerReference"/> for the node or <c>null</c> when this couldn't
+        /// be determined.
+        /// </returns>
+        public static async Task<V1OwnerReference> GetOwnerReferenceAsync(IKubernetes k8s)
+        {
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+
+            using (await mutex.AcquireAsync())
+            {
+                // Return any cached information.
+
+                if (cachedOwnerReference != null)
+                {
+                    return cachedOwnerReference;
+                }
+
+                // Query Kubernetes for the node information based on the the node's hostname.
+
+                cachedNode           = await k8s.ReadNodeAsync(Name);
+                cachedOwnerReference = new V1OwnerReference(apiVersion: cachedNode.ApiVersion, name: cachedNode.Name(), kind: cachedNode.Kind, uid: cachedNode.Uid());
+
+                return cachedOwnerReference;
+            }
+        }
 
         /// <summary>
         /// Returns the actual command line used to execute a bash script by one of the methods

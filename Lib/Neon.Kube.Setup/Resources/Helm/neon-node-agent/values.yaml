@@ -17,6 +17,12 @@ image:
 
 resources: {}
 
+resources:
+  limits:
+    memory: 100Mi
+  requests:
+    memory: 50Mi
+
 serviceMesh:
   enabled: true
 # Log level: none, critical, serror, error, warn, sinfo, info, transient, debug

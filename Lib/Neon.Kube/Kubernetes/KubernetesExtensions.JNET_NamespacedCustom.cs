@@ -150,7 +150,7 @@ namespace Neon.Kube
             bool?               watch                = null,
             CancellationToken   cancellationToken    = default(CancellationToken))
 
-            where T : IKubernetesObject, new()
+            where T : IKubernetesObject<V1ObjectMeta>, new()
         {
             await SyncContext.Clear;
 

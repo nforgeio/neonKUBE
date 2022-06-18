@@ -50,7 +50,7 @@ namespace Neon.JsonConverters
         /// <inheritdoc/>
         public override void Write(Utf8JsonWriter writer, TimeSpan value, JsonSerializerOptions options)
         {
-            writer.WriteRawValue(GoDuration.FromTimeSpan(value).ToString());
+            writer.WriteRawValue(GoDuration.FromTimeSpan(value).ToPretty());
         }
     }
 }

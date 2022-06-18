@@ -153,6 +153,11 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Identifies resources that should be ignored by the operator [ResourceManager].
+        /// </summary>
+        public const string IgnorableResourceName = "ignore-this";  // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1599
+
+        /// <summary>
         /// Explicitly sets the class <see cref="INeonLogger"/> implementation.  This defaults to
         /// a reasonable value.
         /// </summary>

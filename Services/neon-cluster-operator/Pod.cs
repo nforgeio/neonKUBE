@@ -28,7 +28,7 @@ using Neon.Common;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// Abstracts access to the executing pod properties.
+    /// Abstracts access to the host pod properties.
     /// </summary>
     public static class Pod
     {
@@ -43,9 +43,23 @@ namespace NeonClusterOperator
         public static readonly string Name = Environment.GetEnvironmentVariable("POD_NAME");
 
         /// <summary>
-        /// Returns the UUID that will be used as the operator's identity for leader
-        /// election purposes.
+        /// Static constructor.
         /// </summary>
-        public static readonly string AgentId = NeonHelper.CreateBase36Guid();
+        static Pod()
+        {
+            // Initializes these properties from environment variables when we're running 
+            // in a cluster, otherwise configure test values when running on workstation.
+
+            if (NeonHelper.IsDevWorkstation)
+            {
+                Namespace = "default";
+                Name      = "test-pod";
+            }
+            else
+            {
+                Namespace = Environment.GetEnvironmentVariable("POD_NAMESPACE");
+                Name      = Environment.GetEnvironmentVariable("POD_NAME");
+            }
+        }
     }
 }

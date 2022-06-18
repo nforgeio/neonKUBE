@@ -108,8 +108,8 @@ namespace Neon.Service
     /// Services are generally configured using environment variables and/or configuration
     /// files.  In production, environment variables will actually come from the environment
     /// after having been initialized by the container image or passed by Kubernetes when
-    /// starting the service container.  Environment variables are retrieved by name
-    /// (case sensitive).
+    /// starting the service container.  Environment variables are retrieved by case sensitive
+    /// name.
     /// </para>
     /// <para>
     /// Configuration files work the same way.  They are either present in the service 
@@ -123,16 +123,19 @@ namespace Neon.Service
     /// can configure themselves using the same code for both environments. 
     /// </para>
     /// <para>
-    /// Services should use the <see cref="GetEnvironmentVariable(string, string, bool)"/> method to 
-    /// retrieve important environment variables rather than using <see cref="Environment.GetEnvironmentVariable(string)"/>.
-    /// In production, this simply returns the variable directly from the current process.
-    /// For tests, the environment variable will be returned from a local dictionary
+    /// Services should use the <see cref="Environment"/> parser methods to retrieve important 
+    /// variables rather obtaining these via <see cref="global::System.Environment.GetEnvironmentVariable(string)"/>.
+    /// These methods handle type-safe parsing, validation and default values.
+    /// </para>
+    /// <para>
+    /// In production, this simply returns values from the process environment variables.
+    /// For tests, the environment variable can be returned from a local dictionary
     /// that was expicitly initialized by calls to <see cref="SetEnvironmentVariable(string, string)"/>.
     /// This local dictionary allows the testing of multiple services at the same
     /// time with each being presented their own environment variables.
     /// </para>
     /// <para>
-    /// You may also use the <see cref="LoadEnvironmentVariables(string, Func{string, string})"/>
+    /// You may also use the <see cref="LoadEnvironmentVariableFile(string, Func{string, string})"/>
     /// methods to load environment variables from a text file (potentially encrypted via
     /// <see cref="NeonVault"/>).  This will typically be done only for unit tests.
     /// </para>
@@ -496,6 +499,8 @@ namespace Neon.Service
 
                     logger.LogCritical($"Unhandled exception [terminating={a.IsTerminating}]", exception);
                 };
+
+            isInitalized = true;
         }
 
         /// <summary>
@@ -721,13 +726,16 @@ namespace Neon.Service
                 }
             }
 
+            this.environmentVariables = new Dictionary<string, string>();
+
+            LoadEnvironmentVariables();
+
             this.Name                   = name;
             this.ServiceMap             = serviceMap;
             this.InProduction           = !NeonHelper.IsDevWorkstation;
             this.Terminator             = new ProcessTerminator(gracefulShutdownTimeout: gracefulShutdownTimeout, minShutdownTime: minShutdownTime);
             this.Version                = global::Neon.Diagnostics.LogManager.VersionRegex.IsMatch(Version) ? version : "unknown";
-            this.Environment            = new EnvironmentParser(null, VariableSource);  // Temporarily setting a NULL logger until we create the logger below
-            this.environmentVariables   = new Dictionary<string, string>();
+            this.Environment            = new EnvironmentParser(null, VariableSource);  // Temporarily setting a NULL logger until we create the service logger below
             this.configFiles            = new Dictionary<string, FileInfo>();
             this.healthFolder           = healthFolder ?? "/";
             this.terminationMessagePath = terminationMessagePath ?? "/dev/termination-log";
@@ -1729,6 +1737,34 @@ namespace Neon.Service
         protected abstract Task<int> OnRunAsync();
 
         /// <summary>
+        /// Used by the <see cref="EnvironmentParser"/> to retrieve environment variables
+        /// via <see cref="GetEnvironmentVariable(string, string, bool)"/>.
+        /// </summary>
+        /// <param name="name">The variable name.</param>
+        /// <returns>The variable value or <c>null</c>.</returns>
+        private string VariableSource(string name)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            lock (syncLock)
+            {
+                if (InProduction)
+                {
+                    return global::System.Environment.GetEnvironmentVariable(name) ?? (string)null;
+                }
+
+                if (environmentVariables.TryGetValue(name, out var value))
+                {
+                    return value;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
         /// <para>
         /// Loads environment variables formatted as <c>NAME=VALUE</c> from a text file as service
         /// environment variables.  The file will be decrypted using <see cref="NeonVault"/> if necessary.
@@ -1757,7 +1793,7 @@ namespace Neon.Service
         /// Implement a custom password provider function if you need something different.
         /// </para>
         /// </remarks>
-        public void LoadEnvironmentVariables(string path, Func<string, string> passwordProvider = null)
+        public void LoadEnvironmentVariableFile(string path, Func<string, string> passwordProvider = null)
         {
             passwordProvider = passwordProvider ?? LookupPassword;
 
@@ -1801,6 +1837,22 @@ namespace Neon.Service
 
                         SetEnvironmentVariable(name, value);
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        /// LOads the ambient process environment variables.
+        /// </summary>
+        private void LoadEnvironmentVariables()
+        {
+            lock (syncLock)
+            {
+                var variables = System.Environment.GetEnvironmentVariables();
+
+                foreach (string key in variables.Keys)
+                {
+                    SetEnvironmentVariable(key, (string)variables[key]);
                 }
             }
         }
@@ -1855,30 +1907,32 @@ namespace Neon.Service
         }
 
         /// <summary>
-        /// Used by the <see cref="EnvironmentParser"/> to retrieve environment variables
-        /// via <see cref="GetEnvironmentVariable(string, string, bool)"/>.
+        /// Returns all loaded enviroment variables.
         /// </summary>
-        /// <param name="name">The variable name.</param>
-        /// <returns>The variable value or <c>null</c>.</returns>
-        private string VariableSource(string name)
+        /// <returns>A dctionary mapping variable names to their values.</returns>
+        public Dictionary<string, string> GetEnvironmentVariables()
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
-
             lock (syncLock)
             {
-                if (InProduction)
+                var clonedVariables = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+
+                foreach (var variable in environmentVariables)
                 {
-                    return global::System.Environment.GetEnvironmentVariable(name) ?? (string)null;
+                    clonedVariables.Add(variable.Key, variable.Value);
                 }
 
-                if (environmentVariables.TryGetValue(name, out var value))
-                {
-                    return value;
-                }
-                else
-                {
-                    return null;
-                }
+                return clonedVariables;
+            }
+        }
+
+        /// <summary>
+        /// Clears any loaded environment variables.
+        /// </summary>
+        public void ClearEnvironmentVariables()
+        {
+            lock (syncLock)
+            {
+                environmentVariables.Clear();
             }
         }
 

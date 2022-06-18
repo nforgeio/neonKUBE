@@ -115,7 +115,7 @@
 		<None Remove="Resources\Helm\neon-cluster-operator\.helmignore" />
 		<None Remove="Resources\Helm\neon-cluster-operator\Chart.yaml" />
 		<None Remove="Resources\Helm\neon-cluster-operator\templates\configmap.yaml" />
-		<None Remove="Resources\Helm\neon-cluster-operator\templates\deployment.yaml" />
+		<None Remove="Resources\Helm\neon-cluster-operator\templates\daemonset.yaml" />
 		<None Remove="Resources\Helm\neon-cluster-operator\templates\service.yaml" />
 		<None Remove="Resources\Helm\neon-cluster-operator\templates\serviceaccount.yaml" />
 		<None Remove="Resources\Helm\neon-cluster-operator\templates\servicemonitor.yaml" />

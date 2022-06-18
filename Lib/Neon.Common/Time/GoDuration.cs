@@ -47,10 +47,29 @@ namespace Neon.Time
         //---------------------------------------------------------------------
         // Static members
 
+        private const string hourRegEx         = @"(\d+(\.\d+)?h)";
+        private const string minuteRegEx       = @"(\d+(\.\d+)?m)";
+        private const string secondRegEx       = @"(\d+(\.\d+)?s)";
+        private const string millisecondRegEx  = @"(\d+(\.\d+)?ms)";
+        private const string microsecondRegEx  = @"((\d+(\.\d+)?us)|(\d+(.\d+)?µs))";
+        private const string nanosecondRegex   = @"(\d+(\.\d+)?ns)";
+        private const string combinationsRegEx = $@"({hourRegEx}{minuteRegEx}?{secondRegEx}?{millisecondRegEx}?{microsecondRegEx}?{nanosecondRegex}?)|" +
+                                                 $@"({hourRegEx}?{minuteRegEx}{secondRegEx}?{millisecondRegEx}?{microsecondRegEx}?{nanosecondRegex}?)|" +
+                                                 $@"({hourRegEx}?{minuteRegEx}?{secondRegEx}{millisecondRegEx}?{microsecondRegEx}?{nanosecondRegex}?)|" +
+                                                 $@"({hourRegEx}?{minuteRegEx}?{secondRegEx}?{millisecondRegEx}{microsecondRegEx}?{nanosecondRegex}?)|" +
+                                                 $@"({hourRegEx}?{minuteRegEx}?{secondRegEx}?{millisecondRegEx}?{microsecondRegEx}{nanosecondRegex}?)|" +
+                                                 $@"({hourRegEx}?{minuteRegEx}?{secondRegEx}?{millisecondRegEx}?{microsecondRegEx}?{nanosecondRegex})";
+
         /// <summary>
-        /// A regular expression that can be used to validate GOLANG duration strings.
+        /// The partial regular expression that can be used to validate GOLANG duration strings.  This
+        /// does not include the start/end anchors and is suitable for situations where these are implied.
         /// </summary>
-        public const string RegEx = @"^.*$";
+        public const string PartialRegEx = $@"0|({combinationsRegEx})";
+
+        /// <summary>
+        /// The full regular expression (including start/end anchors) use to validate GOLANG duration strings.
+        /// </summary>
+        public const string RegEx = $"^({PartialRegEx})$";
 
         /// <summary>
         /// The number of nanosecond ticks per micrososecond.
@@ -551,7 +570,7 @@ namespace Neon.Time
             }
             else if (Ticks == long.MinValue)
             {
-                // Special case the minimum negative duration so we negate Ticks
+                // Special case the minimum negative duration so we can negate [Ticks]
                 // below without worrying about 64-bit wrap around.  I computed this
                 // by hand.
 
@@ -599,6 +618,60 @@ namespace Neon.Time
             if (absolute.Nanoseconds > 0)
             {
                 output += $"{absolute.Nanoseconds}ns";
+            }
+
+            return output;
+        }
+
+        /// <summary>
+        /// Renders the duration into a string including hour, minute, and seconds with
+        /// fractions as required, avoiding millisecond, microsecond, and nanosecond units.
+        /// </summary>
+        /// <returns>The pretty string.</returns>
+        public string ToPretty()
+        {
+            if (Ticks == 0)
+            {
+                return "0";
+            }
+            else if (Ticks == long.MinValue)
+            {
+                // Special case the minimum negative duration so we can negate [Ticks]
+                // below without worrying about 64-bit wrap around.  I computed this
+                // by hand.
+
+                return MinValueString;  // $hack(jefflill): I'm not going to worry about malking this pretty.
+            }
+
+            string      output = string.Empty;
+            GoDuration  absolute;
+
+            if (Ticks < 0)
+            {
+                output  += "-";
+                absolute = FromNanoseconds(-this.Ticks);
+            }
+            else
+            {
+                absolute = FromNanoseconds(this.Ticks);
+            }
+
+            if (absolute.Hours > 0)
+            {
+                output += $"{absolute.Hours}h";
+            }
+
+            if (absolute.Minutes > 0)
+            {
+                output += $"{absolute.Minutes}m";
+            }
+
+            var hoursAndMinutes = TimeSpan.FromHours(absolute.Hours) + TimeSpan.FromMinutes(absolute.Minutes);
+            var seconds         = ((TimeSpan)absolute - hoursAndMinutes).TotalSeconds;
+
+            if (seconds > 0)
+            {
+                output += $"{seconds}s";
             }
 
             return output;

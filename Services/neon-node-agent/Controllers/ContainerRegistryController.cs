@@ -90,9 +90,13 @@ namespace NeonNodeAgent
     /// CRI-O to reload its configuration.
     /// </item>
     /// </list>
+    /// <note>
+    /// This controller provides limited functionality when running on Windows to facilitate debugging.
+    /// Node tasks on the host node will be simulated in this case by simply doing nothing.
+    /// </note>
     /// </remarks>
     [EntityRbac(typeof(V1NeonContainerRegistry), Verbs = RbacVerb.Get | RbacVerb.Patch | RbacVerb.List | RbacVerb.Watch | RbacVerb.Update)]
-    public class ContainerRegistryController : IResourceController<V1NeonContainerRegistry>
+    public class ContainerRegistryController : IResourceController<V1NeonContainerRegistry>, IExtendedController<V1NeonContainerRegistry>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -170,36 +174,47 @@ namespace NeonNodeAgent
         /// can maintain the status of all resources and then afterwards, this will be called whenever
         /// a resource is added or has a non-status update.
         /// </summary>
-        /// <param name="registry">The new entity or <c>null</c> when nothing has changed.</param>
+        /// <param name="respource">The new entity or <c>null</c> when nothing has changed.</param>
         /// <returns>The controller result.</returns>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonContainerRegistry registry)
+        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonContainerRegistry respource)
         {
-            await resourceManager.ReconciledAsync(registry,
+            // Ignore all events when the controller hasn't been started.
+
+            if (resourceManager == null)
+            {
+                return null;
+            }
+
+            return await resourceManager.ReconciledAsync(respource,
                 async (resource, resources) =>
                 {
                     var name = resource?.Name();
 
-                    log.LogInfo($"RECONCILED: {name ?? "[IDLE]"}");
+                    log.LogInfo($"RECONCILED: {name ?? "[IDLE]"} count={resources.Count}");
                     await UpdateContainerRegistriesAsync(resources);
 
                     return null;
                 });
-
-            return null;
         }
 
         /// <summary>
         /// Called when a custom resource is removed from the API Server.
         /// </summary>
-        /// <param name="registry">The deleted entity.</param>
+        /// <param name="resource">The deleted entity.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task DeletedAsync(V1NeonContainerRegistry registry)
+        public async Task DeletedAsync(V1NeonContainerRegistry resource)
         {
-            await resourceManager.DeletedAsync(registry,
-                async (name, resources) =>
-                {
-                    log.LogInfo($"DELETED: {name}");
+            // Ignore all events when the controller hasn't been started.
 
+            if (resourceManager == null)
+            {
+                return;
+            }
+
+            await resourceManager.DeletedAsync(resource,
+                async (resource, resources) =>
+                {
+                    log.LogInfo($"DELETED: {resource}");
                     await UpdateContainerRegistriesAsync(resources);
                 });
         }
@@ -207,12 +222,19 @@ namespace NeonNodeAgent
         /// <summary>
         /// Called when a custom resource's status has been modified.
         /// </summary>
-        /// <param name="registry">The updated entity.</param>
+        /// <param name="resource">The updated entity.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task StatusModifiedAsync(V1NeonContainerRegistry registry)
+        public async Task StatusModifiedAsync(V1NeonContainerRegistry resource)
         {
-            await resourceManager.StatusModifiedAsync(registry,
-                async (name, resources) =>
+            // Ignore all events when the controller hasn't been started.
+
+            if (resourceManager == null)
+            {
+                return;
+            }
+
+            await resourceManager.StatusModifiedAsync(resource,
+                async (resource, resources) =>
                 {
                     // This is a NO-OP
 
@@ -227,6 +249,11 @@ namespace NeonNodeAgent
         /// <param name="registries">The current registry configurations.</param>
         private async Task UpdateContainerRegistriesAsync(IReadOnlyDictionary<string, V1NeonContainerRegistry> registries)
         {
+            if (!NeonHelper.IsLinux)
+            {
+                return;
+            }
+
             // NOTE: Here's the documentation for the config file we're generating:
             //
             //      https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md
@@ -364,6 +391,16 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                     await Node.ExecuteCaptureAsync("podman", new object[] { "logout", location });
                 }
             }
+        }
+
+        /// <inheritdoc/>
+        public V1NeonContainerRegistry CreateIgnorable()
+        {
+            var ignorable = new V1NeonContainerRegistry();
+
+            ignorable.Spec.Prefix = "no.where";
+
+            return ignorable;
         }
     }
 }

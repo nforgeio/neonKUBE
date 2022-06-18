@@ -27,6 +27,7 @@ using k8s.Models;
 using DotnetKubernetesClient.Entities;
 using KubeOps.Operator.Entities;
 using KubeOps.Operator.Entities.Annotations;
+using Neon.Kube;
 #endif
 
 using Neon.JsonConverters;
@@ -151,8 +152,8 @@ namespace Neon.Kube.Resources
     /// </note>
     /// <item>
     /// When the command execution timesout, the agent will kill the process and set the node task state to
-    /// <see cref="Phase.Timeout"/> and set <see cref="TaskStatus.FinishTimestamp"/> to the
-    /// current time.
+    /// <see cref="Phase.Timeout"/> and set <see cref="TaskStatus.FinishTimestamp"/> to the time when the
+    /// timeout was detected.
     /// </item>
     /// <item>
     /// <b>neon-node-agents</b> also look for running tasks that are assigned to its node but include a 
@@ -184,7 +185,7 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// Object API group.
         /// </summary>
-        public const string KubeGroup = Helper.NeonKubeResourceGroup;
+        public const string KubeGroup = ResourceHelper.NeonKubeResourceGroup;
 
         /// <summary>
         /// Object API version.
@@ -302,7 +303,7 @@ namespace Neon.Kube.Resources
             /// </summary>
 #if KUBEOPS
             [Required]
-            [Pattern(GoDuration.RegEx)]
+            [Pattern(GoDuration.PartialRegEx)]
 #endif
             public string Timeout { get; set; } = "5m";
 
@@ -321,7 +322,7 @@ namespace Neon.Kube.Resources
             /// <param name="value">The value veing set.</param>
             public void SetTimeout(TimeSpan value)
             {
-                Timeout = GoDuration.FromTimeSpan(value).ToString();
+                Timeout = GoDuration.FromTimeSpan(value).ToPretty();
             }
 
             /// <summary>
@@ -333,7 +334,7 @@ namespace Neon.Kube.Resources
             /// </summary>
 #if KUBEOPS
             [Required]
-            [Pattern(GoDuration.RegEx)]
+            [Pattern(GoDuration.PartialRegEx)]
 #endif
             public string RetentionTime { get; set; } = "10m";
 
@@ -352,7 +353,7 @@ namespace Neon.Kube.Resources
             /// <param name="value">The value being set.</param>
             public void SetRetentionTime(TimeSpan value)
             {
-                RetentionTime = GoDuration.FromTimeSpan(value).ToString();
+                RetentionTime = GoDuration.FromTimeSpan(value).ToPretty();
             }
 
             /// <summary>
@@ -431,8 +432,7 @@ namespace Neon.Kube.Resources
             /// Set to the task execution time.
             /// </summary>
 #if KUBEOPS
-            [Required]
-            [Pattern(GoDuration.RegEx)]
+            [Pattern(GoDuration.PartialRegEx)]
 #endif
             public string Runtime { get; set; } = "0s";
 
@@ -451,7 +451,7 @@ namespace Neon.Kube.Resources
             /// <param name="value">The value being set.</param>
             public void SetRuntime(TimeSpan value)
             {
-                Runtime = GoDuration.FromTimeSpan(value).ToString();
+                Runtime = GoDuration.FromTimeSpan(value).ToPretty();
             }
 
             /// <summary>
