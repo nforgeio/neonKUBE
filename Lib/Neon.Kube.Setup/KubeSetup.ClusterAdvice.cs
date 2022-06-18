@@ -126,7 +126,6 @@ namespace Neon.Kube
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Minio, CalculateMinioAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.MinioOperator, CalculateMinioOperatorAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.NeonClusterOperator, CalculateNeonClusterOperatorAdvice(cluster));
-            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.NeonNodeAgent, CalculateNeonNodeAgentAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.NeonDashboard, CalculateNeonDashboardAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.NeonNodeAgent, CalculateNeonNodeAgentAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.NeonSsoSessionProxy, CalculateNeonSsoSessionProxyAdvice(cluster));
@@ -884,16 +883,6 @@ namespace Neon.Kube
             return advice;
         }
 
-        private static KubeServiceAdvice CalculateNeonNodeAgentAdvice(ClusterProxy cluster)
-        {
-            var advice = new KubeServiceAdvice(KubeClusterAdvice.NeonNodeAgent);
-
-            advice.PodMemoryLimit   = ByteUnits.Parse("110Mi");
-            advice.PodMemoryRequest = ByteUnits.Parse("50Mi");
-
-            return advice;
-        }
-
         private static KubeServiceAdvice CalculateNeonDashboardAdvice(ClusterProxy cluster)
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.NeonDashboard);
@@ -914,6 +903,9 @@ namespace Neon.Kube
             {
                 advice.MetricsEnabled = false;
             }
+
+            advice.PodMemoryLimit = ByteUnits.Parse("110Mi");
+            advice.PodMemoryRequest = ByteUnits.Parse("50Mi");
 
             return advice;
         }
