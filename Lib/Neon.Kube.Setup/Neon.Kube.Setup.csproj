@@ -85,6 +85,7 @@
 		<None Remove="Resources\Helm\memcached\templates\_tplvalues.tpl" />
 		<None Remove="Resources\Helm\memcached\templates\_warnings.tpl" />
 		<None Remove="Resources\Helm\metrics-server\templates\serviceMonitor.yaml" />
+		<None Remove="Resources\Helm\metrics-server\_helpers.tpl" />
 		<None Remove="Resources\Helm\mimir\templates\alertmanager\alertmanager-dashboard-resources.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\alertmanager\alertmanager-dashboard.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\compactor\compactor-dashboard-resources.yaml" />

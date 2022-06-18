@@ -354,9 +354,6 @@ spec:
             await WriteClusterInfoAsync(controller, master);
 
             controller.ThrowIfCancelled();
-            await InstallNeonDashboardAsync(controller, master);
-
-            controller.ThrowIfCancelled();
             await InstallMonitoringAsync(controller);
 
             // Install the cluster operators and any required custom resources.
@@ -366,6 +363,9 @@ spec:
 
             controller.ThrowIfCancelled();
             await InstallClusterOperatorAsync(controller, master);
+
+            controller.ThrowIfCancelled();
+            await InstallNeonDashboardAsync(controller, master);
 
             controller.ThrowIfCancelled();
             await InstallNodeAgentAsync(controller, master);
@@ -5919,13 +5919,17 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(url), nameof(url));
 
-            master.Status = $"create: [{name}] minio bucket";
+            master.Status = $"create: [{name}] dashboard CRD";
 
             var cluster     = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s         = GetK8sClient(controller);
 
             var dashboard = new V1NeonDashboard()
             {
+                Metadata = new V1ObjectMeta()
+                {
+                    Name = name
+                },
                 Spec = new V1NeonDashboard.NeonDashboardSpec()
                 {
                     DisplayName  = displayName, 

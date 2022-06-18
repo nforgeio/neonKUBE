@@ -70,16 +70,10 @@ namespace Neon.Kube
             var clusterAdvice = new KubeClusterAdvice();
 
             clusterAdvice.MetricsEnabled  = true;
-            clusterAdvice.MetricsInterval = cluster.Definition.Nodes.Count() > 6 ? "60s" : "1m";
+            clusterAdvice.MetricsInterval = cluster.Definition.Nodes.Count() > 6 ? "60s" : "5m";
             clusterAdvice.MetricsQuota    = cluster.Definition.IsDesktopBuiltIn ? "1Gi" : "10Gi";
             clusterAdvice.LogsQuota       = cluster.Definition.IsDesktopBuiltIn ? "1Gi" : "10Gi";
             clusterAdvice.TracesQuota     = cluster.Definition.IsDesktopBuiltIn ? "1Gi" : "10Gi";
-
-            if (cluster.Definition.IsDesktopBuiltIn
-                || cluster.Definition.Nodes.Count() == 1)
-            {
-                clusterAdvice.MetricsEnabled = false;
-            }
 
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.AlertManager, CalculateAlertManagerAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Calico, CalculateCalicoAdvice(cluster));
@@ -191,6 +185,8 @@ namespace Neon.Kube
         private static KubeServiceAdvice CalculateCalicoAdvice(ClusterProxy cluster)
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.Calico);
+
+            advice.MetricsEnabled = false;
 
             return advice;
         }
@@ -527,7 +523,7 @@ namespace Neon.Kube
 
             advice.PodMemoryLimit   = ByteUnits.Parse("256Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
-            advice.MetricsEnabled   = true;
+            advice.MetricsEnabled   = false;
             advice.MetricsInterval  = "60s";
 
             return advice;
@@ -536,6 +532,8 @@ namespace Neon.Kube
         private static KubeServiceAdvice CalculateMetricsServerAdvice(ClusterProxy cluster)
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.MetricsServer);
+
+            advice.MetricsEnabled = false;
 
             return advice;
         }
@@ -882,6 +880,11 @@ namespace Neon.Kube
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.NeonClusterOperator);
 
+            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.Masters.Count() == 1)
+            {
+                advice.MetricsEnabled = false;
+            }
+
             return advice;
         }
 
@@ -925,10 +928,7 @@ namespace Neon.Kube
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.NodeProblemDetector);
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.Masters.Count() == 1)
-            {
-                advice.MetricsInterval = "1m";
-            }
+            advice.MetricsInterval = "1m";
 
             return advice;
         }
