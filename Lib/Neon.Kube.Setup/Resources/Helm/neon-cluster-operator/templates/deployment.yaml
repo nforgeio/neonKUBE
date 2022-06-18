@@ -2,7 +2,7 @@
 kind: Deployment
 metadata:
   labels:
-    app: neon-cluster-operator
+    {{- include "neon-cluster-operator.labels" . | nindent 4 }}
   name: neon-cluster-operator
   annotations:
     reloader.stakater.com/auto: "true"
@@ -10,16 +10,16 @@ spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: neon-cluster-operator
+      {{- include "neon-cluster-operator.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: neon-cluster-operator
+        {{- include "neon-cluster-operator.selectorLabels" . | nindent 8 }}
         kubectl.kubernetes.io/default-container: neon-cluster-operator
       annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/path: "/"
-        prometheus.io/port: "9762"
+      {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
         sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
     spec:
       serviceAccountName: neon-cluster-operator
@@ -79,10 +79,5 @@ spec:
           containerPort: 9762
           protocol: TCP
         resources:
-          limits:
-            cpu: {{ .Values.resource.limits.cpu }}
-            memory: {{ .Values.resource.limits.memory }}
-          requests:
-            cpu: {{ .Values.resource.requests.cpu }}
-            memory: {{ .Values.resource.requests.memory }}
+          {{- toYaml .Values.resources | nindent 10 }}
       terminationGracePeriodSeconds: 10
