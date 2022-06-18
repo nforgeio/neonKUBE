@@ -10,7 +10,9 @@
 # Container image details.
 
 image:
+  organization: neon-registry.node.local
   repository: neon-node-agent
+  tag: neonkube-0.6.0-alpha
   pullPolicy: IfNotPresent
 
 resources: {}
@@ -20,6 +22,18 @@ serviceMesh:
 # Log level: none, critical, serror, error, warn, sinfo, info, transient, debug
 
 logLevel: info
+
+service:
+  type: ClusterIP
+  ports:
+    - name: http-web
+      port: 80
+      protocol: TCP
+      targetPort: 5000
+    - name: https-web
+      protocol: TCP
+      port: 443
+      targetPort: 5001
 
 metrics:
   # Enable Prometheus metrics endpoint

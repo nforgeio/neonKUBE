@@ -7,11 +7,10 @@ metadata:
 spec:
   type: {{ .Values.service.type }}
   ports:
-    - port: {{ .Values.service.port }}
-      protocol: TCP
-      name: http-web
+    {{- toYaml .Values.service.ports | nindent 4 }}
     - port: {{ .Values.metrics.port }}
       protocol: TCP
       name: http-metrics
+      targetPort: {{ .Values.metrics.port }}
   selector:
     {{- include "neon-node-agent.selectorLabels" . | nindent 4 }}
