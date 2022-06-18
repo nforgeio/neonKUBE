@@ -136,6 +136,11 @@ namespace NeonClusterOperator
             // Start the operator controllers.  Note that we're not going to await
             // this and will use the termination signal instead to exit.
 
+            // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1599
+            //
+            // We're temporarily using our poor man's operator
+
+#if DISABLED
             _ = Host.CreateDefaultBuilder()
                     .ConfigureHostOptions(
                         options =>
@@ -167,6 +172,7 @@ namespace NeonClusterOperator
                     .ConfigureWebHostDefaults(builder => builder.UseStartup<Startup>())
                     .Build()
                     .RunOperatorAsync(Array.Empty<string>());
+#endif
 
             // Indicate that the service is running.
 

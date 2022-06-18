@@ -37,8 +37,8 @@ namespace Neon.Kube
     /// <summary>
     /// A kubernetes watch event.
     /// </summary>
-    /// <typeparam name="TObject"></typeparam>
-    public class WatchEvent<TObject>
+    /// <typeparam name="T">Specifies the Kubernetes entity type being watched.</typeparam>
+    public class WatchEvent<T>
     {
         /// <summary>
         /// The <see cref="WatchEventType"/>
@@ -48,7 +48,7 @@ namespace Neon.Kube
         /// <summary>
         /// The watch event value.
         /// </summary>
-        public TObject Value { get; internal set; }
+        public T Value { get; internal set; }
     }
 
     /// <summary>
@@ -281,7 +281,7 @@ namespace Neon.Kube
             string  fieldSelector        = null,
             string  labelSelector        = null,
             string  resourceVersionMatch = null,
-            int?    timeoutSeconds         = null)
+            int?    timeoutSeconds       = null)
         {
             await SyncContext.Clear;
 

@@ -33,6 +33,7 @@ using System.IO;
 using System.Net;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -333,6 +334,7 @@ namespace Neon.Kube.Operator
         // Implementation
 
         private bool                            isDisposed            = false;
+        private bool                            stopIdleLoop          = false;
         private AsyncReentrantMutex             mutex                 = new AsyncReentrantMutex();
         private Dictionary<string, TEntity>     resources             = new Dictionary<string, TEntity>(StringComparer.InvariantCultureIgnoreCase);
         private bool                            started               = false;
@@ -351,6 +353,7 @@ namespace Neon.Kube.Operator
         private LeaderElectionConfig            leaderConfig;
         private LeaderElector                   leaderElector;
         private Task                            leaderTask;
+        private Task                            idleLoopTask;
 
         /// <summary>
         /// Default constructor.
@@ -456,7 +459,7 @@ namespace Neon.Kube.Operator
 
             // Start the IDLE reconcile loop.
 
-            _ = IdleLoopAsync();
+            idleLoopTask = IdleLoopAsync();
 
             // $hack(jefflill):
             //
@@ -551,6 +554,8 @@ namespace Neon.Kube.Operator
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task EnsureIgnorableResource()
         {
+            await SyncContext.Clear;
+
 #if IGNORABLE_RESOURCE
             // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1599
             //
@@ -558,7 +563,7 @@ namespace Neon.Kube.Operator
             // controller wants an ignorable resource to always exist.  This works around
             // watch problems.
 
-            var controller = (IResourceController<TEntity>)controllerConstructor.Invoke(new object[] { k8s });
+            var controller = CreateController();
 
             if (controller is IExtendedController<TEntity> extendedController)
             {
@@ -701,6 +706,14 @@ namespace Neon.Kube.Operator
             {
                 resources[resource.Name()] = resource;
             }
+        }
+
+        /// <summary>
+        /// Removes all resources cached in  <see cref="resources"/> dictionary.
+        /// </summary>
+        private void ClearResources()
+        {
+            resources.Clear();
         }
 
         /// <summary>
@@ -1087,6 +1100,15 @@ namespace Neon.Kube.Operator
             }
         }
 
+        /// <summary>
+        /// Creates a controller instance.
+        /// </summary>
+        /// <returns>The controller.</returns>
+        private IResourceController<TEntity> CreateController()
+        {
+            return (IResourceController<TEntity>)controllerConstructor.Invoke(new object[] { k8s });
+        }
+
         //---------------------------------------------------------------------
         // $todo(jefflill): At least support dependency injection when constructing the controller.
         //
@@ -1150,9 +1172,11 @@ namespace Neon.Kube.Operator
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task IdleLoopAsync()
         {
+            await SyncContext.Clear;
+            
             var loopDelay = TimeSpan.FromSeconds(1);
 
-            while (!isDisposed)
+            while (!isDisposed && !stopIdleLoop)
             {
                 await Task.Delay(loopDelay);
 
@@ -1266,7 +1290,7 @@ namespace Neon.Kube.Operator
                                 //
                                 //       https://github.com/nforgeio/neonKUBE/issues/1589
 
-                                var controller = (IResourceController<TEntity>)controllerConstructor.Invoke(new object[] { k8s });
+                                var controller = CreateController();
 
                                 // Reconcile all of the resources when we just finished discovering them,
                                 // otherwise send an IDLE RECONCILE.
@@ -1323,12 +1347,150 @@ namespace Neon.Kube.Operator
         /// <returns></returns>
         private async Task WatchAsync()
         {
+            await SyncContext.Clear;
+
             // We're going to implement our own event watcher until KubeOps has
             // a chance to fix this bug:
             //
             //      https://github.com/nforgeio/neonKUBE/issues/1599
 
+            CancellationTokenSource cts = default;
 
+            //-----------------------------------------------------------------
+            // We're going to use this dictionary to keep track of the [Status]
+            // property of the resources we're watching so we can distinguish
+            // between changes to the status vs. changes to anything else in
+            // the resource.
+            //
+            // The dictionary simply holds the status property serialized to
+            // JSON, with these keyed by resource name.  Note that the resource
+            // entities might not have a [Status] property.
+
+            var entityType   = typeof(TEntity);
+            var statusGetter = entityType.GetProperty("Status")?.GetMethod;
+            var statusCache  = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+
+            //-----------------------------------------------------------------
+            // Our watcher handler action.
+
+            var actionAsync = 
+                async (WatchEvent<TEntity> @event) =>
+                {
+                    await SyncContext.Clear;
+
+                    switch (@event.Type)
+                    {
+                        case WatchEventType.Added:
+
+                            await CreateController().ReconcileAsync(@event.Value);
+                            break;
+
+                        case WatchEventType.Bookmark:
+
+                            break;
+
+                        case WatchEventType.Error:
+
+                            // This cancels the watcher.  We'll catch the [OperationCancelledException] below
+                            // and restart the watcher.
+
+                            cts.Cancel();
+                            break;
+
+                        case WatchEventType.Deleted:
+
+                            await CreateController().DeletedAsync(@event.Value);
+                            break;
+
+                        case WatchEventType.Modified:
+
+                            // We only need to reconcile when the entity doesn't have [Status].
+
+                            if (statusGetter == null)
+                            {
+                                await CreateController().ReconcileAsync(@event.Value);
+                                return;
+                            }
+
+                            // $note(jefflill):
+                            //
+                            // I'm going to assume that we're not going to see both [Status]
+                            // and other changes in the same [Modified] event.  I believe this
+                            // makes sense because the API is structured to modify status
+                            // independently.
+
+                            var newStatus     = statusGetter.Invoke(@event.Value, Array.Empty<object>());
+                            var newStatusJson = newStatus == null ? null : JsonSerializer.Serialize(newStatus);
+                            var statusChanged = false;
+
+                            statusCache.TryGetValue(@event.Value.Metadata.Name, out var lastStatusJson);
+
+                            if (newStatus == null && lastStatusJson == null)
+                            {
+                                // Nothing has changed
+                            }
+                            else if ((newStatus != null) == (lastStatusJson != null))
+                            {
+                                statusChanged = newStatusJson != lastStatusJson;
+                            }
+                            else
+                            {
+                                statusChanged = true;   // [Status] was added or removed
+                            }
+
+                            if (statusChanged)
+                            {
+                                await CreateController().StatusModifiedAsync(@event.Value);
+
+                                if (newStatusJson != null)
+                                {
+                                    statusCache[@event.Value.Metadata.Name] = newStatusJson;
+                                }
+                                else
+                                {
+                                    statusCache.Remove(@event.Value.Metadata.Name);
+                                }
+                            }
+                            else
+                            {
+                                await CreateController().ReconcileAsync(@event.Value);
+                            }
+                            break;
+                    }
+                };
+
+            //-----------------------------------------------------------------
+            // Loop to handle watcher errors.
+
+            while (true)
+            {
+                cts = new CancellationTokenSource();
+
+                try
+                {
+                    await k8s.WatchAsync<TEntity>(actionAsync, resourceNamespace);
+                }
+                catch (OperationCanceledException)
+                {
+                    // This is thrown for [WatchEventType.Error] events and we need to restart the
+                    // watching from scratch.  This also means that we need to clear any resources
+                    // we've already captured and reinitiate discovery for collection mode.
+                    //
+                    // We're going to signal the idle loop to stop and then restart it to avoid any 
+                    // race conditions.
+
+                    stopIdleLoop = true;
+                    await idleLoopTask;
+
+                    discovering          = options.Mode == ResourceManagerMode.Collection;
+                    nextIdleReconcileUtc = DateTime.UtcNow + options.IdleInterval;
+                    ClearResources();
+                    statusCache.Clear();
+
+                    stopIdleLoop = false;
+                    idleLoopTask = IdleLoopAsync();
+                }
+            }
         }
     }
 }

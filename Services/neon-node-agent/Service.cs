@@ -159,6 +159,11 @@ namespace NeonNodeAgent
             //-----------------------------------------------------------------
             // Start KubeOps.
 
+            // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1599
+            //
+            // We're temporarily using our poor man's operator
+
+#if DISABLED
             _ = Host.CreateDefaultBuilder()
                     .ConfigureHostOptions(
                         options =>
@@ -190,6 +195,7 @@ namespace NeonNodeAgent
                     .ConfigureWebHostDefaults(builder => builder.UseStartup<Startup>())
                     .Build()
                     .RunOperatorAsync(Array.Empty<string>());
+#endif
 
             // Indicate that the service is running.
 
