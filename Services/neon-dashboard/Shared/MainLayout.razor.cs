@@ -42,6 +42,10 @@ namespace NeonDashboard.Shared
 {
     public partial class MainLayout
     {
-        
+        /// <inheritdoc/>
+        protected override void OnInitialized()
+        {
+            AppState.OnDashboardChange += StateHasChanged;
+        }
     }
 }

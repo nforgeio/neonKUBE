@@ -135,13 +135,21 @@ namespace NeonDashboard
                     Logger.LogError(e);
                 }
 
-                Nodes = await K8s.ListNodeAsync();
+                try
+                {
 
-                TotalNodes = Nodes.Items.Count();
-                FailedNodes = Nodes.Items.Where(node => node.Status.Conditions.Any(condition => negativeNodeConditions.Contains(condition.Type) && condition.Status == "True")).Count();
-                ActiveNodes = Nodes.Items.Where(node => node.Status.Conditions.Any(condition => condition.Type == "Ready" && condition.Status == "True")).Count();
+                    Nodes = await K8s.ListNodeAsync();
 
-                NotifyStateChanged();
+                    TotalNodes = Nodes.Items.Count();
+                    FailedNodes = Nodes.Items.Where(node => node.Status.Conditions.Any(condition => negativeNodeConditions.Contains(condition.Type) && condition.Status == "True")).Count();
+                    ActiveNodes = Nodes.Items.Where(node => node.Status.Conditions.Any(condition => condition.Type == "Ready" && condition.Status == "True")).Count();
+
+                    NotifyStateChanged();
+                } 
+                catch (Exception e)
+                {
+                    Logger.LogError(e);
+                }
             }
         }
     }

@@ -156,16 +156,23 @@ namespace NeonDashboard
                 switch (@event.Type)
                 {
                     case WatchEventType.Added:
+
                         await AddDashboardAsync(@event.Value);
                         break;
+
                     case WatchEventType.Deleted:
+
                         await RemoveDashboardAsync(@event.Value);
                         break;
+
                     case WatchEventType.Modified:
+
                         await RemoveDashboardAsync(@event.Value);
                         await AddDashboardAsync(@event.Value);
                         break;
+
                     default:
+
                         break;
                 }
 

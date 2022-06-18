@@ -7,7 +7,7 @@
 
 <div class="mainlayout " >
   <div class="containermain text-slate-50  font-sans antialiased tracking-wide">
-      <main class="main bg-bg justify-center grid">
+      <main class="main bg-bg justify-center @((AppState.CurrentDashboard == "neonkube") ? "grid" : "")">
               @Body
       </main>
        <div class="bottom">

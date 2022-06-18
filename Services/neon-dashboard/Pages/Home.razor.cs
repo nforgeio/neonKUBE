@@ -86,8 +86,9 @@ namespace NeonDashboard.Pages
             PageTitle   = NeonDashboardService.ClusterInfo.Name;
             clusterInfo = NeonDashboardService.ClusterInfo;
 
-            AppState.Kube.OnChange    += StateHasChanged;
-            AppState.Metrics.OnChange += StateHasChanged;
+            AppState.OnDashboardChange += StateHasChanged;
+            AppState.Kube.OnChange     += StateHasChanged;
+            AppState.Metrics.OnChange  += StateHasChanged;
 
             clusterMetaData = new Dictionary<string, string>()
             {
