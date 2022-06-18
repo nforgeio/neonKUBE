@@ -109,7 +109,7 @@ namespace TestKube
         }
 
         /// <summary>
-        /// Removes all non-ignorable node tasks.
+        /// Removes all existing node tasks.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task DeleteExistingTasksAsync()
@@ -118,10 +118,7 @@ namespace TestKube
 
             foreach (var resource in existingTasks)
             {
-                if (resource.Metadata.Name != KubeHelper.IgnorableResourceName)
-                {
-                    await fixture.K8s.DeleteClusterCustomObjectAsync(resource);
-                }
+                await fixture.K8s.DeleteClusterCustomObjectAsync(resource);
             }
         }
 
@@ -145,7 +142,7 @@ namespace TestKube
 
                 foreach (var node in fixture.Cluster.Nodes)
                 {
-                    nodeToTaskName.Add(node.Name, $"test-basic-{node.Name}-{NeonHelper.CreateBase36Guid()}");
+                    nodeToTaskName.Add(node.Name, $"test-basic-{node.Name}-{NeonHelper.CreateBase36Uuid()}");
                 }
 
                 // Initalize a test folder on each node where the task will update a file
@@ -271,7 +268,7 @@ touch $NODE_ROOT{filePath}
 
             await DeleteExistingTasksAsync();
 
-            var taskName = $"test-exitcode-{NeonHelper.CreateBase36Guid()}";
+            var taskName = $"test-exitcode-{NeonHelper.CreateBase36Uuid()}";
             var nodeTask = new V1NeonNodeTask();
             var metadata = nodeTask.Metadata;
             var spec     = nodeTask.Spec;
@@ -334,7 +331,7 @@ exit 123
 
             await DeleteExistingTasksAsync();
 
-            var taskName = $"test-timeout-{NeonHelper.CreateBase36Guid()}";
+            var taskName = $"test-timeout-{NeonHelper.CreateBase36Uuid()}";
             var nodeTask = new V1NeonNodeTask();
             var metadata = nodeTask.Metadata;
             var spec     = nodeTask.Spec;
@@ -398,7 +395,7 @@ sleep 30
 
             await DeleteExistingTasksAsync();
 
-            var taskName = $"test-orphan-{NeonHelper.CreateBase36Guid()}";
+            var taskName = $"test-orphan-{NeonHelper.CreateBase36Uuid()}";
             var nodeTask = new V1NeonNodeTask();
             var metadata = nodeTask.Metadata;
             var spec     = nodeTask.Spec;
