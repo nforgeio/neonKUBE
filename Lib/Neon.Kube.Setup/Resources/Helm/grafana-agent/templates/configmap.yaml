@@ -47,9 +47,15 @@ data:
       wal_cleanup_period: 15m
       {{- if .Values.metrics.global.enabled }}
       configs:
+        {{- if .Values.tracing.enabled }}
+        - name: tracing
+          host_filter: true
+          wal_truncate_frequency: 15m
+          max_wal_time: 15m
+        {{- end -}}
         {{- if .Values.metrics.crio.enabled }}
         - name: crio
-          host_filter: false
+          host_filter: true
           wal_truncate_frequency: 15m
           max_wal_time: 15m
           scrape_configs:
@@ -306,7 +312,7 @@ data:
           service_graphs:
             enabled: true
           spanmetrics:
-            metrics_instance: agent
+            metrics_instance: traces
           scrape_configs:
             - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
               job_name: kubernetes-pods
