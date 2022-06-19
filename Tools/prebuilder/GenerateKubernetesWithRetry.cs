@@ -139,12 +139,47 @@ namespace {targetNamespace}
     public sealed partial class {wrapperClassName} : IKubernetes
     {{");
                 //-------------------------------------------------------------
+                // Static members
+
+                writer.WriteLine($"        //---------------------------------------------------------------------");
+                writer.WriteLine($"        // Static members");
+                
+                writer.WriteLine();
+                writer.WriteLine($"        /// <summary>");
+                writer.WriteLine($"        /// Returns a disconnected client used for specialized situations where a Kubernetes client");
+                writer.WriteLine($"        /// instance is required but it won't actually be used.  The instance returned is not actually");
+                writer.WriteLine($"        /// connected to a cluster.");
+                writer.WriteLine($"        /// </summary>");
+                writer.WriteLine($"        public static IKubernetes CreateDisconnected()");
+                writer.WriteLine($"        {{");
+                writer.WriteLine($"            return new {wrapperClassName}();");
+                writer.WriteLine($"        }}");
+
+                //-------------------------------------------------------------
+                // Instance members
+
+                writer.WriteLine();
+                writer.WriteLine($"        //---------------------------------------------------------------------");
+                writer.WriteLine($"        // Instance members");
+                writer.WriteLine();
+
+                //-------------------------------------------------------------
                 // Generate the local fields
 
                 writer.WriteLine($"        private Kubernetes k8s;");
 
                 //-------------------------------------------------------------
                 // Generate the public constructors.
+
+                writer.WriteLine();
+                writer.WriteLine($"        /// <summary>");
+                writer.WriteLine($"        /// Private constructor that creates a special non-functional client instance");
+                writer.WriteLine($"        /// that is not actually connected to a cluster.");
+                writer.WriteLine($"        /// </summary>");
+                writer.WriteLine($"        private {wrapperClassName}()");
+                writer.WriteLine($"        {{");
+                writer.WriteLine($"        }}");
+
 
                 writer.WriteLine();
                 writer.WriteLine($"        public {wrapperClassName}(Kubernetes k8s)");
