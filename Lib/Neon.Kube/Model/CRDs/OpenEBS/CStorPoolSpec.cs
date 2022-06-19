@@ -23,8 +23,6 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
-using Newtonsoft.Json;
-
 namespace Neon.Kube
 {
     /// <summary>
@@ -42,19 +40,16 @@ namespace Neon.Kube
         /// <summary>
         /// Selector identifying the nodes holding the targeted cStor block devices.
         /// </summary>
-        [JsonProperty(PropertyName = "nodeSelector", Required = Required.Always)]
         public Dictionary<string, string> NodeSelector { get; set; }
 
         /// <summary>
         /// Identifies the associated block devices.
         /// </summary>
-        [JsonProperty(PropertyName = "dataRaidGroups", Required = Required.Always)]
         public List<V1CStorDataRaidGroup> DataRaidGroups { get; set; }
 
         /// <summary>
         /// Specifies the pool configuration.
         /// </summary>
-        [JsonProperty(PropertyName = "poolConfig", Required = Required.Always)]
         public V1CStorPoolConfig PoolConfig { get; set; }
     }
 }

@@ -23,8 +23,6 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
-using Newtonsoft.Json;
-
 namespace Neon.Kube
 {
     /// <summary>
@@ -42,13 +40,11 @@ namespace Neon.Kube
         /// <summary>
         /// The filesystem type.
         /// </summary>
-        [JsonProperty(PropertyName = "fileSystem")]
         public string FileSystem { get; set; }
 
         /// <summary>
         /// The mount point.
         /// </summary>
-        [JsonProperty(PropertyName = "mountPoint")]
         public string MountPoint { get; set; }
     }
 }

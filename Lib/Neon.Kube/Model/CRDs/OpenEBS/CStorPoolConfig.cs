@@ -24,8 +24,6 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
-using Newtonsoft.Json;
-
 namespace Neon.Kube
 {
     /// <summary>
@@ -43,13 +41,11 @@ namespace Neon.Kube
         /// <summary>
         /// The raid type.
         /// </summary>
-        [JsonProperty(PropertyName = "dataRaidGroupType", Required = Required.Always)]
         public DataRaidGroupType? DataRaidGroupType { get; set; }
 
         /// <summary>
         /// Tolerations to be applied to the CStor Pool pods.
         /// </summary>
-        [JsonProperty(PropertyName = "tolerations", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public List<V1Toleration> Tolerations { get; set; }
     }

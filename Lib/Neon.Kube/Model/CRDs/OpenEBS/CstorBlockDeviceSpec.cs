@@ -24,8 +24,6 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
-using Newtonsoft.Json;
-
 namespace Neon.Kube
 {
     /// <summary>
@@ -43,49 +41,42 @@ namespace Neon.Kube
         /// <summary>
         /// The capacity of the block device.
         /// </summary>
-        [JsonProperty(PropertyName = "capacity", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public BlockDeviceCapacity Capacity { get; set; }
 
         /// <summary>
         /// Details about the block device.
         /// </summary>
-        [JsonProperty(PropertyName = "details", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public BlockDeviceDetails Details { get; set; }
 
         /// <summary>
         /// List of device links.
         /// </summary>
-        [JsonProperty(PropertyName = "devLinks", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public List<BlockDeviceDevLink> DevLinks { get; set; }
 
         /// <summary>
         /// Filesystem information about the block device.
         /// </summary>
-        [JsonProperty(PropertyName = "filesystem", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public FileSystemInfo FileSystem { get; set; }
 
         /// <summary>
         /// Attributes related to the node where the block device is mounted.
         /// </summary>
-        [JsonProperty(PropertyName = "nodeAttributes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public Dictionary<string, string> NodeAttributes { get; set; }
 
         /// <summary>
         /// Whether the block device is partitioned. (Yes/No)
         /// </summary>
-        [JsonProperty(PropertyName = "partitioned", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string Partitioned { get; set; }
 
         /// <summary>
         /// The path.
         /// </summary>
-        [JsonProperty(PropertyName = "path", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string Path { get; set; }
     }

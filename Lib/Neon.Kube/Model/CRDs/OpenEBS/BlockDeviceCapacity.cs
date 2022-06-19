@@ -25,8 +25,6 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
-using Newtonsoft.Json;
-
 namespace Neon.Kube
 {
     /// <summary>
@@ -44,21 +42,18 @@ namespace Neon.Kube
         /// <summary>
         /// The logical sector size.
         /// </summary>
-        [JsonProperty(PropertyName = "logicalSectorSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public long? LogicalSectorSize { get; set; }
 
         /// <summary>
         /// The physical sector size.
         /// </summary>
-        [JsonProperty(PropertyName = "physicalSectorSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public long? PhysicalSectorSize { get; set; }
 
         /// <summary>
         /// The storage size.
         /// </summary>
-        [JsonProperty(PropertyName = "storage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public long? Storage { get; set; }
     }

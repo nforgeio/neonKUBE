@@ -24,8 +24,6 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
-using Newtonsoft.Json;
-
 namespace Neon.Kube
 {
     /// <summary>
@@ -43,7 +41,6 @@ namespace Neon.Kube
         /// <summary>
         /// The list of block devices.
         /// </summary>
-        [JsonProperty(PropertyName = "blockDevices", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public List<V1CStorBlockDeviceRef> BlockDevices { get; set; }
     }

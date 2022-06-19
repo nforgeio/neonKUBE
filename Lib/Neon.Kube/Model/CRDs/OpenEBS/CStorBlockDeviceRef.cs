@@ -24,8 +24,6 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
-using Newtonsoft.Json;
-
 namespace Neon.Kube
 {
     /// <summary>
@@ -43,20 +41,17 @@ namespace Neon.Kube
         /// <summary>
         /// The name of the block device.
         /// </summary>
-        [JsonProperty(PropertyName = "blockDeviceName", Required = Required.Always)]
         public string BlockDeviceName { get; set; }
 
         /// <summary>
         /// The capacity of block device.
         /// </summary>
-        [JsonProperty(PropertyName = "capacity", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public BlockDeviceCapacity capacity { get; set; }
 
         /// <summary>
         /// The dev link for the block device.
         /// </summary>
-        [JsonProperty(PropertyName = "devLink", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string DevLink { get; set; }
     }

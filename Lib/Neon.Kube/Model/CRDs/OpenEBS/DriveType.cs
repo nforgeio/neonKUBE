@@ -28,10 +28,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
-
 using Neon.Common;
 using Neon.Net;
 
@@ -40,8 +36,7 @@ namespace Neon.Kube
     /// <summary>
     /// Enumerates the possible Drive types.
     /// </summary>
-    [Newtonsoft.Json.JsonConverter(typeof(StringEnumConverter))]
-    [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringEnumMemberConverter))]
+    [JsonConverter(typeof(JsonStringEnumMemberConverter))]
     public enum DriveType
     {
         /// <summary>
