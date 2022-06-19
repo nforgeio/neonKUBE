@@ -69,6 +69,8 @@
 		<None Remove="Resources\Helm\cert-manager\crds\orders.yaml" />
 		<None Remove="Resources\Helm\cert-manager\templates\cainjector-deployment - Copy.yaml" />
 		<None Remove="Resources\Helm\cert-manager\templates\grafana-dashboard.yaml" />
+		<None Remove="Resources\Helm\crd-cluster\crds\grafanadashboards.yaml" />
+		<None Remove="Resources\Helm\crd-cluster\crds\grafanadatasources.yaml" />
 		<None Remove="Resources\Helm\grafana-agent\templates\grafana-dashboard.yaml" />
 		<None Remove="Resources\Helm\grafana-agent\templates\neon-dashboard.yaml" />
 		<None Remove="Resources\Helm\grafana\templates\datasource-loki.yaml" />
@@ -162,6 +164,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Folder Include="Resources\Helm\crd-cluster\templates\" />
 		<Folder Include="Resources\Helm\neon-cluster-operator\crds\" />
 	</ItemGroup>
 
