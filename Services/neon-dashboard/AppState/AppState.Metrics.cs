@@ -192,7 +192,8 @@ namespace NeonDashboard
                     return;
                 }
 
-                if (decimal.TryParse(result.Data.Result.First().Value.Value, out var cpu)){
+                if (decimal.TryParse(result.Data.Result.First().Value.Value, out var cpu))
+                {
                     CPUTotal = cpu;
                 }
 
