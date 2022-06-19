@@ -59,15 +59,10 @@ namespace NeonClusterOperator
 
             var watcherTimeoutSeconds = Math.Max(1, Math.Max(ushort.MaxValue, (int)Math.Ceiling(watcherTimeout.TotalSeconds)));
             var watcherRetrySeconds   = Math.Max(1, (int)Math.Ceiling(watcherTimeout.TotalSeconds));
-
-            var _services = services;
-
-            if (!OperatorHelper.GeneratingCRDs)
-            {
-                _services = _services.AddSingleton<IKubernetes>(new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig()));
-            }
-
-            var operatorBuilder = _services
+            var k8s                   = OperatorHelper.GeneratingCRDs ? KubernetesWithRetry.CreateDisconnected()
+                                                                      : new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
+            var operatorBuilder = services
+                .AddSingleton(k8s)
                 .AddKubernetesOperator(
                     settings =>
                     {
