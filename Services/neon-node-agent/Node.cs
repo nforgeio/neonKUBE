@@ -67,7 +67,7 @@ namespace NeonNodeAgent
             }
             catch
             {
-                Name = "UNKNOWN";
+                Name = "emulated-node";
             }
 
             AgentId = Guid.NewGuid().ToString("d");
@@ -95,21 +95,30 @@ namespace NeonNodeAgent
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
-            using (await mutex.AcquireAsync())
+            if (NeonHelper.IsLinux)
             {
-                // Return any cached information.
-
-                if (cachedOwnerReference != null)
+                using (await mutex.AcquireAsync())
                 {
+                    // Return any cached information.
+
+                    if (cachedOwnerReference != null)
+                    {
+                        return cachedOwnerReference;
+                    }
+
+                    // Query Kubernetes for the node information based on the the node's hostname.
+
+                    cachedNode           = await k8s.ReadNodeAsync(Name);
+                    cachedOwnerReference = new V1OwnerReference(apiVersion: cachedNode.ApiVersion, name: cachedNode.Name(), kind: cachedNode.Kind, uid: cachedNode.Uid());
+
                     return cachedOwnerReference;
                 }
+            }
+            else
+            {
+                // Emulate without an owner reference.
 
-                // Query Kubernetes for the node information based on the the node's hostname.
-
-                cachedNode           = await k8s.ReadNodeAsync(Name);
-                cachedOwnerReference = new V1OwnerReference(apiVersion: cachedNode.ApiVersion, name: cachedNode.Name(), kind: cachedNode.Kind, uid: cachedNode.Uid());
-
-                return cachedOwnerReference;
+                return null;
             }
         }
 
@@ -125,33 +134,7 @@ namespace NeonNodeAgent
         }
 
         /// <summary>
-        /// Synchronously executes a Bash script and captures the result.
-        /// </summary>
-        /// <param name="path">Path to the script.</param>
-        /// <param name="timeout">
-        /// Optional maximum time to wait for the process to complete or <c>null</c> to wait
-        /// indefinitely.
-        /// </param>
-        /// <param name="processCallback">
-        /// Optionally passed to obtain the details of the process created to execute the command.
-        /// When a non-null value is passed, the callback will be called with the <see cref="Process"/> 
-        /// instances just after it is launched.
-        /// </param>
-        /// <returns>The <see cref="ExecuteResponse"/>.</returns>
-        public static ExecuteResponse BashExecuteCapture(
-            string          path,
-            TimeSpan?       timeout         = null,
-            Action<Process> processCallback = null)
-        {
-            return NeonHelper.ExecuteCapture(
-                path:            "/bin/bash",
-                args:            path,
-                timeout:         timeout,
-                processCallback: processCallback);
-        }
-
-        /// <summary>
-        /// Asynchronously executes a Bash script and captures the result.
+        /// Executes a Bash script and captures the result.
         /// </summary>
         /// <param name="path">Path to the script.</param>
         /// <param name="timeout">

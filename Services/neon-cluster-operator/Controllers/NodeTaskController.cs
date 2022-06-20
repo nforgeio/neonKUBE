@@ -74,7 +74,7 @@ namespace NeonClusterOperator
     /// </para>
     /// </remarks>
     [EntityRbac(typeof(V1NeonNodeTask), Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Patch | RbacVerb.Watch | RbacVerb.Update)]
-    public class NodeTaskController : IResourceController<V1NeonNodeTask>, IExtendedController<V1NeonNodeTask>
+    public class NodeTaskController : IResourceController<V1NeonNodeTask>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -271,9 +271,9 @@ namespace NeonClusterOperator
             }
 
             await resourceManager.DeletedAsync(task,
-                async (name, resources) =>
+                async (resource, resources) =>
                 {
-                    log.LogInfo($"DELETED: {name}");
+                    log.LogInfo($"DELETED: {resource.Name()}");
 
                     // This is a NOP.
 
@@ -295,29 +295,15 @@ namespace NeonClusterOperator
                 return;
             }
 
-            await resourceManager.DeletedAsync(task,
-                async (name, resources) =>
+            await resourceManager.StatusModifiedAsync(task,
+                async (resource, resources) =>
                 {
-                    log.LogInfo($"STATUS-MODIFIED: {name}");
+                    log.LogInfo($"STATUS-MODIFIED: {resource.Name()}");
 
                     // This is a NOP.
 
                     await Task.CompletedTask;
                 });
-        }
-
-        /// <inheritdoc/>
-        public V1NeonNodeTask CreateIgnorable()
-        {
-            var ignorable = new V1NeonNodeTask();
-
-            ignorable.Spec.Node          = "ignored";
-            ignorable.Spec.BashScript    = "ignored";
-            ignorable.Spec.Timeout       = "0s";
-            ignorable.Spec.RetentionTime = "0s";
-            ignorable.Spec.CaptureOutput = false;
-
-            return ignorable;
         }
     }
 }

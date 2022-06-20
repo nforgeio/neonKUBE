@@ -15,17 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// $hack(jefflill):
-//
-// Define [IGNORABLE] to ensure that an "ignorable" resource exists on the API
-// server.  This was useful when [KubernetesClient] had trouble watching empty
-// resource list responses (fixed for v7.2.19)
-//
-// This should be removed at some point in the future when we're sure we won't
-// need it again.
-
-#undef IGNORABLE_RESOURCE
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -333,14 +322,14 @@ namespace Neon.Kube.Operator
         //---------------------------------------------------------------------
         // Implementation
 
-        private bool                            isDisposed            = false;
-        private bool                            stopIdleLoop          = false;
-        private AsyncReentrantMutex             mutex                 = new AsyncReentrantMutex();
-        private Dictionary<string, TEntity>     resources             = new Dictionary<string, TEntity>(StringComparer.InvariantCultureIgnoreCase);
-        private bool                            started               = false;
-        private bool                            reconcileReceived     = false;
-        private bool                            discovering           = false;
-        private bool                            skipChangeDetection   = false;
+        private bool                            isDisposed           = false;
+        private bool                            stopIdleLoop         = false;
+        private AsyncReentrantMutex             mutex                = new AsyncReentrantMutex();
+        private Dictionary<string, TEntity>     resources            = new Dictionary<string, TEntity>(StringComparer.InvariantCultureIgnoreCase);
+        private bool                            started              = false;
+        private bool                            reconcileReceived    = false;
+        private bool                            discovering          = false;
+        private bool                            skipChangeDetection  = false;
         private TimeSpan                        notStartedRequeDelay = TimeSpan.FromSeconds(10);
         private ResourceManagerOptions          options;
         private IKubernetes                     k8s;
@@ -354,6 +343,8 @@ namespace Neon.Kube.Operator
         private LeaderElector                   leaderElector;
         private Task                            leaderTask;
         private Task                            idleLoopTask;
+        private Task                            watcherTask;
+        private CancellationTokenSource         watcherTcs;
 
         /// <summary>
         /// Default constructor.
@@ -430,15 +421,6 @@ namespace Neon.Kube.Operator
             }
 
             //-----------------------------------------------------------------
-            // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1599
-            //
-            // For controllers that implement [IExtendedController], determine whether the
-            // controller wants an ignorable resource to always exist.  This works around
-            // watch problems.
-
-            await EnsureIgnorableResource();
-
-            //-----------------------------------------------------------------
             // Start the leader elector if enabled.
 
             resourceNamespace = @namespace;
@@ -450,25 +432,12 @@ namespace Neon.Kube.Operator
             {
                 leaderElector = new LeaderElector(
                     leaderConfig, 
-                    onStartedLeading: OnStartedLeading, 
-                    onStoppedLeading: OnStoppedLeading, 
+                    onStartedLeading: OnPromotion, 
+                    onStoppedLeading: OnDemotion, 
                     onNewLeader:      OnNewLeader);
 
                 leaderTask = leaderElector.RunAsync();
             }
-
-            // Start the IDLE reconcile loop.
-
-            idleLoopTask = IdleLoopAsync();
-
-            // $hack(jefflill):
-            //
-            // We're going to implement our own event watcher until KubeOps has
-            // a chance to fix this bug:
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/1599
-
-            _ = WatchAsync();
 
             await Task.CompletedTask;
         }
@@ -535,121 +504,59 @@ namespace Neon.Kube.Operator
         }
 
         /// <summary>
-        /// Determines whether a resource is ignorable.
-        /// </summary>
-        /// <param name="resource">The resource being tested (may be <c>null</c>).</param>
-        /// <returns><c>true</c> if the resource is ignorable, <c>false</c> if not ignorable or <c>null</c>.</returns>
-        private bool IsIgnorable(TEntity resource)
-        {
-#if IGNORABLE_RESOURCE
-            return resource?.Name() == KubeHelper.IgnorableResourceName;
-#else
-            return false;
-#endif
-        }
-
-        /// <summary>
-        /// Ensures that an ignorable resource exists for controllers that need that.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task EnsureIgnorableResource()
-        {
-            await SyncContext.Clear;
-
-#if IGNORABLE_RESOURCE
-            // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1599
-            //
-            // For controllers that implement [IExtendedController], determine whether the
-            // controller wants an ignorable resource to always exist.  This works around
-            // watch problems.
-
-            var controller = CreateController();
-
-            if (controller is IExtendedController<TEntity> extendedController)
-            {
-                var entity = extendedController.CreateIgnorable();
-
-                if (entity != null)
-                {
-                    // The controller needs us to ensure that at least one ignorable
-                    // resource exists.  We'll do that here.  Note that ignorable
-                    // resources will always have the same name.
-
-                    if (string.IsNullOrEmpty(resourceNamespace))
-                    {
-                        try
-                        {
-                            await k8s.GetNamespacedCustomObjectAsync<TEntity>(resourceNamespace, KubeHelper.IgnorableResourceName);
-                        }
-                        catch (HttpOperationException e)
-                        {
-                            if (e.Response.StatusCode == HttpStatusCode.NotFound)
-                            {
-                                try
-                                {
-                                    await k8s.CreateNamespacedCustomObjectAsync(entity, resourceNamespace, KubeHelper.IgnorableResourceName);
-                                }
-                                catch (HttpOperationException e2)
-                                {
-                                    // Any errors here will probably be due to other controller instances
-                                    // creating an ignorable between the time we checked above and the
-                                    // time Kubernetes actually handled the create.
-                                    //
-                                    // We're going to ignore these and take the watcher bug performance hit.
-
-                                    log.LogWarn("Cannot create ignorable resource.", e2);
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        try
-                        {
-                            await k8s.GetClusterCustomObjectAsync<TEntity>(KubeHelper.IgnorableResourceName);
-                        }
-                        catch (HttpOperationException e)
-                        {
-                            if (e.Response.StatusCode == HttpStatusCode.NotFound)
-                            {
-                                try
-                                {
-                                    await k8s.CreateClusterCustomObjectAsync(entity, KubeHelper.IgnorableResourceName);
-                                }
-                                catch (HttpOperationException e2)
-                                {
-                                    // Any errors here will probably be due to other controller instances
-                                    // creating an ignorable between the time we checked above and the
-                                    // time Kubernetes actually handled the create.
-                                    //
-                                    // We're going to ignore these and take the watcher bug performance hit.
-
-                                    log.LogWarn("Cannot create ignorable resource.", e2);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-#endif
-        }
-
-        /// <summary>
         /// Called when the instance has a <see cref="LeaderElector"/> and this instance has
         /// assumed leadership.
         /// </summary>
-        private void OnStartedLeading()
+        private void OnPromotion()
         {
+            log.LogInfo("PROMOTED");
+
             IsLeader = true;
+
+            // Start the IDLE reconcile loop.
+
+            discovering          = options.Mode == ResourceManagerMode.Collection;
+            nextIdleReconcileUtc = DateTime.UtcNow + options.IdleInterval;
+            idleLoopTask         = IdleLoopAsync();
+
+            // Start the watcher.
+
+            watcherTcs  = new CancellationTokenSource();
+            watcherTask = WatchAsync(watcherTcs.Token);
         }
 
         /// <summary>
         /// Called when the instance has a <see cref="LeaderElector"/> this instance has
         /// been demoted.
         /// </summary>
-        private void OnStoppedLeading()
+        private async void OnDemotion()
         {
+            log.LogInfo("DEMOTED");
+
             IsLeader = false;
+
+            try
+            {
+                // Stop the IDLE loop.
+
+                stopIdleLoop = true;
+                await idleLoopTask;
+
+                // Stop the watcher.
+
+                watcherTcs.Cancel();
+                await watcherTask;
+            }
+            finally
+            {
+                // Reset operator state.
+
+                stopIdleLoop = false;
+                idleLoopTask = null;
+                watcherTask  = null;
+
+                ClearResources();
+            }
         }
 
         /// <summary>
@@ -660,6 +567,8 @@ namespace Neon.Kube.Operator
         private void OnNewLeader(string identity)
         {
             LeaderIdentity = identity;
+
+            log.LogInfo($"LEADER: {identity}");
         }
 
         /// <summary>
@@ -700,9 +609,9 @@ namespace Neon.Kube.Operator
         /// Ignorable resources are excluded.
         /// </summary>
         /// <param name="resource">The resource being added.</param>
-        private void AddResource(TEntity resource)
+        private void SetResource(TEntity resource)
         {
-            if (resource != null && !IsIgnorable(resource))
+            if (resource != null)
             {
                 resources[resource.Name()] = resource;
             }
@@ -745,69 +654,29 @@ namespace Neon.Kube.Operator
         public async Task<ResourceControllerResult> ReconciledAsync(TEntity resource, ReconcileHandlerAsync handlerAsync)
         {
             await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(handlerAsync != null, nameof(handlerAsync));
             Covenant.Requires<InvalidOperationException>(started, $"You must call [{nameof(TController)}.{nameof(StartAsync)}()] before starting KubeOps.");
 
-            //-----------------------------------------------------------------
-            // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1599
-            //
-            // Ignore "ignorable" resources.
+            EnsureNotDisposed();
+            EnsureStarted();
 
-            if (IsIgnorable(resource))
+            if (!IsLeader)
             {
                 return null;
             }
 
             //-----------------------------------------------------------------
-            // Handle the resource.
-
-            EnsureNotDisposed();
-            EnsureStarted();
-
-            // Filter out undesired resources.
+            // Filter only desired resources.
 
             if (resource != null && !filter(resource))
             {
                 return null;
             }
 
-            //-----------------------------------------------------------------
-            // NORMAL MODE: We're just going to pass the resource directly to the handler
-            // in a new dictionary in this case.  Note that the [IdleLoopAsync()] loop
-            // isn't running, so we don't need to worry about the mutex.
-
-            if (options.Mode == ResourceManagerMode.Normal)
-            {
-                try
-                {
-                    options.ReconcileCounter?.Inc();
-                    AddResource(resource);
-
-                    var result = await handlerAsync(resource, resources);
-
-                    reconciledErrorBackoff = TimeSpan.Zero;   // Reset after a success
-
-                    return result;
-                }
-                catch (Exception e)
-                {
-                    log.LogError(e);
-                    options.ReconcileErrorCounter?.Inc();
-
-                    return ResourceControllerResult.RequeueEvent(ComputeErrorBackoff(ref reconciledErrorBackoff));
-                }
-            }
-
-            //-----------------------------------------------------------------
-            // COLLECTION MODE:
-
-            Covenant.Assert(options.Mode == ResourceManagerMode.Collection);
-
             reconcileReceived = true;
 
             try
             {
-                Covenant.Requires<ArgumentNullException>(handlerAsync != null, nameof(handlerAsync));
-
                 return await mutex.ExecuteFuncAsync(
                     async () =>
                     {
@@ -839,7 +708,7 @@ namespace Neon.Kube.Operator
                                 changed = true;
                             }
 
-                            AddResource(resource);
+                            SetResource(resource);
                         }
 
                         if (discovering)
@@ -898,58 +767,26 @@ namespace Neon.Kube.Operator
         public async Task DeletedAsync(TEntity resource, NoResultHandlerAsync handlerAsync)
         {
             await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
+            Covenant.Requires<ArgumentNullException>(handlerAsync != null, nameof(handlerAsync));
             EnsureNotDisposed();
             EnsureStarted();
 
-            //-----------------------------------------------------------------
-            // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1599
-            //
-            // Ignore "ignorable" resources.
-
-            if (IsIgnorable(resource))
+            if (!IsLeader)
             {
                 return;
             }
 
             //-----------------------------------------------------------------
-            // Filter desired resources.
+            // Filter only desired resources.
 
             if (resource != null && !filter(resource))
             {
                 return;
             }
 
-            //-----------------------------------------------------------------
-            // NORMAL MODE: We're just going to pass the resource directly to the handler
-            // in a new dictionary in this case.  Note that the [IdleLoopAsync()] loop
-            // isn't running, so we don't need to worry about the mutex.
-
-            if (options.Mode == ResourceManagerMode.Normal)
-            {
-                try
-                {
-                    options.DeleteCounter?.Inc();
-                    resources.Remove(resource.Name());
-                    await handlerAsync(resource, resources);
-                }
-                catch (Exception e)
-                {
-                    log.LogError(e);
-                    options.DeleteErrorCounter?.Inc();
-                }
-
-                return;
-            }
-
-            //-----------------------------------------------------------------
-            // COLLECTION MODE:
-
-            Covenant.Assert(options.Mode == ResourceManagerMode.Collection);
-
             try
             {
-                Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
-                Covenant.Requires<ArgumentNullException>(handlerAsync != null, nameof(handlerAsync));
 
                 await mutex.ExecuteActionAsync(
                     async () =>
@@ -1015,51 +852,18 @@ namespace Neon.Kube.Operator
             EnsureNotDisposed();
             EnsureStarted();
 
-            //-----------------------------------------------------------------
-            // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1599
-            //
-            // Ignore "ignorable" resources.
-
-            if (IsIgnorable(resource))
+            if (!IsLeader)
             {
                 return;
             }
 
             //-----------------------------------------------------------------
-            // Filter desired resources.
+            // Filter only desired resources.
 
             if (resource != null && !filter(resource))
             {
                 return;
             }
-
-            //-----------------------------------------------------------------
-            // NORMAL MODE: We're just going to pass the resource directly to the handler
-            // in a new dictionary in this case.  Note that the [IdleLoopAsync()] loop
-            // isn't running, so we don't need to worry about the mutex.
-
-            if (options.Mode == ResourceManagerMode.Normal)
-            {
-                try
-                {
-                    options.StatusModifiedCounter?.Inc();
-                    AddResource(resource);
-
-                    await handlerAsync(resource, resources);
-                }
-                catch (Exception e)
-                {
-                    log.LogError(e);
-                    options.StatusModifiedErrorCounter?.Inc();
-                }
-
-                return;
-            }
-
-            //-----------------------------------------------------------------
-            // COLLECTION MODE:
-
-            Covenant.Assert(options.Mode == ResourceManagerMode.Collection);
 
             try
             {
@@ -1070,15 +874,6 @@ namespace Neon.Kube.Operator
                     async () =>
                     {
                         options.StatusModifiedCounter?.Inc();
-
-                        var name = resource.Name();
-
-                        if (!resources.ContainsKey(name))
-                        {
-                            return;
-                        }
-
-                        AddResource(resource);
 
                         // Wait until after we've finished discovering resources before calling
                         // the user's handler.
@@ -1186,15 +981,6 @@ namespace Neon.Kube.Operator
                 {
                     nextIdleReconcileUtc = DateTime.UtcNow + options.IdleInterval;
 
-                    //-----------------------------------------------------------------
-                    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1599
-                    //
-                    // For controllers that implement [IExtendedController], determine whether the
-                    // controller wants an ignorable resource to always exist.  This works around
-                    // watch problems.
-
-                    await EnsureIgnorableResource();
-
                     if (reconcileReceived)
                     {
                         // It's been [reconciledNoChangeInterval] since we saw the last 
@@ -1204,8 +990,6 @@ namespace Neon.Kube.Operator
 
                         reconcileDiscovered = discovering;
                         discovering         = false;
-
-                        log.LogInfo($"No resources discovered.");
                     }
                     else
                     {
@@ -1238,7 +1022,6 @@ namespace Neon.Kube.Operator
                             }
 
                             if (items
-                                .Where(item => item.Name() != KubeHelper.IgnorableResourceName)
                                 .Any(filter))
                             {
                                 if (discovering)
@@ -1267,15 +1050,16 @@ namespace Neon.Kube.Operator
                         }
                     }
 
-                    // Don't send an IDLE RECONCILE while we're still discovering resources.
+                    // Don't send an IDLE RECONCILE while we're still discovering resources or when
+                    // we're not the leader.
 
-                    if (discovering)
+                    if (discovering && !IsLeader)
                     {
                         continue;
                     }
 
                     // We're going to log and otherwise ignore any exceptions thrown by the 
-                    // the operator's controller or from any members above called by the controller.
+                    // operator's controller or from any members above called by the controller.
 
                     await mutex.ExecuteActionAsync(
                         async () =>
@@ -1306,7 +1090,7 @@ namespace Neon.Kube.Operator
                                     {
                                         skipChangeDetection = true;
 
-                                        foreach (var resource in resources.Values.Where(resource => !IsIgnorable(resource)))
+                                        foreach (var resource in resources.Values)
                                         {
                                             await controller.ReconcileAsync(resource);
                                         }
@@ -1344,17 +1128,11 @@ namespace Neon.Kube.Operator
         /// <summary>
         /// Temporarily implements our own resource watcher.
         /// </summary>
+        /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to stop the watcher when the operator is demoted.</param>
         /// <returns></returns>
-        private async Task WatchAsync()
+        private async Task WatchAsync(CancellationToken cancellationToken)
         {
             await SyncContext.Clear;
-
-            // We're going to implement our own event watcher until KubeOps has
-            // a chance to fix this bug:
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/1599
-
-            CancellationTokenSource cts = default;
 
             //-----------------------------------------------------------------
             // We're going to use this dictionary to keep track of the [Status]
@@ -1366,9 +1144,10 @@ namespace Neon.Kube.Operator
             // JSON, with these keyed by resource name.  Note that the resource
             // entities might not have a [Status] property.
 
-            var entityType   = typeof(TEntity);
-            var statusGetter = entityType.GetProperty("Status")?.GetMethod;
-            var statusCache  = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            var entityType      = typeof(TEntity);
+            var statusGetter    = entityType.GetProperty("Status")?.GetMethod;
+            var generationCache = new Dictionary<string, long>(StringComparer.InvariantCultureIgnoreCase);
+            var statusCache     = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 
             //-----------------------------------------------------------------
             // Our watcher handler action.
@@ -1378,85 +1157,127 @@ namespace Neon.Kube.Operator
                 {
                     await SyncContext.Clear;
 
-                    switch (@event.Type)
-                    {
-                        case WatchEventType.Added:
+                    await mutex.ExecuteActionAsync(
+                        async () =>
+                        {
+                            var resource     = @event.Value;
+                            var resourceName = resource.Metadata.Name;
+                            var newGeneration   = resource.Metadata.Generation.Value;
 
-                            await CreateController().ReconcileAsync(@event.Value);
-                            break;
-
-                        case WatchEventType.Bookmark:
-
-                            break;
-
-                        case WatchEventType.Error:
-
-                            // This cancels the watcher.  We'll catch the [OperationCancelledException] below
-                            // and restart the watcher.
-
-                            cts.Cancel();
-                            break;
-
-                        case WatchEventType.Deleted:
-
-                            await CreateController().DeletedAsync(@event.Value);
-                            break;
-
-                        case WatchEventType.Modified:
-
-                            // We only need to reconcile when the entity doesn't have [Status].
-
-                            if (statusGetter == null)
+                            switch (@event.Type)
                             {
-                                await CreateController().ReconcileAsync(@event.Value);
-                                return;
-                            }
+                                case WatchEventType.Added:
 
-                            // $note(jefflill):
-                            //
-                            // I'm going to assume that we're not going to see both [Status]
-                            // and other changes in the same [Modified] event.  I believe this
-                            // makes sense because the API is structured to modify status
-                            // independently.
+                                    generationCache.Add(resourceName, newGeneration);
+                                    await CreateController().ReconcileAsync(resource);
+                                    break;
 
-                            var newStatus     = statusGetter.Invoke(@event.Value, Array.Empty<object>());
-                            var newStatusJson = newStatus == null ? null : JsonSerializer.Serialize(newStatus);
-                            var statusChanged = false;
+                                case WatchEventType.Bookmark:
 
-                            statusCache.TryGetValue(@event.Value.Metadata.Name, out var lastStatusJson);
+                                    break;  // We don't care about these.
 
-                            if (newStatus == null && lastStatusJson == null)
-                            {
-                                // Nothing has changed
-                            }
-                            else if ((newStatus != null) == (lastStatusJson != null))
-                            {
-                                statusChanged = newStatusJson != lastStatusJson;
-                            }
-                            else
-                            {
-                                statusChanged = true;   // [Status] was added or removed
-                            }
+                                case WatchEventType.Error:
 
-                            if (statusChanged)
-                            {
-                                await CreateController().StatusModifiedAsync(@event.Value);
+                                    // I believe we're only going to see this for extreme scenarios, like:
+                                    //
+                                    //      1. The CRD we're watching was deleted and recreated.
+                                    //      2. The watcher is so far behind that part of the
+                                    //         history is no longer available.
+                                    //
+                                    // We're going to log this and terminate the application, expecting
+                                    // that Kubernetes will reschedule it so we can start over.
 
-                                if (newStatusJson != null)
-                                {
-                                    statusCache[@event.Value.Metadata.Name] = newStatusJson;
-                                }
-                                else
-                                {
-                                    statusCache.Remove(@event.Value.Metadata.Name);
-                                }
+                                    var stub = new TEntity();
+
+                                    if (!string.IsNullOrEmpty(resourceNamespace))
+                                    {
+                                        log.LogCritical($"Critical error watching: [namespace={resourceNamespace}] {stub.ApiGroupAndVersion}/{stub.Kind}");
+                                    }
+                                    else
+                                    {
+                                        log.LogCritical($"Critical error watching: {stub.ApiGroupAndVersion}/{stub.Kind}");
+                                    }
+
+                                    log.LogCritical("Terminating the pod so Kubernetes can reschedule it and we can restart the watch.");
+                                    Environment.Exit(1);
+                                    break;
+
+                                case WatchEventType.Deleted:
+
+                                    generationCache.Remove(resourceName);
+                                    statusCache.Remove(resourceName);
+                                    await CreateController().DeletedAsync(resource);
+                                    break;
+
+                                case WatchEventType.Modified:
+
+        try
+        {
+        log.LogDebug($"MODIFIED: 0: name=[{resource?.Name()}]");
+        log.LogDebug($"MODIFIED: 1: statusGetter-NULL=[{statusGetter == null}]");
+        var s = statusGetter.Invoke(resource, Array.Empty<object>());
+        log.LogDebug($"MODIFIED: 2: status-NULL=[{s == null}]");
+        Console.WriteLine();
+        Console.WriteLine(NeonHelper.YamlSerialize(s));
+        Console.WriteLine();
+        }
+        catch (Exception e)
+        {
+        }
+                                    SetResource(resource);
+
+                                    // Reconcile when the resource generation changes.
+
+                                    Covenant.Assert(generationCache.ContainsKey(resourceName));
+
+                                    if (generationCache.TryGetValue(resourceName, out var cachedGeneration) && cachedGeneration != newGeneration)
+                                    {
+                                        generationCache[resourceName] = newGeneration;
+                                        await CreateController().ReconcileAsync(resource);
+                                    }
+
+                                    // There's no need for STATUS-MODIFIED when the resource has no status status.
+
+                                    if (statusGetter == null)
+                                    {
+                                        return;
+                                    }
+
+                                    var newStatus     = statusGetter.Invoke(resource, Array.Empty<object>());
+                                    var newStatusJson = newStatus == null ? null : JsonSerializer.Serialize(newStatus);
+                                    var statusChanged = false;
+
+                                    statusCache.TryGetValue(resourceName, out var lastStatusJson);
+
+                                    if (newStatus == null && lastStatusJson == null)
+                                    {
+                                        // Nothing has changed
+                                    }
+                                    else if ((newStatus != null) == (lastStatusJson != null))
+                                    {
+                                        statusChanged = newStatusJson != lastStatusJson;
+                                    }
+                                    else
+                                    {
+                                        statusChanged = true;   // [Status] was added or removed
+                                    }
+
+                                    if (statusChanged)
+                                    {
+                                        await CreateController().StatusModifiedAsync(resource);
+
+                                        if (newStatusJson != null)
+                                        {
+                                            statusCache[resourceName] = newStatusJson;
+                                        }
+                                        else
+                                        {
+                                            statusCache.Remove(resourceName);
+                                        }
+                                    }
+                                    break;
                             }
-                            else
-                            {
-                                await CreateController().ReconcileAsync(@event.Value);
-                            }
-                            break;
-                    }
+                        });
                 };
 
             //-----------------------------------------------------------------
@@ -1464,31 +1285,15 @@ namespace Neon.Kube.Operator
 
             while (true)
             {
-                cts = new CancellationTokenSource();
-
                 try
                 {
-                    await k8s.WatchAsync<TEntity>(actionAsync, resourceNamespace);
+                    await k8s.WatchAsync<TEntity>(actionAsync, namespaceParameter: resourceNamespace, cancellationToken: cancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
-                    // This is thrown for [WatchEventType.Error] events and we need to restart the
-                    // watching from scratch.  This also means that we need to clear any resources
-                    // we've already captured and reinitiate discovery for collection mode.
-                    //
-                    // We're going to signal the idle loop to stop and then restart it to avoid any 
-                    // race conditions.
+                    // This is thrown when the watcher is stopped due the operator being demoted.
 
-                    stopIdleLoop = true;
-                    await idleLoopTask;
-
-                    discovering          = options.Mode == ResourceManagerMode.Collection;
-                    nextIdleReconcileUtc = DateTime.UtcNow + options.IdleInterval;
-                    ClearResources();
-                    statusCache.Clear();
-
-                    stopIdleLoop = false;
-                    idleLoopTask = IdleLoopAsync();
+                    return;
                 }
             }
         }

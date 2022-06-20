@@ -116,7 +116,8 @@ namespace Neon.Kube
         {
             await SyncContext.Clear;
 
-            // validate the resource version we're being given
+            // Validate the resource version we're being given.
+
             if (!string.IsNullOrEmpty(resourceVersion))
             {
                 await ValidateResourceVersionAsync(
@@ -127,7 +128,7 @@ namespace Neon.Kube
                     timeoutSeconds:       timeoutSeconds);
             }
 
-            // Start the loop that handles the async action callbacks
+            // Start the loop that handles the async action callbacks.
 
             _ = EventHandlerAsync(actionAsync);
 
@@ -275,7 +276,7 @@ namespace Neon.Kube
         /// <param name="resourceVersionMatch">Optional resourceVersionMatch parameter.</param>
         /// <param name="timeoutSeconds">Optional timeout.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task ValidateResourceVersionAsync(
+        private async Task ValidateResourceVersionAsync(
             string  resourceVersion,
             string  namespaceParameter   = null,
             string  fieldSelector        = null,

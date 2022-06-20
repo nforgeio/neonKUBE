@@ -153,11 +153,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Identifies resources that should be ignored by the operator [ResourceManager].
-        /// </summary>
-        public const string IgnorableResourceName = "ignore-this";  // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1599
-
-        /// <summary>
         /// Explicitly sets the class <see cref="INeonLogger"/> implementation.  This defaults to
         /// a reasonable value.
         /// </summary>
@@ -3191,6 +3186,22 @@ TCPKeepAlive yes
             Covenant.Requires<ArgumentNullException>(crd != null, nameof(crd));
 
             return crd.Spec.Group.EndsWith($".{KubeConst.NeonKubeResourceGroup}");
+        }
+
+        /// <summary>
+        /// Generates a unique(ish) pod name for application instances that are actually
+        /// running outside of the cluster, typically for testing purposes.  This is based
+        /// on the deployment name passed and a small UUID.
+        /// </summary>
+        /// <returns>The emulated pod name.</returns>
+        public static string GetEmulatedPodName(string deployment)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(deployment), nameof(deployment));
+            Covenant.Requires<ArgumentException>(ClusterDefinition.NameRegex.IsMatch(deployment), nameof(deployment));
+
+            var uuid = NeonHelper.CreateBase36Uuid();
+
+            return $"{deployment}-{uuid.Substring(0, 10)}-{uuid.Substring(uuid.Length - 5, 5)}";
         }
     }
 }

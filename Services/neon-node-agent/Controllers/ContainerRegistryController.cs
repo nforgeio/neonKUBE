@@ -96,7 +96,7 @@ namespace NeonNodeAgent
     /// </note>
     /// </remarks>
     [EntityRbac(typeof(V1NeonContainerRegistry), Verbs = RbacVerb.Get | RbacVerb.Patch | RbacVerb.List | RbacVerb.Watch | RbacVerb.Update)]
-    public class ContainerRegistryController : IResourceController<V1NeonContainerRegistry>, IExtendedController<V1NeonContainerRegistry>
+    public class ContainerRegistryController : IResourceController<V1NeonContainerRegistry>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -391,16 +391,6 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                     await Node.ExecuteCaptureAsync("podman", new object[] { "logout", location });
                 }
             }
-        }
-
-        /// <inheritdoc/>
-        public V1NeonContainerRegistry CreateIgnorable()
-        {
-            var ignorable = new V1NeonContainerRegistry();
-
-            ignorable.Spec.Prefix = "no.where";
-
-            return ignorable;
         }
     }
 }

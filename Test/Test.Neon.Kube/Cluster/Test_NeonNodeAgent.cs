@@ -48,7 +48,7 @@ namespace TestKube
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly TimeSpan timeout = TimeSpan.FromMinutes(5);        // $hack(jefflill): We need long timeouts because: https://github.com/nforgeio/neonKUBE/issues/1599
+        private static readonly TimeSpan timeout      = TimeSpan.FromMinutes(5);
         private static readonly TimeSpan pollInterval = TimeSpan.FromSeconds(1);
 
         private const string testFolderPath = $"/tmp/{nameof(Test_NeonNodeAgent)}";

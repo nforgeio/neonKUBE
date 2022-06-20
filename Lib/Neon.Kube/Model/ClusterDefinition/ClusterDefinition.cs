@@ -52,14 +52,27 @@ namespace Neon.Kube
         private const string        defaultProvisioner = "unknown";
         private readonly string[]   defaultTimeSources = new string[] { "pool.ntp.org" };
 
+        // $todo(jefflill):
+        //
+        // [DnsNameRegex] and [NameRegex] need to be more restrictive than they are now by
+        // ensuring that all segments start and end with letters/digits, and that dots/dash
+        // rules are also applied.  We could also check for maximum lengths if we really
+        // wanted to get fancy.
+
         /// <summary>
         /// Regex for verifying cluster names for hosts, routes, groups, etc.  This also can
         /// be used to (lightly) validate DNS host names.
         /// </summary>
-        public static Regex NameRegex { get; private set; } = new Regex(@"^[a-z0-9.\-_]+$", RegexOptions.IgnoreCase);
+        public static Regex DnsNameRegex { get; private set; } = new Regex(@"^[a-z0-9.\-_]+$", RegexOptions.IgnoreCase);
 
         /// <summary>
-        /// Regex for verifying cluster prefixes.  This is the similar to <see cref="NameRegex"/> but optionally
+        /// Regex for verifying non-DNS like names that start and end with a letter or digit and
+        /// may also include dashes.
+        /// </summary>
+        public static Regex NameRegex { get; private set; } = new Regex(@"^[a-z0-9\-_]+$", RegexOptions.IgnoreCase);
+
+        /// <summary>
+        /// Regex for verifying cluster prefixes.  This is the similar to <see cref="DnsNameRegex"/> but optionally
         /// allows a "(" and ")" which we use for clusterspace related deployments.
         /// </summary>
         public static Regex PrefixRegex { get; private set; } = new Regex(@"^[a-z0-9.\-_()]+$", RegexOptions.IgnoreCase);
@@ -199,7 +212,7 @@ namespace Neon.Kube
         /// <returns><c>true</c> if the name is valid.</returns>
         public static bool IsValidName(string name)
         {
-            return name != null && NameRegex.IsMatch(name);
+            return name != null && DnsNameRegex.IsMatch(name);
         }
 
         /// <summary>
