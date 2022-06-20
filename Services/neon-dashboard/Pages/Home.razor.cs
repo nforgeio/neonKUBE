@@ -183,6 +183,7 @@ namespace NeonDashboard.Pages
             }
             catch (Exception e)
             {
+                Logger.LogError(NeonHelper.JsonSerialize(e));
             }
         }
 

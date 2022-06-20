@@ -35,6 +35,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 
+using Neon.Diagnostics;
+
 using NeonDashboard.Shared;
 using NeonDashboard.Shared.Components;
 
@@ -48,7 +50,7 @@ namespace NeonDashboard.Pages
         [Parameter]
         public string Description { get; set; } = "";
 
-
+        public INeonLogger Logger => AppState.Logger;
         public PageBase()
         {
         }
