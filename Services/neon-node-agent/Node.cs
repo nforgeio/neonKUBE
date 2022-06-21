@@ -61,11 +61,11 @@ namespace NeonNodeAgent
         /// </summary>
         static Node()
         {
-            try
+            if (NeonHelper.IsLinux)
             {
                 Name = File.ReadAllLines(LinuxPath.Combine(HostMount, "etc/hostname")).First().Trim();
             }
-            catch
+            else
             {
                 Name = "emulated";
             }
