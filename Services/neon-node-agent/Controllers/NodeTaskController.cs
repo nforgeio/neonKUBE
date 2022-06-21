@@ -66,7 +66,7 @@ namespace NeonNodeAgent
     /// </note>
     /// </remarks>
     [EntityRbac(typeof(V1NeonNodeTask), Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Patch | RbacVerb.Watch | RbacVerb.Update)]
-    public class NodeTaskController : IResourceController<V1NeonNodeTask>
+    public class NodeTaskController : IOperatorController<V1NeonNodeTask>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -162,9 +162,13 @@ rm $0
                 IdleInterval               = Program.Service.Environment.Get("NODETASK_IDLE_INTERVAL", TimeSpan.FromSeconds(60)),
                 ErrorMinRequeueInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15)),
                 ErrorMaxRetryInterval      = Program.Service.Environment.Get("NODETASK_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromSeconds(60)),
-                ReconcileErrorCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconciled_error", "Failed NodeTask reconcile event processing."),
-                DeleteErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_deleted_error", "Failed NodeTask deleted event processing."),
-                StatusModifiedErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodified_error", "Failed NodeTask status-modified events processing.")
+                IdleCounter                = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle", "IDLE events processed."),
+                ReconcileCounter           = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconcile", "RECONCILE events processed."),
+                DeleteCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_delete", "DELETED events processed."),
+                IdleErrorCounter           = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle_error", "Failed NodeTask IDLE event processing."),
+                ReconcileErrorCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconcile_error", "Failed NodeTask RECONCILE event processing."),
+                DeleteErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_delete_error", "Failed NodeTask DELETE event processing."),
+                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodify_error", "Failed NodeTask STATUS-MODIFY events processing.")
             };
 
             resourceManager = new ResourceManager<V1NeonNodeTask, NodeTaskController>(
@@ -214,6 +218,17 @@ rm $0
         }
 
         /// <summary>
+        /// Called periodically to allow the operator to perform global events.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task IdleAsync()
+        {
+            log.LogInfo("[IDLE]");
+
+            await CleanupTasksAsync();
+        }
+
+        /// <summary>
         /// Called for each existing custom resource when the controller starts so that the controller
         /// can maintain the status of all resources and then afterwards, this will be called whenever
         /// a resource is added or has a non-status update.
@@ -229,145 +244,82 @@ rm $0
                 return null;
             }
 
-            return await resourceManager.ReconciledAsync(resource,
-                async (resource) =>
-                {
-                    var name = resource?.Name();
+            var name = resource.Name();
 
-                    log.LogInfo($"RECONCILED: {name ?? "[IDLE]"}");
+            log.LogInfo($"RECONCILED: {name}");
 
-                    if (resource == null)
-                    {
-                        // This is an IDLE event: we'll use this as a signal to do any cleanup.
+            // We have a new node task targeting the host node:
+            //
+            //      1. Ensure that it's valid, delete if bad
+            //      2. Add a status property as necessary
+            //      3. Remove the task if it's been retained long enough
+            //      4. Execute the task if it's pending
 
-                        await CleanupTasksAsync();
-                    }
-                    else
-                    {
-                        // We have a new node task targeting the host node:
-                        //
-                        //      1. Ensure that it's valid, delete if bad
-                        //      2. Add a status property as necessary
-                        //      3. Remove the task if it's been retained long enough
-                        //      4. Execute the task if it's pending
+            var nodeTask = resource;
 
-                        var nodeTask = resource;
+            // Verify that task is valid.
 
-                        // Verify that task is well structured.
+            try
+            {
+                nodeTask.Validate();
+            }
+            catch (Exception e)
+            {
+                log.LogWarn($"Invalid NodeTask: [{name}]", e);
+                log.LogWarn($"Deleting invalid NodeTask: [{name}]");
+                await k8s.DeleteClusterCustomObjectAsync(nodeTask);
 
-                        try
-                        {
-                            nodeTask.Validate();
-                        }
-                        catch (Exception e)
-                        {
-                            log.LogWarn($"Invalid NodeTask: [{name}]", e);
-                            log.LogWarn($"Deleting invalid NodeTask: [{name}]");
-                            await k8s.DeleteClusterCustomObjectAsync(nodeTask);
+                return null;
+            }
 
-                            return null;
-                        }
-
-                        // For new tasks, update the status to PENDING and also add the
-                        // node's owner reference to the object.
+            // For new tasks, update the status to PENDING and also add the
+            // node's owner reference to the object.
                         
-                        if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.New)
-                        {
-                            var patch = OperatorHelper.CreatePatch<V1NeonNodeTask>();
+            if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.New)
+            {
+                var patch = OperatorHelper.CreatePatch<V1NeonNodeTask>();
 
-                            patch.Replace(path => path.Status, new V1NeonNodeTask.TaskStatus());
-                            patch.Replace(path => path.Status.Phase, V1NeonNodeTask.Phase.Pending);
+                patch.Replace(path => path.Status, new V1NeonNodeTask.TaskStatus());
+                patch.Replace(path => path.Status.Phase, V1NeonNodeTask.Phase.Pending);
 
-                            nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
+                nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
 
-                            var nodeOwnerReference = await Node.GetOwnerReferenceAsync(k8s);
+                var nodeOwnerReference = await Node.GetOwnerReferenceAsync(k8s);
 
-                            if (nodeOwnerReference != null)
-                            {
-                                if (nodeTask.Metadata.OwnerReferences == null)
-                                {
-                                    nodeTask.Metadata.OwnerReferences = new List<V1OwnerReference>();
-                                }
-
-                                nodeTask.Metadata.OwnerReferences.Add(await Node.GetOwnerReferenceAsync(k8s));
-                            }
-
-                            nodeTask = await k8s.ReplaceClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, nodeTask.Name());
-                        }
-
-                        if (nodeTask.Status.FinishTimestamp.HasValue)
-                        {
-                            var retentionTime = DateTime.UtcNow - nodeTask.Status.FinishTimestamp;
-
-                            if (retentionTime >= TimeSpan.FromSeconds(nodeTask.Spec.RetentionSeconds))
-                            {
-                                log.LogInfo($"NodeTask [{name}] retained for [{retentionTime}] (deleting now).");
-                                await k8s.DeleteClusterCustomObjectAsync(nodeTask);
-
-                                return null;
-                            }
-                        }
-
-                        // Execute the task if it's pending.
-
-                        if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.Pending)
-                        {
-                            await ExecuteTaskAsync(nodeTask);
-                        }
+                if (nodeOwnerReference != null)
+                {
+                    if (nodeTask.Metadata.OwnerReferences == null)
+                    {
+                        nodeTask.Metadata.OwnerReferences = new List<V1OwnerReference>();
                     }
+
+                    nodeTask.Metadata.OwnerReferences.Add(await Node.GetOwnerReferenceAsync(k8s));
+                }
+
+                nodeTask = await k8s.ReplaceClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, nodeTask.Name());
+            }
+
+            if (nodeTask.Status.FinishTimestamp.HasValue)
+            {
+                var retentionTime = DateTime.UtcNow - nodeTask.Status.FinishTimestamp;
+
+                if (retentionTime >= TimeSpan.FromSeconds(nodeTask.Spec.RetentionSeconds))
+                {
+                    log.LogInfo($"NodeTask [{name}] retained for [{retentionTime}] (deleting now).");
+                    await k8s.DeleteClusterCustomObjectAsync(nodeTask);
 
                     return null;
-                });
-        }
-
-        /// <summary>
-        /// Called when a custom resource is removed from the API Server.
-        /// </summary>
-        /// <param name="resource">The deleted entity.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task DeletedAsync(V1NeonNodeTask resource)
-        {
-            // Ignore all events when the controller hasn't been started.
-
-            if (resourceManager == null)
-            {
-                return;
+                }
             }
 
-            await resourceManager.DeletedAsync(resource,
-                async (resource) =>
-                {
-                    log.LogInfo($"DELETED: {resource.Name()}");
+            // Execute the task if it's pending.
 
-                    // This is a NOP.
-
-                    await Task.CompletedTask;
-                });
-        }
-
-        /// <summary>
-        /// Called when a custom resource's status has been modified.
-        /// </summary>
-        /// <param name="resource">The updated entity.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task StatusModifiedAsync(V1NeonNodeTask resource)
-        {
-            // Ignore all events when the controller hasn't been started.
-
-            if (resourceManager == null)
+            if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.Pending)
             {
-                return;
+                await ExecuteTaskAsync(nodeTask);
             }
 
-            await resourceManager.StatusModifiedAsync(resource,
-                async (resource) =>
-                {
-                    log.LogInfo($"STATUS-MODIFIED: {resource.Name()}");
-
-                    // This is a NOP.
-
-                    await Task.CompletedTask;
-                });
+            return null;
         }
 
         /// <summary>

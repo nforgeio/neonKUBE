@@ -209,7 +209,7 @@ namespace Neon.Kube.Operator
     /// </remarks>
     public sealed class ResourceManager<TEntity, TController> : IDisposable
         where TEntity : CustomKubernetesEntity, new()
-        where TController : IResourceController<TEntity>
+        where TController : IOperatorController<TEntity>
     {
         //---------------------------------------------------------------------
         // Private types
@@ -245,7 +245,6 @@ namespace Neon.Kube.Operator
         private Func<TEntity, bool>             filter;
         private INeonLogger                     log;
         private DateTime                        nextIdleReconcileUtc;
-        private TimeSpan                        reconciledErrorBackoff;
         private LeaderElectionConfig            leaderConfig;
         private LeaderElector                   leaderElector;
         private Task                            leaderTask;
@@ -289,12 +288,11 @@ namespace Neon.Kube.Operator
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
-            this.k8s                    = k8s;  // $todo(jefflill): Can we obtain this from KubeOps or the [IServiceProvider] somehow?
-            this.options                = options ?? new ResourceManagerOptions();
-            this.filter                 = filter ?? new Func<TEntity, bool>(resource => true);
-            this.log                    = logger ?? LogManager.Default.GetLogger($"Neon.Kube.Operator.ResourceManager({typeof(TEntity).Name})");
-            this.reconciledErrorBackoff = TimeSpan.Zero;
-            this.leaderConfig           = leaderConfig;
+            this.k8s          = k8s;  // $todo(jefflill): Can we obtain this from KubeOps or the [IServiceProvider] somehow?
+            this.options      = options ?? new ResourceManagerOptions();
+            this.filter       = filter ?? new Func<TEntity, bool>(resource => true);
+            this.log          = logger ?? LogManager.Default.GetLogger($"Neon.Kube.Operator.ResourceManager({typeof(TEntity).Name})");
+            this.leaderConfig = leaderConfig;
 
             options.Validate();
 
@@ -483,233 +481,12 @@ namespace Neon.Kube.Operator
         public string LeaderIdentity { get; private set; }
 
         /// <summary>
-        /// Computes the backoff timeout for exceptions caught by the event handlers.
-        /// </summary>
-        /// <param name="errorBackoff">
-        /// Passed as the current error backoff time being tracked for the event.  This with
-        /// be increased honoring <see cref="ResourceManagerOptions.ErrorMinRequeueInterval"/> 
-        /// and <see cref="ResourceManagerOptions.ErrorMaxRetryInterval"/> constraints and will
-        /// also be returned as the backoff.
-        /// </param>
-        /// <returns>The backoff <see cref="TimeSpan"/>.</returns>
-        private TimeSpan ComputeErrorBackoff(ref TimeSpan errorBackoff)
-        {
-            if (reconciledErrorBackoff <= TimeSpan.Zero)
-            {
-                return errorBackoff = options.ErrorMinRequeueInterval;
-            }
-            else
-            {
-                return errorBackoff = NeonHelper.Min(TimeSpan.FromTicks(reconciledErrorBackoff.Ticks * 2), options.ErrorMaxRetryInterval);
-            }
-        }
-
-        /// <summary>
-        /// Call this when your controller receives a <b>reconciled</b> event, passing the
-        /// resource received.  This method adds the resource to the collection if it  doesn't 
-        /// already exist and then calls your handler with the resource name and a dictionary of 
-        /// the existing resources when a change is detected.  The resource name will be passed as
-        /// <c>null</c> when no change is detected or when all existing resources have been
-        /// collected.
-        /// </summary>
-        /// <param name="resource">The custom resource received or <c>null</c> when nothing has changed.</param>
-        /// <param name="handlerAsync">Your custom event handler.</param>
-        /// <returns>The <see cref="ResourceControllerResult"/> returned by your handler.</returns>
-        /// <exception cref="ObjectDisposedException">Thrown if the instance has been disposed.</exception>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when KubeOps is running before <see cref="StartAsync(string)"/> is called for this controller.
-        /// </exception>
-        /// <remarks>
-        /// <para>
-        /// By default, the resource manager will hold off calling your handler until all
-        /// existing resources have been receieved.  You can disable this behavior by passing
-        /// <c>discover: false</c> to the constructor.
-        /// </para>
-        /// <note>
-        /// The reconciled resource will be already added to the resource dictionary before
-        /// your handler is called.
-        /// </note>
-        /// </remarks>
-        public async Task<ResourceControllerResult> ReconciledAsync(TEntity resource, ReconcileHandlerAsync handlerAsync)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(handlerAsync != null, nameof(handlerAsync));
-            Covenant.Requires<InvalidOperationException>(started, $"You must call [{nameof(TController)}.{nameof(StartAsync)}()] before starting KubeOps.");
-
-            EnsureNotDisposed();
-            EnsureStarted();
-
-            if (!IsLeader)
-            {
-                return null;
-            }
-
-            //-----------------------------------------------------------------
-            // Filter only desired resources.
-
-            if (resource != null && !filter(resource))
-            {
-                return null;
-            }
-
-            try
-            {
-                return await mutex.ExecuteFuncAsync(
-                    async () =>
-                    {
-                        options.ReconcileCounter?.Inc();
-
-                        var result = await handlerAsync(resource);
-
-                        reconciledErrorBackoff = TimeSpan.Zero;   // Reset after a success
-
-                        return result;
-                    });
-            }
-            catch (Exception e)
-            {
-                log.LogError(e);
-                options.ReconcileErrorCounter?.Inc();
-
-                return ResourceControllerResult.RequeueEvent(ComputeErrorBackoff(ref reconciledErrorBackoff));
-            }
-        }
-
-        /// <summary>
-        /// Call this when your controller receives a <b>deleted</b> event, passing the resource
-        /// receievd.  If the resource exists in the collection, this method will remove it and call 
-        /// your handler.  The handler is not called when the resource does not exist the collection
-        /// or while we're still discovering existing resources.
-        /// </summary>
-        /// <param name="resource">The custom resource received.</param>
-        /// <param name="handlerAsync">Your custom event handler.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="ObjectDisposedException">Thrown if the instance has been disposed.</exception>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when KubeOps is running before <see cref="StartAsync(string)"/> is called for this controller.
-        /// </exception>
-        /// <remarks>
-        /// <para>
-        /// By default, the resource manager will hold off calling your handler until all
-        /// existing resources have been receieved.  You can disable this behavior by passing
-        /// <c>discover: false</c> to the constructor.
-        /// </para>
-        /// <note>
-        /// The reconciled resource will be already fromved from the resource dictionary before
-        /// your handler is called.
-        /// </note>
-        /// </remarks>
-        public async Task DeletedAsync(TEntity resource, NoResultHandlerAsync handlerAsync)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
-            Covenant.Requires<ArgumentNullException>(handlerAsync != null, nameof(handlerAsync));
-            EnsureNotDisposed();
-            EnsureStarted();
-
-            if (!IsLeader)
-            {
-                return;
-            }
-
-            //-----------------------------------------------------------------
-            // Filter only desired resources.
-
-            if (resource != null && !filter(resource))
-            {
-                return;
-            }
-
-            try
-            {
-                await mutex.ExecuteActionAsync(
-                    async () =>
-                    {
-                        options.DeleteCounter?.Inc();
-
-                        await handlerAsync(resource);
-                    });
-            }
-            catch (Exception e)
-            {
-                log.LogError(e);
-                options.DeleteErrorCounter?.Inc();
-            }
-        }
-
-        /// <summary>
-        /// Call this when a <b>status-modified</b> event was received, passing the resource
-        /// reeceived.  This method replaces any existing resource with the same name in the 
-        /// collection.  The handler is not called when the resource does not exist in the
-        /// collection or while we're still discovering existing resources.
-        /// </summary>
-        /// <param name="resource">The custom resource received.</param>
-        /// <param name="handlerAsync">Your custom event handler.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="ObjectDisposedException">Thrown if the instance has been disposed.</exception>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when KubeOps is running before <see cref="StartAsync(string)"/> is called for this controller.
-        /// </exception>
-        /// <remarks>
-        /// <para>
-        /// By default, the resource manager will hold off calling your handler until all
-        /// existing resources have been receieved.  You can disable this behavior by passing
-        /// <c>discover: false</c> to the constructor.
-        /// </para>
-        /// <note>
-        /// The reconciled resource will be already updated in the resource dictionary before
-        /// your handler is called.
-        /// </note>
-        /// </remarks>
-        public async Task StatusModifiedAsync(TEntity resource, NoResultHandlerAsync handlerAsync)
-        {
-            await SyncContext.Clear;
-            EnsureNotDisposed();
-            EnsureStarted();
-
-            if (!IsLeader)
-            {
-                return;
-            }
-
-            //-----------------------------------------------------------------
-            // Filter only desired resources.
-
-            if (resource != null && !filter(resource))
-            {
-                return;
-            }
-
-            try
-            {
-                Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
-                Covenant.Requires<ArgumentNullException>(handlerAsync != null, nameof(handlerAsync));
-
-                await mutex.ExecuteActionAsync(
-                    async () =>
-                    {
-                        options.StatusModifiedCounter?.Inc();
-
-                        // Wait until after we've finished discovering resources before calling
-                        // the user's handler.
-
-                        await handlerAsync(resource);
-                    });
-            }
-            catch (Exception e)
-            {
-                log.LogError(e);
-                options.StatusModifiedErrorCounter?.Inc();
-            }
-        }
-
-        /// <summary>
         /// Creates a controller instance.
         /// </summary>
         /// <returns>The controller.</returns>
-        private IResourceController<TEntity> CreateController()
+        private IOperatorController<TEntity> CreateController()
         {
-            return (IResourceController<TEntity>)controllerConstructor.Invoke(new object[] { k8s });
+            return (IOperatorController<TEntity>)controllerConstructor.Invoke(new object[] { k8s });
         }
 
         //---------------------------------------------------------------------
@@ -812,7 +589,7 @@ namespace Neon.Kube.Operator
 
                                 var controller = CreateController();
 
-                                await controller.ReconcileAsync(null);
+                                await controller.IdleAsync();
                             }
                             catch (OperationCanceledException)
                             {
@@ -823,6 +600,7 @@ namespace Neon.Kube.Operator
                             }
                             catch (Exception e)
                             {
+                                options.IdleErrorCounter?.Inc();
                                 log.LogError(e);
                             }
                         });
@@ -873,11 +651,25 @@ namespace Neon.Kube.Operator
                                 var resourceName  = resource.Metadata.Name;
                                 var newGeneration = resource.Metadata.Generation.Value;
 
+                                if (!filter(resource))
+                                {
+                                    return;
+                                }
+
                                 switch (@event.Type)
                                 {
                                     case WatchEventType.Added:
 
-                                        await CreateController().ReconcileAsync(resource);
+                                        try
+                                        {
+                                            options.ReconcileCounter?.Inc();
+                                            await CreateController().ReconcileAsync(resource);
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            options.ReconcileErrorCounter.Inc();
+                                            log.LogError(e);
+                                        }
 
                                         generationCache[resourceName] = newGeneration;
                                         break;
@@ -914,7 +706,17 @@ namespace Neon.Kube.Operator
 
                                     case WatchEventType.Deleted:
 
-                                        await CreateController().DeletedAsync(resource);
+                                        try
+                                        {
+                                            options.DeleteCounter?.Inc();
+                                            await CreateController().DeletedAsync(resource);
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            options.DeleteErrorCounter?.Inc();
+                                            log.LogError(e);
+                                        }
+
                                         generationCache.Remove(resourceName);
                                         statusJsonCache.Remove(resourceName);
                                         break;
@@ -930,7 +732,16 @@ namespace Neon.Kube.Operator
 
                                         if (newGeneration < oldGeneration)
                                         {
-                                            await CreateController().ReconcileAsync(resource);
+                                            try
+                                            {
+                                                options.ReconcileCounter?.Inc();
+                                                await CreateController().ReconcileAsync(resource);
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                options.ReconcileErrorCounter?.Inc();
+                                                log.LogError(e);
+                                            }
                                         }
 
                                         // There's no need for STATUS-MODIFIED when the resource has no status.
@@ -943,11 +754,20 @@ namespace Neon.Kube.Operator
                                         var newStatus     = statusGetter.Invoke(resource, Array.Empty<object>());
                                         var newStatusJson = newStatus == null ? null : JsonSerializer.Serialize(newStatus);
 
-                                        statusJsonCache.TryGetValue(resourceName, out var oldStatusJson); ;
+                                        statusJsonCache.TryGetValue(resourceName, out var oldStatusJson);
 
                                         if (newStatusJson != oldStatusJson)
                                         {
-                                            await CreateController().StatusModifiedAsync(resource);
+                                            try
+                                            {
+                                                options.StatusModifyCounter?.Inc();
+                                                await CreateController().StatusModifiedAsync(resource);
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                options.StatusModifyErrorCounter?.Inc();
+                                                log.LogError(e);
+                                            }
                                         }
                                         break;
                                 }

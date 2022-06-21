@@ -83,6 +83,22 @@ namespace Neon.Kube.Operator
 
         /// <summary>
         /// <para>
+        /// Metrics counter incremented whenever a IDLE event is passed to the operator.  This 
+        /// defaults to a counter names <b>operator_idle</b> which is suitable for operator 
+        /// applications with only a single control loop.  
+        /// </para>
+        /// <para>
+        /// Operators with multiple control loops should consider setting this to a counter specific
+        /// to each loop.
+        /// </para>
+        /// <note>
+        /// This may also be set to <c>null</c> to disable counting.
+        /// </note>
+        /// </summary>
+        public Counter IdleCounter { get; set; } = Metrics.CreateCounter("operator_idle", "IDLE events handled by the controller.");
+
+        /// <summary>
+        /// <para>
         /// Metrics counter incremented whenever a RECONCILE event is passed to the operator.  This 
         /// defaults to a counter names <b>operator_reconcile</b> which is suitable for operator 
         /// applications with only a single control loop.  
@@ -116,7 +132,7 @@ namespace Neon.Kube.Operator
         /// <summary>
         /// <para>
         /// Metrics counter incremented whenever a STATUS-MODIFIED event is passed to the operator.  This 
-        /// defaults to a counter names <b>operator_statusmodified</b> which is suitable for operator 
+        /// defaults to a counter names <b>operator_statusmodify</b> which is suitable for operator 
         /// applications with only a single control loop.  
         /// </para>
         /// <para>
@@ -127,7 +143,23 @@ namespace Neon.Kube.Operator
         /// This may also be set to <c>null</c> to disable counting.
         /// </note>
         /// </summary>
-        public Counter StatusModifiedCounter { get; set; } = Metrics.CreateCounter("operator_statusmodified", "STATUS-MODIFIED events handled by the controller.");
+        public Counter StatusModifyCounter { get; set; } = Metrics.CreateCounter("operator_statusmodify", "STATUS-MODIFY events handled by the controller.");
+
+        /// <summary>
+        /// <para>
+        /// Metrics counter incremented whenever a IDLE event is passed to the operator.  This 
+        /// defaults to a counter names <b>operator_idle</b> which is suitable for operator 
+        /// applications with only a single control loop.  
+        /// </para>
+        /// <para>
+        /// Operators with multiple control loops should consider setting this to a counter specific
+        /// to each loop.
+        /// </para>
+        /// <note>
+        /// This may also be set to <c>null</c> to disable counting.
+        /// </note>
+        /// </summary>
+        public Counter IdleErrorCounter { get; set; } = Metrics.CreateCounter("operator_idle", "IDLE events handled by the controller.");
 
         /// <summary>
         /// <para>
@@ -166,7 +198,7 @@ namespace Neon.Kube.Operator
         /// to each loop.
         /// </para>
         /// </summary>
-        public Counter StatusModifiedErrorCounter { get; set; } = Metrics.CreateCounter("operator_statusmodified_errors", "Exceptions thrown while handling STATUS-MODIFIED events.");
+        public Counter StatusModifyErrorCounter { get; set; } = Metrics.CreateCounter("operator_statusmodified_errors", "Exceptions thrown while handling STATUS-MODIFIED events.");
 
         /// <summary>
         /// Validates the option properties.
