@@ -292,7 +292,7 @@ exit 123
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
-                    var task = await fixture.K8s.GetClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
+                    var task = await fixture.K8s.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
 
                     switch (task.Status.Phase)
                     {
@@ -315,7 +315,7 @@ exit 123
             // and that the exit code as well as the output/error streams were
             // captured.
 
-            var task = await fixture.K8s.GetClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
+            var task = await fixture.K8s.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
 
             Assert.Equal(V1NeonNodeTask.Phase.Failed, task.Status.Phase);
             Assert.Equal(123, task.Status.ExitCode);
@@ -353,7 +353,7 @@ sleep 30
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
-                    var task = await fixture.K8s.GetClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
+                    var task = await fixture.K8s.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
 
                     switch (task.Status.Phase)
                     {
@@ -374,7 +374,7 @@ sleep 30
             //-----------------------------------------------------------------
             // Verify that the node task timed out.
 
-            var task = await fixture.K8s.GetClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
+            var task = await fixture.K8s.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
 
             Assert.Equal(V1NeonNodeTask.Phase.Timeout, task.Status.Phase);
             Assert.Equal(-1, task.Status.ExitCode);
@@ -417,7 +417,7 @@ sleep 600
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
-                    var task = await fixture.K8s.GetClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
+                    var task = await fixture.K8s.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
 
                     return task.Status.Phase == V1NeonNodeTask.Phase.Running;
                 },
@@ -439,7 +439,7 @@ sleep 600
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
-                    var task = await fixture.K8s.GetClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
+                    var task = await fixture.K8s.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
 
                     return task.Status.Phase == V1NeonNodeTask.Phase.Orphaned;
                 },

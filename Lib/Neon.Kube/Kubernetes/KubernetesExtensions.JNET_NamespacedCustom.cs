@@ -363,7 +363,7 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object.</returns>
         [Obsolete("Remove this after we've ported to [KubeGenericClient].")]
-        public static async Task<T> JNET_GetNamespacedCustomObjectAsync<T>(
+        public static async Task<T> JNET_ReadNamespacedCustomObjectAsync<T>(
             this IKubernetes    k8s,
             string              namespaceParameter,
             string              name,
@@ -480,7 +480,7 @@ namespace Neon.Kube
 
             try
             {
-                await k8s.JNET_GetNamespacedCustomObjectAsync<T>(namespaceParameter, name, cancellationToken);
+                await k8s.JNET_ReadNamespacedCustomObjectAsync<T>(namespaceParameter, name, cancellationToken);
             }
             catch (HttpOperationException e)
             {

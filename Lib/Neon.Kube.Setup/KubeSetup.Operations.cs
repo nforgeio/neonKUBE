@@ -1418,7 +1418,7 @@ kubectl apply -f priorityclasses.yaml
 
                     foreach (var felix in configs.Items)
                     {
-                        var f = await k8s.GetClusterCustomObjectAsync<FelixConfiguration>(felix.Name());
+                        var f = await k8s.ReadClusterCustomObjectAsync<FelixConfiguration>(felix.Name());
                         await k8s.PatchClusterCustomObjectAsync<FelixConfiguration>(patch, felix.Name());
                     }
                 });
