@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_LeaseElector.cs
+// FILE:	    Test_LeaderElector.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -72,7 +72,13 @@ namespace TestKube
             this.fixture = fixture;
 
             var options = new ClusterFixtureOptions();
-            var status  = fixture.StartWithNeonAssistant(options: options);
+
+            //################################################################
+            // $debug(jefflill): Restore this after manual testing is complete
+            //var status  = fixture.StartWithNeonAssistant(options: options);
+            //################################################################
+
+            var status = fixture.StartWithCurrentCluster(options: options);
 
             if (status == TestFixtureStatus.Disabled)
             {
@@ -85,7 +91,39 @@ namespace TestKube
         }
 
         [ClusterFact]
-        public async Task SingleInstance()
+        public async Task Single_WithoutActionsOrCounters()
+        {
+            // Verify that the elector works without callback actions.
+
+            var  leaseName = $"test-{NeonHelper.CreateBase36Uuid()}";
+            var  config   = new LeaderElectionConfig(fixture.K8s, @namespace: KubeNamespace.Default, leaseName: leaseName, identity: "instance-0");
+            var  elector  = new LeaderElector(config);
+            Task electorTask;
+
+            try
+            {
+                using (elector)
+                {
+                    electorTask = elector.RunAsync();
+
+                    NeonHelper.WaitFor(() => elector.IsLeader, timeout: MaxWaitTime);
+
+                    Assert.True(elector.IsLeader);
+                    Assert.Equal("instance-0", elector.Leader);
+                }
+
+                // Ensure that the elector task completes.
+
+                await electorTask.WaitAsync(timeout: MaxWaitTime);
+            }
+            finally
+            {
+                await config.K8s.DeleteNamespacedLeaseWithHttpMessagesAsync(leaseName, config.Namespace);
+            }
+        }
+
+        [ClusterFact]
+        public async Task Single_WithoutCounters()
         {
             // Verify that we can create a single [LeaderElector] instance and that:
             //
@@ -94,63 +132,48 @@ namespace TestKube
             //      3. The new leader matches the current instance
             //      4. IsLeader and GetLeader() work
 
+            var     leaseName = $"test-{NeonHelper.CreateBase36Uuid()}";
             bool    isLeading = false;
             string  leader    = null;
-            var     config    = new LeaderElectionConfig(fixture.K8s, KubeNamespace.Default, "test", "instance-0");
+            var     config    = new LeaderElectionConfig(fixture.K8s, @namespace: KubeNamespace.Default, leaseName: leaseName, identity: "instance-0");
             Task    electorTask;
 
-            var elector = new LeaderElector(
-                config:           config,
-                onStartedLeading: () => isLeading = true,
-                onStoppedLeading: () => isLeading = false,
-                onNewLeader:      identity => leader = identity);
-
-            using (elector)
+            try
             {
-                electorTask = elector.RunAsync();
+                var elector = new LeaderElector(
+                    config:           config,
+                    onStartedLeading: () => isLeading = true,
+                    onStoppedLeading: () => isLeading = false,
+                    onNewLeader:      identity => leader = identity);
 
-                NeonHelper.WaitFor(() => isLeading, timeout: MaxWaitTime);
+                using (elector)
+                {
+                    electorTask = elector.RunAsync();
 
-                Assert.True(isLeading);
-                Assert.True(elector.IsLeader);
-                Assert.Equal("instance-0", leader);
-                Assert.Equal("instance-0", elector.Leader);
+                    NeonHelper.WaitFor(() => isLeading, timeout: MaxWaitTime);
+
+                    Assert.True(isLeading);
+                    Assert.True(elector.IsLeader);
+                    Assert.Equal("instance-0", leader);
+                    Assert.Equal("instance-0", elector.Leader);
+                }
+
+                // Ensure that the elector task completes.
+
+                await electorTask.WaitAsync(timeout: MaxWaitTime);
             }
-
-            // Ensure that the elector task completes.
-
-            await electorTask.WaitAsync(timeout: MaxWaitTime);
+            finally
+            {
+                await config.K8s.DeleteNamespacedLeaseWithHttpMessagesAsync(leaseName, config.Namespace);
+            }
         }
 
         [ClusterFact]
-        public async Task SingleInstance_WithoutActions()
-        {
-            // Verify that the elector works without callback actions.
-
-            var  config = new LeaderElectionConfig(fixture.K8s, KubeNamespace.Default, "test", "instance-0");
-            var  elector = new LeaderElector(config);
-            Task electorTask;
-
-            using (elector)
-            {
-                electorTask = elector.RunAsync();
-
-                NeonHelper.WaitFor(() => elector.IsLeader, timeout: MaxWaitTime);
-
-                Assert.True(elector.IsLeader);
-                Assert.Equal("instance-0", elector.Leader);
-            }
-
-            // Ensure that the elector task completes.
-
-            await electorTask.WaitAsync(timeout: MaxWaitTime);
-        }
-
-        [ClusterFact]
-        public async Task SingleInstance_WithCounters()
+        public async Task Single_WithCounters()
         {
             // Verify that the elector can increment performance counters.
 
+            var leaseName        = $"test-{NeonHelper.CreateBase36Uuid()}";
             var promotionCounter = Metrics.CreateCounter("test_promotions", string.Empty);
             var demotionCounter  = Metrics.CreateCounter("test_demotions", string.Empty);
             var newLeaderCounter = Metrics.CreateCounter("test_newleaders", string.Empty);
@@ -158,8 +181,8 @@ namespace TestKube
             var config = new LeaderElectionConfig(
                 k8s:              fixture.K8s,
                 @namespace:       KubeNamespace.Default,
-                leaseName:       "test",
-                identity:        "instance-0",
+                leaseName:        leaseName,
+                identity:         "instance-0",
                 promotionCounter: promotionCounter,
                 demotionCounter:  demotionCounter,
                 newLeaderCounter: newLeaderCounter);
@@ -167,25 +190,32 @@ namespace TestKube
             var  elector = new LeaderElector(config);
             Task electorTask;
 
-            using (elector)
+            try
             {
-                electorTask = elector.RunAsync();
+                using (elector)
+                {
+                    electorTask = elector.RunAsync();
 
-                NeonHelper.WaitFor(() => elector.IsLeader, timeout: MaxWaitTime);
+                    NeonHelper.WaitFor(() => elector.IsLeader, timeout: MaxWaitTime);
 
-                Assert.True(elector.IsLeader);
-                Assert.Equal("instance-0", elector.Leader);
+                    Assert.True(elector.IsLeader);
+                    Assert.Equal("instance-0", elector.Leader);
+                }
+
+                // Ensure that the elector task completes.
+
+                await electorTask.WaitAsync(timeout: MaxWaitTime);
+
+                // Ensure that the counters are correct.
+
+                Assert.Equal(1, promotionCounter.Value);
+                Assert.Equal(0, demotionCounter.Value);     // We don't see demotions when the elector is disposed
+                Assert.Equal(2, newLeaderCounter.Value);    // We do see a leadership change when the elector is disposed
             }
-
-            // Ensure that the elector task completes.
-
-            await electorTask.WaitAsync(timeout: MaxWaitTime);
-
-            // Ensure that the counters are correct.
-
-            Assert.Equal(1, promotionCounter.Value);
-            Assert.Equal(0, demotionCounter.Value);     // We don't see demotions when the elector is disposed
-            Assert.Equal(2, newLeaderCounter.Value);    // We do see a leadership change when the elector is disposed
+            finally
+            {
+                await config.K8s.DeleteNamespacedLeaseWithHttpMessagesAsync(leaseName, config.Namespace);
+            }
         }
     }
 }

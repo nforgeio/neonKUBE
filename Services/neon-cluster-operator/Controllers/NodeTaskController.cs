@@ -74,7 +74,7 @@ namespace NeonClusterOperator
     /// </para>
     /// </remarks>
     [EntityRbac(typeof(V1NeonNodeTask), Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Patch | RbacVerb.Watch | RbacVerb.Update)]
-    public class NodeTaskController : IResourceController<V1NeonNodeTask>, IExtendedController<V1NeonNodeTask>
+    public class NodeTaskController : IResourceController<V1NeonNodeTask>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -112,7 +112,6 @@ namespace NeonClusterOperator
 
             var options = new ResourceManagerOptions()
             {
-                Mode                       = ResourceManagerMode.Collection,
                 IdleInterval               = Program.Service.Environment.Get("NODETASK_IDLE_INTERVAL", TimeSpan.FromSeconds(1)),
                 ErrorMinRequeueInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15)),
                 ErrorMaxRetryInterval      = Program.Service.Environment.Get("NODETASK_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromSeconds(60)),
@@ -161,11 +160,11 @@ namespace NeonClusterOperator
             }
 
             return await resourceManager.ReconciledAsync(resource,
-                async (resource, resources) =>
+                async (resource) =>
                 {
                     var name = resource?.Name();
 
-                    log.LogInfo($"RECONCILED: {name ?? "[IDLE]"} count={resources.Count}");
+                    log.LogInfo($"RECONCILED: {name ?? "[IDLE]"}");
 
                     if (name == null)
                     {
@@ -178,8 +177,9 @@ namespace NeonClusterOperator
                         // fetch and cache node information as we go along.
 
                         var nodeNameToExists = new Dictionary<string, bool>(StringComparer.InvariantCultureIgnoreCase);
+                        var resources        = (await k8s.ListClusterCustomObjectAsync<V1NeonNodeTask>()).Items;
 
-                        foreach (var nodeTask in resources.Values)
+                        foreach (var nodeTask in resources)
                         {
                             var deleteMessage = $"Deleting node task [{nodeTask.Name()}] because it is assigned to the non-existent cluster node [{nodeTask.Spec.Node}].";
 
@@ -271,9 +271,9 @@ namespace NeonClusterOperator
             }
 
             await resourceManager.DeletedAsync(task,
-                async (name, resources) =>
+                async (resource) =>
                 {
-                    log.LogInfo($"DELETED: {name}");
+                    log.LogInfo($"DELETED: {resource.Name()}");
 
                     // This is a NOP.
 
@@ -295,29 +295,15 @@ namespace NeonClusterOperator
                 return;
             }
 
-            await resourceManager.DeletedAsync(task,
-                async (name, resources) =>
+            await resourceManager.StatusModifiedAsync(task,
+                async (resource) =>
                 {
-                    log.LogInfo($"STATUS-MODIFIED: {name}");
+                    log.LogInfo($"STATUS-MODIFIED: {resource.Name()}");
 
                     // This is a NOP.
 
                     await Task.CompletedTask;
                 });
-        }
-
-        /// <inheritdoc/>
-        public V1NeonNodeTask CreateIgnorable()
-        {
-            var ignorable = new V1NeonNodeTask();
-
-            ignorable.Spec.Node          = "ignored";
-            ignorable.Spec.BashScript    = "ignored";
-            ignorable.Spec.Timeout       = "0s";
-            ignorable.Spec.RetentionTime = "0s";
-            ignorable.Spec.CaptureOutput = false;
-
-            return ignorable;
         }
     }
 }

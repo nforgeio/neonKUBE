@@ -846,6 +846,7 @@ namespace Neon.Kube
         /// <param name="resourceVersion">The start resource version.</param>
         /// <param name="resourceVersionMatch">The optional <b>resourceVersionMatch</b> setting.</param>
         /// <param name="timeoutSeconds">Optional timeout override.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <param name="logger">Optional <see cref="INeonLogger"/></param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task WatchAsync<T>(
@@ -857,6 +858,7 @@ namespace Neon.Kube
             string                      resourceVersion      = null,
             string                      resourceVersionMatch = null,
             int?                        timeoutSeconds       = null,
+            CancellationToken           cancellationToken    = default,
             INeonLogger                 logger               = null) 
             
             where T : IKubernetesObject<V1ObjectMeta>, new()
@@ -867,7 +869,8 @@ namespace Neon.Kube
                 labelSelector:        labelSelector,
                 resourceVersion:      resourceVersion,
                 resourceVersionMatch: resourceVersionMatch,
-                timeoutSeconds:       timeoutSeconds);
+                timeoutSeconds:       timeoutSeconds,
+                cancellationToken:    cancellationToken);
         }
     }
 }

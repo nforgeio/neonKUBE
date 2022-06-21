@@ -96,7 +96,7 @@ namespace NeonNodeAgent
     /// </note>
     /// </remarks>
     [EntityRbac(typeof(V1NeonContainerRegistry), Verbs = RbacVerb.Get | RbacVerb.Patch | RbacVerb.List | RbacVerb.Watch | RbacVerb.Update)]
-    public class ContainerRegistryController : IResourceController<V1NeonContainerRegistry>, IExtendedController<V1NeonContainerRegistry>
+    public class ContainerRegistryController : IResourceController<V1NeonContainerRegistry>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -134,7 +134,6 @@ namespace NeonNodeAgent
 
             var options = new ResourceManagerOptions()
             {
-                Mode                       = ResourceManagerMode.Normal,
                 IdleInterval               = Program.Service.Environment.Get("CONTAINERREGISTRY_IDLE_INTERVAL", TimeSpan.FromMinutes(5)),
                 ErrorMinRequeueInterval    = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15)),
                 ErrorMaxRetryInterval      = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromSeconds(60)),
@@ -186,12 +185,12 @@ namespace NeonNodeAgent
             }
 
             return await resourceManager.ReconciledAsync(respource,
-                async (resource, resources) =>
+                async (resource) =>
                 {
                     var name = resource?.Name();
 
-                    log.LogInfo($"RECONCILED: {name ?? "[IDLE]"} count={resources.Count}");
-                    await UpdateContainerRegistriesAsync(resources);
+                    log.LogInfo($"RECONCILED: {name ?? "[IDLE]"}");
+                    await UpdateContainerRegistriesAsync();
 
                     return null;
                 });
@@ -212,10 +211,10 @@ namespace NeonNodeAgent
             }
 
             await resourceManager.DeletedAsync(resource,
-                async (resource, resources) =>
+                async (resource) =>
                 {
                     log.LogInfo($"DELETED: {resource}");
-                    await UpdateContainerRegistriesAsync(resources);
+                    await UpdateContainerRegistriesAsync();
                 });
         }
 
@@ -234,7 +233,7 @@ namespace NeonNodeAgent
             }
 
             await resourceManager.StatusModifiedAsync(resource,
-                async (resource, resources) =>
+                async (resource) =>
                 {
                     // This is a NO-OP
 
@@ -246,13 +245,14 @@ namespace NeonNodeAgent
         /// Rebuilds the host node's <b>/etc/containers/registries.conf.d/00-neon-cluster.conf</b> file,
         /// using the container registries passed and then signals CRI-O to reload any changes.
         /// </summary>
-        /// <param name="registries">The current registry configurations.</param>
-        private async Task UpdateContainerRegistriesAsync(IReadOnlyDictionary<string, V1NeonContainerRegistry> registries)
+        private async Task UpdateContainerRegistriesAsync()
         {
             if (!NeonHelper.IsLinux)
             {
                 return;
             }
+
+            var registries = (await k8s.ListClusterCustomObjectAsync<V1NeonContainerRegistry>()).Items;
 
             // NOTE: Here's the documentation for the config file we're generating:
             //
@@ -264,7 +264,7 @@ namespace NeonNodeAgent
 
             // Configure any unqualified search registries.
 
-            foreach (var registry in registries.Values
+            foreach (var registry in registries
                 .Where(registry => registry.Spec.SearchOrder >= 0)
                 .OrderBy(registry => registry.Spec.SearchOrder))
             {
@@ -277,7 +277,7 @@ $@"unqualified-search-registries = [{sbSearchRegistries}]
 
             // Configure any container registries include the local cluster.
 
-            foreach (var registry in registries.Values)
+            foreach (var registry in registries)
             {
                 sbRegistryConfig.Append(
 $@"
@@ -341,7 +341,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
 
             var retry = new LinearRetryPolicy(e => true, maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(5));
 
-            foreach (var registry in registries.Values)
+            foreach (var registry in registries)
             {
                 try
                 {
@@ -385,22 +385,12 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
 
             foreach (var location in existingLocations)
             {
-                if (!registries.Values.Any(registry => location == registry.Spec.Location))
+                if (!registries.Any(registry => location == registry.Spec.Location))
                 {
                     log.LogInfo($"podman logout {location}");
                     await Node.ExecuteCaptureAsync("podman", new object[] { "logout", location });
                 }
             }
-        }
-
-        /// <inheritdoc/>
-        public V1NeonContainerRegistry CreateIgnorable()
-        {
-            var ignorable = new V1NeonContainerRegistry();
-
-            ignorable.Spec.Prefix = "no.where";
-
-            return ignorable;
         }
     }
 }

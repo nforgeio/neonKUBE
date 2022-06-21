@@ -20,5 +20,3 @@ neon delete crd neoncontainerregistries.neonkube.io
 neon delete crd neonnodetasks.neonkube.io
 neon delete crd neonclusteroperator.neonkube.io
 neon delete crd neontestobjects.neonkube.io
-
-

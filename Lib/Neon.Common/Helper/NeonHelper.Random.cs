@@ -34,6 +34,33 @@ namespace Neon.Common
         private static RandomNumberGenerator    randCrypto = null;
 
         /// <summary>
+        /// <para>
+        /// Creates the <see cref="rand"/> instance.
+        /// </para>
+        /// <note>
+        /// THIS MUST BE CALLED WHILE <see cref="randLock"/> IS LOCKED.
+        /// </note>
+        /// </summary>
+        private static void CreateRandom()
+        {
+            if (rand == null)
+            {
+                // The [Random] class has been improved for .NET 6+ by implementing a faster
+                // alghorithm and doing a better job at seeding the generator.  We'll enable
+                // this new behavior by not seeding when running on .NET 6+.
+
+                if (NeonHelper.FrameworkVersion >= new Version(6, 0))
+                {
+                    rand = new Random();
+                }
+                else
+                {
+                    rand = new Random(Environment.TickCount ^ (int)DateTime.Now.Ticks);
+                }
+            }
+        }
+
+        /// <summary>
         /// Returns an integer pseudo random number.
         /// </summary>
         /// <returns>The random integer.</returns>
@@ -41,10 +68,7 @@ namespace Neon.Common
         {
             lock (randLock)
             {
-                if (rand == null)
-                {
-                    rand = new Random(Environment.TickCount ^ (int)DateTime.Now.Ticks);
-                }
+                CreateRandom();
 
                 return rand.Next();
             }
@@ -58,10 +82,7 @@ namespace Neon.Common
         {
             lock (randLock)
             {
-                if (rand == null)
-                {
-                    rand = new Random(Environment.TickCount ^ (int)DateTime.Now.Ticks);
-                }
+                CreateRandom();
 
                 return rand.NextDouble();
             }
@@ -76,10 +97,7 @@ namespace Neon.Common
         {
             lock (randLock)
             {
-                if (rand == null)
-                {
-                    rand = new Random(Environment.TickCount ^ (int)DateTime.Now.Ticks);
-                }
+                CreateRandom();
 
                 return rand.NextDouble() * limit;
             }
@@ -104,6 +122,27 @@ namespace Neon.Common
             }
 
             return v % limit;
+        }
+
+        /// <summary>
+        /// Returns the specified number of pseudo random bytes.
+        /// </summary>
+        /// <param name="count">The requested number of bytes.</param>
+        /// <returns>The random bytes.</returns>
+        public static byte[] PseudoRandomBytes(int count)
+        {
+            Covenant.Requires<ArgumentException>(count > 0, nameof(count));
+
+            lock (randLock)
+            {
+                CreateRandom();
+
+                var bytes = new byte[count];
+
+                rand.NextBytes(bytes);
+
+                return bytes;
+            }
         }
 
         /// <summary>
@@ -256,6 +295,87 @@ namespace Neon.Common
             var seedBytes = GetCryptoRandomBytes(4);
 
             return new Random(BitConverter.ToInt32(seedBytes, 0));
+        }
+
+        /// <summary>
+        /// Generates a 13 digit base-36 UUID including only lowercase ASCII
+        /// characters and digits.  This is useful for generating unique shorter
+        /// names for Kubernetes objects etc.
+        /// </summary>
+        /// <param name="secure">
+        /// Optionally specifies that a cryptographically secure algorithm is
+        /// is used to generate the UUID, rather than the default pseudo random
+        /// generator.  Cryptogrphically secure algorithms consume system entropy.
+        /// </param>
+        /// <returns>The new base-36 string.</returns>
+        public static string CreateBase36Uuid(bool secure = true)
+        {
+            ulong value;
+
+            // Generate a non-zero random long.
+
+            do
+            {
+                byte[] randomBytes;
+
+                if (secure)
+                {
+                    randomBytes = NeonHelper.GetCryptoRandomBytes(8);
+                }
+                else
+                {
+                    randomBytes = NeonHelper.PseudoRandomBytes(8);
+                }
+
+                value = 0;
+
+                foreach (var b in randomBytes)
+                {
+                    value = (value * 256) + b;
+                }
+            }
+            while (value == 0);
+
+            // Convert the value into a base-36 string.
+
+            var sb = new StringBuilder();
+
+            while (value > 0)
+            {
+                var digit = (int)(value % 36);
+
+                if (digit < 10)
+                {
+                    sb.Append((char)('0' + digit));
+                }
+                else
+                {
+                    sb.Append((char)('a' + (digit - 10)));
+                }
+
+                value /= 36;
+            }
+
+            var result = sb.ToString();
+
+            // We may end up up with more than 13 digits because 72-bit values
+            // have more possible values than 13 digit base-36 numbers.  We'll
+            // just take the last 13 digits just in case.
+            //
+            // We may also end up with fewer than 13 digits when the random number
+            // generated is very small (should be quite rare).  We'll prepend zero
+            // digits in this case.
+
+            if (result.Length > 13)
+            {
+                result = result.Substring(result.Length - 13);
+            }
+            else if (result.Length < 13)
+            {
+                result = new string('0', 13 - result.Length) + result;
+            }
+
+            return result;
         }
     }
 }

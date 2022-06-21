@@ -65,11 +65,11 @@ namespace Neon.Kube
         /// </param>
         /// <param name="leaseDuration">
         /// Optionally specifies the interval a follower must wait before attempting to become
-        /// the leader.  This defaults to <b>15 seconds</b>.
+        /// the leader.  This defaults to <b>30 seconds</b>.
         /// </param>
         /// <param name="renewDeadline">
-        /// Optionally specifies the interval the leader will attempt to renew the lease before
-        /// abandonding leadership.  This defaults to <b>10 seconds</b>.
+        /// Optionally specifies the interval when the leader will attempt to renew the lease before
+        /// abandonding leadership.  This defaults to <b>15 seconds</b>.
         /// </param>
         /// <param name="retryPeriod">
         /// Optionally specifies the interval that <see cref="LeaderElector"/> instances should 
@@ -112,12 +112,12 @@ namespace Neon.Kube
 
             if (leaseDuration <= TimeSpan.Zero)
             {
-                leaseDuration = TimeSpan.FromSeconds(15);
+                leaseDuration = TimeSpan.FromSeconds(30);
             }
 
             if (renewDeadline <= TimeSpan.Zero)
             {
-                renewDeadline = TimeSpan.FromSeconds(10);
+                renewDeadline = TimeSpan.FromSeconds(15);
             }
 
             if (retryPeriod <= TimeSpan.Zero)
