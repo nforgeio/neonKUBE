@@ -45,13 +45,13 @@ namespace Neon.JsonConverters
 
             var input = reader.GetString();
 
-            return DateTime.ParseExact(input, dateFormat, CultureInfo.InvariantCulture);
+            return DateTime.ParseExact(input, dateFormat, CultureInfo.InvariantCulture).ToUniversalTime();
         }
 
         /// <inheritdoc/>
         public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
         {
-            writer.WriteRawValue(value.ToString(dateFormat));
+            writer.WriteStringValue(value.ToString(dateFormat));
         }
     }
 }

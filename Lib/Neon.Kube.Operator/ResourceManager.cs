@@ -867,87 +867,96 @@ namespace Neon.Kube.Operator
                     await mutex.ExecuteActionAsync(
                         async () =>
                         {
-                            var resource      = @event.Value;
-                            var resourceName  = resource.Metadata.Name;
-                            var newGeneration = resource.Metadata.Generation.Value;
-
-                            switch (@event.Type)
+                            try
                             {
-                                case WatchEventType.Added:
+                                var resource      = @event.Value;
+                                var resourceName  = resource.Metadata.Name;
+                                var newGeneration = resource.Metadata.Generation.Value;
 
-                                    await CreateController().ReconcileAsync(resource);
+                                switch (@event.Type)
+                                {
+                                    case WatchEventType.Added:
 
-                                    generationCache[resourceName] = newGeneration;
-                                    break;
-
-                                case WatchEventType.Bookmark:
-
-                                    break;  // We don't care about these.
-
-                                case WatchEventType.Error:
-
-                                    // I believe we're only going to see this for extreme scenarios, like:
-                                    //
-                                    //      1. The CRD we're watching was deleted and recreated.
-                                    //      2. The watcher is so far behind that part of the
-                                    //         history is no longer available.
-                                    //
-                                    // We're going to log this and terminate the application, expecting
-                                    // that Kubernetes will reschedule it so we can start over.
-
-                                    var stub = new TEntity();
-
-                                    if (!string.IsNullOrEmpty(resourceNamespace))
-                                    {
-                                        log.LogCritical($"Critical error watching: [namespace={resourceNamespace}] {stub.ApiGroupAndVersion}/{stub.Kind}");
-                                    }
-                                    else
-                                    {
-                                        log.LogCritical($"Critical error watching: {stub.ApiGroupAndVersion}/{stub.Kind}");
-                                    }
-
-                                    log.LogCritical("Terminating the pod so Kubernetes can reschedule it and we can restart the watch.");
-                                    Environment.Exit(1);
-                                    break;
-
-                                case WatchEventType.Deleted:
-
-                                    await CreateController().DeletedAsync(resource);
-                                    generationCache.Remove(resourceName);
-                                    statusJsonCache.Remove(resourceName);
-                                    break;
-
-                                case WatchEventType.Modified:
-
-                                    // Reconcile when the resource generation changes.
-
-                                    if (!generationCache.TryGetValue(resourceName, out var oldGeneration))
-                                    {
-                                        Covenant.Assert(false, $"Resource [{resourceName}] does not known.");
-                                    }
-
-                                    if (newGeneration < oldGeneration)
-                                    {
                                         await CreateController().ReconcileAsync(resource);
-                                    }
 
-                                    // There's no need for STATUS-MODIFIED when the resource has no status.
+                                        generationCache[resourceName] = newGeneration;
+                                        break;
 
-                                    if (statusGetter == null)
-                                    {
-                                        return;
-                                    }
+                                    case WatchEventType.Bookmark:
 
-                                    var newStatus      = statusGetter.Invoke(resource, Array.Empty<object>());
-                                    var newStatusJson  = newStatus == null ? null : JsonSerializer.Serialize(newStatus);
+                                        break;  // We don't care about these.
 
-                                    statusJsonCache.TryGetValue(resourceName, out var oldStatusJson);;
+                                    case WatchEventType.Error:
 
-                                    if (newStatusJson != oldStatusJson)
-                                    {
-                                        await CreateController().StatusModifiedAsync(resource);
-                                    }
-                                    break;
+                                        // I believe we're only going to see this for extreme scenarios, like:
+                                        //
+                                        //      1. The CRD we're watching was deleted and recreated.
+                                        //      2. The watcher is so far behind that part of the
+                                        //         history is no longer available.
+                                        //
+                                        // We're going to log this and terminate the application, expecting
+                                        // that Kubernetes will reschedule it so we can start over.
+
+                                        var stub = new TEntity();
+
+                                        if (!string.IsNullOrEmpty(resourceNamespace))
+                                        {
+                                            log.LogCritical($"Critical error watching: [namespace={resourceNamespace}] {stub.ApiGroupAndVersion}/{stub.Kind}");
+                                        }
+                                        else
+                                        {
+                                            log.LogCritical($"Critical error watching: {stub.ApiGroupAndVersion}/{stub.Kind}");
+                                        }
+
+                                        log.LogCritical("Terminating the pod so Kubernetes can reschedule it and we can restart the watch.");
+                                        Environment.Exit(1);
+                                        break;
+
+                                    case WatchEventType.Deleted:
+
+                                        await CreateController().DeletedAsync(resource);
+                                        generationCache.Remove(resourceName);
+                                        statusJsonCache.Remove(resourceName);
+                                        break;
+
+                                    case WatchEventType.Modified:
+
+                                        // Reconcile when the resource generation changes.
+
+                                        if (!generationCache.TryGetValue(resourceName, out var oldGeneration))
+                                        {
+                                            Covenant.Assert(false, $"Resource [{resourceName}] does not known.");
+                                        }
+
+                                        if (newGeneration < oldGeneration)
+                                        {
+                                            await CreateController().ReconcileAsync(resource);
+                                        }
+
+                                        // There's no need for STATUS-MODIFIED when the resource has no status.
+
+                                        if (statusGetter == null)
+                                        {
+                                            return;
+                                        }
+
+                                        var newStatus     = statusGetter.Invoke(resource, Array.Empty<object>());
+                                        var newStatusJson = newStatus == null ? null : JsonSerializer.Serialize(newStatus);
+
+                                        statusJsonCache.TryGetValue(resourceName, out var oldStatusJson); ;
+
+                                        if (newStatusJson != oldStatusJson)
+                                        {
+                                            await CreateController().StatusModifiedAsync(resource);
+                                        }
+                                        break;
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                log.LogCritical(e);
+                                log.LogCritical("Cannot recover from exception within watch loop.  Terminating process.");
+                                Environment.Exit(1);
                             }
                         });
                 };
