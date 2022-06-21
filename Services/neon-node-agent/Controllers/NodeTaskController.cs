@@ -25,13 +25,6 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.JsonPatch;
-using Microsoft.Extensions.Logging;
-
-using JsonDiffPatch;
-
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
@@ -244,6 +237,15 @@ rm $0
 
                     log.LogInfo($"RECONCILED: {name ?? "[IDLE]"} count={resources.Count}");
 
+//##############################
+// $todo(jefflill): DELETE THIS!
+var existing = resources.Values.FirstOrDefault();
+if (existing != null)
+{
+    log.LogDebug($"RECONCILED: 0: {existing.Name()} Phase={existing.Status?.Phase}");
+}
+//##############################
+
                     if (resource == null)
                     {
                         // This is an IDLE event: we'll use this as a signal to do any cleanup.
@@ -286,7 +288,9 @@ rm $0
                             patch.Replace(path => path.Status, new V1NeonNodeTask.TaskStatus());
                             patch.Replace(path => path.Status.Phase, V1NeonNodeTask.Phase.Pending);
 
-                            nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
+log.LogDebug($"RECONCILE BEFORE: generation={nodeTask.Metadata.Generation}");
+                            resources.Update(nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name()));
+log.LogDebug($"RECONCILE AFTER:  generation={nodeTask.Metadata.Generation}");
 
                             var nodeOwnerReference = await Node.GetOwnerReferenceAsync(k8s);
 
@@ -320,7 +324,7 @@ rm $0
 
                         if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.Pending)
                         {
-                            await ExecuteTaskAsync(nodeTask);
+                            await ExecuteTaskAsync(nodeTask, resources);
                         }
                     }
 
@@ -395,15 +399,15 @@ rm $0
         /// </item>
         /// </list>
         /// </summary>
-        /// <param name="nodeTasks">The existing tasks.</param>
+        /// <param name="resources">The existing tasks.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task CleanupTasksAsync(IReadOnlyDictionary<string, V1NeonNodeTask> nodeTasks)
+        private async Task CleanupTasksAsync(ResourceCache<V1NeonNodeTask> resources)
         {
-            Covenant.Requires<ArgumentNullException>(nodeTasks != null, nameof(nodeTasks));
+            Covenant.Requires<ArgumentNullException>(resources != null, nameof(resources));
 
             var utcNow = DateTime.UtcNow;
 
-            foreach (var nodeTask in nodeTasks.Values)
+            foreach (var nodeTask in resources.Values)
             {
                 var taskName = nodeTask.Name();
 
@@ -439,7 +443,7 @@ rm $0
                         patch.Replace(path => path.Status.FinishTimestamp, utcNow);
                         patch.Replace(path => path.Status.ExitCode, -1);
 
-                        await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
+                        resources.Update(await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name()));
 
                         await KillTaskAsync(nodeTask);
                         continue;
@@ -463,7 +467,7 @@ rm $0
                         patch.Replace(path => path.Status.Runtime, GoDuration.FromTimeSpan((utcNow - nodeTask.Status.StartTimestamp.Value)).ToPretty());
                         patch.Replace(path => path.Status.ExitCode, -1);
 
-                        await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
+                        resources.Update(await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name()));
                         continue;
                     }
                 }
@@ -472,7 +476,7 @@ rm $0
             //-----------------------------------------------------------------
             // Remove tasks that have been retained long enough.
 
-            foreach (var nodeTask in nodeTasks.Values
+            foreach (var nodeTask in resources.Values
                 .Where(task => task.Status.Phase != V1NeonNodeTask.Phase.New && task.Status.Phase != V1NeonNodeTask.Phase.Running)
                 .Where(task => (utcNow - task.Status.FinishTimestamp) >= task.Spec.GetRetentionTime()))
             {
@@ -487,7 +491,7 @@ rm $0
             {
                 var nodeTaskExecuteIds = new HashSet<string>();
 
-                foreach (var nodeTask in nodeTasks.Values.Where(task => !string.IsNullOrEmpty(task.Status.RunId)))
+                foreach (var nodeTask in resources.Values.Where(task => !string.IsNullOrEmpty(task.Status.RunId)))
                 {
                     nodeTaskExecuteIds.Add(nodeTask.Status.RunId);
                 }
@@ -562,9 +566,10 @@ rm $0
         /// <summary>
         /// Initiates execution of a node task in the background when the task is still pending.
         /// </summary>
-        /// <param name="nodeTask">The node task.</param>
+        /// <param name="nodeTask">The node task to be executed.</param>
+        /// <param name="resources">The existing tasks.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ExecuteTaskAsync(V1NeonNodeTask nodeTask)
+        private async Task ExecuteTaskAsync(V1NeonNodeTask nodeTask, ResourceCache<V1NeonNodeTask> resources)
         {
             Covenant.Requires<ArgumentNullException>(nodeTask != null, nameof(nodeTask));
 
@@ -666,7 +671,7 @@ log.LogInfo($"EXECUTE-7:");
                     failedPatch.Replace(path => path.Status.ExitCode, -1);
                     failedPatch.Replace(path => path.Status.Error, $"EXECUTE FAILED: {e.Message}");
 
-                    await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(failedPatch), nodeTask.Name());
+                    resources.Update(await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(failedPatch), nodeTask.Name()));
 log.LogInfo($"EXECUTE-8:");
                     return;
                 }
@@ -702,7 +707,7 @@ log.LogInfo($"EXECUTE-12:");
             patch.Replace(path => path.Status.CommandLine, Node.GetBashCommandLine(scriptPath).Trim());
             patch.Replace(path => path.Status.RunId, executionId);
 
-            nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
+            resources.Update(nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name()));
 log.LogInfo($"EXECUTE-13:");
 
             // Wait for the command to complete and the update the node task status.
@@ -757,8 +762,8 @@ log.LogInfo($"EXECUTE-17:");
                     }
 
 log.LogInfo($"EXECUTE-18:");
-                    nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
-log.LogInfo($"EXECUTE-19:");
+                    resources.Update(nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name()));
+log.LogInfo($"EXECUTE-19: Phase={nodeTask.Status.Phase}");
                 }
             }
             catch (Exception e)

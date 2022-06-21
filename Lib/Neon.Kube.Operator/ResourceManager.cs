@@ -54,7 +54,7 @@ namespace Neon.Kube.Operator
     /// <summary>
     /// Used by custom <b>KubeOps</b> based operators to manage a collection of custom resources.
     /// </summary>
-    /// <typeparam name="TEntity">Specifies the custom Kubernetes entity type.</typeparam>
+    /// <typeparam name="TEntity">Specifies the custom Kubernetes entity type being managed.</typeparam>
     /// <typeparam name="TController">Specifies the entity controller type.</typeparam>
     /// <remarks>
     /// <para>
@@ -305,7 +305,7 @@ namespace Neon.Kube.Operator
         /// <paramref name="resource"/> will never be passed as <c>null</c> for <see cref="ResourceManagerMode.Normal"/>
         /// mode.  <paramref name="resources"/> will always be passed.
         /// </remarks>
-        public delegate Task<ResourceControllerResult> ReconcileHandlerAsync(TEntity resource, IReadOnlyDictionary<string, TEntity> resources);
+        public delegate Task<ResourceControllerResult> ReconcileHandlerAsync(TEntity resource, ResourceCache<TEntity> resources);
 
         /// <summary>
         /// Defines the event handler you'll need to implement to handle <b>DELETE</b> and <b>STATUS-MODIFIED</b> events.
@@ -317,7 +317,7 @@ namespace Neon.Kube.Operator
         /// <paramref name="resource"/> will never be passed as <c>null</c> for <see cref="ResourceManagerMode.Normal"/>
         /// mode.  <paramref name="resources"/> will always be passed.
         /// </remarks>
-        public delegate Task NoResultHandlerAsync(TEntity resource, IReadOnlyDictionary<string, TEntity> resources);
+        public delegate Task NoResultHandlerAsync(TEntity resource, ResourceCache<TEntity> resources);
 
         //---------------------------------------------------------------------
         // Implementation
@@ -325,7 +325,6 @@ namespace Neon.Kube.Operator
         private bool                            isDisposed           = false;
         private bool                            stopIdleLoop         = false;
         private AsyncReentrantMutex             mutex                = new AsyncReentrantMutex();
-        private Dictionary<string, TEntity>     resources            = new Dictionary<string, TEntity>(StringComparer.InvariantCultureIgnoreCase);
         private bool                            started              = false;
         private bool                            reconcileReceived    = false;
         private bool                            discovering          = false;
@@ -333,6 +332,8 @@ namespace Neon.Kube.Operator
         private TimeSpan                        notStartedRequeDelay = TimeSpan.FromSeconds(10);
         private ResourceManagerOptions          options;
         private IKubernetes                     k8s;
+        private Dictionary<string, TEntity>     resources;
+        private ResourceCache<TEntity>          resourceCache;
         private string                          resourceNamespace;
         private ConstructorInfo                 controllerConstructor;
         private Func<TEntity, bool>             filter;
@@ -389,6 +390,8 @@ namespace Neon.Kube.Operator
             this.discovering            = options.Mode == ResourceManagerMode.Collection;
             this.reconciledErrorBackoff = TimeSpan.Zero;
             this.leaderConfig           = leaderConfig;
+            this.resources              = new Dictionary<string, TEntity>(StringComparer.InvariantCultureIgnoreCase);
+            this.resourceCache          = new ResourceCache<TEntity>(resources);
 
             options.Validate();
 
@@ -605,10 +608,15 @@ namespace Neon.Kube.Operator
         }
 
         /// <summary>
-        /// Adds or updates a non-ignorable resource to the <see cref="resources"/> dictionary.
-        /// Ignorable resources are excluded.
+        /// Adds or updates a resource to the known resources dictionary.
         /// </summary>
         /// <param name="resource">The resource being added.</param>
+        /// <remarks>
+        /// Operators should call this whenever they modify a resource to ensure that the
+        /// cached resource dictionary is always up-to-date.  This will prevent spurious
+        /// STATUS-MODIFIED events from being raised and also so that the resources passed
+        /// for IDLE RECONCILE events are current.
+        /// </remarks>
         private void SetResource(TEntity resource)
         {
             if (resource != null)
@@ -724,7 +732,7 @@ namespace Neon.Kube.Operator
                             return null;
                         }
 
-                        var result = await handlerAsync(changed ? resource : null, resources);
+                        var result = await handlerAsync(changed ? resource : null, resourceCache);
 
                         reconciledErrorBackoff = TimeSpan.Zero;   // Reset after a success
 
@@ -787,7 +795,6 @@ namespace Neon.Kube.Operator
 
             try
             {
-
                 await mutex.ExecuteActionAsync(
                     async () =>
                     {
@@ -807,7 +814,7 @@ namespace Neon.Kube.Operator
 
                         if (!discovering)
                         {
-                            await handlerAsync(resource, resources);
+                            await handlerAsync(resource, resourceCache);
                         }
                         else
                         {
@@ -880,7 +887,7 @@ namespace Neon.Kube.Operator
 
                         if (!discovering)
                         {
-                            await handlerAsync(resource, resources);
+                            await handlerAsync(resource, resourceCache);
                         }
                         else
                         {
@@ -1144,10 +1151,8 @@ namespace Neon.Kube.Operator
             // JSON, with these keyed by resource name.  Note that the resource
             // entities might not have a [Status] property.
 
-            var entityType      = typeof(TEntity);
-            var statusGetter    = entityType.GetProperty("Status")?.GetMethod;
-            var generationCache = new Dictionary<string, long>(StringComparer.InvariantCultureIgnoreCase);
-            var statusCache     = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            var entityType   = typeof(TEntity);
+            var statusGetter = entityType.GetProperty("Status")?.GetMethod;
 
             //-----------------------------------------------------------------
             // Our watcher handler action.
@@ -1160,15 +1165,14 @@ namespace Neon.Kube.Operator
                     await mutex.ExecuteActionAsync(
                         async () =>
                         {
-                            var resource     = @event.Value;
-                            var resourceName = resource.Metadata.Name;
-                            var newGeneration   = resource.Metadata.Generation.Value;
+                            var resource      = @event.Value;
+                            var resourceName  = resource.Metadata.Name;
+                            var newGeneration = resource.Metadata.Generation.Value;
 
                             switch (@event.Type)
                             {
                                 case WatchEventType.Added:
 
-                                    generationCache.Add(resourceName, newGeneration);
                                     await CreateController().ReconcileAsync(resource);
                                     break;
 
@@ -1204,97 +1208,71 @@ namespace Neon.Kube.Operator
 
                                 case WatchEventType.Deleted:
 
-                                    generationCache.Remove(resourceName);
-                                    statusCache.Remove(resourceName);
                                     await CreateController().DeletedAsync(resource);
                                     break;
 
                                 case WatchEventType.Modified:
 
-        try
-        {
-        log.LogDebug($"MODIFIED: 0: name=[{resource?.Name()}]");
-        log.LogDebug($"MODIFIED: 1: statusGetter-NULL=[{statusGetter == null}]");
-        var s = statusGetter.Invoke(resource, Array.Empty<object>());
-        log.LogDebug($"MODIFIED: 2: status-NULL=[{s == null}]");
-        Console.WriteLine();
-        Console.WriteLine(NeonHelper.YamlSerialize(s));
-        Console.WriteLine();
-        }
-        catch (Exception e)
-        {
-        }
+try
+{
+log.LogDebug($"MODIFIED: 0: name=[{resource?.Name()}]");
+log.LogDebug($"MODIFIED: 1: statusGetter-NULL=[{statusGetter == null}]");
+var s = statusGetter.Invoke(resource, Array.Empty<object>());
+log.LogDebug($"MODIFIED: 2: status-NULL=[{s == null}]");
+Console.WriteLine();
+Console.WriteLine(NeonHelper.YamlSerialize(s));
+Console.WriteLine();
+}
+catch (Exception e)
+{
+}
                                     SetResource(resource);
 
                                     // Reconcile when the resource generation changes.
 
-                                    Covenant.Assert(generationCache.ContainsKey(resourceName));
-
-                                    if (generationCache.TryGetValue(resourceName, out var cachedGeneration) && cachedGeneration != newGeneration)
+                                    if (!resources.TryGetValue(resourceName, out var existing))
                                     {
-                                        generationCache[resourceName] = newGeneration;
+                                        Covenant.Assert(false, $"Resource [{resourceName}] does not exist.");
+                                    }
+
+                                    if (existing.Metadata.Generation < newGeneration)
+                                    {
                                         await CreateController().ReconcileAsync(resource);
                                     }
 
-                                    // There's no need for STATUS-MODIFIED when the resource has no status status.
+                                    // There's no need for STATUS-MODIFIED when the resource has no status.
 
                                     if (statusGetter == null)
                                     {
                                         return;
                                     }
 
-                                    var newStatus     = statusGetter.Invoke(resource, Array.Empty<object>());
-                                    var newStatusJson = newStatus == null ? null : JsonSerializer.Serialize(newStatus);
-                                    var statusChanged = false;
+                                    var newStatus      = statusGetter.Invoke(resource, Array.Empty<object>());
+                                    var newStatusJson  = newStatus == null ? null : JsonSerializer.Serialize(newStatus);
+                                    var existingStatus = statusGetter.Invoke(existing, Array.Empty<object>());
+                                    var lastStatusJson = existingStatus == null ? null : JsonSerializer.Serialize(existingStatus);
 
-                                    statusCache.TryGetValue(resourceName, out var lastStatusJson);
-
-                                    if (newStatus == null && lastStatusJson == null)
-                                    {
-                                        // Nothing has changed
-                                    }
-                                    else if ((newStatus != null) == (lastStatusJson != null))
-                                    {
-                                        statusChanged = newStatusJson != lastStatusJson;
-                                    }
-                                    else
-                                    {
-                                        statusChanged = true;   // [Status] was added or removed
-                                    }
-
-                                    if (statusChanged)
+                                    if (newStatusJson != lastStatusJson)
                                     {
                                         await CreateController().StatusModifiedAsync(resource);
-
-                                        if (newStatusJson != null)
-                                        {
-                                            statusCache[resourceName] = newStatusJson;
-                                        }
-                                        else
-                                        {
-                                            statusCache.Remove(resourceName);
-                                        }
                                     }
                                     break;
                             }
                         });
                 };
-
+            
             //-----------------------------------------------------------------
-            // Loop to handle watcher errors.
+            // Startb the watcher.
 
-            while (true)
+            try
             {
-                try
-                {
-                    await k8s.WatchAsync<TEntity>(actionAsync, namespaceParameter: resourceNamespace, cancellationToken: cancellationToken);
-                }
-                catch (OperationCanceledException)
-                {
-                    // This is thrown when the watcher is stopped due the operator being demoted.
+                await k8s.WatchAsync<TEntity>(actionAsync, namespaceParameter: resourceNamespace, cancellationToken: cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // This is thrown when the watcher is stopped due the operator being demoted.
 
-                    return;
-                }
+                return;
             }
         }
     }
