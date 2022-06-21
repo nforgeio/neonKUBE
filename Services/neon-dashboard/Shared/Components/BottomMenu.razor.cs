@@ -30,13 +30,18 @@ namespace NeonDashboard.Shared.Components
 {
     public partial class BottomMenu : ComponentBase, IDisposable
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public BottomMenu() { }
 
+        /// <inheritdoc />
         protected override void OnInitialized()
         {
             AppState.OnDashboardChange += StateHasChanged;
         }
 
+        /// <inheritdoc />
         public void Dispose()
         {
             AppState.OnDashboardChange -= StateHasChanged;

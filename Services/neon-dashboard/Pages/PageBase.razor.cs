@@ -54,9 +54,5 @@ namespace NeonDashboard.Pages
         public PageBase()
         {
         }
-
-        public void Dispose()
-        {
-        }
     }
 }

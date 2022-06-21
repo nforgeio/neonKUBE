@@ -64,6 +64,12 @@ namespace NeonDashboard.Pages
         }
 
         /// <inheritdoc/>
+        public void Dispose()
+        {
+            AppState.OnDashboardChange -= StateHasChanged;
+        }
+
+        /// <inheritdoc/>
         protected override async Task OnParametersSetAsync()
         {
             await SyncContext.Clear;

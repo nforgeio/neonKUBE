@@ -53,13 +53,12 @@ namespace NeonDashboard.Shared.Components
 		{
 			AppState.OnDashboardChange += StateHasChanged;
 		}
-
-		public DropUp() { }
-
 		public void Dispose()
 		{
 			AppState.OnDashboardChange -= StateHasChanged;
 		}
+
+		public DropUp() { }
 
 		bool HideMenu = true;
 

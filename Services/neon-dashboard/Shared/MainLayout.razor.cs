@@ -47,5 +47,11 @@ namespace NeonDashboard.Shared
         {
             AppState.OnDashboardChange += StateHasChanged;
         }
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            AppState.OnDashboardChange -= StateHasChanged;
+        }
     }
 }

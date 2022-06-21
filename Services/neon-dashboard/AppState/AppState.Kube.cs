@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.IO;
 using System.Reflection;
@@ -81,6 +82,11 @@ namespace NeonDashboard
             /// The date that the cluster was created.
             /// </summary>
             public DateTime CreationTimestamp { get; private set; }
+
+            /// <summary>
+            /// The expiration date of the control plane certificate.
+            /// </summary>
+            public DateTime KubeCertExpiration { get; set; }
 
             /// <summary>
             /// The list of nodes. This contains node related metadata.
@@ -150,6 +156,28 @@ namespace NeonDashboard
                 {
                     Logger.LogError(e);
                 }
+            }
+
+            public async Task GetCertExpirationAsync()
+            {
+                var config = KubernetesClientConfiguration.BuildDefaultConfig();
+
+                X509Certificate2 certificate = null;
+                var httpClientHandler = new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = (_, cert, __, ___) =>
+                    {
+                        certificate = new X509Certificate2(cert.GetRawCertData());
+                        return true;
+                    }
+                };
+
+                var httpClient = new HttpClient(httpClientHandler);
+                await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, config.Host));
+
+                KubeCertExpiration = certificate.NotAfter;
+
+                NotifyStateChanged();
             }
         }
     }

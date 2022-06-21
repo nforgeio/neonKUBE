@@ -48,11 +48,13 @@ namespace NeonDashboard.Shared
         /// <inheritdoc/>
         protected override void OnInitialized()
         {
+            AppState.Kube.OnChange += StateHasChanged;
         }
 
         /// <inheritdoc/>
         public void Dispose()
         {
+            AppState.Kube.OnChange -= StateHasChanged;
         }
     }
 }

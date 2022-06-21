@@ -142,7 +142,16 @@ namespace NeonDashboard.Pages
             if (firstRender)
             {
                 await GetNodeStatusAsync();
+                await AppState.Kube.GetCertExpirationAsync();
             }
+        }
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            AppState.OnDashboardChange -= StateHasChanged;
+            AppState.Kube.OnChange     -= StateHasChanged;
+            AppState.Metrics.OnChange  -= StateHasChanged;
         }
 
         private async Task GetNodeStatusAsync()
@@ -222,13 +231,13 @@ namespace NeonDashboard.Pages
 
             await Task.WhenAll(tasks);
 
-            if (AppState.Metrics.CPUUsagePercent == null || AppState.Metrics.CPUTotal == null)
+            if (AppState.Metrics.CPUUsagePercent == null || AppState.Metrics.CPUUsagePercent.Data?.Result?.Count() == 0)
             {
                 return;
             }
 
             var cpuUsageX = AppState.Metrics.CPUUsagePercent.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time).ToShortTimeString()).ToList();
-            var cpuUsageY = AppState.Metrics.CPUUsagePercent.Data.Result.First().Values.Select(x => decimal.Parse(x.Value) * AppState.Metrics.CPUTotal).ToList();
+            var cpuUsageY = AppState.Metrics.CPUUsagePercent.Data.Result.First().Values.Select(x => AppState.Metrics.CPUTotal - decimal.Parse(x.Value) ).ToList();
 
             await UpdateChartAsync(cpuUsageX, cpuUsageY, cpuChartConfig, cpuChart, $"CPU usage (total cores: {AppState.Metrics.CPUTotal})");
         }

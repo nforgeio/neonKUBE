@@ -167,7 +167,7 @@ namespace NeonDashboard
             {
                 await SyncContext.Clear;
 
-                var query = $@"(avg(irate(node_cpu_seconds_total{{mode = ""idle"", cluster=~""{NeonDashboardService.ClusterInfo.Name}""}}[5m])))";
+                var query = $@"(sum(irate(node_cpu_seconds_total{{mode = ""idle"", cluster=~""{NeonDashboardService.ClusterInfo.Name}""}}[10m])))";
                 CPUUsagePercent = await QueryRangeAsync(query, start, end, stepSize);
 
                 NotifyStateChanged();
