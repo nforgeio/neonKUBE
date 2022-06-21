@@ -3586,6 +3586,7 @@ $@"- name: StorageType
                             values.Add("cluster.name", cluster.Definition.Name);
                             values.Add("cluster.domain", cluster.Definition.Domain);
                             values.Add("neonkube.clusterDomain.minio", ClusterDomain.Minio);
+                            values.Add("neonkube.clusterDomain.sso", ClusterDomain.Sso);
                             values.Add($"metrics.serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                             values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                             values.Add("image.organization", KubeConst.LocalClusterRegistry);
