@@ -285,13 +285,13 @@ spec:
             await TaintNodesAsync(controller);
 
             controller.ThrowIfCancelled();
-            await InstallCrdsAsync(controller);
-
-            controller.ThrowIfCancelled();
             await LabelNodesAsync(controller, master);
 
             controller.ThrowIfCancelled();
             await CreateNamespacesAsync(controller, master);
+
+            controller.ThrowIfCancelled();
+            await InstallCrdsAsync(controller, master);
 
             controller.ThrowIfCancelled();
             await CreateRootUserAsync(controller, master);
@@ -2006,15 +2006,15 @@ subjects:
         /// Installs CRDs used later on in setup by various helm charts.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallCrdsAsync(ISetupController controller)
+        public static async Task InstallCrdsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.Clear;
 
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var master = cluster.FirstMaster;
 
             controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/install-crds",
@@ -4111,7 +4111,7 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(master, verb: "wait for", message: "neon-cluster-operator");
 
-                    await k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-cluster-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                    await k8s.WaitForDaemonsetAsync(KubeNamespace.NeonSystem, "neon-cluster-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
         }
 
@@ -4137,6 +4137,15 @@ $@"- name: StorageType
                 async () =>
                 {
                     controller.LogProgress(master, verb: "setup", message: "neon-dashboard");
+
+                    await CreateNeonDashboardAsync(
+                            controller,
+                            master,
+                            name: "kubernetes",
+                            url: $"https://{ClusterDomain.KubernetesDashboard}.{cluster.Definition.Domain}",
+                            displayName: "Kubernetes",
+                            enabled: true,
+                            displayOrder: 1);
 
                     if (cluster.Definition.Features.Grafana)
                     {
@@ -4252,9 +4261,7 @@ $@"- name: StorageType
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
-                    values.Add($"cluster.datacenter", cluster.Definition.Datacenter);
-                    values.Add($"cluster.version", cluster.Definition.ClusterVersion);
-                    values.Add($"cluster.hostingEnvironment", cluster.Definition.Hosting.Environment);
+                    values.Add("neonkube.clusterDomain.neonDashboard", ClusterDomain.NeonDashboard);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
