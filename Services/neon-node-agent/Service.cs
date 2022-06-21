@@ -153,12 +153,16 @@ namespace NeonNodeAgent
 
             var k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
 
-            await ContainerRegistryController.StartAsync(k8s);
             await NodeTaskController.StartAsync(k8s);
 
             //-----------------------------------------------------------------
             // Start KubeOps.
 
+            // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1599
+            //
+            // We're temporarily using our poor man's operator
+
+#if DISABLED
             _ = Host.CreateDefaultBuilder()
                     .ConfigureHostOptions(
                         options =>
@@ -190,6 +194,7 @@ namespace NeonNodeAgent
                     .ConfigureWebHostDefaults(builder => builder.UseStartup<Startup>())
                     .Build()
                     .RunOperatorAsync(Array.Empty<string>());
+#endif
 
             // Indicate that the service is running.
 

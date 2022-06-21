@@ -475,7 +475,7 @@ namespace Neon.Kube
         /// <param name="name">Specifies the object name.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object.</returns>
-        public static async Task<T> GetNamespacedCustomObjectAsync<T>(
+        public static async Task<T> ReadNamespacedCustomObjectAsync<T>(
             this IKubernetes    k8s,
             string              namespaceParameter,
             string              name,
@@ -593,7 +593,7 @@ namespace Neon.Kube
 
             try
             {
-                await k8s.GetNamespacedCustomObjectAsync<T>(namespaceParameter, name, cancellationToken);
+                await k8s.ReadNamespacedCustomObjectAsync<T>(namespaceParameter, name, cancellationToken);
             }
             catch (HttpOperationException e)
             {

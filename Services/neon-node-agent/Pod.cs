@@ -24,6 +24,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Kube;
 
 namespace NeonNodeAgent
 {
@@ -53,7 +54,7 @@ namespace NeonNodeAgent
             if (NeonHelper.IsDevWorkstation)
             {
                 Namespace = "default";
-                Name      = "test-pod";
+                Name      = KubeHelper.GetEmulatedPodName("neon-node-agent");
             }
             else
             {

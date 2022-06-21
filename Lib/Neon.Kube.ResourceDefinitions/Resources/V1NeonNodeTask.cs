@@ -123,7 +123,7 @@ namespace Neon.Kube.Resources
     /// The agent will then execute the script on the node, persisting the process ID to the node task 
     /// status along with the command line used to execute the script.  When the script finishes, the
     /// agent will capture its exit code and standard output and error streams as text.  The command 
-    /// execution time will be limited by <see cref="TaskSpec.Timeout"/>.
+    /// execution time will be limited by <see cref="TaskSpec.TimeoutSeconds"/>.
     /// </item>
     /// <note>
     /// <para>
@@ -139,7 +139,7 @@ namespace Neon.Kube.Resources
     /// </para>
     /// </note>
     /// <item>
-    /// When the command completes without timing out, the agent will set its state to <see cref="Phase.Finished"/>,
+    /// When the command completes without timing out, the agent will set its state to <see cref="Phase.Success"/>,
     /// set <see cref="TaskStatus.FinishTimestamp"/> to the current time and <see cref="TaskStatus.ExitCode"/>,
     /// <see cref="TaskStatus.Output"/> and <see cref="TaskStatus.Error"/> to the command results.
     /// </item>
@@ -244,9 +244,9 @@ namespace Neon.Kube.Resources
             Failed,
 
             /// <summary>
-            /// The task finished executing.
+            /// The task finished executing with a zero exit code.
             /// </summary>
-            Finished
+            Success
         }
 
         //---------------------------------------------------------------------
@@ -298,63 +298,24 @@ namespace Neon.Kube.Resources
             public DateTime? StartAfterTimestamp { get; set; }
 
             /// <summary>
-            /// Specifies the maximum time the command will be allowed to execute.
-            /// This is formatted as a GO duration and defaults to <b>5 minutes</b>.
+            /// Specifies the maximum time the command will be allowed to execute
+            /// in seconds.  Defaults to <b>5 minutes</b>.
             /// </summary>
 #if KUBEOPS
             [Required]
-            [Pattern(GoDuration.PartialRegEx)]
 #endif
-            public string Timeout { get; set; } = "5m";
+            public int TimeoutSeconds { get; set; } = 300;
 
             /// <summary>
-            /// Gets the <see cref="Timeout"/> property as a GOLANG formatted <see cref="TimeSpan"/>.
-            /// </summary>
-            /// <returns>The parsed <see cref="TimeSpan"/>.</returns>
-            public TimeSpan GetTimeout()
-            {
-                return GoDuration.Parse(Timeout ?? "0s");
-            }
-
-            /// <summary>
-            /// Sets the <see cref="Timeout"/> property as a GOLANG formatted <see cref="TimeSpan"/>.
-            /// </summary>
-            /// <param name="value">The value veing set.</param>
-            public void SetTimeout(TimeSpan value)
-            {
-                Timeout = GoDuration.FromTimeSpan(value).ToPretty();
-            }
-
-            /// <summary>
-            /// Specifies the maximum time to retain the task after it has been
-            /// ended, for any reason.  <b>neon-cluster-operator</b> will add
+            /// Specifies the maximum time in seconds to retain the task after 
+            /// it has been ended, for any reason.  <b>neon-cluster-operator</b> will add
             /// this to <see cref="TaskStatus.FinishTimestamp"/> to determine
-            /// when it should delete the task.  This is formatted as a GO
-            /// duration and defaults to <b>10 minutes</b>.
+            /// when it should delete the task.  This defaults to <b>10 minutes</b>.
             /// </summary>
 #if KUBEOPS
             [Required]
-            [Pattern(GoDuration.PartialRegEx)]
 #endif
-            public string RetentionTime { get; set; } = "10m";
-
-            /// <summary>
-            /// Gets the <see cref="RetentionTime"/> property as a GOLANG formatted <see cref="TimeSpan"/>.
-            /// </summary>
-            /// <returns>The parsed <see cref="TimeSpan"/>.</returns>
-            public TimeSpan GetRetentionTime()
-            {
-                return GoDuration.Parse(RetentionTime ?? "0s");
-            }
-
-            /// <summary>
-            /// Sets the <see cref="RetentionTime"/> property as a GOLANG formatted <see cref="TimeSpan"/>.
-            /// </summary>
-            /// <param name="value">The value being set.</param>
-            public void SetRetentionTime(TimeSpan value)
-            {
-                RetentionTime = GoDuration.FromTimeSpan(value).ToPretty();
-            }
+            public int RetentionSeconds { get; set; } = 600;
 
             /// <summary>
             /// <para>
@@ -385,14 +346,14 @@ namespace Neon.Kube.Resources
                     throw new CustomResourceException($"[{specPrefix}.{nameof(BashScript)}]: cannot be NULL or empty.");
                 }
 
-                if (GetTimeout() <= TimeSpan.Zero)
+                if (TimeoutSeconds <= 0)
                 {
-                    throw new CustomResourceException($"[{specPrefix}.{nameof(Timeout)}={Timeout}]: Must be greater than zero.");
+                    throw new CustomResourceException($"[{specPrefix}.{nameof(TimeoutSeconds)}={TimeoutSeconds}]: Must be greater than zero.");
                 }
 
-                if (GetRetentionTime() < TimeSpan.Zero)
+                if (RetentionSeconds < 0)
                 {
-                    throw new CustomResourceException($"[{specPrefix}.{nameof(RetentionTime)}={RetentionTime}]: Cannot be negative.");
+                    throw new CustomResourceException($"[{specPrefix}.{nameof(RetentionSeconds)}={RetentionSeconds}]: Cannot be negative.");
                 }
             }
         }
@@ -431,28 +392,7 @@ namespace Neon.Kube.Resources
             /// <summary>
             /// Set to the task execution time.
             /// </summary>
-#if KUBEOPS
-            [Pattern(GoDuration.PartialRegEx)]
-#endif
-            public string Runtime { get; set; } = "0s";
-
-            /// <summary>
-            /// Gets the <see cref="Runtime"/> property as a GOLANG formatted <see cref="TimeSpan"/>.
-            /// </summary>
-            /// <returns>The parsed <see cref="TimeSpan"/>.</returns>
-            public TimeSpan GetRuntime()
-            {
-                return GoDuration.Parse(Runtime ?? "0s");
-            }
-
-            /// <summary>
-            /// Sets the <see cref="Runtime"/> property as a GOLANG formatted <see cref="TimeSpan"/>.
-            /// </summary>
-            /// <param name="value">The value being set.</param>
-            public void SetRuntime(TimeSpan value)
-            {
-                Runtime = GoDuration.FromTimeSpan(value).ToPretty();
-            }
+            public int RuntimeSeconds { get; set; }
 
             /// <summary>
             /// The command line invoked for the task.  This is used for detecting orphaned tasks.

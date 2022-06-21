@@ -468,7 +468,7 @@ namespace Neon.Kube
         /// <param name="name">Specifies the object name.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object.</returns>
-        public static async Task<T> GetClusterCustomObjectAsync<T>(
+        public static async Task<T> ReadClusterCustomObjectAsync<T>(
             this IKubernetes    k8s,
             string              name,
             CancellationToken   cancellationToken = default(CancellationToken)) 
@@ -576,7 +576,7 @@ namespace Neon.Kube
 
             try
             {
-                await k8s.GetClusterCustomObjectAsync<T>(name, cancellationToken);
+                await k8s.ReadClusterCustomObjectAsync<T>(name, cancellationToken);
             }
             catch (HttpOperationException e)
             {

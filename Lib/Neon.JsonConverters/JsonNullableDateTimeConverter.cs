@@ -51,7 +51,7 @@ namespace Neon.JsonConverters
             }
             else
             {
-                return DateTime.ParseExact(input, dateFormat, CultureInfo.InvariantCulture);
+                return DateTime.ParseExact(input, dateFormat, CultureInfo.InvariantCulture).ToUniversalTime();
             }
         }
 
