@@ -26,20 +26,17 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 using Neon.Common;
-using Neon.IO;
 using Neon.JsonConverters;
-using Neon.Kube;
-using Neon.Kube.Xunit;
 using Neon.Xunit;
 
 using Xunit;
 
-namespace TestKube
+namespace TestConverters
 {
     [Trait(TestTrait.Category, TestArea.NeonKube)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
-    public class Test_Converters
+    public class Test_JsonConverters
     {
         private class TestDateTime
         {
