@@ -58,7 +58,7 @@ namespace Neon.JsonConverters
         /// <inheritdoc/>
         public override void Write(Utf8JsonWriter writer, DateTime? value, JsonSerializerOptions options)
         {
-            writer.WriteRawValue(value.HasValue ? value.Value.ToString(dateFormat) : "null");
+            writer.WriteStringValue(value.HasValue ? value.Value.ToString(dateFormat) : "null");
         }
     }
 }
