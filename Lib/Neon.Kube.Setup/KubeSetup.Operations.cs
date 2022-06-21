@@ -2040,8 +2040,10 @@ subjects:
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s     = GetK8sClient(controller);
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s           = GetK8sClient(controller);
+            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Kiali);
 
             controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/kiali",
@@ -2063,6 +2065,8 @@ subjects:
                     values.Add("neonkube.clusterDomain.kiali", ClusterDomain.Kiali);
                     values.Add($"neonkube.clusterDomain.grafana", ClusterDomain.Grafana);
                     values.Add("grafanaPassword", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
+                    values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
                     int i = 0;
                     foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelIstio, "true"))

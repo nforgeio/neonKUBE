@@ -472,11 +472,6 @@ namespace Neon.Kube
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.Kiali);
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.Masters.Count() == 1)
-            {
-                advice.MetricsEnabled = false;
-            }
-
             advice.MetricsEnabled = false;
 
             return advice;

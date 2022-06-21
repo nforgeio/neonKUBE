@@ -14,6 +14,11 @@ metadata:
 spec:
   version: default
   istio_namespace: neon-ingress
+  server:
+    observability:
+      metrics:
+        enabled: {{ .Values.metrics.enabled }}
+        port: 9090
   auth:
     strategy: header
     openid:

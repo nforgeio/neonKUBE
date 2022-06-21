@@ -75,6 +75,9 @@
 		<None Remove="Resources\Helm\grafana-agent\templates\neon-dashboard.yaml" />
 		<None Remove="Resources\Helm\grafana\templates\datasource-loki.yaml" />
 		<None Remove="Resources\Helm\grafana\templates\datasource-mimir.yaml" />
+		<None Remove="Resources\Helm\kiali\templates\service-operator.yaml" />
+		<None Remove="Resources\Helm\kiali\templates\servicemonitor-operator.yaml" />
+		<None Remove="Resources\Helm\kiali\templates\servicemonitor.yaml" />
 		<None Remove="Resources\Helm\kube-state-metrics\templates\grafana-dashboard.yaml" />
 		<None Remove="Resources\Helm\loki\templates\service.yaml" />
 		<None Remove="Resources\Helm\loki\templates\virtualservice.yaml" />

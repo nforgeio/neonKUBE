@@ -32,6 +32,17 @@ secretReader: ['cacerts', 'istio-ca-secret']
 # metrics.enabled: set to true if you want Prometheus to collect metrics from the operator
 metrics:
   enabled: true
+  serviceMonitor:
+    # Enable Prometheus Operator ServiceMonitor
+    enabled: true
+    # Define the namespace where to deploy the ServiceMonitor resource
+    namespace: ""
+    # Prometheus scrape interval
+    interval: 60s
+    # Prometheus scrape timeout
+    scrapeTimeout: 30s
+    # Add custom labels to the ServiceMonitor resource
+    labels: {}
 
 # debug.enabled: when true the full ansible logs are dumped after each reconciliation run
 # debug.verbosity: defines the amount of details the operator will log (higher numbers are more noisy)
