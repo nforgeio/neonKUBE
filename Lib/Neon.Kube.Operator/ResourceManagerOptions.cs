@@ -61,25 +61,9 @@ namespace Neon.Kube.Operator
         }
 
         /// <summary>
-        /// Specifies how the operator should treat reconclie events. See the <see cref="ResourceManager{TResource, TController}"/>
-        /// remarks for more information.  This defaults to <see cref="ResourceManagerMode.Normal"/>.
-        /// </summary>
-        public ResourceManagerMode Mode { get; set; } = ResourceManagerMode.Normal;
-
-        /// <summary>
-        /// Specifies the amount of time the resource manager will wait after receiving the last
-        /// reconciled resource before consider that it has the entire set.  This impacts the
-        /// <see cref="ResourceManagerMode.Collection"/> mode by delaying any reconcile events
-        /// until all events have been collected.  This has no impact for the <see cref="ResourceManagerMode.Normal"/>
-        /// mode.  This defaults to <b>30 seconds</b>.
-        /// </summary>
-        public TimeSpan CollectInterval { get; set; } = TimeSpan.FromSeconds(30);
-
-        /// <summary>
         /// Specifies the interval at which reconcile events indicating that nothing has changed will
-        /// be raised for <see cref="ResourceManagerMode.Collection"/>/ mode.  These IDLE events
-        /// are a good time for controllers to operate on the entire set of resources.  This applies
-        /// only the <see cref="ResourceManagerMode.Collection"/> mode and defaults to <b>1 minutes</b>.
+        /// be raised.  These IDLE events are a good time for controllers to operate on the entire set 
+        /// of resources.  This defaults to <b>1 minutes</b>.
         /// </summary>
         public TimeSpan IdleInterval { get; set; } = TimeSpan.FromMinutes(1);
 
@@ -190,11 +174,6 @@ namespace Neon.Kube.Operator
         /// <exception cref="ValidationException">Thrown when any of the properties are invalid.</exception>
         public void Validate()
         {
-            if (CollectInterval < TimeSpan.Zero)
-            {
-                throw new ValidationException($"[{nameof(CollectInterval)}={CollectInterval}] cannot be less than zero.");
-            }
-
             if (ErrorMinRequeueInterval < TimeSpan.Zero)
             {
                 throw new ValidationException($"[{nameof(ErrorMinRequeueInterval)}={ErrorMinRequeueInterval}] cannot be less than zero.");
