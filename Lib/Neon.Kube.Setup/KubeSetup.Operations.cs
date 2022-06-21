@@ -4062,9 +4062,37 @@ $@"- name: StorageType
                                     return await Task.FromResult(false);
                                 }
                             },
-                            timeout:           TimeSpan.FromSeconds(600),
-                            pollInterval:      TimeSpan.FromSeconds(1),
+                            timeout: TimeSpan.FromSeconds(600),
+                            pollInterval: TimeSpan.FromSeconds(1),
                             cancellationToken: controller.CancellationToken);
+                    }
+                });
+
+            controller.ThrowIfCancelled();
+            await master.InvokeIdempotentAsync("setup/harbor-login-workstation",
+                async () =>
+                {
+                    var user     = await KubeHelper.GetClusterLdapUserAsync(k8s, "root");
+                    var password = user.Password;
+                    var sbScript = new StringBuilder();
+                    var sbArgs   = new StringBuilder();
+
+                    if (!string.IsNullOrEmpty(NeonHelper.DockerCli))
+                    {
+                        Console.WriteLine($"Login: Workstation to Harbor...");
+
+                        var login = KubeHelper.GetClusterLogin(KubeHelper.CurrentContextName);
+
+                        NeonHelper.Execute(NeonHelper.DockerCli,
+                            new object[]
+                            {
+                                "login",
+                                $"{ClusterDomain.HarborRegistry}.{login.ClusterDefinition.Domain}",
+                                "--username",
+                                "root",
+                                "--password-stdin"
+                            },
+                            input: new StringReader(login.SsoPassword));
                     }
                 });
         }
