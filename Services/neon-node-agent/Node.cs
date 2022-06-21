@@ -67,7 +67,7 @@ namespace NeonNodeAgent
             }
             catch
             {
-                Name = "emulated-node";
+                Name = "emulated";
             }
 
             AgentId = Guid.NewGuid().ToString("d");

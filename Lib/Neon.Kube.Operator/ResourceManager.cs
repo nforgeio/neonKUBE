@@ -258,8 +258,8 @@ namespace Neon.Kube.Operator
         /// </summary>
         /// <param name="k8s">The <see cref="IKubernetes"/> client used by the controller.</param>
         /// <param name="options">
-        /// Optionally specifies options that customize the resource manager's behavior.  This
-        /// defaults to <see cref="ResourceManagerMode.Normal"/> mode with reasonable timing settings.
+        /// Optionally specifies options that customize the resource manager's behavior.  Reasonable
+        /// defaults will be used when this isn't specified.
         /// </param>
         /// <param name="filter">
         /// <para>

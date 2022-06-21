@@ -167,9 +167,9 @@ namespace TestKube
                     var filePath = GetTestFilePath(node.Name);
                     var folderPath = LinuxPath.GetDirectoryName(filePath);
 
-                    spec.Node = node.Name;
-                    spec.SetRetentionTime(TimeSpan.FromSeconds(30));
-                    spec.BashScript =
+                    spec.Node             = node.Name;
+                    spec.RetentionSeconds = 30;
+                    spec.BashScript       =
  $@"
 set -euo pipefail
 
@@ -218,7 +218,7 @@ touch $NODE_ROOT{filePath}
                 {
                     if (taskNames.Contains(task.Metadata.Name))
                     {
-                        Assert.Equal(V1NeonNodeTask.Phase.Finished, task.Status.Phase);
+                        Assert.Equal(V1NeonNodeTask.Phase.Success, task.Status.Phase);
                         Assert.Equal(0, task.Status.ExitCode);
                         Assert.Equal(string.Empty, task.Status.Output);
                         Assert.Equal(string.Empty, task.Status.Error);
@@ -273,9 +273,9 @@ touch $NODE_ROOT{filePath}
             var metadata = nodeTask.Metadata;
             var spec     = nodeTask.Spec;
 
-            spec.Node = fixture.Cluster.FirstMaster.Name;
-            spec.SetRetentionTime(TimeSpan.FromSeconds(30));
-            spec.BashScript =
+            spec.Node             = fixture.Cluster.FirstMaster.Name;
+            spec.RetentionSeconds = 30;
+            spec.BashScript       =
 @"
 echo 'HELLO WORLD!'   >&1
 echo 'GOODBYE WORLD!' >&2
@@ -336,10 +336,10 @@ exit 123
             var metadata = nodeTask.Metadata;
             var spec     = nodeTask.Spec;
 
-            spec.Node = fixture.Cluster.FirstMaster.Name;
-            spec.SetTimeout(TimeSpan.FromSeconds(15));
-            spec.SetRetentionTime(TimeSpan.FromSeconds(30));
-            spec.BashScript =
+            spec.Node             = fixture.Cluster.FirstMaster.Name;
+            spec.TimeoutSeconds   = 15;
+            spec.RetentionSeconds = 30;
+            spec.BashScript       =
 @"
 sleep 30
 ";
@@ -400,10 +400,10 @@ sleep 30
             var metadata = nodeTask.Metadata;
             var spec     = nodeTask.Spec;
 
-            spec.Node = fixture.Cluster.FirstMaster.Name;
-            spec.SetTimeout(TimeSpan.FromMinutes(15));
-            spec.SetRetentionTime(TimeSpan.FromSeconds(30));
-            spec.BashScript =
+            spec.Node             = fixture.Cluster.FirstMaster.Name;
+            spec.TimeoutSeconds   = (int)TimeSpan.FromMinutes(15).TotalSeconds;
+            spec.RetentionSeconds = 30;
+            spec.BashScript       =
 @"
 sleep 600
 ";

@@ -299,7 +299,7 @@ rm $0
                         {
                             var retentionTime = DateTime.UtcNow - nodeTask.Status.FinishTimestamp;
 
-                            if (retentionTime >= nodeTask.Spec.GetRetentionTime())
+                            if (retentionTime >= TimeSpan.FromSeconds(nodeTask.Spec.RetentionSeconds))
                             {
                                 log.LogInfo($"NodeTask [{name}] retained for [{retentionTime}] (deleting now).");
                                 await k8s.DeleteClusterCustomObjectAsync(nodeTask);
@@ -441,9 +441,9 @@ rm $0
                     // Kill tasks that have been running for too long.
 
                     if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.Running &&
-                        utcNow - nodeTask.Status.StartTimestamp >= nodeTask.Spec.GetTimeout())
+                        utcNow - nodeTask.Status.StartTimestamp >= TimeSpan.FromSeconds(nodeTask.Spec.TimeoutSeconds))
                     {
-                        log.LogWarn($"Execution timeout [nodetask={taskName}]: execution time exceeds [{nodeTask.Spec.Timeout}].");
+                        log.LogWarn($"Execution timeout [nodetask={taskName}]: execution time exceeds [{nodeTask.Spec.TimeoutSeconds}].");
                         await KillTaskAsync(nodeTask);
 
                         // Update the node task status to: TIMEOUT
@@ -452,7 +452,7 @@ rm $0
 
                         patch.Replace(path => path.Status.Phase, V1NeonNodeTask.Phase.Timeout);
                         patch.Replace(path => path.Status.FinishTimestamp, utcNow);
-                        patch.Replace(path => path.Status.Runtime, GoDuration.FromTimeSpan((utcNow - nodeTask.Status.StartTimestamp.Value)).ToPretty());
+                        patch.Replace(path => path.Status.RuntimeSeconds, (int)Math.Ceiling((utcNow - nodeTask.Status.StartTimestamp.Value).TotalSeconds));
                         patch.Replace(path => path.Status.ExitCode, -1);
 
                         await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
@@ -466,9 +466,9 @@ rm $0
 
             foreach (var nodeTask in nodeTasks
                 .Where(task => task.Status.Phase != V1NeonNodeTask.Phase.New && task.Status.Phase != V1NeonNodeTask.Phase.Running)
-                .Where(task => (utcNow - task.Status.FinishTimestamp) >= task.Spec.GetRetentionTime()))
+                .Where(task => (utcNow - task.Status.FinishTimestamp) >= TimeSpan.FromSeconds(task.Spec.RetentionSeconds)))
             {
-                log.LogWarn($"[nodetask={nodeTask.Name()}]: has been retained for [{nodeTask.Spec.RetentionTime}] (deleting now).");
+                log.LogWarn($"[nodetask={nodeTask.Name()}]: has been retained for [{nodeTask.Spec.RetentionSeconds}] (deleting now).");
                 await k8s.DeleteClusterCustomObjectAsync(nodeTask);
             }
 
@@ -634,7 +634,7 @@ export SCRIPT_DIR={taskFolder}
 
                     task = Node.BashExecuteCaptureAsync(
                         path:            scriptPath,
-                        timeout:         nodeTask.Spec.GetTimeout(),
+                        timeout:         TimeSpan.FromSeconds(nodeTask.Spec.TimeoutSeconds),
                         processCallback: processCallback);
                 }
                 catch (Exception e)
@@ -703,25 +703,24 @@ export SCRIPT_DIR={taskFolder}
                     log.LogWarn($"Timeout [nodetask={taskName}]");
                 }
 
+                var utcNow = DateTime.UtcNow;
+
                 if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.Running)
                 {
-                    nodeTask.Status.FinishTimestamp = DateTime.UtcNow;
-                    nodeTask.Status.SetRuntime(nodeTask.Status.FinishTimestamp.Value - nodeTask.Status.StartTimestamp.Value);
-
                     patch = OperatorHelper.CreatePatch<V1NeonNodeTask>();
 
-                    patch.Replace(path => path.Status.FinishTimestamp, DateTime.UtcNow);
+                    patch.Replace(path => path.Status.FinishTimestamp, utcNow);
 
                     if (timeout)
                     {
                         patch.Replace(path => path.Status.Phase, V1NeonNodeTask.Phase.Timeout);
-                        patch.Replace(path => path.Status.Runtime, GoDuration.FromTimeSpan(DateTime.UtcNow - nodeTask.Status.StartTimestamp.Value).ToPretty());
+                        patch.Replace(path => path.Status.RuntimeSeconds, (int)Math.Ceiling((utcNow - nodeTask.Status.StartTimestamp.Value).TotalSeconds));
                         patch.Replace(path => path.Status.ExitCode, -1);
                     }
                     else
                     {
-                        patch.Replace(path => path.Status.Phase, result.ExitCode == 0 ? V1NeonNodeTask.Phase.Finished : V1NeonNodeTask.Phase.Failed);
-                        patch.Replace(path => path.Status.Runtime, GoDuration.FromTimeSpan(nodeTask.Status.FinishTimestamp.Value - nodeTask.Status.StartTimestamp.Value).ToPretty());
+                        patch.Replace(path => path.Status.Phase, result.ExitCode == 0 ? V1NeonNodeTask.Phase.Success : V1NeonNodeTask.Phase.Failed);
+                        patch.Replace(path => path.Status.RuntimeSeconds, (int)Math.Ceiling((utcNow - nodeTask.Status.StartTimestamp.Value).TotalSeconds));
                         patch.Replace(path => path.Status.ExitCode, result.ExitCode);
 
                         if (nodeTask.Spec.CaptureOutput)
