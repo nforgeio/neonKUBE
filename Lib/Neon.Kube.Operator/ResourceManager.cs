@@ -49,6 +49,17 @@ using k8s.Models;
 
 using Prometheus;
 
+// $todo(jefflill):
+//
+// We don't currently do anything with non-null [ResourceControllerResult] returned by [ReconcileAsync()].
+// I'm not entirely sure what the semantics for this are.  I assume that:
+//
+//      1. a subsequent DELETE will cancel a pending RECONCILE
+//      2. a subsequent ADD/UPDATE will cancel (or replace?) a pending RECONILE
+//      3. a subsequent MODIFY will cancel a pending RECONCILE
+//
+// I need to do some more research.  neonKUBE isn't currently depending on this.
+
 namespace Neon.Kube.Operator
 {
     /// <summary>
@@ -63,31 +74,9 @@ namespace Neon.Kube.Operator
     /// (passing any custom settings as parameters) and then call <see cref="StartAsync(string)"/>.
     /// </para>
     /// <para>
-    /// After the resource manager starts, your controller's <see cref="ReconciledAsync(TEntity, ResourceManager{TEntity, TController}.ReconcileHandlerAsync)"/>, 
-    /// <see cref="DeletedAsync(TEntity, ResourceManager{TEntity, TController}.NoResultHandlerAsync)"/>, and
-    /// <see cref="StatusModifiedAsync(TEntity, ResourceManager{TEntity, TController}.NoResultHandlerAsync)"/> 
+    /// After the resource manager starts, your controller's <see cref="IOperatorController{TEntity}.ReconcileAsync(TEntity)"/>, 
+    /// <see cref="IOperatorController{TEntity}.DeletedAsync(TEntity)"/>, and <see cref="IOperatorController{TEntity}.StatusModifiedAsync(TEntity)"/> 
     /// methods will be called as related resource related events are received.
-    /// </para>
-    /// <para><b>KUBEOPS INTEGRATION</b></para>
-    /// <para>
-    /// This class is designed to integrate cleanly with operators based on the [KubeOps](https://github.com/buehler/dotnet-operator-sdk)
-    /// Kubernetes Operator SDK for .NET.  You'll instantiate a <see cref="ResourceManager{TResource, IController}"/>
-    /// instance for each controller, passing the custom resource type as the type parameter and then set this
-    /// as a static field in your controller.  Then you'll need to add a call to 
-    /// <see cref="ReconciledAsync(TEntity, ResourceManager{TEntity, TController}.ReconcileHandlerAsync)"/>
-    /// in your controller's <b>ReconcileAsync()</b> method, a call to 
-    /// <see cref="DeletedAsync(TEntity, ResourceManager{TEntity, TController}.NoResultHandlerAsync)"/>
-    /// in your controller's <b>DeletedAsync()</b> method and a call to 
-    /// <see cref="StatusModifiedAsync(TEntity, ResourceManager{TEntity, TController}.NoResultHandlerAsync)"/>
-    /// on your controller <b>StatusModifiedAsync()</b> method.
-    /// </para>
-    /// <para>
-    /// You'll also need to pass a callback to each method to handle any resource changes for that operation.
-    /// The callback signature for your RECONCILE handler is <see cref="ResourceManager{TResource, TController}.ReconcileHandlerAsync"/>,
-    /// where the <c>name</c> parameter will be passed as the name of the changed resource or <c>null</c> when
-    /// the event was raised when nothing changed.  For DELETED and STATUS-MODIFIED, your callback will be
-    /// a <see cref="ResourceManager{TResource, TController}.NoResultHandlerAsync"/> which does not return
-    /// a result.
     /// </para>
     /// <para>
     /// Your handlers should perform any necessary operations to converge the actual state with set
@@ -174,38 +163,6 @@ namespace Neon.Kube.Operator
     /// processes required along with their associated overhead.
     /// </item>
     /// </list>
-    /// <note>
-    /// <para>
-    /// <b>YOU MUST DISABLE</b> <b>KubeOps</b> based leader election like this:
-    /// </para>
-    /// <code language="C#">
-    /// public class Startup
-    /// {
-    ///     public void ConfigureServices(IServiceCollection services)
-    ///     {
-    ///         var operatorBuilder = services
-    ///             .AddKubernetesOperator(
-    ///                 settings =>
-    ///                 {
-    ///                     settings.EnableLeaderElection = false;  // &lt;--- DISABLE LEADER ELECTION
-    ///                 });
-    ///     }
-    ///
-    ///     public void Configure(IApplicationBuilder app)
-    ///     {
-    ///         app.UseKubernetesOperator();
-    ///     }
-    /// }
-    /// </code>
-    /// </note>
-    /// <para>
-    /// You'll need to pass a <see cref="LeaderElectionConfig"/> to the <see cref="ResourceManager{TResource, TController}"/>
-    /// constructor when resource processing needs to be restricted to a single operator instance (the leader).  Then 
-    /// <see cref="ResourceManager{TResource, TController}"/> instances with this config will allow methods like 
-    /// <see cref="ReconciledAsync(TEntity, ResourceManager{TEntity, TController}.ReconcileHandlerAsync)"/> to
-    /// return only when the instance holds the lease and all <see cref="ResourceManager{TResource, TController}"/> 
-    /// instances without a leader config will continue returning changes.
-    /// </para>
     /// </remarks>
     public sealed class ResourceManager<TEntity, TController> : IDisposable
         where TEntity : CustomKubernetesEntity, new()
