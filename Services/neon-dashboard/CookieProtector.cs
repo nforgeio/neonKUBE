@@ -21,45 +21,13 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.DataProtection;
 
 using Neon.Common;
+using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Web;
-
-using Blazor.Analytics;
-using Blazor.Analytics.Components;
-
-using Blazored.LocalStorage;
-
-using k8s;
-
-using Prometheus;
-
-using Segment;
-
-using StackExchange.Redis;
-
-using Tailwind;
-using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.DataProtection.XmlEncryption;
-using System.Xml.Linq;
-using System.IO;
-using Neon.Cryptography;
 
 namespace NeonDashboard
 {
@@ -69,6 +37,11 @@ namespace NeonDashboard
     public class CookieProtector : IDataProtector
     {
         private AesCipher cipher;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="aesCipher"></param>
         public CookieProtector(AesCipher aesCipher)
         {
             cipher = aesCipher;
