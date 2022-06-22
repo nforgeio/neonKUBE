@@ -159,15 +159,15 @@ rm $0
 
             var options = new ResourceManagerOptions()
             {
-                IdleInterval               = Program.Service.Environment.Get("NODETASK_IDLE_INTERVAL", TimeSpan.FromSeconds(60)),
-                ErrorMinRequeueInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15)),
-                ErrorMaxRetryInterval      = Program.Service.Environment.Get("NODETASK_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromSeconds(60)),
-                IdleCounter                = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle", "IDLE events processed."),
-                ReconcileCounter           = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconcile", "RECONCILE events processed."),
-                DeleteCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_delete", "DELETED events processed."),
-                IdleErrorCounter           = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle_error", "Failed NodeTask IDLE event processing."),
-                ReconcileErrorCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconcile_error", "Failed NodeTask RECONCILE event processing."),
-                DeleteErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_delete_error", "Failed NodeTask DELETE event processing."),
+                IdleInterval             = Program.Service.Environment.Get("NODETASK_IDLE_INTERVAL", TimeSpan.FromSeconds(60)),
+                ErrorMinRequeueInterval  = Program.Service.Environment.Get("NODETASK_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15)),
+                ErrorMaxRetryInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromSeconds(60)),
+                IdleCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle", "IDLE events processed."),
+                ReconcileCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconcile", "RECONCILE events processed."),
+                DeleteCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_delete", "DELETED events processed."),
+                IdleErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle_error", "Failed NodeTask IDLE event processing."),
+                ReconcileErrorCounter    = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconcile_error", "Failed NodeTask RECONCILE event processing."),
+                DeleteErrorCounter       = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_delete_error", "Failed NodeTask DELETE event processing."),
                 StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodify_error", "Failed NodeTask STATUS-MODIFY events processing.")
             };
 
@@ -224,6 +224,28 @@ rm $0
         public async Task IdleAsync()
         {
             log.LogInfo("[IDLE]");
+
+            // Handle execution of scheduled tasks.
+
+            // $todo(jefflill):
+            //
+            // I'm implementing this here because even though this would be better
+            // implemented via requeue events.  Unforunately, we haven't implemented
+            // that yet.
+
+            var utcNow = DateTime.UtcNow;
+
+            foreach (var scheduledTask in (await k8s.ListClusterCustomObjectAsync<V1NeonNodeTask>()).Items
+                .Where(task => NodeTaskFilter(task) && task.Spec.StartAfterTimestamp != null && task.Status != null)
+                .Where(task => task.Spec.StartAfterTimestamp <= utcNow && task.Status.Phase == V1NeonNodeTask.Phase.Pending)
+                .OrderByDescending(task => task.Metadata.CreationTimestamp))
+            {
+                await ExecuteTaskAsync(scheduledTask);
+            }
+
+            // Manage tasks by deleting finished tasks after their retention period,
+            // detecting and deleting orphanded tasks, as well as detecting tardy tasks
+            // that have missed their scheduling window.
 
             await CleanupTasksAsync();
         }
@@ -312,10 +334,29 @@ rm $0
                 }
             }
 
-            // Execute the task if it's pending.
+            // Execute the task if it's pending and it hasn't missed the scheduliung window.
 
             if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.Pending)
             {
+                var utcNow = DateTime.UtcNow;
+
+                if (nodeTask.Spec.StartBeforeTimestamp.HasValue && utcNow >= nodeTask.Spec.StartBeforeTimestamp)
+                {
+                    log.LogWarn($"Detected tardy [nodetask={nodeTask.Name()}]: task execution didn't start before [{nodeTask.Spec.StartBeforeTimestamp}].");
+
+                    // Update the node task status to: TARDY
+
+                    var patch = OperatorHelper.CreatePatch<V1NeonNodeTask>();
+
+                    patch.Replace(path => path.Status.Phase, V1NeonNodeTask.Phase.Tardy);
+                    patch.Replace(path => path.Status.FinishTimestamp, utcNow);
+                    patch.Replace(path => path.Status.ExitCode, -1);
+
+                    await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
+
+                    return null;
+                }
+
                 await ExecuteTaskAsync(nodeTask);
             }
 
@@ -336,6 +377,10 @@ rm $0
         /// <item>
         /// Tasks with a finish time that is older than <see cref="V1NeonNodeTask.TaskSpec.RetentionTime"/>
         /// will be removed.
+        /// </item>
+        /// <item>
+        /// Scheduled tasks that missed their scheduling window will be marked as TARDY and
+        /// will be retained for a while before being deleted.
         /// </item>
         /// </list>
         /// </summary>
@@ -405,6 +450,26 @@ rm $0
                         patch.Replace(path => path.Status.Phase, V1NeonNodeTask.Phase.Timeout);
                         patch.Replace(path => path.Status.FinishTimestamp, utcNow);
                         patch.Replace(path => path.Status.RuntimeSeconds, (int)Math.Ceiling((utcNow - nodeTask.Status.StartTimestamp.Value).TotalSeconds));
+                        patch.Replace(path => path.Status.ExitCode, -1);
+
+                        await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
+                        continue;
+                    }
+
+                    //---------------------------------------------------------
+                    // Detect that missed their scheduling window and mark them as tardy 
+
+                    if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.Pending &&
+                        nodeTask.Spec.StartBeforeTimestamp.HasValue && utcNow >= nodeTask.Spec.StartBeforeTimestamp)
+                    {
+                        log.LogWarn($"Detected tardy [nodetask={taskName}]: task execution didn't start before [{nodeTask.Spec.StartBeforeTimestamp}].");
+
+                        // Update the node task status to: TARDY
+
+                        var patch = OperatorHelper.CreatePatch<V1NeonNodeTask>();
+
+                        patch.Replace(path => path.Status.Phase, V1NeonNodeTask.Phase.Tardy);
+                        patch.Replace(path => path.Status.FinishTimestamp, utcNow);
                         patch.Replace(path => path.Status.ExitCode, -1);
 
                         await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
