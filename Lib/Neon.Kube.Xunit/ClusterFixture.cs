@@ -306,7 +306,7 @@ namespace Neon.Kube.Xunit
     /// </note>
     /// <para>
     /// <see cref="ClusterFixture"/> attempts to detect significant differences between an already deployed
-    /// cluster and a new cluster definition and redeploy the cluster in this case.  Unforunately, the detection
+    /// cluster and a new cluster definition and redeploy the cluster in this case.  Unfortunately, the detection
     /// mechanism isn't perfect at this time and sometimes clusters that should be redeployed won't be.
     /// </para>
     /// <para>

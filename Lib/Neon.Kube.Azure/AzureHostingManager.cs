@@ -1615,7 +1615,7 @@ namespace Neon.Kube
             Covenant.Assert(azure != null);
             Covenant.Assert(nameToVm != null);
 
-            // Unforunately, Azure doesn't retrieve VM powerstate when we list the VMs in [GetResourcesAsync()],
+            // Unfortunately, Azure doesn't retrieve VM powerstate when we list the VMs in [GetResourcesAsync()],
             // so we need to query for each VM state individually.  We'll do this in parallel to speed things up.
             //
             // We'll be querying for each VM for its [InstanceView] and examine it's current status:
