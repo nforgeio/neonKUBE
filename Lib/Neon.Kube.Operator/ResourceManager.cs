@@ -503,7 +503,7 @@ namespace Neon.Kube.Operator
         // Kubernetes or when there are items, we should expect KubeOps to reconcile those for us.
 
         /// <summary>
-        /// This loop handles raising of <see cref="ReconciledAsync(TEntity, ReconcileHandlerAsync)"/> 
+        /// This loop handles raising of <see cref="IOperatorController{TEntity}.IdleAsync()"/> 
         /// events when there's been no changes to any of the monitored resources.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
