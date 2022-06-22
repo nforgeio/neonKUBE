@@ -239,12 +239,18 @@ namespace Neon.Kube.Resources
             Orphaned,
 
             /// <summary>
-            /// The task failed with a non-zero exit code.
+            /// The task did not execute before its <see cref="V1NeonNodeTask.TaskSpec.StartBeforeTimestamp"/>
+            /// property.
+            /// </summary>
+            Tardy,
+
+            /// <summary>
+            /// The task executed but failed with a non-zero exit code.
             /// </summary>
             Failed,
 
             /// <summary>
-            /// The task finished executing with a zero exit code.
+            /// The task executed successfully with a zero exit code.
             /// </summary>
             Success
         }
@@ -296,6 +302,14 @@ namespace Neon.Kube.Resources
             /// </summary>
             [JsonConverter(typeof(JsonNullableDateTimeConverter))]
             public DateTime? StartAfterTimestamp { get; set; }
+
+            /// <summary>
+            /// Optionally specifies the time after which the task should not be executed.
+            /// This is useful for ensuring that tasks don't accumulate for some reason
+            /// and then perhaps, execute all at once.
+            /// </summary>
+            [JsonConverter(typeof(JsonNullableDateTimeConverter))]
+            public DateTime? StartBeforeTimestamp { get; set; }
 
             /// <summary>
             /// Specifies the maximum time the command will be allowed to execute

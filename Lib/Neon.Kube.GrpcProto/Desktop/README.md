@@ -1,7 +1,7 @@
 ﻿### Neon Desktop Service
 
 NeonDesktop and neon-cli for Windows don't typically run with elevated permissions but both
-of these need to be able to manage Hyper-V virtual machines and switches.  Unforunately,
+of these need to be able to manage Hyper-V virtual machines and switches.  Unfortunately,
 these operations required elevated permissions.
 
 To work around this, we're going to install a Neon Desktop Windows service that will run

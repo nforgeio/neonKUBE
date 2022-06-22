@@ -96,7 +96,7 @@ namespace NeonNodeAgent
     /// </note>
     /// </remarks>
     [EntityRbac(typeof(V1NeonContainerRegistry), Verbs = RbacVerb.Get | RbacVerb.Patch | RbacVerb.List | RbacVerb.Watch | RbacVerb.Update)]
-    public class ContainerRegistryController : IResourceController<V1NeonContainerRegistry>
+    public class ContainerRegistryController : IOperatorController<V1NeonContainerRegistry>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -134,15 +134,16 @@ namespace NeonNodeAgent
 
             var options = new ResourceManagerOptions()
             {
-                IdleInterval               = Program.Service.Environment.Get("CONTAINERREGISTRY_IDLE_INTERVAL", TimeSpan.FromMinutes(5)),
-                ErrorMinRequeueInterval    = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15)),
-                ErrorMaxRetryInterval      = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromSeconds(60)),
-                ReconcileCounter           = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_reconciled_changes", "Processed ContainerRegistry reconcile events due to change."),
-                DeleteCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_deleted_received", "Received ContainerRegistry deleted events."),
-                StatusModifiedCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_statusmodified_received", "Received ContainerRegistry status-modified events."),
-                ReconcileErrorCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_reconciled_error", "Failed NodeTask reconcile event processing."),
-                DeleteErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_deleted_error", "Failed NodeTask deleted event processing."),
-                StatusModifiedErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_statusmodified_error", "Failed NodeTask status-modified events processing.")
+                IdleInterval             = Program.Service.Environment.Get("CONTAINERREGISTRY_IDLE_INTERVAL", TimeSpan.FromMinutes(5)),
+                ErrorMinRequeueInterval  = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15)),
+                ErrorMaxRetryInterval    = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromSeconds(60)),
+                IdleCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_idle", "IDLE events processed."),
+                ReconcileCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_reconcile", "RECONCILE events processed."),
+                DeleteCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_delete", "DELETED events processed."),
+                IdleErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_idle_error", "Failed NodeTask IDLE event processing."),
+                ReconcileErrorCounter    = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_reconcile_error", "Failed NodeTask RECONCILE event processing."),
+                DeleteErrorCounter       = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_delete_error", "Failed NodeTask DELETE event processing."),
+                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_statusmodify_error", "Failed NodeTask STATUS-MODIFY events processing.")
             };
 
             resourceManager = new ResourceManager<V1NeonContainerRegistry, ContainerRegistryController>(
@@ -173,9 +174,9 @@ namespace NeonNodeAgent
         /// can maintain the status of all resources and then afterwards, this will be called whenever
         /// a resource is added or has a non-status update.
         /// </summary>
-        /// <param name="respource">The new entity or <c>null</c> when nothing has changed.</param>
+        /// <param name="resource">The new entity or <c>null</c> when nothing has changed.</param>
         /// <returns>The controller result.</returns>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonContainerRegistry respource)
+        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonContainerRegistry resource)
         {
             // Ignore all events when the controller hasn't been started.
 
@@ -184,16 +185,10 @@ namespace NeonNodeAgent
                 return null;
             }
 
-            return await resourceManager.ReconciledAsync(respource,
-                async (resource) =>
-                {
-                    var name = resource?.Name();
+            log.LogInfo($"RECONCILED: {resource.Name()}");
+            await UpdateContainerRegistriesAsync();
 
-                    log.LogInfo($"RECONCILED: {name ?? "[IDLE]"}");
-                    await UpdateContainerRegistriesAsync();
-
-                    return null;
-                });
+            return null;
         }
 
         /// <summary>
@@ -210,35 +205,8 @@ namespace NeonNodeAgent
                 return;
             }
 
-            await resourceManager.DeletedAsync(resource,
-                async (resource) =>
-                {
-                    log.LogInfo($"DELETED: {resource}");
-                    await UpdateContainerRegistriesAsync();
-                });
-        }
-
-        /// <summary>
-        /// Called when a custom resource's status has been modified.
-        /// </summary>
-        /// <param name="resource">The updated entity.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task StatusModifiedAsync(V1NeonContainerRegistry resource)
-        {
-            // Ignore all events when the controller hasn't been started.
-
-            if (resourceManager == null)
-            {
-                return;
-            }
-
-            await resourceManager.StatusModifiedAsync(resource,
-                async (resource) =>
-                {
-                    // This is a NO-OP
-
-                    await Task.CompletedTask;
-                });
+            log.LogInfo($"DELETED: {resource.Name()}");
+            await UpdateContainerRegistriesAsync();
         }
 
         /// <summary>
