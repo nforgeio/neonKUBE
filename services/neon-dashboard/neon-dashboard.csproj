@@ -30,7 +30,6 @@
 		<PackageReference Include="Blazored.LocalStorage" Version="4.1.5" />
 		<PackageReference Include="ChartJs.Blazor.Fork" Version="2.0.2" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="6.0.1" />
-		<PackageReference Include="Microsoft.AspNetCore.DataProtection.Extensions" Version="6.0.6" />
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="6.0.1" />
     <PackageReference Include="GitInfo" Version="2.2.0">
 			<PrivateAssets>all</PrivateAssets>
