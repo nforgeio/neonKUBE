@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_NeonNodeAgent.cs
+// FILE:	    Test_NeonNodeTask.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -20,11 +20,12 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
+using k8s.Autorest;
 using Microsoft.Extensions.DependencyInjection;
-using Prometheus;
 
 using Neon.Common;
 using Neon.Deployment;
@@ -43,7 +44,7 @@ namespace TestKube
     [Trait(TestTrait.Category, TestArea.NeonKube)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
-    public class Test_NeonNodeAgent
+    public class Test_NeonNodeTask
     {
         //---------------------------------------------------------------------
         // Static members
@@ -51,12 +52,12 @@ namespace TestKube
         private static readonly TimeSpan timeout      = TimeSpan.FromMinutes(5);
         private static readonly TimeSpan pollInterval = TimeSpan.FromSeconds(1);
 
-        private const string testFolderPath = $"/tmp/{nameof(Test_NeonNodeAgent)}";
+        private const string testFolderPath = $"/tmp/{nameof(Test_NeonNodeTask)}";
 
         /// <summary>
         /// Static constructor.
         /// </summary>
-        static Test_NeonNodeAgent()
+        static Test_NeonNodeTask()
         {
             if (TestHelper.IsClusterTestingEnabled)
             {
@@ -72,7 +73,7 @@ namespace TestKube
 
         private ClusterFixture fixture;
 
-        public Test_NeonNodeAgent(ClusterFixture fixture, ITestOutputHelper testOutputHelper)
+        public Test_NeonNodeTask(ClusterFixture fixture, ITestOutputHelper testOutputHelper)
         {
             this.fixture = fixture;
 
@@ -122,6 +123,15 @@ namespace TestKube
             }
         }
 
+        /// <summary>
+        /// Returns a 5-digit base-36 UUID string.
+        /// </summary>
+        /// <returns>The UUID.</returns>
+        private string CreateUuidString()
+        {
+            return NeonHelper.CreateBase36Uuid().Substring(0, 5);
+        }
+
         [ClusterFact]
         public async Task NodeTask_Basic()
         {
@@ -142,7 +152,7 @@ namespace TestKube
 
                 foreach (var node in fixture.Cluster.Nodes)
                 {
-                    nodeToTaskName.Add(node.Name, $"test-basic-{node.Name}-{NeonHelper.CreateBase36Uuid()}");
+                    nodeToTaskName.Add(node.Name, $"test-basic-{node.Name}-{CreateUuidString()}");
                 }
 
                 // Initalize a test folder on each node where the task will update a file
@@ -268,7 +278,7 @@ touch $NODE_ROOT{filePath}
 
             await DeleteExistingTasksAsync();
 
-            var taskName = $"test-exitcode-{NeonHelper.CreateBase36Uuid()}";
+            var taskName = $"test-exitcode-{CreateUuidString()}";
             var nodeTask = new V1NeonNodeTask();
             var metadata = nodeTask.Metadata;
             var spec     = nodeTask.Spec;
@@ -331,7 +341,7 @@ exit 123
 
             await DeleteExistingTasksAsync();
 
-            var taskName = $"test-timeout-{NeonHelper.CreateBase36Uuid()}";
+            var taskName = $"test-timeout-{CreateUuidString()}";
             var nodeTask = new V1NeonNodeTask();
             var metadata = nodeTask.Metadata;
             var spec     = nodeTask.Spec;
@@ -350,6 +360,9 @@ sleep 30
             //-----------------------------------------------------------------
             // Wait the node task to report completion.
 
+            var phase    = V1NeonNodeTask.Phase.New;
+            var exitCode = int.MaxValue;
+
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
@@ -365,6 +378,8 @@ sleep 30
 
                         default:
 
+                            phase    = task.Status.Phase;
+                            exitCode = task.Status.ExitCode;
                             return true;
                     }
                 },
@@ -374,84 +389,153 @@ sleep 30
             //-----------------------------------------------------------------
             // Verify that the node task timed out.
 
-            var task = await fixture.K8s.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
-
-            Assert.Equal(V1NeonNodeTask.Phase.Timeout, task.Status.Phase);
-            Assert.Equal(-1, task.Status.ExitCode);
+            Assert.Equal(V1NeonNodeTask.Phase.Timeout, phase);
+            Assert.Equal(-1, exitCode);
         }
 
         [Fact]
-        public async Task NeonTask_Orphan()
+        public async Task NeonTask_StartBefore()
         {
             //-----------------------------------------------------------------
-            // Verify that orphaned tasks are detected.  An orphaned task is one
-            // whose [Status.AgentId] doesn't match the ID of the current [neon-node-agent].
-            // This can happen if the [neon-node-agent] was restarted while the node task
-            // was still running.
-            //
-            // We're going to simulate this by starting a node task with a long runtime,
-            // waiting for its status to change to RUNNING and then we're going to set
-            // update the task's [Status.AgentId] to a new GUID.
+            // Verify that a task scheduled with a StartBeforeTimestamp that is
+            // already too late is detected and its status is set to TARDY.
 
             await DeleteExistingTasksAsync();
 
-            var taskName = $"test-orphan-{NeonHelper.CreateBase36Uuid()}";
+            var taskName = $"test-tardy-{CreateUuidString()}";
             var nodeTask = new V1NeonNodeTask();
             var metadata = nodeTask.Metadata;
             var spec     = nodeTask.Spec;
 
-            spec.Node             = fixture.Cluster.FirstMaster.Name;
-            spec.TimeoutSeconds   = (int)TimeSpan.FromMinutes(15).TotalSeconds;
-            spec.RetentionSeconds = 30;
-            spec.BashScript       =
+            spec.Node                 = fixture.Cluster.FirstMaster.Name;
+            spec.StartBeforeTimestamp = DateTime.UtcNow - TimeSpan.FromHours(1);
+            spec.TimeoutSeconds       = 15;
+            spec.RetentionSeconds     = 30;
+            spec.BashScript           =
 @"
-sleep 600
+sleep 5
 ";
             metadata.SetLabel(NeonLabel.RemoveOnClusterReset);
 
             await fixture.K8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: taskName);
 
             //-----------------------------------------------------------------
-            // Wait the node task to report RUNNING.
+            // Wait the node task to reported as TARDY.
 
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
                     var task = await fixture.K8s.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
 
-                    return task.Status.Phase == V1NeonNodeTask.Phase.Running;
+                    return task.Status.Phase == V1NeonNodeTask.Phase.Tardy;
                 },
                 timeout:      timeout,
                 pollInterval: pollInterval);
+        }
+
+        [Fact]
+        public async Task NeonTask_StartAfter()
+        {
+            //-----------------------------------------------------------------
+            // Verify that a task scheduled in the future with a StartAfterTimestamp
+            // is actually executed in the future.
+
+            await DeleteExistingTasksAsync();
+
+            var taskName     = $"test-scheduled-{CreateUuidString()}";
+            var nodeTask     = new V1NeonNodeTask();
+            var metadata     = nodeTask.Metadata;
+            var spec         = nodeTask.Spec;
+            var scheduledUtc = DateTime.UtcNow + TimeSpan.FromSeconds(90);
+
+            spec.Node                = fixture.Cluster.FirstMaster.Name;
+            spec.StartAfterTimestamp = scheduledUtc;
+            spec.TimeoutSeconds      = 15;
+            spec.RetentionSeconds    = 30;
+            spec.BashScript          =
+@"
+sleep 5
+";
+            metadata.SetLabel(NeonLabel.RemoveOnClusterReset);
+
+            await fixture.K8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: taskName);
 
             //-----------------------------------------------------------------
-            // Tweak the AgentId
+            // Wait the node task to reported as SUCCESS.
 
-            var patch = OperatorHelper.CreatePatch<V1NeonNodeTask>();
-
-            patch.Replace(path => path.Status.AgentId, "***NO-MATCH***");
-
-            nodeTask = await fixture.K8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), taskName);
-
-            //-----------------------------------------------------------------
-            // Wait the node task to report orphan status.
+            var actualUtc = DateTime.MinValue;
 
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
                     var task = await fixture.K8s.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
 
-                    return task.Status.Phase == V1NeonNodeTask.Phase.Orphaned;
+                    if (task.Status.Phase == V1NeonNodeTask.Phase.Success)
+                    {
+                        actualUtc = task.Status.StartTimestamp.Value;
+
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 },
                 timeout:      timeout,
                 pollInterval: pollInterval);
 
             //-----------------------------------------------------------------
-            // Verify that the process no longer exists on the node.
+            // Verify that the task actually started at or after the scheduled time.
 
-            //  ps -p $PID
+            Assert.True(actualUtc >= scheduledUtc);
+        }
 
-            throw new NotImplementedException("$todo(jefflill): verify that the process no longer exists on the node");
+        [Fact]
+        public async Task NeonTask_MissingNode()
+        {
+            //-----------------------------------------------------------------
+            // Verify that the [V1NodeTask] controller in [neon-cluster-operator] deletes
+            // tasks assigned to nodes that don't exist.
+
+            await DeleteExistingTasksAsync();
+
+            var taskName     = $"test-badnode-{CreateUuidString()}";
+            var nodeTask     = new V1NeonNodeTask();
+            var metadata     = nodeTask.Metadata;
+            var spec         = nodeTask.Spec;
+            var scheduledUtc = DateTime.UtcNow + TimeSpan.FromHours(1);
+
+            spec.Node                = $"missing-node-{CreateUuidString()}";
+            spec.StartAfterTimestamp = scheduledUtc;
+            spec.TimeoutSeconds      = 15;
+            spec.RetentionSeconds    = 30;
+            spec.BashScript          =
+@"
+sleep 5
+";
+            metadata.SetLabel(NeonLabel.RemoveOnClusterReset);
+
+            await fixture.K8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: taskName);
+
+            //-----------------------------------------------------------------
+            // Wait the node task to be deleted.
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    try
+                    {
+                        await fixture.K8s.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
+
+                        return false;
+                    }
+                    catch (HttpOperationException e)
+                    {
+                        return e.Response.StatusCode == HttpStatusCode.NotFound;
+                    }
+                },
+                timeout:      timeout,
+                pollInterval: pollInterval);
         }
     }
 }

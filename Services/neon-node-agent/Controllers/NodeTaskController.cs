@@ -230,14 +230,16 @@ rm $0
             // $todo(jefflill):
             //
             // I'm implementing this here because even though this would be better
-            // implemented via requeue events.  Unforunately, we haven't implemented
+            // implemented via requeued events.  Unfortunately, we haven't implemented
             // that yet.
 
             var utcNow = DateTime.UtcNow;
 
             foreach (var scheduledTask in (await k8s.ListClusterCustomObjectAsync<V1NeonNodeTask>()).Items
-                .Where(task => NodeTaskFilter(task) && task.Spec.StartAfterTimestamp != null && task.Status != null)
-                .Where(task => task.Spec.StartAfterTimestamp <= utcNow && task.Status.Phase == V1NeonNodeTask.Phase.Pending)
+                .Where(task => NodeTaskFilter(task))
+                .Where(task => task.Status != null && task.Status.Phase == V1NeonNodeTask.Phase.Pending)
+                .Where(task => !task.Spec.StartAfterTimestamp.HasValue || task.Spec.StartAfterTimestamp <= utcNow)
+                .Where(task => !task.Spec.StartBeforeTimestamp.HasValue || task.Spec.StartBeforeTimestamp < utcNow)
                 .OrderByDescending(task => task.Metadata.CreationTimestamp))
             {
                 await ExecuteTaskAsync(scheduledTask);
@@ -334,13 +336,15 @@ rm $0
                 }
             }
 
-            // Execute the task if it's pending and it hasn't missed the scheduliung window.
+            // Execute the task if it's pending and it hasn't missed the scheduling window.
 
             if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.Pending)
             {
                 var utcNow = DateTime.UtcNow;
 
-                if (nodeTask.Spec.StartBeforeTimestamp.HasValue && utcNow >= nodeTask.Spec.StartBeforeTimestamp)
+                // Abort if we missed the end the scheduled window.
+
+                if (nodeTask.Spec.StartBeforeTimestamp.HasValue && nodeTask.Spec.StartBeforeTimestamp < utcNow)
                 {
                     log.LogWarn($"Detected tardy [nodetask={nodeTask.Name()}]: task execution didn't start before [{nodeTask.Spec.StartBeforeTimestamp}].");
 
@@ -355,6 +359,27 @@ rm $0
                     await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
 
                     return null;
+                }
+
+                // Don't start before a scheduled time.
+
+                // $todo(jefflill):
+                //
+                // We should requeue the event for the remaining time here, instead of letting
+                // the IDLE handler execute the delayed task.
+
+                if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.Pending)
+                {
+                    if (nodeTask.Spec.StartAfterTimestamp.HasValue && nodeTask.Spec.StartAfterTimestamp.Value <= utcNow)
+                    {
+                        await ExecuteTaskAsync(nodeTask);
+
+                        return null;
+                    }
+                    else
+                    {
+                        return null;
+                    }
                 }
 
                 await ExecuteTaskAsync(nodeTask);
@@ -460,7 +485,7 @@ rm $0
                     // Detect that missed their scheduling window and mark them as tardy 
 
                     if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.Pending &&
-                        nodeTask.Spec.StartBeforeTimestamp.HasValue && utcNow >= nodeTask.Spec.StartBeforeTimestamp)
+                        nodeTask.Spec.StartBeforeTimestamp.HasValue && nodeTask.Spec.StartBeforeTimestamp <= utcNow)
                     {
                         log.LogWarn($"Detected tardy [nodetask={taskName}]: task execution didn't start before [{nodeTask.Spec.StartBeforeTimestamp}].");
 
@@ -646,7 +671,7 @@ export SCRIPT_DIR={taskFolder}
                         {
                             processId = newProcess.Id;
 
-                            log.LogInfo($"Starting [nodetask={taskName}]: [command={nodeTask.Status.CommandLine}] [processID={processId}]");
+                            log.LogInfo($"Starting [nodetask={taskName}]: [command={Node.GetBashCommandLine(scriptPath)}] [processID={processId}]");
                         };
 
                     task = Node.BashExecuteCaptureAsync(
@@ -701,7 +726,7 @@ export SCRIPT_DIR={taskFolder}
 
             nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
 
-            // Wait for the command to complete and the update the node task status.
+            // Wait for the command to complete and then update the node task status.
 
             try
             {

@@ -58,7 +58,9 @@ using Prometheus;
 //      2. a subsequent ADD/UPDATE will cancel (or replace?) a pending RECONILE
 //      3. a subsequent MODIFY will cancel a pending RECONCILE
 //
-// I need to do some more research.  neonKUBE isn't currently depending on this.
+// Note also that DeletedAsync() and StatusModified() should also return an optional requeue result.
+//
+// I need to do some more research.  neonKUBE isn't currently depending on any of this.
 
 namespace Neon.Kube.Operator
 {
@@ -168,29 +170,6 @@ namespace Neon.Kube.Operator
         where TEntity : CustomKubernetesEntity, new()
         where TController : IOperatorController<TEntity>
     {
-        //---------------------------------------------------------------------
-        // Private types
-
-        /// <summary>
-        /// Defines the event handler you'll need to implement to handle <b>RECONCILE</b> events.
-        /// </summary>
-        /// <param name="resource">Passed as impacted resource or <c>null</c> for IDLE events.</param>
-        /// <returns>
-        /// Returns a <see cref="ResourceControllerResult"/> controlling how events may be requeued or
-        /// <c>null</c> such that nothing will be explicitly requeued.
-        /// </returns>
-        public delegate Task<ResourceControllerResult> ReconcileHandlerAsync(TEntity resource);
-
-        /// <summary>
-        /// Defines the event handler you'll need to implement to handle <b>DELETE</b> and <b>STATUS-MODIFIED</b> events.
-        /// </summary>
-        /// <param name="resource">Passed as impacted resource.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public delegate Task NoResultHandlerAsync(TEntity resource);
-
-        //---------------------------------------------------------------------
-        // Implementation
-
         private bool                            isDisposed           = false;
         private bool                            stopIdleLoop         = false;
         private AsyncReentrantMutex             mutex                = new AsyncReentrantMutex();
@@ -373,6 +352,7 @@ namespace Neon.Kube.Operator
 
             // Start the IDLE reconcile loop.
 
+            stopIdleLoop         = false;
             nextIdleReconcileUtc = DateTime.UtcNow + options.IdleInterval;
             idleLoopTask         = IdleLoopAsync();
 
@@ -423,7 +403,7 @@ namespace Neon.Kube.Operator
         {
             LeaderIdentity = identity;
 
-            log.LogInfo($"LEADER: {identity}");
+            log.LogInfo($"LEADER-IS: {identity}");
         }
 
         /// <summary>
@@ -519,48 +499,44 @@ namespace Neon.Kube.Operator
 
                 if (DateTime.UtcNow >= nextIdleReconcileUtc)
                 {
-                    nextIdleReconcileUtc = DateTime.UtcNow + options.IdleInterval;
-
                     // Don't send an IDLE RECONCILE while we're when we're not the leader.
 
-                    if (!IsLeader)
+                    if (IsLeader)
                     {
-                        continue;
-                    }
+                        // We're going to log and otherwise ignore any exceptions thrown by the 
+                        // operator's controller or from any members above called by the controller.
 
-                    // We're going to log and otherwise ignore any exceptions thrown by the 
-                    // operator's controller or from any members above called by the controller.
-
-                    await mutex.ExecuteActionAsync(
-                        async () =>
-                        {
-                            try
+                        await mutex.ExecuteActionAsync(
+                            async () =>
                             {
-                                // $todo(jefflill):
-                                //
-                                // We're currently assuming that operator controllers all have a constructor
-                                // that accepts a single [IKubernetes] parameter.  We should change this to
-                                // doing actual dependency injection when we have the time.
-                                //
-                                //       https://github.com/nforgeio/neonKUBE/issues/1589
+                                try
+                                {
+                                    // $todo(jefflill):
+                                    //
+                                    // We're currently assuming that operator controllers all have a constructor
+                                    // that accepts a single [IKubernetes] parameter.  We should change this to
+                                    // doing actual dependency injection when we have the time.
+                                    //
+                                    //       https://github.com/nforgeio/neonKUBE/issues/1589
 
-                                var controller = CreateController();
+                                    var controller = CreateController();
 
-                                await controller.IdleAsync();
-                            }
-                            catch (OperationCanceledException)
-                            {
+                                    await controller.IdleAsync();
+                                }
+                                catch (OperationCanceledException)
+                                {
                                 // Exit the loop when the [mutex] is disposed which happens
                                 // when the resource manager is disposed.
 
-                                return;
-                            }
-                            catch (Exception e)
-                            {
-                                options.IdleErrorCounter?.Inc();
-                                log.LogError(e);
-                            }
-                        });
+                                    return;
+                                }
+                                catch (Exception e)
+                                {
+                                    options.IdleErrorCounter?.Inc();
+                                    log.LogError(e);
+                                }
+                            });
+                    }
 
                     nextIdleReconcileUtc = DateTime.UtcNow + options.IdleInterval;
                 }
