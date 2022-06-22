@@ -68,7 +68,6 @@ namespace NeonSsoSessionProxy
                     if (requestCookie.TokenResponse != null)
                     {
                         var code = NeonHelper.GetCryptoRandomPassword(10);
-                        await cache.SetAsync(code, cipher.EncryptToBytes(NeonHelper.JsonSerializeToBytes(requestCookie.TokenResponse)), cacheOptions);
 
                         logger.LogDebug($"Request Query: [{NeonHelper.JsonSerialize(context.Request.Query)}]");
 
@@ -97,15 +96,15 @@ namespace NeonSsoSessionProxy
                                 context.Response.Headers.Location = QueryHelpers.AddQueryString(redirectUri, query);
 
                                 logger.LogDebug($"Client and Redirect URI confirmed.");
+
+                                await cache.SetAsync(code, cipher.EncryptToBytes(NeonHelper.JsonSerializeToBytes(requestCookie.TokenResponse)), cacheOptions);
                             }
                             else
                             {
                                 logger.LogError("No Client ID specified.");
 
                                 throw new HttpRequestException("Invalid Client ID.");
-                            }
-                            
-                            return;
+                            }                           
                         }
                         else
                         {
