@@ -4295,6 +4295,7 @@ $@"- name: StorageType
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
                     values.Add("neonkube.clusterDomain.neonDashboard", ClusterDomain.NeonDashboard);
+                    values.Add("secrets.cipherKey", AesCipher.GenerateKey(256));
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);

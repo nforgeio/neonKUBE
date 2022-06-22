@@ -37,6 +37,7 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 
 using Neon.Common;
+using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Web;
@@ -115,6 +116,10 @@ namespace NeonDashboard
 
             services.AddServerSideBlazor();
 
+            // Cookie encryption cipher.
+
+            var aesCipher = new AesCipher(NeonDashboardService.GetEnvironmentVariable("COOKIE_CIPHER", AesCipher.GenerateKey(), redacted: true));
+
             services.AddAuthentication(options => {
                 options.DefaultScheme          = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
@@ -124,6 +129,7 @@ namespace NeonDashboard
                 options.ExpireTimeSpan    = TimeSpan.FromMinutes(20);
                 options.SlidingExpiration = true;
                 options.AccessDeniedPath  = "/Forbidden/";
+                options.DataProtectionProvider = new CookieProtector(aesCipher);
             })
             .AddOpenIdConnect("oidc", options =>
             {
@@ -140,7 +146,7 @@ namespace NeonDashboard
                 options.Scope.Add("profile");
                 options.Scope.Add("email");
                 options.Scope.Add("groups");
-                options.UsePkce                       = false;
+                options.UsePkce                       = true;
                 options.UseTokenLifetime              = false;
                 options.ProtocolValidator             = new OpenIdConnectProtocolValidator()
                 {
