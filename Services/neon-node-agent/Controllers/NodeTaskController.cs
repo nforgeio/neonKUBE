@@ -78,7 +78,6 @@ namespace NeonNodeAgent
         // Paths to relevant folders in the host file system.
 
         private static readonly string      hostNeonRunFolder;
-        private static readonly string      hostAgentFolder;
         private static readonly string      hostAgentTasksFolder;
 
         /// <summary>
@@ -87,8 +86,7 @@ namespace NeonNodeAgent
         static NodeTaskController()
         {
             hostNeonRunFolder    = Path.Combine(Node.HostMount, KubeNodeFolder.NeonRun.Substring(1));
-            hostAgentFolder      = Path.Combine(hostNeonRunFolder, "node-agent");
-            hostAgentTasksFolder = Path.Combine(hostAgentFolder, "node-tasks");
+            hostAgentTasksFolder = Path.Combine(hostNeonRunFolder, "node-tasks");
         }
 
         /// <summary>
@@ -116,12 +114,6 @@ if [ ! -d {hostNeonRunFolder} ]; then
 
 mkdir -p {hostNeonRunFolder}
 chmod 700 {hostNeonRunFolder}
-fi
-
-if [ ! -d {hostAgentFolder} ]; then
-
-mkdir -p {hostAgentFolder}
-chmod 700 {hostAgentFolder}
 fi
 
 if [ ! -d {hostAgentTasksFolder} ]; then
