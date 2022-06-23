@@ -32,9 +32,19 @@ using Neon.Web;
 
 namespace NeonBlazorProxy
 {
+    /// <summary>
+    /// This middleware takes care of removing closed sessions from the Cache after the expiration defined in
+    /// <see cref="Cache.DurationSeconds"/>.
+    /// </summary>
     public class ConnectionHandler
     {
         private readonly RequestDelegate _next;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="next"></param>
+        /// <exception cref="ArgumentNullException"></exception>
         public ConnectionHandler(RequestDelegate next)
         {
             _next = next ?? throw new ArgumentNullException(nameof(next));
