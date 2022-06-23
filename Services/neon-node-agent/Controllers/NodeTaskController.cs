@@ -78,17 +78,15 @@ namespace NeonNodeAgent
         // Paths to relevant folders in the host file system.
 
         private static readonly string      hostNeonRunFolder;
-        private static readonly string      hostAgentFolder;
-        private static readonly string      hostAgentTasksFolder;
+        private static readonly string      hostNeonTasksFolder;
 
         /// <summary>
         /// Static constructor.
         /// </summary>
         static NodeTaskController()
         {
-            hostNeonRunFolder    = Path.Combine(Node.HostMount, KubeNodeFolder.NeonRun.Substring(1));
-            hostAgentFolder      = Path.Combine(hostNeonRunFolder, "node-agent");
-            hostAgentTasksFolder = Path.Combine(hostAgentFolder, "node-tasks");
+            hostNeonRunFolder   = Path.Combine(Node.HostMount, KubeNodeFolder.NeonRun.Substring(1));
+            hostNeonTasksFolder = Path.Combine(hostNeonRunFolder, "node-tasks");
         }
 
         /// <summary>
@@ -102,7 +100,7 @@ namespace NeonNodeAgent
 
             if (NeonHelper.IsLinux)
             {
-                // Ensure that the [/var/run/neonkube/neon-node-agent/nodetask] folder exists on the node.
+                // Ensure that the [/var/run/neonkube/node-tasks] folder exists on the node.
 
                 var scriptPath = Path.Combine(Node.HostMount, $"tmp/node-agent-folder-{NeonHelper.CreateBase36Uuid()}.sh");
                 var script      =
@@ -110,7 +108,7 @@ $@"#!/bin/bash
 
 set -euo pipefail
 
-# Ensure that the node runtime folders exist and have the correct permissions.
+# Ensure that the nodetask runtime folders exist and have the correct permissions.
 
 if [ ! -d {hostNeonRunFolder} ]; then
 
@@ -118,16 +116,10 @@ mkdir -p {hostNeonRunFolder}
 chmod 700 {hostNeonRunFolder}
 fi
 
-if [ ! -d {hostAgentFolder} ]; then
+if [ ! -d {hostNeonTasksFolder} ]; then
 
-mkdir -p {hostAgentFolder}
-chmod 700 {hostAgentFolder}
-fi
-
-if [ ! -d {hostAgentTasksFolder} ]; then
-
-mkdir -p {hostAgentTasksFolder}
-chmod 700 {hostAgentTasksFolder}
+mkdir -p {hostNeonTasksFolder}
+chmod 700 {hostNeonTasksFolder}
 fi
 
 # Remove this script.
@@ -217,10 +209,7 @@ rm $0
             this.k8s = k8s;
         }
 
-        /// <summary>
-        /// Called periodically to allow the operator to perform global events.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <inheritdoc/>
         public async Task IdleAsync()
         {
             log.LogInfo("[IDLE]");
@@ -252,13 +241,7 @@ rm $0
             await CleanupTasksAsync();
         }
 
-        /// <summary>
-        /// Called for each existing custom resource when the controller starts so that the controller
-        /// can maintain the status of all resources and then afterwards, this will be called whenever
-        /// a resource is added or has a non-status update.
-        /// </summary>
-        /// <param name="resource">The new entity or <c>null</c> when nothing has changed.</param>
-        /// <returns>The controller result.</returns>
+        /// <inheritdoc/>
         public async Task<ResourceControllerResult> ReconcileAsync(V1NeonNodeTask resource)
         {
             // Ignore all events when the controller hasn't been started.
@@ -526,7 +509,7 @@ rm $0
                     nodeTaskExecuteIds.Add(nodeTask.Status.RunId);
                 }
 
-                foreach (var scriptFolderPath in Directory.GetDirectories(hostAgentTasksFolder, "*", SearchOption.TopDirectoryOnly))
+                foreach (var scriptFolderPath in Directory.GetDirectories(hostNeonTasksFolder, "*", SearchOption.TopDirectoryOnly))
                 {
                     var scriptFolderName = LinuxPath.GetFileName(scriptFolderPath);
 
@@ -618,7 +601,7 @@ rm $0
             // Generate the execution UUID and determine where the script will be located.
 
             var executionId = Guid.NewGuid().ToString("d");
-            var taskFolder  = LinuxPath.Combine(hostAgentTasksFolder, executionId);
+            var taskFolder  = LinuxPath.Combine(hostNeonTasksFolder, executionId);
             var scriptPath  = LinuxPath.Combine(taskFolder, "task.sh");
 
             // Prepend the script to be deployed with code that sets the special
