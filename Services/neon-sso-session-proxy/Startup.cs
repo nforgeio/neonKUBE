@@ -151,7 +151,6 @@ namespace NeonSsoSessionProxy
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapHealthChecks("/healthz");
-                endpoints.MapMetrics();
                 endpoints.MapControllers();
             });
         }
