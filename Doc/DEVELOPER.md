@@ -133,7 +133,7 @@ Follow the steps below to configure a development or test workstation:
    * Install **.NET Framework 4.8 Developer Pack** from [here](https://dotnet.microsoft.com/download/thank-you/net48-developer-pack)
    * Install **.NET Core SDK 3.1.409** from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-3.1.409-windows-x64-installer) (.NET SDK x64 installer)
    * Install **.NET 5.0 SDK 5.0.408** from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-5.0.403-windows-x64-installer) (.NET SDK x64 installer)
-   * Install **.NET 6.0 SDK 6.0.300** from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-6.0.101-windows-x64-installer) (.NET SDK x64 installer)
+   * Install **.NET 6.0 SDK 6.0.301** from [here](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-6.0.301-windows-x64-installer) (.NET SDK x64 installer)
 
 18. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
 
