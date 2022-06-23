@@ -116,20 +116,16 @@ namespace NeonDashboard
 
             services.AddServerSideBlazor();
 
-            // Cookie encryption cipher.
-
-            var aesCipher = new AesCipher(NeonDashboardService.GetEnvironmentVariable("COOKIE_CIPHER", AesCipher.GenerateKey(), redacted: true));
-
             services.AddAuthentication(options => {
                 options.DefaultScheme          = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
             })
             .AddCookie(options =>
             {
-                options.ExpireTimeSpan    = TimeSpan.FromMinutes(20);
-                options.SlidingExpiration = true;
-                options.AccessDeniedPath  = "/Forbidden/";
-                options.DataProtectionProvider = new CookieProtector(aesCipher);
+                options.ExpireTimeSpan         = TimeSpan.FromMinutes(20);
+                options.SlidingExpiration      = true;
+                options.AccessDeniedPath       = "/Forbidden/";
+                options.DataProtectionProvider = new CookieProtector(NeonDashboardService.AesCipher);
             })
             .AddOpenIdConnect("oidc", options =>
             {
@@ -147,6 +143,7 @@ namespace NeonDashboard
                 options.Scope.Add("email");
                 options.Scope.Add("groups");
                 options.UsePkce                       = true;
+                options.DataProtectionProvider        = new CookieProtector(NeonDashboardService.AesCipher);
                 options.UseTokenLifetime              = false;
                 options.ProtocolValidator             = new OpenIdConnectProtocolValidator()
                 {

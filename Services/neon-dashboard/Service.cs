@@ -31,6 +31,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Common;
+using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Resources;
@@ -74,6 +75,11 @@ namespace NeonDashboard
         /// SSO Client Secret.
         /// </summary>
         public string SsoClientSecret;
+
+        /// <summary>
+        /// AES Cipher for protecting cookies..
+        /// </summary>
+        public AesCipher AesCipher;
 
         /// <summary>
         /// USe to turn off Segment tracking.
@@ -191,7 +197,9 @@ namespace NeonDashboard
             var metricsHost = GetEnvironmentVariable("METRICS_HOST", "http://mimir-query-frontend.neon-monitor.svc.cluster.local:8080");
             PrometheusClient = new PrometheusClient($"{metricsHost}/prometheus/");
 
-            SsoClientSecret = GetEnvironmentVariable("SSO_CLIENT_SECRET", redacted: true);
+            SsoClientSecret = GetEnvironmentVariable("SSO_CLIENT_SECRET", redacted: !Log.IsLogDebugEnabled);
+
+            AesCipher = new AesCipher(GetEnvironmentVariable("COOKIE_CIPHER", AesCipher.GenerateKey(), redacted: !Log.IsLogDebugEnabled));
 
             // Start the web service.
 

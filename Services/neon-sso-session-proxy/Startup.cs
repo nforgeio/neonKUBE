@@ -110,7 +110,7 @@ namespace NeonSsoSessionProxy
 
             // Cookie encryption cipher.
 
-            var aesCipher = new AesCipher(NeonSsoSessionProxyService.GetEnvironmentVariable("COOKIE_CIPHER", AesCipher.GenerateKey(), redacted: true));
+            var aesCipher = new AesCipher(NeonSsoSessionProxyService.GetEnvironmentVariable("COOKIE_CIPHER", AesCipher.GenerateKey(), redacted: !NeonSsoSessionProxyService.Log.IsLogDebugEnabled));
 
             services.AddSingleton(aesCipher);
 
