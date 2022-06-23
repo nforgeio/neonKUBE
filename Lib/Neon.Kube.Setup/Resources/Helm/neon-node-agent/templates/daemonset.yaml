@@ -53,6 +53,8 @@ spec:
           value: 5s
         - name: CONTAINERREGISTRY_ERROR_MAX_REQUEUE_INTERVAL
           value: 60s
+        - name: CONTAINERREGISTRY_RELOGIN_INTERVAL
+          value: 24h
         - name: NODETASK_IDLE_INTERVAL
           value: 60s
         - name: NODETASK_ERROR_MIN_REQUEUE_INTERVAL

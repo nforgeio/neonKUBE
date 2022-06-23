@@ -29,6 +29,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using Neon.Common;
+using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
@@ -45,6 +46,7 @@ using KubeOps.Operator.Controller.Results;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Rbac;
 
+using Newtonsoft.Json;
 using Prometheus;
 using Tomlyn;
 
@@ -99,17 +101,201 @@ namespace NeonNodeAgent
     public class ContainerRegistryController : IOperatorController<V1NeonContainerRegistry>
     {
         //---------------------------------------------------------------------
+        // Local types
+
+        /// <summary>
+        /// Used to serialize the contents of a login file.
+        /// </summary>
+        private class LoginData
+        {
+            [JsonProperty(PropertyName = "location", Required = Required.Always)]
+            public string Location { get; set; }
+
+            [JsonProperty(PropertyName = "username", Required = Required.Always)]
+            public string Username { get; set; }
+
+            [JsonProperty(PropertyName = "updatedUtc", Required = Required.Always)]
+            public DateTime UpdatedUtc { get; set; }
+        }
+
+        /// <summary>
+        /// Represents a container registry login file as described here: https://github.com/nforgeio/neonKUBE/issues/1591
+        /// </summary>
+        private class LoginFile
+        {
+            //-----------------------------------------------------------------
+            // Static members
+
+            /// <summary>
+            /// Reads a login file.  Note that this does not throw exceptions and instead deletes
+            /// the existing file and returns <c>null</c>.
+            /// </summary>
+            /// <param name="path">Path to the file.</param>
+            /// <returns>The <see cref="LoginFile"/> or <c>null</c> when it is missing or invalid.</returns>
+            public static LoginFile Read(string path)
+            {
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
+
+                var loginFile = new LoginFile()
+                {
+                    Path = path
+                };
+
+                try
+                {
+                    var loginData = NeonHelper.JsonDeserialize<LoginData>(File.ReadAllText(path));
+
+                    loginFile.Sha256     = System.IO.Path.GetFileNameWithoutExtension(path);
+                    loginFile.Location   = loginData.Location;
+                    loginFile.Username   = loginData.Username;
+                    loginFile.UpdatedUtc = loginData.UpdatedUtc;
+                }
+                catch
+                {
+                    NeonHelper.DeleteFile(path);
+                    return null;
+                }
+
+                return loginFile;
+            }
+
+            /// <summary>
+            /// Creates a new login file instance with parameters passed, but does not persist
+            /// the file.  Use <see cref="Write()"/> to do this.
+            /// </summary>
+            /// <param name="loginFolder">Specifies the path to the login folder.</param>
+            /// <param name="registryUri">Specifies the upstream registry URI.</param>
+            /// <param name="userName">Specifies the user name used to login.</param>
+            /// <param name="password">Specifies the password.</param>
+            /// <returns>The <see cref="LoginFile"/>.</returns>
+            public static LoginFile Create(string loginFolder, string registryUri, string userName, string password)
+            {
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(loginFolder), nameof(loginFolder));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(registryUri), nameof(registryUri));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(userName), nameof(userName));
+                Covenant.Requires<ArgumentNullException>(password != null, nameof(password));
+
+                var loginFile = new LoginFile()
+                {
+                    Location = registryUri,
+                    Username = userName,
+                    Password = password,
+                    Sha256   = CryptoHelper.ComputeSHA256String($"{registryUri},{userName},{password}")
+                };
+
+                loginFile.Path = System.IO.Path.Combine(loginFolder, $"{loginFile.Sha256}.login");
+
+                return loginFile;
+            }
+
+            //-----------------------------------------------------------------
+            // Instance members.
+
+            /// <summary>
+            /// Private constructor.
+            /// </summary>
+            private LoginFile()
+            {
+            }
+
+            /// <summary>
+            /// Returns the path to the login file.
+            /// </summary>
+            public string Path { get; private set; }
+
+            /// <summary>
+            /// Returns the SHA-256 for the upstream registry URI and the credentials.
+            /// </summary>
+            public string Sha256 { get; private set; }
+
+            /// <summary>
+            /// Returns the upstream registry URI.
+            /// </summary>
+            public string Location { get; private set; }
+
+            /// <summary>
+            /// Returns the username used to login to the registry.
+            /// </summary>
+            public string Username { get; private set; }
+
+            /// <summary>
+            /// The password for instances created via <see cref="Create(string, string, string, string)"/>.
+            /// </summary>
+            public string Password { get; set; }
+
+            /// <summary>
+            /// Returns the time when the operator last logged into the container registry.
+            /// </summary>
+            public DateTime UpdatedUtc { get; private set; }
+
+            /// <summary>
+            /// Deletes the login file if mit exists.
+            /// </summary>
+            public void Delete()
+            {
+                NeonHelper.DeleteFile(Path);
+            }
+
+            /// <summary>
+            /// Creates or updates the login file.
+            /// </summary>
+            public void Write()
+            {
+                this.UpdatedUtc = DateTime.UtcNow;
+
+                var loginData = new LoginData()
+                {
+                    Location   = Location,
+                    Username   = Username,
+                    UpdatedUtc = UpdatedUtc
+                };
+
+                File.WriteAllText(Path, NeonHelper.JsonSerialize(loginData, Formatting.Indented));
+            }
+        }
+
+        //---------------------------------------------------------------------
         // Static members
+
+        private const string podmanPath = "/usr/bin/podman";
 
         private static readonly INeonLogger log             = Program.Service.LogManager.GetLogger<ContainerRegistryController>();
         private static readonly string      configMountPath = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
+        private static TimeSpan             reloginInterval;
+        private static TimeSpan             reloginMaxRandomInterval;
 
         private static ResourceManager<V1NeonContainerRegistry, ContainerRegistryController> resourceManager;
+
+        // Paths to relevant folders in the host file system.
+
+        private static readonly string      hostNeonRunFolder;
+        private static readonly string      hostContainerRegistriesFolder;
 
         // Metrics counters
 
         private static readonly Counter configUpdateCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_node_updated", "Number of node config updates.");
         private static readonly Counter loginErrorCounter   = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_login_error", "Number of failed container registry logins.");
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static ContainerRegistryController()
+        {
+            if (NeonHelper.IsLinux)
+            {
+                hostNeonRunFolder             = Path.Combine(Node.HostMount, KubeNodeFolder.NeonRun.Substring(1));
+                hostContainerRegistriesFolder = Path.Combine(hostNeonRunFolder, "container-registries");
+            }
+            else
+            {
+                // Configure a emulation directory on Windows.
+
+                hostNeonRunFolder             = @"C:\Temp\neonkube";
+                hostContainerRegistriesFolder = Path.Combine(hostNeonRunFolder, "container-registries");
+
+                Directory.CreateDirectory(hostContainerRegistriesFolder);
+            }
+        }
 
         /// <summary>
         /// Starts the controller.
@@ -120,7 +306,49 @@ namespace NeonNodeAgent
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
+            if (NeonHelper.IsLinux)
+            {
+                // Ensure that the [/var/run/neonkube/container-registries] folder exists on the node.
+
+                var scriptPath = Path.Combine(Node.HostMount, $"tmp/node-agent-folder-{NeonHelper.CreateBase36Uuid()}.sh");
+                var script =
+$@"#!/bin/bash
+
+set -euo pipefail
+
+# Ensure that the nodetask runtime folders exist and have the correct permissions.
+
+if [ ! -d {hostNeonRunFolder} ]; then
+
+mkdir -p {hostNeonRunFolder}
+chmod 700 {hostNeonRunFolder}
+fi
+
+if [ ! -d {hostContainerRegistriesFolder} ]; then
+
+mkdir -p {hostContainerRegistriesFolder}
+chmod 700 {hostContainerRegistriesFolder}
+fi
+
+# Remove this script.
+
+rm $0
+";
+                File.WriteAllText(scriptPath, NeonHelper.ToLinuxLineEndings(script));
+                try
+                {
+                    (await Node.BashExecuteCaptureAsync(scriptPath)).EnsureSuccess();
+                }
+                finally
+                {
+                    NeonHelper.DeleteFile(scriptPath);
+                }
+            }
+
             // Load the configuration settings.
+
+            reloginInterval          = Program.Service.Environment.Get("CONTAINERREGISTRY_RELOGIN_INTERVAL", TimeSpan.FromHours(24));
+            reloginMaxRandomInterval = reloginInterval.Divide(4);
 
             var leaderConfig = 
                 new LeaderElectionConfig(
@@ -169,13 +397,23 @@ namespace NeonNodeAgent
             this.k8s = k8s;
         }
 
-        /// <summary>
-        /// Called for each existing custom resource when the controller starts so that the controller
-        /// can maintain the status of all resources and then afterwards, this will be called whenever
-        /// a resource is added or has a non-status update.
-        /// </summary>
-        /// <param name="resource">The new entity or <c>null</c> when nothing has changed.</param>
-        /// <returns>The controller result.</returns>
+        /// <inheritdoc/>
+        public async Task IdleAsync()
+        {
+            // Ignore all events when the controller hasn't been started.
+
+            if (resourceManager == null)
+            {
+                return;
+            }
+
+            log.LogInfo($"IDLE");
+            await UpdateContainerRegistriesAsync();
+
+            return;
+        }
+
+        /// <inheritdoc/>
         public async Task<ResourceControllerResult> ReconcileAsync(V1NeonContainerRegistry resource)
         {
             // Ignore all events when the controller hasn't been started.
@@ -191,11 +429,7 @@ namespace NeonNodeAgent
             return null;
         }
 
-        /// <summary>
-        /// Called when a custom resource is removed from the API Server.
-        /// </summary>
-        /// <param name="resource">The deleted entity.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <inheritdoc/>
         public async Task DeletedAsync(V1NeonContainerRegistry resource)
         {
             // Ignore all events when the controller hasn't been started.
@@ -211,15 +445,11 @@ namespace NeonNodeAgent
 
         /// <summary>
         /// Rebuilds the host node's <b>/etc/containers/registries.conf.d/00-neon-cluster.conf</b> file,
-        /// using the container registries passed and then signals CRI-O to reload any changes.
+        /// using the container registries passed, signals CRI-O to reload any changes and also manages
+        /// container registry logins.
         /// </summary>
         private async Task UpdateContainerRegistriesAsync()
         {
-            if (!NeonHelper.IsLinux)
-            {
-                return;
-            }
-
             var registries = (await k8s.ListClusterCustomObjectAsync<V1NeonContainerRegistry>()).Items;
 
             // NOTE: Here's the documentation for the config file we're generating:
@@ -243,7 +473,7 @@ namespace NeonNodeAgent
 $@"unqualified-search-registries = [{sbSearchRegistries}]
 ");
 
-            // Configure any container registries include the local cluster.
+            // Configure any container registries including the local cluster.
 
             foreach (var registry in registries)
             {
@@ -261,85 +491,109 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                 }
             }
 
-            // Read and parse the current configuration file to create list of the existing
-            // configured upstream registries.  We'll need this so we can logout any registries
-            // that are being deleted.
-
-            var currentConfigText  = File.ReadAllText(configMountPath);
-            var currentConfig      = Toml.Parse(currentConfigText);
-            var existingLocations  = new List<string>();
-
-            foreach (var registryTable in currentConfig.Tables.Where(table => table.Name.Key.GetName() == "registry"))
+            if (NeonHelper.IsLinux)
             {
-                var location = registryTable.Items.SingleOrDefault(key => key.Key.GetName() == "location")?.Value.GetValue();
+                // Read and parse the current configuration file to create list of the existing
+                // configured upstream registries.
 
-                if (!string.IsNullOrWhiteSpace(location))
+                var currentConfigText = File.ReadAllText(configMountPath);
+                var currentConfig     = Toml.Parse(currentConfigText);
+                var existingLocations = new List<string>();
+
+                foreach (var registryTable in currentConfig.Tables.Where(table => table.Name.Key.GetName() == "registry"))
                 {
-                    existingLocations.Add(location);
+                    var location = registryTable.Items.SingleOrDefault(key => key.Key.GetName() == "location")?.Value.GetValue();
+
+                    if (!string.IsNullOrWhiteSpace(location))
+                    {
+                        existingLocations.Add(location);
+                    }
+                }
+
+                // Convert the generated config to Linux line endings and then compare the new
+                // config against what's already configured on the host node.  We'll rewrite the
+                // host file and then signal CRI-O to reload its config when the files differ.
+
+                var newConfigText = NeonHelper.ToLinuxLineEndings(sbRegistryConfig.ToString());
+
+                if (currentConfigText != newConfigText)
+                {
+                    configUpdateCounter.Inc();
+
+                    File.WriteAllText(configMountPath, newConfigText);
+                    (await Node.ExecuteCaptureAsync("pkill", new object[] { "-HUP", "crio" })).EnsureSuccess();
+
+                    // Wait a few seconds to give CRI-O a chance to reload its config.  This will
+                    // help mitigate problems when managing logins below due to potential inconsistencies
+                    // between CRI-O's currently loaded config and the new config we just saved.
+
+                    await Task.Delay(TimeSpan.FromSeconds(15));
                 }
             }
 
-            // Convert the generated config to Linux line endings and then compare the new
-            // config against what's already configured on the host node.  We'll rewrite the
-            // host file and then signal CRI-O to reload its config when the files differ.
-
-            var newConfigText = NeonHelper.ToLinuxLineEndings(sbRegistryConfig.ToString());
-
-            if (currentConfigText != newConfigText)
-            {
-                configUpdateCounter.Inc();
-
-                File.WriteAllText(configMountPath, newConfigText);
-                (await Node.ExecuteCaptureAsync("pkill", new object[] { "-HUP", "crio" })).EnsureSuccess();
-
-                // Wait a few seconds to give CRI-O a chance to reload its config.  This will
-                // help mitigate problems when managing logins below due to potential inconsistencies
-                // between CRI-O's currently loaded config and the new config we just saved.
-
-                await Task.Delay(TimeSpan.FromSeconds(15));
-            }
-
-            // We also need to log into each of the registries that require credentials
-            // via [podman] on the node.  We also need to logout of registries that don't
-            // specify credentials to handle cases where the registry was originally
-            // logged in, but has no credentials now.
+            //-----------------------------------------------------------------
+            // We need to manage registry logins by logging into new registries,
+            // logging out of deleted registries, relogging in with new credentials,
+            // and periodically logging in with unchanged credentials to ensure that
+            // we're actually logged in.  Here's how this works:
             //
-            // We'll log individual login failures but will continue trying to log into any
-            // remaining registries.
+            //      https://github.com/nforgeio/neonKUBE/issues/1591
 
             var retry = new LinearRetryPolicy(e => true, maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(5));
 
-            foreach (var registry in registries)
+            // Construct LoginFile instances for all specified upstream registries
+            // that require credentials and add these to a dictionary keyed by SHA-256.
+
+            var shaToRequiredLogins = new Dictionary<string, LoginFile>();
+
+            foreach (var registry in registries.Where(registry => !string.IsNullOrEmpty(registry.Spec.Username)))
+            {
+                var loginFile = LoginFile.Create(hostContainerRegistriesFolder, registry.Spec.Location, registry.Spec.Username, registry.Spec.Password);
+
+                shaToRequiredLogins.Add(loginFile.Sha256, loginFile);
+            }
+
+            // Read all existing login files on the node and add them to a dictionary
+            // mapping their SHA-256s to the file.
+
+            var shaToExistingLogins = new Dictionary<string, LoginFile>();
+
+            foreach (var file in Directory.GetFiles(hostContainerRegistriesFolder, "*.login", SearchOption.TopDirectoryOnly))
+            {
+                var loginFile = LoginFile.Read(file);
+
+                if (loginFile != null)
+                {
+                    shaToExistingLogins.Add(loginFile.Sha256, loginFile);
+                }
+            }
+
+            // Look for any existing login files that are not present in the collection of
+            // new logins.  These correspond to registries that have been deleted or whose
+            // credentials have changed.  We're going to go ahead and log out of the related
+            // registries and then delete these login files (we'll re-login with new
+            // credentials below for the registries that weren't targeted for removal).
+
+            foreach (var loginFile in shaToExistingLogins.Values
+                .Where(login => !shaToRequiredLogins.ContainsKey(login.Sha256)))
             {
                 try
                 {
-                    if (string.IsNullOrEmpty(registry.Spec.Username))
-                    {
-                        // The registry doesn't have a username so we'll logout to clear any old credentials.
-                        // We're going to ignore any errors here in case we're not currently logged into
-                        // the registry.
+                    await retry.InvokeAsync(
+                        async () =>
+                        {
+                            // Note that we're not ensuring success here because we may not be
+                            // logged-in which is OK: we don't want to see that error.
 
-                        log.LogInfo($"podman logout {registry.Spec.Location}");
-                        await Node.ExecuteCaptureAsync("podman", new object[] { "logout", registry.Spec.Location });
-                    }
-                    else
-                    {
-                        // The registry has credentials so login using them.
-
-                        // $note(jefflill):
-                        //
-                        // It's possible that CRI-O hasn't reloaded its config yet and we may see errors
-                        // when logging into a new registry we just configured that CRI-O isn't aware of
-                        // yet.  The delay above should mitigate this most of the time, so we're going
-                        // to retry here, just in case.
-
-                        await retry.InvokeAsync(
-                            async () =>
+                            log.LogInfo($"{podmanPath} logout {loginFile.Location}");
+                            
+                            if (NeonHelper.IsLinux)
                             {
-                                log.LogInfo($"podman login {registry.Spec.Location} --username {registry.Spec.Username} --password REDACTED");
-                                (await Node.ExecuteCaptureAsync("podman", new object[] { "login", registry.Spec.Location, "--username", registry.Spec.Username, "--password", registry.Spec.Password })).EnsureSuccess();
-                            });
-                    }
+                                await Node.ExecuteCaptureAsync(podmanPath, new object[] { "logout", loginFile.Location });
+                            }
+
+                            loginFile.Delete();
+                        });
                 }
                 catch (Exception e)
                 {
@@ -348,15 +602,88 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                 }
             }
 
-            // We also need to log out of registeries that were just removed from the configuration.
-            // We're going to ignore any errors.
+            // Look for any required logins that don't have an existing login file,
+            // and then login the registry and then create the login file on success.
 
-            foreach (var location in existingLocations)
+            foreach (var loginFile in shaToRequiredLogins.Values
+                .Where(login => !shaToExistingLogins.ContainsKey(login.Sha256)))
             {
-                if (!registries.Any(registry => location == registry.Spec.Location))
+                try
                 {
-                    log.LogInfo($"podman logout {location}");
-                    await Node.ExecuteCaptureAsync("podman", new object[] { "logout", location });
+                    await retry.InvokeAsync(
+                        async () =>
+                        {
+                            log.LogInfo($"{podmanPath} login {loginFile.Location} --username {loginFile.Username} --password REDACTED");
+
+                            if (NeonHelper.IsLinux)
+                            {
+                                (await Node.ExecuteCaptureAsync(podmanPath, new object[] { "login", loginFile.Location, "--username", loginFile.Username, "--password", loginFile.Password })).EnsureSuccess();
+                            }
+                        });
+
+                    loginFile.Write();
+                }
+                catch (Exception e)
+                {
+                    loginErrorCounter.Inc();
+                    log.LogError(e);
+                }
+            }
+
+            //-----------------------------------------------------------------
+            // Finally, we need to force a re-login for any existing logins that haven't
+            // been explicitly logged into for a while.  Note that we're always going to
+            // log into the local Harbor registry.
+
+            foreach (var file in Directory.GetFiles(hostContainerRegistriesFolder, "*.login", SearchOption.TopDirectoryOnly))
+            {
+                // Read the next existing login file.
+
+                var loginFile = LoginFile.Read(file);
+
+                if (loginFile == null)
+                {
+                    continue;
+                }
+
+                // Update the login with the password from the corresponding container registry resource.
+
+                var registry = registries.FirstOrDefault(registry => registry.Spec.Location == loginFile.Location);
+
+                if (registry == null)
+                {
+                    log.LogWarn($"Cannot locate [{nameof(V1NeonContainerRegistry)}] resource for [location={loginFile.Location}].");
+                    continue;
+                }
+
+                loginFile.Password = registry.Spec.Password;
+
+                // Perform the login.
+
+                var scheduledLoginUtc = loginFile.UpdatedUtc + reloginInterval + NeonHelper.PseudoRandomTimespan(reloginMaxRandomInterval);
+
+                if (DateTime.UtcNow <= scheduledLoginUtc || loginFile.Location == KubeConst.LocalClusterRegistry)
+                {
+                    try
+                    {
+                        await retry.InvokeAsync(
+                            async () =>
+                            {
+                                log.LogInfo($"{podmanPath} login {loginFile.Location} --username {loginFile.Username} --password REDACTED");
+
+                                if (NeonHelper.IsLinux)
+                                {
+                                    (await Node.ExecuteCaptureAsync(podmanPath, new object[] { "login", loginFile.Location, "--username", loginFile.Username, "--password", loginFile.Password })).EnsureSuccess();
+                                }
+                            });
+
+                        loginFile.Write();
+                    }
+                    catch (Exception e)
+                    {
+                        loginErrorCounter.Inc();
+                        log.LogError(e);
+                    }
                 }
             }
         }

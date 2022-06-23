@@ -100,6 +100,33 @@ namespace NeonNodeAgent
     ///     </description>
     /// </item>
     /// <item>
+    ///     <term><b>CONTAINERREGISTRY_RELOGIN_INTERVAL</b></term>
+    ///     <description>
+    ///     <para>
+    ///     <b>timespan:</b> Specifies the interval at which \<b>ContainerRegistry</b> will
+    ///     force a login to upstream registries to ensure that they're reachable even when
+    ///     it appears that the the correct login is active.  This helps to ensure that 
+    ///     nodes will converge on having proper registery credentials even after these
+    ///     got corrupted somehow (e.g. somebody logged out manually or CRI-O was reinstalled).
+    ///     </para>
+    ///     <para>
+    ///     The control loop randomizes actual logins to prevent the cluster nodes from all
+    ///     slamming an upstream registry with logins at the same time.  It does this by
+    ///     scheduling the re-logins after:
+    ///     </para>
+    ///     <code>
+    ///     CONTAINERREGISTRY_RELOGIN_INTERVAL + random(CONTAINERREGISTRY_RELOGIN_INTERVAL/4)
+    ///     </code>
+    ///     <para>
+    ///     where `random(CONTAINERREGISTRY_RELOGIN_INTERVAL/4)` is a random interval between
+    ///     `0..CONTAINERREGISTRY_RELOGIN_INTERVAL/4`.
+    ///     </para>
+    ///     <para>
+    ///     This defaults to <b>24 hours</b>.
+    ///     </para>
+    ///     </description>
+    /// </item>
+    /// <item>
     ///     <term><b>NODETASK_IDLE_INTERVAL</b></term>
     ///     <description>
     ///     <b>timespan:</b> Specifies the interval at which IDLE events will be raised
@@ -153,7 +180,12 @@ namespace NeonNodeAgent
 
             var k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
 
-            await NodeTaskController.StartAsync(k8s);
+            //################################
+            // $debug(jefflill): RESTORE THIS!
+            //await NodeTaskController.StartAsync(k8s);
+            //################################
+
+            await ContainerRegistryController.StartAsync(k8s);
 
             //-----------------------------------------------------------------
             // Start KubeOps.
