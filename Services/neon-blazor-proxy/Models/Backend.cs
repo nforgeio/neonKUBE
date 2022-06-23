@@ -56,5 +56,13 @@ namespace NeonBlazorProxy
         [YamlMember(Alias = "port", ApplyNamingConventions = false)]
         [DefaultValue(80)]
         public int Port { get; set; } = 80;
+
+        /// <summary>
+        /// The scheme to use when connecting to the backend. Defaults to http.
+        /// </summary>
+        [JsonProperty(PropertyName = "Scheme", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "scheme", ApplyNamingConventions = false)]
+        [DefaultValue("http")]
+        public string Scheme { get; set; } = "http";
     }
 }

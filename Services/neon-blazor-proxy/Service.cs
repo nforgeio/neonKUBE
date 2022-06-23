@@ -122,7 +122,7 @@ namespace NeonBlazorProxy
                 CacheFailedResults  = Config.Dns.CacheFailedResults
             });
 
-            AesCipher = new AesCipher(GetEnvironmentVariable("COOKIE_CIPHER", AesCipher.GenerateKey(), redacted: true));
+            AesCipher = new AesCipher(GetEnvironmentVariable("COOKIE_CIPHER", AesCipher.GenerateKey(), redacted: !Log.IsLogDebugEnabled));
 
             CurrentConnections = new HashSet<string>();
 

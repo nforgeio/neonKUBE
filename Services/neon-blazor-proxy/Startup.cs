@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -42,6 +43,7 @@ using StackExchange.Redis;
 
 using Yarp;
 using Yarp.Telemetry.Consumption;
+using Yarp.ReverseProxy.Forwarder;
 
 namespace NeonBlazorProxy
 {
@@ -106,14 +108,18 @@ namespace NeonBlazorProxy
 
             // Http client for Yarp.
 
-            var httpMessageInvoker = new HttpMessageInvoker(new SocketsHttpHandler()
-            {
-                UseProxy               = false,
-                AllowAutoRedirect      = false,
-                AutomaticDecompression = DecompressionMethods.None,
-                UseCookies             = false
-            });
-            services.AddSingleton(httpMessageInvoker);
+            services.AddSingleton<HttpMessageInvoker>(
+                serviceProvider =>
+                {
+                    return new HttpMessageInvoker(new SocketsHttpHandler()
+                    {
+                        UseProxy                  = false,
+                        AllowAutoRedirect         = false,
+                        AutomaticDecompression    = DecompressionMethods.None,
+                        UseCookies                = false,
+                        ActivityHeadersPropagator = new ReverseProxyPropagator(DistributedContextPropagator.Current)
+                    });
+                });
 
             // Cookie encryption cipher.
 

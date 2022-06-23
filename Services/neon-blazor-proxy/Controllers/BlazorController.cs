@@ -18,12 +18,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 
@@ -40,7 +42,6 @@ using Newtonsoft.Json;
 using Yarp;
 using Yarp.ReverseProxy;
 using Yarp.ReverseProxy.Forwarder;
-using System.Net;
 
 namespace NeonBlazorProxy.Controllers
 {
@@ -128,7 +129,7 @@ namespace NeonBlazorProxy.Controllers
 
             var host = await GetHostAsync();
 
-            var error = await forwarder.SendAsync(HttpContext, $"http://{host}:{config.Backend.Port}", httpClient, forwarderRequestConfig, transformer);
+            var error = await forwarder.SendAsync(HttpContext, $"{config.Backend.Scheme}://{host}:{config.Backend.Port}", httpClient, forwarderRequestConfig, transformer);
 
             if (error != ForwarderError.None)
             {
@@ -148,6 +149,7 @@ namespace NeonBlazorProxy.Controllers
         /// </summary>
         /// <returns></returns>
         [Route("/_blazor")]
+        [Route("/_blazor/{**catchAll}")]
         public async Task BlazorAsync()
         {
             await SyncContext.Clear;
@@ -164,14 +166,22 @@ namespace NeonBlazorProxy.Controllers
             WebsocketMetrics.ConnectionsEstablished.Inc();
             blazorProxyService.CurrentConnections.Add(session.ConnectionId);
 
-            var error = await forwarder.SendAsync(HttpContext, $"http://{session.UpstreamHost}", httpClient, forwarderRequestConfig, transformer);
+            LogDebug($"Fwd [{session.Id}] to [{session.UpstreamHost}].");
+
+            var error = await forwarder.SendAsync(HttpContext, $"{config.Backend.Scheme}://{session.UpstreamHost}", httpClient, forwarderRequestConfig, transformer);
+
+            LogDebug($"Session [{session.Id}] closed.");
 
             if (error != ForwarderError.None)
             {
                 var errorFeature = HttpContext.GetForwarderErrorFeature();
                 var exception = errorFeature.Exception;
 
-                LogError("CatchAll", exception);
+                if (exception.GetType() != typeof(TaskCanceledException)
+                    && exception.GetType() != typeof(OperationCanceledException))
+                {
+                    LogError("_blazor", exception);
+                }
             }
         }
 
