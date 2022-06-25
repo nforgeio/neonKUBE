@@ -68,6 +68,8 @@ namespace TestNeonSignalR
             services.AddSignalR(options =>
             {
                 options.EnableDetailedErrors = true;
+                options.KeepAliveInterval = TimeSpan.FromSeconds(5);
+                options.ClientTimeoutInterval = TimeSpan.FromSeconds(300);
             })
                 .AddNeonNats(connectionFactory.CreateConnection(options));
 

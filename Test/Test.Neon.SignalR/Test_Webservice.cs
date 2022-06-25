@@ -21,6 +21,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.WebSockets;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -157,8 +158,7 @@ namespace TestNeonSignalR
             var tcs2 = new TaskCompletionSource<string>();
             secondConnection.On<string>("Echo", message => tcs2.TrySetResult(message));
 
-            await connection.StartAsync();
-            await secondConnection.StartAsync();
+            await CheckConnectionsAsync();
 
             await connection.InvokeAsync("EchoUser", "userA", "Hello, World!");
 
@@ -178,10 +178,7 @@ namespace TestNeonSignalR
             var tcs4 = new TaskCompletionSource<string>();
             fourthConnection.On<string>("Echo", message => tcs4.TrySetResult(message));
 
-            await connection.StartAsync();
-            await secondConnection.StartAsync();
-            await thirdConnection.StartAsync();
-            await fourthConnection.StartAsync();
+            await CheckConnectionsAsync();
 
             await connection.InvokeAsync("EchoUser", "userA", "Hello, World!");
 
@@ -214,8 +211,7 @@ namespace TestNeonSignalR
 
             var groupName = $"TestGroup_{HttpTransportType.WebSockets}_{HubProtocolHelpers.NewtonsoftJsonHubProtocol.Name}_{Guid.NewGuid()}";
 
-            await connection.StartAsync();
-            await secondConnection.StartAsync();
+            await CheckConnectionsAsync();
 
             await connection.InvokeAsync("AddSelfToGroup", groupName);
             await secondConnection.InvokeAsync("AddSelfToGroup", groupName);
@@ -236,8 +232,7 @@ namespace TestNeonSignalR
 
             var groupName = $"TestGroup_{HttpTransportType.WebSockets}_{HubProtocolHelpers.NewtonsoftJsonHubProtocol.Name}_{Guid.NewGuid()}";
 
-            await secondConnection.StartAsync();
-            await connection.StartAsync();
+            await CheckConnectionsAsync();
 
             await connection.InvokeAsync("AddSelfToGroup", groupName);
             await secondConnection.InvokeAsync("AddSelfToGroup", groupName);
@@ -268,8 +263,7 @@ namespace TestNeonSignalR
 
             var groupName = $"TestGroup_{HttpTransportType.WebSockets}_{HubProtocolHelpers.NewtonsoftJsonHubProtocol.Name}_{Guid.NewGuid()}";
 
-            await secondConnection.StartAsync();
-            await connection.StartAsync();
+            await CheckConnectionsAsync();
 
             await secondConnection.InvokeAsync("AddUserToGroup", connection.ConnectionId, groupName);
 
@@ -288,8 +282,7 @@ namespace TestNeonSignalR
 
             var groupName = $"TestGroup_{HttpTransportType.WebSockets}_{HubProtocolHelpers.NewtonsoftJsonHubProtocol.Name}_{Guid.NewGuid()}";
 
-            await secondConnection.StartAsync();
-            await connection.StartAsync();
+            await CheckConnectionsAsync();
 
             await secondConnection.InvokeAsync("AddUserToGroup", connection.ConnectionId, groupName);
 
@@ -307,12 +300,33 @@ namespace TestNeonSignalR
             await Assert.ThrowsAsync<TimeoutException>(async () => await AwaitWithTimeoutAsync<string>(tcs2.Task));
         }
 
+        private async Task CheckConnectionsAsync()
+        {
+            if (connection.State != HubConnectionState.Connected)
+            {
+                await connection.StartAsync();
+            }
+            if (secondConnection.State != HubConnectionState.Connected)
+            {
+                await secondConnection.StartAsync();
+            }
+            if (thirdConnection.State != HubConnectionState.Connected)
+            {
+                await thirdConnection.StartAsync();
+            }
+            if (fourthConnection.State != HubConnectionState.Connected)
+            {
+                await fourthConnection.StartAsync();
+            }
+        }
+
         private static HubConnection CreateConnection(string url, HttpTransportType transportType, IHubProtocol protocol, string userName = null)
         {
             var hubConnectionBuilder = new HubConnectionBuilder()
                 .WithAutomaticReconnect()
                 .WithUrl(url, transportType, httpConnectionOptions =>
                 {
+                    httpConnectionOptions.CloseTimeout = TimeSpan.MaxValue;
                     if (!string.IsNullOrEmpty(userName))
                     {
                         httpConnectionOptions.Headers["UserName"] = userName;
@@ -321,7 +335,11 @@ namespace TestNeonSignalR
 
             hubConnectionBuilder.Services.AddSingleton(protocol);
 
-            return hubConnectionBuilder.Build();
+            var connection = hubConnectionBuilder.Build();
+            connection.KeepAliveInterval = TimeSpan.FromSeconds(5);
+            connection.ServerTimeout = TimeSpan.FromSeconds(300);
+
+            return connection;
         }
 
         private async Task<T> AwaitWithTimeoutAsync<T>(Task<T> task, int timeout = 1000)
