@@ -56,6 +56,11 @@ namespace TestNeonSignalR
         private NeonServiceFixture<WebService> web0;
         private NeonServiceFixture<WebService> web1;
 
+        private HubConnection connection;
+        private HubConnection secondConnection;
+        private HubConnection thirdConnection;
+        private HubConnection fourthConnection;
+
         public Test_WebService(ComposedFixture fixture)
         {
             TestHelper.ResetDocker(this.GetType());
@@ -78,6 +83,13 @@ namespace TestNeonSignalR
             this.natsFixture = (NatsFixture)composedFixture["nats"];
             this.web0        = (NeonServiceFixture<WebService>)composedFixture["web-0"];
             this.web1        = (NeonServiceFixture<WebService>)composedFixture["web-1"];
+
+
+            var protocol     = HubProtocolHelpers.NewtonsoftJsonHubProtocol;
+            connection       = CreateConnection(web0.Service.ServiceMap["web-0"].Endpoints.Default.Uri + "echo", HttpTransportType.WebSockets, protocol, userName: "userA");
+            secondConnection = CreateConnection(web1.Service.ServiceMap["web-1"].Endpoints.Default.Uri + "echo", HttpTransportType.WebSockets, protocol, userName: "userA");
+            thirdConnection  = CreateConnection(web1.Service.ServiceMap["web-0"].Endpoints.Default.Uri + "echo", HttpTransportType.WebSockets, protocol, userName: "userB");
+            fourthConnection = CreateConnection(web1.Service.ServiceMap["web-1"].Endpoints.Default.Uri + "echo", HttpTransportType.WebSockets, protocol, userName: "userC");
         }
 
         /// <summary>
@@ -140,39 +152,89 @@ namespace TestNeonSignalR
         [Fact]
         public async Task CanSendAndReceiveUserMessagesFromMultipleConnectionsWithSameUser()
         {
-            var protocol         = HubProtocolHelpers.NewtonsoftJsonHubProtocol;
-            var connection       = CreateConnection(web0.Service.ServiceMap["web-0"].Endpoints.Default.Uri + "echo", HttpTransportType.WebSockets, protocol, userName: "userA");
-            var secondConnection = CreateConnection(web1.Service.ServiceMap["web-1"].Endpoints.Default.Uri + "echo", HttpTransportType.WebSockets, protocol, userName: "userA");
-
             var tcs = new TaskCompletionSource<string>();
             connection.On<string>("Echo", message => tcs.TrySetResult(message));
             var tcs2 = new TaskCompletionSource<string>();
             secondConnection.On<string>("Echo", message => tcs2.TrySetResult(message));
 
-            await secondConnection.StartAsync();
             await connection.StartAsync();
+            await secondConnection.StartAsync();
+
             await connection.InvokeAsync("EchoUser", "userA", "Hello, World!");
 
-            Assert.Equal("Hello, World!", await tcs.Task);
-            Assert.Equal("Hello, World!", await tcs2.Task);
+            Assert.Equal("Hello, World!", await AwaitWithTimeoutAsync<string>(tcs.Task));
+            Assert.Equal("Hello, World!", await AwaitWithTimeoutAsync<string>(tcs2.Task));
+        }
 
-            await connection.DisposeAsync();
-            await secondConnection.DisposeAsync();
+        [Fact]
+        public async Task CanSendAndReceiveUserMessagesToOtherUsers()
+        {
+            var tcs = new TaskCompletionSource<string>();
+            connection.On<string>("Echo", message => tcs.TrySetResult(message));
+            var tcs2 = new TaskCompletionSource<string>();
+            secondConnection.On<string>("Echo", message => tcs2.TrySetResult(message));
+            var tcs3 = new TaskCompletionSource<string>();
+            thirdConnection.On<string>("Echo", message => tcs3.TrySetResult(message));
+            var tcs4 = new TaskCompletionSource<string>();
+            fourthConnection.On<string>("Echo", message => tcs4.TrySetResult(message));
+
+            await connection.StartAsync();
+            await secondConnection.StartAsync();
+            await thirdConnection.StartAsync();
+            await fourthConnection.StartAsync();
+
+            await connection.InvokeAsync("EchoUser", "userA", "Hello, World!");
+
+            Assert.Equal("Hello, World!", await AwaitWithTimeoutAsync<string>(tcs.Task));
+            Assert.Equal("Hello, World!", await AwaitWithTimeoutAsync<string>(tcs2.Task));
+            await Assert.ThrowsAsync<TimeoutException>(async () => await AwaitWithTimeoutAsync<string>(tcs3.Task));
+            await Assert.ThrowsAsync<TimeoutException>(async () => await AwaitWithTimeoutAsync<string>(tcs4.Task));
+
+            tcs = new TaskCompletionSource<string>();
+            tcs2 = new TaskCompletionSource<string>();
+            tcs3 = new TaskCompletionSource<string>();
+            tcs4 = new TaskCompletionSource<string>();
+
+            await connection.InvokeAsync("EchoUser", "userC", "Hello, World!");
+
+            await Assert.ThrowsAsync<TimeoutException>(async () => await AwaitWithTimeoutAsync<string>(tcs.Task));
+            await Assert.ThrowsAsync<TimeoutException>(async () => await AwaitWithTimeoutAsync<string>(tcs2.Task));
+            await Assert.ThrowsAsync<TimeoutException>(async () => await AwaitWithTimeoutAsync<string>(tcs3.Task));
+            Assert.Equal("Hello, World!", await AwaitWithTimeoutAsync<string>(tcs4.Task));
+
         }
 
         [Fact]
         public async Task HubConnectionCanSendAndReceiveGroupMessages()
         {
-            var protocol         = HubProtocolHelpers.NewtonsoftJsonHubProtocol;
-            var connection       = CreateConnection(web0.Service.ServiceMap["web-0"].Endpoints.Default.Uri + "echo", HttpTransportType.WebSockets, protocol, userName: "userA");
-            var secondConnection = CreateConnection(web1.Service.ServiceMap["web-1"].Endpoints.Default.Uri + "echo", HttpTransportType.WebSockets, protocol, userName: "userA");
-
             var tcs = new TaskCompletionSource<string>();
             connection.On<string>("Echo", message => tcs.TrySetResult(message));
             var tcs2 = new TaskCompletionSource<string>();
             secondConnection.On<string>("Echo", message => tcs2.TrySetResult(message));
-            
-            var groupName = $"TestGroup_{HttpTransportType.WebSockets}_{protocol.Name}_{Guid.NewGuid()}";
+
+            var groupName = $"TestGroup_{HttpTransportType.WebSockets}_{HubProtocolHelpers.NewtonsoftJsonHubProtocol.Name}_{Guid.NewGuid()}";
+
+            await connection.StartAsync();
+            await secondConnection.StartAsync();
+
+            await connection.InvokeAsync("AddSelfToGroup", groupName);
+            await secondConnection.InvokeAsync("AddSelfToGroup", groupName);
+
+            await connection.InvokeAsync("EchoGroup", groupName, "Hello, World!");
+
+            Assert.Equal("Hello, World!", await AwaitWithTimeoutAsync<string>(tcs.Task));
+            Assert.Equal("Hello, World!", await AwaitWithTimeoutAsync<string>(tcs2.Task));
+        }
+
+        [Fact]
+        public async Task HubConnectionCanUnsubscribeFromGroupMessages()
+        {
+            var tcs = new TaskCompletionSource<string>();
+            connection.On<string>("Echo", message => tcs.TrySetResult(message));
+            var tcs2 = new TaskCompletionSource<string>();
+            secondConnection.On<string>("Echo", message => tcs2.TrySetResult(message));
+
+            var groupName = $"TestGroup_{HttpTransportType.WebSockets}_{HubProtocolHelpers.NewtonsoftJsonHubProtocol.Name}_{Guid.NewGuid()}";
 
             await secondConnection.StartAsync();
             await connection.StartAsync();
@@ -182,16 +244,73 @@ namespace TestNeonSignalR
 
             await connection.InvokeAsync("EchoGroup", groupName, "Hello, World!");
 
-            Assert.Equal("Hello, World!", await tcs.Task);
-            Assert.Equal("Hello, World!", await tcs2.Task);
+            Assert.Equal("Hello, World!", await AwaitWithTimeoutAsync<string>(tcs.Task));
+            Assert.Equal("Hello, World!", await AwaitWithTimeoutAsync<string>(tcs2.Task));
 
-            await connection.DisposeAsync();
-            await secondConnection.DisposeAsync();
+            tcs = new TaskCompletionSource<string>();
+            tcs2 = new TaskCompletionSource<string>();
+
+            await secondConnection.InvokeAsync("RemoveSelfFromGroup", groupName);
+
+            await connection.InvokeAsync("EchoGroup", groupName, "Hello, World!");
+
+            Assert.Equal("Hello, World!", await AwaitWithTimeoutAsync<string>(tcs.Task));
+            await Assert.ThrowsAsync<TimeoutException>(async () => await AwaitWithTimeoutAsync<string>(tcs2.Task));
+        }
+
+        [Fact]
+        public async Task HubConnectionCanAddUserToGroup()
+        {
+            var tcs = new TaskCompletionSource<string>();
+            connection.On<string>("Echo", message => tcs.TrySetResult(message));
+            var tcs2 = new TaskCompletionSource<string>();
+            secondConnection.On<string>("Echo", message => tcs2.TrySetResult(message));
+
+            var groupName = $"TestGroup_{HttpTransportType.WebSockets}_{HubProtocolHelpers.NewtonsoftJsonHubProtocol.Name}_{Guid.NewGuid()}";
+
+            await secondConnection.StartAsync();
+            await connection.StartAsync();
+
+            await secondConnection.InvokeAsync("AddUserToGroup", connection.ConnectionId, groupName);
+
+            await connection.InvokeAsync("EchoGroup", groupName, "Hello, World!");
+
+            Assert.Equal("Hello, World!", await AwaitWithTimeoutAsync<string>(tcs.Task));
+        }
+
+        [Fact]
+        public async Task HubConnectionCanRemoveUserFromGroup()
+        {
+            var tcs = new TaskCompletionSource<string>();
+            connection.On<string>("Echo", message => tcs.TrySetResult(message));
+            var tcs2 = new TaskCompletionSource<string>();
+            secondConnection.On<string>("Echo", message => tcs2.TrySetResult(message));
+
+            var groupName = $"TestGroup_{HttpTransportType.WebSockets}_{HubProtocolHelpers.NewtonsoftJsonHubProtocol.Name}_{Guid.NewGuid()}";
+
+            await secondConnection.StartAsync();
+            await connection.StartAsync();
+
+            await secondConnection.InvokeAsync("AddUserToGroup", connection.ConnectionId, groupName);
+
+            await connection.InvokeAsync("EchoGroup", groupName, "Hello, World!");
+
+            Assert.Equal("Hello, World!", await AwaitWithTimeoutAsync<string>(tcs.Task));
+
+
+            tcs = new TaskCompletionSource<string>();
+
+            await secondConnection.InvokeAsync("RemoveUserFromGroup", connection.ConnectionId, groupName);
+
+            await secondConnection.InvokeAsync("EchoGroup", groupName, "Hello, World!");
+
+            await Assert.ThrowsAsync<TimeoutException>(async () => await AwaitWithTimeoutAsync<string>(tcs2.Task));
         }
 
         private static HubConnection CreateConnection(string url, HttpTransportType transportType, IHubProtocol protocol, string userName = null)
         {
             var hubConnectionBuilder = new HubConnectionBuilder()
+                .WithAutomaticReconnect()
                 .WithUrl(url, transportType, httpConnectionOptions =>
                 {
                     if (!string.IsNullOrEmpty(userName))
@@ -203,6 +322,18 @@ namespace TestNeonSignalR
             hubConnectionBuilder.Services.AddSingleton(protocol);
 
             return hubConnectionBuilder.Build();
+        }
+
+        private async Task<T> AwaitWithTimeoutAsync<T>(Task<T> task, int timeout = 1000)
+        {
+            if (await Task.WhenAny(task, Task.Delay(timeout)) == task)
+            {
+                return await task;
+            }
+            else
+            {
+                throw new TimeoutException("Operation timed out.");
+            }
         }
     }
 }

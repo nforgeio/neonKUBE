@@ -46,7 +46,7 @@ namespace Neon.SignalR
         /// <summary>
         /// The action to be performed on the group.
         /// </summary>
-        [JsonProperty(PropertyName = "Action", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Action", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.Include)]
         public GroupAction Action { get; set; }
 
         /// <summary>
@@ -83,6 +83,8 @@ namespace Neon.SignalR
                 ConnectionId = connectionId
             };
 
+            var s = NeonHelper.JsonSerialize(command);
+
             return NeonHelper.JsonSerializeToBytes(command);
         }
 
@@ -93,6 +95,7 @@ namespace Neon.SignalR
         /// <returns></returns>
         public static GroupCommand Read(byte[] message)
         {
+            var s = NeonHelper.JsonDeserialize<dynamic>(message);
             return NeonHelper.JsonDeserialize<GroupCommand>(message);
         }
     }

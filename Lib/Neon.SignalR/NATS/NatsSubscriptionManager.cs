@@ -89,9 +89,10 @@ namespace Neon.SignalR
 
                     if (natsSubscriptions.TryGetValue(id, out var sAsync))
                     {
-                        sAsync.Unsubscribe();
-                        sAsync.Dispose();
+                        await sAsync.DrainAsync();
                     }
+
+                    natsSubscriptions.TryRemove(id, out _);
                 }
             }
             finally

@@ -49,8 +49,7 @@ namespace Neon.SignalR
         private readonly NatsSubscriptionManager users                 = new NatsSubscriptionManager();
         private readonly ClientResultsManager    clientResultsManager = new();
         private readonly string serverName = GenerateServerName();
-        private readonly INeonLogger logger;
-        private readonly NATS.Client.Options natsOptions;
+        private readonly ILogger logger;
         private readonly SemaphoreSlim connectionLock = new SemaphoreSlim(1);
         private readonly IHubProtocolResolver hubProtocolResolver;
         private readonly IConnection nats;
@@ -66,14 +65,14 @@ namespace Neon.SignalR
         /// Constructs the <see cref="NatsHubLifetimeManager{THub}"/> with types from Dependency Injection.
         /// </summary>
         /// <param name="logger">The logger to write information about what the class is doing.</param>
-        /// <param name="options">The <see cref="NATS.Client.Options"/> that influence behavior of the NATS connection.</param>
-        public NatsHubLifetimeManager(INeonLogger logger,
-                                        NATS.Client.Options options)
+        /// <param name="connection">The NATS <see cref="IConnection"/>.</param>
+        public NatsHubLifetimeManager(IConnection connection,
+                                      ILogger logger)
         {
+            this.nats        = connection;
             this.logger      = logger;
-            this.natsOptions = options;
+            this.ackHandler  = new AckHandler();
 
-            nats = natsConnectionFactory.CreateConnection(natsOptions);
             subjects = new NatsSubjects("neon.signalr");
         }
 
@@ -336,7 +335,7 @@ namespace Neon.SignalR
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex);
+                    logger.LogError("SubscribeToConnection", ex);
                 }
             };
 
@@ -368,7 +367,7 @@ namespace Neon.SignalR
                     }
                     catch (Exception ex)
                     {
-                        logger.LogError(ex);
+                        logger.LogError("SubscribeToUser", ex);
                     }
                 };
 
@@ -404,7 +403,7 @@ namespace Neon.SignalR
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex);
+                    logger.LogError("SubscribeToGroupAsync", ex);
                 }
             };
 
@@ -488,7 +487,7 @@ namespace Neon.SignalR
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex);
+                    logger.LogError("SubscribeToAll", ex);
                 }
             };
 
@@ -529,7 +528,7 @@ namespace Neon.SignalR
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex);
+                    logger.LogError("SubscribeToGroupManagementChannel", ex);
                 }
             };
 
@@ -550,7 +549,7 @@ namespace Neon.SignalR
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex);
+                    logger.LogError("SubscribeToAckChannel", ex);
                 }
             };
 

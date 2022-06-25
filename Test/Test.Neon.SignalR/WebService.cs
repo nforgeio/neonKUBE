@@ -59,16 +59,17 @@ namespace TestNeonSignalR
         {
             var natsServerUri = service.GetEnvironmentVariable("NATS_URI", string.Empty);
 
+            var connectionFactory = new ConnectionFactory();
             var options = ConnectionFactory.GetDefaultOptions();
 
             options.Servers = new string[] { natsServerUri };
-
-            services.AddSingleton(service.Log);
+            var logger = service.LogManager.CreateLogger("neon-signalr");
+            services.AddSingleton(logger);
             services.AddSignalR(options =>
             {
                 options.EnableDetailedErrors = true;
             })
-                .AddNeonNats(options);
+                .AddNeonNats(connectionFactory.CreateConnection(options));
 
             services.AddSingleton<IUserIdProvider, UserNameIdProvider>();
         }

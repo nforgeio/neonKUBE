@@ -60,5 +60,20 @@ namespace TestNeonSignalR
         {
             return Groups.AddToGroupAsync(Context.ConnectionId, groupName);
         }
+
+        public Task AddUserToGroup(string connectionId, string groupName)
+        {
+            return Groups.AddToGroupAsync(connectionId, groupName);
+        }
+
+        public Task RemoveUserFromGroup(string connectionId, string groupName)
+        {
+            return Groups.RemoveFromGroupAsync(connectionId, groupName);
+        }
+
+        public Task RemoveSelfFromGroup(string groupName)
+        {
+            return Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
+        }
     }
 }

@@ -44,9 +44,11 @@ namespace TestNeonSignalR
         [Fact]
         public void AddNatsWithConnectionStringProperlyParsesOptions()
         {
-            var defaultOptions = ConnectionFactory.GetDefaultOptions(); 
+            var defaultOptions = ConnectionFactory.GetDefaultOptions();
+            var connection = new ConnectionFactory().CreateConnection(defaultOptions);
+            
             var services = new ServiceCollection();
-            services.AddSignalR().AddNeonNats(ConnectionFactory.GetDefaultOptions());
+            services.AddSignalR().AddNeonNats(connection);
             var provider = services.BuildServiceProvider();
 
             var options = provider.GetService<IOptions<NATS.Client.Options>>();

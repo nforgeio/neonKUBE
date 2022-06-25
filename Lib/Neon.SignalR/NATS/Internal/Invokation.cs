@@ -116,8 +116,6 @@ namespace Neon.SignalR
         /// <returns></returns>
         public static Invokation Read(byte[] message)
         {
-            var s = Encoding.UTF8.GetString(message);
-            var d = NeonHelper.JsonDeserialize<dynamic>(message);
             return NeonHelper.JsonDeserialize<Invokation>(message);
         }
     }

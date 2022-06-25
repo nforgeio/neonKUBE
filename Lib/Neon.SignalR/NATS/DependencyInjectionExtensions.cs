@@ -40,21 +40,13 @@ namespace Neon.SignalR
         /// Adds scale-out to a <see cref="ISignalRServerBuilder"/>, using a shared Nats server.
         /// </summary>
         /// <param name="signalrBuilder">The <see cref="ISignalRServerBuilder"/>.</param>
+        /// <param name="connection">The nats <see cref="IConnection"/>.</param>
         /// <returns>The same instance of the <see cref="ISignalRServerBuilder"/> for chaining.</returns>
-        public static ISignalRServerBuilder AddNeonNats(this ISignalRServerBuilder signalrBuilder)
+        public static ISignalRServerBuilder AddNeonNats(
+            this ISignalRServerBuilder signalrBuilder, 
+            IConnection connection)
         {
-            return AddNeonNats(signalrBuilder, ConnectionFactory.GetDefaultOptions());
-        }
-
-        /// <summary>
-        /// Adds scale-out to a <see cref="ISignalRServerBuilder"/>, using a shared Nats server.
-        /// </summary>
-        /// <param name="signalrBuilder">The <see cref="ISignalRServerBuilder"/>.</param>
-        /// <param name="options">A callback to configure the Nats options.</param>
-        /// <returns>The same instance of the <see cref="ISignalRServerBuilder"/> for chaining.</returns>
-        public static ISignalRServerBuilder AddNeonNats(this ISignalRServerBuilder signalrBuilder, NATS.Client.Options options)
-        {
-            signalrBuilder.Services.AddSingleton(options);
+            signalrBuilder.Services.AddSingleton(connection);
             signalrBuilder.Services.AddSingleton(typeof(HubLifetimeManager<>), typeof(NatsHubLifetimeManager<>));
             return signalrBuilder;
         }
