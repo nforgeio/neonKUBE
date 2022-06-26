@@ -198,6 +198,7 @@ Follow the steps below to configure a development or test workstation:
 
     * Restart **Visual Studio** as **administrator** (to pick up the new environment variables)
     * Open **$/neonKUBE.sln** (where **$** is the repo root directory)
+    * Click the **Install** link at the top of the solution explorer panel when there's a warning about a missing SDK.
     * Select **Build/Rebuild** Solution
 
 26. *Optional:* Install **Notepad++** from [here](https://notepad-plus-plus.org/download)
