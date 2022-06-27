@@ -226,7 +226,7 @@ namespace TestNeonSignalR
             var tcs2 = new TaskCompletionSource<string>();
             secondConnection.On<string>("Echo", message => tcs2.SetResult(message));
 
-            var groupName = $"TestGroup_{HttpTransportType.WebSockets}_{HubProtocolHelpers.MessagePackHubProtocol.Name}_{Guid.NewGuid()}";
+            var groupName = $"HubConnectionCanSendAndReceiveGroupMessages_{Guid.NewGuid():N}";
 
             await CheckConnectionsAsync();
 
@@ -247,7 +247,7 @@ namespace TestNeonSignalR
             var tcs2 = new TaskCompletionSource<string>();
             secondConnection.On<string>("Echo", message => tcs2.SetResult(message));
 
-            var groupName = $"TestGroup_{HttpTransportType.WebSockets}_{HubProtocolHelpers.MessagePackHubProtocol.Name}_{Guid.NewGuid()}";
+            var groupName = $"HubConnectionCanUnsubscribeFromGroupMessages_{Guid.NewGuid():N}";
 
             await CheckConnectionsAsync();
 
@@ -278,7 +278,7 @@ namespace TestNeonSignalR
             var tcs2 = new TaskCompletionSource<string>();
             secondConnection.On<string>("Echo", message => tcs2.SetResult(message));
 
-            var groupName = $"TestGroup_{HttpTransportType.WebSockets}_{HubProtocolHelpers.MessagePackHubProtocol.Name}_{Guid.NewGuid()}";
+            var groupName = $"HubConnectionCanAddUserToGroup_{Guid.NewGuid():N}";
 
             await CheckConnectionsAsync();
 
@@ -297,7 +297,7 @@ namespace TestNeonSignalR
             var tcs2 = new TaskCompletionSource<string>();
             secondConnection.On<string>("Echo", message => tcs2.SetResult(message));
 
-            var groupName = $"TestGroup_{HttpTransportType.WebSockets}_{HubProtocolHelpers.MessagePackHubProtocol.Name}_{Guid.NewGuid()}";
+            var groupName = $"HubConnectionCanRemoveUserFromGroup_{Guid.NewGuid():N}";
 
             await CheckConnectionsAsync();
 

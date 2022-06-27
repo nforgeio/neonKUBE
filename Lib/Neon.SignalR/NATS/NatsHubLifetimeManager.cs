@@ -85,8 +85,8 @@ namespace Neon.SignalR
             
             nats.Flush();
 
-            await SubscribeToAll();
-            await SubscribeToGroupManagementChannel();
+            await SubscribeToAllAsync();
+            await SubscribeToGroupManagementChannelAsync();
 
             var feature = new NatsFeature();
             connection.Features.Set<INatsFeature>(feature);
@@ -95,7 +95,7 @@ namespace Neon.SignalR
 
             connections.Add(connection);
 
-            var connectionTask = SubscribeToConnection(connection);
+            var connectionTask = SubscribeToConnectionAsync(connection);
 
             if (!string.IsNullOrEmpty(connection.UserIdentifier))
             {
@@ -149,8 +149,10 @@ namespace Neon.SignalR
         }
 
         /// <inheritdoc />
-        public override Task AddToGroupAsync(string connectionId, string groupName, CancellationToken cancellationToken = default)
+        public override async Task AddToGroupAsync(string connectionId, string groupName, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(connectionId != null, nameof(connectionId));
             Covenant.Requires<ArgumentNullException>(groupName != null, nameof(groupName));
 
@@ -158,15 +160,17 @@ namespace Neon.SignalR
             if (connection != null)
             {
                 // short circuit if connection is on this server
-                return AddGroupAsyncCore(connection, groupName);
+                await AddGroupAsyncCore(connection, groupName);
             }
 
-            return SendGroupActionAndWaitForAck(connectionId, groupName, GroupAction.Add);
+            await SendGroupActionAndWaitForAckAsync(connectionId, groupName, GroupAction.Add);
         }
 
         /// <inheritdoc />
-        public override Task RemoveFromGroupAsync(string connectionId, string groupName, CancellationToken cancellationToken = default)
+        public override async Task RemoveFromGroupAsync(string connectionId, string groupName, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(connectionId != null, nameof(connectionId));
             Covenant.Requires<ArgumentNullException>(groupName != null, nameof(groupName));
 
@@ -174,44 +178,52 @@ namespace Neon.SignalR
             if (connection != null)
             {
                 // short circuit if connection is on this server
-                return RemoveGroupAsyncCore(connection, groupName);
+                await RemoveGroupAsyncCore(connection, groupName);
             }
 
-            return SendGroupActionAndWaitForAck(connectionId, groupName, GroupAction.Remove);
+            await SendGroupActionAndWaitForAckAsync(connectionId, groupName, GroupAction.Remove);
         }
 
         /// <inheritdoc />
-        public override Task SendAllAsync(string methodName, object[] args, CancellationToken cancellationToken = default)
+        public override async Task SendAllAsync(string methodName, object[] args, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(methodName != null, nameof(methodName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
-            return PublishAsync(subjects.All, Invokation.Write(methodName: methodName, args: args));
+            await PublishAsync(subjects.All, Invokation.Write(methodName: methodName, args: args));
         }
 
         /// <inheritdoc />
-        public override Task SendAllExceptAsync(string methodName, object[] args, IReadOnlyList<string> excludedConnectionIds, CancellationToken cancellationToken = default)
+        public override async Task SendAllExceptAsync(string methodName, object[] args, IReadOnlyList<string> excludedConnectionIds, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(methodName != null, nameof(methodName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
             Covenant.Requires<ArgumentNullException>(excludedConnectionIds != null, nameof(excludedConnectionIds));
 
-            return PublishAsync(subjects.All, Invokation.Write(methodName: methodName, args: args, excludedConnectionIds: excludedConnectionIds));
+            await PublishAsync(subjects.All, Invokation.Write(methodName: methodName, args: args, excludedConnectionIds: excludedConnectionIds));
         }
 
         /// <inheritdoc />
-        public override Task SendConnectionAsync(string connectionId, string methodName, object[] args, CancellationToken cancellationToken = default)
+        public override async Task SendConnectionAsync(string connectionId, string methodName, object[] args, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(connectionId != null, nameof(connectionId));
             Covenant.Requires<ArgumentNullException>(methodName != null, nameof(methodName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
-            return PublishAsync(subjects.Connection(connectionId), Invokation.Write(methodName: methodName, args: args));
+            await PublishAsync(subjects.Connection(connectionId), Invokation.Write(methodName: methodName, args: args));
         }
 
         /// <inheritdoc />
-        public override Task SendConnectionsAsync(IReadOnlyList<string> connectionIds, string methodName, object[] args, CancellationToken cancellationToken = default)
+        public override async Task SendConnectionsAsync(IReadOnlyList<string> connectionIds, string methodName, object[] args, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(connectionIds != null, nameof(connectionIds));
             Covenant.Requires<ArgumentNullException>(methodName != null, nameof(methodName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
@@ -224,33 +236,39 @@ namespace Neon.SignalR
                 tasks.Add(PublishAsync(subjects.Connection(connectionId), message));
             }
 
-            return Task.WhenAll(tasks);
+            await Task.WhenAll(tasks);
         }
 
         /// <inheritdoc />
-        public override Task SendGroupAsync(string groupName, string methodName, object[] args, CancellationToken cancellationToken = default)
+        public override async Task SendGroupAsync(string groupName, string methodName, object[] args, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(groupName != null, nameof(groupName));
             Covenant.Requires<ArgumentNullException>(methodName != null, nameof(methodName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
-            return PublishAsync(subjects.Group(groupName), Invokation.Write(methodName: methodName, args: args));
+            await PublishAsync(subjects.Group(groupName), Invokation.Write(methodName: methodName, args: args));
         }
 
         /// <inheritdoc />
-        public override Task SendGroupExceptAsync(string groupName, string methodName, object[] args, IReadOnlyList<string> excludedConnectionIds, CancellationToken cancellationToken = default)
+        public override async Task SendGroupExceptAsync(string groupName, string methodName, object[] args, IReadOnlyList<string> excludedConnectionIds, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(groupName != null, nameof(groupName));
             Covenant.Requires<ArgumentNullException>(methodName != null, nameof(methodName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
             Covenant.Requires<ArgumentNullException>(excludedConnectionIds != null, nameof(excludedConnectionIds));
 
-            return PublishAsync(subjects.Group(groupName), Invokation.Write(methodName: methodName, args: args, excludedConnectionIds: excludedConnectionIds));
+            await PublishAsync(subjects.Group(groupName), Invokation.Write(methodName: methodName, args: args, excludedConnectionIds: excludedConnectionIds));
         }
 
         /// <inheritdoc />
-        public override Task SendGroupsAsync(IReadOnlyList<string> groupNames, string methodName, object[] args, CancellationToken cancellationToken = default)
+        public override async Task SendGroupsAsync(IReadOnlyList<string> groupNames, string methodName, object[] args, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(groupNames != null, nameof(groupNames));
             Covenant.Requires<ArgumentNullException>(methodName != null, nameof(methodName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
@@ -263,22 +281,26 @@ namespace Neon.SignalR
                 tasks.Add(PublishAsync(subjects.Group(groupName), message));
             }
 
-            return Task.WhenAll(tasks);
+            await Task.WhenAll(tasks);
         }
 
         /// <inheritdoc />
-        public override Task SendUserAsync(string userId, string methodName, object[] args, CancellationToken cancellationToken = default)
+        public override async Task SendUserAsync(string userId, string methodName, object[] args, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(userId != null, nameof(userId));
             Covenant.Requires<ArgumentNullException>(methodName != null, nameof(methodName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
-            return PublishAsync(subjects.User(userId), Invokation.Write(methodName: methodName, args: args));
+            await PublishAsync(subjects.User(userId), Invokation.Write(methodName: methodName, args: args));
         }
 
         /// <inheritdoc />
-        public override Task SendUsersAsync(IReadOnlyList<string> userIds, string methodName, object[] args, CancellationToken cancellationToken = default)
+        public override async Task SendUsersAsync(IReadOnlyList<string> userIds, string methodName, object[] args, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(userIds != null, nameof(userIds));
             Covenant.Requires<ArgumentNullException>(methodName != null, nameof(methodName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
@@ -291,7 +313,7 @@ namespace Neon.SignalR
                 tasks.Add(PublishAsync(subjects.User(userId), message));
             }
 
-            return Task.WhenAll(tasks);
+            await Task.WhenAll(tasks);
         }
 
         private static string GenerateServerName()
@@ -304,17 +326,20 @@ namespace Neon.SignalR
         private async Task PublishAsync(string subject, byte[] payload)
         {
             await SyncContext.Clear;
+
             nats.Publish(subject, payload);
         }
 
         private async Task RemoveUserAsync(HubConnectionContext connection)
         {
+            await SyncContext.Clear;
+
             var userChannel = subjects.User(connection.UserIdentifier!);
 
             await users.RemoveSubscriptionAsync(userChannel, connection, this);
         }
 
-        private async Task SubscribeToConnection(HubConnectionContext connection)
+        private async Task SubscribeToConnectionAsync(HubConnectionContext connection)
         {
             await SyncContext.Clear;
             
@@ -333,7 +358,7 @@ namespace Neon.SignalR
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError("SubscribeToConnection", ex);
+                    logger.LogError("SubscribeToConnectionAsync", ex);
                     throw;
                 }
             };
@@ -345,6 +370,8 @@ namespace Neon.SignalR
 
         private async Task SubscribeToUserAsync(HubConnectionContext connection)
         {
+            await SyncContext.Clear;
+
             var userChannel = subjects.User(connection.UserIdentifier!);
 
             await users.AddSubscriptionAsync(userChannel, connection, async (channelName, subscriptions) =>
@@ -417,6 +444,8 @@ namespace Neon.SignalR
 
         private async Task AddGroupAsyncCore(HubConnectionContext connection, string groupName)
         {
+            await SyncContext.Clear;
+
             var feature = connection.Features.Get<INatsFeature>()!;
             var groupNames = feature.Groups;
 
@@ -440,6 +469,8 @@ namespace Neon.SignalR
         /// </summary>
         private async Task RemoveGroupAsyncCore(HubConnectionContext connection, string groupName)
         {
+            await SyncContext.Clear;
+
             var groupChannel = subjects.Group(groupName);
 
             await groups.RemoveSubscriptionAsync(groupChannel, connection, this);
@@ -455,8 +486,10 @@ namespace Neon.SignalR
             }
         }
 
-        private async Task SendGroupActionAndWaitForAck(string connectionId, string groupName, GroupAction action)
+        private async Task SendGroupActionAndWaitForAckAsync(string connectionId, string groupName, GroupAction action)
         {
+            await SyncContext.Clear;
+
             try
             {
                 var id = Interlocked.Increment(ref internalAckId);
@@ -471,7 +504,7 @@ namespace Neon.SignalR
                 logger.LogError("SendGroupActionAndWaitForAck", e);
             }
         }
-        private async Task SubscribeToAll()
+        private async Task SubscribeToAllAsync()
         {
             await SyncContext.Clear;
 
@@ -496,7 +529,7 @@ namespace Neon.SignalR
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError("SubscribeToAll", ex);
+                    logger.LogError("SubscribeToAllAsync", ex);
                 }
             };
 
@@ -505,7 +538,7 @@ namespace Neon.SignalR
             sAsync.Start();
         }
 
-        private async Task SubscribeToGroupManagementChannel()
+        private async Task SubscribeToGroupManagementChannelAsync()
         {
             await SyncContext.Clear;
 
@@ -539,7 +572,7 @@ namespace Neon.SignalR
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError("SubscribeToGroupManagementChannel", ex);
+                    logger.LogError("SubscribeToGroupManagementChannelAsync", ex);
                 }
             };
 
