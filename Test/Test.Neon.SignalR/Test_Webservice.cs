@@ -39,6 +39,7 @@ using Neon.SignalR;
 using Neon.Xunit;
 
 using Xunit;
+using NATS.Client;
 
 namespace TestNeonSignalR
 {
@@ -148,6 +149,22 @@ namespace TestNeonSignalR
             service.SetEnvironmentVariable("NATS_QUEUE", "test");
 
             return service;
+        }
+
+        [Fact]
+        public void AddNeonNats()
+        {
+            var natsServerUri = NatsFixture.ConnectionUri;
+
+            var connectionFactory = new ConnectionFactory();
+            var options = ConnectionFactory.GetDefaultOptions();
+
+            options.Servers = new string[] { natsServerUri };
+
+            var services = new ServiceCollection();
+
+            var exception = Record.Exception(() => services.AddSignalR().AddNeonNats(connectionFactory.CreateConnection()));
+            Assert.Null(exception);
         }
 
         [Fact]
