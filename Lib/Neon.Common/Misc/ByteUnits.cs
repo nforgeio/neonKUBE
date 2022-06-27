@@ -440,13 +440,13 @@ namespace Neon.Common
         /// </summary>
         /// <param name="size">The size.</param>
         /// <param name="powerOfTwo">Optionally returns a power-of-2 based unit.</param>
-        /// <param name="spaceBeforeUnit">Optionally includes a space between the value and unit.</param>
+        /// <param name="spaceBeforeUnit">Optionally excludes a space between the value and unit (this defaults to <c>true</c>.</param>
         /// <param name="removeByteUnit">
         /// Optionally strip any trailing "B" from the unit string.  For example when this
         /// is set, a decimal value of 1000 will return <b>1K</b> instead of <b>1KB</b>.
         /// </param>
         /// <returns>The converted string.</returns>
-        public static string Humanize(decimal size, bool powerOfTwo = false, bool spaceBeforeUnit = false, bool removeByteUnit = false)
+        public static string Humanize(decimal size, bool powerOfTwo = false, bool spaceBeforeUnit = true, bool removeByteUnit = false)
         {
             Covenant.Requires<ArgumentException>(size >= 0, nameof(size));
 

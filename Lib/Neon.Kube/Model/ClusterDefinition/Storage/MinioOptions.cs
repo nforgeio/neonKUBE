@@ -115,7 +115,7 @@ namespace Neon.Kube
 
                 if (osDisk - minioVolumes < minOsDiskAfterMinio)
                 {
-                    throw new ClusterDefinitionException($"Node [{node.Name}] Operating System (boot) disk is too small.  Increase this to at least [{ByteUnits.Humanize(minOsDiskAfterMinio + minioVolumes, powerOfTwo: true)}].");
+                    throw new ClusterDefinitionException($"Node [{node.Name}] Operating System (boot) disk is too small.  Increase this to at least [{ByteUnits.Humanize(minOsDiskAfterMinio + minioVolumes, powerOfTwo: true, spaceBeforeUnit: false)}].");
                 }
             }
         }
