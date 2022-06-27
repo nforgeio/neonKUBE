@@ -61,20 +61,17 @@ namespace TestNeonSignalR
 
             var connectionFactory = new ConnectionFactory();
             var options = ConnectionFactory.GetDefaultOptions();
-
+            
             options.Servers = new string[] { natsServerUri };
-            var logger = service.LogManager.CreateLogger("neon-signalr");
-            services.AddSingleton(logger);
-            services.AddSignalR(options =>
-            {
-                options.EnableDetailedErrors = true;
-                options.KeepAliveInterval = TimeSpan.FromSeconds(5);
-                options.ClientTimeoutInterval = TimeSpan.FromSeconds(300);
-                options.MaximumParallelInvocationsPerClient = 10;
-            })
-                .AddNeonNats(connectionFactory.CreateConnection(options));
 
-            services.AddSingleton<IUserIdProvider, UserNameIdProvider>();
+            var connection = connectionFactory.CreateConnection(options);
+
+            var logger = service.LogManager.CreateLogger("neon-signalr");
+
+            services.AddSingleton<IUserIdProvider, UserNameIdProvider>()
+                    .AddSingleton(logger)
+                    .AddSignalR()
+                    .AddNeonNats(connection);
         }
 
         public void Configure(IApplicationBuilder app)

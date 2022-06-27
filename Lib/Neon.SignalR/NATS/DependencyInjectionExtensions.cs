@@ -51,15 +51,15 @@ namespace Neon.SignalR
         /// </summary>
         /// <param name="signalrBuilder">The <see cref="ISignalRServerBuilder"/>.</param>
         /// <param name="connection">The nats <see cref="IConnection"/>.</param>
-        /// <returns>The same instance of the <see cref="ISignalRServerBuilder"/> for chaining.</returns>
-        public static ISignalRServerBuilder AddNeonNats(
+        /// <returns>The same instance of the <see cref="IServiceCollection"/> for chaining.</returns>
+        public static IServiceCollection AddNeonNats(
             this ISignalRServerBuilder signalrBuilder,
             IConnection connection)
         {
             signalrBuilder.AddMessagePackProtocol();
             signalrBuilder.Services.AddSingleton(connection);
             signalrBuilder.Services.AddSingleton(typeof(HubLifetimeManager<>), typeof(NatsHubLifetimeManager<>));
-            return signalrBuilder;
+            return signalrBuilder.Services;
         }
     }
 }
