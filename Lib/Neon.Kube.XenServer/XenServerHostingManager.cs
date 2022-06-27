@@ -1423,7 +1423,7 @@ namespace Neon.Kube
 
                             switch (stopMode)
                             {
-                                case StopMode.Sleep:
+                                case StopMode.Pause:
 
                                     xenClient.Machine.Suspend(vm);
                                     break;

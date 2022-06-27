@@ -1147,7 +1147,7 @@ namespace Neon.Kube
 
                                 switch (stopMode)
                                 {
-                                    case StopMode.Sleep:
+                                    case StopMode.Pause:
 
                                         hyperv.SaveVm(vmName);
                                         break;

@@ -1010,7 +1010,7 @@ namespace Neon.Kube
                     {
                         var status = await GetClusterHealthAsync();
 
-                        return status.State == ClusterState.Off;
+                        return status.State == ClusterState.Off || status.State == ClusterState.Paused;
                     }
                     catch (TimeoutException)
                     {
