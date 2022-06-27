@@ -41,7 +41,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// Chooses the label of the Kubernetes Endpoints. Its value will be used for the job-label's value of
-        /// the created metrics.\n\nDefault & fallback value: the name of the respective Kubernetes Endpoint.
+        /// the created metrics.
+        /// Default fallback value: the name of the respective Kubernetes Endpoint.
         /// </summary>
         public string JobLabel { get; set; }
 

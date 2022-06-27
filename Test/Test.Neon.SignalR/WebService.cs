@@ -70,6 +70,7 @@ namespace TestNeonSignalR
                 options.EnableDetailedErrors = true;
                 options.KeepAliveInterval = TimeSpan.FromSeconds(5);
                 options.ClientTimeoutInterval = TimeSpan.FromSeconds(300);
+                options.MaximumParallelInvocationsPerClient = 10;
             })
                 .AddNeonNats(connectionFactory.CreateConnection(options));
 
@@ -81,7 +82,12 @@ namespace TestNeonSignalR
             app.UseRouting();
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapHub<EchoHub>("/echo");
+                endpoints.MapHub<EchoHub>(
+                    "/echo", 
+                    options =>
+                    {
+                        options.TransportSendTimeout = TimeSpan.FromSeconds(30);
+                    });
             });
         }
 
@@ -150,7 +156,10 @@ namespace TestNeonSignalR
 
             webHost = new WebHostBuilder()
                 .UseStartup<Startup>()
-                .UseKestrel(options => options.Listen(IPAddress.Any, endpoint.Port))
+                .UseKestrel(options =>
+                    {
+                        options.Listen(IPAddress.Any, endpoint.Port);
+                    })
                 .ConfigureServices(services => services.AddSingleton(typeof(WebService), this))
                 .Build();
 

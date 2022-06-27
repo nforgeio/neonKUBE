@@ -38,6 +38,11 @@ namespace Neon.SignalR
         private readonly ConcurrentDictionary<string, HubConnectionStore> subscriptions = new ConcurrentDictionary<string, HubConnectionStore>(StringComparer.Ordinal);
         private readonly ConcurrentDictionary<string, IAsyncSubscription> natsSubscriptions = new ConcurrentDictionary<string, IAsyncSubscription>(StringComparer.Ordinal);
         private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
+        private readonly ILogger logger;
+        public NatsSubscriptionManager(ILogger logger)
+        {
+            this.logger = logger;
+        }
 
         public async Task AddSubscriptionAsync(string id, HubConnectionContext connection, Func<string, HubConnectionStore, Task<IAsyncSubscription>> subscribeMethod)
         {
@@ -64,6 +69,10 @@ namespace Neon.SignalR
                     natsSubscriptions.GetOrAdd(id, _ => sAsync);
                 }
             }
+            catch (Exception e)
+            {
+                logger.LogError("AddSubscriptionAsync", e);
+            }
             finally
             {
                 _lock.Release();
@@ -89,11 +98,15 @@ namespace Neon.SignalR
 
                     if (natsSubscriptions.TryGetValue(id, out var sAsync))
                     {
-                        await sAsync.DrainAsync();
+                        sAsync.Dispose();
                     }
 
                     natsSubscriptions.TryRemove(id, out _);
                 }
+            }
+            catch (Exception e)
+            {
+                logger.LogError("RemoveSubscriptionAsync", e);
             }
             finally
             {

@@ -78,7 +78,7 @@ namespace NeonDashboard
             /// <summary>
             /// The total amount of memory available to the cluster.
             /// </summary>
-            public decimal MemoryTotalBytes;
+            public decimal MemoryTotalBytes = -1;
 
             /// <summary>
             /// Prometheus result containing the CPU use percentage for the cluster.
@@ -88,7 +88,7 @@ namespace NeonDashboard
             /// <summary>
             /// The total number of CPU cores available to the cluster.
             /// </summary>
-            public decimal CPUTotal;
+            public decimal CPUTotal = -1;
 
             /// <summary>
             /// Prometheus result containing the total disk usage for the cluster.
@@ -98,7 +98,7 @@ namespace NeonDashboard
             /// <summary>
             /// The total amount of disk space available to the cluster.
             /// </summary>
-            public decimal DiskTotalBytes;
+            public decimal DiskTotalBytes = -1;
 
             /// <summary>
             /// Constructor.

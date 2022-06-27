@@ -24,43 +24,47 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 
+using MessagePack;
+
 using Newtonsoft.Json;
 
 namespace Neon.SignalR
 {
-    internal class GroupCommand
+    /// <summary>
+    /// Represents a group command.
+    /// </summary>
+    [MessagePackObject]
+    public class GroupCommand
     {
         /// <summary>
         /// The ID of the group command.
         /// </summary>
-        [JsonProperty(PropertyName = "Id", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [Key(0)]
         public int Id { get; set; }
 
         /// <summary>
         /// The name of the server that sent the command.
         /// </summary>
-        [JsonProperty(PropertyName = "ServerName", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [Key(1)]
         [DefaultValue(null)]
         public string ServerName { get; set; } = null;
 
         /// <summary>
         /// The action to be performed on the group.
         /// </summary>
-        [JsonProperty(PropertyName = "Action", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.Include)]
+        [Key(2)]
         public GroupAction Action { get; set; }
 
         /// <summary>
         /// Gets the group on which the action is performed.
         /// </summary>
-        [JsonProperty(PropertyName = "GroupName", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
+        [Key(3)]
         public string GroupName { get; set; } = null;
 
         /// <summary>
         /// Gets the ID of the connection to be added or removed from the group.
         /// </summary>
-        [JsonProperty(PropertyName = "ConnectionId", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
+        [Key(4)]
         public string ConnectionId { get; set; } = null;
 
         /// <summary>
@@ -83,9 +87,7 @@ namespace Neon.SignalR
                 ConnectionId = connectionId
             };
 
-            var s = NeonHelper.JsonSerialize(command);
-
-            return NeonHelper.JsonSerializeToBytes(command);
+            return MessagePackSerializer.Serialize(command);
         }
 
         /// <summary>
@@ -95,8 +97,7 @@ namespace Neon.SignalR
         /// <returns></returns>
         public static GroupCommand Read(byte[] message)
         {
-            var s = NeonHelper.JsonDeserialize<dynamic>(message);
-            return NeonHelper.JsonDeserialize<GroupCommand>(message);
+            return MessagePackSerializer.Deserialize<GroupCommand>(message);
         }
     }
 }

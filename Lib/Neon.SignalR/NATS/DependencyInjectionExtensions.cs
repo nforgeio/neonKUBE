@@ -23,17 +23,27 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.SignalR.Protocol;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
+
+using MessagePack;
 
 using NATS;
 using NATS.Client;
 
 namespace Neon.SignalR
 {
+    /// <summary>
+    /// Helpers for adding Neon NATS backplane via dependency injection.
+    /// </summary>
     public static class DependencyInjectionExtensions
     {
         /// <summary>
@@ -43,9 +53,10 @@ namespace Neon.SignalR
         /// <param name="connection">The nats <see cref="IConnection"/>.</param>
         /// <returns>The same instance of the <see cref="ISignalRServerBuilder"/> for chaining.</returns>
         public static ISignalRServerBuilder AddNeonNats(
-            this ISignalRServerBuilder signalrBuilder, 
+            this ISignalRServerBuilder signalrBuilder,
             IConnection connection)
         {
+            signalrBuilder.AddMessagePackProtocol();
             signalrBuilder.Services.AddSingleton(connection);
             signalrBuilder.Services.AddSingleton(typeof(HubLifetimeManager<>), typeof(NatsHubLifetimeManager<>));
             return signalrBuilder;

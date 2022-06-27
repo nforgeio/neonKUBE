@@ -32,48 +32,40 @@ using Newtonsoft.Json;
 
 namespace Neon.SignalR
 {
-    internal class Invokation
+    /// <summary>
+    /// Represents a method invokation.
+    /// </summary>
+    [MessagePackObject]
+    public class Invokation
     {
         /// <summary>
         /// The optional invokation ID.
         /// </summary>
-        [JsonProperty(PropertyName = "InvocationId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
+        [Key(0)]
         public string InvocationId { get; set; } = null;
 
         /// <summary>
         /// The method name.
         /// </summary>
-        [JsonProperty(PropertyName = "MethodName", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
+        [Key(1)]
         public string MethodName { get; set; } = null;
 
         /// <summary>
         /// The method arguments.
         /// </summary>
-        [JsonProperty(PropertyName = "Args", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
+        [Key(2)]
         public object[] Args { get; set; } = null;
 
         /// <summary>
         /// The list of connection IDs that should not receive this message.
         /// </summary>
-        [JsonProperty(PropertyName = "ExcludedConnectionIds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
+        [Key(3)]
         public IReadOnlyList<string> ExcludedConnectionIds { get; set; } = null;
-
-        /// <summary>
-        /// The <see cref="InvocationMessage"/>
-        /// </summary>
-        [JsonProperty(PropertyName = "Message", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public InvocationMessage Message { get; set; } = null;
 
         /// <summary>
         /// The optional return channel.
         /// </summary>
-        [JsonProperty(PropertyName = "ReturnChannel", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
+        [Key(5)]
         public string ReturnChannel { get; set; } = null;
 
         /// <summary>
@@ -82,7 +74,7 @@ namespace Neon.SignalR
         /// <param name="methodName"></param>
         /// <param name="args"></param>
         /// <returns></returns>
-        public static byte[] Write(string methodName, object?[] args) =>
+        public static byte[] Write(string methodName, object[] args) =>
             Write(methodName: methodName, args: args, excludedConnectionIds: null);
 
         /// <summary>
@@ -94,8 +86,8 @@ namespace Neon.SignalR
         /// <param name="excludedConnectionIds"></param>
         /// <param name="returnChannel"></param>
         /// <returns></returns>
-        public static byte[] Write(string methodName, object?[] args, string? invocationId = null,
-                                IReadOnlyList<string>? excludedConnectionIds = null, string? returnChannel = null)
+        public static byte[] Write(string methodName, object[] args, string invocationId = null,
+                                IReadOnlyList<string> excludedConnectionIds = null, string returnChannel = null)
         {
             var invokation = new Invokation()
             {
@@ -106,7 +98,7 @@ namespace Neon.SignalR
                 ReturnChannel         = returnChannel
             };
 
-            return NeonHelper.JsonSerializeToBytes(invokation);
+            return MessagePackSerializer.Serialize(invokation);
         }
 
         /// <summary>
@@ -116,7 +108,7 @@ namespace Neon.SignalR
         /// <returns></returns>
         public static Invokation Read(byte[] message)
         {
-            return NeonHelper.JsonDeserialize<Invokation>(message);
+            return MessagePackSerializer.Deserialize<Invokation>(message);
         }
     }
 }

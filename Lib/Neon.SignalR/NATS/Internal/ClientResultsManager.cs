@@ -97,7 +97,7 @@ namespace Neon.SignalR
             return item;
         }
 
-        public bool TryGetType(string invocationId, [NotNullWhen(true)] out Type? type)
+        public bool TryGetType(string invocationId, [NotNullWhen(true)] out Type type)
         {
             if (_pendingInvocations.TryGetValue(invocationId, out var item))
             {

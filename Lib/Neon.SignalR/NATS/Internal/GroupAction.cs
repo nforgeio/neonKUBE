@@ -25,16 +25,23 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 
 namespace Neon.SignalR
 {
-    [JsonConverter(typeof(StringEnumConverter))]
-    internal enum GroupAction
+    /// <summary>
+    /// Represents a group action.
+    /// </summary>
+    public enum GroupAction
     {
+        /// <summary>
+        /// Add a member to the group.
+        /// </summary>
         [EnumMember(Value = "add")]
         Add,
+
+        /// <summary>
+        /// Remove a member from the group.
+        /// </summary>
         [EnumMember(Value = "remove")]
         Remove,
     }

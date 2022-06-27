@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -45,21 +46,16 @@ namespace Neon.SignalR
     {
         private readonly ConnectionFactory       natsConnectionFactory = new ConnectionFactory();
         private readonly HubConnectionStore      connections           = new HubConnectionStore();
-        private readonly NatsSubscriptionManager groups                = new NatsSubscriptionManager();
-        private readonly NatsSubscriptionManager users                 = new NatsSubscriptionManager();
+        private readonly NatsSubscriptionManager groups;
+        private readonly NatsSubscriptionManager users;
         private readonly ClientResultsManager    clientResultsManager = new();
         private readonly string serverName = GenerateServerName();
         private readonly ILogger logger;
         private readonly SemaphoreSlim connectionLock = new SemaphoreSlim(1);
-        private readonly IHubProtocolResolver hubProtocolResolver;
         private readonly IConnection nats;
         private readonly NatsSubjects subjects;
-        private bool natsConnectErrorLogged;
-
-        private readonly AckHandler ackHandler;
 
         private int internalAckId;
-        private ulong lastInvocationId;
 
         /// <summary>
         /// Constructs the <see cref="NatsHubLifetimeManager{THub}"/> with types from Dependency Injection.
@@ -71,16 +67,15 @@ namespace Neon.SignalR
         {
             this.nats        = connection;
             this.logger      = logger;
-            this.ackHandler  = new AckHandler();
-
-            subjects = new NatsSubjects("neon.signalr");
+            this.users       = new NatsSubscriptionManager(logger);
+            this.groups      = new NatsSubscriptionManager(logger);
+            subjects         = new NatsSubjects($"Neon.SignalR.{typeof(THub)}");
         }
 
         /// <inheritdoc />
         public void Dispose()
         {
             nats?.Dispose();
-            ackHandler?.Dispose();
         }
 
         /// <inheritdoc />
@@ -92,7 +87,6 @@ namespace Neon.SignalR
 
             await SubscribeToAll();
             await SubscribeToGroupManagementChannel();
-            await SubscribeToAckChannel();
 
             var feature = new NatsFeature();
             connection.Features.Set<INatsFeature>(feature);
@@ -105,7 +99,7 @@ namespace Neon.SignalR
 
             if (!string.IsNullOrEmpty(connection.UserIdentifier))
             {
-                userTask = SubscribeToUser(connection);
+                userTask = SubscribeToUserAsync(connection);
             }
 
             await Task.WhenAll(connectionTask, userTask);
@@ -313,19 +307,23 @@ namespace Neon.SignalR
             nats.Publish(subject, payload);
         }
 
-        private Task RemoveUserAsync(HubConnectionContext connection)
+        private async Task RemoveUserAsync(HubConnectionContext connection)
         {
             var userChannel = subjects.User(connection.UserIdentifier!);
 
-            return users.RemoveSubscriptionAsync(userChannel, connection, this);
+            await users.RemoveSubscriptionAsync(userChannel, connection, this);
         }
 
         private async Task SubscribeToConnection(HubConnectionContext connection)
         {
+            await SyncContext.Clear;
+            
             var connectionChannel = subjects.Connection(connection.ConnectionId);
 
             EventHandler<MsgHandlerEventArgs> handler = async (sender, args) =>
             {
+                await SyncContext.Clear;
+                
                 try
                 {
                     var invocation = Invokation.Read(args.Message.Data);
@@ -336,6 +334,7 @@ namespace Neon.SignalR
                 catch (Exception ex)
                 {
                     logger.LogError("SubscribeToConnection", ex);
+                    throw;
                 }
             };
 
@@ -344,14 +343,18 @@ namespace Neon.SignalR
             sAsync.Start();
         }
 
-        private Task SubscribeToUser(HubConnectionContext connection)
+        private async Task SubscribeToUserAsync(HubConnectionContext connection)
         {
             var userChannel = subjects.User(connection.UserIdentifier!);
 
-            return users.AddSubscriptionAsync(userChannel, connection, async (channelName, subscriptions) =>
+            await users.AddSubscriptionAsync(userChannel, connection, async (channelName, subscriptions) =>
             {
+                await SyncContext.Clear;
+
                 EventHandler<MsgHandlerEventArgs> handler = async (sender, args) =>
                 {
+                    await SyncContext.Clear;
+
                     try
                     {
                         var invocation = Invokation.Read(args.Message.Data);
@@ -412,7 +415,7 @@ namespace Neon.SignalR
             return sAsync;
         }
 
-        private Task AddGroupAsyncCore(HubConnectionContext connection, string groupName)
+        private async Task AddGroupAsyncCore(HubConnectionContext connection, string groupName)
         {
             var feature = connection.Features.Get<INatsFeature>()!;
             var groupNames = feature.Groups;
@@ -422,13 +425,13 @@ namespace Neon.SignalR
                 // Connection already in group
                 if (!groupNames.Add(groupName))
                 {
-                    return Task.CompletedTask;
+                    return;
                 }
             }
 
             var groupChannel = subjects.Group(groupName);
 
-            return groups.AddSubscriptionAsync(groupChannel, connection, SubscribeToGroupAsync);
+            await groups.AddSubscriptionAsync(groupChannel, connection, SubscribeToGroupAsync);
         }
 
         /// <summary>
@@ -454,13 +457,19 @@ namespace Neon.SignalR
 
         private async Task SendGroupActionAndWaitForAck(string connectionId, string groupName, GroupAction action)
         {
-            var id = Interlocked.Increment(ref internalAckId);
-            var ack = ackHandler.CreateAck(id);
-            // Send Add/Remove Group to other servers and wait for an ack or timeout
-            var message = GroupCommand.Write(id, serverName, action, groupName, connectionId);
-            await PublishAsync(subjects.GroupManagement, message);
+            try
+            {
+                var id = Interlocked.Increment(ref internalAckId);
 
-            await ack;
+                // Send Add/Remove Group to other servers and wait for an ack or timeout
+                var message = GroupCommand.Write(id, serverName, action, groupName, connectionId);
+
+                await nats.RequestAsync(subjects.GroupManagement, message, timeout: 10000);
+            }
+            catch (Exception e)
+            {
+                logger.LogError("SendGroupActionAndWaitForAck", e);
+            }
         }
         private async Task SubscribeToAll()
         {
@@ -502,6 +511,8 @@ namespace Neon.SignalR
 
             EventHandler<MsgHandlerEventArgs> handler = async (sender, args) =>
             {
+                await SyncContext.Clear;
+
                 try
                 {
                     var groupMessage = GroupCommand.Read(args.Message.Data);
@@ -524,7 +535,7 @@ namespace Neon.SignalR
                     }
 
                     // Send an ack to the server that sent the original command.
-                    await PublishAsync(subjects.Ack(groupMessage.ServerName), ackHandler.WriteAck(groupMessage.Id));
+                    nats.Publish(args.Message.Reply, Encoding.UTF8.GetBytes($"{groupMessage.Id}"));
                 }
                 catch (Exception ex)
                 {
@@ -533,27 +544,6 @@ namespace Neon.SignalR
             };
 
             IAsyncSubscription sAsync = nats.SubscribeAsync(subjects.GroupManagement);
-            sAsync.MessageHandler += handler;
-            sAsync.Start();
-        }
-
-        private async Task SubscribeToAckChannel()
-        {
-            await SyncContext.Clear;
-
-            EventHandler<MsgHandlerEventArgs> handler = async (sender, args) =>
-            {
-                try
-                {
-                    ackHandler.TriggerAck(args.Message.Data);
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError("SubscribeToAckChannel", ex);
-                }
-            };
-
-            IAsyncSubscription sAsync = nats.SubscribeAsync(subjects.Ack(serverName));
             sAsync.MessageHandler += handler;
             sAsync.Start();
         }
