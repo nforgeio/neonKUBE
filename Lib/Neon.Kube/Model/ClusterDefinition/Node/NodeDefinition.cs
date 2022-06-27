@@ -316,6 +316,8 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
+            Vm = Vm ?? new VmNodeOptions();
+
             var nodeDefinitionPrefix = $"{nameof(ClusterDefinition.NodeDefinitions)}";
 
             // Ensure that the labels are wired up to the parent node.

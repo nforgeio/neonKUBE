@@ -1037,6 +1037,7 @@ namespace Neon.Kube
             Kubernetes   = Kubernetes ?? new KubernetesOptions();
             Monitor      = Monitor ?? new MonitorOptions();
             Hosting      = Hosting ?? new HostingOptions();
+            Hosting.Vm   = Hosting.Vm ?? new VmHostingOptions();
             NodeOptions  = NodeOptions ?? new NodeOptions();
             Network      = Network ?? new NetworkOptions();
             Container    = Container ?? new ContainerOptions();
