@@ -257,7 +257,7 @@ namespace Neon.Kube
                     });
             }
 
-            controller.AddGlobalStep("ssh/sso credentials",
+            controller.AddGlobalStep("generate credentials",
                 controller =>
                 {
                     // We're going to generate a secure random password and we're going to append
