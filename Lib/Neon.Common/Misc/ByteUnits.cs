@@ -434,7 +434,7 @@ namespace Neon.Common
 
         /// <summary>
         /// Humanizes the size passed into a string using appropriate units.
-        /// This uses power-of-10 based unites by default but you can switch
+        /// This uses power-of-10 based units by default but you can switch
         /// to power-of-2 units by passing <paramref name="powerOfTwo"/> as
         /// <c>true</c>.
         /// </summary>
