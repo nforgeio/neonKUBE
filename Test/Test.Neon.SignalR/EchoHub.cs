@@ -45,6 +45,10 @@ namespace TestNeonSignalR
         {
             return message;
         }
+        public Task SayHello(string optional = null)
+        {
+            return Clients.All.SendAsync("Echo", "Hello, World!");
+        }
 
         public Task EchoGroup(string groupName, string message)
         {

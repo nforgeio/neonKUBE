@@ -184,6 +184,22 @@ namespace TestNeonSignalR
         }
 
         [Fact]
+        public async Task CanInvokeMethodWithoutOptionalParams()
+        {
+            var tcs = new TaskCompletionSource<string>();
+            connection.On<string>("Echo", message => tcs.SetResult(message));
+            var tcs2 = new TaskCompletionSource<string>();
+            secondConnection.On<string>("Echo", message => tcs2.SetResult(message));
+
+            await CheckConnectionsAsync();
+
+            await connection.InvokeAsync("SayHello", null);
+
+            Assert.Equal("Hello, World!", await AwaitWithTimeoutAsync<string>(tcs.Task));
+            Assert.Equal("Hello, World!", await AwaitWithTimeoutAsync<string>(tcs2.Task));
+        }
+
+        [Fact]
         public async Task CanSendAndReceiveUserMessagesToOtherUsers()
         {
             var tcs = new TaskCompletionSource<string>();
@@ -358,7 +374,7 @@ namespace TestNeonSignalR
             return connection;
         }
 
-        private async Task<T> AwaitWithTimeoutAsync<T>(Task<T> task, int timeout = 1000, bool throwOnTimeout = true)
+        private async Task<T> AwaitWithTimeoutAsync<T>(Task<T> task, int timeout = 500, bool throwOnTimeout = true)
         {
             if (await Task.WhenAny(task, Task.Delay(timeout)) == task)
             {
