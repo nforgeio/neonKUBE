@@ -18,6 +18,9 @@ images:
     tag: v3.22.2
 
 ipv4PoolCidr: "10.254.0.0/16"
+vEthMtu: "1440"
+ipipMode: Always
+vxlanMode: Never
 
 kubernetes:
   service:

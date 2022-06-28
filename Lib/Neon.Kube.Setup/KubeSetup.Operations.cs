@@ -1299,6 +1299,13 @@ kubectl apply -f priorityclasses.yaml
 
                     values.Add("images.organization", KubeConst.LocalClusterRegistry);
                     values.Add($"serviceMonitor.enabled", calicoAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    
+                    if (cluster.Definition.Hosting.Environment == HostingEnvironment.Azure)
+                    {
+                        values.Add($"vEthMtu", "1410");
+                        values.Add($"ipipMode", "Never");
+                        values.Add($"vxlanMode", "Always");
+                    }
 
                     controller.ThrowIfCancelled();
                     await master.InstallHelmChartAsync(controller, "calico", releaseName: "calico", @namespace: KubeNamespace.KubeSystem, values: values);
