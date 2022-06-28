@@ -56,6 +56,8 @@ using Segment;
 using StackExchange.Redis;
 
 using Tailwind;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace NeonDashboard
 {
@@ -142,7 +144,7 @@ namespace NeonDashboard
                 options.Scope.Add("profile");
                 options.Scope.Add("email");
                 options.Scope.Add("groups");
-                options.UsePkce                       = true;
+                options.UsePkce                       = false;
                 options.DataProtectionProvider        = new CookieProtector(NeonDashboardService.AesCipher);
                 options.UseTokenLifetime              = false;
                 options.ProtocolValidator             = new OpenIdConnectProtocolValidator()
