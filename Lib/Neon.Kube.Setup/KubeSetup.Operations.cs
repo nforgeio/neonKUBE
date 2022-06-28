@@ -1381,14 +1381,17 @@ kubectl apply -f priorityclasses.yaml
                                     }
                                     catch
                                     {
-                                        // restart coredns and try again.
+                                        // Restart coredns and try again.
+
                                         var coredns = await k8s.ReadNamespacedDaemonSetAsync("coredns", KubeNamespace.KubeSystem);
+
                                         await coredns.RestartAsync(k8s);
-                                        await Task.Delay(10000);
+                                        await Task.Delay(TimeSpan.FromSeconds(20));
+
                                         return false;
                                     }
                                 },
-                                timeout: TimeSpan.FromSeconds(120),
+                                timeout:      TimeSpan.FromSeconds(120),
                                 pollInterval: TimeSpan.FromMilliseconds(500));
 
                             await k8s.DeleteNamespacedPodAsync("dnsutils", KubeNamespace.NeonSystem);
@@ -1402,23 +1405,24 @@ kubectl apply -f priorityclasses.yaml
                     await NeonHelper.WaitForAsync(async () =>
                     {
                         var configs = await k8s.ListClusterCustomObjectAsync<FelixConfiguration>();
+
                         return configs.Items.Count() > 0;
                     },
-                    timeout: clusterOpTimeout,
-                    pollInterval: clusterOpPollInterval,
+                    timeout:           clusterOpTimeout,
+                    pollInterval:      clusterOpPollInterval,
                     cancellationToken: controller.CancellationToken);
 
                     var configs = await k8s.ListClusterCustomObjectAsync<FelixConfiguration>();
 
                     dynamic patchContent = new JObject();
-                    patchContent.spec = new JObject();
+
+                    patchContent.spec                          = new JObject();
                     patchContent.spec.prometheusMetricsEnabled = true;
 
                     var patch = new V1Patch(NeonHelper.JsonSerialize(patchContent), V1Patch.PatchType.MergePatch);
 
                     foreach (var felix in configs.Items)
                     {
-                        var f = await k8s.ReadClusterCustomObjectAsync<FelixConfiguration>(felix.Name());
                         await k8s.PatchClusterCustomObjectAsync<FelixConfiguration>(patch, felix.Name());
                     }
                 });
