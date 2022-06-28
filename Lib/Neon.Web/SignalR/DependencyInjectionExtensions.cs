@@ -39,7 +39,7 @@ using MessagePack;
 using NATS;
 using NATS.Client;
 
-namespace Neon.SignalR
+namespace Neon.Web.SignalR
 {
     /// <summary>
     /// Helpers for adding Neon NATS backplane via dependency injection.

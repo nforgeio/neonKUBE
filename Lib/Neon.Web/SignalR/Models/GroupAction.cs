@@ -26,7 +26,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 
 
-namespace Neon.SignalR
+namespace Neon.Web.SignalR
 {
     /// <summary>
     /// Represents a group action.

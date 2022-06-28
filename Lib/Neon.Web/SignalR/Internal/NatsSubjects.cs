@@ -21,7 +21,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Neon.SignalR
+namespace Neon.Web.SignalR
 {
     internal class NatsSubjects
     {

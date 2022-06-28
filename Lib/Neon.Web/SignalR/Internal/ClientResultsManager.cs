@@ -29,7 +29,7 @@ using Microsoft.Extensions.Internal;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Protocol;
 
-namespace Neon.SignalR
+namespace Neon.Web.SignalR
 {
     /// <summary>
     /// Common type used by our HubLifetimeManager implementations to manage client results.

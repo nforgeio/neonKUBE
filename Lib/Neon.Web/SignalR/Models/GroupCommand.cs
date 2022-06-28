@@ -28,7 +28,7 @@ using MessagePack;
 
 using Newtonsoft.Json;
 
-namespace Neon.SignalR
+namespace Neon.Web.SignalR
 {
     /// <summary>
     /// Represents a group command.

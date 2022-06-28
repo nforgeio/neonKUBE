@@ -32,7 +32,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
 using Neon.Service;
-using Neon.SignalR;
+using Neon.Web.SignalR;
 using Neon.Xunit;
 
 using Xunit;

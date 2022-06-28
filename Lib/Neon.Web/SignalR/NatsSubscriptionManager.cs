@@ -31,7 +31,7 @@ using Microsoft.Extensions.Logging;
 using NATS;
 using NATS.Client;
 
-namespace Neon.SignalR
+namespace Neon.Web.SignalR
 {
     internal sealed class NatsSubscriptionManager
     {

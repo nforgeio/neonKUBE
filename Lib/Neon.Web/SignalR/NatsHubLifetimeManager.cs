@@ -36,7 +36,7 @@ using Neon.Tasks;
 using NATS;
 using NATS.Client;
 
-namespace Neon.SignalR
+namespace Neon.Web.SignalR
 {
     /// <summary>
     /// The NATS scaleout provider for multi-server support.

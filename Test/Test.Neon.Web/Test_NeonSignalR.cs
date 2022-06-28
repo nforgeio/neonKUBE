@@ -35,7 +35,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
 using Neon.Service;
-using Neon.SignalR;
+using Neon.Web.SignalR;
 using Neon.Xunit;
 
 using Xunit;
@@ -86,12 +86,10 @@ namespace TestNeonSignalR
             this.web0        = (NeonServiceFixture<WebService>)composedFixture["web-0"];
             this.web1        = (NeonServiceFixture<WebService>)composedFixture["web-1"];
 
-
-            var protocol     = HubProtocolHelpers.MessagePackHubProtocol;
-            connection       = CreateConnection(web0.Service.ServiceMap["web-0"].Endpoints.Default.Uri + "echo", HttpTransportType.WebSockets, protocol, userName: "userA");
-            secondConnection = CreateConnection(web1.Service.ServiceMap["web-1"].Endpoints.Default.Uri + "echo", HttpTransportType.WebSockets, protocol, userName: "userA");
-            thirdConnection  = CreateConnection(web1.Service.ServiceMap["web-0"].Endpoints.Default.Uri + "echo", HttpTransportType.WebSockets, protocol, userName: "userB");
-            fourthConnection = CreateConnection(web1.Service.ServiceMap["web-1"].Endpoints.Default.Uri + "echo", HttpTransportType.WebSockets, protocol, userName: "userC");
+            connection       = CreateConnection(web0.Service.ServiceMap["web-0"].Endpoints.Default.Uri + "echo", HttpTransportType.WebSockets, userName: "userA");
+            secondConnection = CreateConnection(web1.Service.ServiceMap["web-1"].Endpoints.Default.Uri + "echo", HttpTransportType.WebSockets, userName: "userA");
+            thirdConnection  = CreateConnection(web1.Service.ServiceMap["web-0"].Endpoints.Default.Uri + "echo", HttpTransportType.WebSockets, userName: "userB");
+            fourthConnection = CreateConnection(web1.Service.ServiceMap["web-1"].Endpoints.Default.Uri + "echo", HttpTransportType.WebSockets, userName: "userC");
         }
 
         /// <summary>
@@ -352,7 +350,7 @@ namespace TestNeonSignalR
             }
         }
 
-        private static HubConnection CreateConnection(string url, HttpTransportType transportType, IHubProtocol protocol, string userName = null)
+        private static HubConnection CreateConnection(string url, HttpTransportType transportType, string userName = null)
         {
             var hubConnectionBuilder = new HubConnectionBuilder()
                 .WithAutomaticReconnect()
@@ -365,7 +363,7 @@ namespace TestNeonSignalR
                     }
                 });
 
-            hubConnectionBuilder.Services.AddSingleton(protocol);
+            hubConnectionBuilder.Services.AddSingleton(new MessagePackHubProtocol());
 
             var connection = hubConnectionBuilder.Build();
             connection.KeepAliveInterval = TimeSpan.FromSeconds(5);

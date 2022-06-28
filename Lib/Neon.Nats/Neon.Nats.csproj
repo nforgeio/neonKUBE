@@ -53,7 +53,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="NATS.Client" Version="0.14.3" />
+		<PackageReference Include="NATS.Client" Version="0.14.8" />
 		<PackageReference Include="STAN.Client" Version="0.3.0" />
 	</ItemGroup>
 
@@ -67,7 +67,7 @@
 
 		<!-- Include the PDB in the nuget so stack traces can include line numbers -->
 
-		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true"/>
+		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
 	</ItemGroup>
 
 </Project>

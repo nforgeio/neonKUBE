@@ -35,7 +35,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
 using Neon.Service;
-using Neon.SignalR;
+using Neon.Web.SignalR;
 using Neon.Xunit;
 
 using NATS.Client;
@@ -79,12 +79,7 @@ namespace TestNeonSignalR
             app.UseRouting();
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapHub<EchoHub>(
-                    "/echo", 
-                    options =>
-                    {
-                        options.TransportSendTimeout = TimeSpan.FromSeconds(30);
-                    });
+                endpoints.MapHub<EchoHub>("/echo");
             });
         }
 
