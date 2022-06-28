@@ -3518,10 +3518,10 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(master, verb: "configure", message: "grafana");
 
-                    var grafanaSecret = await k8s.ReadNamespacedSecretAsync("grafana-admin-credentials", KubeNamespace.NeonMonitor);
-                    var grafanaUser = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_USER"]);
+                    var grafanaSecret   = await k8s.ReadNamespacedSecretAsync("grafana-admin-credentials", KubeNamespace.NeonMonitor);
+                    var grafanaUser     = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_USER"]);
                     var grafanaPassword = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_PASSWORD"]);
-                    var grafanaPod = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonMonitor, labelSelector: "app=grafana");
+                    var grafanaPod      = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonMonitor, labelSelector: "app=grafana");
 
                     var cmd = new string[]
                         {
@@ -3530,14 +3530,30 @@ $@"- name: StorageType
                             $@"curl -X GET -H 'Content-Type: application/json' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/dashboards/uid/neonkube-default-dashboard"
                         };
 
-                    var defaultDashboard = await k8s.NamespacedPodExecWithRetryAsync(
-                                retryPolicy: podExecRetry,
-                                namespaceParameter: grafanaPod.Namespace(),
-                                name: grafanaPod.Name(),
-                                container: "grafana",
-                                command: cmd);
+                    string dashboardId = "";
+                    await NeonHelper.WaitForAsync(
+                            async () =>
+                            {
+                                try
+                                {
+                                    var defaultDashboard = (await k8s.NamespacedPodExecWithRetryAsync(
+                                        retryPolicy:        podExecRetry,
+                                        namespaceParameter: grafanaPod.Namespace(),
+                                        name:               grafanaPod.Name(),
+                                        container:          "grafana",
+                                        command:            cmd)).EnsureSuccess();
 
-                    var dashboardId = NeonHelper.JsonDeserialize<dynamic>(defaultDashboard.OutputText)["dashboard"]["id"];
+                                    dashboardId = NeonHelper.JsonDeserialize<dynamic>(defaultDashboard.OutputText)["dashboard"]["id"];
+
+                                    return true;
+                                }
+                                catch (Exception e)
+                                {
+                                    return false;
+                                }
+                            },
+                            timeout: TimeSpan.FromSeconds(300),
+                            pollInterval: TimeSpan.FromMilliseconds(250));
 
                     cmd = new string[]
                         {
@@ -3546,12 +3562,12 @@ $@"- name: StorageType
                             $@"curl -X PUT -H 'Content-Type: application/json' -d '{{""theme"":"""",""homeDashboardId"":{dashboardId},""timezone"":"""",""weekStart"":""""}}' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/org/preferences"
                         };
 
-                    await k8s.NamespacedPodExecWithRetryAsync(
-                                retryPolicy: podExecRetry,
+                    (await k8s.NamespacedPodExecWithRetryAsync(
+                                retryPolicy:        podExecRetry,
                                 namespaceParameter: grafanaPod.Namespace(),
-                                name: grafanaPod.Name(),
-                                container: "grafana",
-                                command: cmd);
+                                name:               grafanaPod.Name(),
+                                container:          "grafana",
+                                command:            cmd)).EnsureSuccess();
                 });
         }
 

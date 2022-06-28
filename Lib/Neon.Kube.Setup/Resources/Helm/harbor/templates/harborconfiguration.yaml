@@ -11,9 +11,9 @@ spec:
     ldapGroupAdminDn: >-
       ou=superadmin,ou=groups,{{ .Values.ldap.baseDN }}
     ldapGroupAttributeName: cn
-    ldapGroupBaseDn: ou=users,{{ .Values.ldap.baseDN }}
+    ldapGroupBaseDn: ou=groups,{{ .Values.ldap.baseDN }}
     ldapGroupMembershipAttribute: memberOf
-    ldapGroupSearchFilter: (|(objectClass=posixGroup)(objectClass=group))
+    ldapGroupSearchFilter: (|(objectClass=posixGroup)(objectClass=groupOfUniqueNames))
     ldapGroupSearchScope: 2
     ldapScope: 2
     ldapSearchDn: >-
