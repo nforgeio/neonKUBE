@@ -208,7 +208,7 @@ namespace NeonDashboard.Pages
 
             await Task.WhenAll(tasks);
 
-            if (AppState.Metrics.MemoryTotalBytes == null || AppState.Metrics.MemoryUsageBytes == null)
+            if (AppState.Metrics.MemoryTotalBytes < 0 || AppState.Metrics.MemoryUsageBytes == null)
             {
                 return;
             }
@@ -231,7 +231,7 @@ namespace NeonDashboard.Pages
 
             await Task.WhenAll(tasks);
 
-            if (AppState.Metrics.CPUUsagePercent == null || AppState.Metrics.CPUUsagePercent.Data?.Result?.Count() == 0)
+            if (AppState.Metrics.CPUUsagePercent == null || AppState.Metrics.CPUTotal < 0)
             {
                 return;
             }
@@ -254,7 +254,7 @@ namespace NeonDashboard.Pages
 
             await Task.WhenAll(tasks);
 
-            if (AppState.Metrics.DiskUsageBytes == null || AppState.Metrics.DiskTotalBytes == null)
+            if (AppState.Metrics.DiskUsageBytes == null || AppState.Metrics.DiskTotalBytes < 0)
             {
                 return;
             }
