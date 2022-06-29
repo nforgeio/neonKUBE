@@ -1627,6 +1627,14 @@ namespace Neon.Kube
             await Parallel.ForEachAsync(nameToVm.Values, parallelOptions,
                 async (azureVm, cancellationToken) =>
                 {
+                    if (azureVm.Vm == null)
+                    {
+                        // The virtual machine doesn't actually exist.
+
+                        azureVm.State = ClusterNodeState.NotProvisioned;
+                        return;
+                    }
+
                     var instanceView = (await azureVm.Vm.InstanceViewAsync()).Value;
                     var latestStatus = instanceView.Statuses
                         .Where(status => status.Code.StartsWith("PowerState/"))

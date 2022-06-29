@@ -3841,6 +3841,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 };
             }
         }
+
         /// <inheritdoc/>
         public override async Task<ClusterHealth> GetClusterHealthAsync(TimeSpan timeout = default)
         {
