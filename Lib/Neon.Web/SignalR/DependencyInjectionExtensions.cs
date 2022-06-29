@@ -28,6 +28,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.SignalR.Protocol;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -36,7 +37,6 @@ using Microsoft.Extensions.Primitives;
 
 using MessagePack;
 
-using NATS;
 using NATS.Client;
 
 namespace Neon.Web.SignalR
@@ -50,16 +50,55 @@ namespace Neon.Web.SignalR
         /// Adds scale-out to a <see cref="ISignalRServerBuilder"/>, using a shared Nats server.
         /// </summary>
         /// <param name="signalrBuilder">The <see cref="ISignalRServerBuilder"/>.</param>
+        /// <returns>The same instance of the <see cref="IServiceCollection"/> for chaining.</returns>
+        public static IServiceCollection AddNeonNats(
+            this ISignalRServerBuilder signalrBuilder)
+        {
+            signalrBuilder.AddMessagePackProtocol()
+                .Services.AddResponseCompression(opts =>
+                {
+                    opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+                        new[] { "application/octet-stream" });
+                })
+                .AddLogging()
+                .AddSingleton(typeof(HubLifetimeManager<>), typeof(NatsHubLifetimeManager<>));
+
+            return signalrBuilder.Services;
+        }
+
+        /// <summary>
+        /// Adds scale-out to a <see cref="ISignalRServerBuilder"/>, using a shared Nats server.
+        /// </summary>
+        /// <param name="signalrBuilder">The <see cref="ISignalRServerBuilder"/>.</param>
+        /// <param name="natConnectionString">The nats connection string.</param>
+        /// <returns>The same instance of the <see cref="IServiceCollection"/> for chaining.</returns>
+        public static IServiceCollection AddNeonNats(
+            this ISignalRServerBuilder signalrBuilder,
+            string natConnectionString)
+        {
+            var connectionFactory = new ConnectionFactory();
+            var options = ConnectionFactory.GetDefaultOptions();
+
+            options.Servers = new string[] { natConnectionString };
+
+            var connection = connectionFactory.CreateConnection(options);
+
+            return AddNeonNats(signalrBuilder, connection);
+        }
+
+        /// <summary>
+        /// Adds scale-out to a <see cref="ISignalRServerBuilder"/>, using a shared Nats server.
+        /// </summary>
+        /// <param name="signalrBuilder">The <see cref="ISignalRServerBuilder"/>.</param>
         /// <param name="connection">The nats <see cref="IConnection"/>.</param>
         /// <returns>The same instance of the <see cref="IServiceCollection"/> for chaining.</returns>
         public static IServiceCollection AddNeonNats(
             this ISignalRServerBuilder signalrBuilder,
             IConnection connection)
         {
-            signalrBuilder.AddMessagePackProtocol();
             signalrBuilder.Services.AddSingleton(connection);
-            signalrBuilder.Services.AddSingleton(typeof(HubLifetimeManager<>), typeof(NatsHubLifetimeManager<>));
-            return signalrBuilder.Services;
+
+            return AddNeonNats(signalrBuilder);
         }
     }
 }

@@ -45,15 +45,15 @@ namespace Neon.Web.SignalR
     public class NatsHubLifetimeManager<THub> : HubLifetimeManager<THub>, IDisposable where THub : Hub
     {
         private readonly ConnectionFactory       natsConnectionFactory = new ConnectionFactory();
-        private readonly HubConnectionStore      connections           = new HubConnectionStore();
+        private readonly HubConnectionStore      hubConnections        = new HubConnectionStore();
+        private readonly ClientResultsManager    clientResultsManager  = new();
+        private readonly NatsSubscriptionManager connections;
         private readonly NatsSubscriptionManager groups;
         private readonly NatsSubscriptionManager users;
-        private readonly ClientResultsManager    clientResultsManager = new();
-        private readonly string serverName = GenerateServerName();
-        private readonly ILogger logger;
-        private readonly SemaphoreSlim connectionLock = new SemaphoreSlim(1);
-        private readonly IConnection nats;
-        private readonly NatsSubjects subjects;
+        private readonly ILogger                 logger;
+        private readonly IConnection             nats;
+        private readonly NatsSubjects            subjects;
+        private readonly string                  serverName;
 
         private int internalAckId;
 
@@ -63,13 +63,18 @@ namespace Neon.Web.SignalR
         /// <param name="logger">The logger to write information about what the class is doing.</param>
         /// <param name="connection">The NATS <see cref="IConnection"/>.</param>
         public NatsHubLifetimeManager(IConnection connection,
-                                      ILogger logger)
+                                      ILogger<NatsHubLifetimeManager<THub>> logger)
         {
+            this.serverName  = GenerateServerName();
             this.nats        = connection;
             this.logger      = logger;
             this.users       = new NatsSubscriptionManager(logger);
             this.groups      = new NatsSubscriptionManager(logger);
-            subjects         = new NatsSubjects($"Neon.SignalR.{typeof(THub)}");
+            this.connections = new NatsSubscriptionManager(logger);
+            this.subjects    = new NatsSubjects($"Neon.SignalR.{typeof(THub)}");
+
+            _ = SubscribeToAllAsync();
+            _ = SubscribeToGroupManagementSubjectAsync();
         }
 
         /// <inheritdoc />
@@ -85,15 +90,14 @@ namespace Neon.Web.SignalR
             
             nats.Flush();
 
-            await SubscribeToAllAsync();
-            await SubscribeToGroupManagementChannelAsync();
+            Log.Connected(logger);
 
             var feature = new NatsFeature();
             connection.Features.Set<INatsFeature>(feature);
 
             var userTask = Task.CompletedTask;
 
-            connections.Add(connection);
+            hubConnections.Add(connection);
 
             var connectionTask = SubscribeToConnectionAsync(connection);
 
@@ -110,9 +114,7 @@ namespace Neon.Web.SignalR
         {
             await SyncContext.Clear;
 
-            await nats.DrainAsync();
-
-            connections.Remove(connection);
+            hubConnections.Remove(connection);
 
             // If the nats is null then the connection failed to be established and none of the other connection setup ran
             if (nats is null)
@@ -120,12 +122,13 @@ namespace Neon.Web.SignalR
                 return;
             }
 
-            var connectionChannel = subjects.Connection(connection.ConnectionId);
+            var connectionSubject = subjects.Connection(connection.ConnectionId);
+
             var tasks = new List<Task>();
+            tasks.Add(RemoveConnectionSubscriptionAsync(connection));
+            tasks.Add(groups.RemoveSubscriptionAsync(connectionSubject, connection, this));
 
-            tasks.Add(groups.RemoveSubscriptionAsync(connectionChannel, connection, this));
-
-            var feature = connection.Features.Get<INatsFeature>();
+            var feature    = connection.Features.Get<INatsFeature>();
             var groupNames = feature.Groups;
 
             if (groupNames != null)
@@ -156,7 +159,7 @@ namespace Neon.Web.SignalR
             Covenant.Requires<ArgumentNullException>(connectionId != null, nameof(connectionId));
             Covenant.Requires<ArgumentNullException>(groupName != null, nameof(groupName));
 
-            var connection = connections[connectionId];
+            var connection = hubConnections[connectionId];
             if (connection != null)
             {
                 // short circuit if connection is on this server
@@ -174,7 +177,7 @@ namespace Neon.Web.SignalR
             Covenant.Requires<ArgumentNullException>(connectionId != null, nameof(connectionId));
             Covenant.Requires<ArgumentNullException>(groupName != null, nameof(groupName));
 
-            var connection = connections[connectionId];
+            var connection = hubConnections[connectionId];
             if (connection != null)
             {
                 // short circuit if connection is on this server
@@ -327,6 +330,8 @@ namespace Neon.Web.SignalR
         {
             await SyncContext.Clear;
 
+            Log.PublishToSubject(logger, subject);
+
             nats.Publish(subject, payload);
         }
 
@@ -334,47 +339,18 @@ namespace Neon.Web.SignalR
         {
             await SyncContext.Clear;
 
-            var userChannel = subjects.User(connection.UserIdentifier!);
+            var userSubject = subjects.User(connection.UserIdentifier!);
 
-            await users.RemoveSubscriptionAsync(userChannel, connection, this);
+            await users.RemoveSubscriptionAsync(userSubject, connection, this);
         }
 
         private async Task SubscribeToConnectionAsync(HubConnectionContext connection)
         {
             await SyncContext.Clear;
             
-            var connectionChannel = subjects.Connection(connection.ConnectionId);
+            var connectionSubject = subjects.Connection(connection.ConnectionId);
 
-            EventHandler<MsgHandlerEventArgs> handler = async (sender, args) =>
-            {
-                await SyncContext.Clear;
-                
-                try
-                {
-                    var invocation = Invokation.Read(args.Message.Data);
-                    var message    = new InvocationMessage(invocation.MethodName, invocation.Args);
-
-                    await connection.WriteAsync(message).AsTask();
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError("SubscribeToConnectionAsync", ex);
-                    throw;
-                }
-            };
-
-            IAsyncSubscription sAsync = nats.SubscribeAsync(connectionChannel);
-            sAsync.MessageHandler += handler;
-            sAsync.Start();
-        }
-
-        private async Task SubscribeToUserAsync(HubConnectionContext connection)
-        {
-            await SyncContext.Clear;
-
-            var userChannel = subjects.User(connection.UserIdentifier!);
-
-            await users.AddSubscriptionAsync(userChannel, connection, async (channelName, subscriptions) =>
+            await connections.AddSubscriptionAsync(connectionSubject, connection, async (subjectName, subscriptions) =>
             {
                 await SyncContext.Clear;
 
@@ -382,6 +358,53 @@ namespace Neon.Web.SignalR
                 {
                     await SyncContext.Clear;
 
+                    Log.ReceivedFromSubject(logger, connectionSubject);
+
+                    try
+                    {
+                        var invocation = Invokation.Read(args.Message.Data);
+                        var message = new InvocationMessage(invocation.MethodName, invocation.Args);
+
+                        await connection.WriteAsync(message).AsTask();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.FailedWritingMessage(logger, ex);
+                    }
+                };
+
+                IAsyncSubscription sAsync = nats.SubscribeAsync(connectionSubject);
+                sAsync.MessageHandler += handler;
+                sAsync.Start();
+                return sAsync;
+            });
+        }
+
+        private async Task RemoveConnectionSubscriptionAsync(HubConnectionContext connection)
+        {
+            await SyncContext.Clear;
+
+            var connectionSubject = subjects.Connection(connection.ConnectionId);
+
+            await connections.RemoveSubscriptionAsync(connectionSubject, connection, this);
+        }
+
+        private async Task SubscribeToUserAsync(HubConnectionContext connection)
+        {
+            await SyncContext.Clear;
+
+            var userSubject = subjects.User(connection.UserIdentifier!);
+
+            await users.AddSubscriptionAsync(userSubject, connection, async (subjectName, subscriptions) =>
+            {
+                await SyncContext.Clear;
+
+                EventHandler<MsgHandlerEventArgs> handler = async (sender, args) =>
+                {
+                    await SyncContext.Clear;
+
+                    Log.ReceivedFromSubject(logger, userSubject);
+                    
                     try
                     {
                         var invocation = Invokation.Read(args.Message.Data);
@@ -397,22 +420,26 @@ namespace Neon.Web.SignalR
                     }
                     catch (Exception ex)
                     {
-                        logger.LogError("SubscribeToUser", ex);
+                        Log.FailedWritingMessage(logger, ex);
                     }
                 };
 
-                IAsyncSubscription sAsync = nats.SubscribeAsync(channelName);
+                IAsyncSubscription sAsync = nats.SubscribeAsync(subjectName);
                 sAsync.MessageHandler += handler;
                 return sAsync;
             });
         }
 
-        private async Task<IAsyncSubscription> SubscribeToGroupAsync(string groupChannel, HubConnectionStore groupConnections)
+        private async Task<IAsyncSubscription> SubscribeToGroupAsync(string groupSubject, HubConnectionStore groupConnections)
         {
             await SyncContext.Clear;
 
             EventHandler<MsgHandlerEventArgs> handler = async (sender, args) =>
             {
+                await SyncContext.Clear;
+                
+                Log.ReceivedFromSubject(logger, groupSubject);
+
                 try
                 {
                     var invocation = Invokation.Read(args.Message.Data);
@@ -433,11 +460,11 @@ namespace Neon.Web.SignalR
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError("SubscribeToGroupAsync", ex);
+                    Log.FailedWritingMessage(logger, ex);
                 }
             };
 
-            IAsyncSubscription sAsync = nats.SubscribeAsync(groupChannel);
+            IAsyncSubscription sAsync = nats.SubscribeAsync(groupSubject);
             sAsync.MessageHandler += handler;
             return sAsync;
         }
@@ -458,9 +485,9 @@ namespace Neon.Web.SignalR
                 }
             }
 
-            var groupChannel = subjects.Group(groupName);
+            var groupSubject = subjects.Group(groupName);
 
-            await groups.AddSubscriptionAsync(groupChannel, connection, SubscribeToGroupAsync);
+            await groups.AddSubscriptionAsync(groupSubject, connection, SubscribeToGroupAsync);
         }
 
         /// <summary>
@@ -471,9 +498,9 @@ namespace Neon.Web.SignalR
         {
             await SyncContext.Clear;
 
-            var groupChannel = subjects.Group(groupName);
+            var groupSubject = subjects.Group(groupName);
 
-            await groups.RemoveSubscriptionAsync(groupChannel, connection, this);
+            await groups.RemoveSubscriptionAsync(groupSubject, connection, this);
 
             var feature = connection.Features.Get<INatsFeature>();
             var groupNames = feature.Groups;
@@ -490,6 +517,8 @@ namespace Neon.Web.SignalR
         {
             await SyncContext.Clear;
 
+            Log.PublishToSubject(logger, subjects.GroupManagement);
+
             try
             {
                 var id = Interlocked.Increment(ref internalAckId);
@@ -499,24 +528,31 @@ namespace Neon.Web.SignalR
 
                 await nats.RequestAsync(subjects.GroupManagement, message, timeout: 10000);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                logger.LogError("SendGroupActionAndWaitForAck", e);
+                Log.AckTimedOut(logger, ex);
             }
         }
+
         private async Task SubscribeToAllAsync()
         {
             await SyncContext.Clear;
 
+            Log.Subscribing(logger, subjects.All);
+
             EventHandler<MsgHandlerEventArgs> handler = async (sender, args) =>
             {
+                await SyncContext.Clear;
+
+                Log.ReceivedFromSubject(logger, subjects.All);
+
                 try
                 {
                     var invocation = Invokation.Read(args.Message.Data);
-                    var tasks      = new List<Task>(connections.Count);
+                    var tasks      = new List<Task>(hubConnections.Count);
                     var message    = new InvocationMessage(invocation.MethodName, invocation.Args);
 
-                    foreach (var connection in connections)
+                    foreach (var connection in hubConnections)
                     {
                         if (invocation.ExcludedConnectionIds == null || !invocation.ExcludedConnectionIds.Contains(connection.ConnectionId))
                         {
@@ -529,7 +565,7 @@ namespace Neon.Web.SignalR
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError("SubscribeToAllAsync", ex);
+                    Log.FailedWritingMessage(logger, ex);
                 }
             };
 
@@ -538,19 +574,23 @@ namespace Neon.Web.SignalR
             sAsync.Start();
         }
 
-        private async Task SubscribeToGroupManagementChannelAsync()
+        private async Task SubscribeToGroupManagementSubjectAsync()
         {
             await SyncContext.Clear;
+
+            Log.Subscribing(logger, subjects.GroupManagement);
 
             EventHandler<MsgHandlerEventArgs> handler = async (sender, args) =>
             {
                 await SyncContext.Clear;
 
+                Log.ReceivedFromSubject(logger, subjects.GroupManagement);
+
                 try
                 {
                     var groupMessage = GroupCommand.Read(args.Message.Data);
 
-                    var connection = connections[groupMessage.ConnectionId];
+                    var connection = hubConnections[groupMessage.ConnectionId];
                     if (connection == null)
                     {
                         // user not on this server
@@ -567,12 +607,14 @@ namespace Neon.Web.SignalR
                         await AddGroupAsyncCore(connection, groupMessage.GroupName);
                     }
 
+                    Log.PublishToSubject(logger, args.Message.Reply);
+
                     // Send an ack to the server that sent the original command.
                     nats.Publish(args.Message.Reply, Encoding.UTF8.GetBytes($"{groupMessage.Id}"));
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError("SubscribeToGroupManagementChannelAsync", ex);
+                    Log.InternalMessageFailed(logger, ex);
                 }
             };
 

@@ -39,14 +39,28 @@ namespace Neon.Web.SignalR
         private readonly ConcurrentDictionary<string, IAsyncSubscription> natsSubscriptions = new ConcurrentDictionary<string, IAsyncSubscription>(StringComparer.Ordinal);
         private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
         private readonly ILogger logger;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="logger"></param>
         public NatsSubscriptionManager(ILogger logger)
         {
             this.logger = logger;
         }
 
+        /// <summary>
+        /// Add a subscription to the store.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="connection"></param>
+        /// <param name="subscribeMethod"></param>
+        /// <returns></returns>
         public async Task AddSubscriptionAsync(string id, HubConnectionContext connection, Func<string, HubConnectionStore, Task<IAsyncSubscription>> subscribeMethod)
         {
             await _lock.WaitAsync();
+
+            Log.Subscribing(logger, id);
 
             try
             {
@@ -71,7 +85,7 @@ namespace Neon.Web.SignalR
             }
             catch (Exception e)
             {
-                logger.LogError("AddSubscriptionAsync", e);
+                Log.SubscribingFailed(logger, id);
             }
             finally
             {
@@ -79,10 +93,19 @@ namespace Neon.Web.SignalR
             }
         }
 
+        /// <summary>
+        /// Remove a subscription from the store.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="connection"></param>
+        /// <param name="state"></param>
+        /// <returns></returns>
         public async Task RemoveSubscriptionAsync(string id, HubConnectionContext connection, object state)
         {
             await _lock.WaitAsync();
 
+            Log.Unsubscribe(logger, id);
+            
             try
             {
                 if (!subscriptions.TryGetValue(id, out var subscription))
@@ -106,7 +129,7 @@ namespace Neon.Web.SignalR
             }
             catch (Exception e)
             {
-                logger.LogError("RemoveSubscriptionAsync", e);
+                Log.UnsubscribeFailed(logger, id);
             }
             finally
             {
