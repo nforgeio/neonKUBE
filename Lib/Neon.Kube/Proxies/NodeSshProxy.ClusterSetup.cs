@@ -888,12 +888,27 @@ systemctl enable kubelet
                         }
                     }
 
-                    var helmChartScript =
+                    var helmChartScript = new StringBuilder();
+
+                helmChartScript.AppendLineLinux(
 $@"
 set -euo pipefail
 
 cd {KubeNodeFolder.Helm}
+");
 
+                    if (controller.Get<bool>(KubeSetupProperty.MaintainerMode))
+                    {
+                        helmChartScript.AppendLineLinux(
+        $@"
+if `helm list --namespace {@namespace} | cut -d' ' -f1 | grep {releaseName}`; then
+    helm uninstall {releaseName} --namespace {@namespace}
+fi
+");
+                    }
+
+                    helmChartScript.AppendLineLinux(
+$@"
 helm install {releaseName} --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} ./{chartName}
 
 START=`date +%s`
@@ -904,12 +919,12 @@ set +e
 until [ `helm status {releaseName} --namespace {@namespace} | grep ""STATUS: deployed"" | wc -l` -eq 1  ];
 do
   if [ $((`date +%s`)) -gt $DEPLOY_END ]; then
-    helm delete {releaseName} || true
+    helm uninstall {releaseName} --namespace {@namespace} || true
     exit 1
   fi
    sleep 1
 done
-";
+");
                     SudoCommand(CommandBundle.FromScript(helmChartScript), RunOptions.FaultOnError).EnsureSuccess();
                 });
 
