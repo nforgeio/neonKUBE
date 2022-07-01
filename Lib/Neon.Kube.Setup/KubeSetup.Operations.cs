@@ -2969,6 +2969,13 @@ $@"- name: StorageType
 
                     values.Add($"minio.enabled", cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() > 1);
 
+                    if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.Nodes.Count() == 1)
+                    {
+                        values.Add($"blocksStorage.tsdb.block_ranges_period[0]", "1h0m0s");
+                        values.Add($"blocksStorage.tsdb.retention_period", "2h0m0s");
+                        values.Add($"limits.compactor_blocks_retention_period", "12h");
+                    }
+
                     await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Mimir, clusterAdvice.MetricsQuota);
                     await CreateMinioBucketAsync(controller, master, KubeMinioBucket.MimirRuler);
 
@@ -3134,6 +3141,13 @@ $@"- name: StorageType
                         await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Loki, clusterAdvice.LogsQuota);
                         values.Add($"loki.schemaConfig.configs[0].object_store", "aws");
                         values.Add($"loki.storageConfig.boltdb_shipper.shared_store", "s3");
+                    }
+
+                    if (cluster.Definition.IsDesktopBuiltIn)
+                    {
+                        values.Add($"limits_config.retention_period", "24h");
+                        values.Add($"limits_config.reject_old_samples_max_age", "6h");
+                        values.Add($"table_manager.retention_period", "24h");
                     }
 
                     int i = 0;
