@@ -35,6 +35,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 
+using Neon.Common;
+
 using MessagePack;
 
 using NATS.Client;
@@ -60,7 +62,6 @@ namespace Neon.Web.SignalR
                     opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
                         new[] { "application/octet-stream" });
                 })
-                .AddLogging()
                 .AddSingleton(typeof(HubLifetimeManager<>), typeof(NatsHubLifetimeManager<>));
 
             return signalrBuilder.Services;

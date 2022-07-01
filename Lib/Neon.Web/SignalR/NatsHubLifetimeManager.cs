@@ -47,10 +47,11 @@ namespace Neon.Web.SignalR
         private readonly ConnectionFactory       natsConnectionFactory = new ConnectionFactory();
         private readonly HubConnectionStore      hubConnections        = new HubConnectionStore();
         private readonly ClientResultsManager    clientResultsManager  = new();
+        private readonly SemaphoreSlim           connectionLock        = new SemaphoreSlim(1);
         private readonly NatsSubscriptionManager connections;
         private readonly NatsSubscriptionManager groups;
         private readonly NatsSubscriptionManager users;
-        private readonly ILogger                 logger;
+        private readonly INeonLogger             logger;
         private readonly IConnection             nats;
         private readonly NatsSubjects            subjects;
         private readonly string                  serverName;
@@ -60,18 +61,29 @@ namespace Neon.Web.SignalR
         /// <summary>
         /// Constructs the <see cref="NatsHubLifetimeManager{THub}"/> with types from Dependency Injection.
         /// </summary>
+        /// <param name="connection">The NATS <see cref="IConnection"/>.</param>
+        public NatsHubLifetimeManager(IConnection connection)
+            : this(connection, logger: null)
+        {
+
+        }
+
+        /// <summary>
+        /// Constructs the <see cref="NatsHubLifetimeManager{THub}"/> with types from Dependency Injection.
+        /// </summary>
         /// <param name="logger">The logger to write information about what the class is doing.</param>
         /// <param name="connection">The NATS <see cref="IConnection"/>.</param>
         public NatsHubLifetimeManager(IConnection connection,
-                                      ILogger<NatsHubLifetimeManager<THub>> logger)
+                                      ILogger logger = null)
         {
             this.serverName  = GenerateServerName();
             this.nats        = connection;
-            this.logger      = logger;
-            this.users       = new NatsSubscriptionManager(logger);
-            this.groups      = new NatsSubscriptionManager(logger);
-            this.connections = new NatsSubscriptionManager(logger);
-            this.subjects    = new NatsSubjects($"Neon.SignalR.{typeof(THub)}");
+            this.logger      = (INeonLogger)logger;
+            this.users       = new NatsSubscriptionManager(this.logger);
+            this.groups      = new NatsSubscriptionManager(this.logger);
+            this.connections = new NatsSubscriptionManager(this.logger);
+            this.subjects    = new NatsSubjects($"Neon.SignalR.{typeof(THub).FullName}");
+
 
             _ = SubscribeToAllAsync();
             _ = SubscribeToGroupManagementSubjectAsync();
@@ -83,30 +95,59 @@ namespace Neon.Web.SignalR
             nats?.Dispose();
         }
 
+        private async Task EnsureNatsServerConnection()
+        {
+            await SyncContext.Clear;
+
+            if (nats.IsClosed() && !nats.IsReconnecting())
+            {
+                throw new NATSConnectionException("The connection to NATS is closed");
+            }
+
+            await connectionLock.WaitAsync();
+            try
+            {
+                await NeonHelper.WaitForAsync(async () =>
+                {
+                    await SyncContext.Clear;
+
+                    return !nats.IsReconnecting();
+                },
+                timeout: TimeSpan.FromSeconds(60),
+                pollInterval: TimeSpan.FromMilliseconds(250));
+
+                nats.Flush();
+
+                logger?.LogDebug("Connected to NATS.");
+            }
+            finally
+            {
+                connectionLock.Release();
+            }
+        }
+
         /// <inheritdoc />
         public override async Task OnConnectedAsync(HubConnectionContext connection)
         {
             await SyncContext.Clear;
-            
-            nats.Flush();
 
-            Log.Connected(logger);
+            await EnsureNatsServerConnection();
 
             var feature = new NatsFeature();
             connection.Features.Set<INatsFeature>(feature);
 
-            var userTask = Task.CompletedTask;
-
             hubConnections.Add(connection);
 
-            var connectionTask = SubscribeToConnectionAsync(connection);
+            var tasks = new List<Task>();
+
+            tasks.Add(SubscribeToConnectionAsync(connection));
 
             if (!string.IsNullOrEmpty(connection.UserIdentifier))
             {
-                userTask = SubscribeToUserAsync(connection);
+                tasks.Add(SubscribeToUserAsync(connection));
             }
 
-            await Task.WhenAll(connectionTask, userTask);
+            await Task.WhenAll(tasks);
         }
 
         /// <inheritdoc />
@@ -329,8 +370,10 @@ namespace Neon.Web.SignalR
         private async Task PublishAsync(string subject, byte[] payload)
         {
             await SyncContext.Clear;
+            
+            await EnsureNatsServerConnection();
 
-            Log.PublishToSubject(logger, subject);
+            logger?.LogDebug($"Publishing message to NATS subject. [Subject={subject}].");
 
             nats.Publish(subject, payload);
         }
@@ -358,7 +401,7 @@ namespace Neon.Web.SignalR
                 {
                     await SyncContext.Clear;
 
-                    Log.ReceivedFromSubject(logger, connectionSubject);
+                    logger?.LogDebug($"Received message from NATS subject. [Subject={connectionSubject}].");
 
                     try
                     {
@@ -367,9 +410,10 @@ namespace Neon.Web.SignalR
 
                         await connection.WriteAsync(message).AsTask();
                     }
-                    catch (Exception ex)
+                    catch (Exception e)
                     {
-                        Log.FailedWritingMessage(logger, ex);
+                        logger?.LogError(e);
+                        logger?.LogDebug($"Failed writing message. [Subject={connectionSubject}] [Connection{connection.ConnectionId}]");
                     }
                 };
 
@@ -403,8 +447,8 @@ namespace Neon.Web.SignalR
                 {
                     await SyncContext.Clear;
 
-                    Log.ReceivedFromSubject(logger, userSubject);
-                    
+                    logger?.LogDebug($"Received message from NATS subject. [Subject={userSubject}].");
+
                     try
                     {
                         var invocation = Invokation.Read(args.Message.Data);
@@ -418,9 +462,10 @@ namespace Neon.Web.SignalR
 
                         await Task.WhenAll(tasks);
                     }
-                    catch (Exception ex)
+                    catch (Exception e)
                     {
-                        Log.FailedWritingMessage(logger, ex);
+                        logger?.LogError(e);
+                        logger?.LogDebug($"Failed writing message. [Subject={userSubject}].");
                     }
                 };
 
@@ -437,8 +482,8 @@ namespace Neon.Web.SignalR
             EventHandler<MsgHandlerEventArgs> handler = async (sender, args) =>
             {
                 await SyncContext.Clear;
-                
-                Log.ReceivedFromSubject(logger, groupSubject);
+
+                logger?.LogDebug($"Received message from NATS subject. [Subject={groupSubject}].");
 
                 try
                 {
@@ -458,9 +503,10 @@ namespace Neon.Web.SignalR
 
                     await Task.WhenAll(tasks);
                 }
-                catch (Exception ex)
+                catch (Exception e)
                 {
-                    Log.FailedWritingMessage(logger, ex);
+                    logger?.LogError(e);
+                    logger?.LogDebug($"Failed writing message. [Subject={groupSubject}].");
                 }
             };
 
@@ -473,7 +519,7 @@ namespace Neon.Web.SignalR
         {
             await SyncContext.Clear;
 
-            var feature = connection.Features.Get<INatsFeature>()!;
+            var feature    = connection.Features.Get<INatsFeature>()!;
             var groupNames = feature.Groups;
 
             lock (groupNames)
@@ -502,8 +548,9 @@ namespace Neon.Web.SignalR
 
             await groups.RemoveSubscriptionAsync(groupSubject, connection, this);
 
-            var feature = connection.Features.Get<INatsFeature>();
+            var feature    = connection.Features.Get<INatsFeature>();
             var groupNames = feature.Groups;
+
             if (groupNames != null)
             {
                 lock (groupNames)
@@ -517,7 +564,7 @@ namespace Neon.Web.SignalR
         {
             await SyncContext.Clear;
 
-            Log.PublishToSubject(logger, subjects.GroupManagement);
+            logger?.LogDebug($"Publishing message to NATS subject. [Subject={subjects.GroupManagement}].");
 
             try
             {
@@ -528,9 +575,10 @@ namespace Neon.Web.SignalR
 
                 await nats.RequestAsync(subjects.GroupManagement, message, timeout: 10000);
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                Log.AckTimedOut(logger, ex);
+                logger?.LogError(e);
+                logger?.LogDebug($"Ack timed out. [Connection={connectionId}] [Group={groupName}]");
             }
         }
 
@@ -538,13 +586,15 @@ namespace Neon.Web.SignalR
         {
             await SyncContext.Clear;
 
-            Log.Subscribing(logger, subjects.All);
+            await EnsureNatsServerConnection();
+
+            logger?.LogDebug($"Subscribing to subject: [Subject={subjects.All}].");
 
             EventHandler<MsgHandlerEventArgs> handler = async (sender, args) =>
             {
                 await SyncContext.Clear;
 
-                Log.ReceivedFromSubject(logger, subjects.All);
+                logger?.LogDebug($"Received message from NATS subject. [Subject={subjects.All}].");
 
                 try
                 {
@@ -563,9 +613,10 @@ namespace Neon.Web.SignalR
 
                     await Task.WhenAll(tasks);
                 }
-                catch (Exception ex)
+                catch (Exception e)
                 {
-                    Log.FailedWritingMessage(logger, ex);
+                    logger?.LogError(e);
+                    logger?.LogDebug($"Failed writing message. [Subject={subjects.All}].");
                 }
             };
 
@@ -578,13 +629,15 @@ namespace Neon.Web.SignalR
         {
             await SyncContext.Clear;
 
-            Log.Subscribing(logger, subjects.GroupManagement);
+            await EnsureNatsServerConnection();
+
+            logger?.LogDebug($"Subscribing to subject. [Subject={subjects.GroupManagement}].");
 
             EventHandler<MsgHandlerEventArgs> handler = async (sender, args) =>
             {
                 await SyncContext.Clear;
 
-                Log.ReceivedFromSubject(logger, subjects.GroupManagement);
+                logger?.LogDebug($"Received message from NATS subject. [Subject={subjects.GroupManagement}].");
 
                 try
                 {
@@ -607,14 +660,15 @@ namespace Neon.Web.SignalR
                         await AddGroupAsyncCore(connection, groupMessage.GroupName);
                     }
 
-                    Log.PublishToSubject(logger, args.Message.Reply);
+                    logger?.LogDebug($"Publishing message to NATS subject. [Subject={subjects.GroupManagement}].");
 
                     // Send an ack to the server that sent the original command.
                     nats.Publish(args.Message.Reply, Encoding.UTF8.GetBytes($"{groupMessage.Id}"));
                 }
-                catch (Exception ex)
+                catch (Exception e)
                 {
-                    Log.InternalMessageFailed(logger, ex);
+                    logger?.LogError(e);
+                    logger?.LogDebug($"Error processing message for internal server message. [Subject={subjects.GroupManagement}]");
                 }
             };
 
