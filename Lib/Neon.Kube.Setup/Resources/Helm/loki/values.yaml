@@ -92,7 +92,7 @@ loki:
           store: memberlist
     server:
       http_listen_port: 3100
-      log_level: debug
+      log_level: info
     memberlist:
       join_members:
         - {{ include "loki.fullname" . }}-memberlist
@@ -105,9 +105,10 @@ loki:
       max_transfer_retries: 0
       wal:
         dir: /var/loki/wal
+        flush_on_shutdown: true
 
     limits_config:
-      {{- toYaml .Values.limits_config | nindent 6 }}
+      {{- toYaml .Values.limits_config | nindent 2 }}
 
     {{- if .Values.loki.schemaConfig}}
     schema_config:
@@ -134,7 +135,7 @@ loki:
           service: http
           timeout: 1000ms
     table_manager:
-      {{- toYaml .Values.table_manager | nindent 6 }}
+      {{- toYaml .Values.table_manager | nindent 2 }}
 
     query_range:
       align_queries_with_step: true
@@ -181,7 +182,7 @@ loki:
     configs:
     - from: 2020-09-07
       store: boltdb-shipper
-      object_store: filesystem
+      object_store: aws
       schema: v11
       index:
         prefix: loki_index_
@@ -190,7 +191,7 @@ loki:
   # -- Check https://grafana.com/docs/loki/latest/configuration/#storage_config for more info on how to configure storages
   storageConfig:
     boltdb_shipper:
-      shared_store: filesystem
+      shared_store: s3
       active_index_directory: /var/loki/index
       cache_location: /var/loki/cache
       cache_ttl: 168h
@@ -793,7 +794,7 @@ compactor:
             topologyKey: failure-domain.beta.kubernetes.io/zone
   persistence:
     # -- Enable creating PVCs for the compactor
-    enabled: false
+    enabled: true
     # -- Size of persistent disk
     size: 1Gi
     # -- Storage class to be used.

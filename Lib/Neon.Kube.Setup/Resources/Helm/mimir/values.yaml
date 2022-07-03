@@ -1087,6 +1087,7 @@ blocksStorage:
     block_ranges_period: 
      - 2h0m0s
     retention_period: 24h
+    flush_blocks_on_shutdown: true
 
 # Configuration for istio gateway
 istio:
