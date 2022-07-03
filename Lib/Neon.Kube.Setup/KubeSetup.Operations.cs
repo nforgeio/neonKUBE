@@ -1817,7 +1817,7 @@ kubectl apply -f priorityclasses.yaml
                         issuer.Spec.Acme.ExternalAccountBinding.Key = null;
                     }
 
-                    if (issuer.Spec.Acme.PrivateKey != null)
+                    if (!string.IsNullOrEmpty(issuer.Spec.Acme.PrivateKey))
                     {
                         var secret = new V1Secret()
                         {
