@@ -56,7 +56,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "route53", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "route53", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public AcmeIssuerDNS01ProviderRoute53 Route53 { get; set; } = null;
+        public AcmeIssuerDns01ProviderRoute53 Route53 { get; set; } = null;
 
         /// <summary>
         /// Specifies configuration for a webhook DNS01 provider, including where to POST ChallengePayload resources.
@@ -64,7 +64,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "webhook", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "webhook", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public AcmeIssuerDNS01ProviderWebhook Webhook { get; set; } = null;
+        public AcmeIssuerDns01ProviderWebhook Webhook { get; set; } = null;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are

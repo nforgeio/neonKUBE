@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AcmeIssuerDNS01ProviderWebhook.cs
+// FILE:	    AcmeIssuerDns01ProviderWebhook.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -33,12 +33,12 @@ namespace Neon.Kube
     /// <summary>
     /// Defines the Route 53 configuration for AWS.
     /// </summary>
-    public class AcmeIssuerDNS01ProviderWebhook
+    public class AcmeIssuerDns01ProviderWebhook
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public AcmeIssuerDNS01ProviderWebhook()
+        public AcmeIssuerDns01ProviderWebhook()
         {
         }
 

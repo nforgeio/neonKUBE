@@ -100,7 +100,7 @@ namespace Neon.Kube
         /// </summary>
         [System.Text.Json.Serialization.JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         [JsonProperty(PropertyName = "privateKey", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "privateKey", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "privateKey", ApplyNamingConventions = false, ScalarStyle = YamlDotNet.Core.ScalarStyle.Literal)]
         [DefaultValue(null)]
         public string PrivateKey { get; set; } = null;
 
@@ -162,7 +162,7 @@ namespace Neon.Kube
 
             if (!Solvers.Any(solver => solver.Dns01?.Webhook?.SolverName == "neon-dns01-solver"))
             {
-                var neonWebhookSolver = new AcmeIssuerDNS01ProviderWebhook()
+                var neonWebhookSolver = new AcmeIssuerDns01ProviderWebhook()
                 {
                     Config = new Dictionary<string, object>()
                 {
@@ -188,12 +188,6 @@ namespace Neon.Kube
             foreach (var solver in Solvers)
             {
                 solver.Validate(clusterDefinition);
-            }
-
-            if (!string.IsNullOrEmpty(PrivateKey))
-            {
-                var cert   = new StringBuilder();
-                PrivateKey = NeonHelper.ToLinuxLineEndings(PrivateKey);
             }
 
             PrivateKeySecretRef = PrivateKeySecretRef ?? new AcmeSecretKeySelector()

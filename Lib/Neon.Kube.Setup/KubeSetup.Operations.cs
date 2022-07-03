@@ -1819,14 +1819,6 @@ kubectl apply -f priorityclasses.yaml
 
                     if (issuer.Spec.Acme.PrivateKey != null)
                     {
-                        var cert = new StringBuilder();
-
-                        using (StringReader reader = new StringReader(issuer.Spec.Acme.PrivateKey))
-                        {
-                            string line = reader.ReadLine();
-                            cert.AppendLineLinux(line);
-                        }
-
                         var secret = new V1Secret()
                         {
                             Metadata = new V1ObjectMeta()
@@ -1836,7 +1828,7 @@ kubectl apply -f priorityclasses.yaml
                             },
                             StringData = new Dictionary<string, string>()
                             {
-                                { issuer.Spec.Acme.PrivateKeySecretRef.Key,  cert.ToString() }
+                                { issuer.Spec.Acme.PrivateKeySecretRef.Key, issuer.Spec.Acme.PrivateKey }
                             }
                         };
 
@@ -1870,7 +1862,6 @@ kubectl apply -f priorityclasses.yaml
                     }
 
                     await k8s.UpsertClusterCustomObjectAsync<ClusterIssuer>(issuer, issuer.Name());
-
 
                     values.Add("image.organization", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);

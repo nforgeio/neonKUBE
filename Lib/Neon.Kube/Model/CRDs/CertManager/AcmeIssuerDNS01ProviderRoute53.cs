@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AcmeIssuerDNS01ProviderRoute53.cs
+// FILE:	    AcmeIssuerDns01ProviderRoute53.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -33,12 +33,12 @@ namespace Neon.Kube
     /// <summary>
     /// Defines the Route 53 configuration for AWS.
     /// </summary>
-    public class AcmeIssuerDNS01ProviderRoute53
+    public class AcmeIssuerDns01ProviderRoute53
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public AcmeIssuerDNS01ProviderRoute53()
+        public AcmeIssuerDns01ProviderRoute53()
         {
         }
 
