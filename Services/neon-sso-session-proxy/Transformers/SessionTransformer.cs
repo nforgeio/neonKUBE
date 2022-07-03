@@ -46,17 +46,17 @@ namespace NeonSsoSessionProxy
         /// <param name="dexClient"></param>
         /// <param name="logger"></param>
         public SessionTransformer(
-            IDistributedCache cache, 
-            AesCipher aesCipher, 
+            IDistributedCache cache,
+            AesCipher aesCipher,
             DexClient dexClient,
             INeonLogger logger,
             DistributedCacheEntryOptions cacheOptions)
-        {
-            this.cache     = cache;
-            this.cipher    = aesCipher;
-            this.dexClient = dexClient;
-            this.dexHost   = dexClient.BaseAddress.Host;
-            this.logger    = logger;
+        { 
+            this.cache        = cache;
+            this.cipher       = aesCipher;
+            this.dexClient    = dexClient;
+            this.dexHost      = dexClient.BaseAddress.Host;
+            this.logger       = logger;
             this.cacheOptions = cacheOptions;
         }
 
@@ -102,7 +102,7 @@ namespace NeonSsoSessionProxy
                 catch (Exception e)
                 {
                     logger.LogError(e);
-                    cookie = new Cookie(); 
+                    cookie = new Cookie();
                 }
             }
             else
