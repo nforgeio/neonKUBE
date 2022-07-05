@@ -2395,7 +2395,7 @@ subjects:
                         }
                     }
 
-                    await k8s.UpsertClusterCustomObjectAsync(cStorPoolCluster, KubeNamespace.NeonStorage);
+                    await k8s.CreateNamespacedCustomObjectAsync(cStorPoolCluster, cStorPoolCluster.Name(), cStorPoolCluster.Namespace());
                 });
 
             controller.ThrowIfCancelled();
