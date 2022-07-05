@@ -32,107 +32,104 @@ using Neon.Web;
 
 namespace NeonSsoSessionProxy
 {
-    public class SsoSessionMiddleware
+  public class SsoSessionMiddleware
+  {
+    private readonly RequestDelegate _next;
+    public SsoSessionMiddleware(RequestDelegate next)
     {
-        private readonly RequestDelegate _next;
-        public SsoSessionMiddleware(RequestDelegate next)
-        {
-            _next = next ?? throw new ArgumentNullException(nameof(next));
-        }
+      _next = next ?? throw new ArgumentNullException(nameof(next));
+    }
 
-        /// <summary>
-        /// <para>
-        /// Entrypoint called as part of the request pipeline.
-        /// </para>
-        /// <para>
-        /// This method is responsible for intercepting token requests from clients.
-        /// If the client has a valid cookie with a token response in it, we save the 
-        /// token to cache and redirect them back with a code referencing the token in 
-        /// the cache.
-        /// </para>
-        /// </summary>
-        public async Task InvokeAsync(
+    /// <summary>
+    /// <para>
+    /// Entrypoint called as part of the request pipeline.
+    /// </para>
+    /// <para>
+    /// This method is responsible for intercepting token requests from clients.
+    /// If the client has a valid cookie with a token response in it, we save the 
+    /// token to cache and redirect them back with a code referencing the token in 
+    /// the cache.
+    /// </para>
+    /// </summary>
+    public async Task InvokeAsync(
             HttpContext                     context,
             Service                         NeonSsoSessionProxyService,
             IDistributedCache               cache, 
             AesCipher                       cipher,
             DistributedCacheEntryOptions    cacheOptions,
             INeonLogger                     logger)
+    {
+      try
+      {
+        if (context.Request.Cookies.TryGetValue(Service.SessionCookieName, out var requestCookieBase64))
         {
-            try
-            {
-                if (context.Request.Cookies.TryGetValue(Service.SessionCookieName, out var requestCookieBase64))
-                {
-                    var requestCookie = NeonHelper.JsonDeserialize<Cookie>(cipher.DecryptBytesFrom(requestCookieBase64));
+          var requestCookie = NeonHelper.JsonDeserialize<Cookie>(cipher.DecryptBytesFrom(requestCookieBase64));
 
-                    if (requestCookie.TokenResponse != null)
-                    {
-                        var code = NeonHelper.GetCryptoRandomPassword(10);
+          if (requestCookie.TokenResponse != null)
+          {
+            var code = NeonHelper.GetCryptoRandomPassword(10);
+            await cache.SetAsync(code, cipher.EncryptToBytes(NeonHelper.JsonSerializeToBytes(requestCookie.TokenResponse)), cacheOptions);
 
-                        logger.LogDebug($"Request Query: [{NeonHelper.JsonSerialize(context.Request.Query)}]");
-
-                        var query = new Dictionary<string, string>()
+            var query = new Dictionary<string, string>()
                         {
                             { "code", code }
                         };
 
-                        if (context.Request.Query.TryGetValue("state", out var state))
-                        {
-                            query["state"] = state;
-                        }
+            if (context.Request.Query.TryGetValue("state", out var state))
+            {
+              query["state"] = state;
+            }
 
-                        if (context.Request.Query.TryGetValue("redirect_uri", out var redirectUri))
-                        {
-                            if (context.Request.Query.TryGetValue("client_id", out var client_id))
-                            {
-                                if (!NeonSsoSessionProxyService.Config.StaticClients.Where(client => client.Id == client_id).First().RedirectUris.Contains(redirectUri))
-                                {
-                                    logger.LogError("Invalid redirect URI");
+            if (context.Request.Query.TryGetValue("redirect_uri", out var redirectUri))
+            {
+                if (context.Request.Query.TryGetValue("client_id", out var client_id))
+                {
+                    if (!NeonSsoSessionProxyService.Config.StaticClients.Where(client => client.Id == client_id).First().RedirectUris.Contains(redirectUri))
+                    {
+                        logger.LogError("Invalid redirect URI");
 
-                                    throw new HttpRequestException("Invalid redirect URI.");
-                                }
-                                
-                                context.Response.StatusCode = StatusCodes.Status302Found;
-                                context.Response.Headers.Location = QueryHelpers.AddQueryString(redirectUri, query);
-
-                                logger.LogDebug($"Client and Redirect URI confirmed.");
-
-                                await cache.SetAsync(code, cipher.EncryptToBytes(NeonHelper.JsonSerializeToBytes(requestCookie.TokenResponse)), cacheOptions);
-                            }
-                            else
-                            {
-                                logger.LogError("No Client ID specified.");
-
-                                throw new HttpRequestException("Invalid Client ID.");
-                            }                           
-                        }
-                        else
-                        {
-                            throw new HttpRequestException("No redirect_uri specified.");
-                        }
+                        throw new HttpRequestException("Invalid redirect URI.");
                     }
+                        context.Response.StatusCode = StatusCodes.Status302Found;
+                        context.Response.Headers.Location = QueryHelpers.AddQueryString(redirectUri, query);
+                        logger.LogDebug($"Client and Redirect URI confirmed.");
+                                
+                        return;
+                }
+                else
+                {
+                    logger.LogError("No Client ID specified.");
+
+                    throw new HttpRequestException("Invalid Client ID.");
                 }
             }
-            catch (Exception e)
+            else
             {
-                NeonSsoSessionProxyService.Log.LogError(e);
+              throw new HttpRequestException("No redirect_uri specified.");
             }
-
-            await _next(context);
+          }
         }
-    }
+      }
+      catch (Exception e)
+      {
+        NeonSsoSessionProxyService.Log.LogError(e);
+      }
 
-    /// <summary>
-    /// Helper method to add this middleware.
-    /// </summary>
-    public static class SsoSessionMiddlewareHelper
+      await _next(context);
+    }
+  }
+
+  /// <summary>
+  /// Helper method to add this middleware.
+  /// </summary>
+  public static class SsoSessionMiddlewareHelper
+  {
+    public static IApplicationBuilder UseSsoSessionMiddleware(
+      this IApplicationBuilder builder)
     {
-        public static IApplicationBuilder UseSsoSessionMiddleware(
-          this IApplicationBuilder builder)
-        {
-            return builder.UseMiddleware<SsoSessionMiddleware>();
-        }
+      return builder.UseMiddleware<SsoSessionMiddleware>();
     }
+  }
 
 
 }

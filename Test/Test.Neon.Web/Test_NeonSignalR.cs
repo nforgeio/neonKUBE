@@ -33,6 +33,7 @@ using Microsoft.AspNetCore.SignalR.Protocol;
 
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Service;
 using Neon.Web.SignalR;
@@ -160,6 +161,42 @@ namespace TestNeonSignalR
             options.Servers = new string[] { natsServerUri };
 
             var services = new ServiceCollection();
+
+            var exception = Record.Exception(() => services.AddSignalR().AddNeonNats(connectionFactory.CreateConnection()));
+            Assert.Null(exception);
+        }
+
+        [Fact]
+        public void AddNeonNatsWithIlogger()
+        {
+            var natsServerUri = NatsFixture.ConnectionUri;
+
+            var connectionFactory = new ConnectionFactory();
+            var options = ConnectionFactory.GetDefaultOptions();
+
+            options.Servers = new string[] { natsServerUri };
+
+            var services = new ServiceCollection();
+            services.AddLogging();
+
+            var exception = Record.Exception(() => services.AddSignalR().AddNeonNats(connectionFactory.CreateConnection()));
+            Assert.Null(exception);
+        }
+
+        [Fact]
+        public void AddNeonNatsWithINeonlogger()
+        {
+            var natsServerUri = NatsFixture.ConnectionUri;
+
+            var connectionFactory = new ConnectionFactory();
+            var options = ConnectionFactory.GetDefaultOptions();
+
+            options.Servers = new string[] { natsServerUri };
+
+            var services         = new ServiceCollection();
+            INeonLogger logger   = new Neon.Diagnostics.LogManager().GetLogger();
+            
+            services.AddSingleton(logger);
 
             var exception = Record.Exception(() => services.AddSignalR().AddNeonNats(connectionFactory.CreateConnection()));
             Assert.Null(exception);

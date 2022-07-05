@@ -1779,15 +1779,96 @@ kubectl apply -f priorityclasses.yaml
                 {
                     controller.LogProgress(master, verb: "setup", message: "neon-acme");
 
-                    var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-                    var values = new Dictionary<string, object>();
+                    var cluster     = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+                    var k8s         = GetK8sClient(controller);
+                    var values      = new Dictionary<string, object>();
+                    var acmeOptions = cluster.Definition.Network.AcmeOptions;
+
+                    var issuer = new ClusterIssuer()
+                    {
+                        Metadata = new V1ObjectMeta()
+                        {
+                            Name              = "neon-acme",
+                            NamespaceProperty = KubeNamespace.NeonIngress
+                        },
+                        Spec = new IssuerSpec()
+                        {
+                            Acme = acmeOptions.Issuer
+                        }
+                    };
+
+                    if (issuer.Spec.Acme.ExternalAccountBinding != null)
+                    {
+                        var secret = new V1Secret()
+                        {
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Name = issuer.Spec.Acme.ExternalAccountBinding.KeySecretRef.Name,
+                                NamespaceProperty = KubeNamespace.NeonIngress
+                            },
+                            StringData = new Dictionary<string, string>()
+                            {
+                                { issuer.Spec.Acme.ExternalAccountBinding.KeySecretRef.Key, issuer.Spec.Acme.ExternalAccountBinding.Key }
+                            }
+                        };
+
+                        await k8s.UpsertSecretAsync(secret, secret.Namespace());
+
+                        issuer.Spec.Acme.ExternalAccountBinding.Key = null;
+                    }
+
+                    if (!string.IsNullOrEmpty(issuer.Spec.Acme.PrivateKey))
+                    {
+                        var secret = new V1Secret()
+                        {
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Name              = issuer.Spec.Acme.PrivateKeySecretRef.Name,
+                                NamespaceProperty = KubeNamespace.NeonIngress
+                            },
+                            StringData = new Dictionary<string, string>()
+                            {
+                                { issuer.Spec.Acme.PrivateKeySecretRef.Key, issuer.Spec.Acme.PrivateKey }
+                            }
+                        };
+
+                        await k8s.UpsertSecretAsync(secret, secret.Namespace());
+
+                        issuer.Spec.Acme.PrivateKey                  = null;
+                        issuer.Spec.Acme.DisableAccountKeyGeneration = true;
+                    }
+
+                    foreach (var solver in issuer.Spec.Acme.Solvers)
+                    {
+                        if (solver.Dns01.Route53 != null)
+                        {
+                            var secret = new V1Secret()
+                            {
+                                Metadata = new V1ObjectMeta()
+                                {
+                                    Name              = solver.Dns01.Route53.SecretAccessKeySecretRef.Name,
+                                    NamespaceProperty = KubeNamespace.NeonIngress
+                                },
+                                StringData = new Dictionary<string, string>()
+                                {
+                                    { solver.Dns01.Route53.SecretAccessKeySecretRef.Key, solver.Dns01.Route53.SecretAccessKey }
+                                }
+                            };
+
+                            await k8s.UpsertSecretAsync(secret, secret.Namespace());
+
+                            solver.Dns01.Route53.SecretAccessKey = null;
+                        }
+                    }
+
+                    await k8s.UpsertClusterCustomObjectAsync<ClusterIssuer>(issuer, issuer.Name());
 
                     values.Add("image.organization", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
-                    values.Add("certficateDuration", cluster.Definition.Network.CertificateDuration);
-                    values.Add("certificateRenewBefore", cluster.Definition.Network.CertificateRenewBefore);
+                    values.Add("certficateDuration", cluster.Definition.Network.AcmeOptions.CertificateDuration);
+                    values.Add("certificateRenewBefore", cluster.Definition.Network.AcmeOptions.CertificateRenewBefore);
 
                     int i = 0;
 
@@ -2844,8 +2925,8 @@ $@"- name: StorageType
                     controller.LogProgress(master, verb: "setup", message: "memcached");
 
                     values.Add($"replicas", serviceAdvice.ReplicaCount);
-                    values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add($"serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"metrics.serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add($"serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
                     values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
@@ -2966,8 +3047,14 @@ $@"- name: StorageType
                     values.Add($"serviceMonitor.interval", mimirAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add($"serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
+                    values.Add($"minio.enabled", true);
 
-                    values.Add($"minio.enabled", cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() > 1);
+                    if (cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() == 1)
+                    {
+                        values.Add($"blocksStorage.tsdb.block_ranges_period[0]", "1h0m0s");
+                        values.Add($"blocksStorage.tsdb.retention_period", "2h0m0s");
+                        values.Add($"limits.compactor_blocks_retention_period", "12h");
+                    }
 
                     await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Mimir, clusterAdvice.MetricsQuota);
                     await CreateMinioBucketAsync(controller, master, KubeMinioBucket.MimirRuler);
@@ -3122,18 +3209,23 @@ $@"- name: StorageType
                     values.Add($"serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
 
-                    values.Add($"minio.enabled", cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() > 1);
+                    values.Add($"minio.enabled", true);
 
                     if (cluster.Definition.Nodes.Where(node => node.Labels.LogsInternal).Count() >= 3)
                     {
                         values.Add($"config.replication_factor", 3);
                     }
 
-                    if (cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() > 1)
+                    await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Loki, clusterAdvice.LogsQuota);
+                    values.Add($"loki.schemaConfig.configs[0].object_store", "aws");
+                    values.Add($"loki.storageConfig.boltdb_shipper.shared_store", "s3");
+
+                    if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.Nodes.Count() == 1)
                     {
-                        await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Loki, clusterAdvice.LogsQuota);
-                        values.Add($"loki.schemaConfig.configs[0].object_store", "aws");
-                        values.Add($"loki.storageConfig.boltdb_shipper.shared_store", "s3");
+                        values.Add($"loki.storageConfig.boltdb_shipper.cache_ttl", "24h");
+                        values.Add($"limits_config.retention_period", "24h");
+                        values.Add($"limits_config.reject_old_samples_max_age", "6h");
+                        values.Add($"table_manager.retention_period", "24h");
                     }
 
                     int i = 0;
@@ -3245,7 +3337,7 @@ $@"- name: StorageType
                         values.Add($"storage.trace.backend", "s3");
                     }
 
-                    values.Add($"minio.enabled", cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() > 1);
+                    values.Add($"minio.enabled", true);
 
                     await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Tempo, clusterAdvice.TracesQuota);
 
@@ -3414,6 +3506,9 @@ $@"- name: StorageType
 
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add($"cluster.datacenter", cluster.Definition.Datacenter);
+                    values.Add($"cluster.version", cluster.Definition.ClusterVersion);
+                    values.Add($"cluster.hostingEnvironment", cluster.Definition.Hosting.Environment);
                     values.Add("neonkube.clusterDomain.grafana", ClusterDomain.Grafana);
                     values.Add("neonkube.clusterDomain.sso", ClusterDomain.Sso);
                     values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
@@ -3554,7 +3649,7 @@ $@"- name: StorageType
 
                                     return true;
                                 }
-                                catch (Exception e)
+                                catch
                                 {
                                     return false;
                                 }

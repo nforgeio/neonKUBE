@@ -28,6 +28,8 @@ using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 
+using Neon.Diagnostics;
+
 using NATS;
 using NATS.Client;
 
@@ -38,13 +40,13 @@ namespace Neon.Web.SignalR
         private readonly ConcurrentDictionary<string, HubConnectionStore> subscriptions = new ConcurrentDictionary<string, HubConnectionStore>(StringComparer.Ordinal);
         private readonly ConcurrentDictionary<string, IAsyncSubscription> natsSubscriptions = new ConcurrentDictionary<string, IAsyncSubscription>(StringComparer.Ordinal);
         private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
-        private readonly ILogger logger;
+        private readonly INeonLogger logger;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="logger"></param>
-        public NatsSubscriptionManager(ILogger logger)
+        public NatsSubscriptionManager(INeonLogger logger)
         {
             this.logger = logger;
         }
@@ -60,7 +62,7 @@ namespace Neon.Web.SignalR
         {
             await _lock.WaitAsync();
 
-            Log.Subscribing(logger, id);
+            logger?.LogDebug($"Subscribing to subject [Subject={id}].");
 
             try
             {
@@ -85,7 +87,8 @@ namespace Neon.Web.SignalR
             }
             catch (Exception e)
             {
-                Log.SubscribingFailed(logger, id);
+                logger?.LogError(e);
+                logger?.LogDebug($"Subscribing failed. [Subject={id}] [Connection={connection.ConnectionId}]");
             }
             finally
             {
@@ -104,8 +107,8 @@ namespace Neon.Web.SignalR
         {
             await _lock.WaitAsync();
 
-            Log.Unsubscribe(logger, id);
-            
+            logger?.LogDebug($"Unsubscribing from NATS subject. [Subject={id}] [Connection={connection.ConnectionId}]");
+
             try
             {
                 if (!subscriptions.TryGetValue(id, out var subscription))
@@ -129,7 +132,8 @@ namespace Neon.Web.SignalR
             }
             catch (Exception e)
             {
-                Log.UnsubscribeFailed(logger, id);
+                logger?.LogError(e);
+                logger?.LogDebug($"Unubscribing failed. [Subject={id}] [Connection={connection.ConnectionId}]");
             }
             finally
             {
