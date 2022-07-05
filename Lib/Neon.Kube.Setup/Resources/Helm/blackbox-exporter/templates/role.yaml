@@ -1,0 +1,18 @@
+{{- if .Values.pspEnabled }}
+apiVersion: {{ template "rbac.apiVersion" . }}
+kind: Role
+metadata:
+  labels:
+    {{- include "prometheus-blackbox-exporter.labels" . | nindent 4 }}
+  name: {{ template "prometheus-blackbox-exporter.fullname" . }}
+  namespace: {{ template "prometheus-blackbox-exporter.namespace" . }}
+rules:
+  - apiGroups:
+    - policy
+    resources:
+    - podsecuritypolicies
+    resourceNames:
+    - {{ template "prometheus-blackbox-exporter.fullname" . }}-psp
+    verbs:
+    - use
+{{- end -}}

@@ -119,6 +119,11 @@ namespace Neon.Kube
         public static string AlertManager = "alertmanager";
 
         /// <summary>
+        /// Identifies the neonKUBE cluster's <b>BlackboxExporter</b> service.
+        /// </summary>
+        public static string BlackboxExporter = "blackbox-exporter";
+
+        /// <summary>
         /// Identifies the neonKUBE cluster's <b>Calico</b> service.
         /// </summary>
         public static string Calico = "calico";
