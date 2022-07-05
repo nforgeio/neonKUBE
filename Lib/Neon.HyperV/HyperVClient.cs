@@ -72,12 +72,9 @@ namespace Neon.HyperV
         private const string NetNatNamespace = @"NetNat\";
 
         /// <summary>
-        /// Returns the path to the default Hyper-V virtual drive folder.
+        /// Returns the path to the user's default Hyper-V virtual drive folder.
         /// </summary>
-        public static string DefaultDriveFolder
-        {
-            get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), "Hyper-V", "Virtual hard disks"); }
-        }
+        public static string DefaultDriveFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Hyper-V", "Virtual hard disks");
 
         //---------------------------------------------------------------------
         // Instance members
