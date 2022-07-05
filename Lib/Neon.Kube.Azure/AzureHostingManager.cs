@@ -1127,7 +1127,7 @@ namespace Neon.Kube
 
             if (string.IsNullOrEmpty(clusterDefinition.Datacenter))
             {
-                clusterDefinition.Datacenter = region.ToUpperInvariant();
+                clusterDefinition.Datacenter = clusterDefinition.Hosting.Azure.Region.ToUpperInvariant();
             }
         }
 
