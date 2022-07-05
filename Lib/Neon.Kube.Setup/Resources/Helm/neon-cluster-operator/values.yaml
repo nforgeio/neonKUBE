@@ -19,7 +19,7 @@ replicaCount: 1
 image:
   organization: neon-registry.node.local
   repository: neon-cluster-operator
-  tag: neonkube-0.6.0-alpha
+  tag: null
   pullPolicy: IfNotPresent
 
 # Resource requests and limits
