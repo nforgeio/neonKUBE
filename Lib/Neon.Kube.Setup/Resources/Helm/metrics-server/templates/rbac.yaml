@@ -28,15 +28,29 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - nodes/metrics
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
   - pods
   - nodes
-  - nodes/stats
   - namespaces
   - configmaps
   verbs:
   - get
   - list
   - watch
+- apiGroups:
+  - extensions
+  - policy
+  resources:
+  - podsecuritypolicies
+  resourceNames:
+  - {{ printf "privileged-%s" (include "metrics-server.fullname" .) }}
+  verbs:
+  - use
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -83,3 +97,30 @@ subjects:
 - kind: ServiceAccount
   name: metrics-server
   namespace: kube-system
+---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: {{ printf "privileged-%s" (include "metrics-server.fullname" .) }}
+  labels:
+    {{- include "metrics-server.labels" . | nindent 4 }}
+spec:
+  allowedCapabilities:
+    - '*'
+  fsGroup:
+    rule: RunAsAny
+  privileged: true
+  runAsUser:
+    rule: RunAsAny
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  volumes:
+    - '*'
+  hostPID: true
+  hostIPC: true
+  hostNetwork: true
+  hostPorts:
+    - min: 1
+      max: 65536
