@@ -1,14 +1,14 @@
 organization: neon-registry.node.local
-tag: 1.11.4-distroless
+tag: 1.14.1-distroless
 
 
 images:
   organization: neon-registry.node.local
   operator: 
     repository: operator
-    tag: 1.11.4-distroless
+    tag: 1.14.1-distroless
   istio:
-    tag: 1.11.4-distroless
+    tag: 1.14.1-distroless
   coredns:
     repository: coredns-coredns
     tag: 1.6.2
