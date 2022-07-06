@@ -1,48 +1,70 @@
-## Calico Helm Chart
-This is a helm chart installs [Calico Networking](https://www.projectcalico.org/). 
+# Kubernetes Metrics Server
 
-### Installing the Chart
+[Metrics Server](https://github.com/kubernetes-sigs/metrics-server/) is a scalable, efficient source of container resource metrics for Kubernetes built-in autoscaling pipelines.
 
-```bash
-Add installation instructions once charts repo is created
+<!-- Trigger release -->
+
+## Installing the Chart
+
+Before you can install the chart you will need to add the `metrics-server` repo to [Helm](https://helm.sh/).
+
+```shell
+helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
 ```
 
-### Configuration
-The following table lists the configurable parameters for this chart. Required values must be set based on the deployment for the chart to work. 
+After you've installed the repo you can install the chart.
 
-| Parameter  | Description | Type | Default | Required |
-| ------------- | ------------- | ------------- | ------------- | ------------- |
-| `datastore`  |  [Datastore for Calico](https://docs.projectcalico.org/getting-started/kubernetes/hardway/the-calico-datastore) | `string` | `kubernetes` | yes |
-| `vxlan`  |  Enables VxLAN. Read more about [overlaynetworking](https://docs.projectcalico.org/networking/vxlan-ipip)  | `boolean` | `true` | no  |
-| `network`  | Network to use. Read more about [determine best networking option](https://docs.projectcalico.org/networking/determine-best-networking) | `calico` | yes |
-| `ipam`  | IP address management for Calico. Read more about [IPAM](https://docs.projectcalico.org/networking/get-started-ip-addresses) | `string` | `calico-ipam`  | yes  |
-| `bpf` | Variable to enable eBPF. Read more about [eBPF](https://docs.projectcalico.org/maintenance/enabling-bpf) | `boolean` | `` | no |
-| `etcd.endpoints` | Calico datastore endpoints | `string` | `` | no( Required if using etcd datastore) |
-| `etcd.tls.ca` |The root certificate of the certificate authority (CA) that issued the etcd server certificate | `string` | ` ` | no( Required if using etcd datastore) |
-| `etcd.tls.crt` | The client certificate issued to Calico for datastore connectivity | `string` | `` | no( Required if using etcd datastore) |
-| `etcd.tls.key` | Private key matching client certificate| `string` | `` | no( Required if using etcd datastore) |
-| `typha.enabled`  | Enables or disabled Typha. Read more about [Typha](https://docs.projectcalico.org/reference/typha/) | `string` | `false` | yes |
-| `typha.image`  | Image name of typha | `string` | `calico/typha` | no (Required if typha is enabled) |
-| `typha.tag`  | Tag value of Typha  | `string` | `v3.8.0` | no(Required if typha is enabled) |
-| `typha.env`  | Additional env variables. Read more about [Typha env variables](https://docs.projectcalico.org/reference/typha/configuration) | `dict` | {} | no(Required if typha is enabled) |
-| `cni.image`  | Calico CNI image name  | `string` | `docker.io/calico/cni` | yes |
-| `cni.tag`  | Calico CNI image tag  | `string` | `v3.17.1` | yes |
-| `cni.env`  | Calico CNI additional env variables | `dict` |  {} | no |
-| `node.image`  | Calico Node image name | `string`| `docker.io/calico/node` | yes |
-| `node.tag`  | Calico Node image tag  | `string` | `v3.17.1` | yes |
-| `node.env`  | Calico Node additional env variables. Read more about [node env variables](https://docs.projectcalico.org/reference/node/configuration) | `dict` |  {} | no |
-| `flannel_migration` | Variable that enables migration from Flannel. Read more about [Flannel Migration](https://docs.projectcalico.org/getting-started/kubernetes/flannel/migration-from-flannel) | `boolean` | `false` | no |
-| `flannel.image`  | Flannel image name | `string` | `quay.io/coreos/flannel` | no(Required if Flannel is being deployed) |
-| `flannel.tag`  | Flannel image tag  | `string` | `v0.12.0` | no(Required if Flannel is being deployed) |
-| `flannel.env`  | Flannel additional env variables | `dict` | {} | no |
-| `flexvol.image`  |  Flexvol Image Name | `string` | `docker.io/calico/pod2daemon-flexvol` | yes |
-| `flexvol.tag`  |  Flexvol Image tag | `string` | `v3.17.1` | yes |
-| `kubeControllers.image`  | Calico KubeControllers image name. Read more about [Calico KubeControllers](https://docs.projectcalico.org/reference/kube-controllers/configuration) | `string` | `docker.io/calico/kube-controllers` | yes |
-| `kubeControllers.tag`  | Calico KubeControllers image tag | `string` | `v3.17.1` | yes |
-| `kubeControllers.serviceAccount.create`  | Calico KubeControllers ServiceAccount creation  | `true` | `bollean`| `true` |yes |
-| `kubeControllers.serviceAccount.name`  | Calico KubeControllers ServiceAccount name  | `string` | `calico-kube-controllers` | yes |
-| `kubeControllers.serviceAccount.rbac`  | Calico KubeControllers ServiceAccount rbac permissions  | `boolean` | `true` | yes |
-| `kubeControllers.annotations`  | Calico KubeControllers ServiceAccount annotations  | `dict` | {} | no |
-| `nodeName.serviceAccount.create`  | Depending on the network choosen, the chart creates a SA account with respective name | `boolean` | `true` | yes |
-| `nodeName.serviceAccount.rbac`  | Calico network SA RBAC permissions | `boolean` | `true` | yes |
-| `nodeName.annotations`  | Calico network SA annotations | `dict` | {} | no |
+```shell
+helm upgrade --install metrics-server metrics-server/metrics-server
+```
+
+## Configuration
+
+The following table lists the configurable parameters of the _Metrics Server_ chart and their default values.
+
+| Parameter                            | Description                                                                                                                                                                                                                                                      | Default                                    |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `image.repository`                   | Image repository.                                                                                                                                                                                                                                                | `k8s.gcr.io/metrics-server/metrics-server` |
+| `image.tag`                          | Image tag, will override the default tag derived from the chart app version.                                                                                                                                                                                     | `""`                                       |
+| `image.pullPolicy`                   | Image pull policy.                                                                                                                                                                                                                                               | `IfNotPresent`                             |
+| `imagePullSecrets`                   | Image pull secrets.                                                                                                                                                                                                                                              | `[]`                                       |
+| `nameOverride`                       | Override the `name` of the chart.                                                                                                                                                                                                                                | `nil`                                      |
+| `fullnameOverride`                   | Override the `fullname` of the chart.                                                                                                                                                                                                                            | `nil`                                      |
+| `serviceAccount.create`              | If `true`, create a new service account.                                                                                                                                                                                                                         | `true`                                     |
+| `serviceAccount.annotations`         | Annotations to add to the service account.                                                                                                                                                                                                                       | `{}`                                       |
+| `serviceAccount.name`                | Service account to be used. If not set and `serviceAccount.create` is `true`, a name is generated using the full name template.                                                                                                                                  | `nil`                                      |
+| `rbac.create`                        | If `true`, create the RBAC resources.                                                                                                                                                                                                                            | `true`                                     |
+| `rbac.pspEnabled`                    | If `true`, create a pod security policy resource.                                                                                                                                                                                                                | `false`                                    |
+| `apiService.create`                  | If `true`, create the `v1beta1.metrics.k8s.io` API service. You typically want this enabled! If you disable API service creation you have to manage it outside of this chart for e.g horizontal pod autoscaling to work with this release.                       | `true`                                     |
+| `podLabels`                          | Labels to add to the pod.                                                                                                                                                                                                                                        | `{}`                                       |
+| `podAnnotations`                     | Annotations to add to the pod.                                                                                                                                                                                                                                   | `{}`                                       |
+| `podSecurityContext`                 | Security context for the pod.                                                                                                                                                                                                                                    | `{}`                                       |
+| `securityContext`                    | Security context for the _metrics-server_ container.                                                                                                                                                                                                             | _See values.yaml_                          |
+| `priorityClassName`                  | Priority class name to use.                                                                                                                                                                                                                                      | `system-cluster-critical`                  |
+| `containerPort`                      | port for the _metrics-server_ container.                                                                                                                                                                                                                         | `10250`                                     |
+| `hostNetwork.enabled`                | If `true`, start _metric-server_ in hostNetwork mode. You would require this enabled if you use alternate overlay networking for pods and API server unable to communicate with metrics-server. As an example, this is required if you use Weave network on EKS. | `false`                                    |
+| `replicas`                           | Number of replicas to run.                                                                                                                                                                                                                                       | `1`                                        |
+| `updateStrategy`                     | Customise the default update strategy.                                                                                                                                                                                                                           | `{}`                                       |
+| `podDisruptionBudget.enabled`        | If `true`, create `PodDisruptionBudget` resource.                                                                                                                                                                                                                | `{}`                                       |
+| `podDisruptionBudget.minAvailable`   | Set the `PodDisruptionBugdet` minimum available pods.                                                                                                                                                                                                            | `nil`                                      |
+| `podDisruptionBudget.maxUnavailable` | Set the `PodDisruptionBugdet` maximum unavailable pods.                                                                                                                                                                                                          | `nil`                                      |
+| `defaultArgs`                        | Default arguments to pass to the _metrics-server_ command.                                                                                                                                                                                                       | See _values.yaml_                          |
+| `args`                               | Additional arguments to pass to the _metrics-server_ command.                                                                                                                                                                                                    | `[]`                                       |
+| `livenessProbe`                      | Liveness probe.                                                                                                                                                                                                                                                  | See _values.yaml_                          |
+| `readinessProbe`                     | Readiness probe.                                                                                                                                                                                                                                                 | See _values.yaml_                          |
+| `service.type`                       | Service type.                                                                                                                                                                                                                                                    | `ClusterIP`                                |
+| `service.port`                       | Service port.                                                                                                                                                                                                                                                    | `443`                                      |
+| `service.annotations`                | Annotations to add to the service.                                                                                                                                                                                                                               | `{}`                                       |
+| `service.labels`                     | Labels to add to the service.                                                                                                                                                                                                                                    | `{}`                                       |
+| `metrics.enabled`                    | If `true`, allow unauthenticated access to `/metrics`.                                                                                                                                                                                                           | `false`                                    |
+| `serviceMonitor.enabled`             | If `true`, create a _Prometheus_ service monitor. This needs `metrics.enabled` to be `true`.                                                                                                                                                                     | `false`                                    |
+| `serviceMonitor.additionalLabels`    | Additional labels to be set on the ServiceMonitor.                                                                                                                                                                                                               | `{}`                                       |
+| `serviceMonitor.interval`            | _Prometheus_ scrape frequency.                                                                                                                                                                                                                                   | `1m`                                       |
+| `serviceMonitor.scrapeTimeout`       | _Prometheus_ scrape timeout.                                                                                                                                                                                                                                     | `10s`                                      |
+| `resources`                          | Resource requests and limits for the _metrics-server_ container. See https://github.com/kubernetes-sigs/metrics-server#scaling                                                                                                                                   | `{}`                                       |
+| `extraVolumeMounts`                  | Additional volume mounts for the _metrics-server_ container.                                                                                                                                                                                                     | `[]`                                       |
+| `extraVolumes`                       | Additional volumes for the pod.                                                                                                                                                                                                                                  | `[]`                                       |
+| `nodeSelector`                       | Node labels for pod assignment.                                                                                                                                                                                                                                  | `{}`                                       |
+| `tolerations`                        | Tolerations for pod assignment.                                                                                                                                                                                                                                  | `[]`                                       |
+| `affinity`                           | Affinity for pod assignment.                                                                                                                                                                                                                                     | `{}`                                       |
+| `topologySpreadConstraints`          | Pod Topology Spread Constraints.                                                                                                                                                                                                                                 | `[]`                                       |

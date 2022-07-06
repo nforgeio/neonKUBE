@@ -4167,7 +4167,6 @@ $@"- name: StorageType
 
                     tasks.Add(k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-portal", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
                     tasks.Add(k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-registry", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
-                    tasks.Add(k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-registryctl", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
                     
                     if (cluster.Definition.Features.Harbor.Trivy)
                     {

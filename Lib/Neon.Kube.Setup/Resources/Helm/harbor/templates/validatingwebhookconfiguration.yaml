@@ -19,7 +19,6 @@ webhooks:
   rules:
   - apiGroups:
     - goharbor.io
-    - goharbor.io
     apiVersions:
     - v1beta1
     operations:
@@ -93,4 +92,25 @@ webhooks:
     - UPDATE
     resources:
     - harborclusters
+  sideEffects: None
+- admissionReviewVersions:
+  - v1beta1
+  clientConfig:
+    service:
+      name: registry-webhook-service
+      namespace: neon-system
+      path: /validate-hsc
+      port: {{ .Values.service.port }}
+  failurePolicy: Fail
+  name: hsc.goharbor.io
+  rules:
+  - apiGroups:
+    - goharbor.io
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - harborserverconfigurations
   sideEffects: None

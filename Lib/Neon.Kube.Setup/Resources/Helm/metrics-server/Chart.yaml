@@ -1,5 +1,25 @@
 apiVersion: v2
 name: metrics-server
-description: A Helm chart for metrics-server
-version: 0.1.1
-appVersion: master
+description: Metrics Server is a scalable, efficient source of container resource metrics for Kubernetes built-in autoscaling pipelines.
+type: application
+version: 3.8.2
+appVersion: 0.6.1
+keywords:
+  - kubernetes
+  - metrics-server
+  - metrics
+home: https://github.com/kubernetes-sigs/metrics-server
+icon: https://avatars.githubusercontent.com/u/36015203?s=400&v=4
+sources:
+  - https://github.com/kubernetes-sigs/metrics-server
+maintainers:
+  - name: stevehipwell
+    url: https://github.com/stevehipwell
+  - name: krmichel
+    url: https://github.com/krmichel
+  - name: endrec
+    url: https://github.com/endrec
+annotations:
+  artifacthub.io/changes: |
+    - kind: changed
+      description: "Allow probes to be turned off completly (this is not advised unless you know what you're doing)."
