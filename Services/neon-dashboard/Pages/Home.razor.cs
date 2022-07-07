@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    Home.razor.cs
-// CONTRIBUTOR: Marcus Bowyer
+// CONTRIBUTOR: Marcus Bowyer, Simon Zhang
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -248,8 +248,8 @@ namespace NeonDashboard.Pages
                 return;
             }
 
-            var memoryUsageX = AppState.Metrics.MemoryUsageBytes.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time).ToShortTimeString()).ToList();
-            var memoryUsageY = AppState.Metrics.MemoryUsageBytes.Data.Result?.First().Values.Select(x => Math.Round(decimal.Parse(x.Value) / 1000000000),2).ToList();
+            var memoryUsageX = AppState.Metrics.MemoryUsageBytes.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time)).ToList();
+            var memoryUsageY = AppState.Metrics.MemoryUsageBytes.Data.Result?.First().Values.Select(x => Math.Round(decimal.Parse(x.Value) / 1000000000,2)).ToList();
 
             await UpdateChartAsync(memoryUsageX, memoryUsageY, memoryChartConfig, memoryChart, $"Memory usage (total memory: {ByteUnits.ToGB(AppState.Metrics.MemoryTotalBytes)})");
         }
@@ -271,7 +271,7 @@ namespace NeonDashboard.Pages
                 return;
             }
 
-            var cpuUsageX = AppState.Metrics.CPUUsagePercent.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time).ToShortTimeString()).ToList();
+            var cpuUsageX = AppState.Metrics.CPUUsagePercent.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time)).ToList();
             var cpuUsageY = AppState.Metrics.CPUUsagePercent.Data.Result.First().Values.Select(x => Math.Round(AppState.Metrics.CPUTotal - decimal.Parse(x.Value),2) ).ToList();
 
             await UpdateChartAsync(cpuUsageX, cpuUsageY, cpuChartConfig, cpuChart, $"CPU usage (total cores: {AppState.Metrics.CPUTotal})");
@@ -294,7 +294,7 @@ namespace NeonDashboard.Pages
                 return;
             }
 
-            var diskUsageX = AppState.Metrics.DiskUsageBytes.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time).ToShortTimeString()).ToList();
+            var diskUsageX = AppState.Metrics.DiskUsageBytes.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time)).ToList();
             var diskUsageY = AppState.Metrics.DiskUsageBytes.Data.Result.First().Values.Select(x => Math.Round(decimal.Parse(x.Value) / 1000000000,2)).ToList();
 
             await UpdateChartAsync(diskUsageX, diskUsageY, diskChartConfig, diskChart, $"Disk usage (total disk: {ByteUnits.ToGB(AppState.Metrics.DiskTotalBytes)})");

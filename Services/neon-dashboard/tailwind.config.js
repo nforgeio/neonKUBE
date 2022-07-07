@@ -15,7 +15,7 @@ module.exports = {
 
         },
         fontFamily: {
-            'sans': ['Pangram Sans', ...defaultTheme.fontFamily.sans],
+            'sans': ['Manrope', ...defaultTheme.fontFamily.sans],
             'mono': [...defaultTheme.fontFamily.mono]
         },
         fontSize: {
