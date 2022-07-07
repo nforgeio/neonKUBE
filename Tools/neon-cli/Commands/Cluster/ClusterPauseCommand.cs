@@ -159,7 +159,7 @@ cluster definition or by executing this command on your cluster:
 
                         try
                         {
-                            await cluster.StopAsync(StopMode.Sleep);
+                            await cluster.StopAsync(StopMode.Pause);
                             Console.WriteLine($"PAUSED:  {cluster.Name}");
                         }
                         catch (TimeoutException)

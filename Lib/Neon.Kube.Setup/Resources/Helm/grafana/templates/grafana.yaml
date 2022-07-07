@@ -7,7 +7,7 @@ spec:
     enabled: False
   config:
     server:
-      root_url: "https://grafana.{{ .Values.cluster.domain }}"
+      root_url: "https://{{ .Values.neonkube.clusterDomain.grafana }}.{{ .Values.cluster.domain }}"
     feature_toggles:
       enable: recordedQueries tempoSearch newNavigation persistNotifications serviceAccounts explore2Dashboard 
     security:
@@ -21,15 +21,15 @@ spec:
       oauth_auto_login: true
     auth.generic_oauth:
       api_url: >-
-        https://sso.{{ .Values.cluster.domain }}/userinfo
+        https://{{ .Values.neonkube.clusterDomain.sso }}.{{ .Values.cluster.domain }}/userinfo
       auth_url: >-
-        https://sso.{{ .Values.cluster.domain }}/auth
+        https://{{ .Values.neonkube.clusterDomain.sso }}.{{ .Values.cluster.domain }}/auth
       client_id: $__env{CLIENT_ID}
       client_secret: $__env{CLIENT_SECRET}
       enabled: true
       scopes: openid email profile groups
       token_url: >-
-        https://sso.{{ .Values.cluster.domain }}/token
+        https://{{ .Values.neonkube.clusterDomain.sso }}.{{ .Values.cluster.domain }}/token
       role_attribute_path: >-
         contains(groups[*], 'superadmin') && 'Admin' || contains(groups[*], 'admin') && 'Editor' || 'Viewer'
     database:

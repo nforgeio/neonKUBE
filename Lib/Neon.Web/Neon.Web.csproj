@@ -6,7 +6,7 @@
 		<Version>10000.0.1650-dev-jeff</Version>
 		<Authors>neonFORGE Team</Authors>
 		<Company>neonFORGE LLC</Company>
-		<Product>neonLIBRARY</Product>
+		<Product>neonSDK</Product>
 		<Description>ASPNET extensions</Description>
 		<Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
 		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
@@ -51,11 +51,18 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Net.Http.Headers" Version="2.2.8" />
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+        <PackageReference Include="MessagePack" Version="2.3.112" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="6.0.6" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="6.0.6" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="6.0.6" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="6.0.6" />
+        <PackageReference Include="NATS.Client" Version="0.14.8" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
-	</ItemGroup>
+        <ProjectReference Include="..\Neon.Nats\Neon.Nats.csproj" />
+    </ItemGroup>
 
 	<ItemGroup>
 		<None Include="..\nuget-icon.png" Pack="true" PackagePath="" />

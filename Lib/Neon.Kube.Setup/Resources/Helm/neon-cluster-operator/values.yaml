@@ -7,6 +7,9 @@
 #
 # We also use this for specifying temporary DEBUG related configurations.
 
+nameOverride: ""
+fullnameOverride: ""
+
 # Number of replicas to be deployed.
 
 replicaCount: 1
@@ -14,22 +17,53 @@ replicaCount: 1
 # Container image details.
 
 image:
+  organization: neon-registry.node.local
   repository: neon-cluster-operator
+  tag: neonkube-0.6.0-alpha
   pullPolicy: IfNotPresent
 
 # Resource requests and limits
 
 resource:
   limits:
-    cpu: 100m
     memory: 110Mi
   requests:
-    cpu: 100m
     memory: 64Mi
 
 serviceMesh:
   enabled: true
 
+podAnnotations: {}
+
 # Log level: none, critical, serror, error, warn, sinfo, info, transient, debug
 
 logLevel: info
+
+service:
+  type: ClusterIP
+  ports:
+    - name: http-web
+      port: 80
+      protocol: TCP
+      targetPort: 5000
+    - name: https-web
+      protocol: TCP
+      port: 443
+      targetPort: 5001
+
+metrics:
+  # Enable Prometheus metrics endpoint
+  enabled: true
+  # Serve Prometheus metrics on this port
+  port: 9762
+  servicemonitor:
+    # Enable Prometheus Operator ServiceMonitor
+    enabled: true
+    # Define the namespace where to deploy the ServiceMonitor resource
+    namespace: ""
+    # Prometheus scrape interval
+    interval: 60s
+    # Prometheus scrape timeout
+    scrapeTimeout: 30s
+    # Add custom labels to the ServiceMonitor resource
+    labels: {}

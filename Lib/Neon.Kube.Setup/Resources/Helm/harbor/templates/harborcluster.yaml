@@ -58,15 +58,15 @@ spec:
   expose:
     core:
       ingress:
-        host: registry.{{ .Values.cluster.domain }}
+        host: {{ .Values.neonkube.clusterDomain.harborRegistry }}.{{ .Values.cluster.domain }}
       tls:
         certificateRef: neon-cluster-certificate
     notary:
       ingress:
-        host: notary.{{ .Values.cluster.domain }}
+        host: {{ .Values.neonkube.clusterDomain.harborNotary }}.{{ .Values.cluster.domain }}
       tls:
         certificateRef: neon-cluster-certificate
-  externalURL: https://registry.{{ .Values.cluster.domain }}
+  externalURL: https://{{ .Values.neonkube.clusterDomain.harborRegistry }}.{{ .Values.cluster.domain }}
   harborAdminPasswordRef: registry
   storage:
     kind: "S3"

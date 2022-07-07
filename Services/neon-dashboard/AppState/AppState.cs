@@ -2,6 +2,18 @@
 // FILE:	    AppState.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -47,7 +59,7 @@ namespace NeonDashboard
         /// <summary>
         /// Cluster Info
         /// </summary>
-        public ClusterInfo ClusterInfo => NeonDashboardService.ClusterInfo;
+        public ClusterInfo ClusterInfo => this.NeonDashboardService.ClusterInfo;
 
         /// <summary>
         /// Kubernetes related state.
@@ -117,7 +129,7 @@ namespace NeonDashboard
         /// <summary>
         /// List of dashboards that can be displayed.
         /// </summary>
-        public List<Dashboard> Dashboards;
+        public List<Dashboard> Dashboards => NeonDashboardService.Dashboards;
 
         /// <summary>
         /// List of dashboards that have been loaded.
@@ -132,7 +144,7 @@ namespace NeonDashboard
         /// <summary>
         /// Cluster ID.
         /// </summary>
-        public string ClusterId;
+        public string ClusterId => NeonDashboardService.ClusterInfo.Domain;
 
         /// <summary>
         /// User ID.
@@ -168,23 +180,9 @@ namespace NeonDashboard
                 Analytics.Disable();
             }
 
-            if (Dashboards == null || Dashboards.Count == 0)
+            if (DashboardFrames == null || DashboardFrames.Count == 0)
             {
-                ClusterId  = neonDashboardService.ClusterInfo.Domain;
-                Dashboards = new List<Dashboard>();
-
-                Dashboards.Add(new Dashboard("neonkube", "neonKUBE"));
-
-                using (var sr = new StreamReader(neonDashboardService.GetConfigFilePath("/etc/neon-dashboard/dashboards.yaml")))
-                {
-                    var dashboards = NeonHelper.YamlDeserialize<List<Dashboard>>(sr.ReadToEnd());
-
-                    Dashboards = Dashboards.Concat(dashboards).ToList();
-
-                    Logger.LogDebug(NeonHelper.JsonSerialize(Dashboards));
-                }
-
-                DashboardFrames = new List<Dashboard>(); 
+                DashboardFrames = new List<Dashboard>();
 
                 if (string.IsNullOrEmpty(UserId))
                 {

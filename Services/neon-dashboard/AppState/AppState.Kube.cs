@@ -1,11 +1,24 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AppState.cs
+// FILE:	    AppState.Kube.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.IO;
 using System.Reflection;
@@ -71,6 +84,11 @@ namespace NeonDashboard
             public DateTime CreationTimestamp { get; private set; }
 
             /// <summary>
+            /// The expiration date of the control plane certificate.
+            /// </summary>
+            public DateTime KubeCertExpiration { get; set; }
+
+            /// <summary>
             /// The list of nodes. This contains node related metadata.
             /// </summary>
             public V1NodeList Nodes;
@@ -123,11 +141,41 @@ namespace NeonDashboard
                     Logger.LogError(e);
                 }
 
-                Nodes = await K8s.ListNodeAsync();
+                try
+                {
 
-                TotalNodes = Nodes.Items.Count();
-                FailedNodes = Nodes.Items.Where(node => node.Status.Conditions.Any(condition => negativeNodeConditions.Contains(condition.Type) && condition.Status == "True")).Count();
-                ActiveNodes = Nodes.Items.Where(node => node.Status.Conditions.Any(condition => condition.Type == "Ready" && condition.Status == "True")).Count();
+                    Nodes = await K8s.ListNodeAsync();
+
+                    TotalNodes = Nodes.Items.Count();
+                    FailedNodes = Nodes.Items.Where(node => node.Status.Conditions.Any(condition => negativeNodeConditions.Contains(condition.Type) && condition.Status == "True")).Count();
+                    ActiveNodes = Nodes.Items.Where(node => node.Status.Conditions.Any(condition => condition.Type == "Ready" && condition.Status == "True")).Count();
+
+                    NotifyStateChanged();
+                } 
+                catch (Exception e)
+                {
+                    Logger.LogError(e);
+                }
+            }
+
+            public async Task GetCertExpirationAsync()
+            {
+                var config = KubernetesClientConfiguration.BuildDefaultConfig();
+
+                X509Certificate2 certificate = null;
+                var httpClientHandler = new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = (_, cert, __, ___) =>
+                    {
+                        certificate = new X509Certificate2(cert.GetRawCertData());
+                        return true;
+                    }
+                };
+
+                var httpClient = new HttpClient(httpClientHandler);
+                await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, config.Host));
+
+                KubeCertExpiration = certificate.NotAfter;
 
                 NotifyStateChanged();
             }

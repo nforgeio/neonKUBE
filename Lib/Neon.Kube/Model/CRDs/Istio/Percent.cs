@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
@@ -53,9 +54,7 @@ namespace Neon.Kube
         /// <summary>
         /// Validate the object.
         /// </summary>
-        /// <exception cref="Microsoft.Rest.ValidationException">
-        /// Thrown if validation fails
-        /// </exception>
+        /// <exception cref="ValidationException">Thrown if validation fails.</exception>
         public virtual void Validate()
         {
             Covenant.Assert(!Value.HasValue || (Value >= 0.0 && Value <= 100.0), "Percent must be in the range of [0.0, 100.0].");

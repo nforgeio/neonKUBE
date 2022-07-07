@@ -33,7 +33,7 @@ namespace Neon.Data
 {
     /// <summary>
     /// <para>
-    /// Extends the standard <see cref="JsonConverter"/> by returning the type
+    /// <b>Newtonsoft:</b> Extends the standard <see cref="JsonConverter"/> by returning the type
     /// handled by the converter.
     /// </para>
     /// <note>

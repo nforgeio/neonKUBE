@@ -1,0 +1,90 @@
+﻿apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    {{- include "neon-cluster-operator.labels" . | nindent 4 }}
+  name: neon-cluster-operator
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  selector:
+    matchLabels:
+      {{- include "neon-cluster-operator.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "neon-cluster-operator.selectorLabels" . | nindent 8 }}
+        kubectl.kubernetes.io/default-container: neon-cluster-operator
+      annotations:
+      {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+        sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
+    spec:
+      nodeSelector: 
+        neonkube.io/node.role: master
+      serviceAccountName: neon-cluster-operator
+      tolerations:
+      - operator: Exists
+      priorityClassName: {{ .Values.priorityClassName }}
+      containers:
+      - name: neon-cluster-operator
+        env:
+        - name: LOG_LEVEL
+          value: {{ .Values.logLevel }}
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: WATCHER_MAX_RETRY_INTERVAL
+          value: 15s
+        - name: CLUSTEROPERATOR_IDLE_INTERVAL
+          value: 60s
+        - name: CLUSTEROPERATOR_ERROR_MIN_REQUEUE_INTERVAL
+          value: 15s
+        - name: CLUSTEROPERATOR_ERROR_MAX_REQUEUE_INTERVAL
+          value: 60s
+        - name: NODETASK_IDLE_INTERVAL
+          value: 60s
+        - name: NODETASK_ERROR_MIN_REQUEUE_INTERVAL
+          value: 5s
+        - name: NODETASK_ERROR_MAX_REQUEUE_INTERVAL
+          value: 60s
+        envFrom:
+        - configMapRef:
+            name: neon-cluster-operator-webhook
+        image: {{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        startupProbe:
+          exec:
+            command:
+            - /health-check
+          initialDelaySeconds: 5
+          failureThreshold: 120
+          periodSeconds: 1
+          timeoutSeconds: 1
+        livenessProbe:
+          exec:
+            command:
+            - /health-check
+          periodSeconds: 5
+          timeoutSeconds: 1
+        readinessProbe:
+          exec:
+            command:
+            - /ready-check
+          periodSeconds: 5
+          timeoutSeconds: 1
+        ports:
+        - name: http
+          containerPort: 5000
+        - name: http-metrics
+          containerPort: 9762
+          protocol: TCP
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+      terminationGracePeriodSeconds: 10

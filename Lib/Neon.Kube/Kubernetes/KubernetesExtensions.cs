@@ -25,12 +25,12 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Threading;
 
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.JsonPatch;
-using Microsoft.Rest;
 
 using Neon.Common;
 using Neon.Diagnostics;
@@ -41,6 +41,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using k8s;
+using k8s.Autorest;
 using k8s.Models;
 
 namespace Neon.Kube
@@ -50,6 +51,24 @@ namespace Neon.Kube
     /// </summary>
     public static partial class KubernetesExtensions
     {
+        //---------------------------------------------------------------------
+        // Shared fields
+
+        private static readonly JsonSerializerOptions serializeOptions;
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static KubernetesExtensions()
+        {
+            serializeOptions = new JsonSerializerOptions()
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
+
+            serializeOptions.Converters.Add(new JsonStringEnumMemberConverter());
+        }
+
         //---------------------------------------------------------------------
         // V1ObjectMeta extensions
 
@@ -815,39 +834,43 @@ namespace Neon.Kube
                 });
         }
 
-
         /// <summary>
         /// Watches a Kubernetes resource with a callback.
         /// </summary>
         /// <typeparam name="T">The type parameter.</typeparam>
         /// <param name="k8s">The <see cref="IKubernetes"/> instance.</param>
-        /// <param name="action">The function to handle updates.</param>
+        /// <param name="actionAsync">The async action called as watch events are received..</param>
         /// <param name="namespaceParameter">That target Kubernetes namespace.</param>
         /// <param name="fieldSelector">The optional field selector</param>
         /// <param name="labelSelector">The optional label selector</param>
         /// <param name="resourceVersion">The start resource version.</param>
-        /// <param name="resourceVersionMatch">The optional resourceVersionMatch setting.</param>
+        /// <param name="resourceVersionMatch">The optional <b>resourceVersionMatch</b> setting.</param>
         /// <param name="timeoutSeconds">Optional timeout override.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <param name="logger">Optional <see cref="INeonLogger"/></param>
-        /// <returns></returns>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task WatchAsync<T>(
-            this IKubernetes k8s,
-            Func<WatchEvent<T>, Task> action,
-            string namespaceParameter = null,
-            string fieldSelector = null,
-            string labelSelector = null,
-            string resourceVersion = null,
-            string resourceVersionMatch = null,
-            int? timeoutSeconds = null,
-            INeonLogger logger = null) where T : IKubernetesObject<V1ObjectMeta>, new()
+            this IKubernetes            k8s,
+            Func<WatchEvent<T>, Task>   actionAsync,
+            string                      namespaceParameter   = null,
+            string                      fieldSelector        = null,
+            string                      labelSelector        = null,
+            string                      resourceVersion      = null,
+            string                      resourceVersionMatch = null,
+            int?                        timeoutSeconds       = null,
+            CancellationToken           cancellationToken    = default,
+            INeonLogger                 logger               = null) 
+            
+            where T : IKubernetesObject<V1ObjectMeta>, new()
         {
-            await new Neon.Kube.Watcher<T>(k8s, logger).WatchAsync(action,
+            await new Watcher<T>(k8s, logger).WatchAsync(actionAsync,
                 namespaceParameter,
-                fieldSelector: fieldSelector,
-                labelSelector: labelSelector,
-                resourceVersion: resourceVersion,
+                fieldSelector:        fieldSelector,
+                labelSelector:        labelSelector,
+                resourceVersion:      resourceVersion,
                 resourceVersionMatch: resourceVersionMatch,
-                timeoutSeconds: timeoutSeconds);
+                timeoutSeconds:       timeoutSeconds,
+                cancellationToken:    cancellationToken);
         }
     }
 }

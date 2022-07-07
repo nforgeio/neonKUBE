@@ -29,12 +29,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using ICSharpCode.SharpZipLib.Zip;
-using k8s;
-using k8s.Models;
-using Microsoft.Rest;
-using Newtonsoft.Json.Linq;
-
 using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
@@ -263,7 +257,7 @@ namespace Neon.Kube
                     });
             }
 
-            controller.AddGlobalStep("ssh/sso credentials",
+            controller.AddGlobalStep("generate credentials",
                 controller =>
                 {
                     // We're going to generate a secure random password and we're going to append

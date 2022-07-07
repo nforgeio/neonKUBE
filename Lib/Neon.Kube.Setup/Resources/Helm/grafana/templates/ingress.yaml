@@ -2,12 +2,12 @@
 kind: VirtualService
 metadata:
   name: grafana-dashboard-virtual-service
-  namespace: neon-ingress
+  namespace: {{ .Release.Namespace }}
 spec:
   gateways:
-    - neoncluster-gateway
+    - neon-ingress/neoncluster-gateway
   hosts:
-    - {{ .Values.ingress.subdomain }}.{{ .Values.cluster.domain }}
+    - {{ .Values.neonkube.clusterDomain.grafana }}.{{ .Values.cluster.domain }}
   http:
     - match:
         - uri:

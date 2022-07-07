@@ -156,10 +156,10 @@ spec:
               value: "autodetect"
             # Enable IPIP
             - name: CALICO_IPV4POOL_IPIP
-              value: "Always"
+              value: {{ .Values.ipipMode }}
             # Enable or Disable VXLAN on the default IP pool.
             - name: CALICO_IPV4POOL_VXLAN
-              value: "Never"
+              value: {{ .Values.vxlanMode }}
             # Set MTU for tunnel device used if ipip is enabled
             - name: FELIX_IPINIPMTU
               valueFrom:
@@ -200,6 +200,10 @@ spec:
               value: "info"
             - name: FELIX_HEALTHENABLED
               value: "true"
+          ports:
+            - containerPort: 9091
+              name: http-metrics
+              protocol: TCP
           securityContext:
             privileged: true
           resources:

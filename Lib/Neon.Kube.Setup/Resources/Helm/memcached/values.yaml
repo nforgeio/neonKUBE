@@ -223,7 +223,6 @@ resources:
     memory: 256Mi
   requests:
     memory: 64Mi
-    cpu: 250m
 ## Configure Pods Security Context
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
 ## @param podSecurityContext.enabled Enabled Memcached pods' Security Context

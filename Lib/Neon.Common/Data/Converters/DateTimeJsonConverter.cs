@@ -33,7 +33,7 @@ namespace Neon.Data
 {
     /// <summary>
     /// <para>
-    /// Implements a type converter for <see cref="DateTime"/> using the culture
+    /// <b>Newtonsoft:</b> Implements a type converter for <see cref="DateTime"/> using the culture
     /// invariant <b>yyyy-MM-ddTHH:mm:ss.fffZ</b> format.
     /// </para>
     /// <note>
@@ -51,7 +51,18 @@ namespace Neon.Data
         /// <inheritdoc/>
         public override DateTime ReadJson(JsonReader reader, Type objectType, DateTime existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            return DateTime.Parse((string)reader.Value);
+            if (objectType == typeof(DateTime) || objectType == typeof(DateTimeOffset))
+            {
+                return (DateTime)reader.Value;
+            }
+            else if (objectType == typeof(string))
+            {
+                return DateTime.Parse((string)reader.Value);
+            }
+            else
+            {
+                throw new FormatException($"Cannot parse [{objectType}] into a [{nameof(DateTime)}].");
+            }
         }
 
         /// <inheritdoc/>

@@ -195,7 +195,7 @@ configPostgresPodResources:
   # CPU limits for the postgres containers
   default_cpu_limit: "1"
   # CPU request value for the postgres containers
-  default_cpu_request: 100m
+  default_cpu_request: 10m
   # memory limits for the postgres containers
   default_memory_limit: 500Mi
   # memory request value for the postgres containers
@@ -401,6 +401,12 @@ resources:
     memory: 500Mi
   requests:
     cpu: 50m
+    memory: 50Mi
+
+operatorResources:
+  limits:
+    memory: 128Mi
+  requests:
     memory: 50Mi
 
 securityContext:

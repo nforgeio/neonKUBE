@@ -25,7 +25,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Neon.Kube
+namespace Neon.Kube.ResourceDefinitions
 {
     /// <summary>
     /// Thrown for an invalid custom resource.

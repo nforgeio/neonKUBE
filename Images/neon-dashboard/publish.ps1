@@ -45,6 +45,13 @@ function Build
 	$registry    = GetKubeSetupRegistry "neon-dashboard"
 	$tag         = "$version"
 	$tagAsLatest = TagAsLatest
+	$tagOverride = $env:DEBUG_TAG
+
+	if (![string]::IsNullOrEmpty($tagOverride))
+	{
+		$tag    = $tagOverride
+		$latest = $false
+	}
 
 	Log-ImageBuild $registry $tag
 

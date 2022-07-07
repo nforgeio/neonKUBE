@@ -456,9 +456,9 @@ namespace Neon.Kube
                     deploymentCheck.Constraints.Add(hostMachineName, hostContraintList);
                 }
 
-                var humanRequiredDisk  = ByteUnits.Humanize(requiredDisk, powerOfTwo: true, spaceBeforeUnit: true);
-                var humanReservedDisk  = ByteUnits.Humanize(reserveDisk, powerOfTwo: true, spaceBeforeUnit: true);
-                var humanAvailableDisk = ByteUnits.Humanize(availableDisk, powerOfTwo: true, spaceBeforeUnit: true);
+                var humanRequiredDisk  = ByteUnits.Humanize(requiredDisk, powerOfTwo: true);
+                var humanReservedDisk  = ByteUnits.Humanize(reserveDisk, powerOfTwo: true);
+                var humanAvailableDisk = ByteUnits.Humanize(availableDisk, powerOfTwo: true);
 
                 hostContraintList.Add(
                     new HostingResourceConstraint()
@@ -526,9 +526,9 @@ namespace Neon.Kube
                         deploymentCheck.Constraints.Add(hostMachineName, hostContraintList);
                     }
 
-                    var humanRequiredMemory  = ByteUnits.Humanize(requiredMemory, powerOfTwo: true, spaceBeforeUnit: true);
-                    var humanReservedMemory  = ByteUnits.Humanize(reserveMemory, powerOfTwo: true, spaceBeforeUnit: true);
-                    var humanAvailableMemory = ByteUnits.Humanize(availableMemory, powerOfTwo: true, spaceBeforeUnit: true);
+                    var humanRequiredMemory  = ByteUnits.Humanize(requiredMemory, powerOfTwo: true);
+                    var humanReservedMemory  = ByteUnits.Humanize(reserveMemory, powerOfTwo: true);
+                    var humanAvailableMemory = ByteUnits.Humanize(availableMemory, powerOfTwo: true);
 
                     hostContraintList.Add(
                         new HostingResourceConstraint()
@@ -1147,7 +1147,7 @@ namespace Neon.Kube
 
                                 switch (stopMode)
                                 {
-                                    case StopMode.Sleep:
+                                    case StopMode.Pause:
 
                                         hyperv.SaveVm(vmName);
                                         break;

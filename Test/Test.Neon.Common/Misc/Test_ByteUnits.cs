@@ -406,23 +406,23 @@ namespace TestCommon
         }
 
         [Fact]
-        public void Humanize_PowerOfTwo()
+        public void Humanize_PowerOfTwo_WithSpace()
         {
             Assert.Equal("0", ByteUnits.Humanize(0, powerOfTwo: true));
             Assert.Equal("500", ByteUnits.Humanize(500, powerOfTwo: true));
             Assert.Equal("1000", ByteUnits.Humanize(1000, powerOfTwo: true));
-            Assert.Equal("1KiB", ByteUnits.Humanize(ByteUnits.KibiBytes, powerOfTwo: true));
-            Assert.Equal("1.5KiB", ByteUnits.Humanize(ByteUnits.KibiBytes + ByteUnits.KibiBytes / 2, powerOfTwo: true));
-            Assert.Equal("1MiB", ByteUnits.Humanize(ByteUnits.MebiBytes, powerOfTwo: true));
-            Assert.Equal("1.5MiB", ByteUnits.Humanize(ByteUnits.MebiBytes + ByteUnits.MebiBytes / 2, powerOfTwo: true));
-            Assert.Equal("1GiB", ByteUnits.Humanize(ByteUnits.GibiBytes, powerOfTwo: true));
-            Assert.Equal("1.5GiB", ByteUnits.Humanize(ByteUnits.GibiBytes + ByteUnits.GibiBytes / 2, powerOfTwo: true));
-            Assert.Equal("1TiB", ByteUnits.Humanize(ByteUnits.TebiBytes, powerOfTwo: true));
-            Assert.Equal("1.5TiB", ByteUnits.Humanize(ByteUnits.TebiBytes + ByteUnits.TebiBytes / 2, powerOfTwo: true));
-            Assert.Equal("1PiB", ByteUnits.Humanize(ByteUnits.PebiBytes, powerOfTwo: true));
-            Assert.Equal("1.5PiB", ByteUnits.Humanize(ByteUnits.PebiBytes + ByteUnits.PebiBytes / 2, powerOfTwo: true));
-            Assert.Equal("1EiB", ByteUnits.Humanize(ByteUnits.ExbiBytes, powerOfTwo: true));
-            Assert.Equal("1.5EiB", ByteUnits.Humanize(ByteUnits.ExbiBytes + ByteUnits.ExbiBytes / 2, powerOfTwo: true));
+            Assert.Equal("1 KiB", ByteUnits.Humanize(ByteUnits.KibiBytes, powerOfTwo: true));
+            Assert.Equal("1.5 KiB", ByteUnits.Humanize(ByteUnits.KibiBytes + ByteUnits.KibiBytes / 2, powerOfTwo: true));
+            Assert.Equal("1 MiB", ByteUnits.Humanize(ByteUnits.MebiBytes, powerOfTwo: true));
+            Assert.Equal("1.5 MiB", ByteUnits.Humanize(ByteUnits.MebiBytes + ByteUnits.MebiBytes / 2, powerOfTwo: true));
+            Assert.Equal("1 GiB", ByteUnits.Humanize(ByteUnits.GibiBytes, powerOfTwo: true));
+            Assert.Equal("1.5 GiB", ByteUnits.Humanize(ByteUnits.GibiBytes + ByteUnits.GibiBytes / 2, powerOfTwo: true));
+            Assert.Equal("1 TiB", ByteUnits.Humanize(ByteUnits.TebiBytes, powerOfTwo: true));
+            Assert.Equal("1.5 TiB", ByteUnits.Humanize(ByteUnits.TebiBytes + ByteUnits.TebiBytes / 2, powerOfTwo: true));
+            Assert.Equal("1 PiB", ByteUnits.Humanize(ByteUnits.PebiBytes, powerOfTwo: true));
+            Assert.Equal("1.5 PiB", ByteUnits.Humanize(ByteUnits.PebiBytes + ByteUnits.PebiBytes / 2, powerOfTwo: true));
+            Assert.Equal("1 EiB", ByteUnits.Humanize(ByteUnits.ExbiBytes, powerOfTwo: true));
+            Assert.Equal("1.5 EiB", ByteUnits.Humanize(ByteUnits.ExbiBytes + ByteUnits.ExbiBytes / 2, powerOfTwo: true));
 
             // Verify that negative numbers are not supported.
 
@@ -430,47 +430,47 @@ namespace TestCommon
         }
 
         [Fact]
-        public void Humanize_PowerOfTwo_WithSpace()
+        public void Humanize_PowerOfTwo_WithoutSpace()
         {
-            Assert.Equal("0", ByteUnits.Humanize(0, powerOfTwo: true, spaceBeforeUnit: true));
-            Assert.Equal("500", ByteUnits.Humanize(500, powerOfTwo: true, spaceBeforeUnit: true));
-            Assert.Equal("1000", ByteUnits.Humanize(1000, powerOfTwo: true, spaceBeforeUnit: true));
-            Assert.Equal("1 KiB", ByteUnits.Humanize(ByteUnits.KibiBytes, powerOfTwo: true, spaceBeforeUnit: true));
-            Assert.Equal("1.5 KiB", ByteUnits.Humanize(ByteUnits.KibiBytes + ByteUnits.KibiBytes / 2, powerOfTwo: true, spaceBeforeUnit: true));
-            Assert.Equal("1 MiB", ByteUnits.Humanize(ByteUnits.MebiBytes, powerOfTwo: true, spaceBeforeUnit: true));
-            Assert.Equal("1.5 MiB", ByteUnits.Humanize(ByteUnits.MebiBytes + ByteUnits.MebiBytes / 2, powerOfTwo: true, spaceBeforeUnit: true));
-            Assert.Equal("1 GiB", ByteUnits.Humanize(ByteUnits.GibiBytes, powerOfTwo: true, spaceBeforeUnit: true));
-            Assert.Equal("1.5 GiB", ByteUnits.Humanize(ByteUnits.GibiBytes + ByteUnits.GibiBytes / 2, powerOfTwo: true, spaceBeforeUnit: true));
-            Assert.Equal("1 TiB", ByteUnits.Humanize(ByteUnits.TebiBytes, powerOfTwo: true, spaceBeforeUnit: true));
-            Assert.Equal("1.5 TiB", ByteUnits.Humanize(ByteUnits.TebiBytes + ByteUnits.TebiBytes / 2, powerOfTwo: true, spaceBeforeUnit: true));
-            Assert.Equal("1 PiB", ByteUnits.Humanize(ByteUnits.PebiBytes, powerOfTwo: true, spaceBeforeUnit: true));
-            Assert.Equal("1.5 PiB", ByteUnits.Humanize(ByteUnits.PebiBytes + ByteUnits.PebiBytes / 2, powerOfTwo: true, spaceBeforeUnit: true));
-            Assert.Equal("1 EiB", ByteUnits.Humanize(ByteUnits.ExbiBytes, powerOfTwo: true, spaceBeforeUnit: true));
-            Assert.Equal("1.5 EiB", ByteUnits.Humanize(ByteUnits.ExbiBytes + ByteUnits.ExbiBytes / 2, powerOfTwo: true, spaceBeforeUnit: true));
+            Assert.Equal("0", ByteUnits.Humanize(0, powerOfTwo: true, spaceBeforeUnit: false));
+            Assert.Equal("500", ByteUnits.Humanize(500, powerOfTwo: true, spaceBeforeUnit: false));
+            Assert.Equal("1000", ByteUnits.Humanize(1000, powerOfTwo: true, spaceBeforeUnit: false));
+            Assert.Equal("1KiB", ByteUnits.Humanize(ByteUnits.KibiBytes, powerOfTwo: true, spaceBeforeUnit: false));
+            Assert.Equal("1.5KiB", ByteUnits.Humanize(ByteUnits.KibiBytes + ByteUnits.KibiBytes / 2, powerOfTwo: true, spaceBeforeUnit: false));
+            Assert.Equal("1MiB", ByteUnits.Humanize(ByteUnits.MebiBytes, powerOfTwo: true, spaceBeforeUnit: false));
+            Assert.Equal("1.5MiB", ByteUnits.Humanize(ByteUnits.MebiBytes + ByteUnits.MebiBytes / 2, powerOfTwo: true, spaceBeforeUnit: false));
+            Assert.Equal("1GiB", ByteUnits.Humanize(ByteUnits.GibiBytes, powerOfTwo: true, spaceBeforeUnit: false));
+            Assert.Equal("1.5GiB", ByteUnits.Humanize(ByteUnits.GibiBytes + ByteUnits.GibiBytes / 2, powerOfTwo: true, spaceBeforeUnit: false));
+            Assert.Equal("1TiB", ByteUnits.Humanize(ByteUnits.TebiBytes, powerOfTwo: true, spaceBeforeUnit: false));
+            Assert.Equal("1.5TiB", ByteUnits.Humanize(ByteUnits.TebiBytes + ByteUnits.TebiBytes / 2, powerOfTwo: true, spaceBeforeUnit: false));
+            Assert.Equal("1PiB", ByteUnits.Humanize(ByteUnits.PebiBytes, powerOfTwo: true, spaceBeforeUnit: false));
+            Assert.Equal("1.5PiB", ByteUnits.Humanize(ByteUnits.PebiBytes + ByteUnits.PebiBytes / 2, powerOfTwo: true, spaceBeforeUnit: false));
+            Assert.Equal("1EiB", ByteUnits.Humanize(ByteUnits.ExbiBytes, powerOfTwo: true, spaceBeforeUnit: false));
+            Assert.Equal("1.5EiB", ByteUnits.Humanize(ByteUnits.ExbiBytes + ByteUnits.ExbiBytes / 2, powerOfTwo: true, spaceBeforeUnit: false));
 
             // Verify that negative numbers are not supported.
 
-            Assert.Throws<ArgumentException>(() => ByteUnits.Humanize(-1, powerOfTwo: true, spaceBeforeUnit: true));
+            Assert.Throws<ArgumentException>(() => ByteUnits.Humanize(-1, powerOfTwo: true, spaceBeforeUnit: false));
         }
 
         [Fact]
-        public void Humanize_PowerOfTwo_NoB()
+        public void Humanize_PowerOfTwo_NoB_WithSpace()
         {
             Assert.Equal("0", ByteUnits.Humanize(0, powerOfTwo: true, removeByteUnit: true));
             Assert.Equal("500", ByteUnits.Humanize(500, powerOfTwo: true, removeByteUnit: true));
             Assert.Equal("1000", ByteUnits.Humanize(1000, powerOfTwo: true, removeByteUnit: true));
-            Assert.Equal("1Ki", ByteUnits.Humanize(ByteUnits.KibiBytes, powerOfTwo: true, removeByteUnit: true));
-            Assert.Equal("1.5Ki", ByteUnits.Humanize(ByteUnits.KibiBytes + ByteUnits.KibiBytes / 2, powerOfTwo: true, removeByteUnit: true));
-            Assert.Equal("1Mi", ByteUnits.Humanize(ByteUnits.MebiBytes, powerOfTwo: true, removeByteUnit: true));
-            Assert.Equal("1.5Mi", ByteUnits.Humanize(ByteUnits.MebiBytes + ByteUnits.MebiBytes / 2, powerOfTwo: true, removeByteUnit: true));
-            Assert.Equal("1Gi", ByteUnits.Humanize(ByteUnits.GibiBytes, powerOfTwo: true, removeByteUnit: true));
-            Assert.Equal("1.5Gi", ByteUnits.Humanize(ByteUnits.GibiBytes + ByteUnits.GibiBytes / 2, powerOfTwo: true, removeByteUnit: true));
-            Assert.Equal("1Ti", ByteUnits.Humanize(ByteUnits.TebiBytes, powerOfTwo: true, removeByteUnit: true));
-            Assert.Equal("1.5Ti", ByteUnits.Humanize(ByteUnits.TebiBytes + ByteUnits.TebiBytes / 2, powerOfTwo: true, removeByteUnit: true));
-            Assert.Equal("1Pi", ByteUnits.Humanize(ByteUnits.PebiBytes, powerOfTwo: true, removeByteUnit: true));
-            Assert.Equal("1.5Pi", ByteUnits.Humanize(ByteUnits.PebiBytes + ByteUnits.PebiBytes / 2, powerOfTwo: true, removeByteUnit: true));
-            Assert.Equal("1Ei", ByteUnits.Humanize(ByteUnits.ExbiBytes, powerOfTwo: true, removeByteUnit: true));
-            Assert.Equal("1.5Ei", ByteUnits.Humanize(ByteUnits.ExbiBytes + ByteUnits.ExbiBytes / 2, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("1 Ki", ByteUnits.Humanize(ByteUnits.KibiBytes, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("1.5 Ki", ByteUnits.Humanize(ByteUnits.KibiBytes + ByteUnits.KibiBytes / 2, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("1 Mi", ByteUnits.Humanize(ByteUnits.MebiBytes, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("1.5 Mi", ByteUnits.Humanize(ByteUnits.MebiBytes + ByteUnits.MebiBytes / 2, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("1 Gi", ByteUnits.Humanize(ByteUnits.GibiBytes, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("1.5 Gi", ByteUnits.Humanize(ByteUnits.GibiBytes + ByteUnits.GibiBytes / 2, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("1 Ti", ByteUnits.Humanize(ByteUnits.TebiBytes, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("1.5 Ti", ByteUnits.Humanize(ByteUnits.TebiBytes + ByteUnits.TebiBytes / 2, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("1 Pi", ByteUnits.Humanize(ByteUnits.PebiBytes, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("1.5 Pi", ByteUnits.Humanize(ByteUnits.PebiBytes + ByteUnits.PebiBytes / 2, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("1 Ei", ByteUnits.Humanize(ByteUnits.ExbiBytes, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("1.5 Ei", ByteUnits.Humanize(ByteUnits.ExbiBytes + ByteUnits.ExbiBytes / 2, powerOfTwo: true, removeByteUnit: true));
 
             // Verify that negative numbers are not supported.
 
@@ -480,90 +480,44 @@ namespace TestCommon
         [Fact]
         public void Humanize_PowerOfTwo_WithSpace_NoB()
         {
-            Assert.Equal("0", ByteUnits.Humanize(0, powerOfTwo: true, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("500", ByteUnits.Humanize(500, powerOfTwo: true, spaceBeforeUnit: true));
-            Assert.Equal("1000", ByteUnits.Humanize(1000, powerOfTwo: true, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("1 Ki", ByteUnits.Humanize(ByteUnits.KibiBytes, powerOfTwo: true, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("1.5 Ki", ByteUnits.Humanize(ByteUnits.KibiBytes + ByteUnits.KibiBytes / 2, powerOfTwo: true, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("1 Mi", ByteUnits.Humanize(ByteUnits.MebiBytes, powerOfTwo: true, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("1.5 Mi", ByteUnits.Humanize(ByteUnits.MebiBytes + ByteUnits.MebiBytes / 2, powerOfTwo: true, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("1 Gi", ByteUnits.Humanize(ByteUnits.GibiBytes, powerOfTwo: true, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("1.5 Gi", ByteUnits.Humanize(ByteUnits.GibiBytes + ByteUnits.GibiBytes / 2, powerOfTwo: true, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("1 Ti", ByteUnits.Humanize(ByteUnits.TebiBytes, powerOfTwo: true, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("1.5 Ti", ByteUnits.Humanize(ByteUnits.TebiBytes + ByteUnits.TebiBytes / 2, powerOfTwo: true, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("1 Pi", ByteUnits.Humanize(ByteUnits.PebiBytes, powerOfTwo: true, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("1.5 Pi", ByteUnits.Humanize(ByteUnits.PebiBytes + ByteUnits.PebiBytes / 2, powerOfTwo: true, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("1 Ei", ByteUnits.Humanize(ByteUnits.ExbiBytes, powerOfTwo: true, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("1.5 Ei", ByteUnits.Humanize(ByteUnits.ExbiBytes + ByteUnits.ExbiBytes / 2, powerOfTwo: true, spaceBeforeUnit: true, removeByteUnit: true));
+            Assert.Equal("0", ByteUnits.Humanize(0, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("500", ByteUnits.Humanize(500, powerOfTwo: true));
+            Assert.Equal("1000", ByteUnits.Humanize(1000, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("1 Ki", ByteUnits.Humanize(ByteUnits.KibiBytes, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("1.5 Ki", ByteUnits.Humanize(ByteUnits.KibiBytes + ByteUnits.KibiBytes / 2, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("1 Mi", ByteUnits.Humanize(ByteUnits.MebiBytes, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("1.5 Mi", ByteUnits.Humanize(ByteUnits.MebiBytes + ByteUnits.MebiBytes / 2, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("1 Gi", ByteUnits.Humanize(ByteUnits.GibiBytes, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("1.5 Gi", ByteUnits.Humanize(ByteUnits.GibiBytes + ByteUnits.GibiBytes / 2, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("1 Ti", ByteUnits.Humanize(ByteUnits.TebiBytes, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("1.5 Ti", ByteUnits.Humanize(ByteUnits.TebiBytes + ByteUnits.TebiBytes / 2, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("1 Pi", ByteUnits.Humanize(ByteUnits.PebiBytes, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("1.5 Pi", ByteUnits.Humanize(ByteUnits.PebiBytes + ByteUnits.PebiBytes / 2, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("1 Ei", ByteUnits.Humanize(ByteUnits.ExbiBytes, powerOfTwo: true, removeByteUnit: true));
+            Assert.Equal("1.5 Ei", ByteUnits.Humanize(ByteUnits.ExbiBytes + ByteUnits.ExbiBytes / 2, powerOfTwo: true, removeByteUnit: true));
 
             // Verify that negative numbers are not supported.
 
-            Assert.Throws<ArgumentException>(() => ByteUnits.Humanize(-1, powerOfTwo: true, spaceBeforeUnit: true, removeByteUnit: true));
-        }
-
-        [Fact]
-        public void Humanize_PowerOfTen()
-        {
-            Assert.Equal("0", ByteUnits.Humanize(0));
-            Assert.Equal("500", ByteUnits.Humanize(500));
-            Assert.Equal("1KB", ByteUnits.Humanize(ByteUnits.KiloBytes));
-            Assert.Equal("1.5KB", ByteUnits.Humanize(ByteUnits.KiloBytes + ByteUnits.KiloBytes / 2));
-            Assert.Equal("1MB", ByteUnits.Humanize(ByteUnits.MegaBytes));
-            Assert.Equal("1.5MB", ByteUnits.Humanize(ByteUnits.MegaBytes + ByteUnits.MegaBytes / 2));
-            Assert.Equal("1GB", ByteUnits.Humanize(ByteUnits.GigaBytes));
-            Assert.Equal("1.5GB", ByteUnits.Humanize(ByteUnits.GigaBytes + ByteUnits.GigaBytes / 2));
-            Assert.Equal("1TB", ByteUnits.Humanize(ByteUnits.TeraBytes));
-            Assert.Equal("1.5TB", ByteUnits.Humanize(ByteUnits.TeraBytes + ByteUnits.TeraBytes / 2));
-            Assert.Equal("1PB", ByteUnits.Humanize(ByteUnits.PetaBytes));
-            Assert.Equal("1.5PB", ByteUnits.Humanize(ByteUnits.PetaBytes + ByteUnits.PetaBytes / 2));
-            Assert.Equal("1EB", ByteUnits.Humanize(ByteUnits.ExaBytes));
-            Assert.Equal("1.5EB", ByteUnits.Humanize(ByteUnits.ExaBytes + ByteUnits.ExaBytes / 2));
-
-            // Verify that negative numbers are not supported.
-
-            Assert.Throws<ArgumentException>(() => ByteUnits.Humanize(-1));
+            Assert.Throws<ArgumentException>(() => ByteUnits.Humanize(-1, powerOfTwo: true, removeByteUnit: true));
         }
 
         [Fact]
         public void Humanize_PowerOfTen_WithSpace()
         {
-            Assert.Equal("0", ByteUnits.Humanize(0, spaceBeforeUnit: true));
-            Assert.Equal("500", ByteUnits.Humanize(500, spaceBeforeUnit: true));
-            Assert.Equal("1 KB", ByteUnits.Humanize(ByteUnits.KiloBytes, spaceBeforeUnit: true));
-            Assert.Equal("1.5 KB", ByteUnits.Humanize(ByteUnits.KiloBytes + ByteUnits.KiloBytes / 2, spaceBeforeUnit: true));
-            Assert.Equal("1 MB", ByteUnits.Humanize(ByteUnits.MegaBytes, spaceBeforeUnit: true));
-            Assert.Equal("1.5 MB", ByteUnits.Humanize(ByteUnits.MegaBytes + ByteUnits.MegaBytes / 2, spaceBeforeUnit: true));
-            Assert.Equal("1 GB", ByteUnits.Humanize(ByteUnits.GigaBytes, spaceBeforeUnit: true));
-            Assert.Equal("1.5 GB", ByteUnits.Humanize(ByteUnits.GigaBytes + ByteUnits.GigaBytes / 2, spaceBeforeUnit: true));
-            Assert.Equal("1 TB", ByteUnits.Humanize(ByteUnits.TeraBytes, spaceBeforeUnit: true));
-            Assert.Equal("1.5 TB", ByteUnits.Humanize(ByteUnits.TeraBytes + ByteUnits.TeraBytes / 2, spaceBeforeUnit: true));
-            Assert.Equal("1 PB", ByteUnits.Humanize(ByteUnits.PetaBytes, spaceBeforeUnit: true));
-            Assert.Equal("1.5 PB", ByteUnits.Humanize(ByteUnits.PetaBytes + ByteUnits.PetaBytes / 2, spaceBeforeUnit: true));
-            Assert.Equal("1 EB", ByteUnits.Humanize(ByteUnits.ExaBytes, spaceBeforeUnit: true));
-            Assert.Equal("1.5 EB", ByteUnits.Humanize(ByteUnits.ExaBytes + ByteUnits.ExaBytes / 2, spaceBeforeUnit: true));
-
-            // Verify that negative numbers are not supported.
-
-            Assert.Throws<ArgumentException>(() => ByteUnits.Humanize(-1, spaceBeforeUnit: true));
-        }
-
-        [Fact]
-        public void Humanize_PowerOfTen_NoB()
-        {
-            Assert.Equal("0", ByteUnits.Humanize(0, removeByteUnit: true));
-            Assert.Equal("500", ByteUnits.Humanize(500, removeByteUnit: true));
-            Assert.Equal("1K", ByteUnits.Humanize(ByteUnits.KiloBytes, removeByteUnit: true));
-            Assert.Equal("1.5K", ByteUnits.Humanize(ByteUnits.KiloBytes + ByteUnits.KiloBytes / 2, removeByteUnit: true));
-            Assert.Equal("1M", ByteUnits.Humanize(ByteUnits.MegaBytes, removeByteUnit: true));
-            Assert.Equal("1.5M", ByteUnits.Humanize(ByteUnits.MegaBytes + ByteUnits.MegaBytes / 2, removeByteUnit: true));
-            Assert.Equal("1G", ByteUnits.Humanize(ByteUnits.GigaBytes, removeByteUnit: true));
-            Assert.Equal("1.5G", ByteUnits.Humanize(ByteUnits.GigaBytes + ByteUnits.GigaBytes / 2, removeByteUnit: true));
-            Assert.Equal("1T", ByteUnits.Humanize(ByteUnits.TeraBytes, removeByteUnit: true));
-            Assert.Equal("1.5T", ByteUnits.Humanize(ByteUnits.TeraBytes + ByteUnits.TeraBytes / 2, removeByteUnit: true));
-            Assert.Equal("1P", ByteUnits.Humanize(ByteUnits.PetaBytes, removeByteUnit: true));
-            Assert.Equal("1.5P", ByteUnits.Humanize(ByteUnits.PetaBytes + ByteUnits.PetaBytes / 2, removeByteUnit: true));
-            Assert.Equal("1E", ByteUnits.Humanize(ByteUnits.ExaBytes, removeByteUnit: true));
-            Assert.Equal("1.5E", ByteUnits.Humanize(ByteUnits.ExaBytes + ByteUnits.ExaBytes / 2, removeByteUnit: true));
+            Assert.Equal("0", ByteUnits.Humanize(0));
+            Assert.Equal("500", ByteUnits.Humanize(500));
+            Assert.Equal("1 KB", ByteUnits.Humanize(ByteUnits.KiloBytes));
+            Assert.Equal("1.5 KB", ByteUnits.Humanize(ByteUnits.KiloBytes + ByteUnits.KiloBytes / 2));
+            Assert.Equal("1 MB", ByteUnits.Humanize(ByteUnits.MegaBytes));
+            Assert.Equal("1.5 MB", ByteUnits.Humanize(ByteUnits.MegaBytes + ByteUnits.MegaBytes / 2));
+            Assert.Equal("1 GB", ByteUnits.Humanize(ByteUnits.GigaBytes));
+            Assert.Equal("1.5 GB", ByteUnits.Humanize(ByteUnits.GigaBytes + ByteUnits.GigaBytes / 2));
+            Assert.Equal("1 TB", ByteUnits.Humanize(ByteUnits.TeraBytes));
+            Assert.Equal("1.5 TB", ByteUnits.Humanize(ByteUnits.TeraBytes + ByteUnits.TeraBytes / 2));
+            Assert.Equal("1 PB", ByteUnits.Humanize(ByteUnits.PetaBytes));
+            Assert.Equal("1.5 PB", ByteUnits.Humanize(ByteUnits.PetaBytes + ByteUnits.PetaBytes / 2));
+            Assert.Equal("1 EB", ByteUnits.Humanize(ByteUnits.ExaBytes));
+            Assert.Equal("1.5 EB", ByteUnits.Humanize(ByteUnits.ExaBytes + ByteUnits.ExaBytes / 2));
 
             // Verify that negative numbers are not supported.
 
@@ -571,26 +525,72 @@ namespace TestCommon
         }
 
         [Fact]
-        public void Humanize_PowerOfTen_WithSpace_NoB()
+        public void Humanize_PowerOfTen_WithoutSpace()
         {
-            Assert.Equal("0", ByteUnits.Humanize(0, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("500", ByteUnits.Humanize(500, spaceBeforeUnit: true));
-            Assert.Equal("1 K", ByteUnits.Humanize(ByteUnits.KiloBytes, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("1.5 K", ByteUnits.Humanize(ByteUnits.KiloBytes + ByteUnits.KiloBytes / 2, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("1 M", ByteUnits.Humanize(ByteUnits.MegaBytes, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("1.5 M", ByteUnits.Humanize(ByteUnits.MegaBytes + ByteUnits.MegaBytes / 2, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("1 G", ByteUnits.Humanize(ByteUnits.GigaBytes, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("1.5 G", ByteUnits.Humanize(ByteUnits.GigaBytes + ByteUnits.GigaBytes / 2, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("1 T", ByteUnits.Humanize(ByteUnits.TeraBytes, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("1.5 T", ByteUnits.Humanize(ByteUnits.TeraBytes + ByteUnits.TeraBytes / 2, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("1 P", ByteUnits.Humanize(ByteUnits.PetaBytes, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("1.5 P", ByteUnits.Humanize(ByteUnits.PetaBytes + ByteUnits.PetaBytes / 2, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("1 E", ByteUnits.Humanize(ByteUnits.ExaBytes, spaceBeforeUnit: true, removeByteUnit: true));
-            Assert.Equal("1.5 E", ByteUnits.Humanize(ByteUnits.ExaBytes + ByteUnits.ExaBytes / 2, spaceBeforeUnit: true, removeByteUnit: true));
+            Assert.Equal("0", ByteUnits.Humanize(0, spaceBeforeUnit: false));
+            Assert.Equal("500", ByteUnits.Humanize(500, spaceBeforeUnit: false));
+            Assert.Equal("1KB", ByteUnits.Humanize(ByteUnits.KiloBytes, spaceBeforeUnit: false));
+            Assert.Equal("1.5KB", ByteUnits.Humanize(ByteUnits.KiloBytes + ByteUnits.KiloBytes / 2, spaceBeforeUnit: false));
+            Assert.Equal("1MB", ByteUnits.Humanize(ByteUnits.MegaBytes, spaceBeforeUnit: false));
+            Assert.Equal("1.5MB", ByteUnits.Humanize(ByteUnits.MegaBytes + ByteUnits.MegaBytes / 2, spaceBeforeUnit: false));
+            Assert.Equal("1GB", ByteUnits.Humanize(ByteUnits.GigaBytes, spaceBeforeUnit: false));
+            Assert.Equal("1.5GB", ByteUnits.Humanize(ByteUnits.GigaBytes + ByteUnits.GigaBytes / 2, spaceBeforeUnit: false));
+            Assert.Equal("1TB", ByteUnits.Humanize(ByteUnits.TeraBytes, spaceBeforeUnit: false));
+            Assert.Equal("1.5TB", ByteUnits.Humanize(ByteUnits.TeraBytes + ByteUnits.TeraBytes / 2, spaceBeforeUnit: false));
+            Assert.Equal("1PB", ByteUnits.Humanize(ByteUnits.PetaBytes, spaceBeforeUnit: false));
+            Assert.Equal("1.5PB", ByteUnits.Humanize(ByteUnits.PetaBytes + ByteUnits.PetaBytes / 2, spaceBeforeUnit: false));
+            Assert.Equal("1EB", ByteUnits.Humanize(ByteUnits.ExaBytes, spaceBeforeUnit: false));
+            Assert.Equal("1.5EB", ByteUnits.Humanize(ByteUnits.ExaBytes + ByteUnits.ExaBytes / 2, spaceBeforeUnit: false));
 
             // Verify that negative numbers are not supported.
 
-            Assert.Throws<ArgumentException>(() => ByteUnits.Humanize(-1, spaceBeforeUnit: true, removeByteUnit: true));
+            Assert.Throws<ArgumentException>(() => ByteUnits.Humanize(-1, spaceBeforeUnit: false));
+        }
+
+        [Fact]
+        public void Humanize_PowerOfTen_NoB_WithSpace()
+        {
+            Assert.Equal("0", ByteUnits.Humanize(0, removeByteUnit: true));
+            Assert.Equal("500", ByteUnits.Humanize(500, removeByteUnit: true));
+            Assert.Equal("1 K", ByteUnits.Humanize(ByteUnits.KiloBytes, removeByteUnit: true));
+            Assert.Equal("1.5 K", ByteUnits.Humanize(ByteUnits.KiloBytes + ByteUnits.KiloBytes / 2, removeByteUnit: true));
+            Assert.Equal("1 M", ByteUnits.Humanize(ByteUnits.MegaBytes, removeByteUnit: true));
+            Assert.Equal("1.5 M", ByteUnits.Humanize(ByteUnits.MegaBytes + ByteUnits.MegaBytes / 2, removeByteUnit: true));
+            Assert.Equal("1 G", ByteUnits.Humanize(ByteUnits.GigaBytes, removeByteUnit: true));
+            Assert.Equal("1.5 G", ByteUnits.Humanize(ByteUnits.GigaBytes + ByteUnits.GigaBytes / 2, removeByteUnit: true));
+            Assert.Equal("1 T", ByteUnits.Humanize(ByteUnits.TeraBytes, removeByteUnit: true));
+            Assert.Equal("1.5 T", ByteUnits.Humanize(ByteUnits.TeraBytes + ByteUnits.TeraBytes / 2, removeByteUnit: true));
+            Assert.Equal("1 P", ByteUnits.Humanize(ByteUnits.PetaBytes, removeByteUnit: true));
+            Assert.Equal("1.5 P", ByteUnits.Humanize(ByteUnits.PetaBytes + ByteUnits.PetaBytes / 2, removeByteUnit: true));
+            Assert.Equal("1 E", ByteUnits.Humanize(ByteUnits.ExaBytes, removeByteUnit: true));
+            Assert.Equal("1.5 E", ByteUnits.Humanize(ByteUnits.ExaBytes + ByteUnits.ExaBytes / 2, removeByteUnit: true));
+
+            // Verify that negative numbers are not supported.
+
+            Assert.Throws<ArgumentException>(() => ByteUnits.Humanize(-1));
+        }
+
+        [Fact]
+        public void Humanize_PowerOfTen_WithoutSpace_NoB()
+        {
+            Assert.Equal("0", ByteUnits.Humanize(0, spaceBeforeUnit: false, removeByteUnit: true));
+            Assert.Equal("500", ByteUnits.Humanize(500, spaceBeforeUnit: false));
+            Assert.Equal("1K", ByteUnits.Humanize(ByteUnits.KiloBytes, spaceBeforeUnit: false, removeByteUnit: true));
+            Assert.Equal("1.5K", ByteUnits.Humanize(ByteUnits.KiloBytes + ByteUnits.KiloBytes / 2, spaceBeforeUnit: false, removeByteUnit: true));
+            Assert.Equal("1M", ByteUnits.Humanize(ByteUnits.MegaBytes, spaceBeforeUnit: false, removeByteUnit: true));
+            Assert.Equal("1.5M", ByteUnits.Humanize(ByteUnits.MegaBytes + ByteUnits.MegaBytes / 2, spaceBeforeUnit: false, removeByteUnit: true));
+            Assert.Equal("1G", ByteUnits.Humanize(ByteUnits.GigaBytes, spaceBeforeUnit: false, removeByteUnit: true));
+            Assert.Equal("1.5G", ByteUnits.Humanize(ByteUnits.GigaBytes + ByteUnits.GigaBytes / 2, spaceBeforeUnit: false, removeByteUnit: true));
+            Assert.Equal("1T", ByteUnits.Humanize(ByteUnits.TeraBytes, spaceBeforeUnit: false, removeByteUnit: true));
+            Assert.Equal("1.5T", ByteUnits.Humanize(ByteUnits.TeraBytes + ByteUnits.TeraBytes / 2, spaceBeforeUnit: false, removeByteUnit: true));
+            Assert.Equal("1P", ByteUnits.Humanize(ByteUnits.PetaBytes, spaceBeforeUnit: false, removeByteUnit: true));
+            Assert.Equal("1.5P", ByteUnits.Humanize(ByteUnits.PetaBytes + ByteUnits.PetaBytes / 2, spaceBeforeUnit: false, removeByteUnit: true));
+            Assert.Equal("1E", ByteUnits.Humanize(ByteUnits.ExaBytes, spaceBeforeUnit: false, removeByteUnit: true));
+            Assert.Equal("1.5E", ByteUnits.Humanize(ByteUnits.ExaBytes + ByteUnits.ExaBytes / 2, spaceBeforeUnit: false, removeByteUnit: true));
+
+            // Verify that negative numbers are not supported.
+
+            Assert.Throws<ArgumentException>(() => ByteUnits.Humanize(-1, spaceBeforeUnit: false, removeByteUnit: true));
         }
     }
 }

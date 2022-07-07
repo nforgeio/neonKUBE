@@ -6,15 +6,17 @@ rules:
 - apiGroups:
   - neonkube.io
   resources:
-  - containerregistries
-  - nodetasks
-  - nodetasks/status
+  - neonclusteroperators
+  - neonnodetasks
+  - neonnodetasks/status
   verbs:
+  - create
   - get
   - list
   - watch
   - update
   - patch
+  - delete
 - apiGroups:
   - ""
   resources:
@@ -24,6 +26,17 @@ rules:
   - get
   - list
   - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  - nodes/status
+  verbs:
+  - get
+  - list
+  - update
+  - watch
 - apiGroups:
   - coordination.k8s.io
   resources:

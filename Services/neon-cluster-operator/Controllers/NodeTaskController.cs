@@ -1,9 +1,19 @@
-﻿#if DISABLED
-
-//-----------------------------------------------------------------------------
+﻿//-----------------------------------------------------------------------------
 // FILE:	    NodeTaskController.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -11,13 +21,17 @@ using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Extensions.Logging;
+
+using JsonDiffPatch;
 
 using Neon.Common;
 using Neon.Diagnostics;
@@ -27,8 +41,10 @@ using Neon.Kube.Operator;
 using Neon.Kube.ResourceDefinitions;
 using Neon.Retry;
 using Neon.Tasks;
+using Neon.Time;
 
 using k8s;
+using k8s.Autorest;
 using k8s.Models;
 
 using KubeOps.Operator.Controller;
@@ -36,57 +52,86 @@ using KubeOps.Operator.Controller.Results;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Rbac;
 
+using Newtonsoft.Json;
 using Prometheus;
 
 namespace NeonClusterOperator
 {
     /// <summary>
     /// <para>
-    /// Manages <see cref="V1NodeTask"/> resources on the Kubernetes API Server.
+    /// Removes <see cref="V1NeonNodeTask"/> resources assigned to nodes that don't exist.
     /// </para>
-    /// <note>
-    /// This controller relies on a lease named <b>neon-cluster-operator.nodetask</b> so that only
-    /// one <b>neon-cluster-operator</b> pod will perform node task management.  This lease will be
-    /// persisted in the <see cref="KubeNamespace.NeonSystem"/> namespace.
-    /// </note>
     /// </summary>
     /// <remarks>
-    /// This controller handles removal of node tasks targeting nodes that don't exist.  
-    /// See <see cref="V1NodeTask"/> for more details.
+    /// <para>
+    /// This controller relies on a lease named <b>neon-cluster-operator.nodetask</b>.  
+    /// This lease will be persisted in the <see cref="KubeNamespace.NeonSystem"/> namespace
+    /// and will be used to a leader to manage these resources.
+    /// </para>
+    /// <para>
+    /// The <b>neon-cluster-operator</b> won't conflict with node agents because we're only 
+    /// removing tasks that don't belong to an existing node.
+    /// </para>
     /// </remarks>
-    [EntityRbac(typeof(V1NodeTask), Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Patch | RbacVerb.Watch | RbacVerb.Update)]
-    public class NodeTaskController : IResourceController<V1NodeTask>
+    [EntityRbac(typeof(V1NeonNodeTask), Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Patch | RbacVerb.Watch | RbacVerb.Update)]
+    public class NodeTaskController : IOperatorController<V1NeonNodeTask>
     {
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly INeonLogger         log = Program.Service.LogManager.GetLogger<NodeTaskController>();
-        private static ResourceManager<V1NodeTask>  resourceManager;
+        private static readonly INeonLogger log = Program.Service.LogManager.GetLogger<NodeTaskController>();
 
-        // Configuration settings
+        private static ResourceManager<V1NeonNodeTask, NodeTaskController>  resourceManager;
 
-        private static bool         configured = false;
-        private static TimeSpan     reconciledNoChangeInterval;
-        private static TimeSpan     errorMinRequeueInterval;
-        private static TimeSpan     errorMaxRequeueInterval;
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static NodeTaskController()
+        {
+        }
 
-        // Metrics counters
+        /// <summary>
+        /// Starts the controller.
+        /// </summary>
+        /// <param name="k8s">The <see cref="IKubernetes"/> client to use.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task StartAsync(IKubernetes k8s)
+        {
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            // Load the configuration settings.
 
-        private static readonly Counter reconciledReceivedCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconciled_received", "Received NodeTask reconcile events.");
-        private static readonly Counter deletedReceivedCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_deleted_received", "Received NodeTask deleted events.");
-        private static readonly Counter statusModifiedReceivedCounter  = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodified_received", "Received NodeTask status-modified events.");
+            var leaderConfig = 
+                new LeaderElectionConfig(
+                    k8s,
+                    @namespace: KubeNamespace.NeonSystem,
+                    leaseName:        $"{Program.Service.Name}.nodetask",
+                    identity:         Pod.Name,
+                    promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_promoted", "Leader promotions"),
+                    demotionCounter:  Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_demoted", "Leader demotions"),
+                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_newLeader", "Leadership changes"));
 
-        private static readonly Counter reconciledProcessedCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconciled_changes", "Processed NodeTask reconcile events due to change.");
-        private static readonly Counter deletedProcessedCounter        = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_deleted_changes", "Processed NodeTask deleted events due to change.");
-        private static readonly Counter statusModifiedProcessedCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodified_changes", "Processed NodeTask status-modified events due to change.");
+            var options = new ResourceManagerOptions()
+            {
+                IdleInterval             = Program.Service.Environment.Get("NODETASK_IDLE_INTERVAL", TimeSpan.FromSeconds(1)),
+                ErrorMinRequeueInterval  = Program.Service.Environment.Get("NODETASK_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15)),
+                ErrorMaxRetryInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromSeconds(60)),
+                IdleCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle", "IDLE events processed."),
+                ReconcileCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle", "RECONCILE events processed."),
+                DeleteCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle", "DELETED events processed."),
+                StatusModifyCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle", "STATUS-MODIFY events processed."),
+                IdleErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle_error", "Failed NodeTask IDLE event processing."),
+                ReconcileErrorCounter    = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconcile_error", "Failed NodeTask RECONCILE event processing."),
+                DeleteErrorCounter       = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_delete_error", "Failed NodeTask DELETE event processing."),
+                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodify_error", "Failed NodeTask STATUS-MODIFY events processing.")
+            };
 
-        private static readonly Counter reconciledErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconciled_error", "Failed NodeTask reconcile event processing.");
-        private static readonly Counter deletedErrorCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_deleted_error", "Failed NodeTask deleted event processing.");
-        private static readonly Counter statusModifiedErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodified_error", "Failed NodeTask status-modified events processing.");
+            resourceManager = new ResourceManager<V1NeonNodeTask, NodeTaskController>(
+                k8s,
+                options:      options,
+                leaderConfig: leaderConfig);
 
-        private static readonly Counter promotionCounter               = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_promoted", "Leader promotions");
-        private static readonly Counter demotedCounter                 = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_demoted", "Leader demotions");
-        private static readonly Counter newLeaderCounter               = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_newLeader", "Leadership changes");
+            await resourceManager.StartAsync();
+        }
 
         //---------------------------------------------------------------------
         // Instance members
@@ -101,149 +146,95 @@ namespace NeonClusterOperator
             Covenant.Requires(k8s != null, nameof(k8s));
 
             this.k8s = k8s;
-
-            // Load the configuration settings the first time a controller instance is created.
-
-            if (!configured)
-            {
-                reconciledNoChangeInterval = Program.Service.Environment.Get("NODETASK_RECONCILED_NOCHANGE_INTERVAL", TimeSpan.FromMinutes(5));
-                errorMinRequeueInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15));
-                errorMaxRequeueInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromMinutes(10));
-
-                var leaderConfig = 
-                    new LeaderElectionConfig(
-                        k8s,
-                        @namespace:       KubeNamespace.NeonSystem,
-                        leaseName:        $"{Program.Service.Name}.nodetask",
-                        identity:         Pod.Name,
-                        promotionCounter: promotionCounter,
-                        demotionCounter:  demotedCounter,
-                        newLeaderCounter: newLeaderCounter);
-
-                resourceManager = new ResourceManager<V1NodeTask>(leaderConfig: leaderConfig)
-                {
-                     ReconcileNoChangeInterval = reconciledNoChangeInterval,
-                     ErrorMinRequeueInterval   = errorMinRequeueInterval,
-                     ErrorMaxRequeueInterval   = errorMaxRequeueInterval
-                };
-
-                configured = true;
-            }
         }
 
         /// <summary>
-        /// Called for each existing custom resource when the controller starts so that the controller
-        /// can maintain the status of all resources and then afterwards, this will be called whenever
-        /// a resource is added or has a non-status update.
+        /// Called periodically to allow the operator to perform global events.
         /// </summary>
-        /// <param name="task">The new entity.</param>
-        /// <returns>The controller result.</returns>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1NodeTask task)
-        {
-            Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
-
-            reconciledReceivedCounter.Inc();
-
-            await resourceManager.ReconciledAsync(task,
-                async (name, resources) =>
-                {
-                    log.LogInfo($"RECONCILED: {name ?? "[NO-CHANGE]"}");
-                    reconciledProcessedCounter.Inc();
-
-                    if (name == null)
-                    {
-                        // This is a NO-CHANGE event which is a good time remove any tasks
-                        // assigned to nodes that don't exist.
-
-                        var tasks = await resourceManager.CloneResourcesAsync(resources);
-                        var nodes = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-
-                        foreach (var node in (await k8s.ListNodeAsync()).Items)
-                        {
-                            nodes.Add(node.Name());
-                        }
-
-                        foreach (var nodeTask in tasks.Values)
-                        {
-                            var taskName = nodeTask.Name();
-                            var nodeName = nodeTask.Spec.Node;
-
-                            // Remove tasks assigned to nodes that don't exist.
-
-                            var utcNow = DateTime.UtcNow;
-
-                            if (!nodes.Contains(nodeName))
-                            {
-                                try
-                                {
-                                    log.LogWarn($"Removing [nodetask={taskName}] because the [node={nodeName}] doesn't exist.");
-                                    await k8s.DeleteNamespacedCustomObjectAsync<V1NodeTask>(KubeNamespace.NeonSystem, nodeName);
-                                }
-                                catch (Exception e)
-                                {
-                                    log.LogWarn(e);
-                                }
-                            }
-                        }
-                    }
-
-                    return await Task.FromResult<ResourceControllerResult>(null);
-                },
-                errorCounter: reconciledErrorCounter);
-
-            return ResourceControllerResult.RequeueEvent(errorMinRequeueInterval);
-        }
-
-        /// <summary>
-        /// Called when a custom resource is removed from the API Server.
-        /// </summary>
-        /// <param name="task">The deleted entity.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task DeletedAsync(V1NodeTask task)
+        public async Task IdleAsync()
         {
-            Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
+            log.LogInfo("[IDLE]");
 
-            deletedReceivedCounter.Inc();
+            // We're going to handle this by looking at each node task and checking
+            // to see whether the target node actually exists.  Rather than listing
+            // the node first, which would be expensive for a large cluster we'll
+            // fetch and cache node information as we go along.
 
-            await resourceManager.DeletedAsync(task,
-                async (name, resources) =>
+            var nodeNameToExists = new Dictionary<string, bool>(StringComparer.InvariantCultureIgnoreCase);
+            var resources        = (await k8s.ListClusterCustomObjectAsync<V1NeonNodeTask>()).Items;
+
+            foreach (var nodeTask in resources)
+            {
+                var deleteMessage = $"Deleting node task [{nodeTask.Name()}] because it is assigned to the non-existent cluster node [{nodeTask.Spec.Node}].";
+
+                if (nodeNameToExists.TryGetValue(nodeTask.Spec.Node, out var nodeExists))
                 {
-                    log.LogInfo($"DELETED: {name}");
-                    deletedProcessedCounter.Inc();
+                    // Target node status is known.
 
-                    // This is a NOP.
+                    if (nodeExists)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        log.LogInfo(deleteMessage);
 
-                    return await Task.FromResult<ResourceControllerResult>(null);
-                },
-                errorCounter: deletedErrorCounter);
-        }
+                        try
+                        {
+                            await k8s.DeleteClusterCustomObjectAsync(nodeTask);
+                        }
+                        catch (Exception e)
+                        {
+                            log.LogError(e);
+                        }
 
-        /// <summary>
-        /// Called when a custom resource's status has been modified.
-        /// </summary>
-        /// <param name="task">The updated entity.</param>
-        /// <returns>The controller result.</returns>
-        public async Task<ResourceControllerResult> StatusModifiedAsync(V1NodeTask task)
-        {
-            Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
+                        continue;
+                    }
+                }
 
-            statusModifiedReceivedCounter.Inc();
+                // Determine whether the node exists.
 
-            await resourceManager.DeletedAsync(task,
-                async (name, resources) =>
+                try
                 {
-                    log.LogInfo($"STATUS-MODIFIED: {name}");
-                    statusModifiedProcessedCounter.Inc();
+                    var node = await k8s.ReadNodeAsync(nodeTask.Spec.Node);
 
-                    // This is a NOP.
+                    nodeExists = true;
+                    nodeNameToExists.Add(nodeTask.Spec.Node, nodeExists);
+                }
+                catch (HttpOperationException e)
+                {
+                    if (e.Response.StatusCode == HttpStatusCode.NotFound)
+                    {
+                        nodeExists = false;
+                        nodeNameToExists.Add(nodeTask.Spec.Node, nodeExists);
+                    }
+                    else
+                    {
+                        log.LogError(e);
+                        continue;
+                    }
+                }
+                catch (Exception e)
+                {
+                    log.LogError(e);
+                    continue;
+                }
 
-                    return await Task.FromResult<ResourceControllerResult>(null);
-                },
-                errorCounter: statusModifiedErrorCounter);
+                if (!nodeExists)
+                {
+                    log.LogInfo(deleteMessage);
 
-            return ResourceControllerResult.RequeueEvent(errorMinRequeueInterval);
+                    try
+                    {
+                        await k8s.DeleteClusterCustomObjectAsync(nodeTask);
+                    }
+                    catch (Exception e)
+                    {
+                        log.LogError(e);
+                    }
+                }
+            }
         }
     }
 }
-
-#endif

@@ -24,9 +24,6 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
-using Newtonsoft.Json;
-using Microsoft.Rest;
-
 namespace Neon.Kube
 {
     /// <summary>
@@ -44,14 +41,12 @@ namespace Neon.Kube
         /// <summary>
         /// The <see cref="DevLinkType"/>. Devices are listed by ID or by path.
         /// </summary>
-        [JsonProperty(PropertyName = "kind", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public DevLinkType Kind { get; set; }
 
         /// <summary>
         /// List of device links. 
         /// </summary>
-        [JsonProperty(PropertyName = "links", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public List<string> Links { get; set; }
     }

@@ -110,6 +110,7 @@ using System.Linq;
 using System.Text;
 
 using k8s;
+using k8s.Autorest;
 
 using Neon.Common;
 using Neon.Retry;
@@ -132,30 +133,56 @@ namespace {targetNamespace}
     /// You may change the retry policy at any time. 
     /// </para>
     /// <note>
-    /// <para>
-    /// <b>IMPORTANT:</b> neonFORGE applications must avoid using <see cref=""Kubernetes""/> directly
-    /// and use either <see cref=""KubernetesClient""/> or <see cref=""KubernetesWithRetry""/> instead.
-    /// </para>
-    /// <para>
-    /// Not doing this will probably result in <see cref=""InvalidOperationException""/> being thrown.
-    /// </para>
-    /// </note>
-    /// <note>
     /// Static methods don't honor the retry policy.
     /// </note>
     /// </remarks>
     public sealed partial class {wrapperClassName} : IKubernetes
     {{");
                 //-------------------------------------------------------------
+                // Static members
+
+                writer.WriteLine($"        //---------------------------------------------------------------------");
+                writer.WriteLine($"        // Static members");
+                
+                writer.WriteLine();
+                writer.WriteLine($"        /// <summary>");
+                writer.WriteLine($"        /// Returns a disconnected client used for specialized situations where a Kubernetes client");
+                writer.WriteLine($"        /// instance is required but it won't actually be used.  The instance returned is not actually");
+                writer.WriteLine($"        /// connected to a cluster.");
+                writer.WriteLine($"        /// </summary>");
+                writer.WriteLine($"        public static IKubernetes CreateDisconnected()");
+                writer.WriteLine($"        {{");
+                writer.WriteLine($"            return new {wrapperClassName}();");
+                writer.WriteLine($"        }}");
+
+                //-------------------------------------------------------------
+                // Instance members
+
+                writer.WriteLine();
+                writer.WriteLine($"        //---------------------------------------------------------------------");
+                writer.WriteLine($"        // Instance members");
+                writer.WriteLine();
+
+                //-------------------------------------------------------------
                 // Generate the local fields
 
-                writer.WriteLine($"        private KubernetesClient k8s;");
+                writer.WriteLine($"        private Kubernetes k8s;");
 
                 //-------------------------------------------------------------
                 // Generate the public constructors.
 
                 writer.WriteLine();
-                writer.WriteLine($"        public {wrapperClassName}(KubernetesClient k8s)");
+                writer.WriteLine($"        /// <summary>");
+                writer.WriteLine($"        /// Private constructor that creates a special non-functional client instance");
+                writer.WriteLine($"        /// that is not actually connected to a cluster.");
+                writer.WriteLine($"        /// </summary>");
+                writer.WriteLine($"        private {wrapperClassName}()");
+                writer.WriteLine($"        {{");
+                writer.WriteLine($"        }}");
+
+
+                writer.WriteLine();
+                writer.WriteLine($"        public {wrapperClassName}(Kubernetes k8s)");
                 writer.WriteLine($"        {{");
                 writer.WriteLine($"            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));");
                 writer.WriteLine();
@@ -183,7 +210,7 @@ namespace {targetNamespace}
 
                     writer.WriteLine($"        public {wrapperClassName}({GetParameterDefinition(parameters)})");
                     writer.WriteLine($"        {{");
-                    writer.WriteLine($"            k8s = new KubernetesClient({GetParameterNames(parameters)});");
+                    writer.WriteLine($"            k8s = new Kubernetes({GetParameterNames(parameters)});");
                     writer.WriteLine($"        }}");
                 }
 
@@ -281,13 +308,13 @@ namespace {targetNamespace}
 
                 writer.WriteLine();
                 writer.WriteLine($"        /// <summary>");
-                writer.WriteLine($"        /// Returns a <see cref=\"Microsoft.Rest.HttpOperationException\"/> by including the response");
+                writer.WriteLine($"        /// Returns a <see cref=\"HttpOperationException\"/> by including the response");
                 writer.WriteLine($"        /// content in the exception message.");
                 writer.WriteLine($"        /// </summary>");
                 writer.WriteLine($"        /// <param name=\"e\">The original exception.</param>");
-                writer.WriteLine($"        private static Microsoft.Rest.HttpOperationException GetEnhancedHttpOperationException(Microsoft.Rest.HttpOperationException e)");
+                writer.WriteLine($"        private static HttpOperationException GetEnhancedHttpOperationException(HttpOperationException e)");
                 writer.WriteLine($"        {{");
-                writer.WriteLine($"            return new Microsoft.Rest.HttpOperationException($\"{{e.Message}}\\r\\n\\r\\nRESPONSE.CONTENT:\\r\\n\\r\\n{{e.Response.Content}}\", e.InnerException)");
+                writer.WriteLine($"            return new HttpOperationException($\"{{e.Message}}\\r\\n\\r\\nRESPONSE.CONTENT:\\r\\n\\r\\n{{e.Response.Content}}\", e.InnerException)");
                 writer.WriteLine($"            {{");
                 writer.WriteLine($"                Response = e.Response");
                 writer.WriteLine($"            }};");
@@ -398,7 +425,7 @@ namespace {targetNamespace}
                                 writer.WriteLine($"                    {{");
                                 writer.WriteLine($"                        await k8s.{method.Name}({GetParameterNames(parameters)});");
                                 writer.WriteLine($"                    }}");
-                                writer.WriteLine($"                    catch (Microsoft.Rest.HttpOperationException e)");
+                                writer.WriteLine($"                    catch (HttpOperationException e)");
                                 writer.WriteLine($"                    {{");
                                 writer.WriteLine($"                        throw GetEnhancedHttpOperationException(e);");
                                 writer.WriteLine($"                    }}");
@@ -413,7 +440,7 @@ namespace {targetNamespace}
                                 writer.WriteLine($"                    {{");
                                 writer.WriteLine($"                        return await k8s.{method.Name}({GetParameterNames(parameters)});");
                                 writer.WriteLine($"                    }}");
-                                writer.WriteLine($"                    catch (Microsoft.Rest.HttpOperationException e)");
+                                writer.WriteLine($"                    catch (HttpOperationException e)");
                                 writer.WriteLine($"                    {{");
                                 writer.WriteLine($"                        throw GetEnhancedHttpOperationException(e);");
                                 writer.WriteLine($"                    }}");
@@ -455,7 +482,7 @@ namespace {targetNamespace}
                                     writer.WriteLine($"                    {{");
                                     writer.WriteLine($"                        k8s.{method.Name}({GetParameterNames(parameters)});");
                                     writer.WriteLine($"                    }}");
-                                    writer.WriteLine($"                    catch (Microsoft.Rest.HttpOperationException e)");
+                                    writer.WriteLine($"                    catch (HttpOperationException e)");
                                     writer.WriteLine($"                    {{");
                                     writer.WriteLine($"                        if (e.Response == null || string.IsNullOrEmpty(e.Response.Content))");
                                     writer.WriteLine($"                        {{");
@@ -482,7 +509,7 @@ namespace {targetNamespace}
                                     writer.WriteLine($"                    {{");
                                     writer.WriteLine($"                        return k8s.{method.Name}({GetParameterNames(parameters)});");
                                     writer.WriteLine($"                    }}");
-                                    writer.WriteLine($"                    catch (Microsoft.Rest.HttpOperationException e)");
+                                    writer.WriteLine($"                    catch (HttpOperationException e)");
                                     writer.WriteLine($"                    {{");
                                     writer.WriteLine($"                        if (e.Response == null || string.IsNullOrEmpty(e.Response.Content))");
                                     writer.WriteLine($"                        {{");

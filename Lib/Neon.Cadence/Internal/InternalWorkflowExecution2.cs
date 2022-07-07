@@ -27,7 +27,7 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Cadence workflow execution details.  Unforunately, this
+    /// <b>INTERNAL USE ONLY:</b> Cadence workflow execution details.  Unfortunately, this
     /// extra class is required because the GOLANG client also defines a second class
     /// that serializes slightly differently.
     /// </summary>

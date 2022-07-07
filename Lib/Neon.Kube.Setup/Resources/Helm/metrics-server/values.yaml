@@ -6,3 +6,9 @@ image:
   organization: neon-registry.node.local
   repository: metrics-server
   tag: v0.4.2
+
+serviceMonitor:
+  enabled: false
+  additionalLabels: {}
+  interval: 1m
+  scrapeTimeout: 10s

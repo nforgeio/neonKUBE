@@ -51,7 +51,7 @@ data:
     staticClients:
     - id: grafana
       redirectURIs:
-      - 'https://grafana.{{ .Values.cluster.domain }}/login/generic_oauth'
+      - 'https://{{ .Values.neonkube.clusterDomain.grafana }}.{{ .Values.cluster.domain }}/login/generic_oauth'
       name: 'Grafana'
       secret: "{{- .Values.secrets.grafana }}"
       trustedPeers:
@@ -60,8 +60,9 @@ data:
         - minio
     - id: kubernetes
       redirectURIs:
-      - 'https://k8s.{{ .Values.cluster.domain }}/oauth2/callback'
-      - 'https://kiali.{{ .Values.cluster.domain }}/oauth2/callback'
+      - 'https://{{ .Values.neonkube.clusterDomain.kubernetesDashboard }}.{{ .Values.cluster.domain }}/oauth2/callback'
+      - 'https://{{ .Values.neonkube.clusterDomain.neonDashboard }}.{{ .Values.cluster.domain }}/oauth2/callback'
+      - 'https://{{ .Values.neonkube.clusterDomain.kiali }}.{{ .Values.cluster.domain }}/oauth2/callback'
       - 'https://{{ .Values.cluster.domain }}/oauth2/callback'
       name: 'Kubernetes'
       secret: "{{- .Values.secrets.kubernetes }}"
@@ -71,7 +72,7 @@ data:
         - minio
     - id: harbor
       redirectURIs:
-      - 'https://registry.{{ .Values.cluster.domain }}/oauth_callback'
+      - 'https://{{ .Values.neonkube.clusterDomain.harborRegistry }}.{{ .Values.cluster.domain }}/oauth_callback'
       name: 'Harbor'
       secret: "{{- .Values.secrets.harbor }}"
       trustedPeers:
@@ -80,7 +81,7 @@ data:
         - minio
     - id: minio
       redirectURIs:
-      - 'https://minio.{{ .Values.cluster.domain }}/oauth_callback'
+      - 'https://{{ .Values.neonkube.clusterDomain.minio }}.{{ .Values.cluster.domain }}/oauth_callback'
       name: 'Minio'
       secret: "{{- .Values.secrets.minio }}"
       trustedPeers:

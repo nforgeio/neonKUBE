@@ -2,23 +2,23 @@
 kind: DaemonSet
 metadata:
   labels:
-    app: neon-node-agent
+    {{- include "neon-node-agent.labels" . | nindent 4 }}
   name: neon-node-agent
   annotations:
     reloader.stakater.com/auto: "true"
 spec:
   selector:
     matchLabels:
-      app: neon-node-agent
+      {{- include "neon-node-agent.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: neon-node-agent
+        {{- include "neon-node-agent.selectorLabels" . | nindent 8 }}
         kubectl.kubernetes.io/default-container: neon-node-agent
       annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/path: "/"
-        prometheus.io/port: "9762"
+      {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
         sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
     spec:
       serviceAccountName: neon-node-agent
@@ -45,18 +45,22 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
-        - name: CONTAINERREGISTRY_RECONCILE_REQUEUE_INTERVAL
-          value: 5m
+        - name: WATCHER_MAX_RETRY_INTERVAL
+          value: 15s
+        - name: CONTAINERREGISTRY_IDLE_INTERVAL
+          value: 60s
         - name: CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL
-          value: 15s
+          value: 5s
         - name: CONTAINERREGISTRY_ERROR_MAX_REQUEUE_INTERVAL
-          value: 10m
-        - name: NODETASK_RECONCILED_NOCHANGE_INTERVAL
-          value: 5m
+          value: 60s
+        - name: CONTAINERREGISTRY_RELOGIN_INTERVAL
+          value: 24h
+        - name: NODETASK_IDLE_INTERVAL
+          value: 60s
         - name: NODETASK_ERROR_MIN_REQUEUE_INTERVAL
-          value: 15s
+          value: 5s
         - name: NODETASK_ERROR_MAX_REQUEUE_INTERVAL
-          value: 10m
+          value: 60s
         envFrom:
         - configMapRef:
             name: neon-node-agent-webhook
@@ -65,6 +69,9 @@ spec:
         securityContext: 
           privileged: true
         volumeMounts:
+        # This is where the host node file system will be mounted to the 
+        # [neon-node-agent] container.  This corresponds the the [HostMount]
+        # constant defined in [neon-node-agent/Node.cs].
         - name: host
           mountPath: /mnt/host
         startupProbe:
@@ -88,16 +95,13 @@ spec:
           periodSeconds: 5
           timeoutSeconds: 1
         ports:
-        - name: http
+        - name: http-web
           containerPort: 5000
+        - name: https-web
+          containerPort: 5001
         - name: http-metrics
-          containerPort: 9762
+          containerPort: {{ .Values.metrics.port }}
           protocol: TCP
         resources:
-          limits:
-            cpu: {{ .Values.resource.limits.cpu }}
-            memory: {{ .Values.resource.limits.memory }}
-          requests:
-            cpu: {{ .Values.resource.requests.cpu }}
-            memory: {{ .Values.resource.requests.memory }}
+          {{- toYaml .Values.resources | nindent 10 }}
       terminationGracePeriodSeconds: 10

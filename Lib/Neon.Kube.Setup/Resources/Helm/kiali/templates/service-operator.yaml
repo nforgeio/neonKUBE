@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kiali-operator.fullname" . }}
+  labels:
+    {{- include "kiali-operator.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: 8383
+      protocol: TCP
+      name: http-metrics
+      targetPort: 8383
+  selector:
+    {{- include "kiali-operator.selectorLabels" . | nindent 4 }}

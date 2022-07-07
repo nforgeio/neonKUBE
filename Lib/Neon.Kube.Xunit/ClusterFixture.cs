@@ -2,6 +2,18 @@
 // FILE:	    ClusterFixture.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -138,10 +150,10 @@ namespace Neon.Kube.Xunit
     /// <see cref="ClusterFixture"/> as the type parameter and then implementing a test class
     /// constructor that has a <see cref="ClusterFixture"/> parameter that will receive an 
     /// instance of the fixture and use that to initialize the test cluster using 
-    /// <see cref="Start(ClusterDefinition, ClusterFixtureOptions)"/> or one it its overrides.
+    /// <see cref="StartWithClusterDefinition(ClusterDefinition, ClusterFixtureOptions)"/> or one it its overrides.
     /// </para>
     /// <para>
-    /// <see cref="Start(ClusterDefinition, ClusterFixtureOptions)"/> handles the deployment of 
+    /// <see cref="StartWithClusterDefinition(ClusterDefinition, ClusterFixtureOptions)"/> handles the deployment of 
     /// the test cluster when it doesn't already exist as well as the  removal of any previous 
     /// cluster, depending on the parameters passed.  You'll be calling this in your test class
     /// constructor.  This method accepts a cluster definition in various forms and returns
@@ -294,7 +306,7 @@ namespace Neon.Kube.Xunit
     /// </note>
     /// <para>
     /// <see cref="ClusterFixture"/> attempts to detect significant differences between an already deployed
-    /// cluster and a new cluster definition and redeploy the cluster in this case.  Unforunately, the detection
+    /// cluster and a new cluster definition and redeploy the cluster in this case.  Unfortunately, the detection
     /// mechanism isn't perfect at this time and sometimes clusters that should be redeployed won't be.
     /// </para>
     /// <para>
@@ -417,7 +429,7 @@ namespace Neon.Kube.Xunit
 
             try
             {
-                var isLocked = !Cluster.IsLockedAsync().Result;
+                var isLocked = Cluster.IsLockedAsync().Result;
 
                 if (!isLocked.HasValue)
                 {
@@ -428,6 +440,10 @@ namespace Neon.Kube.Xunit
                 {
                     throw new NeonKubeException("Cluster is locked.  Use this command to unlock it: neon cluster unlock");
                 }
+            }
+            catch (NeonKubeException)
+            {
+                throw;
             }
             catch (Exception e)
             {
@@ -495,7 +511,7 @@ namespace Neon.Kube.Xunit
         /// Visual Studio instances will also fail.
         /// </para>
         /// </remarks>
-        public TestFixtureStatus Start(ClusterDefinition clusterDefinition, ClusterFixtureOptions options = null)
+        public TestFixtureStatus StartWithClusterDefinition(ClusterDefinition clusterDefinition, ClusterFixtureOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
@@ -795,7 +811,7 @@ namespace Neon.Kube.Xunit
             var profileClient = new ProfileClient();
             var key           = profileClient.GetProfileValue("clusterdefinition.key");
 
-            return Start(ClusterDefinition.FromYaml(KubeTestHelper.ClusterDefinitions[key], strict: true, validate: true), options);
+            return StartWithClusterDefinition(ClusterDefinition.FromYaml(KubeTestHelper.ClusterDefinitions[key], strict: true, validate: true), options);
         }
 
         /// <summary>
@@ -857,7 +873,7 @@ namespace Neon.Kube.Xunit
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinitionYaml != null, nameof(clusterDefinitionYaml));
 
-            return Start(ClusterDefinition.FromYaml(clusterDefinitionYaml, strict: true, validate: true), options);
+            return StartWithClusterDefinition(ClusterDefinition.FromYaml(clusterDefinitionYaml, strict: true, validate: true), options);
         }
 
         /// <summary>
@@ -919,7 +935,7 @@ namespace Neon.Kube.Xunit
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinitionFile != null, nameof(clusterDefinitionFile));
 
-            return Start(ClusterDefinition.FromFile(clusterDefinitionFile.FullName), options);
+            return StartWithClusterDefinition(ClusterDefinition.FromFile(clusterDefinitionFile.FullName), options);
         }
 
         /// <summary>

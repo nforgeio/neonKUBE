@@ -2,12 +2,12 @@
 kind: VirtualService
 metadata:
   name: minio-operator-dashboard-virtual-service
-  namespace: neon-ingress
+  namespace: {{ .Release.Namespace }}
 spec:
   gateways:
-    - neoncluster-gateway
+    - neon-ingress/neoncluster-gateway
   hosts:
-    - {{ .Values.ingress.operator.subdomain }}.{{ .Values.cluster.domain }}
+    - {{ .Values.neonkube.clusterDomain.minio }}.{{ .Values.cluster.domain }}
   http:
     - match:
         - uri:

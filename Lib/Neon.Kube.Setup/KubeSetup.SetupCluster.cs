@@ -30,12 +30,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using ICSharpCode.SharpZipLib.Zip;
-using k8s;
-using k8s.Models;
-using Microsoft.Rest;
-using Newtonsoft.Json.Linq;
-
 using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;

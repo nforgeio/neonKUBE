@@ -24,6 +24,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Numerics;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Security.Cryptography;
@@ -371,7 +372,7 @@ namespace Neon.Common
             }
 
             var lineEndings = input.IndexOfAny(new char[] { '\r', '\n' }) >= 0;
-            var sb = new StringBuilder((int)(input.Length * 1.25));
+            var sb          = new StringBuilder((int)(input.Length * 1.25));
 
             using (var reader = new StringReader(input))
             {

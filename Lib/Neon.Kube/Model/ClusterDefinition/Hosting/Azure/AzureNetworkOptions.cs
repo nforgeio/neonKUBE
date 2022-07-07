@@ -71,7 +71,7 @@ namespace Neon.Kube
     /// assigned a single public IP address by default.  This configuration allows the
     /// cluster to establish about 64K outbound connections at any given moment.  This
     /// will be sufficient for many clusters but larger or particularly chatty clusters
-    /// may exceed this limit.  Unforunately, diagnosing this when it happens can be 
+    /// may exceed this limit.  Unfortunately, diagnosing this when it happens can be 
     /// difficult because applications just see this as random socket connection timeouts.
     /// This is known as <a href="https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-outbound-connections#outboundrules">SNAT Exhaustion</a>.
     /// </para>

@@ -1,7 +1,19 @@
 ﻿//------------------------------------------------------------------------------
 // FILE:        Service.cs
-// CONTRIBUTOR: Marcus Bowyer, Jeff Lill
+// CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -52,36 +64,25 @@ namespace NeonClusterOperator
     /// </para>
     /// <list type="table">
     /// <item>
-    ///     <term><b>CONTAINERREGISTRY_RECONCILED_NOCHANGE_INTERVAL</b></term>
+    ///     <term><b>WATCHER_TIMEOUT_INTERVAL</b></term>
     ///     <description>
-    ///     <b>timespan:</b> Specifies the interval at which <b>reconcile</b> events will be requeued
-    ///     for <b>ContainerRegistry</b> resources as a backstop to ensure that the operator state
-    ///     remains in sync with the API server.  This defaults to <b>5 minutes</b>.
+    ///     <b>timespan:</b> Specifies the maximum time the resource watcher will wait without
+    ///     a response before creating a new request.  This defaults to <b>2 minutes</b>.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL</b></term>
+    ///     <term><b>WATCHER_MAX_RETRY_INTERVAL</b></term>
     ///     <description>
-    ///     <b>timespan:</b> Specifies the minimum requeue interval to use when an
-    ///     exception is thrown when handling ContainerRegistry events.  This
-    ///     value will be doubled when subsequent events also fail until the
-    ///     requeue time maxes out at <b>CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL</b>.
-    ///     This defaults to <b>15 seconds</b>.
+    ///     <b>timespan:</b> Specifies the maximum time the KubeOps resource watcher will wait
+    ///     after a watch failure.  This defaults to <b>15 seconds</b>.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL</b></term>
+    ///     <term><b>NODETASK_IDLE_INTERVAL</b></term>
     ///     <description>
-    ///     <b>timespan:</b> Specifies the maximum requeue time for ContainerRegistry
-    ///     handler exceptions.  This defaults to <b>10</b> minutes.
-    ///     </description>
-    /// </item>
-    /// <item>
-    ///     <term><b>NODETASK_RECONCILED_NOCHANGE_INTERVAL</b></term>
-    ///     <description>
-    ///     <b>timespan:</b> Specifies the interval at which <b>reconcile</b> events will be requeued
-    ///     for <b>NodeTask</b> resources as a backstop to ensure that the operator state
-    ///     remains in sync with the API server.  This defaults to <b>5 minutes</b>.
+    ///     <b>timespan:</b> Specifies the interval at which IDLE events will be raised
+    ///     for <b>NodeTask</b> giving the operator the chance to delete node tasks assigned
+    ///     to nodes that don't exist.  This defaults to <b>60 seconds/b>.
     ///     </description>
     /// </item>
     /// <item>
@@ -91,17 +92,16 @@ namespace NeonClusterOperator
     ///     exception is thrown when handling NodeTask events.  This
     ///     value will be doubled when subsequent events also fail until the
     ///     requeue time maxes out at <b>CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL</b>.
-    ///     This defaults to <b>15 seconds</b>.
+    ///     This defaults to <b>5 seconds</b>.
     ///     </description>
     /// </item>
     /// <item>
     ///     <term><b>NODETASK_ERROR_MIN_REQUEUE_INTERVAL</b></term>
     ///     <description>
     ///     <b>timespan:</b> Specifies the maximum requeue time for NodeTask
-    ///     handler exceptions.  This defaults to <b>10</b> minutes.
+    ///     handler exceptions.  This defaults to <b>60 seconds</b>.
     ///     </description>
     /// </item>
-    /// <item>
     /// </list>
     /// </remarks>
     public partial class Service : NeonService
@@ -125,9 +125,22 @@ namespace NeonClusterOperator
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
+            //-----------------------------------------------------------------
+            // Start the controllers: these need to be started before starting KubeOps
+
+            var k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
+
+            await NodeTaskController.StartAsync(k8s);
+
+            //-----------------------------------------------------------------
             // Start the operator controllers.  Note that we're not going to await
             // this and will use the termination signal instead to exit.
 
+            // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1599
+            //
+            // We're temporarily using our poor man's operator
+
+#if DISABLED
             _ = Host.CreateDefaultBuilder()
                     .ConfigureHostOptions(
                         options =>
@@ -159,6 +172,7 @@ namespace NeonClusterOperator
                     .ConfigureWebHostDefaults(builder => builder.UseStartup<Startup>())
                     .Build()
                     .RunOperatorAsync(Array.Empty<string>());
+#endif
 
             // Indicate that the service is running.
 

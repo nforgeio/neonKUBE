@@ -55,7 +55,7 @@ namespace Neon.Kube.Resources
             public string GroupApiVersion   { get; private set; }
         }
 
-        private static Dictionary<Type, CustomResourceMetadata> typeToKubernetesEntity = new ();
+        private static Dictionary<Type, CustomResourceMetadata> typeToKubernetesEntity = new();
 
         /// <summary>
         /// Initializes a custom Kubernetes object's metadata <b>Group</b>, <b>ApiVersion</b>, and
@@ -79,7 +79,7 @@ namespace Neon.Kube.Resources
         /// {
         ///     public V1ContainerRegistry()
         ///     {
-        ///         ((IKubernetesObject)this).InitializeMetadata();
+        ///         this.InitializeMetadata();
         ///     }
         ///
         ///     ...

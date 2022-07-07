@@ -1,7 +1,19 @@
-﻿        //-----------------------------------------------------------------------------
+﻿//-----------------------------------------------------------------------------
 // FILE:	    Home.razor.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -66,7 +78,6 @@ namespace NeonDashboard.Pages
         /// </summary>
         public Home()
         {
-            
         }
 
         /// <inheritdoc/>
@@ -75,8 +86,9 @@ namespace NeonDashboard.Pages
             PageTitle   = NeonDashboardService.ClusterInfo.Name;
             clusterInfo = NeonDashboardService.ClusterInfo;
 
-            AppState.Kube.OnChange    += StateHasChanged;
-            AppState.Metrics.OnChange += StateHasChanged;
+            AppState.OnDashboardChange += StateHasChanged;
+            AppState.Kube.OnChange     += StateHasChanged;
+            AppState.Metrics.OnChange  += StateHasChanged;
 
             clusterMetaData = new Dictionary<string, string>()
             {
@@ -160,7 +172,16 @@ namespace NeonDashboard.Pages
             if (firstRender)
             {
                 await GetNodeStatusAsync();
+                await AppState.Kube.GetCertExpirationAsync();
             }
+        }
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            AppState.OnDashboardChange -= StateHasChanged;
+            AppState.Kube.OnChange     -= StateHasChanged;
+            AppState.Metrics.OnChange  -= StateHasChanged;
         }
 
         private async Task GetNodeStatusAsync()
@@ -206,8 +227,8 @@ namespace NeonDashboard.Pages
             }
             catch (Exception e)
             {
+                Logger.LogError(NeonHelper.JsonSerialize(e));
             }
-            
         }
 
         private async Task UpdateMemoryAsync()
@@ -222,8 +243,13 @@ namespace NeonDashboard.Pages
 
             await Task.WhenAll(tasks);
 
-            var memoryUsageX = AppState.Metrics.MemoryUsageBytes.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time)).ToList();
-            var memoryUsageY = AppState.Metrics.MemoryUsageBytes.Data.Result.First().Values.Select(x => Math.Round(decimal.Parse(x.Value) / AppState.Metrics.MemoryTotalBytes, 2)).ToList();
+            if (AppState.Metrics.MemoryTotalBytes < 0 || AppState.Metrics.MemoryUsageBytes == null)
+            {
+                return;
+            }
+
+            var memoryUsageX = AppState.Metrics.MemoryUsageBytes.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time).ToShortTimeString()).ToList();
+            var memoryUsageY = AppState.Metrics.MemoryUsageBytes.Data.Result?.First().Values.Select(x => Math.Round(decimal.Parse(x.Value) / 1000000000),2).ToList();
 
             await UpdateChartAsync(memoryUsageX, memoryUsageY, memoryChartConfig, memoryChart, $"Memory usage (total memory: {ByteUnits.ToGB(AppState.Metrics.MemoryTotalBytes)})");
         }
@@ -240,8 +266,13 @@ namespace NeonDashboard.Pages
 
             await Task.WhenAll(tasks);
 
-            var cpuUsageX = AppState.Metrics.CPUUsagePercent.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time)).ToList();
-            var cpuUsageY = AppState.Metrics.CPUUsagePercent.Data.Result.First().Values.Select(x => Math.Round(decimal.Parse(x.Value) ,2)).ToList();
+            if (AppState.Metrics.CPUUsagePercent == null || AppState.Metrics.CPUTotal < 0)
+            {
+                return;
+            }
+
+            var cpuUsageX = AppState.Metrics.CPUUsagePercent.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time).ToShortTimeString()).ToList();
+            var cpuUsageY = AppState.Metrics.CPUUsagePercent.Data.Result.First().Values.Select(x => Math.Round(AppState.Metrics.CPUTotal - decimal.Parse(x.Value),2) ).ToList();
 
             await UpdateChartAsync(cpuUsageX, cpuUsageY, cpuChartConfig, cpuChart, $"CPU usage (total cores: {AppState.Metrics.CPUTotal})");
         }
@@ -258,8 +289,13 @@ namespace NeonDashboard.Pages
 
             await Task.WhenAll(tasks);
 
-            var diskUsageX = AppState.Metrics.DiskUsageBytes.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time)).ToList();
-            var diskUsageY = AppState.Metrics.DiskUsageBytes.Data.Result.First().Values.Select(x => Math.Round(decimal.Parse(x.Value) / AppState.Metrics.DiskTotalBytes, 2)).ToList();
+            if (AppState.Metrics.DiskUsageBytes == null || AppState.Metrics.DiskTotalBytes < 0)
+            {
+                return;
+            }
+
+            var diskUsageX = AppState.Metrics.DiskUsageBytes.Data.Result?.First()?.Values?.Select(x => AppState.Metrics.UnixTimeStampToDateTime(x.Time).ToShortTimeString()).ToList();
+            var diskUsageY = AppState.Metrics.DiskUsageBytes.Data.Result.First().Values.Select(x => Math.Round(decimal.Parse(x.Value) / 1000000000,2)).ToList();
 
             await UpdateChartAsync(diskUsageX, diskUsageY, diskChartConfig, diskChart, $"Disk usage (total disk: {ByteUnits.ToGB(AppState.Metrics.DiskTotalBytes)})");
         }

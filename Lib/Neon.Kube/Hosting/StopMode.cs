@@ -32,7 +32,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Puts the nodes to sleep when supported by the hosting environment.  This
+        /// Pauses the nodes when supported by the hosting environment.  This
         /// quickly persists the node state to disk such that it can be restarted
         /// relatively quickly where it left off.
         /// </para>
@@ -41,7 +41,7 @@ namespace Neon.Kube
         /// will treat this as <see cref="Graceful"/>.
         /// </note>
         /// </summary>
-        Sleep,
+        Pause,
 
         /// <summary>
         /// Immediately turns the the nodes off without shutting them down gracefully.

@@ -14,11 +14,16 @@ metadata:
 spec:
   version: default
   istio_namespace: neon-ingress
+  server:
+    observability:
+      metrics:
+        enabled: {{ .Values.metrics.enabled }}
+        port: 9090
   auth:
     strategy: header
     openid:
       client_id: "kubernetes"
-      issuer_uri: "https://sso.{{ .Values.cluster.domain }}"
+      issuer_uri: "https://{{ .Values.neonkube.clusterDomain.sso }}.{{ .Values.cluster.domain }}"
       username_claim: "email"
       scopes:
         - openid
@@ -44,7 +49,7 @@ spec:
         username: kiali
       enabled: true
       in_cluster_url: http://grafana.neon-monitor:3000
-      url: https://grafana.{{ .Values.cluster.domain }}
+      url: https://{{ .Values.neonkube.clusterDomain.grafana }}.{{ .Values.cluster.domain }}
     istio:
       component_status:
         enabled: true

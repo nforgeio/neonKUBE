@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM        mcr.microsoft.com/dotnet/aspnet:6.0.1-focal-amd64
+FROM        mcr.microsoft.com/dotnet/aspnet:6.0.6-jammy-amd64
 MAINTAINER  jeff@neonforge.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME

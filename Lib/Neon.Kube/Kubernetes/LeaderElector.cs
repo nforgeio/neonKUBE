@@ -250,13 +250,25 @@ namespace Neon.Kube
             await SyncContext.Clear;
             EnsureNotDisposed();
 
-            try
+            while (true)
             {
-                await leaderElector.RunAsync(tcs.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                // Ignore this.
+                try
+                {
+                    await leaderElector.RunAsync(tcs.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    // This signals that the leader elector has been disposed.
+
+                    return;
+                }
+                catch
+                {
+                    // We're going to ignore all other exceptions and try to restart the elector
+                    // after waiting a few seconds to avoid getting into a tight failure loop.
+
+                    await Task.Delay(TimeSpan.FromSeconds(15));
+                }
             }
         }
     }

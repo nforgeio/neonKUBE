@@ -7,7 +7,7 @@
 		<Version>10000.0.1650-dev-jeff</Version>
 		<Authors>neonFORGE Team</Authors>
 		<Company>neonFORGE LLC</Company>
-		<Product>neonLIBRARY</Product>
+		<Product>neonSDK</Product>
 		<Description>Yugabyte Cassandra .NET client related utilities and extensions</Description>
 		<Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>

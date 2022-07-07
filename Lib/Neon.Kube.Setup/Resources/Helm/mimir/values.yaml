@@ -54,13 +54,7 @@ mimir:
     multitenancy_enabled: false
 
     limits:
-      max_global_series_per_user: 0
-      max_global_series_per_metric: 0 
-      enforce_metadata_metric_name: true
-      max_global_metadata_per_user: 0
-      max_global_metadata_per_metric: 0
-      max_label_names_per_series: 100
-      ingestion_rate: 50000
+      {{- toYaml .Values.limits | nindent 2 }}
 
     alertmanager:
       data_dir: '/alertmanager'
@@ -129,7 +123,7 @@ mimir:
       backend: s3
       {{- end }}
       tsdb:
-        dir: /data/tsdb
+        {{- toYaml .Values.blocksStorage.tsdb | nindent 4 }}
       bucket_store:
         sync_dir: /data/tsdb-sync
         {{- if .Values.memcached.enabled }}
@@ -218,7 +212,6 @@ alertmanager:
 
   resources:
     requests:
-      cpu: 10m
       memory: 32Mi
 
   extraArgs:
@@ -378,7 +371,6 @@ distributor:
 
   resources:
     requests:
-      cpu: 100m
       memory: 512Mi
 
   # Additional distributor container arguments, e.g. log level (debug, info, warn, error)
@@ -452,7 +444,6 @@ ingester:
 
   resources:
     requests:
-      cpu: 100m
       memory: 512Mi
 
   # Additional ingester container arguments, e.g. log level (debug, info, warn, error)
@@ -483,7 +474,7 @@ ingester:
     # Ingester will create/use a Persistent Volume Claim
     # If false, use emptyDir
     #
-    enabled: true
+    enabled: false
 
     # Ingester data Persistent Volume Claim annotations
     #
@@ -604,7 +595,6 @@ overrides_exporter:
 
   resources:
     requests:
-      cpu: 100m
       memory: 128Mi
 
   extraContainers: []
@@ -624,7 +614,6 @@ ruler:
 
   resources:
     requests:
-      cpu: 100m
       memory: 128Mi
 
   # Additional ruler container arguments, e.g. log level (debug, info, warn, error)
@@ -700,7 +689,6 @@ querier:
 
   resources:
     requests:
-      cpu: 100m
       memory: 128Mi
 
   # Additional querier container arguments, e.g. log level (debug, info, warn, error)
@@ -785,7 +773,6 @@ query_frontend:
 
   resources:
     requests:
-      cpu: 100m
       memory: 128Mi
 
   # Additional query-frontend container arguments, e.g. log level (debug, info, warn, error)
@@ -858,7 +845,6 @@ store_gateway:
 
   resources:
     requests:
-      cpu: 100m
       memory: 128Mi
 
   # Additional store-gateway container arguments, e.g. log level (debug, info, warn, error)
@@ -896,7 +882,7 @@ store_gateway:
     # If true Store-gateway will create/use a Persistent Volume Claim
     # If false, use emptyDir
     #
-    enabled: true
+    enabled: false
 
     # Store-gateway data Persistent Volume Claim annotations
     #
@@ -974,7 +960,6 @@ compactor:
 
   resources:
     requests:
-      cpu: 100m
       memory: 128Mi
 
   # Additional compactor container arguments, e.g. log level (debug, info, warn, error)
@@ -1012,7 +997,7 @@ compactor:
     # If true compactor will create/use a Persistent Volume Claim
     # If false, use emptyDir
     #
-    enabled: true
+    enabled: false
 
     # compactor data Persistent Volume Claim annotations
     #
@@ -1085,6 +1070,23 @@ memcached-metadata:
 
 minio:
   enabled: true
+
+limits:
+  max_global_series_per_user: 0
+  max_global_series_per_metric: 0 
+  enforce_metadata_metric_name: true
+  max_global_metadata_per_user: 0
+  max_global_metadata_per_metric: 0
+  max_label_names_per_series: 250
+  ingestion_rate: 50000
+  compactor_blocks_retention_period: 0s
+
+blocksStorage:
+  tsdb:
+    dir: /data/tsdb
+    block_ranges_period: 
+     - 2h0m0s
+    retention_period: 24h
 
 # Configuration for istio gateway
 istio:

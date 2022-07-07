@@ -37,6 +37,9 @@ using Neon.Kube.Resources;
 using Neon.Net;
 using Neon.SSH;
 using Neon.Tasks;
+using Neon.Kube.Operator;
+using System.Dynamic;
+using Newtonsoft.Json.Linq;
 
 namespace Neon.Kube
 {
@@ -282,13 +285,13 @@ spec:
             await TaintNodesAsync(controller);
 
             controller.ThrowIfCancelled();
-            await InstallCrdsAsync(controller);
-
-            controller.ThrowIfCancelled();
             await LabelNodesAsync(controller, master);
 
             controller.ThrowIfCancelled();
             await CreateNamespacesAsync(controller, master);
+
+            controller.ThrowIfCancelled();
+            await InstallCrdsAsync(controller, master);
 
             controller.ThrowIfCancelled();
             await CreateRootUserAsync(controller, master);
@@ -351,9 +354,6 @@ spec:
             await WriteClusterInfoAsync(controller, master);
 
             controller.ThrowIfCancelled();
-            await InstallNeonDashboardAsync(controller, master);
-
-            controller.ThrowIfCancelled();
             await InstallMonitoringAsync(controller);
 
             // Install the cluster operators and any required custom resources.
@@ -363,6 +363,9 @@ spec:
 
             controller.ThrowIfCancelled();
             await InstallClusterOperatorAsync(controller, master);
+
+            controller.ThrowIfCancelled();
+            await InstallNeonDashboardAsync(controller, master);
 
             controller.ThrowIfCancelled();
             await InstallNodeAgentAsync(controller, master);
@@ -447,7 +450,7 @@ apiServer:
     service-account-issuer: https://kubernetes.default.svc
     service-account-key-file: /etc/kubernetes/pki/sa.key
     service-account-signing-key-file: /etc/kubernetes/pki/sa.key
-    oidc-issuer-url: https://sso.{cluster.Definition.Domain}
+    oidc-issuer-url: https://{ClusterDomain.Sso}.{cluster.Definition.Domain}
     oidc-client-id: kubernetes
     oidc-username-claim: email
     oidc-groups-claim: groups
@@ -956,7 +959,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             //      - --oidc-client-id=kubernetes
             //      - --oidc-groups-claim=groups
             //      - --oidc-groups-prefix=
-            //      - --oidc-issuer-url=https://sso.f4ef74204ee34bbb888e823b3f0c8e3b.neoncluster.io
+            //      - --oidc-issuer-url=https://neon-sso.f4ef74204ee34bbb888e823b3f0c8e3b.neoncluster.io
             //      - --oidc-username-claim=email
             //      - --oidc-username-prefix=-
             //      - --proxy-client-cert-file=/etc/kubernetes/pki/front-proxy-client.crt
@@ -1287,9 +1290,22 @@ kubectl apply -f priorityclasses.yaml
                 {
                     controller.LogProgress(master, verb: "setup", message: "calico");
 
+                    var cluster       = master.Cluster;
+                    var k8s           = GetK8sClient(controller);
+                    var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+                    var calicoAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Calico);
+
                     var values = new Dictionary<string, object>();
 
                     values.Add("images.organization", KubeConst.LocalClusterRegistry);
+                    values.Add($"serviceMonitor.enabled", calicoAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    
+                    if (cluster.Definition.Hosting.Environment == HostingEnvironment.Azure)
+                    {
+                        values.Add($"vEthMtu", "1410");
+                        values.Add($"ipipMode", "Never");
+                        values.Add($"vxlanMode", "Always");
+                    }
 
                     controller.ThrowIfCancelled();
                     await master.InstallHelmChartAsync(controller, "calico", releaseName: "calico", @namespace: KubeNamespace.KubeSystem, values: values);
@@ -1372,20 +1388,94 @@ kubectl apply -f priorityclasses.yaml
                                     }
                                     catch
                                     {
-                                        // restart coredns and try again.
+                                        // Restart coredns and try again.
+
                                         var coredns = await k8s.ReadNamespacedDaemonSetAsync("coredns", KubeNamespace.KubeSystem);
+
                                         await coredns.RestartAsync(k8s);
-                                        await Task.Delay(10000);
+                                        await Task.Delay(TimeSpan.FromSeconds(20));
+
                                         return false;
                                     }
                                 },
-                                timeout: TimeSpan.FromSeconds(120),
+                                timeout:      TimeSpan.FromSeconds(120),
                                 pollInterval: TimeSpan.FromMilliseconds(500));
-
 
                             await k8s.DeleteNamespacedPodAsync("dnsutils", KubeNamespace.NeonSystem);
                         });
                 });
+
+            controller.ThrowIfCancelled();
+            await master.InvokeIdempotentAsync("setup/calico-metrics",
+                async () =>
+                {
+                    await NeonHelper.WaitForAsync(async () =>
+                    {
+                        var configs = await k8s.ListClusterCustomObjectAsync<FelixConfiguration>();
+
+                        return configs.Items.Count() > 0;
+                    },
+                    timeout:           clusterOpTimeout,
+                    pollInterval:      clusterOpPollInterval,
+                    cancellationToken: controller.CancellationToken);
+
+                    var configs = await k8s.ListClusterCustomObjectAsync<FelixConfiguration>();
+
+                    dynamic patchContent = new JObject();
+
+                    patchContent.spec                          = new JObject();
+                    patchContent.spec.prometheusMetricsEnabled = true;
+
+                    var patch = new V1Patch(NeonHelper.JsonSerialize(patchContent), V1Patch.PatchType.MergePatch);
+
+                    foreach (var felix in configs.Items)
+                    {
+                        await k8s.PatchClusterCustomObjectAsync<FelixConfiguration>(patch, felix.Name());
+                    }
+                });
+
+            if (coreDnsAdvice.MetricsEnabled ?? false)
+            {
+                controller.ThrowIfCancelled();
+                await master.InvokeIdempotentAsync("setup/coredns-metrics",
+                    async () =>
+                    {
+                        var serviceMonitor = new ServiceMonitor()
+                        {
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Name = "kube-dns",
+                                NamespaceProperty = "kube-system"
+                            },
+                            Spec = new ServiceMonitorSpec()
+                            {
+                                Endpoints = new List<Endpoint>()
+                                {
+                                new Endpoint()
+                                {
+                                    Interval      = coreDnsAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval,
+                                    Path          = "/metrics",
+                                    ScrapeTimeout = "10s",
+                                    TargetPort    = 9153
+                                }
+                                },
+                                NamespaceSelector = new NamespaceSelector()
+                                {
+                                    MatchNames = new List<string>() { "kube-system" }
+                                },
+                                Selector = new V1LabelSelector()
+                                {
+                                    MatchLabels = new Dictionary<string, string>()
+                                    {
+                                    { "k8s-app", "kube-dns"}
+                                    }
+                                }
+                            }
+                        };
+
+                        await k8s.CreateNamespacedCustomObjectAsync<ServiceMonitor>(serviceMonitor, serviceMonitor.Name(), serviceMonitor.Namespace());
+                    });
+            }
         }
 
         /// <summary>
@@ -1486,8 +1576,10 @@ kubectl apply -f priorityclasses.yaml
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = master.Cluster;
-            var k8s     = GetK8sClient(controller);
+            var cluster       = master.Cluster;
+            var k8s           = GetK8sClient(controller);
+            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MetricsServer);
 
             controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/kubernetes-metrics-server",
@@ -1498,6 +1590,8 @@ kubectl apply -f priorityclasses.yaml
                     var values = new Dictionary<string, object>();
 
                     values.Add("image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add("serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
                     int i = 0;
 
@@ -1839,7 +1933,7 @@ subjects:
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("settings.clusterName", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
-                    values.Add("ingress.subdomain", ClusterDomain.KubernetesDashboard);
+                    values.Add("neonkube.clusterDomain.kubernetesDashboard", ClusterDomain.KubernetesDashboard);
                     values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
                     values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
@@ -1923,546 +2017,25 @@ subjects:
         /// Installs CRDs used later on in setup by various helm charts.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallCrdsAsync(ISetupController controller)
+        public static async Task InstallCrdsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.Clear;
 
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var master = cluster.FirstMaster;
 
             controller.ThrowIfCancelled();
-            master.InvokeIdempotent("setup/install-crds",
-                () =>
+            await master.InvokeIdempotentAsync("setup/install-crds",
+                async () =>
                 {
                     controller.LogProgress(master, verb: "Install", message: "CRDs");
 
-                    var grafanaDashboardScript =
-                    @"
-cat <<EOF | kubectl apply -f -
-apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
-  annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
-  name: grafanadashboards.integreatly.org
-spec:
-  group: integreatly.org
-  names:
-    kind: GrafanaDashboard
-    listKind: GrafanaDashboardList
-    plural: grafanadashboards
-    singular: grafanadashboard
-  preserveUnknownFields: false
-  scope: Namespaced
-  versions:
-  - name: v1alpha1
-    schema:
-      openAPIV3Schema:
-        description: GrafanaDashboard is the Schema for the grafanadashboards API
-        properties:
-          apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-            type: string
-          kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-            type: string
-          metadata:
-            type: object
-          spec:
-            description: GrafanaDashboardSpec defines the desired state of GrafanaDashboard
-            properties:
-              configMapRef:
-                description: Selects a key from a ConfigMap.
-                properties:
-                  key:
-                    description: The key to select.
-                    type: string
-                  name:
-                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                      TODO: Add other useful fields. apiVersion, kind, uid?'
-                    type: string
-                  optional:
-                    description: Specify whether the ConfigMap or its key must be
-                      defined
-                    type: boolean
-                required:
-                - key
-                type: object
-              customFolderName:
-                type: string
-              datasources:
-                items:
-                  properties:
-                    datasourceName:
-                      type: string
-                    inputName:
-                      type: string
-                  required:
-                  - datasourceName
-                  - inputName
-                  type: object
-                type: array
-              grafanaCom:
-                properties:
-                  id:
-                    type: integer
-                  revision:
-                    type: integer
-                required:
-                - id
-                type: object
-              json:
-                type: string
-              jsonnet:
-                type: string
-              plugins:
-                items:
-                  description: GrafanaPlugin contains information about a single plugin
-                  properties:
-                    name:
-                      type: string
-                    version:
-                      type: string
-                  required:
-                  - name
-                  - version
-                  type: object
-                type: array
-              url:
-                type: string
-            type: object
-          status:
-            type: object
-        type: object
-    served: true
-    storage: true
-    subresources:
-      status: {}
-status:
-  acceptedNames:
-    kind: """"
-    plural: """"
-  conditions: []
-  storedVersions: []
----
-apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
-  annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
-  name: grafanadatasources.integreatly.org
-spec:
-  group: integreatly.org
-  names:
-    kind: GrafanaDataSource
-    listKind: GrafanaDataSourceList
-    plural: grafanadatasources
-    singular: grafanadatasource
-  preserveUnknownFields: false
-  scope: Namespaced
-  versions:
-  - name: v1alpha1
-    schema:
-      openAPIV3Schema:
-        description: GrafanaDataSource is the Schema for the grafanadatasources API
-        properties:
-          apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-            type: string
-          kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-            type: string
-          metadata:
-            type: object
-          spec:
-            description: GrafanaDataSourceSpec defines the desired state of GrafanaDataSource
-            properties:
-              datasources:
-                items:
-                  properties:
-                    access:
-                      type: string
-                    basicAuth:
-                      type: boolean
-                    basicAuthPassword:
-                      type: string
-                    basicAuthUser:
-                      type: string
-                    database:
-                      type: string
-                    editable:
-                      type: boolean
-                    isDefault:
-                      type: boolean
-                    jsonData:
-                      description: GrafanaDataSourceJsonData contains the most common
-                        json options See https://grafana.com/docs/administration/provisioning/#datasources
-                      properties:
-                        addCorsHeader:
-                          description: Useful fields for clickhouse datasource See
-                            https://github.com/Vertamedia/clickhouse-grafana/tree/master/dist/README.md#configure-the-datasource-with-provisioning
-                            See https://github.com/Vertamedia/clickhouse-grafana/tree/master/src/datasource.ts#L44
-                          type: boolean
-                        alertmanagerUid:
-                          description: AlertManagerUID if null use the internal grafana
-                            alertmanager
-                          type: string
-                        allowInfraExplore:
-                          type: boolean
-                        apiToken:
-                          type: string
-                        appInsightsAppId:
-                          description: Fields for Azure data sources
-                          type: string
-                        assumeRoleArn:
-                          type: string
-                        authType:
-                          type: string
-                        authenticationType:
-                          type: string
-                        azureLogAnalyticsSameAs:
-                          type: string
-                        clientEmail:
-                          type: string
-                        clientId:
-                          type: string
-                        cloudName:
-                          type: string
-                        clusterUrl:
-                          type: string
-                        connMaxLifetime:
-                          type: integer
-                        customMetricsNamespaces:
-                          type: string
-                        customQueryParameters:
-                          description: Fields for Prometheus data sources
-                          type: string
-                        defaultBucket:
-                          type: string
-                        defaultDatabase:
-                          type: string
-                        defaultProject:
-                          type: string
-                        defaultRegion:
-                          type: string
-                        derivedFields:
-                          items:
-                            properties:
-                              datasourceUid:
-                                type: string
-                              matcherRegex:
-                                type: string
-                              name:
-                                type: string
-                              url:
-                                type: string
-                            type: object
-                          type: array
-                        encrypt:
-                          type: string
-                        esVersion:
-                          type: string
-                        exemplarTraceIdDestinations:
-                          items:
-                            properties:
-                              datasourceUid:
-                                type: string
-                              name:
-                                type: string
-                              url:
-                                type: string
-                              urlDisplayLabel:
-                                type: string
-                            type: object
-                          type: array
-                        githubUrl:
-                          description: Fields for Github data sources
-                          type: string
-                        graphiteVersion:
-                          type: string
-                        httpHeaderName1:
-                          description: Custom HTTP headers for datasources See https://grafana.com/docs/grafana/latest/administration/provisioning/#datasources
-                          type: string
-                        httpHeaderName2:
-                          type: string
-                        httpHeaderName3:
-                          type: string
-                        httpHeaderName4:
-                          type: string
-                        httpHeaderName5:
-                          type: string
-                        httpHeaderName6:
-                          type: string
-                        httpHeaderName7:
-                          type: string
-                        httpHeaderName8:
-                          type: string
-                        httpHeaderName9:
-                          type: string
-                        httpMethod:
-                          type: string
-                        httpMode:
-                          description: Fields for InfluxDB data sources
-                          type: string
-                        implementation:
-                          description: Fields for Alertmanager data sources
-                          type: string
-                        interval:
-                          type: string
-                        logAnalyticsClientId:
-                          type: string
-                        logAnalyticsDefaultWorkspace:
-                          type: string
-                        logAnalyticsSubscriptionId:
-                          type: string
-                        logAnalyticsTenantId:
-                          type: string
-                        logLevelField:
-                          type: string
-                        logMessageField:
-                          type: string
-                        manageAlerts:
-                          description: ManageAlerts turns on alert management from
-                            UI
-                          type: boolean
-                        maxIdleConns:
-                          type: integer
-                        maxLines:
-                          description: Fields for Loki data sources
-                          type: integer
-                        maxOpenConns:
-                          type: integer
-                        nodeGraph:
-                          properties:
-                            enabled:
-                              type: boolean
-                          type: object
-                        oauthPassThru:
-                          type: boolean
-                        organization:
-                          type: string
-                        port:
-                          type: integer
-                        postgresVersion:
-                          type: integer
-                        search:
-                          properties:
-                            hide:
-                              type: boolean
-                          type: object
-                        server:
-                          description: Fields for Grafana Clickhouse data sources
-                          type: string
-                        serviceMap:
-                          properties:
-                            datasourceUid:
-                              type: string
-                          type: object
-                        showOffline:
-                          type: boolean
-                        sigV4AssumeRoleArn:
-                          type: string
-                        sigV4Auth:
-                          description: Fields for AWS Prometheus data sources
-                          type: boolean
-                        sigV4AuthType:
-                          type: string
-                        sigV4ExternalId:
-                          type: string
-                        sigV4Profile:
-                          type: string
-                        sigV4Region:
-                          type: string
-                        sslmode:
-                          type: string
-                        subscriptionId:
-                          type: string
-                        tenantId:
-                          type: string
-                        timeField:
-                          type: string
-                        timeInterval:
-                          type: string
-                        timescaledb:
-                          type: boolean
-                        timezone:
-                          description: Extra field for MySQL data source
-                          type: string
-                        tlsAuth:
-                          type: boolean
-                        tlsAuthWithCACert:
-                          type: boolean
-                        tlsSkipVerify:
-                          type: boolean
-                        tokenUri:
-                          description: Fields for Stackdriver data sources
-                          type: string
-                        tracesToLogs:
-                          description: Fields for tracing data sources
-                          properties:
-                            datasourceUid:
-                              type: string
-                            filterBySpanID:
-                              type: boolean
-                            filterByTraceID:
-                              type: boolean
-                            lokiSearch:
-                              type: boolean
-                            spanEndTimeShift:
-                              type: string
-                            spanStartTimeShift:
-                              type: string
-                            tags:
-                              items:
-                                type: string
-                              type: array
-                          type: object
-                        tsdbResolution:
-                          type: string
-                        tsdbVersion:
-                          type: string
-                        url:
-                          description: Fields for Instana data sources See https://github.com/instana/instana-grafana-datasource/blob/main/provisioning/datasources/datasource.yml
-                          type: string
-                        usePOST:
-                          type: boolean
-                        useProxy:
-                          type: boolean
-                        useYandexCloudAuthorization:
-                          type: boolean
-                        username:
-                          type: string
-                        version:
-                          type: string
-                        xHeaderKey:
-                          type: string
-                        xHeaderUser:
-                          type: string
-                      type: object
-                    name:
-                      type: string
-                    orgId:
-                      type: integer
-                    password:
-                      type: string
-                    secureJsonData:
-                      description: GrafanaDataSourceSecureJsonData contains the most
-                        common secure json options See https://grafana.com/docs/administration/provisioning/#datasources
-                      properties:
-                        accessKey:
-                          type: string
-                        accessToken:
-                          description: Fields for Github data sources
-                          type: string
-                        appInsightsApiKey:
-                          type: string
-                        basicAuthPassword:
-                          type: string
-                        clientSecret:
-                          description: Fields for Azure data sources
-                          type: string
-                        httpHeaderValue1:
-                          description: Custom HTTP headers for datasources See https://grafana.com/docs/grafana/latest/administration/provisioning/#datasources
-                          type: string
-                        httpHeaderValue2:
-                          type: string
-                        httpHeaderValue3:
-                          type: string
-                        httpHeaderValue4:
-                          type: string
-                        httpHeaderValue5:
-                          type: string
-                        httpHeaderValue6:
-                          type: string
-                        httpHeaderValue7:
-                          type: string
-                        httpHeaderValue8:
-                          type: string
-                        httpHeaderValue9:
-                          type: string
-                        logAnalyticsClientSecret:
-                          type: string
-                        password:
-                          type: string
-                        privateKey:
-                          description: Fields for Stackdriver data sources
-                          type: string
-                        secretKey:
-                          type: string
-                        sigV4AccessKey:
-                          description: Fields for AWS data sources
-                          type: string
-                        sigV4SecretKey:
-                          type: string
-                        tlsCACert:
-                          type: string
-                        tlsClientCert:
-                          type: string
-                        tlsClientKey:
-                          type: string
-                        token:
-                          description: Fields for InfluxDB data sources
-                          type: string
-                      type: object
-                    type:
-                      type: string
-                    uid:
-                      type: string
-                    url:
-                      type: string
-                    user:
-                      type: string
-                    version:
-                      type: integer
-                    withCredentials:
-                      type: boolean
-                  required:
-                  - name
-                  - type
-                  type: object
-                type: array
-              name:
-                type: string
-            required:
-            - datasources
-            - name
-            type: object
-          status:
-            properties:
-              message:
-                type: string
-              phase:
-                type: string
-            required:
-            - message
-            - phase
-            type: object
-        type: object
-    served: true
-    storage: true
-    subresources:
-      status: {}
-status:
-  acceptedNames:
-    kind: """"
-    plural: """"
-  conditions: []
-  storedVersions: []
-EOF
-";
-
-                    master.SudoCommand(CommandBundle.FromScript(grafanaDashboardScript), RunOptions.FaultOnError);
+                    await master.InstallHelmChartAsync(controller, "crd-cluster",
+                        releaseName: "crd-cluster",
+                        @namespace: KubeNamespace.NeonSystem);
                 });
         }
 
@@ -2478,8 +2051,10 @@ EOF
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s     = GetK8sClient(controller);
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s           = GetK8sClient(controller);
+            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Kiali);
 
             controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/kiali",
@@ -2497,8 +2072,12 @@ EOF
                     values.Add("image.kiali.repository", "kiali-kiali");
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
-                    values.Add("ingress.subdomain", ClusterDomain.Kiali);
+                    values.Add("neonkube.clusterDomain.sso", ClusterDomain.Sso);
+                    values.Add("neonkube.clusterDomain.kiali", ClusterDomain.Kiali);
+                    values.Add($"neonkube.clusterDomain.grafana", ClusterDomain.Grafana);
                     values.Add("grafanaPassword", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
+                    values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
                     int i = 0;
                     foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelIstio, "true"))
@@ -2773,7 +2352,6 @@ EOF
                         }
                     };
 
-                    
                     var blockDevices = await k8s.ListNamespacedCustomObjectAsync<V1CStorBlockDevice>(KubeNamespace.NeonStorage);
 
                     foreach (var node in cluster.Definition.Nodes)
@@ -2817,7 +2395,7 @@ EOF
                         }
                     }
 
-                    await k8s.CreateNamespacedCustomObjectAsync(cStorPoolCluster, KubeNamespace.NeonStorage);
+                    await k8s.UpsertClusterCustomObjectAsync(cStorPoolCluster, KubeNamespace.NeonStorage);
                 });
 
             controller.ThrowIfCancelled();
@@ -3171,10 +2749,15 @@ $@"- name: StorageType
                     values.Add($"cluster.version", cluster.Definition.ClusterVersion);
                     values.Add($"cluster.hostingEnvironment", cluster.Definition.Hosting.Environment);
 
+                    values.Add($"metrics.global.enabled", clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.global.scrapeInterval", clusterAdvice.MetricsInterval);
+                    values.Add($"metrics.crio.enabled", clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.crio.scrapeInterval", clusterAdvice.MetricsInterval);
+                    values.Add($"metrics.istio.enabled", istioAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.istio.scrapeInterval", istioAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"metrics.kubelet.enabled", clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.kubelet.scrapeInterval", clusterAdvice.MetricsInterval);
+                    values.Add($"metrics.cadvisor.enabled", clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.cadvisor.scrapeInterval", clusterAdvice.MetricsInterval);
                     values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
@@ -3386,6 +2969,13 @@ $@"- name: StorageType
 
                     values.Add($"minio.enabled", cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() > 1);
 
+                    if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.Nodes.Count() == 1)
+                    {
+                        values.Add($"blocksStorage.tsdb.block_ranges_period[0]", "1h0m0s");
+                        values.Add($"blocksStorage.tsdb.retention_period", "2h0m0s");
+                        values.Add($"limits.compactor_blocks_retention_period", "12h");
+                    }
+
                     await CreateMinioBucketAsync(controller, master, KubeMinioBucket.Mimir, clusterAdvice.MetricsQuota);
                     await CreateMinioBucketAsync(controller, master, KubeMinioBucket.MimirRuler);
 
@@ -3553,6 +3143,13 @@ $@"- name: StorageType
                         values.Add($"loki.storageConfig.boltdb_shipper.shared_store", "s3");
                     }
 
+                    if (cluster.Definition.IsDesktopBuiltIn)
+                    {
+                        values.Add($"limits_config.retention_period", "24h");
+                        values.Add($"limits_config.reject_old_samples_max_age", "6h");
+                        values.Add($"table_manager.retention_period", "24h");
+                    }
+
                     int i = 0;
 
                     foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelLogsInternal, "true"))
@@ -3715,7 +3312,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s           = GetK8sClient(controller);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.KubeStateMetrics);
@@ -3728,6 +3325,7 @@ $@"- name: StorageType
 
                     var values = new Dictionary<string, object>();
 
+                    values.Add($"prometheus.monitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"prometheus.monitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
 
@@ -3830,7 +3428,8 @@ $@"- name: StorageType
 
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
-                    values.Add("ingress.subdomain", ClusterDomain.Grafana);
+                    values.Add("neonkube.clusterDomain.grafana", ClusterDomain.Grafana);
+                    values.Add("neonkube.clusterDomain.sso", ClusterDomain.Sso);
                     values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
@@ -3940,10 +3539,10 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(master, verb: "configure", message: "grafana");
 
-                    var grafanaSecret = await k8s.ReadNamespacedSecretAsync("grafana-admin-credentials", KubeNamespace.NeonMonitor);
-                    var grafanaUser = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_USER"]);
+                    var grafanaSecret   = await k8s.ReadNamespacedSecretAsync("grafana-admin-credentials", KubeNamespace.NeonMonitor);
+                    var grafanaUser     = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_USER"]);
                     var grafanaPassword = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_PASSWORD"]);
-                    var grafanaPod = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonMonitor, labelSelector: "app=grafana");
+                    var grafanaPod      = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonMonitor, labelSelector: "app=grafana");
 
                     var cmd = new string[]
                         {
@@ -3952,14 +3551,30 @@ $@"- name: StorageType
                             $@"curl -X GET -H 'Content-Type: application/json' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/dashboards/uid/neonkube-default-dashboard"
                         };
 
-                    var defaultDashboard = await k8s.NamespacedPodExecWithRetryAsync(
-                                retryPolicy: podExecRetry,
-                                namespaceParameter: grafanaPod.Namespace(),
-                                name: grafanaPod.Name(),
-                                container: "grafana",
-                                command: cmd);
+                    string dashboardId = "";
+                    await NeonHelper.WaitForAsync(
+                            async () =>
+                            {
+                                try
+                                {
+                                    var defaultDashboard = (await k8s.NamespacedPodExecWithRetryAsync(
+                                        retryPolicy:        podExecRetry,
+                                        namespaceParameter: grafanaPod.Namespace(),
+                                        name:               grafanaPod.Name(),
+                                        container:          "grafana",
+                                        command:            cmd)).EnsureSuccess();
 
-                    var dashboardId = NeonHelper.JsonDeserialize<dynamic>(defaultDashboard.OutputText)["dashboard"]["id"];
+                                    dashboardId = NeonHelper.JsonDeserialize<dynamic>(defaultDashboard.OutputText)["dashboard"]["id"];
+
+                                    return true;
+                                }
+                                catch
+                                {
+                                    return false;
+                                }
+                            },
+                            timeout: TimeSpan.FromSeconds(300),
+                            pollInterval: TimeSpan.FromMilliseconds(250));
 
                     cmd = new string[]
                         {
@@ -3968,12 +3583,12 @@ $@"- name: StorageType
                             $@"curl -X PUT -H 'Content-Type: application/json' -d '{{""theme"":"""",""homeDashboardId"":{dashboardId},""timezone"":"""",""weekStart"":""""}}' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/org/preferences"
                         };
 
-                    await k8s.NamespacedPodExecWithRetryAsync(
-                                retryPolicy: podExecRetry,
+                    (await k8s.NamespacedPodExecWithRetryAsync(
+                                retryPolicy:        podExecRetry,
                                 namespaceParameter: grafanaPod.Namespace(),
-                                name: grafanaPod.Name(),
-                                container: "grafana",
-                                command: cmd);
+                                name:               grafanaPod.Name(),
+                                container:          "grafana",
+                                command:            cmd)).EnsureSuccess();
                 });
         }
 
@@ -4011,6 +3626,8 @@ $@"- name: StorageType
 
                             values.Add("cluster.name", cluster.Definition.Name);
                             values.Add("cluster.domain", cluster.Definition.Domain);
+                            values.Add("neonkube.clusterDomain.minio", ClusterDomain.Minio);
+                            values.Add("neonkube.clusterDomain.sso", ClusterDomain.Sso);
                             values.Add($"metrics.serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                             values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                             values.Add("image.organization", KubeConst.LocalClusterRegistry);
@@ -4026,8 +3643,6 @@ $@"- name: StorageType
                                 removeByteUnit:  true);
 
                             values.Add($"tenants[0].pools[0].size", volumesize);
-
-                            values.Add("ingress.operator.subdomain", ClusterDomain.Minio);
 
                             if (serviceAdvice.ReplicaCount > 1)
                             {
@@ -4378,8 +3993,8 @@ $@"- name: StorageType
                     values.Add($"components.notary.enabled", cluster.Definition.Features.Harbor.Notary);
                     values.Add($"components.trivy.enabled", cluster.Definition.Features.Harbor.Trivy);
                     
-                    values.Add("ingress.notary.subdomain", ClusterDomain.HarborNotary);
-                    values.Add("ingress.registry.subdomain", ClusterDomain.HarborRegistry);
+                    values.Add("neonkube.clusterDomain.harborNotary", ClusterDomain.HarborNotary);
+                    values.Add("neonkube.clusterDomain.harborRegistry", ClusterDomain.HarborRegistry);
 
                     values.Add($"storage.s3.accessKey", Encoding.UTF8.GetString(minioSecret.Data["accesskey"]));
                     values.Add($"storage.s3.secretKeyRef", "registry-minio");
@@ -4488,9 +4103,37 @@ $@"- name: StorageType
                                     return await Task.FromResult(false);
                                 }
                             },
-                            timeout:           TimeSpan.FromSeconds(600),
-                            pollInterval:      TimeSpan.FromSeconds(1),
+                            timeout: TimeSpan.FromSeconds(600),
+                            pollInterval: TimeSpan.FromSeconds(1),
                             cancellationToken: controller.CancellationToken);
+                    }
+                });
+
+            controller.ThrowIfCancelled();
+            await master.InvokeIdempotentAsync("setup/harbor-login-workstation",
+                async () =>
+                {
+                    var user     = await KubeHelper.GetClusterLdapUserAsync(k8s, "root");
+                    var password = user.Password;
+                    var sbScript = new StringBuilder();
+                    var sbArgs   = new StringBuilder();
+
+                    if (!string.IsNullOrEmpty(NeonHelper.DockerCli))
+                    {
+                        Console.WriteLine($"Login: Workstation to Harbor...");
+
+                        var login = KubeHelper.GetClusterLogin(KubeHelper.CurrentContextName);
+
+                        NeonHelper.Execute(NeonHelper.DockerCli,
+                            new object[]
+                            {
+                                "login",
+                                $"{ClusterDomain.HarborRegistry}.{login.ClusterDefinition.Domain}",
+                                "--username",
+                                "root",
+                                "--password-stdin"
+                            },
+                            input: new StringReader(login.SsoPassword));
                     }
                 });
         }
@@ -4504,11 +4147,14 @@ $@"- name: StorageType
         public static async Task InstallClusterOperatorAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
         {
             await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var k8s = GetK8sClient(controller);
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s           = GetK8sClient(controller);
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonClusterOperator);
 
             controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/cluster-operator",
@@ -4521,6 +4167,10 @@ $@"- name: StorageType
                     values.Add("image.organization", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add("resource.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
+                    values.Add("resource.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
+                    values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
                     await master.InstallHelmChartAsync(controller, "neon-cluster-operator",
                         releaseName:  "neon-cluster-operator",
@@ -4535,57 +4185,7 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(master, verb: "wait for", message: "neon-cluster-operator");
 
-                    await k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-cluster-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
-                });
-        }
-
-        /// <summary>
-        /// Installs <b>neon-dashboard</b>.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="master">The master node where the operation will be performed.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallNeonDashboardAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
-
-            var k8s     = GetK8sClient(controller);
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-
-            controller.ThrowIfCancelled();
-            await master.InvokeIdempotentAsync("setup/neon-dashboard",
-                async () =>
-                {
-                    controller.LogProgress(master, verb: "setup", message: "neon-dashboard");
-
-                    var values = new Dictionary<string, object>();
-
-                    values.Add("image.organization", KubeConst.LocalClusterRegistry);
-                    values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
-                    values.Add("cluster.name", cluster.Definition.Name);
-                    values.Add("cluster.domain", cluster.Definition.Domain);
-                    values.Add($"cluster.datacenter", cluster.Definition.Datacenter);
-                    values.Add($"cluster.version", cluster.Definition.ClusterVersion);
-                    values.Add($"cluster.hostingEnvironment", cluster.Definition.Hosting.Environment);
-                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
-                    values.Add("dashboards.kiali.enabled", cluster.Definition.Features.Kiali);
-
-                    await master.InstallHelmChartAsync(controller, "neon-dashboard",
-                        releaseName:  "neon-dashboard",
-                        @namespace:   KubeNamespace.NeonSystem,
-                        prioritySpec: PriorityClass.NeonApp.Name,
-                        values:       values);
-                });
-
-            controller.ThrowIfCancelled();
-            await master.InvokeIdempotentAsync("setup/neon-dashboard-ready",
-                async () =>
-                {
-                    controller.LogProgress(master, verb: "wait for", message: "neon-dashboard");
-
-                    await k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-dashboard", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                    await k8s.WaitForDaemonsetAsync(KubeNamespace.NeonSystem, "neon-cluster-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
         }
 
@@ -4601,8 +4201,71 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
 
-            var k8s     = GetK8sClient(controller);
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s           = GetK8sClient(controller);
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonDashboard);
+            
+            controller.ThrowIfCancelled();
+            await master.InvokeIdempotentAsync("setup/neon-dashboard-resources",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "setup", message: "neon-dashboard");
+
+                    await CreateNeonDashboardAsync(
+                            controller,
+                            master,
+                            name: "kubernetes",
+                            url: $"https://{ClusterDomain.KubernetesDashboard}.{cluster.Definition.Domain}",
+                            displayName: "Kubernetes",
+                            enabled: true,
+                            displayOrder: 1);
+
+                    if (cluster.Definition.Features.Grafana)
+                    {
+                        await CreateNeonDashboardAsync(
+                            controller,
+                            master,
+                            name:         "grafana",
+                            url:          $"https://{ClusterDomain.Grafana}.{cluster.Definition.Domain}",
+                            displayName:  "Grafana",
+                            enabled:      true,
+                            displayOrder: 10);
+                    }
+                    if (cluster.Definition.Features.Minio)
+                    {
+                        await CreateNeonDashboardAsync(
+                            controller,
+                            master,
+                            name:         "minio",
+                            url:          $"https://{ClusterDomain.Minio}.{cluster.Definition.Domain}",
+                            displayName:  "Minio",
+                            enabled:      true,
+                            displayOrder: 10);
+                    }
+                    if (cluster.Definition.Features.Harbor.Enabled)
+                    {
+                        await CreateNeonDashboardAsync(
+                            controller,
+                            master,
+                            name:         "harbor",
+                            url:          $"https://{ClusterDomain.HarborRegistry}.{cluster.Definition.Domain}",
+                            displayName:  "Harbor",
+                            enabled:      true,
+                            displayOrder: 10);
+                    }
+                    if (cluster.Definition.Features.Kiali)
+                    {
+                        await CreateNeonDashboardAsync(
+                            controller,
+                            master,
+                            name:         "kiali",
+                            url:          $"https://{ClusterDomain.Kiali}.{cluster.Definition.Domain}",
+                            displayName:  "Kiali",
+                            enabled:      true,
+                            displayOrder: 10);
+                    }
+                });
 
             controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync("setup/neon-node-agent",
@@ -4614,7 +4277,17 @@ $@"- name: StorageType
 
                     values.Add("image.organization", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
+                    values.Add("cluster.name", cluster.Definition.Name);
+                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add($"cluster.datacenter", cluster.Definition.Datacenter);
+                    values.Add($"cluster.version", cluster.Definition.ClusterVersion);
+                    values.Add($"cluster.hostingEnvironment", cluster.Definition.Hosting.Environment);
+                    values.Add($"neonkube.clusterDomain.neonDashboard", ClusterDomain.NeonDashboard);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add("resource.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
+                    values.Add("resource.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
 
                     await master.InstallHelmChartAsync(controller, "neon-node-agent",
                         releaseName:  "neon-node-agent",
@@ -4634,7 +4307,59 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Adds custom <see cref="V1ContainerRegistry"/> resources defined in the cluster definition to
+        /// Installs <b>neon-dashboard</b>.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallNeonDashboardAsync(ISetupController controller, NodeSshProxy<NodeDefinition> master)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+
+            var k8s           = GetK8sClient(controller);
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonNodeAgent);
+
+            controller.ThrowIfCancelled();
+            await master.InvokeIdempotentAsync("setup/neon-dashboard",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "setup", message: "neon-dashboard");
+
+                    var values = new Dictionary<string, object>();
+
+                    values.Add("image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
+                    values.Add("cluster.name", cluster.Definition.Name);
+                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("neonkube.clusterDomain.neonDashboard", ClusterDomain.NeonDashboard);
+                    values.Add("secrets.cipherKey", AesCipher.GenerateKey(256));
+                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+
+                    await master.InstallHelmChartAsync(controller, "neon-dashboard",
+                        releaseName:  "neon-dashboard",
+                        @namespace:   KubeNamespace.NeonSystem,
+                        prioritySpec: PriorityClass.NeonApp.Name,
+                        values:       values);
+                });
+
+            controller.ThrowIfCancelled();
+            await master.InvokeIdempotentAsync("setup/neon-dashboard-ready",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "wait for", message: "neon-dashboard");
+
+                    await k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-dashboard", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                });
+        }
+
+        /// <summary>
+        /// Adds custom <see cref="V1NeonContainerRegistry"/> resources defined in the cluster definition to
         /// the cluster.  <b>neon-node-agent</b> will pick these up and regenerate the CRI-O configuration.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -4877,7 +4602,13 @@ $@"- name: StorageType
 
             values.Add("cluster.name", cluster.Definition.Name);
             values.Add("cluster.domain", cluster.Definition.Domain);
-            values.Add("ingress.subdomain", ClusterDomain.Sso);
+            values.Add("neonkube.clusterDomain.grafana", ClusterDomain.Grafana);
+            values.Add("neonkube.clusterDomain.kiali", ClusterDomain.Kiali);
+            values.Add("neonkube.clusterDomain.minio", ClusterDomain.Minio);
+            values.Add("neonkube.clusterDomain.harborRegistry", ClusterDomain.HarborRegistry);
+            values.Add("neonkube.clusterDomain.neonDashboard", ClusterDomain.NeonDashboard);
+            values.Add("neonkube.clusterDomain.kubernetesDashboard", ClusterDomain.KubernetesDashboard);
+            values.Add("neonkube.clusterDomain.sso", ClusterDomain.Sso);
             values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
 
             values.Add("secrets.grafana", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
@@ -4946,7 +4677,7 @@ $@"- name: StorageType
             values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
             values.Add("cluster.name", cluster.Definition.Name);
             values.Add("cluster.domain", cluster.Definition.Domain);
-            values.Add("ingress.subdomain", ClusterDomain.Sso);
+            values.Add("neonkube.clusterDomain.sso", ClusterDomain.Sso);
             values.Add("secrets.cipherKey", AesCipher.GenerateKey(256));
             values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
             values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
@@ -5165,6 +4896,7 @@ $@"- name: StorageType
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
                     values.Add("config.cookieSecret", NeonHelper.ToBase64(NeonHelper.GetCryptoRandomPassword(24)));
+                    values.Add("neonkube.clusterDomain.sso", ClusterDomain.Sso);
                     values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
@@ -5225,19 +4957,19 @@ $@"- name: StorageType
 
             master.Status = $"create: [{name}] minio bucket";
 
-            var cluster     = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var minioSecret = await GetK8sClient(controller).ReadNamespacedSecretAsync("minio", KubeNamespace.NeonSystem);
-            var accessKey   = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
-            var secretKey   = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
-            var k8s         = GetK8sClient(controller);
-            
+            var accessKey = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
+            var secretKey = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
+            var k8s = GetK8sClient(controller);
+
             controller.ThrowIfCancelled();
             await master.InvokeIdempotentAsync($"setup/minio-bucket-{name}",
                 async () =>
                 {
                     await cluster.ExecMinioCommandAsync(
                         retryPolicy: podExecRetry,
-                        mcCommand:   $"mb minio/{name}");
+                        mcCommand: $"mb minio/{name}");
                 });
 
             controller.ThrowIfCancelled();
@@ -5248,9 +4980,64 @@ $@"- name: StorageType
                     {
                         await cluster.ExecMinioCommandAsync(
                             retryPolicy: podExecRetry,
-                            mcCommand:   $"admin bucket quota minio/{name} --hard {quota}");
+                            mcCommand: $"admin bucket quota minio/{name} --hard {quota}");
                     });
             }
+        }
+
+        /// <summary>
+        /// Creates a <see cref="V1NeonDashboard"/> idempotently.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="master">The master node where the operation will be performed.</param>
+        /// <param name="name">The new bucket name.</param>
+        /// <param name="url">The dashboard URL</param>
+        /// <param name="displayName">The Dashboard display name.</param>
+        /// <param name="enabled">Optionally specify whether the dashboard is enabled.</param>
+        /// <param name="displayOrder">Optionally specify the display order.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task CreateNeonDashboardAsync(
+            ISetupController controller, 
+            NodeSshProxy<NodeDefinition> master, 
+            string name,
+            string url, 
+            string displayName  = null,
+            bool   enabled      = true,
+            int    displayOrder = int.MaxValue)
+        {
+            await SyncContext.Clear;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(url), nameof(url));
+
+            master.Status = $"create: [{name}] dashboard CRD";
+
+            var cluster     = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s         = GetK8sClient(controller);
+
+            var dashboard = new V1NeonDashboard()
+            {
+                Metadata = new V1ObjectMeta()
+                {
+                    Name = name
+                },
+                Spec = new V1NeonDashboard.NeonDashboardSpec()
+                {
+                    DisplayName  = displayName, 
+                    Enabled      = enabled,
+                    DisplayOrder = displayOrder,
+                    Url          = url
+                }
+            };
+
+            controller.ThrowIfCancelled();
+            await master.InvokeIdempotentAsync($"setup/neon-dashboard-{name}",
+                async () =>
+                {
+                    await k8s.CreateClusterCustomObjectAsync<V1NeonDashboard>(dashboard, dashboard.Name());
+                });
         }
 
 

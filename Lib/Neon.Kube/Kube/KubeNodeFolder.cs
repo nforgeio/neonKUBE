@@ -115,11 +115,9 @@ namespace Neon.Kube
         public const string Tmpfs = "/dev/shm/neonkube";
 
         /// <summary>
-        /// Folder where the <b>neon-node-agent</b> will write and execute node task scripts.
-        /// Each script will be executed in a subfolder named by a UUID and the script itself
-        /// will be persisted in the folder and named by the same UUID.
+        /// Folder where neonKUBE related components will maintain runtime state.
         /// </summary>
-        public const string NodeTasks = "/var/run/neonkube/nodetasks";
+        public const string NeonRun = "/run/neonkube";
 
         /// <summary>
         /// Path to a user upload directory.

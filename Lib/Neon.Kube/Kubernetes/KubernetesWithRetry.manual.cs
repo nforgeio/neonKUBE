@@ -29,9 +29,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.Rest;
-
 using k8s;
+using k8s.Autorest;
 using k8s.Models;
 
 using Neon.Common;
@@ -67,7 +66,6 @@ namespace Neon.Kube
                     return await k8s.UpsertSecretAsync(secret, @namespace);
                 });
         }
-
 
         /// <summary>
         /// Executes a program within a pod container.

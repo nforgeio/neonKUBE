@@ -2,6 +2,18 @@
 // FILE:	    Service.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System.Threading.Tasks;
 using System.Net;
@@ -19,10 +31,14 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Common;
+using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.Resources;
 using Neon.Service;
 using Neon.Tasks;
+
+using NeonDashboard.Shared.Components;
 
 using k8s;
 using k8s.Models;
@@ -51,9 +67,19 @@ namespace NeonDashboard
         public ClusterInfo ClusterInfo;
 
         /// <summary>
+        /// Dashboards available.
+        /// </summary>
+        public List<Dashboard> Dashboards;
+
+        /// <summary>
         /// SSO Client Secret.
         /// </summary>
         public string SsoClientSecret;
+
+        /// <summary>
+        /// AES Cipher for protecting cookies..
+        /// </summary>
+        public AesCipher AesCipher;
 
         /// <summary>
         /// USe to turn off Segment tracking.
@@ -122,6 +148,44 @@ namespace NeonDashboard
             KubeNamespace.NeonStatus,
             fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
 
+            Dashboards = new List<Dashboard>();
+            Dashboards.Add(
+                new Dashboard(
+                    id:           "neonkube", 
+                    name:         "neonKUBE",
+                    displayOrder: 0));
+
+            _ = Kubernetes.WatchAsync<V1NeonDashboard>(async (@event) =>
+            {
+                await SyncContext.Clear;
+
+                switch (@event.Type)
+                {
+                    case WatchEventType.Added:
+
+                        await AddDashboardAsync(@event.Value);
+                        break;
+
+                    case WatchEventType.Deleted:
+
+                        await RemoveDashboardAsync(@event.Value);
+                        break;
+
+                    case WatchEventType.Modified:
+
+                        await RemoveDashboardAsync(@event.Value);
+                        await AddDashboardAsync(@event.Value);
+                        break;
+
+                    default:
+
+                        break;
+                }
+
+                Dashboards = Dashboards.OrderBy(d => d.DisplayOrder)
+                                        .ThenBy(d => d.Name).ToList();
+            });
+
             if (NeonHelper.IsDevWorkstation)
             {
                 port = 11001;
@@ -133,7 +197,9 @@ namespace NeonDashboard
             var metricsHost = GetEnvironmentVariable("METRICS_HOST", "http://mimir-query-frontend.neon-monitor.svc.cluster.local:8080");
             PrometheusClient = new PrometheusClient($"{metricsHost}/prometheus/");
 
-            SsoClientSecret = GetEnvironmentVariable("SSO_CLIENT_SECRET", redacted: true);
+            SsoClientSecret = GetEnvironmentVariable("SSO_CLIENT_SECRET", redacted: !Log.IsLogDebugEnabled);
+
+            AesCipher = new AesCipher(GetEnvironmentVariable("COOKIE_CIPHER", AesCipher.GenerateKey(), redacted: !Log.IsLogDebugEnabled));
 
             // Start the web service.
 
@@ -165,6 +231,31 @@ namespace NeonDashboard
             return 0;
         }
 
+        private async Task AddDashboardAsync(V1NeonDashboard dashboard)
+        {
+            await SyncContext.Clear;
+
+            if (string.IsNullOrEmpty(dashboard.Spec.DisplayName))
+            {
+                dashboard.Spec.DisplayName = dashboard.Name();
+            }
+
+            Dashboards.Add(
+                new Dashboard(
+                    id:           dashboard.Name(),
+                    name:         dashboard.Spec.DisplayName,
+                    url:          dashboard.Spec.Url,
+                    displayOrder: dashboard.Spec.DisplayOrder));
+        }
+        private async Task RemoveDashboardAsync(V1NeonDashboard dashboard)
+        {
+            await SyncContext.Clear;
+
+            Dashboards.Remove(
+                Dashboards.Where(
+                    d => d.Id == dashboard.Name())?.First());
+        }
+
         public async Task ConfigureDevAsync()
         {
             await SyncContext.Clear;
@@ -183,11 +274,6 @@ namespace NeonDashboard
 
             try
             {
-                // set config map
-                var configMap = await Kubernetes.ReadNamespacedConfigMapAsync("neon-dashboard", KubeNamespace.NeonSystem);
-
-                SetConfigFile("/etc/neon-dashboard/dashboards.yaml", configMap.Data["dashboards.yaml"]);
-
                 var secret = await Kubernetes.ReadNamespacedSecretAsync("neon-sso-dex", KubeNamespace.NeonSystem);
 
                 SetEnvironmentVariable("SSO_CLIENT_SECRET", Encoding.UTF8.GetString(secret.Data["KUBERNETES_CLIENT_SECRET"]));
@@ -261,7 +347,7 @@ namespace NeonDashboard
                     }
                 };
 
-                await Kubernetes.CreateNamespacedCustomObjectAsync<VirtualService>(virtualService, KubeNamespace.NeonIngress);
+                await Kubernetes.CreateNamespacedCustomObjectAsync<VirtualService>(virtualService, virtualService.Name(), KubeNamespace.NeonIngress);
             }
             SetEnvironmentVariable("METRICS_HOST", $"https://metrics.{ClusterInfo.Domain}");
         }

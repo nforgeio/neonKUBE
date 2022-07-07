@@ -261,7 +261,7 @@ OPTIONS:
 
                     if (check && !debug)
                     {
-                        var k8s = new KubernetesClient(KubernetesClientConfiguration.BuildConfigFromConfigFile(KubeHelper.KubeConfigPath));
+                        var k8s = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(KubeHelper.KubeConfigPath));
 
                         if (!await ClusterChecker.CheckAsync(clusterLogin, k8s))
                         {

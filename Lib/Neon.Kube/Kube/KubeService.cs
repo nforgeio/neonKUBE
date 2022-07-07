@@ -23,6 +23,10 @@ namespace Neon.Kube
     public static class KubeService
     {
         /// <summary>
+        /// Neon Blazor Proxy.
+        /// </summary>
+        public const string NeonBlazorProxy = "neon-blazor-proxy";
+        /// <summary>
         /// Dex.
         /// </summary>
         public const string Dex = "neon-sso-dex";

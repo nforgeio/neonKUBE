@@ -23,8 +23,6 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
-using Newtonsoft.Json;
-
 namespace Neon.Kube
 {
     /// <summary>
@@ -42,21 +40,18 @@ namespace Neon.Kube
         /// <summary>
         /// The list of pools in the cluster.
         /// </summary>
-        [JsonProperty(PropertyName = "pools", Required = Required.Always)]
         public List<V1CStorPoolSpec> Pools { get; set; }
 
         /// <summary>
         /// Compute resources for the cstor pool containers.
         /// </summary>
-        [System.Text.Json.Serialization.JsonConverter(typeof(V1ResourceConverter))]
-        [JsonProperty(PropertyName = "resources", Required = Required.Always)]
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonV1ResourceConverter))]
         public V1ResourceRequirements Resources { get; set; }
 
         /// <summary>
         /// Compute resources for the cstor sidecar containers.
         /// </summary>
-        [System.Text.Json.Serialization.JsonConverter(typeof(V1ResourceConverter))]
-        [JsonProperty(PropertyName = "auxResources", Required = Required.Always)]
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonV1ResourceConverter))]
         public V1ResourceRequirements AuxResources { get; set; }
     }
 }

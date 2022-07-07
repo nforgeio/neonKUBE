@@ -17,13 +17,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 
 using k8s;
 using k8s.Models;
-
-using Newtonsoft.Json;
 
 namespace Neon.Kube
 {
@@ -69,7 +68,6 @@ namespace Neon.Kube
         /// values. More info:
         /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
         /// </summary>
-        [JsonProperty(PropertyName = "apiVersion")]
         public string ApiVersion { get; set; }
 
         /// <summary>
@@ -79,28 +77,23 @@ namespace Neon.Kube
         /// More info:
         /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
         /// </summary>
-        [JsonProperty(PropertyName = "kind")]
         public string Kind { get; set; }
 
         /// <summary>
         /// Gets or sets standard object metadata.
         /// </summary>
-        [JsonProperty(PropertyName = "metadata")]
         public V1ObjectMeta Metadata { get; set; }
 
         /// <summary>
         /// Gets or sets specification of the desired behavior of the
         /// Block device.
         /// </summary>
-        [JsonProperty(PropertyName = "spec")]
         public V1CStorBlockDeviceSpec Spec { get; set; }
 
         /// <summary>
         /// Validate the object.
         /// </summary>
-        /// <exception cref="Microsoft.Rest.ValidationException">
-        /// Thrown if validation fails
-        /// </exception>
+        /// <exception cref="ValidationException">Thrown if validation fails.</exception>
         public virtual void Validate()
         {
         }

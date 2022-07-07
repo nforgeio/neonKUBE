@@ -58,6 +58,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<None Remove="Resources\Helm\calico\templates\service-controller.yaml" />
+		<None Remove="Resources\Helm\calico\templates\service-node.yaml" />
+		<None Remove="Resources\Helm\calico\templates\servicemonitor-controller.yaml" />
+		<None Remove="Resources\Helm\calico\templates\servicemonitor-node.yaml" />
 		<None Remove="Resources\Helm\cert-manager\crds\certificates.yaml" />
 		<None Remove="Resources\Helm\cert-manager\crds\challenges.yaml" />
 		<None Remove="Resources\Helm\cert-manager\crds\clusterissuers.yaml" />
@@ -65,10 +69,15 @@
 		<None Remove="Resources\Helm\cert-manager\crds\orders.yaml" />
 		<None Remove="Resources\Helm\cert-manager\templates\cainjector-deployment - Copy.yaml" />
 		<None Remove="Resources\Helm\cert-manager\templates\grafana-dashboard.yaml" />
+		<None Remove="Resources\Helm\crd-cluster\crds\grafanadashboards.yaml" />
+		<None Remove="Resources\Helm\crd-cluster\crds\grafanadatasources.yaml" />
 		<None Remove="Resources\Helm\grafana-agent\templates\grafana-dashboard.yaml" />
 		<None Remove="Resources\Helm\grafana-agent\templates\neon-dashboard.yaml" />
 		<None Remove="Resources\Helm\grafana\templates\datasource-loki.yaml" />
 		<None Remove="Resources\Helm\grafana\templates\datasource-mimir.yaml" />
+		<None Remove="Resources\Helm\kiali\templates\service-operator.yaml" />
+		<None Remove="Resources\Helm\kiali\templates\servicemonitor-operator.yaml" />
+		<None Remove="Resources\Helm\kiali\templates\servicemonitor.yaml" />
 		<None Remove="Resources\Helm\kube-state-metrics\templates\grafana-dashboard.yaml" />
 		<None Remove="Resources\Helm\loki\templates\service.yaml" />
 		<None Remove="Resources\Helm\loki\templates\virtualservice.yaml" />
@@ -80,6 +89,8 @@
 		<None Remove="Resources\Helm\memcached\templates\_names.tpl" />
 		<None Remove="Resources\Helm\memcached\templates\_tplvalues.tpl" />
 		<None Remove="Resources\Helm\memcached\templates\_warnings.tpl" />
+		<None Remove="Resources\Helm\metrics-server\templates\serviceMonitor.yaml" />
+		<None Remove="Resources\Helm\metrics-server\_helpers.tpl" />
 		<None Remove="Resources\Helm\mimir\templates\alertmanager\alertmanager-dashboard-resources.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\alertmanager\alertmanager-dashboard.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\compactor\compactor-dashboard-resources.yaml" />
@@ -109,18 +120,24 @@
 		<None Remove="Resources\Helm\neon-cluster-operator\.helmignore" />
 		<None Remove="Resources\Helm\neon-cluster-operator\Chart.yaml" />
 		<None Remove="Resources\Helm\neon-cluster-operator\templates\configmap.yaml" />
-		<None Remove="Resources\Helm\neon-cluster-operator\templates\deployment.yaml" />
+		<None Remove="Resources\Helm\neon-cluster-operator\templates\daemonset.yaml" />
+		<None Remove="Resources\Helm\neon-cluster-operator\templates\service.yaml" />
 		<None Remove="Resources\Helm\neon-cluster-operator\templates\serviceaccount.yaml" />
+		<None Remove="Resources\Helm\neon-cluster-operator\templates\servicemonitor.yaml" />
+		<None Remove="Resources\Helm\neon-cluster-operator\templates\_helpers.tpl" />
 		<None Remove="Resources\Helm\neon-cluster-operator\values.yaml" />
 		<None Remove="Resources\Helm\neon-dashboard\templates\clusterrole.yaml" />
 		<None Remove="Resources\Helm\neon-dashboard\templates\clusterrolebinding.yaml" />
-		<None Remove="Resources\Helm\neon-dashboard\templates\configmap.yaml" />
+		<None Remove="Resources\Helm\neon-dashboard\templates\secret.yaml" />
 		<None Remove="Resources\Helm\neon-node-agent\.helmignore" />
 		<None Remove="Resources\Helm\neon-node-agent\Chart.yaml" />
 		<None Remove="Resources\Helm\neon-node-agent\templates\configmap.yaml" />
 		<None Remove="Resources\Helm\neon-node-agent\templates\daemonset.yaml" />
 		<None Remove="Resources\Helm\neon-node-agent\templates\rbac.yaml" />
+		<None Remove="Resources\Helm\neon-node-agent\templates\service.yaml" />
 		<None Remove="Resources\Helm\neon-node-agent\templates\serviceaccount.yaml" />
+		<None Remove="Resources\Helm\neon-node-agent\templates\servicemonitor.yaml" />
+		<None Remove="Resources\Helm\neon-node-agent\templates\_helpers.tpl" />
 		<None Remove="Resources\Helm\neon-node-agent\values.yaml" />
 		<None Remove="Resources\Helm\postgres-operator\templates\configmap-metric-exporter.yaml" />
 		<None Remove="Resources\Helm\postgres-operator\templates\healthcheck-role.yaml" />
@@ -136,20 +153,22 @@
 		<ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
 		<ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
 		<ProjectReference Include="..\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
+		<ProjectReference Include="..\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
 		<ProjectReference Include="..\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
 		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
 		<ProjectReference Include="..\Neon.Postgres\Neon.Postgres.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Helm" Version="0.1.35" />
 		<PackageReference Include="Minio" Version="3.1.13" />
 		<PackageReference Include="Samboy063.Tomlet" Version="3.1.2" />
-		<PackageReference Include="Tomlyn" Version="0.1.2" />
+		<PackageReference Include="SSH.NET" Version="2020.0.2" />
+		<PackageReference Include="Tomlyn" Version="0.3.1" />
 		<PackageReference Include="Npgsql" Version="6.0.2" />
 	</ItemGroup>
 
 	<ItemGroup>
+		<Folder Include="Resources\Helm\crd-cluster\templates\" />
 		<Folder Include="Resources\Helm\neon-cluster-operator\crds\" />
 	</ItemGroup>
 

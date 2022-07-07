@@ -4,6 +4,8 @@ metadata:
   name: {{ include "neon-dashboard.fullname" . }}
   labels:
     {{- include "neon-dashboard.labels" . | nindent 4 }}
+  annotations:
+    reloader.stakater.com/auto: "true"
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
@@ -41,6 +43,11 @@ spec:
                 secretKeyRef:
                   name:  neon-sso-dex
                   key: KUBERNETES_CLIENT_SECRET
+            - name: COOKIE_CIPHER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "neon-dashboard.fullname" . }}
+                  key: CIPHER_KEY
           ports:
             - name: http-web
               containerPort: {{ .Values.service.port }}
@@ -48,9 +55,6 @@ spec:
             - name: http-metrics
               containerPort: {{ .Values.metrics.port }}
               protocol: TCP
-          volumeMounts:
-            - name: config
-              mountPath: /etc/neon-dashboard
           startupProbe:
             exec:
               command:
@@ -87,7 +91,3 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      volumes:
-        - name: config
-          configMap:
-            name: neon-dashboard

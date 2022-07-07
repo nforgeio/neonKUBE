@@ -270,7 +270,7 @@ data:
     auth:
       token:
         issuer: harbor-token-issuer
-        realm: https://registry.{{ .Values.cluster.domain }}/service/token
+        realm: https://{{ .Values.neonkube.clusterDomain.harborRegistry }}.{{ .Values.cluster.domain }}/service/token
         rootcertbundle: /harbor_cust_cert/registry-harbor-harbor-core-tokencert.crt
         service: harbor-registry
     notifications:

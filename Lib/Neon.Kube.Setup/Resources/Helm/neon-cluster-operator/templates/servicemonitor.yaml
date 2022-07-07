@@ -1,0 +1,32 @@
+{{- if and .Values.metrics.enabled .Values.metrics.servicemonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ template "neon-cluster-operator.fullname" . }}
+{{- if .Values.metrics.servicemonitor.namespace }}
+  namespace: {{ .Values.metrics.servicemonitor.namespace }}
+{{- else }}
+  namespace: {{ .Release.Namespace | quote }}
+{{- end }}
+  labels:
+    app: {{ template "neon-cluster-operator.name" . }}
+    chart: {{ template "neon-cluster-operator.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+{{- if .Values.metrics.servicemonitor.labels }}
+{{ toYaml .Values.metrics.servicemonitor.labels | indent 4}}
+{{- end }}
+spec:
+  jobLabel: {{ template "neon-cluster-operator.fullname" . }}
+  selector:
+    matchLabels:
+    {{- include "neon-cluster-operator.labels" . | nindent 6 }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  endpoints:
+  - targetPort: {{ .Values.metrics.port }}
+    path: "/metrics"
+    interval: {{ .Values.metrics.servicemonitor.interval }}
+    scrapeTimeout: {{ .Values.metrics.servicemonitor.scrapeTimeout }}
+{{- end }}

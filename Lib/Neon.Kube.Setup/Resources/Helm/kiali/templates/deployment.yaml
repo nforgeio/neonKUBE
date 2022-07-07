@@ -20,7 +20,6 @@ spec:
         name: {{ include "kiali-operator.fullname" . }}
       {{- include "kiali-operator.labels" . | nindent 8 }}
       annotations:
-        prometheus.io/scrape: {{ .Values.metrics.enabled | quote }}
         {{- if .Values.podAnnotations }}
         {{- toYaml .Values.podAnnotations | nindent 8 }}
     {{- end }}

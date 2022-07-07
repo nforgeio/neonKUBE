@@ -54,7 +54,7 @@ configSecret:
 # -- Application configuration.
 # See the [official documentation](https://dexidp.io/docs/).
 config:
-  issuer: https://sso.cluster.neoncluster.io
+  issuer: https://neon-sso.cluster.neoncluster.io
   storage:
     type: kubernetes
     config:

@@ -26,16 +26,11 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Threading;
 
-using Microsoft.AspNetCore.JsonPatch;
-using Microsoft.Rest;
-
 using Neon.Common;
 using Neon.Tasks;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
 using k8s;
+using k8s.Autorest;
 using k8s.Models;
 
 namespace Neon.Kube
@@ -131,41 +126,41 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object list.</returns>
         public static async Task<V1CustomObjectList<T>> ListNamespacedCustomObjectAsync<T>(
-            this IKubernetes k8s,
-            string namespaceParameter,
-            bool? allowWatchBookmarks = null,
-            string continueParameter = null,
-            string fieldSelector = null,
-            string labelSelector = null,
-            int? limit = null,
-            string resourceVersion = null,
-            string resourceVersionMatch = null,
-            int? timeoutSeconds = null,
-            bool? watch = null,
-            CancellationToken cancellationToken = default(CancellationToken))
+            this IKubernetes    k8s,
+            string              namespaceParameter,
+            bool?               allowWatchBookmarks  = null,
+            string              continueParameter    = null,
+            string              fieldSelector        = null,
+            string              labelSelector        = null,
+            int?                limit                = null,
+            string              resourceVersion      = null,
+            string              resourceVersionMatch = null,
+            int?                timeoutSeconds       = null,
+            bool?               watch                = null,
+            CancellationToken   cancellationToken    = default(CancellationToken))
 
-            where T : IKubernetesObject, new()
+            where T : IKubernetesObject<V1ObjectMeta>, new()
         {
             await SyncContext.Clear;
 
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
             var result = await k8s.ListNamespacedCustomObjectAsync(
-                group: typeMetadata.Group,
-                version: typeMetadata.ApiVersion,
-                plural: typeMetadata.PluralName,
-                namespaceParameter: namespaceParameter,
-                allowWatchBookmarks: allowWatchBookmarks,
-                continueParameter: continueParameter,
-                fieldSelector: fieldSelector,
-                labelSelector: labelSelector,
-                limit: limit,
-                resourceVersion: resourceVersion,
+                group:                typeMetadata.Group,
+                version:              typeMetadata.ApiVersion,
+                plural:               typeMetadata.PluralName,
+                namespaceParameter:   namespaceParameter,
+                allowWatchBookmarks:  allowWatchBookmarks,
+                continueParameter:    continueParameter,
+                fieldSelector:        fieldSelector,
+                labelSelector:        labelSelector,
+                limit:                limit,
+                resourceVersion:      resourceVersion,
                 resourceVersionMatch: resourceVersionMatch,
-                timeoutSeconds: timeoutSeconds,
-                watch: watch,
-                pretty: false,
-                cancellationToken: cancellationToken);
+                timeoutSeconds:       timeoutSeconds,
+                watch:                watch,
+                pretty:               false,
+                cancellationToken:    cancellationToken);
 
             return NeonHelper.JsonDeserialize<V1CustomObjectList<T>>(((JsonElement)result).GetRawText());
         }
@@ -274,21 +269,21 @@ namespace Neon.Kube
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
             return k8s.ListNamespacedCustomObjectWithHttpMessagesAsync(
-                group: typeMetadata.Group,
-                version: typeMetadata.ApiVersion,
-                plural: typeMetadata.PluralName,
-                namespaceParameter: namespaceParameter,
-                allowWatchBookmarks: allowWatchBookmarks,
-                continueParameter: continueParameter,
-                fieldSelector: fieldSelector,
-                labelSelector: labelSelector,
-                limit: limit,
-                resourceVersion: resourceVersion,
+                group:                typeMetadata.Group,
+                version:              typeMetadata.ApiVersion,
+                plural:               typeMetadata.PluralName,
+                namespaceParameter:   namespaceParameter,
+                allowWatchBookmarks:  allowWatchBookmarks,
+                continueParameter:    continueParameter,
+                fieldSelector:        fieldSelector,
+                labelSelector:        labelSelector,
+                limit:                limit,
+                resourceVersion:      resourceVersion,
                 resourceVersionMatch: resourceVersionMatch,
-                timeoutSeconds: timeoutSeconds,
-                watch: watch,
-                pretty: false,
-                cancellationToken: cancellationToken);
+                timeoutSeconds:       timeoutSeconds,
+                watch:                watch,
+                pretty:               false,
+                cancellationToken:    cancellationToken);
         }
 
         /// <summary>
@@ -415,7 +410,7 @@ namespace Neon.Kube
                 pretty:               false,
                 cancellationToken:    cancellationToken);
 
-            return NeonHelper.JsonDeserialize<V1CustomObjectList<KubernetesObjectMetadata>>(((JsonElement)result).GetRawText());
+            return ((JsonElement)result).Deserialize<V1CustomObjectList<KubernetesObjectMetadata>>(options: serializeOptions);
         }
 
         /// <summary>
@@ -424,6 +419,7 @@ namespace Neon.Kube
         /// <typeparam name="T">The custom object type.</typeparam>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
         /// <param name="body">The object data.</param>
+        /// <param name="name">Specifies the object name.</param>
         /// <param name="namespaceParameter">That target Kubernetes namespace.</param>
         /// <param name="dryRun">
         /// When present, indicates that modifications should not be persisted. An invalid
@@ -441,6 +437,7 @@ namespace Neon.Kube
         public static async Task<T> CreateNamespacedCustomObjectAsync<T>(
             this IKubernetes    k8s,
             T                   body,
+            string              name,
             string              namespaceParameter,
             string              dryRun            = null,
             string              fieldManager      = null,
@@ -449,7 +446,10 @@ namespace Neon.Kube
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
             await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(body.Metadata.Name), nameof(body.Metadata.Name));
+            Covenant.Requires<ArgumentNullException>(body != null, nameof(body));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            body.Metadata.Name = name;
 
             var typeMetadata = body.GetKubernetesTypeMetadata();
             var result       = await k8s.CreateNamespacedCustomObjectAsync(
@@ -463,7 +463,7 @@ namespace Neon.Kube
                 pretty:             false, 
                 cancellationToken:  cancellationToken);
 
-            return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
+            return ((JsonElement)result).Deserialize<T>(options: serializeOptions);
         }
 
         /// <summary>
@@ -475,7 +475,7 @@ namespace Neon.Kube
         /// <param name="name">Specifies the object name.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object.</returns>
-        public static async Task<T> GetNamespacedCustomObjectAsync<T>(
+        public static async Task<T> ReadNamespacedCustomObjectAsync<T>(
             this IKubernetes    k8s,
             string              namespaceParameter,
             string              name,
@@ -494,7 +494,7 @@ namespace Neon.Kube
                 name:               name, 
                 cancellationToken:  cancellationToken);
 
-            return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
+            return ((JsonElement)result).Deserialize<T>(options: serializeOptions);
         }
 
         /// <summary>
@@ -543,7 +543,7 @@ namespace Neon.Kube
                 fieldManager:       fieldManager, 
                 cancellationToken:  cancellationToken);
 
-            return NeonHelper.JsonDeserialize<T>(((JsonElement)result).GetRawText());
+            return ((JsonElement)result).Deserialize<T>(options: serializeOptions);
         }
 
         /// <summary>
@@ -580,6 +580,9 @@ namespace Neon.Kube
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
             await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(body != null, nameof(body));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             // $todo(jefflill): Investigate fixing race condition:
             // 
@@ -590,7 +593,7 @@ namespace Neon.Kube
 
             try
             {
-                await k8s.GetNamespacedCustomObjectAsync<T>(namespaceParameter, name, cancellationToken);
+                await k8s.ReadNamespacedCustomObjectAsync<T>(namespaceParameter, name, cancellationToken);
             }
             catch (HttpOperationException e)
             {
@@ -598,6 +601,7 @@ namespace Neon.Kube
                 {
                     return await k8s.CreateNamespacedCustomObjectAsync<T>(
                         body:               body,
+                        name:               name,
                         namespaceParameter: namespaceParameter,
                         dryRun:             dryRun, 
                         fieldManager:       fieldManager, 
@@ -624,12 +628,11 @@ namespace Neon.Kube
         /// </summary>
         /// <typeparam name="T">The custom object type.  Note that this is passed as the entire custom object including its status.</typeparam>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
-        /// <param name="body">Specifies the new object data.</param>
-        /// <param name="namespaceParameter">That target Kubernetes namespace.</param>
         /// <param name="patch">
         /// Specifies the patch to be applied to the object status.  This is typically a 
         /// <see cref="V1Patch"/> instance but additional patch types may be supported in 
         /// </param>
+        /// <param name="namespaceParameter">That target Kubernetes namespace.</param>
         /// <param name="name">Specifies the object name.</param>
         /// <param name="dryRun">
         /// When present, indicates that modifications should not be persisted. An invalid
@@ -647,12 +650,11 @@ namespace Neon.Kube
         /// fields owned by other people. Force flag must be unset for non-apply patch requests.
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
-        /// <returns>The updated object.</returns>
+        /// <returns>The updated custom object.</returns>
         public static async Task<T> PatchNamespacedCustomObjectStatusAsync<T>(
             this IKubernetes    k8s,
-            T                   body,
+            V1Patch             patch,
             string              namespaceParameter, 
-            object              patch,
             string              name,
             string              dryRun            = null,
             string              fieldManager      = null,
@@ -662,14 +664,12 @@ namespace Neon.Kube
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
             await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(body != null, nameof(body));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentNullException>(patch != null, nameof(patch));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
-
-            return (T)await k8s.PatchNamespacedCustomObjectStatusAsync(
+            var result       = await k8s.PatchNamespacedCustomObjectStatusAsync(
                 body:               patch,
                 namespaceParameter: namespaceParameter,
                 group:              typeMetadata.Group,
@@ -680,6 +680,8 @@ namespace Neon.Kube
                 fieldManager:       fieldManager,
                 force:              force,
                 cancellationToken:  cancellationToken);
+
+            return ((JsonElement)result).Deserialize<T>(options: serializeOptions);
         }
 
         /// <summary>
@@ -716,7 +718,7 @@ namespace Neon.Kube
         /// processed
         /// </param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
-        /// <returns>The updated object.</returns>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task DeleteNamespacedCustomObjectAsync<T>(
             this                IKubernetes k8s,
             string              namespaceParameter,
@@ -728,7 +730,7 @@ namespace Neon.Kube
             string              dryRun             = null,
             CancellationToken   cancellationToken  = default(CancellationToken))
 
-            where T : IKubernetesObject, new()
+            where T : IKubernetesObject<V1ObjectMeta>, new()
         {
             await SyncContext.Clear;
 
@@ -742,6 +744,86 @@ namespace Neon.Kube
                     namespaceParameter: namespaceParameter, 
                     plural:             typeMetadata.PluralName, 
                     name:               name,
+                    body:               body,
+                    gracePeriodSeconds: gracePeriodSeconds,
+                    orphanDependents:   orphanDependents,
+                    propagationPolicy:  propagationPolicy,
+                    dryRun:             dryRun,
+                    cancellationToken:  cancellationToken);
+            }
+            catch (HttpOperationException e)
+            {
+                if (e.Response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Deletes a namespace scoped custom object passed, and name and doesn't throw any 
+        /// exceptions if the object doesn't exist.
+        /// </summary>
+        /// <typeparam name="T">The custom object type.</typeparam>
+        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
+        /// <param name="namespaceParameter">Specifies the target Kubernetes namespace.</param>
+        /// <param name="object">Specifies the object being deleted.</param>
+        /// <param name="body">Optionally specifies deletion options.</param>
+        /// <param name="gracePeriodSeconds">
+        /// Optionally specifies the duration in seconds before the object should be deleted. Value must be
+        /// non-negative integer. The value zero indicates delete immediately. If this value
+        /// is nil, the default grace period for the specified type will be used. Defaults
+        /// to a per object value if not specified. zero means delete immediately.
+        /// </param>
+        /// <param name="orphanDependents">
+        /// Deprecated: please use the PropagationPolicy, this field will be deprecated in
+        /// 1.7. Should the dependent objects be orphaned. If true/false, the &quot;orphan&quot;
+        /// finalizer will be added to/removed from the object&apos;s finalizers list. Either
+        /// this field or PropagationPolicy may be set, but not both.
+        /// </param>
+        /// <param name="propagationPolicy">
+        /// Optionally specifies ehether and how garbage collection will be performed. Either 
+        /// this field or OrphanDependents may be set, but not both. The default policy is 
+        /// decided by the existing finalizer set in the metadata.finalizers and the resource-specific
+        /// default policy.
+        /// </param>
+        /// <param name="dryRun">
+        /// Optionally specifies that modifications should not be persisted. An invalid
+        /// or unrecognized dryRun directive will result in an error response and no further
+        /// processing of the request. Valid values are: - All: all dry run stages will be
+        /// processed
+        /// </param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task DeleteNamespacedCustomObjectAsync<T>(
+            this                IKubernetes k8s,
+            string              namespaceParameter,
+            T                   @object,
+            V1DeleteOptions     body               = null,
+            int?                gracePeriodSeconds = null,
+            bool?               orphanDependents   = null,
+            string              propagationPolicy  = null,
+            string              dryRun             = null,
+            CancellationToken   cancellationToken  = default(CancellationToken))
+
+            where T : IKubernetesObject<V1ObjectMeta>, new()
+        {
+            await SyncContext.Clear;
+
+            try
+            {
+                var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
+
+                await k8s.DeleteNamespacedCustomObjectAsync(
+                    group:              typeMetadata.Group, 
+                    version:            typeMetadata.ApiVersion, 
+                    namespaceParameter: namespaceParameter, 
+                    plural:             typeMetadata.PluralName, 
+                    name:               @object.Name(),
                     body:               body,
                     gracePeriodSeconds: gracePeriodSeconds,
                     orphanDependents:   orphanDependents,

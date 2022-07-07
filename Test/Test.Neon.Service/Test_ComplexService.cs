@@ -210,7 +210,7 @@ WEB_RESULT=HELLO WORLD!
 
                 var service = CreateService();
 
-                service.LoadEnvironmentVariables(tempFile.Path);
+                service.LoadEnvironmentVariableFile(tempFile.Path);
 
                 fixture.Restart(() => service);
                 Assert.True(fixture.IsRunning);
@@ -243,7 +243,7 @@ WEB_RESULT=HELLO WORLD! (encrypted)
 
                 var service = CreateService();
 
-                service.LoadEnvironmentVariables(decryptedPath);
+                service.LoadEnvironmentVariableFile(decryptedPath);
                 vault.Encrypt(decryptedPath, encryptedPath, "foo");
                 Assert.True(NeonVault.IsEncrypted(encryptedPath));
 

@@ -422,7 +422,7 @@ service ntp restart
             sb.AppendLine($"NEON_CONFIG_FOLDER={KubeNodeFolder.Config}");
             sb.AppendLine($"NEON_SETUP_FOLDER={KubeNodeFolder.Setup}");
             sb.AppendLine($"NEON_STATE_FOLDER={KubeNodeFolder.State}");
-            sb.AppendLine($"NEON_TASK_FOLDER={KubeNodeFolder.NodeTasks}");
+            sb.AppendLine($"NEON_RUN_FOLDER={KubeNodeFolder.NeonRun}");
             sb.AppendLine($"NEON_TMPFS_FOLDER={KubeNodeFolder.Tmpfs}");
 
             // Kubernetes related variables for masters.
@@ -888,12 +888,27 @@ systemctl enable kubelet
                         }
                     }
 
-                    var helmChartScript =
+                    var helmChartScript = new StringBuilder();
+
+                helmChartScript.AppendLineLinux(
 $@"
 set -euo pipefail
 
 cd {KubeNodeFolder.Helm}
+");
 
+                    if (controller.Get<bool>(KubeSetupProperty.MaintainerMode))
+                    {
+                        helmChartScript.AppendLineLinux(
+        $@"
+if `helm list --namespace {@namespace} | cut -d' ' -f1 | grep {releaseName}`; then
+    helm uninstall {releaseName} --namespace {@namespace}
+fi
+");
+                    }
+
+                    helmChartScript.AppendLineLinux(
+$@"
 helm install {releaseName} --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} ./{chartName}
 
 START=`date +%s`
@@ -904,12 +919,12 @@ set +e
 until [ `helm status {releaseName} --namespace {@namespace} | grep ""STATUS: deployed"" | wc -l` -eq 1  ];
 do
   if [ $((`date +%s`)) -gt $DEPLOY_END ]; then
-    helm delete {releaseName} || true
+    helm uninstall {releaseName} --namespace {@namespace} || true
     exit 1
   fi
    sleep 1
 done
-";
+");
                     SudoCommand(CommandBundle.FromScript(helmChartScript), RunOptions.FaultOnError).EnsureSuccess();
                 });
 

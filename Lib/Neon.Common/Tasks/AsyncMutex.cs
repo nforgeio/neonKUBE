@@ -25,30 +25,12 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-// $todo(jefflill):
-//
-// The current implementation is based on [AsyncReaderWriterLock] for simplicitly 
-// and because that is well tested.  There could be minor efficency gains to
-// reimplement this from scratch using [SemaphoreSlim].
-
 namespace Neon.Tasks
 {
     /// <summary>
     /// Implements an <c>async</c>/<c>await</c> friendly equivalent of <see cref="Mutex"/>.
     /// </summary>
     /// <remarks>
-    /// <note>
-    /// <para>
-    /// <b>IMPORTANT:</b> This class does not allow a single task to acquire the lock more than once.  
-    /// This differs from how the regular <see cref="Mutex"/> classes work which do allow a single 
-    /// thread to acquire the mutex more than once.
-    /// </para>
-    /// <para>
-    /// This means that you cannot expect to acquire a mutex in a task and then call into a
-    /// method that will also attempt to acquire the same mutex.  Doing this will result in 
-    /// a deadlock.
-    /// </para>
-    /// </note>
     /// <para>
     /// This class can be used to grant a task exclusive access to a resource.  This class is
     /// pretty easy to use.  Simply instantiate an instance and then call <see cref="AcquireAsync"/>
@@ -83,6 +65,31 @@ namespace Neon.Tasks
     /// <para>
     /// <see cref="AsyncMutex"/>'s <see cref="Dispose()"/> method ensures that any tasks
     /// waiting for a lock will be unblocked with an <see cref="ObjectDisposedException"/>.
+    /// </para>
+    /// <para><b>REENTRANCY NOT SUPPORTED</b></para>
+    /// <para>
+    /// <b>IMPORTANT:</b> This class does not allow a single task to acquire the lock more than once.  
+    /// This differs from how the regular <see cref="Mutex"/> classes work which do allow a single 
+    /// thread to acquire the mutex more than once.
+    /// </para>
+    /// <para>
+    /// This means that you cannot expect to acquire a mutex in a task and then call into a
+    /// method that will also attempt to acquire the same mutex.  Doing this will result in 
+    /// a deadlock.
+    /// </para>
+    /// <code language="cs">
+    /// var mutex = new AsyncMutex();
+    /// 
+    /// using (await mutex.Acquire())
+    /// {
+    ///     using (await mutex.Acquire())   // $lt;--- This will block forever
+    ///     {
+    ///         // Protected code
+    ///     }
+    /// }
+    /// </code>
+    /// <para>
+    /// You can use <see cref="AsyncReentrantMutex"/> instead.
     /// </para>
     /// </remarks>
     /// <threadsafety instance="true"/>
@@ -161,7 +168,7 @@ namespace Neon.Tasks
         /// Acquires exclusive access to the mutex.
         /// </summary>
         /// <returns>The <see cref="IDisposable"/> instance to be disposed to release the lock.</returns>
-        /// <exception cref="ObjectDisposedException">Thrown if the lock is disposed before or after this method is called.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the mutex is disposed before or after this method is called.</exception>
         public NonDisposableTask<IDisposable> AcquireAsync()
         {
             if (isDisposed)

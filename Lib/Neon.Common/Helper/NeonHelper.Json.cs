@@ -73,6 +73,12 @@ namespace Neon.Common
 
                     AddTypeConverters(settings);
 
+                    // Set maximum object nesting depth to mitigate stack overflow/DOS attacks:
+                    //
+                    //      https://github.com/JamesNK/Newtonsoft.Json/issues/2457
+
+                    settings.MaxDepth = 64;
+
                     return settings;
                 });
 

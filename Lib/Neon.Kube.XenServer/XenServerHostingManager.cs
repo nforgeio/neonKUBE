@@ -1028,8 +1028,8 @@ namespace Neon.Kube
                         availability.Constraints.Add(hostname, constraints);
                     }
 
-                    var humanRequiredMemory  = ByteUnits.Humanize(requiredMemory, powerOfTwo: true, spaceBeforeUnit: true);
-                    var humanAvailableMemory = ByteUnits.Humanize(availableMemory, powerOfTwo: true, spaceBeforeUnit: true);
+                    var humanRequiredMemory  = ByteUnits.Humanize(requiredMemory, powerOfTwo: true);
+                    var humanAvailableMemory = ByteUnits.Humanize(availableMemory, powerOfTwo: true);
 
                     constraints.Add(
                         new HostingResourceConstraint()
@@ -1056,8 +1056,8 @@ namespace Neon.Kube
                         availability.Constraints.Add(hostname, constraints);
                     }
 
-                    var humanRequiredDisk  = ByteUnits.Humanize(requiredDisk, powerOfTwo: true, spaceBeforeUnit: true);
-                    var humanAvailableDisk = ByteUnits.Humanize(availableDisk, powerOfTwo: true, spaceBeforeUnit: true);
+                    var humanRequiredDisk  = ByteUnits.Humanize(requiredDisk, powerOfTwo: true);
+                    var humanAvailableDisk = ByteUnits.Humanize(availableDisk, powerOfTwo: true);
 
                     constraints.Add(
                         new HostingResourceConstraint()
@@ -1423,7 +1423,7 @@ namespace Neon.Kube
 
                             switch (stopMode)
                             {
-                                case StopMode.Sleep:
+                                case StopMode.Pause:
 
                                     xenClient.Machine.Suspend(vm);
                                     break;

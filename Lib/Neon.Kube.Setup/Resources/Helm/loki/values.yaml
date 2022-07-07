@@ -107,11 +107,7 @@ loki:
         dir: /var/loki/wal
 
     limits_config:
-      enforce_metric_name: false
-      reject_old_samples: true
-      reject_old_samples_max_age: 168h
-      max_cache_freshness_per_query: 10m
-      split_queries_by_interval: 15m
+      {{- toYaml .Values.limits_config | nindent 6 }}
 
     {{- if .Values.loki.schemaConfig}}
     schema_config:
@@ -138,8 +134,7 @@ loki:
           service: http
           timeout: 1000ms
     table_manager:
-      retention_deletes_enabled: true
-      retention_period: 168h
+      {{- toYaml .Values.table_manager | nindent 6 }}
 
     query_range:
       align_queries_with_step: true
@@ -366,7 +361,7 @@ ingester:
     # -- Enable creating PVCs which is required when using boltdb-shipper
     enabled: true
     # -- Size of persistent disk
-    size: 1Gi
+    size: 5Gi
     # -- Storage class to be used.
     # If defined, storageClassName: <storageClass>.
     # If set to "-", storageClassName: "", which disables dynamic provisioning.
@@ -1052,7 +1047,7 @@ indexGateway:
     # -- Enable creating PVCs which is required when using boltdb-shipper
     enabled: true
     # -- Size of persistent disk
-    size: 1Gi
+    size: 2Gi
     # -- Storage class to be used.
     # If defined, storageClassName: <storageClass>.
     # If set to "-", storageClassName: "", which disables dynamic provisioning.
@@ -1062,6 +1057,18 @@ indexGateway:
 
 memcached:
   enabled: true
+
+limits_config:
+  enforce_metric_name: false
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h
+  max_cache_freshness_per_query: 10m
+  split_queries_by_interval: 15m
+  retention_period: 744h
+
+table_manager:
+  retention_deletes_enabled: true
+  retention_period: 168h
 
 networkPolicy:
   # -- Specifies whether Network Policies should be created
