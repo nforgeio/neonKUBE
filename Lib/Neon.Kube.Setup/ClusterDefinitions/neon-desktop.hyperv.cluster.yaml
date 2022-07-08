@@ -15,7 +15,7 @@ hosting:
   vm:
     namePrefix: ""
     cores: 4
-    memory: 12 GiB
+    memory: 8 GiB
     osDisk: 64 GiB
 network:
   premiseSubnet: 100.64.0.0/24

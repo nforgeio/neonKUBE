@@ -94,7 +94,7 @@ namespace Neon.Kube
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.HarborNotaryServer, CalculateHarborNotaryServerAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.HarborNotarySigner, CalculateHarborNotarySignerAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.HarborPortal, CalculateHarborPortalAdvice(cluster));
-            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Redis, CalculateHarborRedisAdvice(cluster));
+            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Redis, CalculateRedisAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.HarborRegistry, CalculateHarborRegistryAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.IstioIngressGateway, CalculateIstioIngressGatewayAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.IstioProxy, CalculateIstioProxyAdvice(cluster));
@@ -162,7 +162,6 @@ namespace Neon.Kube
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.TempoQueryFrontend, CalculateTempoQueryFrontendAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.TempoRuler, CalculateTempoRulerAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.TempoStoreGateway, CalculateTempoStoreGatewayAdvice(cluster));
-            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.RedisHA, CalculateRedisHAAdvice(cluster));
 
             // Make the advice available to subsequent setup steps.
 
@@ -382,11 +381,12 @@ namespace Neon.Kube
             return advice;
         }
 
-        private static KubeServiceAdvice CalculateHarborRedisAdvice(ClusterProxy cluster)
+        private static KubeServiceAdvice CalculateRedisAdvice(ClusterProxy cluster)
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.Redis);
 
             advice.ReplicaCount = Math.Min(3, cluster.Definition.Masters.Count());
+            advice.MetricsEnabled = false;
 
             return advice;
         }
@@ -1269,18 +1269,6 @@ namespace Neon.Kube
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("16Mi");
             advice.ReplicaCount     = 1;
-
-            return advice;
-        }
-
-        private static KubeServiceAdvice CalculateRedisHAAdvice(ClusterProxy cluster)
-        {
-            var advice = new KubeServiceAdvice(KubeClusterAdvice.RedisHA);
-
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.Masters.Count() == 1)
-            {
-                advice.MetricsEnabled = false;
-            }
 
             return advice;
         }

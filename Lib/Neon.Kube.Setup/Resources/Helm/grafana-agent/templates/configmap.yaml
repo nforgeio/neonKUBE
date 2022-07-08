@@ -48,7 +48,7 @@ data:
       {{- if .Values.metrics.global.enabled }}
       configs:
         {{- if .Values.tracing.enabled }}
-        - name: tracing
+        - name: traces
           host_filter: true
           wal_truncate_frequency: 15m
           max_wal_time: 15m

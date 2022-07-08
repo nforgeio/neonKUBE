@@ -57,7 +57,7 @@ spec:
             "mode": "html"
           },
           "pluginVersion": "8.5.0",
-          "title": "Panel Title",
+          "title": " ",
           "type": "text"
         },
         {

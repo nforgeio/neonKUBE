@@ -57,8 +57,8 @@ namespace Neon.Kube
         /// </summary>
         public V1CStorPoolCluster()
         {
-            ApiVersion = "cstor.openebs.io/v1";
-            Kind       = "CStorPoolCluster";
+            ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
+            Kind       = KubeKind;
         }
 
         /// <summary>
