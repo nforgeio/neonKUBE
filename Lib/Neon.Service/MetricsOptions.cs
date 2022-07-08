@@ -62,7 +62,7 @@ namespace Neon.Service
     /// <para>
     /// Built-in Prometheus scraping support is limited to HTTP and not HTTPS and no authentication
     /// is enforced.  Pushgateway support can use HTTPS as well as HTTP, but we don't support
-    /// authentication.  
+    /// authentication at this time.  
     /// </para>
     /// <para>
     /// For more complex scenarios, just leave <see cref="Mode"/><c>==</c><see cref="MetricsMode.Disabled"/>
@@ -72,7 +72,28 @@ namespace Neon.Service
     /// </para>
     /// </note>
     /// <note>
-    /// For ASPNET applications, we recommend that you leave metrics collection disabled here and 
+    /// <para>
+    /// For ASPNET applications, you have some choices:
+    /// </para>
+    /// <list type="number">
+    /// <item>
+    /// Leave metrics disabled here and configure middleware to handle the metrics; this will
+    /// automatically much more detailed web related metrics.  You can use the standard 
+    /// <b>prometheus-net</b> middleware builder extension.
+    /// </item>
+    /// <item>
+    /// Enable metrics here and optionally set <see cref="GetCollector"/> to a function that
+    /// returns the 
+    /// </item>
+    /// <item>
+    /// </item>
+    /// </list>
+    /// 
+    /// 
+    /// 
+    /// 
+    /// 
+    /// , we recommend that you leave metrics collection disabled here and 
     /// configure middleware to handle the metrics; this will automatically much more detailed web
     /// related metrics.  You can use the standard <b>prometheus-net</b> middleware builder extension.
     /// </note>
@@ -86,18 +107,19 @@ namespace Neon.Service
 
         /// <summary>
         /// Specifies the TCP port for the local HTTP listener that exposes metrics
-        /// for scraping by Prometheus.
+        /// for scraping by Prometheus.  This defaults to <see cref="NetworkPorts.PrometheusMetrics"/>.
         /// </summary>
         public int Port { get; set; } = NetworkPorts.PrometheusMetrics;
 
         /// <summary>
         /// Specifies the URL path for the local HTTP listener that exposes metrics
-        /// for scraping by Prometheus.
+        /// for scraping by Prometheus.  This defaults to <b>"metrics/"</b>.
         /// </summary>
         public string Path { get; set; } = "metrics/";
 
         /// <summary>
         /// Specifies the target Prometheus Pushgateway for <see cref="MetricsMode.Push"/> mode.
+        /// This defaults to <c>null</c>.
         /// </summary>
         public string PushUrl { get; set; } = null;
 
@@ -113,9 +135,25 @@ namespace Neon.Service
         public IList<Tuple<string, string>> PushLabels { get; set; } = new List<Tuple<string, string>>();
 
         /// <summary>
-        /// Optionally configures a callback that can return an additional metrics collector for the service.
-        /// </summary>
-        public Func<IDisposable> GetCollector { get; set; }
+        /// <para>
+        /// Optionally configures a callback that can return a custom metrics collector for the service.
+        /// </para>
+        /// <para>
+        /// We recommend that you configure this to return the standard .NET Runtime or ASP.NET runtime metrics
+        /// collector so your services will report those as well.  The code to configure the .NET Runtime metrics
+        /// looks like this:
+        /// </para>
+        /// <code language="C#">
+        /// Service.MetricsOptions.GetCollector =
+        ///     () =>
+        ///     {
+        ///         return DotNetRuntimeStatsBuilder
+        ///             .Default()
+        ///             .StartCollecting();
+        ///     };
+    /// </code>
+    /// </summary>
+    public Func<IDisposable> GetCollector { get; set; }
 
         /// <summary>
         /// Validates the options.
