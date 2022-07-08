@@ -35,7 +35,7 @@ namespace UnixText
     /// <para>
     /// Examines one or more text files specified on the command line for Unicode
     /// UTF-8 byte order marker (BOM) as well as Windows style CR-LF line endings.  
-    /// If any of these are present, the file will be rewritten stripping out the
+    /// If any of these are present, the file will be rewritten, stripping out the
     /// (BOM) and converting to Unix style (LF only) line endings with the file 
     /// being generated using the UTF-8 encoding.
     /// </para>
