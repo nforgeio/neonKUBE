@@ -107,5 +107,71 @@ namespace TestCommon
                 existing.Add(v);
             }
         }
+
+        [Fact]
+        public void PseudoRandomTimeSpan_Max()
+        {
+            Assert.Equal(TimeSpan.Zero, NeonHelper.PseudoRandomTimespan(TimeSpan.Zero));
+
+            var max = TimeSpan.FromSeconds(10);
+
+            for (int i = 0; i < 1000000; i++)
+            {
+                var value = NeonHelper.PseudoRandomTimespan(max);
+
+                Assert.True(value >= TimeSpan.Zero);
+                Assert.True(value <= max);
+            }
+
+            // Verify error detection.
+
+            Assert.Throws<ArgumentException>(() => NeonHelper.PseudoRandomTimespan(TimeSpan.FromSeconds(-1)));
+        }
+
+        [Fact]
+        public void PseudoRandomTimeSpan_Fraction()
+        {
+            Assert.Equal(TimeSpan.Zero, NeonHelper.PseudoRandomTimespan(TimeSpan.Zero, 0.0));
+            Assert.Equal(TimeSpan.FromSeconds(10), NeonHelper.PseudoRandomTimespan(TimeSpan.FromSeconds(10), 0.0));
+
+            var @base = TimeSpan.FromSeconds(10);
+            var max   = TimeSpan.FromTicks((long)(@base.Ticks * 1.5));
+
+            for (int i = 0; i < 1000000; i++)
+            {
+                var value = NeonHelper.PseudoRandomTimespan(@base, 0.5);
+
+                Assert.True(value >= @base);
+                Assert.True(value <= max);
+            }
+
+            // Verify error detection.
+
+            Assert.Throws<ArgumentException>(() => NeonHelper.PseudoRandomTimespan(TimeSpan.FromSeconds(-1), 0.5));
+            Assert.Throws<ArgumentException>(() => NeonHelper.PseudoRandomTimespan(TimeSpan.FromSeconds(10), -0.5));
+        }
+
+        [Fact]
+        public void PseudoRandomTimeSpan_MinMax()
+        {
+            Assert.Equal(TimeSpan.Zero, NeonHelper.PseudoRandomTimespan(TimeSpan.Zero, TimeSpan.Zero));
+
+            var min = TimeSpan.FromSeconds(5);
+            var max = TimeSpan.FromSeconds(10);
+
+            for (int i = 0; i < 1000000; i++)
+            {
+                var value = NeonHelper.PseudoRandomTimespan(min, max);
+
+                Assert.True(value >= min);
+                Assert.True(value <= max);
+            }
+
+            // Verify error detection.
+
+            Assert.Throws<ArgumentException>(() => NeonHelper.PseudoRandomTimespan(TimeSpan.FromSeconds(-1), TimeSpan.FromSeconds(1)));
+            Assert.Throws<ArgumentException>(() => NeonHelper.PseudoRandomTimespan(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(-1)));
+            Assert.Throws<ArgumentException>(() => NeonHelper.PseudoRandomTimespan(TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(5)));
+        }
     }
 }

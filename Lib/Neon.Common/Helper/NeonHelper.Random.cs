@@ -227,17 +227,7 @@ namespace Neon.Common
             Covenant.Requires<ArgumentException>(maxInterval >= TimeSpan.Zero, nameof(maxInterval));
             Covenant.Requires<ArgumentException>(minInterval <= maxInterval, nameof(minInterval));
 
-            if (maxInterval < minInterval)
-            {
-                // Just being safe.
-
-                var tmp = maxInterval;
-
-                maxInterval = minInterval;
-                minInterval = maxInterval;
-            }
-
-            return minInterval + TimeSpan.FromSeconds((maxInterval - minInterval).TotalSeconds * rand.NextDouble());
+            return minInterval + TimeSpan.FromSeconds((maxInterval - minInterval).TotalSeconds * PseudoRandomDouble());
         }
 
         /// <summary>
