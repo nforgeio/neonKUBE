@@ -449,7 +449,21 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.JsonConverters", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-blazor-proxy", "Services\neon-blazor-proxy\neon-blazor-proxy.csproj", "{05EC0776-CA43-4AEE-A8F6-B498C6BC537F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "neon-acme", "services\neon-acme\neon-acme.csproj", "{FB434543-9904-46E5-A1AB-CD975CD5CEA3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-acme", "services\neon-acme\neon-acme.csproj", "{FB434543-9904-46E5-A1AB-CD975CD5CEA3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Github", "Github", "{D9006A33-CDE2-4791-86F6-9DFD89D93012}"
+	ProjectSection(SolutionItems) = preProject
+		.dockerignore = .dockerignore
+		.editorconfig = .editorconfig
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		.password-name = .password-name
+		buildenv.cmd = buildenv.cmd
+		buildenv.ps1 = buildenv.ps1
+		LICENSE = LICENSE
+		nuget.config = nuget.config
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

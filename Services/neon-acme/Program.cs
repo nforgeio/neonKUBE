@@ -24,8 +24,6 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Service;
 
-using CommandLine;
-
 using Prometheus.DotNetRuntime;
 
 namespace NeonAcme
@@ -41,23 +39,12 @@ namespace NeonAcme
         public static Service Service { get; private set; }
 
         /// <summary>
-        /// Command line options.
-        /// </summary>
-        public class Options
-        {
-            [Option('c', "config-file", Required = false, HelpText = "Set the config file.")]
-            public string ConfigFile { get; set; }
-        }
-
-        /// <summary>
         /// The program entrypoint.
         /// </summary>
         /// <param name="args">The command line arguments.</param>
         public static async Task Main(string[] args)
         {
             NeonService.Initialize();
-
-            var options = Parser.Default.ParseArguments<Options>(args).Value;
 
             try
             {

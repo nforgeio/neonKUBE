@@ -27,28 +27,17 @@ using System.Web;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Distributed;
 
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Service;
 using Neon.Kube;
 using Neon.Tasks;
+using Neon.Net;
 using Neon.Web;
 
 using k8s;
 using k8s.Models;
-
-using DnsClient;
-
-using Newtonsoft.Json;
-
-using Yarp;
-using Yarp.ReverseProxy;
-using Yarp.ReverseProxy.Forwarder;
-using System.IO;
-using Microsoft.OpenApi.Models;
-using Neon.Net;
 
 namespace NeonAcme.Controllers
 {

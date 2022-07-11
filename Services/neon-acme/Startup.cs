@@ -18,38 +18,26 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi.Models;
 
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
+using Neon.Net;
 using Neon.Web;
 
-using DnsClient;
-
 using Prometheus;
-
-using StackExchange.Redis;
-
-using Yarp;
-using Yarp.Telemetry.Consumption;
-using Yarp.ReverseProxy.Forwarder;
-using System.Security.Cryptography.X509Certificates;
-using System.IO;
-using System.Security.Authentication;
-using Microsoft.OpenApi.Models;
-using Neon.Net;
-using Microsoft.AspNetCore.HttpLogging;
 
 namespace NeonAcme
 {
