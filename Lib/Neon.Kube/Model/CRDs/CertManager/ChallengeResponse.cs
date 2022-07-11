@@ -44,7 +44,9 @@ namespace Neon.Kube
         [DefaultValue(null)]
         public string Uid { get; set; }
 
-        
+        /// <summary>
+        /// Indicates whether the request was successful.
+        /// </summary>
         [JsonProperty(PropertyName = "success", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public bool Success { get; set; }

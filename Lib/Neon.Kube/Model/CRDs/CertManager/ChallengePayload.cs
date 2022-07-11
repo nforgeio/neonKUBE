@@ -25,6 +25,10 @@ using Newtonsoft.Json;
 
 namespace Neon.Kube
 {
+    /// <summary>
+    /// Describes a request/response for presenting or cleaning up
+    /// an ACME challenge resource
+    /// </summary>
     public class ChallengePayload
     {
         /// <summary>
@@ -49,11 +53,16 @@ namespace Neon.Kube
         [DefaultValue(null)]
         public string Kind { get; set; }
 
-
+        /// <summary>
+        /// Describes the attributes for the ACME solver request.
+        /// </summary>
         [JsonProperty(PropertyName = "request", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public ChallengeRequest Request { get; set; }
 
+        /// <summary>
+        /// Describes the attributes for the ACME solver response.
+        /// </summary>
         [JsonProperty(PropertyName = "response", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public ChallengeResponse Response { get; set; }
