@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore;
@@ -32,54 +33,22 @@ using Microsoft.Extensions.DependencyInjection;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Service;
-
-using DnsClient;
+using Neon.Kube;
 
 using Prometheus;
 using Prometheus.DotNetRuntime;
 
-namespace NeonBlazorProxy
+namespace NeonAcme
 {
     /// <summary>
-    /// Implements the <b>neon-blazor-proxy</b> service.
+    /// Implements the <b>neon-acme</b> service.
     /// </summary>
     public class Service : NeonService
     {
         /// <summary>
         /// The Default <see cref="NeonService"/> name.
         /// </summary>
-        public const string ServiceName = "neon-blazor-proxy";
-
-        /// <summary>
-        /// Config file location.
-        /// </summary>
-        public const string ConfigFile = "/etc/neonkube/neon-blazor-proxy/config.yaml";
-
-        /// <summary>
-        /// Session cookie name.
-        /// </summary>
-        public const string SessionCookieName = ".Neon.Blazor.Proxy.Cookie";
-
-        /// <summary>
-        /// Proxy Configuration.
-        /// </summary>
-        public ProxyConfig Config;
-
-        /// <summary>
-        /// Dns Client.
-        /// </summary>
-        public LookupClient DnsClient;
-
-        /// <summary>
-        /// AES Cipher.
-        /// </summary>
-        public AesCipher AesCipher;
-
-        /// <summary>
-        /// HashSet containing current open websocket connection IDs. 
-        /// </summary>
-        public HashSet<string> CurrentConnections;
-
+        public const string ServiceName = "neon-acme";
 
         // private fields
         private IWebHost webHost;
@@ -89,7 +58,7 @@ namespace NeonBlazorProxy
         /// </summary>
         /// <param name="name">The service name.</param>
         public Service(string name)
-             : base(name, version: "0.1", metricsPrefix: "neonblazorproxy")
+             : base(name, version: KubeVersions.NeonKube, metricsPrefix: "neonacme")
         {
         }
 
@@ -112,21 +81,13 @@ namespace NeonBlazorProxy
         {
             await SetStatusAsync(NeonServiceStatus.Starting);
 
-            Config = await ProxyConfig.FromFileAsync(GetConfigFilePath(ConfigFile));
-
-            DnsClient = new LookupClient(new LookupClientOptions()
-            {
-                UseCache            = Config.Dns.UseCache,
-                MaximumCacheTimeout = TimeSpan.FromSeconds(Config.Dns.MaximumCacheTimeoutSeconds),
-                MinimumCacheTimeout = TimeSpan.FromSeconds(Config.Dns.MinimumCacheTimeoutSeconds),
-                CacheFailedResults  = Config.Dns.CacheFailedResults
-            });
-
-            AesCipher = new AesCipher(GetEnvironmentVariable("COOKIE_CIPHER", AesCipher.GenerateKey(), redacted: !Log.IsLogDebugEnabled));
-
-            CurrentConnections = new HashSet<string>();
-
             // Start the web service.
+            var port = 443;
+
+            if (NeonHelper.IsDevWorkstation)
+            {
+                port = 11004;
+            }
 
             webHost = new WebHostBuilder()
                 .ConfigureAppConfiguration(
@@ -135,14 +96,24 @@ namespace NeonBlazorProxy
                         config.Sources.Clear();
                     })
                 .UseStartup<Startup>()
-                .UseKestrel(options => options.Listen(IPAddress.Any, Config.Port))
+                .UseKestrel(options => {
+                    options.Listen(IPAddress.Any, port, listenOptions =>
+                    {
+                        if (!NeonHelper.IsDevWorkstation)
+                        {
+                            listenOptions.UseHttps(X509Certificate2.CreateFromPem(
+                                                        File.ReadAllText(@"/tls/tls.crt"),
+                                                        File.ReadAllText(@"/tls/tls.key")));
+                        }
+                    });
+                })
                 .ConfigureServices(services => services.AddSingleton(typeof(Service), this))
                 .UseStaticWebAssets()
                 .Build();
 
             _ = webHost.RunAsync();
 
-            Log.LogInfo($"Listening on {IPAddress.Any}:{Config.Port}");
+            Log.LogInfo($"Listening on {IPAddress.Any}:{port}");
 
             // Indicate that the service is ready for business.
 
