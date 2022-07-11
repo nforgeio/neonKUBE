@@ -30,7 +30,7 @@ namespace NeonBlazorProxy
         public static int DnsLookupsRequested = 0;
 
         private static readonly Counter _dnsLookupsRequested = Metrics.CreateCounter(
-            "neonblazorrouter_dns_lookups_requested",
+            "neonblazorproxy_dns_lookups_requested",
             "Number of DNS lookups requested"
             );
 

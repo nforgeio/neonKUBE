@@ -30,7 +30,7 @@ namespace NeonBlazorProxy
         /// The total number of websocket connections established.
         /// </summary>
         public static readonly Counter ConnectionsEstablished = Metrics.CreateCounter(
-            "neonblazorrouter_websockets_connections_established_total",
+            "neonblazorproxy_websockets_connections_established_total",
             "Number of websocket requests inititated."
             );
 
@@ -38,7 +38,7 @@ namespace NeonBlazorProxy
         /// The current number of open websocket connections.
         /// </summary>
         public static readonly Gauge CurrentConnections = Metrics.CreateGauge(
-            "neonblazorrouter_websockets_current_connections",
+            "neonblazorproxy_websockets_current_connections",
             "Number of active websocket connections that have are connected."
             );
     }
