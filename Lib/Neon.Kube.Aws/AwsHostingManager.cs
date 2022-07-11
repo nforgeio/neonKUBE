@@ -900,7 +900,6 @@ namespace Neon.Kube
             this.networkOptions     = cluster.Definition.Network;
             this.region             = awsOptions.Region;
             this.availabilityZone   = awsOptions.AvailabilityZone;
-            this.resourceGroupName  = cluster.Definition.Deployment.GetPrefixedName(awsOptions.ResourceGroup);
             this.clusterFilter      = new List<Filter>()
             {
                 new Filter()
@@ -909,6 +908,18 @@ namespace Neon.Kube
                     Values = new List<string>() { clusterName }
                 }
             };
+
+            // Apparently, resource group names cannot start with "aws".  We'll workaround this
+            // by adding an (ugly) dash prefix.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1627
+
+            this.resourceGroupName = cluster.Definition.Deployment.GetPrefixedName(awsOptions.ResourceGroup);
+
+            if (this.resourceGroupName.StartsWith("aws", StringComparison.InvariantCultureIgnoreCase))
+            {
+                this.resourceGroupName = "-" + this.resourceGroupName;
+            }
 
             // Initialize the cluster resource names.
 

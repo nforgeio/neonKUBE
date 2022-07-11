@@ -47,7 +47,7 @@
 **/launchSettings.json
 **/.vs/**
 **/.vscode/**
-*.pubxml
+# *.pubxml
 
 # Nuget Packages
 *.nupkg

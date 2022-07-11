@@ -5,6 +5,8 @@ metadata:
   namespace: neon-ingress
   labels:
     app: neon-acme
+  annotations:
+    reloader.stakater.com/search: 'true'
 spec:
   replicas:
   selector:
