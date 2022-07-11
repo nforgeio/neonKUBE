@@ -485,6 +485,7 @@ cgroupDriver: systemd
 runtimeRequestTimeout: 5m
 {kubeletFailSwapOnLine}
 maxPods: {cluster.Definition.Kubernetes.MaxPodsPerNode}
+rotateCertificates: true
 ");
 
             var kubeProxyMode = "ipvs";
