@@ -81,8 +81,8 @@ namespace Neon.Kube
         /// <summary>
         /// If set, the provider will manage only this zone in Route53 and will not do an lookup using the route53:ListHostedZonesByName api call.
         /// </summary>
-        [JsonProperty(PropertyName = "hostedZoneId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "hostedZoneId", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "hostedZoneID", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "hostedZoneID", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string HostedZoneId { get; set; } = null;
 
