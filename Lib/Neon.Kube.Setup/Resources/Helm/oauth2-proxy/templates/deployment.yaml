@@ -141,8 +141,8 @@ spec:
         resources:
 {{ toYaml .Values.resources | indent 10 }}
         volumeMounts:
-          - name: oidc
-            mountPath: /etc/oauth2_proxy_oidc
+        - name: oidc
+          mountPath: /etc/oauth2_proxy_oidc
 {{- with .Values.config.google }}
 {{- if and .adminEmail (or .serviceAccountJson .existingSecret) }}
         - name: google-secret
