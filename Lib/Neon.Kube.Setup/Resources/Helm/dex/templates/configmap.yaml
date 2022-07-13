@@ -15,7 +15,7 @@ data:
       http: 0.0.0.0:5556
       tlsCert: /etc/dex/tls/tls.crt
       tlsKey: /etc/dex/tls/tls.key
-    frontend: 
+    frontend:
       dir: /srv/dex/web
       issuer: SSO Login - {{ .Values.cluster.name }}
       theme: dark
