@@ -7,7 +7,6 @@ metadata:
   name: {{ template "openebs.ndm-cluster-exporter.fullname" . }}
   labels:
     {{- include "openebs.ndm-cluster-exporter.labels" . | nindent 4 }}
-    openebs.io/metrics: openebs-ndm-exporter
 spec:
   replicas: 1
   strategy:
@@ -24,10 +23,9 @@ spec:
         {{- end }}
     spec:
       serviceAccountName: {{ template "openebs.serviceAccountName" . }}
-      priorityClassName: {{ .Values.priorityClassName }}
       containers:
         - name: {{ template "openebs.ndm-cluster-exporter.fullname" . }}
-          image: "{{ .Values.ndmExporter.image.organization }}/{{ .Values.ndmExporter.image.repository }}:{{ .Values.ndmExporter.image.tag }}"
+          image: "{{ .Values.ndmExporter.image.registry }}{{ .Values.ndmExporter.image.repository }}:{{ .Values.ndmExporter.image.tag }}"
           command:
             - /usr/local/bin/exporter
           args:

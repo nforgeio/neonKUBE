@@ -2321,10 +2321,16 @@ subjects:
                             values.Add($"openebsMonitoringAddon.lvmLocalPV.serviceMonitor.enabled", localPvAdvice.MetricsEnabled);
                             values.Add($"openebsMonitoringAddon.deviceLocalPV.serviceMonitor.enabled", localPvAdvice.MetricsEnabled);
                             values.Add($"openebsMonitoringAddon.ndm.serviceMonitor.enabled", ndmOperatorAdvice.MetricsEnabled);
-
+                            
 
                             await master.InstallHelmChartAsync(controller, "openebs",
                                 releaseName:  "openebs",
+                                @namespace:   KubeNamespace.NeonStorage,
+                                prioritySpec: PriorityClass.NeonStorage.Name,
+                                values:       values);
+
+                            await master.InstallHelmChartAsync(controller, "openebs-jiva-operator",
+                                releaseName:  "openebs-jiva-operator",
                                 @namespace:   KubeNamespace.NeonStorage,
                                 prioritySpec: PriorityClass.NeonStorage.Name,
                                 values:       values);
@@ -2349,6 +2355,24 @@ subjects:
 
                             throw new NotImplementedException($"[{cluster.Definition.Storage.OpenEbs.Engine}]");
                     }
+
+                    await master.InvokeIdempotentAsync("setup/openebs-nfs",
+                        async () =>
+                        {
+                            var values = new Dictionary<string, object>();
+
+                            await CreateStorageClass(controller, master, "neon-internal-nfs");
+
+                            values.Add("nfsStorageClass.backendStorageClass", "neon-internal-nfs");
+
+                            await master.InstallHelmChartAsync(controller, "openebs-nfs-provisioner",
+                                releaseName:  "openebs-nfs-provisioner",
+                                @namespace:   KubeNamespace.NeonStorage,
+                                prioritySpec: PriorityClass.NeonStorage.Name,
+                                values:       values);
+                        });
+                            
+                    
                 });
         }
 
