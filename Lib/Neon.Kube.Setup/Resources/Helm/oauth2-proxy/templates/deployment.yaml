@@ -46,9 +46,8 @@ spec:
         image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         args:
-        {{- if or .Values.config.existingConfig .Values.config.configFile }}
           - --config=/etc/oauth2_proxy/oauth2_proxy.cfg
-        {{- end }}
+          - --alpha-config=/etc/oauth2_proxy/oauth2_proxy_alpha.cfg
         {{- if .Values.authenticatedEmailsFile.enabled }}
         {{- if .Values.authenticatedEmailsFile.template }}
           - --authenticated-emails-file=/etc/oauth2-proxy/{{ .Values.authenticatedEmailsFile.template }}
@@ -66,24 +65,7 @@ spec:
           - --htpasswd-file=/etc/oauth2_proxy/htpasswd/users.txt
         {{- end }}
         env:
-        - name: OAUTH2_PROXY_LOGIN_URL
-          valueFrom:
-            configMapKeyRef:
-              name: {{ template "oauth2-proxy.fullname" . }}
-              key: loginUrl
-        - name: OAUTH2_PROXY_OIDC_ISSUER_URL
-          valueFrom:
-            configMapKeyRef:
-              name: {{ template "oauth2-proxy.fullname" . }}
-              key: issuerUrl
         {{- if .Values.proxyVarsAsSecrets }}
-        - name: OAUTH2_PROXY_CLIENT_ID
-          value: kubernetes
-        - name: OAUTH2_PROXY_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name:  neon-sso-dex
-              key: KUBERNETES_CLIENT_SECRET
         - name: OAUTH2_PROXY_COOKIE_SECRET
           valueFrom:
             secretKeyRef:
@@ -159,6 +141,8 @@ spec:
         resources:
 {{ toYaml .Values.resources | indent 10 }}
         volumeMounts:
+          - name: oidc
+            mountPath: /etc/oauth2_proxy_oidc
 {{- with .Values.config.google }}
 {{- if and .adminEmail (or .serviceAccountJson .existingSecret) }}
         - name: google-secret
@@ -188,6 +172,10 @@ spec:
           runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
 {{- end}}
       volumes:
+      - name: oidc
+        secret:
+          secretName: neon-sso-dex
+          defaultMode: 420
 {{- with .Values.config.google }}
 {{- if and .adminEmail (or .serviceAccountJson .existingSecret) }}
       - name: google-secret
