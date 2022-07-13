@@ -130,7 +130,7 @@ namespace NeonDashboard
                 options.AccessDeniedPath       = "/Forbidden/";
                 options.DataProtectionProvider = new CookieProtector(NeonDashboardService.AesCipher);
             })
-            .AddOpenIdConnect("oidc", options =>
+            .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
             {
                 options.ClientId                      = "kubernetes";
                 options.ClientSecret                  = NeonDashboardService.SsoClientSecret;

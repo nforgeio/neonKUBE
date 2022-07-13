@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Login.cshtml.cs
+// FILE:	    Logout.cshtml.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -22,7 +22,6 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -35,43 +34,44 @@ using Neon.Tasks;
 namespace NeonDashboard.Pages
 {
     /// <summary>
-    /// Handles login.
+    /// Handles logout.
     /// </summary>
-    public class LoginModel : PageModel
+    public class LogoutModel : PageModel
     {
-        private Service           neonDashboardService;
-        private INeonLogger       logger;
+        private Service neonDashboardService;
+        private IHttpContextAccessor httpContextAccessor;
+        private INeonLogger logger;
         private IDistributedCache cache;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="neonDashboardService"></param>
+        /// <param name="httpContextAccessor"></param>
         /// <param name="neonLogger"></param>
         /// <param name="cache"></param>
-        public LoginModel(
+        public LogoutModel(
             Service                 neonDashboardService,
+            IHttpContextAccessor    httpContextAccessor,
             INeonLogger             neonLogger,
             IDistributedCache       cache)
         {
             this.neonDashboardService = neonDashboardService;
+            this.httpContextAccessor  = httpContextAccessor;
             this.logger               = neonLogger;
             this.cache                = cache;
         }
 
         /// <summary>
-        /// Forwards the client to the upstream provider.
+        /// Logs the user out.
         /// </summary>
-        /// <param name="redirectUri"></param>
         /// <returns></returns>
-        public async Task OnGet(string redirectUri)
+        public async Task<IActionResult> OnGet()
         {
-            await HttpContext.ChallengeAsync(
-                OpenIdConnectDefaults.AuthenticationScheme, 
-                new AuthenticationProperties 
-                { 
-                    RedirectUri = redirectUri,
-                });
+            logger.LogDebug($"Logging out.");
+
+            await HttpContext.SignOutAsync();
+            return Redirect("/");
         }
     }
 }
