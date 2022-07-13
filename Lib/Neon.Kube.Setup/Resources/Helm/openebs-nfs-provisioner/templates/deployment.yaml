@@ -39,7 +39,7 @@ spec:
       containers:
         - name: {{ include "nfsProvisioner.fullname" . }}
           imagePullPolicy: {{ .Values.nfsProvisioner.image.pullPolicy }}
-          image: "{{ .Values.nfsProvisioner.image.registry }}{{ .Values.nfsProvisioner.image.repository }}:{{ default .Chart.AppVersion .Values.nfsProvisioner.image.tag }}"
+          image: "{{ .Values.nfsProvisioner.image.registry }}/{{ .Values.nfsProvisioner.image.repository }}:{{ default .Chart.AppVersion .Values.nfsProvisioner.image.tag }}"
           {{- if .Values.nfsProvisioner.resources  }}
           resources:
           {{- toYaml .Values.nfsProvisioner.resources | nindent 12 }}
@@ -78,7 +78,7 @@ spec:
             # OPENEBS_IO_NFS_SERVER_IMG defines the nfs-server-alpine image name to be used
             # while creating nfs volume
             - name: OPENEBS_IO_NFS_SERVER_IMG
-              value: "{{ .Values.nfsProvisioner.nfsServerAlpineImage.registry }}{{ .Values.nfsProvisioner.nfsServerAlpineImage.repository }}:{{ default .Chart.AppVersion .Values.nfsProvisioner.nfsServerAlpineImage.tag }}"
+              value: "{{ .Values.nfsProvisioner.nfsServerAlpineImage.registry }}/{{ .Values.nfsProvisioner.nfsServerAlpineImage.repository }}:{{ default .Chart.AppVersion .Values.nfsProvisioner.nfsServerAlpineImage.tag }}"
             # LEADER_ELECTION_ENABLED is used to enable/disable leader election. By default
             # leader election is enabled.
             - name: LEADER_ELECTION_ENABLED

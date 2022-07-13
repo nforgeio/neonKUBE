@@ -26,7 +26,7 @@ spec:
       containers:
         - name: {{ template "jiva.fullname" . }}-operator
           imagePullPolicy: {{ .Values.jivaOperator.image.pullPolicy }}
-          image: "{{ .Values.jivaOperator.image.registry }}{{ .Values.jivaOperator.image.repository }}:{{ .Values.jivaOperator.image.tag }}"
+          image: "{{ .Values.jivaOperator.image.registry }}/{{ .Values.jivaOperator.image.repository }}:{{ .Values.jivaOperator.image.tag }}"
           command:
           - jiva-operator
           resources:
@@ -47,11 +47,11 @@ spec:
                 fieldRef:
                   fieldPath: spec.serviceAccountName
             - name: OPENEBS_IO_JIVA_CONTROLLER_IMAGE
-              value: "{{ .Values.jivaOperator.controller.image.registry }}{{ .Values.jivaOperator.controller.image.repository }}:{{ .Values.jivaOperator.controller.image.tag }}"
+              value: "{{ .Values.jivaOperator.controller.image.registry }}/{{ .Values.jivaOperator.controller.image.repository }}:{{ .Values.jivaOperator.controller.image.tag }}"
             - name: OPENEBS_IO_JIVA_REPLICA_IMAGE
-              value: "{{ .Values.jivaOperator.replica.image.registry }}{{ .Values.jivaOperator.replica.image.repository }}:{{ .Values.jivaOperator.replica.image.tag }}"
+              value: "{{ .Values.jivaOperator.replica.image.registry }}/{{ .Values.jivaOperator.replica.image.repository }}:{{ .Values.jivaOperator.replica.image.tag }}"
             - name: OPENEBS_IO_MAYA_EXPORTER_IMAGE
-              value: "{{ .Values.jivaOperator.exporter.image.registry }}{{ .Values.jivaOperator.exporter.image.repository }}:{{ .Values.jivaOperator.exporter.image.tag }}"
+              value: "{{ .Values.jivaOperator.exporter.image.registry }}/{{ .Values.jivaOperator.exporter.image.repository }}:{{ .Values.jivaOperator.exporter.image.tag }}"
 {{- if .Values.imagePullSecrets }}
             - name: OPENEBS_IO_IMAGE_PULL_SECRETS
               value: "{{- range $.Values.imagePullSecrets }}{{ .name }},{{- end }}"

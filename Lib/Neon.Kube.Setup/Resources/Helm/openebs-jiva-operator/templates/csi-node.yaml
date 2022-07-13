@@ -24,7 +24,7 @@ spec:
       hostNetwork: true
       containers:
         - name: {{ .Values.csiNode.driverRegistrar.name }}
-          image: "{{ .Values.csiNode.driverRegistrar.image.registry }}{{ .Values.csiNode.driverRegistrar.image.repository }}:{{ .Values.csiNode.driverRegistrar.image.tag }}"
+          image: "{{ .Values.csiNode.driverRegistrar.image.registry }}/{{ .Values.csiNode.driverRegistrar.image.repository }}:{{ .Values.csiNode.driverRegistrar.image.tag }}"
           imagePullPolicy: {{ .Values.csiNode.driverRegistrar.image.pullPolicy }}
           resources:
 {{ toYaml .Values.csiNode.resources | indent 12 }}
@@ -56,7 +56,7 @@ spec:
           securityContext:
             privileged: true
             allowPrivilegeEscalation: true
-          image: "{{ .Values.jivaCSIPlugin.image.registry }}{{ .Values.jivaCSIPlugin.image.repository }}:{{ .Values.jivaCSIPlugin.image.tag }}"
+          image: "{{ .Values.jivaCSIPlugin.image.registry }}/{{ .Values.jivaCSIPlugin.image.repository }}:{{ .Values.jivaCSIPlugin.image.tag }}"
           imagePullPolicy: {{ .Values.jivaCSIPlugin.image.pullPolicy }}
           args:
             - "--name=jiva.csi.openebs.io"
@@ -115,7 +115,7 @@ spec:
               mountPath: /sbin/iscsiadm
               subPath: iscsiadm
         - name: {{ .Values.csiNode.livenessprobe.name }}
-          image: "{{ .Values.csiNode.livenessprobe.image.registry }}{{ .Values.csiNode.livenessprobe.image.repository }}:{{ .Values.csiNode.livenessprobe.image.tag }}"
+          image: "{{ .Values.csiNode.livenessprobe.image.registry }}/{{ .Values.csiNode.livenessprobe.image.repository }}:{{ .Values.csiNode.livenessprobe.image.tag }}"
           imagePullPolicy: {{ .Values.csiNode.livenessprobe.image.pullPolicy }}
           args:
             - "--csi-address=/plugin/csi.sock"

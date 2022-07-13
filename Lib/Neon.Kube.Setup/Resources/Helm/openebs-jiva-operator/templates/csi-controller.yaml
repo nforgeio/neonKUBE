@@ -25,7 +25,7 @@ spec:
       serviceAccount: {{ .Values.serviceAccount.csiController.name }}
       containers:
         - name: {{ .Values.csiController.resizer.name }}
-          image: "{{ .Values.csiController.resizer.image.registry }}{{ .Values.csiController.resizer.image.repository }}:{{ .Values.csiController.resizer.image.tag }}"
+          image: "{{ .Values.csiController.resizer.image.registry }}/{{ .Values.csiController.resizer.image.repository }}:{{ .Values.csiController.resizer.image.tag }}"
           resources:
 {{ toYaml .Values.csiController.resources | indent 12 }}
           args:
@@ -40,7 +40,7 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
         - name: {{ .Values.csiController.provisioner.name }}
-          image: "{{ .Values.csiController.provisioner.image.registry }}{{ .Values.csiController.provisioner.image.repository }}:{{ .Values.csiController.provisioner.image.tag }}"
+          image: "{{ .Values.csiController.provisioner.image.registry }}/{{ .Values.csiController.provisioner.image.repository }}:{{ .Values.csiController.provisioner.image.tag }}"
           imagePullPolicy: {{ .Values.csiController.provisioner.image.pullPolicy }}
           args:
             - "--csi-address=$(ADDRESS)"
@@ -61,7 +61,7 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
         - name: {{ .Values.csiController.attacher.name }}
-          image: "{{ .Values.csiController.attacher.image.registry }}{{ .Values.csiController.attacher.image.repository }}:{{ .Values.csiController.attacher.image.tag }}"
+          image: "{{ .Values.csiController.attacher.image.registry }}/{{ .Values.csiController.attacher.image.repository }}:{{ .Values.csiController.attacher.image.tag }}"
           imagePullPolicy: {{ .Values.csiController.attacher.image.pullPolicy }}
           args:
             - "--v={{ .Values.csiController.attacher.logLevel | default .Values.csiController.logLevel }}"
@@ -73,7 +73,7 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
         - name: {{ .Values.jivaCSIPlugin.name }}
-          image: "{{ .Values.jivaCSIPlugin.image.registry }}{{ .Values.jivaCSIPlugin.image.repository }}:{{ .Values.jivaCSIPlugin.image.tag }}"
+          image: "{{ .Values.jivaCSIPlugin.image.registry }}/{{ .Values.jivaCSIPlugin.image.repository }}:{{ .Values.jivaCSIPlugin.image.tag }}"
           imagePullPolicy: {{ .Values.jivaCSIPlugin.image.pullPolicy }}
           env:
             - name: OPENEBS_JIVA_CSI_CONTROLLER
@@ -106,7 +106,7 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
         - name: {{ .Values.csiController.livenessprobe.name }}
-          image: "{{ .Values.csiController.livenessprobe.image.registry }}{{ .Values.csiController.livenessprobe.image.repository }}:{{ .Values.csiController.livenessprobe.image.tag }}"
+          image: "{{ .Values.csiController.livenessprobe.image.registry }}/{{ .Values.csiController.livenessprobe.image.repository }}:{{ .Values.csiController.livenessprobe.image.tag }}"
           imagePullPolicy: {{ .Values.csiController.livenessprobe.image.pullPolicy }}
           args:
             - "--csi-address=/csi/csi.sock"
