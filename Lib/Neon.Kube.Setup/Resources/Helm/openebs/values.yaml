@@ -43,6 +43,7 @@ localprovisioner:
   - operator: "Exists"
     effect: "NoExecute"
   affinity: {}
+  waitForBDBindTimeoutRetryCount: "12"
   healthCheck:
     initialDelaySeconds: 30
     periodSeconds: 60
@@ -104,6 +105,7 @@ ndmExporter:
     organization: neon-registry.node.local
     repository: openebs-node-disk-exporter
     tag: 1.9.0
+    pullPolicy: IfNotPresent
   nodeExporter:
     name: ndm-node-exporter
     podLabels:

@@ -44,11 +44,11 @@ loki:
     timeoutSeconds: 1
   image:
     # -- The Docker registry
-    registry: docker.io
+    registry: neon-registry.node.local
     # -- Docker image repository
-    repository: grafana/loki
+    repository: grafana-loki
     # -- Overrides the image tag whose default is the chart's appVersion
-    tag: 2.5.0
+    tag: 2.6.0
     # -- Docker image pull policy
     pullPolicy: IfNotPresent
   # -- Common labels for all pods

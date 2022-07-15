@@ -81,6 +81,12 @@ namespace Neon.Kube
         AAAA,
 
         /// <summary>
+        /// TXT.
+        /// </summary>
+        [EnumMember(Value = "TXT")]
+        TXT,
+
+        /// <summary>
         /// SRV.
         /// </summary>
         [EnumMember(Value = "SRV")]

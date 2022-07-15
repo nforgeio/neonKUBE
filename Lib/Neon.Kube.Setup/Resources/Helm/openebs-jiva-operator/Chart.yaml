@@ -20,13 +20,6 @@ keywords:
 sources:
   - https://github.com/openebs/jiva-operator
 
-
-dependencies:
-  - name: localpv-provisioner
-    version: "3.2.0"
-    repository: "https://openebs.github.io/dynamic-localpv-provisioner"
-    condition: openebsLocalpv.enabled
-
 maintainers:
   - name: prateekpandey14
     email: prateek.pandey@mayadata.io

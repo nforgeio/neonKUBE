@@ -232,6 +232,24 @@ or decrease [{kubernetesOptionsPrefix}.{nameof(clusterDefinition.Nodes)}] to [{m
                     }
                 }
             }
+
+            if (!clusterDefinition.Nodes.Any(node => node.Labels.OpenEBS))
+            {
+                if (AllowPodsOnMasters.GetValueOrDefault())
+                {
+                    foreach (var node in clusterDefinition.Nodes)
+                    {
+                        node.Labels.OpenEBS = true;
+                    };
+                }
+                else
+                {
+                    foreach (var worker in clusterDefinition.Nodes.Where(node => node.IsWorker))
+                    {
+                        worker.Labels.OpenEBS = true;
+                    }
+                }
+            }
         }
 
         /// <summary>
