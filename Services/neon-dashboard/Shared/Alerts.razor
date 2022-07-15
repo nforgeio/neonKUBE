@@ -1,5 +1,5 @@
 ﻿<div class="space-y-4">
-  <div  class="">
+  <div  class=" flex flex-col gap-y-1">
       <label class="text-4 text-slate-300 font-bold" >
         Alerts
     </label>
@@ -11,17 +11,17 @@
         <p class="text">The cluster looks healthy</p>
       </ChildContent>
     </AlertCard>
-        @if (!(AppState.Kube.KubeCertExpiration == default))
-        {
-            <AlertCard Title="Kubernetes Cert Valid" >
-              <Left>
-                <Icon Content=@Icons.Smile />
-              </Left>
-              <ChildContent>
-                <p class="text">Expires: @AppState.Kube.KubeCertExpiration.ToLongDateString()</p>
-              </ChildContent>
-            </AlertCard>
-        }
+    @if (!(AppState.Kube.KubeCertExpiration == default))
+    {
+        <AlertCard Title="Kubernetes Cert Valid" Type=StyleType.Outline >
+          <Left>
+            <Icon Content=@Icons.Smile />
+          </Left>
+          <ChildContent>
+            <p class="text">Expires: @AppState.Kube.KubeCertExpiration.ToLongDateString()</p>
+          </ChildContent>
+        </AlertCard>
+    }
   </div>
 
   <hr class="border-b border-slate-500 w-100" />

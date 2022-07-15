@@ -7,7 +7,7 @@
 	<div class="dropup button" @onclick="Show">
 		<Icon Content=@Icon />
 		<div class="noselect name">
-			<p>@Title</p>
+		@*	<p>@Title</p>*@
 			<h3>@((Active != null) ? Active.Name : "Loading")</h3>
 		</div>
 		<Icon Content=@Icons.ChevronUp />
@@ -22,15 +22,7 @@
 	  {
 		  if (DropList is not null)
 		  {
-			  <div class="button button__icon" @onmouseout:stopPropagation @onclick="@(() => NavigationManager.NavigateTo(item.GetId()))">
-				  <h3>@item.GetName()</h3>
-				  @if (item.GetId() == AppState.CurrentDashboard)
-				  {
-					  <div style="right: 20px;position: absolute;">
-						  <Icon Content=@Icons.Check />
-						  </div>
-				  }
-				  </div>
+			  <div>@DropList(item)</div>
 		  }
 	  }
 	  </div>

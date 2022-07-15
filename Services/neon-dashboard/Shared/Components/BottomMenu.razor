@@ -5,10 +5,16 @@
 
 <DropUp Title="Dashboard" Active=@AppState.GetCurrentDashboard(AppState.CurrentDashboard) Icon=@Icons.Server Items=@AppState.Dashboards >
      <DropList Context="dashboard">
-      <div></div>
-			<div class="">
-				<p>@dashboard.GetName()</p>
-			</div>
+      
+			<div class="button button__icon" @onmouseout:stopPropagation @onclick="@(() => NavigationManager.NavigateTo(dashboard.GetId()))">
+				  <h3>@dashboard.GetName()</h3>
+				  @if (dashboard.GetId() == AppState.CurrentDashboard)
+				  {
+					  <div style="right: 20px;position: absolute;">
+						  <Icon Content=@Icons.Check />
+						  </div>
+				  }
+				  </div>
     </DropList>
 </DropUp>
 
