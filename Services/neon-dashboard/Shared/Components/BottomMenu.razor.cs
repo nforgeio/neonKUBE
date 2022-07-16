@@ -29,6 +29,9 @@ namespace NeonDashboard.Shared.Components
 {
     public partial class BottomMenu : ComponentBase, IDisposable
     {
+        [Inject]
+        AppState AppState { get; set; }
+
         /// <summary>
         /// Constructor.
         /// </summary>

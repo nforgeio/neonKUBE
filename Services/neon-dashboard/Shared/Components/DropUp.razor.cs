@@ -34,47 +34,53 @@ namespace NeonDashboard.Shared.Components
 {
     public partial class DropUp : ComponentBase, IDisposable
     {
-		[Parameter]
-		public string Title { get; set; } = "Name";
+        [Inject]
+        AppState AppState { get; set; }
 
-		[Parameter]
-		public Dashboard Active { get; set; }
+        [Inject]
+        NavigationManager NavigationManager { get; set; }
 
-		[Parameter]
-		public string Icon { get; set; }
+        [Parameter]
+        public string Title { get; set; } = "Name";
 
-		[Parameter]
-		public RenderFragment<IDropUpItem> DropList { get; set; }
+        [Parameter]
+        public Dashboard Active { get; set; }
 
-		[Parameter, AllowNull]
-		public IReadOnlyList<IDropUpItem> Items { get; set; }
+        [Parameter]
+        public string Icon { get; set; }
 
-		protected override void OnInitialized()
-		{
-			AppState.OnDashboardChange += StateHasChanged;
-		}
-		public void Dispose()
-		{
-			AppState.OnDashboardChange -= StateHasChanged;
-		}
+        [Parameter]
+        public RenderFragment<IDropUpItem> DropList { get; set; }
 
-		public DropUp() { }
+        [Parameter, AllowNull]
+        public IReadOnlyList<IDropUpItem> Items { get; set; }
 
-		bool HideMenu = true;
+        protected override void OnInitialized()
+        {
+            AppState.OnDashboardChange += StateHasChanged;
+        }
+        public void Dispose()
+        {
+            AppState.OnDashboardChange -= StateHasChanged;
+        }
 
-		void Show()
-		{
-			HideMenu = !HideMenu;
-		}
+        public DropUp() { }
 
-		void MouseIn()
-		{
-			HideMenu = false;
-		}
+        bool HideMenu = true;
 
-		void MouseOut()
-		{
-			HideMenu = true;
-		}
+        void Show()
+        {
+            HideMenu = !HideMenu;
+        }
+
+        void MouseIn()
+        {
+            HideMenu = false;
+        }
+
+        void MouseOut()
+        {
+            HideMenu = true;
+        }
     }
 }

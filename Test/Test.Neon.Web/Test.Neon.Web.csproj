@@ -1,103 +1,103 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<TargetFrameworks>netcoreapp3.1; net5.0; net6.0</TargetFrameworks>
-		<TargetLatestRuntimePatch>false</TargetLatestRuntimePatch>
-		<IsPackable>false</IsPackable>
-		<LangVersion>latest</LangVersion>
-		<RootNamespace>Test.Neon.Web</RootNamespace>
-		<Configurations>Debug;Release;CodeDoc</Configurations>
-		<OutputType>Library</OutputType>
-		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
-		<GenerateDocumentationFile>false</GenerateDocumentationFile>
-		<AnalysisLevel>5.0</AnalysisLevel>
-	</PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>netcoreapp3.1; net5.0; net6.0</TargetFrameworks>
+        <TargetLatestRuntimePatch>false</TargetLatestRuntimePatch>
+        <IsPackable>false</IsPackable>
+        <LangVersion>latest</LangVersion>
+        <RootNamespace>Test.Neon.Web</RootNamespace>
+        <Configurations>Debug;Release;CodeDoc</Configurations>
+        <OutputType>Library</OutputType>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
+        <AnalysisLevel>5.0</AnalysisLevel>
+    </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>DEBUG;TRACE</DefineConstants>
-		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-		<WarningsAsErrors>NU1605</WarningsAsErrors>
-		<NoWarn></NoWarn>
-	</PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <DefineConstants>DEBUG;TRACE</DefineConstants>
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+        <WarningsAsErrors>NU1605</WarningsAsErrors>
+        <NoWarn></NoWarn>
+    </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-		<WarningsAsErrors>NU1605</WarningsAsErrors>
-		<NoWarn></NoWarn>
-	</PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+        <WarningsAsErrors>NU1605</WarningsAsErrors>
+        <NoWarn></NoWarn>
+    </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
-		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-		<WarningsAsErrors>NU1605</WarningsAsErrors>
-		<NoWarn></NoWarn>
-	</PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+        <WarningsAsErrors>NU1605</WarningsAsErrors>
+        <NoWarn></NoWarn>
+    </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
-		<PlatformTarget>x64</PlatformTarget>
-	</PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
+        <PlatformTarget>x64</PlatformTarget>
+    </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.1|AnyCPU'">
-		<PlatformTarget>x64</PlatformTarget>
-		<DefineConstants />
-	</PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.1|AnyCPU'">
+        <PlatformTarget>x64</PlatformTarget>
+        <DefineConstants />
+    </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='CodeDoc|netcoreapp3.1|AnyCPU'">
-		<DefineConstants />
-	</PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='CodeDoc|netcoreapp3.1|AnyCPU'">
+        <DefineConstants />
+    </PropertyGroup>
 
-	<ItemGroup>
-		<None Remove="xunit.runner.json" />
-	</ItemGroup>
+    <ItemGroup>
+        <None Remove="xunit.runner.json" />
+    </ItemGroup>
 
-	<ItemGroup>
-		<Content Include="xunit.runner.json">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
-	</ItemGroup>
+    <ItemGroup>
+        <Content Include="xunit.runner.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="coverlet.collector" Version="3.1.0">
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-			<PrivateAssets>all</PrivateAssets>
-		</PackageReference>
-		<PackageReference Include="Linq2Couchbase" Version="1.4.2" />
-		<PackageReference Include="LiquidTestReports.Markdown" Version="1.1.1-beta" />
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector" Version="3.1.0">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="Linq2Couchbase" Version="1.4.2" />
+        <PackageReference Include="LiquidTestReports.Markdown" Version="1.1.1-beta" />
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="6.0.6" />
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="6.0.6" />
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="6.0.6" />
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
-		<PackageReference Include="xunit" Version="2.4.1" />
-		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-			<PrivateAssets>all</PrivateAssets>
-		</PackageReference>
-	</ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
+        <PackageReference Include="xunit" Version="2.4.1" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.16" />
-		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="3.1.15" />
-	</ItemGroup>
+    <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.16" />
+        <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="3.1.15" />
+    </ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.13" />
-		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="5.0.13" />
-	</ItemGroup>
+    <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.13" />
+        <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="5.0.13" />
+    </ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.1" />
-		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.1" />
-	</ItemGroup>
+    <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.1" />
+        <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.1" />
+    </ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\..\Lib\Neon.ModelGen\Neon.ModelGen.csproj" />
-		<ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
-		<ProjectReference Include="..\..\Lib\Neon.Couchbase\Neon.Couchbase.csproj" />
-		<ProjectReference Include="..\..\Lib\Neon.Web\Neon.Web.csproj" />
-		<ProjectReference Include="..\..\Lib\Neon.Xunit.Couchbase\Neon.Xunit.Couchbase.csproj" />
-		<ProjectReference Include="..\..\Lib\Neon.Xunit\Neon.Xunit.csproj" />
-		<ProjectReference Include="..\Test.Neon.Models\Test.Neon.Models.csproj" />
-	</ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\Lib\Neon.ModelGen\Neon.ModelGen.csproj" />
+        <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
+        <ProjectReference Include="..\..\Lib\Neon.Couchbase\Neon.Couchbase.csproj" />
+        <ProjectReference Include="..\..\Lib\Neon.Web\Neon.Web.csproj" />
+        <ProjectReference Include="..\..\Lib\Neon.Xunit.Couchbase\Neon.Xunit.Couchbase.csproj" />
+        <ProjectReference Include="..\..\Lib\Neon.Xunit\Neon.Xunit.csproj" />
+        <ProjectReference Include="..\Test.Neon.Models\Test.Neon.Models.csproj" />
+    </ItemGroup>
 
 </Project>

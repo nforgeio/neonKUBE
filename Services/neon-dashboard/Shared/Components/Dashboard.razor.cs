@@ -15,7 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -33,6 +32,9 @@ namespace NeonDashboard.Shared.Components
 {
     public partial class Dashboard : ComponentBase, IDropUpItem, IDisposable
     {
+        [Inject]
+        AppState AppState { get; set; }
+
         public Dashboard() { }
         public Dashboard(
             string id,

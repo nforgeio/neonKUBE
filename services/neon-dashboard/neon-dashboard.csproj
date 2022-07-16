@@ -75,6 +75,11 @@
 
 	</ItemGroup>
 
+    <ItemGroup>
+        <Watch Include="**\*.razor" />
+        <Watch Include="**\*.cshtml" />
+    </ItemGroup>
+
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
 		<Exec Command="pwsh -f ./prebuild.ps1" ContinueOnError="true" />
 	</Target>

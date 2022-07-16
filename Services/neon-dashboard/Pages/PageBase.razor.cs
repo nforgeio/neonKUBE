@@ -34,6 +34,7 @@ using Microsoft.AspNetCore.Components.Web.Virtualization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using Microsoft.JSInterop;
 
 using Neon.Diagnostics;
 
@@ -44,6 +45,18 @@ namespace NeonDashboard.Pages
 {
     public partial class PageBase : ComponentBase
     {
+        [Inject]
+        public AppState AppState { get; set; }
+
+        [Inject]
+        public NavigationManager NavigationManager { get; set; }
+
+        [Inject]
+        public IHttpContextAccessor HttpContextAccessor { get; set; }
+
+        [Inject]
+        public IJSRuntime JS { get; set; }
+
         [Parameter]
         public string PageTitle { get; set; } = "NeonKUBE Dashboard";
 
@@ -51,6 +64,9 @@ namespace NeonDashboard.Pages
         public string Description { get; set; } = "";
 
         public INeonLogger Logger => AppState.Logger;
+
+        public Service NeonDashboardService => AppState.NeonDashboardService;
+
         public PageBase()
         {
         }

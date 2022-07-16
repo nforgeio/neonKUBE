@@ -43,6 +43,20 @@ tab_width = 2
 end_of_line = lf
 insert_final_newline = false
 
+# Blazor
+[*.{razor,cshtml}]
+
+#### Core EditorConfig Options ####
+
+# Indentation and spacing
+indent_size = 4
+indent_style = space
+tab_width = 4
+
+# New line preferences
+end_of_line = crlf
+insert_final_newline = false
+
 # C# files
 [*.cs]
 

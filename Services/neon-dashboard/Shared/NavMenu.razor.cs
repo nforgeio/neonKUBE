@@ -42,6 +42,12 @@ namespace NeonDashboard.Shared
 {
     public partial class NavMenu : ComponentBase
     {
+        [Inject]
+        AppState AppState { get; set; }
+
+        [Inject]
+        NavigationManager NavigationManager { get; set; }
+
         private bool collapseNavMenu = true;
 
         private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;

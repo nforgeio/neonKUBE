@@ -6,12 +6,12 @@
 <DropUp Title="Dashboard" Active=@AppState.GetCurrentDashboard(AppState.CurrentDashboard) Icon=@Icons.Server Items=@AppState.Dashboards >
      <DropList Context="dashboard">
       <div></div>
-			<div class="">
-				<p>@dashboard.GetName()</p>
-			</div>
+            <div class="">
+                <p>@dashboard.GetName()</p>
+            </div>
     </DropList>
 </DropUp>
 
 <div class="button">
-		<Icon Content=@Icons.Settings />
+        <Icon Content=@Icons.Settings />
 </div>

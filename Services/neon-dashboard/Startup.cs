@@ -223,8 +223,8 @@ namespace NeonDashboard
             app.UseRouting();
             app.UseHttpMetrics();
             app.UseCookiePolicy();
-            app.UseAuthentication();
-            app.UseAuthorization();
+                app.UseAuthentication();
+                app.UseAuthorization();
             app.UseHttpLogging();
             app.UseEndpoints(endpoints =>
             {
