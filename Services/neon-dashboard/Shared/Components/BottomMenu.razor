@@ -3,18 +3,20 @@
 // CONTRIBUTOR: Simon Zhang
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.*@
 
-<DropUp Title="Dashboard" Active=@AppState.GetCurrentDashboard(AppState.CurrentDashboard) Icon=@Icons.Server Items=@AppState.Dashboards >
+<DropUp Title="Switch Dashboard" Active=@AppState.GetCurrentDashboard(AppState.CurrentDashboard) Icon=@Icons.Server Items=@AppState.Dashboards >
      <DropList Context="dashboard">
-      
-			<div class="button button__icon" @onmouseout:stopPropagation @onclick="@(() => NavigationManager.NavigateTo(dashboard.GetId()))">
+			 <div class="px-1 ">
+        <div class="px-2 py-1 flex w-full justify-between items-center hover:bg-slate-800 rounded-2 cursor-pointer " @onmouseout:stopPropagation @onclick="@(() => NavigationManager.NavigateTo(dashboard.GetId()))">
 				  <h3>@dashboard.GetName()</h3>
 				  @if (dashboard.GetId() == AppState.CurrentDashboard)
 				  {
-					  <div style="right: 20px;position: absolute;">
+					  <div  >
 						  <Icon Content=@Icons.Check />
 						  </div>
 				  }
 				  </div>
+			  </div>
+			
     </DropList>
 </DropUp>
 

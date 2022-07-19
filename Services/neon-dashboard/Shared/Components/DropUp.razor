@@ -4,17 +4,17 @@
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.*@
 
 <div class="dropup__wrapper relative" @onmouseenter="MouseIn" @onmouseleave="MouseOut">
-	<div class="dropup button" @onclick="Show">
+	<div class="px-2 py-0 hover:bg-slate-700  rounded-2 bg-slate-900 border border-slate-700 flex gap-x-2 " @onclick="Show">
 		<Icon Content=@Icon />
-		<div class="noselect name">
+		<div class="noselect text-3 name">
 		@*	<p>@Title</p>*@
 			<h3>@((Active != null) ? Active.Name : "Loading")</h3>
 		</div>
 		<Icon Content=@Icons.ChevronUp />
 	</div>
 	
-	<div class="absolute menu @(HideMenu ? "hide" : "")">
-		<div class="menu-header button__icon" @onmouseout:stopPropagation>
+	<div class="absolute menu bg-slate-900 flex flex-col divide divide-slate-700 rounded-2 drop-shadow border border-slate-700 @(HideMenu ? "hidden" : "")">
+		<div class="px-1 py-2 items-center  mb-0 flex bg-slate-800 rounded-2 button__icon" @onmouseout:stopPropagation>
 			<Icon Content=@Icon />
 			<h3>@Title</h3>
 		</div>

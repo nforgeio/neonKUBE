@@ -5,7 +5,6 @@
 
 .menu {
 	width: 100%;
-	background: var(--c-bg);
 	bottom: 100%;
 	left: 0;
 	z-index: 100;
@@ -14,7 +13,7 @@
 }
 
 .menu-header {
-	padding: var(--f1) var(--f2);
+	
 	align-items: center;
 }
 
@@ -27,6 +26,3 @@
 	width: 7rem;
 }
 
-.hide {
-	display: none;
-}

@@ -6,11 +6,11 @@
 @inherits LayoutComponentBase
 
 <div class="mainlayout " >
-  <div class="containermain text-slate-50  font-sans antialiased tracking-wide">
+  <div class="containermain text-slate-100  font-sans antialiased tracking-wide">
       <main class="main bg-bg  @((AppState.CurrentDashboard == "neonkube") ? "items-center flex flex-col" : "")">
               @Body
       </main>
-       <div class="bottom">
+       <div class="bottom pt-[4px]">
           <BottomMenu />
       </div>
   </div>
