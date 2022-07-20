@@ -26,37 +26,37 @@ namespace NeonBlazorProxy
     public sealed class KestrelMetrics : IMetricsConsumer<Yarp.Telemetry.Consumption.KestrelMetrics>
     {
         private static readonly Counter _totalConnections = Metrics.CreateCounter(
-            "neonblazorrouter_kestrel_total_connections",
+            "neonblazorproxy_kestrel_total_connections",
             "Number of incomming connections opened"
             );
 
         private static readonly Counter _totalTlsHandshakes = Metrics.CreateCounter(
-            "neonblazorrouter_kestrel_total_tls_Handshakes",
+            "neonblazorproxy_kestrel_total_tls_Handshakes",
             "Numer of TLS handshakes started"
             );
 
         private static readonly Gauge _currentTlsHandshakes = Metrics.CreateGauge(
-            "neonblazorrouter_kestrel_current_tls_handshakes",
+            "neonblazorproxy_kestrel_current_tls_handshakes",
             "Number of active TLS handshakes that have started but not yet completed or failed"
             );
 
         private static readonly Counter _failedTlsHandshakes = Metrics.CreateCounter(
-            "neonblazorrouter_kestrel_failed_tls_handshakes",
+            "neonblazorproxy_kestrel_failed_tls_handshakes",
             "Number of TLS handshakes that failed"
             );
 
         private static readonly Gauge _currentConnections = Metrics.CreateGauge(
-            "neonblazorrouter_kestrel_current_connections",
+            "neonblazorproxy_kestrel_current_connections",
             "Number of currently open incomming connections"
             );
 
         private static readonly Gauge _connectionQueueLength = Metrics.CreateGauge(
-            "neonblazorrouter_kestrel_connection_queue_length",
+            "neonblazorproxy_kestrel_connection_queue_length",
             "Number of connections on the queue."
             );
 
         private static readonly Gauge _requestQueueLength = Metrics.CreateGauge(
-            "neonblazorrouter_kestrel_request_queue_length",
+            "neonblazorproxy_kestrel_request_queue_length",
             "Number of requests on the queue"
             );
 

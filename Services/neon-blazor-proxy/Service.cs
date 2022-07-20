@@ -41,7 +41,7 @@ using Prometheus.DotNetRuntime;
 namespace NeonBlazorProxy
 {
     /// <summary>
-    /// Implements the <b>neon-blazor-router</b> service.
+    /// Implements the <b>neon-blazor-proxy</b> service.
     /// </summary>
     public class Service : NeonService
     {
@@ -58,7 +58,7 @@ namespace NeonBlazorProxy
         /// <summary>
         /// Session cookie name.
         /// </summary>
-        public const string SessionCookieName = ".Neon.Blazor.Router.Cookie";
+        public const string SessionCookieName = ".Neon.Blazor.Proxy.Cookie";
 
         /// <summary>
         /// Proxy Configuration.
@@ -89,7 +89,7 @@ namespace NeonBlazorProxy
         /// </summary>
         /// <param name="name">The service name.</param>
         public Service(string name)
-             : base(name, version: "0.1", metricsPrefix: "neonblazorrouter")
+             : base(name, version: "0.1", metricsPrefix: "neonblazorproxy")
         {
         }
 

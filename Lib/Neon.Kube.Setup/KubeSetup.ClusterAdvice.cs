@@ -76,6 +76,7 @@ namespace Neon.Kube
             clusterAdvice.TracesQuota     = cluster.Definition.IsDesktopBuiltIn ? "1Gi" : "10Gi";
 
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.AlertManager, CalculateAlertManagerAdvice(cluster));
+            clusterAdvice.AddServiceAdvice(KubeClusterAdvice.BlackboxExporter, CalculateBlackboxExporterAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.Calico, CalculateCalicoAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.CertManager, CalculateCertManagerAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.CoreDns, CalculateCoreDnsAdvice(cluster));
@@ -173,10 +174,18 @@ namespace Neon.Kube
 
             clusterAdvice.IsReadOnly = true;
         }
-
         private static KubeServiceAdvice CalculateAlertManagerAdvice(ClusterProxy cluster)
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.AlertManager);
+
+            return advice;
+        }
+        private static KubeServiceAdvice CalculateBlackboxExporterAdvice(ClusterProxy cluster)
+        {
+            var advice = new KubeServiceAdvice(KubeClusterAdvice.BlackboxExporter);
+
+            advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
+            advice.PodMemoryLimit   = ByteUnits.Parse("256Mi");
 
             return advice;
         }

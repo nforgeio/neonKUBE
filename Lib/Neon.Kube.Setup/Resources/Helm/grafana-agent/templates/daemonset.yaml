@@ -26,7 +26,7 @@ spec:
         args:
         - -config.file=/etc/agent/agent.yml
         - -config.expand-env=true
-        - -prometheus.wal-directory=/tmp/agent/data
+        - -metrics.wal-directory=/tmp/agent/data
         command:
         - /bin/agent
         lifecycle:

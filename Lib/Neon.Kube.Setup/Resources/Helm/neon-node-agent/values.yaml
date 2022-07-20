@@ -12,7 +12,7 @@
 image:
   organization: neon-registry.node.local
   repository: neon-node-agent
-  tag: neonkube-0.6.0-alpha
+  tag: null
   pullPolicy: IfNotPresent
 
 resources: {}

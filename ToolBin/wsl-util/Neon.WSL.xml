@@ -310,11 +310,6 @@
             happen when a Windows process is listening on the port.
             </remarks>
         </member>
-        <member name="M:Neon.WSL.Wsl2Proxy.ConfigureDNS">
-            <summary>
-            Configures the DNS settings for neon-desktop.
-            </summary>
-        </member>
         <member name="M:Neon.WSL.Wsl2Proxy.Terminate">
             <summary>
             Terminates the distribution if it's running.

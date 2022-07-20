@@ -1,62 +1,102 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: {{ include "metrics-server.fullname" . }}
+  namespace: {{ .Release.Namespace }}
   labels:
-    k8s-app: metrics-server
-  name: metrics-server
-  namespace: kube-system
+    {{- include "metrics-server.labels" . | nindent 4 }}
 spec:
+  replicas: {{ .Values.replicas }}
+  {{- with .Values.updateStrategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   selector:
     matchLabels:
-      k8s-app: metrics-server
-  strategy:
-    rollingUpdate:
-      maxUnavailable: 0
+      {{- include "metrics-server.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        k8s-app: metrics-server
+        {{- include "metrics-server.selectorLabels" . | nindent 8 }}
+      {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
+      serviceAccountName: {{ include "metrics-server.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . | quote }}
+      {{- end }}
+      {{- if .Values.hostNetwork.enabled }}
       hostNetwork: true
+      {{- end }}
       containers:
-      - args:
-        - --kubelet-preferred-address-types=InternalDNS,InternalIP,ExternalDNS,ExternalIP,Hostname
-        - --kubelet-insecure-tls
-        - --cert-dir=/tmp
-        - --secure-port=4443
-        - --kubelet-use-node-status-port
-        image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          failureThreshold: 3
-          httpGet:
-            path: /livez
-            port: https
-            scheme: HTTPS
-          periodSeconds: 10
-        name: metrics-server
-        ports:
-        - containerPort: 4443
-          name: https
-          protocol: TCP
-        readinessProbe:
-          failureThreshold: 3
-          httpGet:
-            path: /readyz
-            port: https
-            scheme: HTTPS
-          periodSeconds: 10
-        securityContext:
-          readOnlyRootFilesystem: true
-          runAsNonRoot: true
-          runAsUser: 1000
-        volumeMounts:
-        - mountPath: /tmp
-          name: tmp-dir
-      nodeSelector:
-        kubernetes.io/os: linux
-      priorityClassName: system-cluster-critical
-      serviceAccountName: metrics-server
+        - name: metrics-server
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - {{ printf "--secure-port=%d" (int .Values.containerPort) }}
+          {{- range .Values.defaultArgs }}
+            - {{ . }}
+          {{- end }}
+          {{- if .Values.metrics.enabled }}
+            - --authorization-always-allow-paths=/metrics
+          {{- end }}
+          {{- range .Values.args }}
+            - {{ . }}
+          {{- end }}
+          ports:
+          - name: https
+            protocol: TCP
+            containerPort: {{ .Values.containerPort }}
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
       volumes:
-      - emptyDir: {}
-        name: tmp-dir
+        - name: tmp
+          emptyDir: {}
+      {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

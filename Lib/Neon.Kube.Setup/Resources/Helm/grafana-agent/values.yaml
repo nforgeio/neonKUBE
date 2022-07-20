@@ -11,14 +11,14 @@ agent:
   image:
     organization: neon-registry.node.local
     repository: grafana-agent
-    tag: v0.23.0
+    tag: v0.25.1
     pullPolicy: IfNotPresent
 
 operator:
   image:
     organization: neon-registry.node.local
     repository: grafana-agent-operator
-    tag: v0.23.0
+    tag: v0.25.1
     pullPolicy: IfNotPresent
 
 configReloader:

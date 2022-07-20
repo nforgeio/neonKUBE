@@ -901,7 +901,7 @@ cd {KubeNodeFolder.Helm}
                     {
                         helmChartScript.AppendLineLinux(
         $@"
-if `helm list --namespace {@namespace} | cut -d' ' -f1 | grep {releaseName}`; then
+if `helm list --namespace {@namespace} | awk '{{print $1}}' | grep -q ""^{releaseName}$""`; then
     helm uninstall {releaseName} --namespace {@namespace}
 fi
 ");
@@ -925,6 +925,8 @@ do
    sleep 1
 done
 ");
+
+                    var scriptString = helmChartScript.ToString();
                     SudoCommand(CommandBundle.FromScript(helmChartScript), RunOptions.FaultOnError).EnsureSuccess();
                 });
 

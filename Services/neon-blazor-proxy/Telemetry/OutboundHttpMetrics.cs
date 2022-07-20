@@ -29,32 +29,32 @@ namespace NeonBlazorProxy
         private static readonly double CUBE_ROOT_10 = Math.Pow(10, (1.0 / 3));
 
         private static readonly Counter _outboundRequestsStarted = Metrics.CreateCounter(
-            "neonblazorrouter_outbound_http_requests_started",
+            "neonblazorproxy_outbound_http_requests_started",
             "Number of outbound requests inititated by the proxy"
             );
 
         private static readonly Counter _outboundRequestsFailed = Metrics.CreateCounter(
-            "neonblazorrouter_outbound_http_requests_failed",
+            "neonblazorproxy_outbound_http_requests_failed",
             "Number of outbound requests failed"
             );
 
         private static readonly Gauge _outboundCurrentRequests = Metrics.CreateGauge(
-            "neonblazorrouter_outbound_http_current_requests",
+            "neonblazorproxy_outbound_http_current_requests",
             "Number of active outbound requests that have started but not yet completed or failed"
             );
 
         private static readonly Gauge _outboundCurrentHttp11Connections = Metrics.CreateGauge(
-            "neonblazorrouter_outbound_http11_connections",
+            "neonblazorproxy_outbound_http11_connections",
             "Number of currently open HTTP 1.1 connections"
             );
 
         private static readonly Gauge _outboundCurrentHttp20Connections= Metrics.CreateGauge(
-            "neonblazorrouter_outbound_http20_connections",
+            "neonblazorproxy_outbound_http20_connections",
             "Number of active proxy requests that have started but not yet completed or failed"
             );
 
         private static readonly Histogram _outboundHttp11RequestQueueDuration= Metrics.CreateHistogram(
-            "neonblazorrouter_outbound_http11_request_queue_duration",
+            "neonblazorproxy_outbound_http11_request_queue_duration",
             "Average time spent on queue for HTTP 1.1 requests that hit the MaxConnectionsPerServer limit in the last metrics interval",
             new HistogramConfiguration
             {
@@ -62,7 +62,7 @@ namespace NeonBlazorProxy
             });
 
         private static readonly Histogram _outboundHttp20RequestQueueDuration = Metrics.CreateHistogram(
-            "neonblazorrouter_outbound_http20_request_queue_duration",
+            "neonblazorproxy_outbound_http20_request_queue_duration",
             "Average time spent on queue for HTTP 2.0 requests that hit the MAX_CONCURRENT_STREAMS limit on the connection in the last metrics interval",
             new HistogramConfiguration
             {

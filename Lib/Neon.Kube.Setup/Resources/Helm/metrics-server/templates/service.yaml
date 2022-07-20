@@ -1,15 +1,23 @@
 apiVersion: v1
 kind: Service
 metadata:
+  name: {{ include "metrics-server.fullname" . }}
+  namespace: {{ .Release.Namespace }}
   labels:
-    k8s-app: metrics-server
-  name: metrics-server
-  namespace: kube-system
+    {{- include "metrics-server.labels" . | nindent 4 }}
+  {{- with .Values.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.service.labels -}}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
+  type: {{ .Values.service.type }}
   ports:
-  - name: https
-    port: 443
-    protocol: TCP
-    targetPort: https
+    - name: https
+      port: {{ .Values.service.port }}
+      protocol: TCP
+      targetPort: https
   selector:
-    k8s-app: metrics-server
+    {{- include "metrics-server.selectorLabels" . | nindent 4 }}

@@ -39,7 +39,7 @@ data:
         {{- end }}
       {{- end }}
     http:
-      # secret: setted through environment variable
+      # secret: set through environment variable
       {{- if .Spec.HTTP.Debug }}
       debug:
         addr: :{{ .Spec.HTTP.Debug.Port }}
@@ -139,6 +139,34 @@ data:
         {{- end }}
         {{- if .Spec.Storage.Driver.S3.RegionEndpoint }}
         regionendpoint: {{ .Spec.Storage.Driver.S3.RegionEndpoint | quote }}
+        {{- end }}
+        {{- if .Spec.Storage.Driver.S3.MultipartCopyChunkSize }}
+        multipartcopychunksize: {{ .Spec.Storage.Driver.S3.MultipartCopyChunkSize | quote }}
+        {{- end }}
+        {{- if .Spec.Storage.Driver.S3.MultipartCopyMaxConcurrency }}
+        multipartcopymaxconcurrency: {{ .Spec.Storage.Driver.S3.MultipartCopyMaxConcurrency | quote }}
+        {{- end }}
+        {{- if .Spec.Storage.Driver.S3.MultipartCopyThresholdSize }}
+        multipartcopythresholdsize: {{ .Spec.Storage.Driver.S3.MultipartCopyThresholdSize | quote }}
+        {{- end }}
+      {{- end }}
+
+      {{- if .Spec.Storage.Driver.Azure }}
+      azure:
+        accountname: {{ .Spec.Storage.Driver.Azure.AccountName | quote }}
+        container: {{ .Spec.Storage.Driver.Azure.Container | quote }}
+        realm: {{ .Spec.Storage.Driver.Azure.BaseURL | quote }}
+      {{- end }}
+
+      {{- if .Spec.Storage.Driver.Gcs }}
+      gcs:
+        bucket: {{ .Spec.Storage.Driver.Gcs.Bucket | quote }}
+        keyfile: /etc/gcs/gcs-key.json
+        {{- if .Spec.Storage.Driver.Gcs.PathPrefix }}
+        rootdirectory: {{ .Spec.Storage.Driver.Gcs.PathPrefix | quote }}
+        {{- end }}
+        {{- if .Spec.Storage.Driver.Gcs.ChunkSize }}
+        chunksize: {{ .Spec.Storage.Driver.Gcs.ChunkSize | quote }}
         {{- end }}
       {{- end }}
 
@@ -273,8 +301,9 @@ data:
         realm: https://{{ .Values.neonkube.clusterDomain.harborRegistry }}.{{ .Values.cluster.domain }}/service/token
         rootcertbundle: /harbor_cust_cert/registry-harbor-harbor-core-tokencert.crt
         service: harbor-registry
+    {{`
     notifications:
-      {{`{{- if .Spec.Notifications.Endpoints }}
+      {{- if .Spec.Notifications.Endpoints }}
       endpoints:
         {{- range $_, $endpoint := .Spec.Notifications.Endpoints }}
         - name: {{ $endpoint.Name | quote }}

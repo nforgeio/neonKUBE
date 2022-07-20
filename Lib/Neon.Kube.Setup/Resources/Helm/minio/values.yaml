@@ -16,7 +16,7 @@ operator:
   image:
     organization: neon-registry.node.local
     repository: minio-operator
-    tag: v4.4.22
+    tag: v4.4.25
     pullPolicy: IfNotPresent
   imagePullSecrets: []
   initcontainers: []
@@ -39,7 +39,7 @@ console:
   image:
     organization: neon-registry.node.local
     repository: minio-console
-    tag: v0.18.1
+    tag: v0.19.0
     pullPolicy: IfNotPresent
   imagePullSecrets: []
   initcontainers: []
@@ -68,7 +68,7 @@ tenants:
     image:
       organization: neon-registry.node.local
       repository: minio-minio
-      tag: RELEASE.2022-06-11T19-55-32Z
+      tag: RELEASE.2022-07-04T21-02-54Z
       pullPolicy: IfNotPresent
     ## Customize namespace for tenant deployment
     namespace: neon-system

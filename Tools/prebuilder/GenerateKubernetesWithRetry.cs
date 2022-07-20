@@ -107,7 +107,10 @@ using System;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using k8s;
 using k8s.Autorest;
@@ -143,7 +146,18 @@ namespace {targetNamespace}
 
                 writer.WriteLine($"        //---------------------------------------------------------------------");
                 writer.WriteLine($"        // Static members");
-                
+                writer.WriteLine();
+                writer.WriteLine($"        private static bool isInitialized = false;");
+
+                writer.WriteLine();
+                writer.WriteLine($"        /// <summary>");
+                writer.WriteLine($"        /// Static constructor.");
+                writer.WriteLine($"        /// </summary>");
+                writer.WriteLine($"        static {wrapperClassName}()");
+                writer.WriteLine($"        {{");
+                writer.WriteLine($"            Initialize();");
+                writer.WriteLine($"        }}");
+
                 writer.WriteLine();
                 writer.WriteLine($"        /// <summary>");
                 writer.WriteLine($"        /// Returns a disconnected client used for specialized situations where a Kubernetes client");
@@ -153,6 +167,32 @@ namespace {targetNamespace}
                 writer.WriteLine($"        public static IKubernetes CreateDisconnected()");
                 writer.WriteLine($"        {{");
                 writer.WriteLine($"            return new {wrapperClassName}();");
+                writer.WriteLine($"        }}");
+
+
+                writer.WriteLine();
+                writer.WriteLine($"        /// <summary>");
+                writer.WriteLine($"        /// Handles initialzation of the stock <see cref=\"Kubernetes\"/> client's JSON serializer to");
+                writer.WriteLine($"        /// support <see cref=\"EnumMemberAttribute\"/> and perhaps customize other settings.  This");
+                writer.WriteLine($"        /// is required to support our custom resources.");
+                writer.WriteLine($"        /// </summary>");
+                writer.WriteLine($"        public static void Initialize()");
+                writer.WriteLine($"        {{");
+                writer.WriteLine($"            if (isInitialized)");
+                writer.WriteLine($"            {{");
+                writer.WriteLine($"                return;");
+                writer.WriteLine($"            }}");
+                writer.WriteLine();
+                writer.WriteLine($"            var kubernetesJsonType = typeof(KubernetesJson).Assembly.GetType(\"k8s.KubernetesJson\");");
+                writer.WriteLine();
+                writer.WriteLine($"            System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(kubernetesJsonType.TypeHandle);");
+                writer.WriteLine();
+                writer.WriteLine($"            var member  = kubernetesJsonType.GetField(\"JsonSerializerOptions\", BindingFlags.Static | BindingFlags.NonPublic);");
+                writer.WriteLine($"            var options = (JsonSerializerOptions)member.GetValue(kubernetesJsonType);");
+                writer.WriteLine();
+                writer.WriteLine($"            options.Converters.Add(new JsonStringEnumMemberConverter());");
+                writer.WriteLine();
+                writer.WriteLine($"            isInitialized = true;");
                 writer.WriteLine($"        }}");
 
                 //-------------------------------------------------------------

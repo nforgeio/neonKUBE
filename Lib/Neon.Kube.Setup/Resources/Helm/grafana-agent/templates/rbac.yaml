@@ -9,59 +9,52 @@ kind: ClusterRole
 metadata:
   name: grafana-agent-operator
 rules:
-- apiGroups: ["monitoring.grafana.com"]
+- apiGroups: [monitoring.grafana.com]
   resources:
   - grafanaagents
   - metricsinstances
   - logsinstances
   - podlogs
-  verbs: 
-  - get
-  - list
-  - watch
-- apiGroups: ["monitoring.coreos.com"]
+  - integrations
+  verbs: [get, list, watch]
+- apiGroups: [monitoring.grafana.com]
+  resources:
+  - grafanaagents/finalizers
+  - metricsinstances/finalizers
+  - logsinstances/finalizers
+  - podlogs/finalizers
+  - integrations/finalizers
+  verbs: [get, list, watch, update]
+- apiGroups: [monitoring.coreos.com]
   resources:
   - podmonitors
   - probes
   - servicemonitors
-  verbs: 
-  - get
-  - list
-  - watch
+  verbs: [get, list, watch]
+- apiGroups: [monitoring.coreos.com]
+  resources:
+  - podmonitors/finalizers
+  - probes/finalizers
+  - servicemonitors/finalizers
+  verbs: [get, list, watch, update]
 - apiGroups: [""]
   resources:
   - namespaces
   - nodes
-  verbs: 
-  - get
-  - list
-  - watch
+  verbs: [get, list, watch]
 - apiGroups: [""]
   resources:
   - secrets
   - services
   - configmaps
   - endpoints
-  verbs: 
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
+  verbs: [get, list, watch, create, update, patch, delete]
 - apiGroups: ["apps"]
   resources:
   - statefulsets
   - daemonsets
-  verbs: 
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
+  - deployments
+  verbs: [get, list, watch, create, update, patch, delete]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

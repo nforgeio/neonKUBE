@@ -485,6 +485,7 @@ cgroupDriver: systemd
 runtimeRequestTimeout: 5m
 {kubeletFailSwapOnLine}
 maxPods: {cluster.Definition.Kubernetes.MaxPodsPerNode}
+rotateCertificates: true
 ");
 
             var kubeProxyMode = "ipvs";
@@ -2813,6 +2814,7 @@ $@"- name: StorageType
             var clusterAdvice   = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var agentAdvice     = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.GrafanaAgent);
             var agentNodeAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.GrafanaAgentNode);
+            var blackboxAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.BlackboxExporter);
             var istioAdvice     = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioProxy);
 
             controller.ThrowIfCancelled();
@@ -2822,7 +2824,7 @@ $@"- name: StorageType
                     controller.LogProgress(master, verb: "setup", message: "prometheus");
 
                     var values = new Dictionary<string, object>();
-                    var i      = 0;
+                    var i = 0;
 
                     values.Add($"cluster.name", cluster.Definition.Name);
                     values.Add($"cluster.domain", cluster.Definition.Domain);
@@ -2858,10 +2860,39 @@ $@"- name: StorageType
                     }
 
                     await master.InstallHelmChartAsync(controller, "grafana-agent",
-                        releaseName:  "grafana-agent",
-                        @namespace:   KubeNamespace.NeonMonitor,
+                        releaseName: "grafana-agent",
+                        @namespace: KubeNamespace.NeonMonitor,
                         prioritySpec: PriorityClass.NeonMonitor.Name,
-                        values:       values);
+                        values: values);
+                });
+
+            controller.ThrowIfCancelled();
+            await master.InvokeIdempotentAsync("setup/monitoring-prometheus-blackbox-exporter",
+                async () =>
+                {
+                    controller.LogProgress(master, verb: "setup", message: "prometheus");
+
+                    var values = new Dictionary<string, object>();
+                    var i = 0;
+
+                    values.Add($"replicas", blackboxAdvice.ReplicaCount);
+                    values.Add($"serviceMesh.enabled", false);
+                    values.Add($"resources.requests.memory", ToSiString(blackboxAdvice.PodMemoryRequest));
+                    values.Add($"resources.limits.memory", ToSiString(blackboxAdvice.PodMemoryLimit));
+
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetricsInternal, "true"))
+                    {
+                        values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                        values.Add($"tolerations[{i}].effect", taint.Effect);
+                        values.Add($"tolerations[{i}].operator", "Exists");
+                        i++;
+                    }
+
+                    await master.InstallHelmChartAsync(controller, "blackbox-exporter",
+                        releaseName: "blackbox-exporter",
+                        @namespace: KubeNamespace.NeonMonitor,
+                        prioritySpec: PriorityClass.NeonMonitor.Name,
+                        values: values);
                 });
         }
 
@@ -4137,7 +4168,6 @@ $@"- name: StorageType
 
                     tasks.Add(k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-portal", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
                     tasks.Add(k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-registry", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
-                    tasks.Add(k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-registryctl", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
                     
                     if (cluster.Definition.Features.Harbor.Trivy)
                     {

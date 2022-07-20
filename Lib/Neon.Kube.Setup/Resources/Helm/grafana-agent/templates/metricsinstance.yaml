@@ -14,7 +14,7 @@ spec:
         batchSendDeadline: 5m
         maxBackoff: 1m
         maxRetries: 3
-        minBackoff: 1m
+        minBackoff: 3s
   maxWALTime: 15m0s
   minWALTime: 5m0s
   remoteFlushDeadline: 1m0s

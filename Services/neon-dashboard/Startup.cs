@@ -117,10 +117,11 @@ namespace NeonDashboard
             }
 
             services.AddServerSideBlazor();
-
             services.AddAuthentication(options => {
-                options.DefaultScheme          = CookieAuthenticationDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+                options.DefaultScheme             = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme    = OpenIdConnectDefaults.AuthenticationScheme;
+                options.DefaultSignInScheme       = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
             })
             .AddCookie(options =>
             {
@@ -151,6 +152,24 @@ namespace NeonDashboard
                 {
                     RequireNonce = false,
                     RequireState = false
+                };
+                options.Events = new OpenIdConnectEvents
+                {
+                    OnTicketReceived = context =>
+                    {
+                        return Task.CompletedTask;
+                    },
+                    OnAuthenticationFailed = context =>
+                    {
+                        context.Response.Redirect("/login?redirectUri=/");
+                        context.HandleResponse(); // Suppress the exception
+                        return Task.CompletedTask;
+                    },
+                    OnRemoteSignOut = context =>
+                    {
+
+                        return Task.CompletedTask;
+                    }
                 };
             });
 

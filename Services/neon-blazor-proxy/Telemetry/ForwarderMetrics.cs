@@ -25,17 +25,17 @@ namespace NeonBlazorProxy
     public sealed class ForwarderMetrics : IMetricsConsumer<Yarp.Telemetry.Consumption.ForwarderMetrics>
     {
         private static readonly Counter _requestsStarted = Metrics.CreateCounter(
-            "neonblazorrouter_proxy_requests_started",
+            "neonblazorproxy_proxy_requests_started",
             "Number of requests inititated through the proxy"
             );
 
         private static readonly Counter _requestsFailed = Metrics.CreateCounter(
-            "neonblazorrouter_proxy_requests_failed",
+            "neonblazorproxy_proxy_requests_failed",
             "Number of proxy requests that failed"
             );
 
         private static readonly Gauge _CurrentRequests = Metrics.CreateGauge(
-            "neonblazorrouter_proxy_current_requests",
+            "neonblazorproxy_proxy_current_requests",
             "Number of active proxy requests that have started but not yet completed or failed"
             );
 

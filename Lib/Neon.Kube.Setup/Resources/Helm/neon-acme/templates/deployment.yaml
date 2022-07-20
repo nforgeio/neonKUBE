@@ -5,6 +5,8 @@ metadata:
   namespace: neon-ingress
   labels:
     app: neon-acme
+  annotations:
+    reloader.stakater.com/search: 'true'
 spec:
   replicas:
   selector:
@@ -33,16 +35,28 @@ spec:
             - name: https
               containerPort: 443
               protocol: TCP
+          startupProbe:
+            exec:
+              command:
+                - /health-check
+            initialDelaySeconds: 1
+            failureThreshold: 30
+            periodSeconds: 5
+            timeoutSeconds: 1
           livenessProbe:
-            httpGet:
-              scheme: HTTPS
-              path: /healthz
-              port: https
+            exec:
+              command:
+                - /health-check
+            initialDelaySeconds: 1
+            periodSeconds: 10
+            timeoutSeconds: 1
           readinessProbe:
-            httpGet:
-              scheme: HTTPS
-              path: /healthz
-              port: https
+            exec:
+              command:
+                - /ready-check
+            initialDelaySeconds: 1
+            periodSeconds: 10
+            timeoutSeconds: 1
           volumeMounts:
             - name: certs
               mountPath: /tls
