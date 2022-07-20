@@ -1,0 +1,44 @@
+﻿@*//-----------------------------------------------------------------------------
+// FILE:	      HeadlessListboxOptions.razor
+// CONTRIBUTOR: Marcus Bowyer
+// COPYRIGHT:  	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.*@
+
+@namespace Neon.Tailwind.HeadlessUI
+
+@typeparam TValue
+
+@if (Static || this.Listbox.State == ListboxState.Open)
+{
+	<KeyDownEventHandler @ref="keyDownEventHandler" OnKeyDown="HandleKeyDown" PreventDefaultForKeys="new() {
+            KeyboardKey.Space,
+            KeyboardKey.Enter,
+            KeyboardKey.ArrowDown,
+            KeyboardKey.ArrowUp,
+            KeyboardKey.Home,
+            KeyboardKey.End,
+            KeyboardKey.Escape
+        }" />
+	<CascadingValue Value="this">
+		<HtmlElement TagName="@TagName"
+					@ref="rootElement" Id="Id"
+					@attributes="AdditionalAttributes"
+					tabindex="-1"
+					role="listbox"
+					aria-labelledby="@Listbox.LabelId"
+					aria-activedescendant="@Listbox.ActiveOptionId">
+			@ChildContent
+		</HtmlElement>
+	</CascadingValue>
+}

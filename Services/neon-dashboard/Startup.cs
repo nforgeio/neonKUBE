@@ -55,9 +55,8 @@ using Segment;
 
 using StackExchange.Redis;
 
-using Tailwind;
-using System.Security.Cryptography;
-using System.Text;
+using Neon.Tailwind;
+using Neon.Tailwind.HeadlessUI;
 
 namespace NeonDashboard
 {
@@ -177,6 +176,7 @@ namespace NeonDashboard
                 .AddHttpContextAccessor()
                 .AddHttpClient()
                 .AddBlazoredLocalStorage()
+                .AddTailwind()
                 .AddSingleton<INeonLogger>(NeonDashboardService.LogManager.GetLogger())
                 .AddGoogleAnalytics("G-PYMLFS3FX4")
                 .AddRouting()
@@ -197,7 +197,7 @@ namespace NeonDashboard
         {
             if (NeonHelper.IsDevWorkstation)
             {
-                app.RunTailwind("dev", "./");
+                app.RunTailwind(script: "dev");
             }
 
             if (env.IsDevelopment())
