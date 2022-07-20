@@ -129,7 +129,7 @@ namespace NeonDashboard
                 options.AccessDeniedPath       = "/Forbidden/";
                 options.DataProtectionProvider = new CookieProtector(NeonDashboardService.AesCipher);
             })
-            .AddOpenIdConnect("oidc", options =>
+            .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
             {
                 options.ClientId                      = "kubernetes";
                 options.ClientSecret                  = NeonDashboardService.SsoClientSecret;
@@ -223,8 +223,8 @@ namespace NeonDashboard
             app.UseRouting();
             app.UseHttpMetrics();
             app.UseCookiePolicy();
-            app.UseAuthentication();
-            app.UseAuthorization();
+                app.UseAuthentication();
+                app.UseAuthorization();
             app.UseHttpLogging();
             app.UseEndpoints(endpoints =>
             {

@@ -63,7 +63,7 @@ namespace NeonAcme
         /// <param name="service">Specifies the service.</param>
         public Startup(IConfiguration configuration, Service service)
         {
-            this.Configuration = configuration;
+            this.Configuration   = configuration;
             this.NeonAcmeService = service;
         }
 

@@ -1,5 +1,5 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    Logo.razor.cs
+//-----------------------------------------------------------------------------
+// FILE:	    RedirectToSignin.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -15,34 +15,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 
-using NeonDashboard;
-
-namespace NeonDashboard.Shared.Components
+namespace NeonDashboard
 {
-    public partial class Logo : ComponentBase, IDisposable
+    public class RedirectToSignin : ComponentBase
     {
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        public Logo() { }
+        [Inject]
+        protected NavigationManager NavigationManager { get; set; }
 
-        /// <inheritdoc/>
-        protected override void OnInitialized() { }
+        [Inject]
+        protected IHttpContextAccessor Context { get; set; }
 
-        /// <inheritdoc/>
-        public void Dispose() { }
+        protected override void OnInitialized()
+        {
+            if (!this.Context.HttpContext.User.Identity.IsAuthenticated)
+            {
+                var returnUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+                NavigationManager.NavigateTo($"login?redirectUri=/{returnUrl}", forceLoad: true);
+            }
+        }
     }
 }

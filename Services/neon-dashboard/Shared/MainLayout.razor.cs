@@ -42,6 +42,9 @@ namespace NeonDashboard.Shared
 {
     public partial class MainLayout
     {
+        [Inject]
+        public AppState AppState { get; set; }
+
         /// <inheritdoc/>
         protected override void OnInitialized()
         {

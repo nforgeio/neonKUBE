@@ -16,6 +16,10 @@ config:
   # The name of the cookie that oauth2-proxy will create
   # If left empty, it will default to the release name
   cookieName: "neon-sso"
+  extraAudiences:
+    - grafana
+    - minio
+    - harbor
   google: {}
     # adminEmail: xxxx
     # serviceAccountJson: xxxx
@@ -24,28 +28,95 @@ config:
     # existingSecret: google-secret
   # Default configuration, to be overridden
   configFile: |-
-    http_address="0.0.0.0:4180"
-    metrics_address="0.0.0.0:44180"
     cookie_name="neon-sso"
     cookie_refresh="1h"
     cookie_expire="168h"
-    provider="oidc"  
     session_store_type = "redis"
     redis_sentinel_connection_urls=[ "redis://neon-redis.neon-system:26379" ]
     redis_sentinel_master_name = "master" 
     redis_use_sentinel = true
     email_domains = [ "*" ] 
-    upstreams = [ "static://200" ] 
-    scope = "openid email profile groups"
     skip_provider_button = true 
     standard_logging = true 
     request_logging = true
     auth_logging = true
     silence_ping_logging = true
-    pass_authorization_header = true 
-    pass_access_token = true
-    set_authorization_header = true
-    set_xauthrequest = true
+  alphaConfigFile: |
+
+    injectRequestHeaders:
+    - name: X-Forwarded-Groups
+      values:
+      - claim: groups
+    - name: X-Forwarded-User
+      values:
+      - claim: user
+    - name: X-Forwarded-Email
+      values:
+      - claim: email
+    - name: X-Forwarded-Preferred-Username
+      values:
+      - claim: preferred_username
+    - name: X-Forwarded-Access-Token
+      values:
+      - claim: access_token
+    - name: Authorization
+      values:
+      - claim: id_token
+        prefix: 'Bearer '
+    injectResponseHeaders:
+    - name: X-Auth-Request-User
+      values:
+      - claim: user
+    - name: X-Auth-Request-Email
+      values:
+      - claim: email
+    - name: X-Auth-Request-Preferred-Username
+      values:
+      - claim: preferred_username
+    - name: X-Auth-Request-Groups
+      values:
+      - claim: groups
+    - name: X-Auth-Request-Access-Token
+      values:
+      - claim: access_token
+    - name: Authorization
+      values:
+      - claim: id_token
+        prefix: 'Bearer '
+    server:
+      BindAddress: 0.0.0.0:4180
+      SecureBindAddress: ""
+      TLS: null
+    metricsServer:
+      BindAddress: 0.0.0.0:44180
+      SecureBindAddress: ""
+      TLS: null
+    providers:
+    - clientID: {{ .Values.client.id }}
+      clientSecret: /etc/oauth2_proxy_oidc/KUBERNETES_CLIENT_SECRET
+      id: oidc={{ .Values.client.id }}
+      loginURL: https://{{ .Values.neonkube.clusterDomain.sso }}.{{ .Values.cluster.domain }}
+      loginURLParameters:
+      - default:
+        - force
+        name: approval_prompt
+      oidcConfig:
+        audienceClaims:
+        - aud
+        emailClaim: email
+        groupsClaim: groups
+        insecureSkipNonce: true
+        issuerURL: https://{{ .Values.neonkube.clusterDomain.sso }}.{{ .Values.cluster.domain }}
+        userIDClaim: email
+      provider: oidc
+      scope: openid email profile groups
+
+    upstreamConfig:
+      upstreams:
+        - id: static
+          static: true
+          staticCode: 200
+          path: "/"
 
   # Custom configuration file: oauth2_proxy.cfg
   # configFile: |-
@@ -61,7 +132,7 @@ cluster:
 image:
   organization: neon-registry.node.local
   repository: "oauth2-proxy-oauth2-proxy"
-  tag: "v7.2.0"
+  tag: "v7.3.0"
   pullPolicy: "IfNotPresent"
 
 # Optionally specify an array of imagePullSecrets.

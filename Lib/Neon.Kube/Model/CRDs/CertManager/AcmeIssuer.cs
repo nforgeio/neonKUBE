@@ -160,7 +160,7 @@ namespace Neon.Kube
 
             Solvers = Solvers ?? new List<AcmeChallengeSolver>();
 
-            if (!Solvers.Any(solver => solver.Dns01?.Webhook?.SolverName == "neoncluster_io-solver"))
+            if (!Solvers.Any(solver => solver.Dns01?.Webhook?.SolverName == "neoncluster_io"))
             {
                 var neonWebhookSolver = new AcmeIssuerDns01ProviderWebhook()
                 {
@@ -169,7 +169,7 @@ namespace Neon.Kube
                     { "Registrar", "route53" }
                 },
                     GroupName = "acme.neoncloud.io",
-                    SolverName = "neoncluster_io-solver"
+                    SolverName = "neoncluster_io"
                 };
 
                 Solvers.Add(new AcmeChallengeSolver()

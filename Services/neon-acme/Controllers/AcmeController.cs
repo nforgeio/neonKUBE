@@ -38,26 +38,32 @@ using Neon.Web;
 
 using k8s;
 using k8s.Models;
+using System.Text.RegularExpressions;
 
 namespace NeonAcme.Controllers
 {
-    /// <summary>
-    /// Implements neon-acme service methods.
-    /// </summary>
+/// <summary>
+/// Implements neon-acme service methods.
+/// </summary>
     [ApiController]
     [Route("apis/acme.neoncloud.io/v1alpha1")]
     public class AcmeController : NeonControllerBase
     {
-        private JsonClient jsonClient;
+        private Service             service;
+        private JsonClient          jsonClient;
+        private KubernetesWithRetry k8s;
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="jsonClient">The JSON client for interacting with the headend.</param>
         public AcmeController(
+            Service    service,
             JsonClient jsonClient)
         {
+            this.service    = service;
             this.jsonClient = jsonClient;
+            this.k8s        = service.Kubernetes;
         }
 
         /// <summary>
@@ -82,8 +88,8 @@ namespace NeonAcme.Controllers
                 {
                     new V1APIResource()
                     {
-                        Name = "neoncluster_io-solver",
-                        SingularName = "neoncluster_io-solver",
+                        Name = "neoncluster_io",
+                        SingularName = "neoncluster_io",
                         Namespaced = false,
                         Group = "webhook.acme.cert-manager.io",
                         Version = "v1alpha1",
@@ -101,36 +107,16 @@ namespace NeonAcme.Controllers
         /// </summary>
         /// <param name="challenge"></param>
         /// <returns></returns>
-        [HttpPost("neoncluster_io-solver")]
+        [HttpPost("neoncluster_io")]
         [Produces("application/json")]
-        public async Task<ActionResult> PresentAsync([FromBody] ChallengePayload challenge)
+        public async Task<ActionResult> PresentNeonclusterChallengeAsync([FromBody] ChallengePayload challenge)
         {
             LogInfo($"Challenge request [{challenge.Request.Action}] [{challenge.Request.DnsName}]");
             LogDebug($"Headers: {NeonHelper.JsonSerialize(HttpContext.Request.Headers)}");
 
-            var route = "acme/challenge/";
+            var response = await jsonClient.PostAsync("acme/challenge", challenge.Request);
 
-            switch (challenge.Request.Action)
-            {
-                case ChallengeAction.Present:
-                    route += "present";
-                    break;
-                case ChallengeAction.CleanUp:
-                    route += "clean-up";
-                    break;
-                default:
-                    return BadRequest();
-            }
-
-            await jsonClient.PostAsync(route, challenge.Request);
-
-            challenge.Response = new ChallengeResponse()
-            {
-                Uid     = challenge.Request.Uid,
-                Success = true
-            };
-
-            return new JsonResult(challenge);
+            return response.As<JsonResult>();
         }
     }
 }

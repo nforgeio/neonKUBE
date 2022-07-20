@@ -2270,7 +2270,8 @@ subjects:
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(master != null, nameof(master));
-
+            
+            var k8s                    = GetK8sClient(controller);
             var cluster                = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var clusterAdvice          = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var apiServerAdvice        = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsApiServer);
@@ -2321,20 +2322,40 @@ subjects:
                             values.Add($"openebsMonitoringAddon.lvmLocalPV.serviceMonitor.enabled", localPvAdvice.MetricsEnabled);
                             values.Add($"openebsMonitoringAddon.deviceLocalPV.serviceMonitor.enabled", localPvAdvice.MetricsEnabled);
                             values.Add($"openebsMonitoringAddon.ndm.serviceMonitor.enabled", ndmOperatorAdvice.MetricsEnabled);
-                            
+
 
                             await master.InstallHelmChartAsync(controller, "openebs",
                                 releaseName:  "openebs",
                                 @namespace:   KubeNamespace.NeonStorage,
                                 prioritySpec: PriorityClass.NeonStorage.Name,
                                 values:       values);
+                        });
+
+                    controller.ThrowIfCancelled();
+                    await master.InvokeIdempotentAsync("setup/openebs-jiva",
+                        async () =>
+                        {
+                            controller.LogProgress(master, verb: "setup", message: "openebs-jiva");
+
+                            var values = new Dictionary<string, object>();
+                            
+                            var jivaReplicas = Math.Min(3, (cluster.Definition.Nodes.Where(node => node.Labels.OpenEBS).Count()));
+                            if (jivaReplicas < 1) 
+                            {
+                                jivaReplicas = 1;
+                            };
+
+                            values.Add("defaultPolicy.replicas", jivaReplicas);
 
                             await master.InstallHelmChartAsync(controller, "openebs-jiva-operator",
                                 releaseName:  "openebs-jiva-operator",
                                 @namespace:   KubeNamespace.NeonStorage,
                                 prioritySpec: PriorityClass.NeonStorage.Name,
                                 values:       values);
-                        });
+                            });
+
+                    await CreateHostPathStorageClass(controller, master, "openebs-hostpath");
+                    await WaitForOpenEbsReady(controller, master);
 
                     switch (cluster.Definition.Storage.OpenEbs.Engine)
                     {
@@ -2345,8 +2366,7 @@ subjects:
 
                         case OpenEbsEngine.HostPath:
                         case OpenEbsEngine.Jiva:
-
-                            await WaitForOpenEbsReady(controller, master);
+                            
                             break;
 
                         default:
@@ -2359,6 +2379,8 @@ subjects:
                     await master.InvokeIdempotentAsync("setup/openebs-nfs",
                         async () =>
                         {
+                            controller.LogProgress(master, verb: "setup", message: "openebs-nfs");
+
                             var values = new Dictionary<string, object>();
 
                             await CreateStorageClass(controller, master, "neon-internal-nfs");
@@ -2371,8 +2393,22 @@ subjects:
                                 prioritySpec: PriorityClass.NeonStorage.Name,
                                 values:       values);
                         });
-                            
-                    
+
+                    await master.InvokeIdempotentAsync("setup/openebs-nfs-ready",
+                        async () =>
+                        {
+                            controller.LogProgress(master, verb: "wait for", message: "openebs");
+
+                            await NeonHelper.WaitAllAsync(
+                                new List<Task>()
+                                {
+                                    k8s.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-nfs-provisioner", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                                },
+                                timeoutMessage: "setup/openebs-ready",
+                                cancellationToken: controller.CancellationToken);
+                        });
+
+
                 });
         }
 
@@ -2425,9 +2461,6 @@ subjects:
 
                     await master.InstallHelmChartAsync(controller, "openebs-cstor-operator", releaseName: "openebs-cstor", values: values, @namespace: KubeNamespace.NeonStorage);
                 });
-
-            controller.ThrowIfCancelled();
-            await WaitForOpenEbsReady(controller, master);
 
             controller.LogProgress(master, verb: "setup", message: "openebs-pool");
 
@@ -2556,13 +2589,12 @@ subjects:
                         {
                             k8s.WaitForDaemonsetAsync(KubeNamespace.NeonStorage, "openebs-ndm", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                             k8s.WaitForDaemonsetAsync(KubeNamespace.NeonStorage, "openebs-ndm-node-exporter", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
-                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-admission-server", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
-                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-apiserver", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.WaitForDaemonsetAsync(KubeNamespace.NeonStorage, "openebs-jiva-operator-csi-node", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-jiva-operator-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                             k8s.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-localpv-provisioner", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
-                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-ndm-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                             k8s.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-ndm-cluster-exporter", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
-                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-provisioner", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
-                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-snapshot-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken)
+                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-ndm-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.WaitForStatefulSetAsync(KubeNamespace.NeonStorage, "openebs-jiva-operator-csi-controller", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                         },
                         timeoutMessage:    "setup/openebs-ready",
                         cancellationToken: controller.CancellationToken);
@@ -2646,19 +2678,14 @@ subjects:
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name        = name,
-                            Annotations = new Dictionary<string, string>()
-                            {
-                                {  "cas.openebs.io/config",
-$@"- name: ReplicaCount
-  value: ""{replicaCount}""
-- name: StoragePool
-  value: {storagePool}
-" },
-                                {"openebs.io/cas-type", "jiva" }
-                            },
+                            Name        = name
                         },
-                        Provisioner       = "openebs.io/provisioner-iscsi",
+                        Parameters        = new Dictionary<string, string>()
+                        {
+                            {"cas-type", "jiva" },
+                            {"policy", "openebs-jiva-default-policy" },
+                        },
+                        Provisioner       = "jiva.csi.openebs.io",
                         ReclaimPolicy     = "Delete",
                         VolumeBindingMode = "WaitForFirstConsumer"
                     };
@@ -5032,6 +5059,7 @@ $@"- name: StorageType
                     values.Add("cluster.domain", cluster.Definition.Domain);
                     values.Add("config.cookieSecret", NeonHelper.ToBase64(NeonHelper.GetCryptoRandomPassword(24)));
                     values.Add("neonkube.clusterDomain.sso", ClusterDomain.Sso);
+                    values.Add("client.id", "kubernetes");
                     values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 

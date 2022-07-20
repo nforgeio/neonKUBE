@@ -19,7 +19,7 @@ spec:
         {{ toYaml .Values.csiNode.podLabels | nindent 8 }}
         {{- end }}
     spec:
-      priorityClassName: {{ template "jiva.csiNode.priorityClassName" . }}
+      priorityClassName: {{ .Values.csiNode.priorityClass.name }}
       serviceAccount: {{ .Values.serviceAccount.csiNode.name }}
       hostNetwork: true
       containers:

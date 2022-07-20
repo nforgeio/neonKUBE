@@ -56,8 +56,8 @@ jivaOperator:
 
 csiController:
   priorityClass:
-    create: true
-    name: jiva-csi-controller-critical
+    create: false
+    name: neon-storage
     value: 900000000
   componentName: "openebs-jiva-csi-controller"
   logLevel: "5"
@@ -114,8 +114,8 @@ jivaCSIPlugin:
   image:
     # Make sure that registry name end with a '/'.
     # For example : quay.io/ is a correct value here and quay.io is incorrect
-    registry:
-    repository: openebs/jiva-csi
+    registry: neon-registry.node.local
+    repository: openebs-jiva-csi
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
     tag: 3.2.0
@@ -123,8 +123,8 @@ jivaCSIPlugin:
 
 csiNode:
   priorityClass:
-    create: true
-    name: jiva-csi-node-critical
+    create: false
+    name: neon-storage
     value: 900001000
   componentName: "openebs-jiva-csi-node"
   logLevel: "5"

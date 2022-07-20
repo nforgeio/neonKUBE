@@ -35,6 +35,8 @@ using Neon.Cryptography;
 using Neon.Service;
 using Neon.Kube;
 
+using k8s;
+
 using Prometheus;
 using Prometheus.DotNetRuntime;
 
@@ -49,6 +51,11 @@ namespace NeonAcme
         /// The Default <see cref="NeonService"/> name.
         /// </summary>
         public const string ServiceName = "neon-acme";
+
+        /// <summary>
+        /// The Kubernetes client.
+        /// </summary>
+        public KubernetesWithRetry Kubernetes;
 
         // private fields
         private IWebHost webHost;
@@ -80,6 +87,8 @@ namespace NeonAcme
         protected async override Task<int> OnRunAsync()
         {
             await SetStatusAsync(NeonServiceStatus.Starting);
+
+            Kubernetes = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
 
             // Start the web service.
             var port = 443;

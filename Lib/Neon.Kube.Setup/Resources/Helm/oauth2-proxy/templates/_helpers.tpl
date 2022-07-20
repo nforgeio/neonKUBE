@@ -86,3 +86,10 @@ Create the name of the service account to use
 {{- printf "redis://%s-redis-master:6379" (include "oauth2-proxy.fullname" .) -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Calculate the config from structured and unstructred text input
+*/}}
+{{- define "calculatedAlphaConfig" -}}
+{{ include (print $.Template.BasePath "/_config-render.tpl") . }}
+{{- end -}}
