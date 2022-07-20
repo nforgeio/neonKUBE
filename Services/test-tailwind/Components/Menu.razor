@@ -1,0 +1,136 @@
+﻿<HeadlessMenu class="relative inline-block text-left" OnClose="@(() => IsOpen = false)" OnOpen="@(() => IsOpen = true)">
+    <div>
+      <HeadlessMenuButton 
+        class="inline-flex w-full justify-center rounded-md bg-black bg-opacity-20 px-4 py-2 text-sm font-medium text-white hover:bg-opacity-30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75">
+        Options
+        <ChevronDownIcon class="ml-2 -mr-1 h-5 w-5 text-violet-200 hover:text-violet-100" aria-hidden="true"/>
+      </HeadlessMenuButton>
+    </div>
+    <Transition
+      Show="@IsOpen"
+      Enter="transition ease-out"
+      EnterDuration="100"
+      EnterFrom="transform opacity-0 scale-95"
+      EnterTo="transform opacity-100 scale-100"
+      Leave="transition ease-in"
+      LeaveDuration="75"
+      LeaveFrom="transform opacity-100 scale-100"
+      LeaveTo="transform opacity-0 scale-95"
+    >
+      <HeadlessMenuItems class="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+        <div class="px-1 py-1 ">
+          <HeadlessMenuItem Context="item">
+                
+              <button
+                class="@(@item.IsActive ? "bg-violet-500 text-white" : "text-gray-900") group flex w-full items-center rounded-md px-2 py-2 text-sm">
+                    
+                @if(item.IsActive)
+                {
+                  <PencilIcon
+                    class="mr-2 h-5 w-5 bg-white-500"
+                    aria-hidden="true"
+                  />
+                } else
+                {
+                  <PencilIcon
+                    class="mr-2 h-5 w-5 bg-black-500"
+                    aria-hidden="true"
+                  />
+                }
+                Edit
+              </button>
+          </HeadlessMenuItem>
+          <HeadlessMenuItem Context="item">
+                
+              <button
+                class="@(@item.IsActive ? "bg-violet-500 text-white" : "text-gray-900") group flex w-full items-center rounded-md px-2 py-2 text-sm">
+                    
+                @if(item.IsActive)
+                {
+                  <DuplicateIcon
+                    class="mr-2 h-5 w-5 bg-white-500"
+                    aria-hidden="true"
+                  />
+                } else
+                {
+                  <DuplicateIcon
+                    class="mr-2 h-5 w-5 bg-black-500"
+                    aria-hidden="true"
+                  />
+                }
+                Duplicate
+              </button>
+          </HeadlessMenuItem>
+        </div>
+        <div class="px-1 py-1">
+              
+          <HeadlessMenuItem Context="item">
+                
+              <button
+                class="@(@item.IsActive ? "bg-violet-500 text-white" : "text-gray-900") group flex w-full items-center rounded-md px-2 py-2 text-sm">
+                    
+                @if(item.IsActive)
+                {
+                  <ArchiveIcon
+                    class="mr-2 h-5 w-5 bg-white-500"
+                    aria-hidden="true"
+                  />
+                } else
+                {
+                  <ArchiveIcon
+                    class="mr-2 h-5 w-5 bg-black-500"
+                    aria-hidden="true"
+                  />
+                }
+                Archive
+              </button>
+          </HeadlessMenuItem>
+          <HeadlessMenuItem Context="item">
+                
+              <button
+                class="@(@item.IsActive ? "bg-violet-500 text-white" : "text-gray-900") group flex w-full items-center rounded-md px-2 py-2 text-sm">
+                    
+                @if(item.IsActive)
+                {
+                  <DocumentIcon
+                    class="mr-2 h-5 w-5 bg-white-500"
+                    aria-hidden="true"
+                  />
+                } else
+                {
+                  <DocumentIcon
+                    class="mr-2 h-5 w-5 bg-black-500"
+                    aria-hidden="true"
+                  />
+                }
+                Move
+              </button>
+          </HeadlessMenuItem>
+        </div>
+        <div class="px-1 py-1">
+           
+          <HeadlessMenuItem Context="item">
+                
+              <button
+                class="@(@item.IsActive ? "bg-violet-500 text-white" : "text-gray-900") group flex w-full items-center rounded-md px-2 py-2 text-sm">
+                    
+                  @if(item.IsActive)
+                {
+                  <TrashIcon
+                    class="mr-2 h-5 w-5 bg-white-500"
+                    aria-hidden="true"
+                  />
+                } else
+                {
+                  <TrashIcon
+                    class="mr-2 h-5 w-5 bg-black-500"
+                    aria-hidden="true"
+                  />
+                }
+                Delete
+              </button>
+          </HeadlessMenuItem>
+        </div>
+      </HeadlessMenuItems>
+    </Transition>
+  </HeadlessMenu>
