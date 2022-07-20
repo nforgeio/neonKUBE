@@ -107,6 +107,16 @@ namespace Neon.Tailwind.HeadlessUI
 
             Menu.GoToItem(MenuFocus.Nothing);
         }
+
+        private async Task HandleMouseEnter(MouseEventArgs e)
+        {
+            if (!IsEnabled) return;
+            if (Menu.State == MenuState.Closed) return;
+
+            await Menu.MenuItemsFocusAsync();
+            if (Menu.IsActiveItem(this)) return;
+            Menu.GoToItem(this);
+        }
         private async Task HandlePointerMove(PointerEventArgs e)
         {
             if (!IsEnabled) return;

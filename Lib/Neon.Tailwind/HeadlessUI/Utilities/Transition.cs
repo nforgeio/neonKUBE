@@ -89,7 +89,7 @@ namespace Neon.Tailwind.HeadlessUI
             TransitionGroup?.NotifyEndTransition();
             EndTransition.InvokeAsync();
 
-            StateHasChanged();
+            InvokeAsync(StateHasChanged);
         }
 
         private void ClearCurrentTransition()
@@ -165,13 +165,13 @@ namespace Neon.Tailwind.HeadlessUI
         {
             if (State == TransitionState.Visible || State == TransitionState.Entering) return;
             InitializeEntering();
-            StateHasChanged();
+            InvokeAsync(StateHasChanged);
         }
         public void Close()
         {
             if (State == TransitionState.Leaving || State == TransitionState.Hidden) return;
             InitializeLeaving();
-            StateHasChanged();
+            InvokeAsync(StateHasChanged);
         }
         public void Toggle()
         {
