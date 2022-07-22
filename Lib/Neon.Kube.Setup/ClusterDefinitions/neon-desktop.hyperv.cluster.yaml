@@ -1,6 +1,6 @@
 name: neon-desktop
 datacenter: neondesktop
-environment: development
+purpose: development
 isDesktopBuiltIn: true
 isLocked: false
 timeSources:

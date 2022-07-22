@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    EnvironmentType.cs
+// FILE:	    ClusterPurpose.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -21,15 +21,15 @@ using System.Runtime.Serialization;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Enumerates the types of cluster operating environments.
+    /// Enumerates the cluster purposes.
     /// </summary>
-    public enum EnvironmentType
+    public enum ClusterPurpose
     {
         /// <summary>
         /// Unspecified.
         /// </summary>
-        [EnumMember(Value = "other")]
-        Other = 0,
+        [EnumMember(Value = "not-set")]
+        NotSet = 0,
 
         /// <summary>
         /// Development environment.
