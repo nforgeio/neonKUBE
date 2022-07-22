@@ -26,6 +26,7 @@
     @onclick="HandleClick"
     @onfocus="HandleFocus"
     @onpointermove="HandlePointerMove"
-    @onmouseout="HandleMouseOut">
+    @onmouseout="HandleMouseOut"
+    @attributes="@AdditionalAttributes">
         @ChildContent?.Invoke(this)
 </HtmlElement>

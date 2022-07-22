@@ -82,7 +82,7 @@ namespace Neon.Tailwind
         private bool isOpen;
         private HeadlessDialog Dialog { get; set; } = default!;
 
-        private HtmlElement rootElement;
+        public HtmlElement rootElement;
         public static implicit operator ElementReference(HeadlessDialogPanel element)
         {
             return element?.rootElement ?? default!;
