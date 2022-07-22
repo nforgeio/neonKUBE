@@ -26,6 +26,8 @@ namespace Neon.Tailwind
 
         public const string ArrowUp = "ArrowUp";
         public const string ArrowDown = "ArrowDown";
+        public const string ArrowLeft = "ArrowLeft";
+        public const string ArrowRight = "ArrowRight";
 
         public const string Home = "Home";
         public const string End = "End";
