@@ -397,6 +397,13 @@ namespace Neon.Kube
         public string Name { get; set; }
 
         /// <summary>
+        /// The unique cluster ID.  This is generated during cluster setup and must not be specified by the user.
+        /// </summary>
+        [JsonProperty(PropertyName = "Id", Required = Required.Always)]
+        [YamlMember(Alias = "id", ApplyNamingConventions = false)]
+        public string Id { get; set; }
+
+        /// <summary>
         /// Optionally describes the cluster for humans.  This may be a string up to 256 characters long.
         /// </summary>
         [JsonProperty(PropertyName = "Description", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -431,6 +438,13 @@ namespace Neon.Kube
         [YamlMember(Alias = "domain", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Domain { get; set; }
+
+        /// <summary>
+        /// Returns the <b>neoncluster.io</b> domain for this cluster.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public string NeonClusterDomain => $"{Id}.neoncluster.io";
 
         /// <summary>
         /// <para>
@@ -587,6 +601,30 @@ namespace Neon.Kube
         [YamlMember(Alias = "datacenter", ApplyNamingConventions = false)]
         [DefaultValue("")]
         public string Datacenter { get; set; } = String.Empty;
+
+        /// <summary>
+        /// <para>
+        /// Optionally specifies the latitude of the cluster location.  This is a value
+        /// between -90 and +90 degrees.
+        /// </para>
+        /// <note>
+        /// <see cref="Latitude"/> and <see cref="Longitude"/> must both be specified together or
+        /// not at all.
+        /// </note>
+        /// </summary>
+        public double? Latitude { get; set; } = null;
+
+        /// <summary>
+        /// <para>
+        /// Optionally specifies the longitude of the cluster location.  This is a value
+        /// between -180 and +180 degrees.
+        /// </para>
+        /// <note>
+        /// <see cref="Latitude"/> and <see cref="Longitude"/> must both be specified together or
+        /// not at all.
+        /// </note>
+        /// </summary>
+        public double? Longitude { get; set; } = null;
 
         /// <summary>
         /// Indicates how the cluster is being used.
@@ -1140,17 +1178,32 @@ namespace Neon.Kube
 
             if (Name.Length > 32)
             {
-                throw new ClusterDefinitionException($"The [{nameof(Name)}={Name}] has more than 32 characters.  Some hosting environments enforce name length limits so please trim your cluster name.");
+                throw new ClusterDefinitionException($"The [{nameof(Name)}={Name}] property has more than 32 characters.  Some hosting environments enforce name length limits so please trim your cluster name.");
             }
 
             if (Description != null && Description.Length > 256)
             {
-                throw new ClusterDefinitionException($"The [{nameof(Description)}] has more than 256 characters.");
+                throw new ClusterDefinitionException($"The [{nameof(Description)}] property has more than 256 characters.");
             }
 
             if (!string.IsNullOrEmpty(Datacenter) && !IsValidName(Datacenter))
             {
                 throw new ClusterDefinitionException($"The [{nameof(Datacenter)}={Datacenter}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
+            }
+
+            if (Latitude.HasValue != Longitude.HasValue)
+            {
+                throw new ClusterDefinitionException($"The [{nameof(Latitude)}] and [{nameof(Longitude)}] properties must be set together or not set at all.");
+            }
+
+            if (Latitude.HasValue && (Latitude.Value < -90 || 90 < Latitude.Value))
+            {
+                throw new ClusterDefinitionException($"The [{nameof(Latitude)}={Latitude}] must be within: -90...+90");
+            }
+
+            if (Longitude.HasValue && (Longitude.Value < -180 || 180 < Longitude.Value))
+            {
+                throw new ClusterDefinitionException($"The [{nameof(Latitude)}={Latitude}] must be within: -180...+180");
             }
 
             var masterNodeCount = Masters.Count();

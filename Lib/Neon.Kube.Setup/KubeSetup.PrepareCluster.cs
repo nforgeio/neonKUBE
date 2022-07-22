@@ -395,15 +395,36 @@ namespace Neon.Kube
 
                     if (string.IsNullOrEmpty(cluster.Definition.Domain))
                     {
-
                         var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
-                        var clusterAddresses = cluster.HostingManager.GetClusterAddresses();
+                        var clusterAddresses   = cluster.HostingManager.GetClusterAddresses();
 
                         using (var jsonClient = new JsonClient())
                         {
                             jsonClient.BaseAddress = new Uri(controller.Get<string>(KubeSetupProperty.NeonCloudHeadendUri));
 
                             clusterLogin.ClusterDefinition.Domain = await jsonClient.PostAsync<string>($"/cluster/domain?addresses={string.Join(',', clusterAddresses)}");
+
+                            // $hack(jefflill):
+                            //
+                            // I'm going to parse the cluster ID from the domain returned.
+                            //
+                            // https://github.com/nforgeio/neonKUBE/issues/16407
+                            //
+                            // $todo(marcusbooyah):
+                            //
+                            // You need to modify the headend API to return an object with the cluster ID
+                            // and domain being returned as separate properties and then replace this code.
+                            //
+                            // Note that the ID should include some dashes to make it easier to read, like:
+                            //
+                            //      4FCA-0F7A-F7F3-4FC0
+                            //
+                            // Cluster IDs are probably going to end up being important for customer support
+                            // and I suspect that we'll be asking users for this ID when they call in.
+
+                            var fields = clusterLogin.ClusterDefinition.Domain.Split('.');
+
+                            clusterLogin.ClusterDefinition.Id = fields[1];
                         }
                     }
                    

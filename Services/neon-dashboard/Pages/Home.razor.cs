@@ -95,7 +95,7 @@ namespace NeonDashboard.Pages
                 {"Version", clusterInfo.ClusterVersion },
                 {"Datacenter",  clusterInfo.Datacenter },
                 {"Enviroment", clusterInfo.Environment.ToString() },
-                {"Purpose", clusterInfo.Puspose.ToString() }
+                {"Purpose", clusterInfo.Purpose.ToString() }
             };
 
             LineOptions options = new LineOptions()
