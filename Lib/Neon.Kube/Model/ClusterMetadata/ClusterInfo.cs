@@ -47,16 +47,17 @@ namespace Neon.Kube
         public ClusterInfo(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
-
             
-            ClusterId          = Guid.NewGuid().ToString("d");
+            ClusterId          = clusterDefinition.Id;
             CreationTimestamp  = DateTime.UtcNow;
             ClusterVersion     = clusterDefinition.ClusterVersion;
             Name               = clusterDefinition.Name;
             Description        = clusterDefinition.Description;
-            HostingEnvironment = clusterDefinition.Hosting.Environment;
-            Environment        = clusterDefinition.Purpose;
+            Environment        = clusterDefinition.Hosting.Environment;
+            Purpose            = clusterDefinition.Purpose;
             Datacenter         = clusterDefinition.Datacenter;
+            Latitude           = clusterDefinition.Latitude;
+            Longitude          = clusterDefinition.Longitude;
             Domain             = clusterDefinition.Domain;
             PublicAddresses    = clusterDefinition.PublicAddresses;
             FeatureOptions     = clusterDefinition.Features;
@@ -102,9 +103,9 @@ namespace Neon.Kube
         /// Identifies the cloud or other hosting platform.
         /// definition. 
         /// </summary>
-        [JsonProperty(PropertyName = "HostingEnvironment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Environment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(HostingEnvironment.Unknown)]
-        public HostingEnvironment HostingEnvironment { get; set; } = HostingEnvironment.Unknown;
+        public HostingEnvironment Environment { get; set; } = HostingEnvironment.Unknown;
 
         /// <summary>
         /// Indicates how the cluster is being used as specified by <see cref="ClusterDefinition.Purpose"/>.
@@ -112,7 +113,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "Environment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(ClusterPurpose.NotSet)]
-        public ClusterPurpose Environment { get; set; } = ClusterPurpose.NotSet;
+        public ClusterPurpose Purpose { get; set; } = ClusterPurpose.NotSet;
 
         /// <summary>
         /// Identifies where the cluster is hosted as specified by <see cref="ClusterDefinition.Datacenter"/> in the cluster
@@ -122,6 +123,30 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Datacenter", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue("")]
         public string Datacenter { get; set; } = string.Empty;
+
+        /// <summary>
+        /// <para>
+        /// Optionally specifies the latitude of the cluster location.  This is a value
+        /// between -90 and +90 degrees.
+        /// </para>
+        /// <note>
+        /// <see cref="Latitude"/> and <see cref="Longitude"/> must both be specified together or
+        /// not at all.
+        /// </note>
+        /// </summary>
+        public double? Latitude { get; set; } = null;
+
+        /// <summary>
+        /// <para>
+        /// Optionally specifies the longitude of the cluster location.  This is a value
+        /// between -180 and +180 degrees.
+        /// </para>
+        /// <note>
+        /// <see cref="Latitude"/> and <see cref="Longitude"/> must both be specified together or
+        /// not at all.
+        /// </note>
+        /// </summary>
+        public double? Longitude { get; set; } = null;
 
         /// <summary>
         /// Identifies the DNS domain assigned to the cluster when it was provisioned.
