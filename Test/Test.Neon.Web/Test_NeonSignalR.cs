@@ -15,6 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if !NETCOREAPP3_1
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -42,7 +44,7 @@ using Neon.Xunit;
 using Xunit;
 using NATS.Client;
 
-namespace TestNeonSignalR
+namespace Test.Neon.SignalR
 {
     /// <summary>
     /// Demonstrates how to test the <see cref="WebService"/> that has a single
@@ -54,10 +56,10 @@ namespace TestNeonSignalR
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_WebService : IClassFixture<ComposedFixture>
     {
-        private ComposedFixture composedFixture;
-        private NatsFixture natsFixture;
-        private NeonServiceFixture<WebService> web0;
-        private NeonServiceFixture<WebService> web1;
+        private ComposedFixture                     composedFixture;
+        private NatsFixture                         natsFixture;
+        private NeonServiceFixture<WebService>      web0;
+        private NeonServiceFixture<WebService>      web1;
 
         private HubConnection connection;
         private HubConnection secondConnection;
@@ -102,33 +104,32 @@ namespace TestNeonSignalR
 
             var description = new ServiceDescription()
             {
-                Name = "web-0",
+                Name    = "web-0",
                 Address = "127.0.0.10"
             };
 
             description.Endpoints.Add(
                 new ServiceEndpoint()
                 {
-                    Protocol = ServiceEndpointProtocol.Http,
+                    Protocol   = ServiceEndpointProtocol.Http,
                     PathPrefix = "/",
-                    Port = 8080
+                    Port       = 8080
                 });
-
 
             serviceMap.Add(description);
 
             description = new ServiceDescription()
             {
-                Name = "web-1",
+                Name    = "web-1",
                 Address = "127.0.0.11"
             };
 
             description.Endpoints.Add(
                 new ServiceEndpoint()
                 {
-                    Protocol = ServiceEndpointProtocol.Http,
+                    Protocol   = ServiceEndpointProtocol.Http,
                     PathPrefix = "/",
-                    Port = 8081
+                    Port       = 8081
                 });
 
             serviceMap.Add(description);
@@ -156,7 +157,7 @@ namespace TestNeonSignalR
             var natsServerUri = NatsFixture.ConnectionUri;
 
             var connectionFactory = new ConnectionFactory();
-            var options = ConnectionFactory.GetDefaultOptions();
+            var options           = ConnectionFactory.GetDefaultOptions();
 
             options.Servers = new string[] { natsServerUri };
 
@@ -172,7 +173,7 @@ namespace TestNeonSignalR
             var natsServerUri = NatsFixture.ConnectionUri;
 
             var connectionFactory = new ConnectionFactory();
-            var options = ConnectionFactory.GetDefaultOptions();
+            var options           = ConnectionFactory.GetDefaultOptions();
 
             options.Servers = new string[] { natsServerUri };
 
@@ -189,12 +190,12 @@ namespace TestNeonSignalR
             var natsServerUri = NatsFixture.ConnectionUri;
 
             var connectionFactory = new ConnectionFactory();
-            var options = ConnectionFactory.GetDefaultOptions();
+            var options           = ConnectionFactory.GetDefaultOptions();
 
             options.Servers = new string[] { natsServerUri };
 
-            var services         = new ServiceCollection();
-            INeonLogger logger   = new Neon.Diagnostics.LogManager().GetLogger();
+            var services = new ServiceCollection();
+            var logger   = new global::Neon.Diagnostics.LogManager().GetLogger();
             
             services.AddSingleton(logger);
 
@@ -206,12 +207,14 @@ namespace TestNeonSignalR
         public async Task CanSendAndReceiveUserMessagesFromMultipleConnectionsWithSameUser()
         {
             var tcs = new TaskCompletionSource<string>();
+
             connection.On<string>("Echo", message => tcs.SetResult(message));
+
             var tcs2 = new TaskCompletionSource<string>();
+
             secondConnection.On<string>("Echo", message => tcs2.SetResult(message));
 
             await CheckConnectionsAsync();
-
             await connection.InvokeAsync("EchoUser", "userA", "Hello, World!");
 
             Assert.Equal("Hello, World!", await AwaitWithTimeoutAsync<string>(tcs.Task));
@@ -222,12 +225,14 @@ namespace TestNeonSignalR
         public async Task CanInvokeMethodWithoutOptionalParams()
         {
             var tcs = new TaskCompletionSource<string>();
+
             connection.On<string>("Echo", message => tcs.SetResult(message));
+
             var tcs2 = new TaskCompletionSource<string>();
+
             secondConnection.On<string>("Echo", message => tcs2.SetResult(message));
 
             await CheckConnectionsAsync();
-
             await connection.InvokeAsync("SayHello", null);
 
             Assert.Equal("Hello, World!", await AwaitWithTimeoutAsync<string>(tcs.Task));
@@ -238,12 +243,19 @@ namespace TestNeonSignalR
         public async Task CanSendAndReceiveUserMessagesToOtherUsers()
         {
             var tcs = new TaskCompletionSource<string>();
+
             connection.On<string>("Echo", message => tcs.SetResult(message));
+
             var tcs2 = new TaskCompletionSource<string>();
+
             secondConnection.On<string>("Echo", message => tcs2.SetResult(message));
+
             var tcs3 = new TaskCompletionSource<string>();
+
             thirdConnection.On<string>("Echo", message => tcs3.SetResult(message));
+
             var tcs4 = new TaskCompletionSource<string>();
+
             fourthConnection.On<string>("Echo", message => tcs4.SetResult(message));
 
             await CheckConnectionsAsync();
@@ -255,7 +267,7 @@ namespace TestNeonSignalR
             Assert.Null(await AwaitWithTimeoutAsync<string>(tcs3.Task, throwOnTimeout: false));
             Assert.Null(await AwaitWithTimeoutAsync<string>(tcs4.Task, throwOnTimeout: false));
 
-            tcs = new TaskCompletionSource<string>();
+            tcs  = new TaskCompletionSource<string>();
             tcs2 = new TaskCompletionSource<string>();
             tcs3 = new TaskCompletionSource<string>();
             tcs4 = new TaskCompletionSource<string>();
@@ -273,14 +285,16 @@ namespace TestNeonSignalR
         public async Task HubConnectionCanSendAndReceiveGroupMessages()
         {
             var tcs = new TaskCompletionSource<string>();
+
             connection.On<string>("Echo", message => tcs.SetResult(message));
+
             var tcs2 = new TaskCompletionSource<string>();
+
             secondConnection.On<string>("Echo", message => tcs2.SetResult(message));
 
             var groupName = $"HubConnectionCanSendAndReceiveGroupMessages_{Guid.NewGuid():N}";
 
             await CheckConnectionsAsync();
-
             await connection.InvokeAsync("AddSelfToGroup", groupName);
             await secondConnection.InvokeAsync("AddSelfToGroup", groupName);
 
@@ -294,27 +308,27 @@ namespace TestNeonSignalR
         public async Task HubConnectionCanUnsubscribeFromGroupMessages()
         {
             var tcs = new TaskCompletionSource<string>();
+
             connection.On<string>("Echo", message => tcs.SetResult(message));
+
             var tcs2 = new TaskCompletionSource<string>();
+
             secondConnection.On<string>("Echo", message => tcs2.SetResult(message));
 
             var groupName = $"HubConnectionCanUnsubscribeFromGroupMessages_{Guid.NewGuid():N}";
 
             await CheckConnectionsAsync();
-
             await connection.InvokeAsync("AddSelfToGroup", groupName);
             await secondConnection.InvokeAsync("AddSelfToGroup", groupName);
-
             await connection.InvokeAsync("EchoGroup", groupName, "Hello, World!");
 
             Assert.Equal("Hello, World!", await AwaitWithTimeoutAsync<string>(tcs.Task));
             Assert.Equal("Hello, World!", await AwaitWithTimeoutAsync<string>(tcs2.Task));
 
-            tcs = new TaskCompletionSource<string>();
+            tcs  = new TaskCompletionSource<string>();
             tcs2 = new TaskCompletionSource<string>();
 
             await secondConnection.InvokeAsync("RemoveSelfFromGroup", groupName);
-
             await connection.InvokeAsync("EchoGroup", groupName, "Hello, World!");
 
             Assert.Equal("Hello, World!", await AwaitWithTimeoutAsync<string>(tcs.Task));
@@ -325,16 +339,17 @@ namespace TestNeonSignalR
         public async Task HubConnectionCanAddUserToGroup()
         {
             var tcs = new TaskCompletionSource<string>();
+
             connection.On<string>("Echo", message => tcs.SetResult(message));
+
             var tcs2 = new TaskCompletionSource<string>();
+
             secondConnection.On<string>("Echo", message => tcs2.SetResult(message));
 
             var groupName = $"HubConnectionCanAddUserToGroup_{Guid.NewGuid():N}";
 
             await CheckConnectionsAsync();
-
             await secondConnection.InvokeAsync("AddUserToGroup", connection.ConnectionId, groupName);
-
             await connection.InvokeAsync("EchoGroup", groupName, "Hello, World!");
 
             Assert.Equal("Hello, World!", await AwaitWithTimeoutAsync<string>(tcs.Task));
@@ -344,16 +359,17 @@ namespace TestNeonSignalR
         public async Task HubConnectionCanRemoveUserFromGroup()
         {
             var tcs = new TaskCompletionSource<string>();
+
             connection.On<string>("Echo", message => tcs.SetResult(message));
+
             var tcs2 = new TaskCompletionSource<string>();
+
             secondConnection.On<string>("Echo", message => tcs2.SetResult(message));
 
             var groupName = $"HubConnectionCanRemoveUserFromGroup_{Guid.NewGuid():N}";
 
             await CheckConnectionsAsync();
-
             await secondConnection.InvokeAsync("AddUserToGroup", connection.ConnectionId, groupName);
-
             await connection.InvokeAsync("EchoGroup", groupName, "Hello, World!");
 
             Assert.Equal("Hello, World!", await AwaitWithTimeoutAsync<string>(tcs.Task));
@@ -361,7 +377,6 @@ namespace TestNeonSignalR
             tcs = new TaskCompletionSource<string>();
 
             await secondConnection.InvokeAsync("RemoveUserFromGroup", connection.ConnectionId, groupName);
-
             await secondConnection.InvokeAsync("EchoGroup", groupName, "Hello, World!");
 
             Assert.Null(await AwaitWithTimeoutAsync<string>(tcs2.Task, throwOnTimeout: false));
@@ -373,14 +388,17 @@ namespace TestNeonSignalR
             {
                 await connection.StartAsync();
             }
+
             if (secondConnection.State != HubConnectionState.Connected)
             {
                 await secondConnection.StartAsync();
             }
+
             if (thirdConnection.State != HubConnectionState.Connected)
             {
                 await thirdConnection.StartAsync();
             }
+
             if (fourthConnection.State != HubConnectionState.Connected)
             {
                 await fourthConnection.StartAsync();
@@ -403,8 +421,9 @@ namespace TestNeonSignalR
             hubConnectionBuilder.Services.AddSingleton(new MessagePackHubProtocol());
 
             var connection = hubConnectionBuilder.Build();
+
             connection.KeepAliveInterval = TimeSpan.FromSeconds(5);
-            connection.ServerTimeout = TimeSpan.FromSeconds(300);
+            connection.ServerTimeout     = TimeSpan.FromSeconds(300);
 
             return connection;
         }
@@ -415,6 +434,7 @@ namespace TestNeonSignalR
             {
                 return await task;
             }
+            
             if (throwOnTimeout)
             {
                 throw new TimeoutException("Operation timed out.");
@@ -424,3 +444,5 @@ namespace TestNeonSignalR
         }
     }
 }
+
+#endif

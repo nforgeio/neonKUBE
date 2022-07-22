@@ -15,6 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if !NETCOREAPP3_1
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -42,7 +44,7 @@ using NATS.Client;
 
 using Xunit;
 
-namespace TestNeonSignalR
+namespace Test.Neon.SignalR
 {
     public class Startup
     {
@@ -68,10 +70,11 @@ namespace TestNeonSignalR
 
             var logger = service.LogManager.CreateLogger("neon-signalr");
 
-            services.AddSingleton<IUserIdProvider, UserNameIdProvider>()
-                    .AddSingleton(logger)
-                    .AddSignalR()
-                    .AddNeonNats(connection);
+            services
+                .AddSingleton<IUserIdProvider, UserNameIdProvider>()
+                .AddSingleton(logger)
+                .AddSignalR()
+                .AddNeonNats(connection);
         }
 
         public void Configure(IApplicationBuilder app)
@@ -170,3 +173,5 @@ namespace TestNeonSignalR
         }
     }
 }
+
+#endif
