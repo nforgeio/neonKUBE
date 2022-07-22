@@ -54,8 +54,8 @@ namespace Neon.Kube
             ClusterVersion     = clusterDefinition.ClusterVersion;
             Name               = clusterDefinition.Name;
             Description        = clusterDefinition.Description;
-            HostingEnvironment = clusterDefinition.Hosting.Environment;
-            Environment        = clusterDefinition.Purpose;
+            Environment = clusterDefinition.Hosting.Environment;
+            Puspose            = clusterDefinition.Purpose;
             Datacenter         = clusterDefinition.Datacenter;
             Domain             = clusterDefinition.Domain;
             PublicAddresses    = clusterDefinition.PublicAddresses;
@@ -102,9 +102,9 @@ namespace Neon.Kube
         /// Identifies the cloud or other hosting platform.
         /// definition. 
         /// </summary>
-        [JsonProperty(PropertyName = "HostingEnvironment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Environment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(HostingEnvironment.Unknown)]
-        public HostingEnvironment HostingEnvironment { get; set; } = HostingEnvironment.Unknown;
+        public HostingEnvironment Environment { get; set; } = HostingEnvironment.Unknown;
 
         /// <summary>
         /// Indicates how the cluster is being used as specified by <see cref="ClusterDefinition.Purpose"/>.
@@ -112,7 +112,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "Environment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(ClusterPurpose.NotSet)]
-        public ClusterPurpose Environment { get; set; } = ClusterPurpose.NotSet;
+        public ClusterPurpose Puspose { get; set; } = ClusterPurpose.NotSet;
 
         /// <summary>
         /// Identifies where the cluster is hosted as specified by <see cref="ClusterDefinition.Datacenter"/> in the cluster

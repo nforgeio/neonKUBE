@@ -93,9 +93,9 @@ namespace NeonDashboard.Pages
             clusterMetaData = new Dictionary<string, string>()
             {
                 {"Version", clusterInfo.ClusterVersion },
-                {"Data Center",  clusterInfo.Datacenter },
-                {"Hosting Enviroment", clusterInfo.HostingEnvironment.ToString() },
-                {"Environment", clusterInfo.Environment.ToString() }
+                {"Datacenter",  clusterInfo.Datacenter },
+                {"Enviroment", clusterInfo.Environment.ToString() },
+                {"Purpose", clusterInfo.Puspose.ToString() }
             };
 
             LineOptions options = new LineOptions()
