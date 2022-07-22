@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<OutputType>Library</OutputType>
-		<Version>10000.0.1650-dev-jeff</Version>
+		<Version>10000.0.2060-dev-marcus</Version>
 		<Authors>neonFORGE Team</Authors>
 		<Company>neonFORGE LLC</Company>
 		<Product>neonSDK</Product>

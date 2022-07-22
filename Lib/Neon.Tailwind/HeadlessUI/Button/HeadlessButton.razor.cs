@@ -22,7 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Neon.Tailwind.HeadlessUI
+namespace Neon.Tailwind
 {
     public partial class HeadlessButton : ComponentBase, IAsyncDisposable
     {
@@ -52,7 +52,6 @@ namespace Neon.Tailwind.HeadlessUI
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             await EnsureInitialized();
-            buttonElement?.FocusAsync();
         }
 
         private async Task EnsureInitialized()

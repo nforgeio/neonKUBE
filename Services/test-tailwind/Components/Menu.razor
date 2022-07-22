@@ -1,7 +1,23 @@
-﻿<HeadlessMenu class="relative inline-block text-left" OnClose="@(() => IsOpen = false)" OnOpen="@(() => IsOpen = true)">
+﻿@*//-----------------------------------------------------------------------------
+// FILE:	    Menu.razor
+// CONTRIBUTOR: Marcus Bowyer
+// COPYRIGHT:  	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.*@
+
+<HeadlessMenu class="relative inline-block text-left" OnClose="Close" OnOpen="Open">
     <div>
-      <HeadlessMenuButton 
-        class="inline-flex w-full justify-center rounded-md bg-black bg-opacity-20 px-4 py-2 text-sm font-medium text-white hover:bg-opacity-30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75">
+      <HeadlessMenuButton class="inline-flex w-full justify-center rounded-md bg-slate-600 bg-opacity-80 px-4 py-2 text-sm font-medium text-white hover:bg-opacity-30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75">
         Options
         <ChevronDownIcon class="ml-2 -mr-1 h-5 w-5 text-violet-200 hover:text-violet-100" aria-hidden="true"/>
       </HeadlessMenuButton>
@@ -9,126 +25,86 @@
     <Transition
       Show="@IsOpen"
       Enter="transition ease-out"
-      EnterDuration="100"
+      EnterDuration="1000"
       EnterFrom="transform opacity-0 scale-95"
       EnterTo="transform opacity-100 scale-100"
       Leave="transition ease-in"
-      LeaveDuration="75"
+      LeaveDuration="1000"
       LeaveFrom="transform opacity-100 scale-100"
       LeaveTo="transform opacity-0 scale-95"
     >
       <HeadlessMenuItems class="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
         <div class="px-1 py-1 ">
           <HeadlessMenuItem Context="item">
-                
-              <button
-                class="@(@item.IsActive ? "bg-violet-500 text-white" : "text-gray-900") group flex w-full items-center rounded-md px-2 py-2 text-sm">
-                    
-                @if(item.IsActive)
-                {
-                  <PencilIcon
-                    class="mr-2 h-5 w-5 bg-white-500"
+
+                <HeadlessButton
+                  OnClick="@(() => value = "Edit")" 
+                    class="text-gray-900 hover:bg-violet-500 hover:text-white group flex w-full items-center rounded-md px-2 py-2 text-sm">
+               
+                 <PencilIcon
+                    class="mr-2 h-5 w-5 bg-black-500 hover:bg-white-500"
                     aria-hidden="true"
                   />
-                } else
-                {
-                  <PencilIcon
-                    class="mr-2 h-5 w-5 bg-black-500"
-                    aria-hidden="true"
-                  />
-                }
                 Edit
-              </button>
+              </HeadlessButton>
           </HeadlessMenuItem>
           <HeadlessMenuItem Context="item">
                 
-              <button
-                class="@(@item.IsActive ? "bg-violet-500 text-white" : "text-gray-900") group flex w-full items-center rounded-md px-2 py-2 text-sm">
+              <HeadlessButton
+                  OnClick="@(() => value = "Duplicate")"
+                    class="text-gray-900 hover:bg-violet-500 hover:text-white group flex w-full items-center rounded-md px-2 py-2 text-sm">
                     
-                @if(item.IsActive)
-                {
                   <DuplicateIcon
-                    class="mr-2 h-5 w-5 bg-white-500"
+                    class="mr-2 h-5 w-5 bg-black-500 hover:bg-white-500"
                     aria-hidden="true"
                   />
-                } else
-                {
-                  <DuplicateIcon
-                    class="mr-2 h-5 w-5 bg-black-500"
-                    aria-hidden="true"
-                  />
-                }
                 Duplicate
-              </button>
+              </HeadlessButton>
           </HeadlessMenuItem>
         </div>
         <div class="px-1 py-1">
               
           <HeadlessMenuItem Context="item">
                 
-              <button
-                class="@(@item.IsActive ? "bg-violet-500 text-white" : "text-gray-900") group flex w-full items-center rounded-md px-2 py-2 text-sm">
+              <HeadlessButton
+                  OnClick="@(() => value = "Archive")"
+                    class="text-gray-900 hover:bg-violet-500 hover:text-white group flex w-full items-center rounded-md px-2 py-2 text-sm">
                     
-                @if(item.IsActive)
-                {
                   <ArchiveIcon
-                    class="mr-2 h-5 w-5 bg-white-500"
+                    class="mr-2 h-5 w-5 bg-black-500 hover:bg-white-500"
                     aria-hidden="true"
                   />
-                } else
-                {
-                  <ArchiveIcon
-                    class="mr-2 h-5 w-5 bg-black-500"
-                    aria-hidden="true"
-                  />
-                }
                 Archive
-              </button>
+              </HeadlessButton>
           </HeadlessMenuItem>
           <HeadlessMenuItem Context="item">
                 
-              <button
-                class="@(@item.IsActive ? "bg-violet-500 text-white" : "text-gray-900") group flex w-full items-center rounded-md px-2 py-2 text-sm">
+              <HeadlessButton
+                  OnClick="@(() => value = "Move")"
+                    class="text-gray-900 hover:bg-violet-500 hover:text-white group flex w-full items-center rounded-md px-2 py-2 text-sm">
                     
-                @if(item.IsActive)
-                {
                   <DocumentIcon
-                    class="mr-2 h-5 w-5 bg-white-500"
+                    class="mr-2 h-5 w-5 bg-black-500 hover:bg-white-500"
                     aria-hidden="true"
                   />
-                } else
-                {
-                  <DocumentIcon
-                    class="mr-2 h-5 w-5 bg-black-500"
-                    aria-hidden="true"
-                  />
-                }
                 Move
-              </button>
+              </HeadlessButton>
           </HeadlessMenuItem>
         </div>
         <div class="px-1 py-1">
            
           <HeadlessMenuItem Context="item">
                 
-              <button
-                class="@(@item.IsActive ? "bg-violet-500 text-white" : "text-gray-900") group flex w-full items-center rounded-md px-2 py-2 text-sm">
+              <HeadlessButton
+                  OnClick="@(() => value = "Delete")"
+                    class="text-gray-900 hover:bg-violet-500 hover:text-white group flex w-full items-center rounded-md px-2 py-2 text-sm">
                     
-                  @if(item.IsActive)
-                {
                   <TrashIcon
-                    class="mr-2 h-5 w-5 bg-white-500"
+                    class="mr-2 h-5 w-5 bg-black-500 hover:bg-white-500"
                     aria-hidden="true"
                   />
-                } else
-                {
-                  <TrashIcon
-                    class="mr-2 h-5 w-5 bg-black-500"
-                    aria-hidden="true"
-                  />
-                }
                 Delete
-              </button>
+              </HeadlessButton>
           </HeadlessMenuItem>
         </div>
       </HeadlessMenuItems>

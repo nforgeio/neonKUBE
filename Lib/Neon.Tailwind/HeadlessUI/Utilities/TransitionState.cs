@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Neon.Tailwind.HeadlessUI
+namespace Neon.Tailwind
 {
     public enum TransitionState
     {

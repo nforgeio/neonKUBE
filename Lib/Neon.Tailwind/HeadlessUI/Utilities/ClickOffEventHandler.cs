@@ -19,13 +19,31 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Threading.Tasks;
 
-namespace Neon.Tailwind.HeadlessUI
+namespace Neon.Tailwind
 {
+    /// <summary>
+    /// Handler that manages click off events.
+    /// </summary>
     public class ClickOffEventHandler : EventHandlerComponentBase<ClickOffEventHandler>
     {
+        /// <summary>
+        /// Callback that runs the click off handler.
+        /// </summary>
         [Parameter] public EventCallback OnClickOff { get; set; }
-        [JSInvokable] public Task HandleClickOff() => OnClickOff.InvokeAsync();
 
-        public ClickOffEventHandler() : base("clickoffhandler", nameof(HandleClickOff)) { }
+        /// <summary>
+        /// Invoke the click off callback.
+        /// </summary>
+        /// <returns></returns>
+        [JSInvokable] 
+        public Task HandleClickOff() => OnClickOff.InvokeAsync();
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public ClickOffEventHandler() 
+            : base("clickoffhandler", nameof(HandleClickOff)) 
+        { 
+        }
     }
 }

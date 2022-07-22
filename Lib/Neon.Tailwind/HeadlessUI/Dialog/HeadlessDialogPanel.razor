@@ -15,32 +15,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.*@
 
-@namespace Neon.Tailwind.HeadlessUI
+@namespace Neon.Tailwind
 
-<TransitionGroup Show="@isOpen">
-    <Transition Enter="@Enter"
-              EnterDuration="@EnterDuration"
-              EnterFrom="@EnterFrom"
-              EnterTo="@EnterTo"
-              Leave="@Leave"
-              LeaveDuration="@LeaveDuration"
-              LeaveFrom="@LeaveFrom"
-              LeaveTo="@LeaveTo"
-              Context="css"
-              @ref="transition">
-      <HtmlElement 
-        class="@css" 
-        Id="@Id"
-        PreventDefaultOn="@(new() { "onclick", "onfocus" })"
-        role="dialog"
-        aria-modal="true"
-        @ref="rootElement" 
-        @onclick="HandleClick"
-        @onfocus="HandleFocus"
-        @onpointermove="HandlePointerMove"
-        @onmouseout="HandleMouseOut"
-        @attributes="AdditionalAttributes">
-          @ChildContent?.Invoke(this)
-      </HtmlElement>
-  </Transition>
-</TransitionGroup>
+<HtmlElement 
+    Id="@Id"
+    PreventDefaultOn="@(new() { "onclick", "onfocus" })"
+    role="dialog"
+    aria-modal="true"
+    @ref="rootElement" 
+    @onclick="HandleClick"
+    @onfocus="HandleFocus"
+    @onpointermove="HandlePointerMove"
+    @onmouseout="HandleMouseOut">
+        @ChildContent?.Invoke(this)
+</HtmlElement>

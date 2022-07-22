@@ -467,7 +467,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Github", "Github", "{D9006A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Tailwind", "Lib\Neon.Tailwind\Neon.Tailwind.csproj", "{2792A0DE-3870-4E76-98E9-F3E82B101439}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test-tailwind", "services\test-tailwind\test-tailwind.csproj", "{B0A3D7A3-BFFB-46F8-8EC3-69E82F8D7588}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "test-tailwind", "services\test-tailwind\test-tailwind.csproj", "{B0A3D7A3-BFFB-46F8-8EC3-69E82F8D7588}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -22,7 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Neon.Tailwind.HeadlessUI
+namespace Neon.Tailwind
 {
     public abstract class EventHandlerComponentBase<TComponent> : ComponentBase, IAsyncDisposable
         where TComponent : EventHandlerComponentBase<TComponent>

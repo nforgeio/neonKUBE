@@ -21,19 +21,21 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Neon.Common;
-using Neon.Tailwind.HeadlessUI;
+using Neon.Tailwind;
 
 namespace Neon.Tailwind
 {
     public static class TailwindExtensions
     {
-        public static Task RunTailwind(
+        [UnsupportedOSPlatform("browser")]
+        public static void RunTailwind(
             this IApplicationBuilder applicationBuilder,
             string inputCssPath  = "./Styles/tailwind.css",
             string outputCssPath = "./wwwroot/css/tailwind.css",
@@ -67,10 +69,11 @@ namespace Neon.Tailwind
                 args.Add("--watch");
             }
 
-            return NeonHelper.ExecuteAsync(executable, args.ToArray());
+            var nodeRunner = new NodeRunner(executable, args.ToArray());
         }
 
-        public static Task RunTailwind(
+        [UnsupportedOSPlatform("browser")]
+        public static void RunTailwind(
             this IApplicationBuilder applicationBuilder,
             string script)
         {
@@ -92,8 +95,7 @@ namespace Neon.Tailwind
             args.Add("run");
             args.Add(script);
 
-            return NeonHelper.ExecuteAsync(executable, args.ToArray());
-
+            var nodeRunner = new NodeRunner(executable, args.ToArray());
         }
 
         public static IServiceCollection AddTailwind(

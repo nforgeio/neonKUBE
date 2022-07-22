@@ -18,7 +18,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 
-namespace Neon.Tailwind.HeadlessUI
+namespace Neon.Tailwind
 {
     [EventHandler("onmouseleave", typeof(MouseEventArgs), true, true)]
     [EventHandler("onmouseenter", typeof(MouseEventArgs), true, true)]

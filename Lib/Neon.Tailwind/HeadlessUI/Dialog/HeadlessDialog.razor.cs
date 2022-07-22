@@ -15,16 +15,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Microsoft.AspNetCore.Components;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace Neon.Tailwind.HeadlessUI
+using Microsoft.AspNetCore.Components;
+
+namespace Neon.Tailwind
 {
-    public partial class HeadlessDialog : ComponentBase
+    public partial class HeadlessDialog : ComponentBase, IAsyncDisposable
     {
         private bool isOpen = true;
 
@@ -32,90 +33,97 @@ namespace Neon.Tailwind.HeadlessUI
         /// The UI content.
         /// </summary>
         [Parameter] 
-        public RenderFragment ChildContent { get; set; }
+        public RenderFragment<HeadlessDialog> ChildContent { get; set; }
 
         /// <summary>
-        /// Applied the entire time an element is entering. Usually you define your duration 
-        /// and what properties you want to transition.
+        /// Whether the transition should run on initial mount.
         /// </summary>
-        [Parameter] 
-        public string Enter { get; set; }
+        [Parameter]
+        public bool Show { get; set; } = false;
 
         /// <summary>
-        /// The starting point to enter from.
+        /// Called when the dialog is opened.
         /// </summary>
-        [Parameter] 
-        public string EnterFrom { get; set; }
-
-        /// <summary>
-        /// The ending point to enter to
-        /// </summary>
-        [Parameter] 
-        public string EnterTo { get; set; }
-
-
-        [Parameter] 
-        public int EnterDuration { get; set; }
-
-        [Parameter] 
-        public string Leave { get; set; }
-
-        [Parameter] 
-        public string LeaveFrom { get; set; }
-
-        [Parameter] 
-        public string LeaveTo { get; set; }
-
-        [Parameter] 
-        public int LeaveDuration { get; set; }
-
-        [Parameter] 
-        public bool Show { get; set; }
-
-        [Parameter] 
-        public EventCallback OnClick { get; set; }
-
         [Parameter] 
         public EventCallback OnOpen { get; set; }
 
+        /// <summary>
+        /// Called when the dialog is closed.
+        /// </summary>
         [Parameter] 
         public EventCallback OnClose { get; set; }
 
-        [Parameter] 
-        public int DebouceTimeout { get; set; } = 350;
-
+        /// <summary>
+        /// Additional attributes to be applied to the child content.
+        /// </summary>
         [Parameter(CaptureUnmatchedValues = true)]
         public IReadOnlyDictionary<string, object> Attributes { get; set; }
 
         private Transition           transition { get; set; }
         private HeadlessDialogPanel  dialogPanel { get; set; }
         private ClickOffEventHandler clickOffEventHandler { get; set; }
-        private HtmlElement rootElement;
 
-        public MenuState State { get; protected set; } = MenuState.Closed;
-
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public HeadlessDialog()
         {
         }
 
-        public void RegisterPanel(HeadlessDialogPanel item)
+        /// <inheritdoc/>
+        protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            dialogPanel = item;
-            if (isOpen)
+            await base.OnAfterRenderAsync(firstRender);
+
+            if (clickOffEventHandler != null)
             {
-                InvokeAsync(dialogPanel.Open);
-            }
-            else
-            {
-                InvokeAsync(dialogPanel.Close);
+                await clickOffEventHandler.RegisterElement(dialogPanel!);
             }
         }
 
-        public void UnregisterPanel(HeadlessDialogPanel item)
+        /// <inheritdoc/>
+        protected override void OnInitialized()
         {
+            base.OnInitialized();
+            isOpen = Show;
+        }
+
+        /// <inheritdoc/>
+        public void Dispose() 
+        { 
+        }
+
+        /// <summary>
+        /// The current 
+        /// </summary>
+        public MenuState State { get; protected set; } = MenuState.Closed;
+
+        /// <summary>
+        /// Method called by a <see cref="HeadlessDialogPanel"/> to register itself with
+        /// the current <see cref="HeadlessDialog"/>.
+        /// </summary>
+        /// <param name="item"></param>
+        public async Task RegisterPanel(HeadlessDialogPanel item)
+        {
+            await Task.CompletedTask;
+            dialogPanel = item;
+        }
+
+        /// <summary>
+        /// Method called by a <see cref="HeadlessDialogPanel"/> to unregister itself with
+        /// the current <see cref="HeadlessDialog"/>.
+        /// </summary>
+        /// <param name="item"></param>
+        public async Task UnregisterPanel(HeadlessDialogPanel item)
+        {
+            await Task.CompletedTask;
             dialogPanel = null;
         }
 
+        /// <summary>
+        /// Toggles the current <see cref="HeadlessDialog"/>
+        /// </summary>
+        /// <returns></returns>
         public async Task Toggle()
         {
             if (State == MenuState.Closed)
@@ -124,42 +132,44 @@ namespace Neon.Tailwind.HeadlessUI
                 await Close();
         }
 
+        /// <summary>
+        /// Opens the current <see cref="HeadlessDialog"/>
+        /// </summary>
+        /// <returns></returns>
         public async Task Open()
         {
-            isOpen = true;
+            Show = true;
             await OnOpen.InvokeAsync();
-            await clickOffEventHandler.RegisterElement(dialogPanel);
+            
             await InvokeAsync(StateHasChanged);
         }
 
-        public async Task Close(bool suppressFocus = false)
+        /// <summary>
+        /// Closes the current <see cref="HeadlessDialog"/>
+        /// </summary>
+        /// <returns></returns>
+        public async Task Close()
         {
-            isOpen = false;
+            Show = false;
             await OnClose.InvokeAsync();
+            await dialogPanel.Close();
             await clickOffEventHandler.UnregisterElement(dialogPanel);
             await InvokeAsync(StateHasChanged);
         }
 
+        /// <summary>
+        /// Handler for when the user clicks away from the <see cref="HeadlessDialogPanel"/>.
+        /// This by default will close the <see cref="HeadlessDialog"/>.
+        /// </summary>
+        /// <returns></returns>
         public Task HandleClickOff()
         {
-            if (!isOpen)
-            {
-                return Task.CompletedTask;
-            }
-
             return Close();
         }
 
-        protected override async Task OnAfterRenderAsync(bool firstRender)
+        public ValueTask DisposeAsync()
         {
+            return ValueTask.CompletedTask;
         }
-
-        protected override void OnInitialized()
-        {
-            isOpen = Show;
-        }
-
-
-        public void Dispose() { }
     }
 }

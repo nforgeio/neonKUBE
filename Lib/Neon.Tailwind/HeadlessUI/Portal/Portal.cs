@@ -24,35 +24,53 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace Neon.Tailwind.HeadlessUI
+namespace Neon.Tailwind
 {
+    /// <summary>
+    /// Portals provide a first-class way to render children into a DOM node that 
+    /// exists outside the DOM hierarchy of the parent component
+    /// </summary>
     public class Portal : ComponentBase
     {
-        [Inject] public IPortalBinder PortalBinder { get; set; }
-        //[Parameter] public string Id { get; set; } = GenerateId();
-        [Parameter] public string Name { get; set; } = "root";
-        //[Parameter] public string Class { get; set; }
-        //[Parameter] public string TagName { get; set; } = "div";
-        //[Parameter] public int    ZIndex { get; set; } = 999;
+        /// <summary>
+        /// The injected <see cref="IPortalBinder"/>.
+        /// </summary>
+        [Inject] 
+        public IPortalBinder PortalBinder { get; set; }
+
+        /// <summary>
+        /// The name of the Portal.
+        /// </summary>
+        [Parameter] 
+        public string Name { get; set; } = "root";
 
         private RenderFragment content;
 
+        /// <inheritdoc/>
         protected override void OnInitialized()
         {
             PortalBinder?.RegisterPortal(Name, this);
         }
 
-        public static string GenerateId() => Guid.NewGuid().ToString("N");
-
+        /// <summary>
+        /// Renders the <see cref="RenderFragment"/>.
+        /// </summary>
+        /// <param name="content"></param>
         public void RenderContent(RenderFragment content)
         {
             this.content = content;
             StateHasChanged();
         }
 
+        /// <inheritdoc/>
         protected override void BuildRenderTree(RenderTreeBuilder builder)
         {
-            builder.AddContent(0, content);
+            builder.OpenElement(0, "div");
+            builder.AddAttribute(1, "id", Name);
+            builder.AddContent(2, content);
+            builder.CloseElement();
+
+
         }
     }
 }

@@ -18,41 +18,125 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Timers;
 
-namespace Neon.Tailwind.HeadlessUI
+namespace Neon.Tailwind
 {
     public class Transition : ComponentBase
     {
-        [CascadingParameter] public TransitionGroup TransitionGroup { get; set; }
+        [CascadingParameter] 
+        public TransitionGroup TransitionGroup { get; set; }
 
-        [Parameter] public RenderFragment<string> ChildContent { get; set; }
+        [Parameter] 
+        public RenderFragment<string> ChildContent { get; set; }
 
-        [Parameter] public string Enter { get; set; }
-        [Parameter] public string EnterFrom { get; set; }
-        [Parameter] public string EnterTo { get; set; }
-        [Parameter] public int    EnterDuration { get; set; }
-        [Parameter] public string Leave { get; set; }
-        [Parameter] public string LeaveFrom { get; set; }
-        [Parameter] public string LeaveTo { get; set; }
-        [Parameter] public int    LeaveDuration { get; set; }
-        [Parameter] public bool   Show { get; set; }
-        [Parameter] public EventCallback<bool> BeginTransition { get; set; }
-        [Parameter] public EventCallback<bool> EndTransition { get; set; }
 
-        public TransitionState State { get; private set; }
+        /// <summary>
+        /// Classes to add to the transitioning element during the entire enter phase.
+        /// </summary>
+        [Parameter]
+        public string Enter { get; set; }
+
+        /// <summary>
+        /// The starting point to enter from.
+        /// </summary>
+        [Parameter]
+        public string EnterFrom { get; set; }
+
+        /// <summary>
+        /// The ending point to enter to.
+        /// </summary>
+        [Parameter]
+        public string EnterTo { get; set; }
+
+        /// <summary>
+        /// The duration that the enter transition will take.
+        /// </summary>
+        [Parameter]
+        public int? EnterDuration { get; set; }
+
+        /// <summary>
+        /// Classes to add to the transitioning element during the entire leave phase.
+        /// </summary>
+        [Parameter]
+        public string Leave { get; set; }
+
+        /// <summary>
+        /// Classes to add to the transitioning element before the leave phase starts.
+        /// </summary>
+        [Parameter]
+        public string LeaveFrom { get; set; }
+
+        /// <summary>
+        /// Classes to add to the transitioning element immediately after the leave phase starts.
+        /// </summary>
+        [Parameter]
+        public string LeaveTo { get; set; }
+
+        /// <summary>
+        /// The duration that the leave transition will take.
+        /// </summary>
+        [Parameter]
+        public int? LeaveDuration { get; set; }
+
+        /// <summary>
+        /// Whether the transition should run on initial mount.
+        /// </summary>
+        [Parameter]
+        public bool Show { get; set; } = false;
+        [Parameter] 
+        public EventCallback<bool> BeginTransition { get; set; }
+        [Parameter] 
+        public EventCallback<bool> EndTransition { get; set; }
+
+        [Parameter(CaptureUnmatchedValues = true)]
+        public IReadOnlyDictionary<string, object> Attributes { get; set; }
+
+        public event Action OnTransitionChange;
+        private void NotifyTransitionChanged() => InvokeAsync(OnTransitionChange);
+
+        public TransitionState State { get; set; }
         public string CurrentCssClass { get; private set; }
+        public string ClassAttributes { get; private set; }
 
         private bool transitionStarted;
         private System.Timers.Timer transitionTimer;
         private bool stateChangeRequested;
+        private string enter;
+        private int enterDuration;
+        private string enterDurationString;
+        private string leave;
+        private int leaveDuration;
+        private string leaveDurationString;
 
+        /// <inheritdoc/>
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             if (TransitionHasStartedOrCompleted()) return;
             await StartTransition();
+        }
+
+        private void GetClassAttributes()
+        {
+            if (Attributes != null)
+            {
+                try
+                {
+                    if (Attributes.TryGetValue("class", out var classAttributes))
+                    {
+                        ClassAttributes = (string)classAttributes;
+                    }
+                }
+                catch
+                {
+
+                }
+            }
         }
 
         private async Task StartTransition()
@@ -63,19 +147,65 @@ namespace Neon.Tailwind.HeadlessUI
             //dom manipulation of adding the item to the page before we start a new state
             await Task.Yield();
 
-            CurrentCssClass = State == TransitionState.Entering ? $"{Enter} duration-{EnterDuration} {EnterTo}" : $"{Leave} duration-{LeaveDuration} {LeaveTo}";
+            var cssClass = new StringBuilder();
+
+            if (!string.IsNullOrEmpty(ClassAttributes))
+            {
+                cssClass.Append(ClassAttributes);
+            }
+
+            switch (State)
+            {
+                case TransitionState.Entering:
+
+                    cssClass.Append($" {enter}");
+                    cssClass.Append($" {enterDurationString}");
+                    cssClass.Append($" {EnterTo}");
+                    break;
+
+                case TransitionState.Leaving:
+                default:
+
+                    cssClass.Append($" {leave}");
+                    cssClass.Append($" {leaveDurationString}");
+                    cssClass.Append($" {LeaveTo}");
+                    break;
+            }
+
+            CurrentCssClass = cssClass.ToString();
 
             _ = BeginTransition.InvokeAsync();
 
             StartTransitionTimer();
-            StateHasChanged();
+            NotifyTransitionChanged();
         }
 
         private bool TransitionHasStartedOrCompleted() => State == TransitionState.Visible || State == TransitionState.Hidden || transitionStarted;
 
         private void StartTransitionTimer()
         {
-            transitionTimer = new System.Timers.Timer(State == TransitionState.Entering ? EnterDuration : LeaveDuration);
+            switch (State)
+            {
+                case TransitionState.Entering:
+                    
+                    if (enterDuration <= 0)
+                    {
+                        return;
+                    }
+                    transitionTimer = new System.Timers.Timer(enterDuration);
+                    break;
+
+                case TransitionState.Leaving:
+                default:
+
+                    if (leaveDuration <= 0)
+                    {
+                        return;
+                    }
+                    transitionTimer = new System.Timers.Timer(leaveDuration);
+                    break;
+            }
+            
             transitionTimer.Elapsed += OnEndTransition;
             transitionTimer.AutoReset = false;
             transitionTimer.Enabled = true;
@@ -89,12 +219,12 @@ namespace Neon.Tailwind.HeadlessUI
             TransitionGroup?.NotifyEndTransition();
             EndTransition.InvokeAsync();
 
-            InvokeAsync(StateHasChanged);
+            NotifyTransitionChanged();
         }
 
         private void ClearCurrentTransition()
         {
-            CurrentCssClass = "";
+            CurrentCssClass = ClassAttributes;
             transitionStarted = false;
 
             if (transitionTimer == null) return;
@@ -102,7 +232,8 @@ namespace Neon.Tailwind.HeadlessUI
             transitionTimer = null;
         }
 
-        public override Task SetParametersAsync(ParameterView parameters)
+        /// <inheritdoc/>
+        public override async Task SetParametersAsync(ParameterView parameters)
         {
             var currentShowValue = Show;            
 
@@ -110,21 +241,86 @@ namespace Neon.Tailwind.HeadlessUI
             
             Show = TransitionGroup?.Show ?? Show;
             stateChangeRequested = currentShowValue != Show;
-
-            return base.SetParametersAsync(ParameterView.Empty);
+            await base.SetParametersAsync(ParameterView.Empty);
         }
+
+        /// <inheritdoc/>
         protected override void OnParametersSet()
         {
             if (!stateChangeRequested) return;
             
             stateChangeRequested = false;
-            
+
+            GetClassAttributes();
+
+            string durationPattern = @"duration[-[]+([0-9]+)[a-z\]]*";
+
+            if (!string.IsNullOrEmpty(Enter))
+            {
+                if (!EnterDuration.HasValue)
+                {
+                    var match = Regex.Match(Enter, durationPattern);
+                    if (match.Success)
+                    {
+                        enterDuration = int.Parse(match.Groups[1].Value);
+                    }
+                    else
+                    {
+                        enterDuration = 0;
+                        enterDurationString = string.Empty;
+                    }
+                }
+                else
+                {
+                    enterDuration = EnterDuration.Value;
+                }
+
+                enterDurationString = $"duration-{enterDuration}";
+                enter = Regex.Replace(Enter, durationPattern, "");
+            }
+
+            if (!string.IsNullOrEmpty(Leave))
+            {
+                if (!LeaveDuration.HasValue)
+                {
+                    var match = Regex.Match(Leave, durationPattern);
+                    if (match.Success)
+                    {
+                        leaveDuration = int.Parse(match.Groups[1].Value);
+                    }
+                    else
+                    {
+                        leaveDuration = 0;
+                        leaveDurationString = string.Empty;
+                    }
+                }
+                else
+                {
+                    leaveDuration = LeaveDuration.Value;
+                }
+
+                leaveDurationString = $"duration-{leaveDuration}";
+                leave = Regex.Replace(Leave, durationPattern, "");
+            }
+
             if (Show)
                 InitializeEntering();
             else
                 InitializeLeaving();
         }
-        protected override void OnInitialized() => TransitionGroup?.RegisterTransition(this);
+
+        /// <inheritdoc/>
+        protected override void OnInitialized()
+        {
+            TransitionGroup?.RegisterTransition(this);
+            OnTransitionChange += StateHasChanged;
+        }
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            OnTransitionChange -= StateHasChanged;
+        }
 
         private void InitializeEntering()
         {
@@ -136,8 +332,25 @@ namespace Neon.Tailwind.HeadlessUI
                 return;
             }
 
+            string attributeClass = string.Empty;
+            if (Attributes != null)
+            {
+                attributeClass = (string)Attributes["class"];
+            }
+
             State = TransitionState.Entering;
-            CurrentCssClass = $"{Enter} duration-{EnterDuration} {EnterFrom}";
+
+            var cssClass = new StringBuilder();
+
+            if (!string.IsNullOrEmpty(ClassAttributes))
+            {
+                cssClass.Append(ClassAttributes);
+            }
+            cssClass.Append($" {enter}");
+            cssClass.Append($" {enterDurationString}");
+            cssClass.Append($" {EnterFrom}");
+
+            CurrentCssClass = cssClass.ToString();
         }
         private void InitializeLeaving()
         {
@@ -150,9 +363,21 @@ namespace Neon.Tailwind.HeadlessUI
             }
 
             State = TransitionState.Leaving;
-            CurrentCssClass = $"{Leave} duration-{LeaveDuration} {LeaveFrom}";
+
+            var cssClass = new StringBuilder();
+
+            if (!string.IsNullOrEmpty(ClassAttributes))
+            {
+                cssClass.Append(ClassAttributes);
+            }
+            cssClass.Append($" {leave}");
+            cssClass.Append($" {leaveDurationString}");
+            cssClass.Append($" {LeaveFrom}");
+
+            CurrentCssClass = cssClass.ToString();
         }
 
+        /// <inheritdoc/>
         protected override void BuildRenderTree(RenderTreeBuilder builder)
         {
             if (State != TransitionState.Hidden)
@@ -165,13 +390,13 @@ namespace Neon.Tailwind.HeadlessUI
         {
             if (State == TransitionState.Visible || State == TransitionState.Entering) return;
             InitializeEntering();
-            InvokeAsync(StateHasChanged);
+            NotifyTransitionChanged();
         }
         public void Close()
         {
             if (State == TransitionState.Leaving || State == TransitionState.Hidden) return;
             InitializeLeaving();
-            InvokeAsync(StateHasChanged);
+            NotifyTransitionChanged();
         }
         public void Toggle()
         {

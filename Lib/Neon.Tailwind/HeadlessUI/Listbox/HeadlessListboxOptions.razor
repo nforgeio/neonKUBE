@@ -15,12 +15,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.*@
 
-@namespace Neon.Tailwind.HeadlessUI
+@namespace Neon.Tailwind
 
 @typeparam TValue
 
-@if (Static || this.Listbox.State == ListboxState.Open)
-{
 	<KeyDownEventHandler @ref="keyDownEventHandler" OnKeyDown="HandleKeyDown" PreventDefaultForKeys="new() {
             KeyboardKey.Space,
             KeyboardKey.Enter,
@@ -32,7 +30,8 @@
         }" />
 	<CascadingValue Value="this">
 		<HtmlElement TagName="@TagName"
-					@ref="rootElement" Id="Id"
+					@ref="rootElement" 
+                    Id="Id"
 					@attributes="AdditionalAttributes"
 					tabindex="-1"
 					role="listbox"
@@ -41,4 +40,3 @@
 			@ChildContent
 		</HtmlElement>
 	</CascadingValue>
-}

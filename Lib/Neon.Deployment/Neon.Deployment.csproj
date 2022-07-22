@@ -4,7 +4,7 @@
 		<TargetFramework>netstandard2.1</TargetFramework>
 		<OutputType>Library</OutputType>
 		<RootNamespace>Neon.Deployment</RootNamespace>
-		<Version>10000.0.1650-dev-jeff</Version>
+		<Version>10000.0.2060-dev-marcus</Version>
 		<Company>neonFORGE LLC</Company>
 		<Authors>neonFORGE Team</Authors>
 		<Description>INTERNAL USE ONLY: CI/CD utility classes</Description>

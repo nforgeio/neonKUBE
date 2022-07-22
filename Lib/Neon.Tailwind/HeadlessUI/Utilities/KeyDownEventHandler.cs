@@ -23,7 +23,7 @@ using System.Collections.Generic;
 using System.Reflection.Metadata;
 using System.Threading.Tasks;
 
-namespace Neon.Tailwind.HeadlessUI
+namespace Neon.Tailwind
 {
     public class KeyDownEventHandler : EventHandlerComponentBase<KeyDownEventHandler>
     {

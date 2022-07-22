@@ -15,28 +15,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.*@
 
-@namespace Neon.Tailwind.HeadlessUI
+@namespace Neon.Tailwind
 
-<ClickOffEventHandler OnClickOff="HandleClickOff" @ref="clickOffEventHandler" />
+<ClickOffEventHandler OnClickOff="HandleClickOff" @ref="@clickOffEventHandler" />
 
 <CascadingValue Value="this">
-    <TransitionGroup Show="@isOpen">
-        <Transition Enter="@Enter"
-                    Show="@isOpen"
-                    EnterDuration="@EnterDuration"
-                    EnterFrom="@EnterFrom"
-                    EnterTo="@EnterTo"
-                    Leave="@Leave"
-                    LeaveDuration="@LeaveDuration"
-                    LeaveFrom="@LeaveFrom"
-                    LeaveTo="@LeaveTo"
-                    Context="css"
-                    @ref="transition">
-            <HtmlElement class="@css" style="z-index: 999;"
-              @ref="rootElement" 
-              @attributes="@Attributes">
-                @ChildContent
-            </HtmlElement>
-        </Transition>
-    </TransitionGroup>
+    @ChildContent?.Invoke(this)
 </CascadingValue>

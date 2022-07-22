@@ -23,7 +23,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Neon.Tailwind.HeadlessUI
+namespace Neon.Tailwind
 {
     public partial class HeadlessMenu : ComponentBase, IDisposable
     {
@@ -50,6 +50,9 @@ namespace Neon.Tailwind.HeadlessUI
         public string ButtonElementId => buttonElement?.Id;
         public string ItemsElementId => itemsElement?.Id;
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public HeadlessMenu()
         {
             searchAssistant = new SearchAssistant();

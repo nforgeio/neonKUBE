@@ -23,9 +23,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Neon.Tailwind.HeadlessUI
+namespace Neon.Tailwind
 {
-    public partial class HeadlessListbox<TValue> : ComponentBase, IDisposable
+    public partial class HeadlessListbox<TValue> : IDisposable
     {
         [Parameter] public RenderFragment<HeadlessListbox<TValue>> ChildContent { get; set; }
 
@@ -68,12 +68,22 @@ namespace Neon.Tailwind.HeadlessUI
         public string ButtonElementId => buttonElement?.Id;
         public string OptionsElementId => optionsElement?.Id;
 
+        /// <summary>
+        /// Con
+        /// </summary>
         public HeadlessListbox()
         {
             searchAssistant = new SearchAssistant();
+        }
+
+        /// <inheritdoc/>
+        protected override void OnInitialized()
+        {
+            base.OnInitialized();
             searchAssistant.OnChange += HandleSearchChange!;
         }
 
+        /// <inheritdoc/>
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             if (shouldFocus)

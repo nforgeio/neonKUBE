@@ -20,7 +20,7 @@ using Microsoft.AspNetCore.Components.Rendering;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Neon.Tailwind.HeadlessUI
+namespace Neon.Tailwind
 {
     public class TransitionGroup : ComponentBase
     {

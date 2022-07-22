@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    EventHandlers.cs
+// FILE:	    Switch.razor.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:  	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,14 +15,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
-namespace NeonDashboard
+using Microsoft.AspNetCore.Components;
+
+namespace TestTailwind.Components
 {
-    [EventHandler("onmouseleave", typeof(MouseEventArgs), true, true)]
-    [EventHandler("onmouseenter", typeof(MouseEventArgs), true, true)]
-    public static class EventHandlers
+    public partial class Switch : ComponentBase
     {
+        private bool isChecked;
     }
 }

@@ -56,7 +56,6 @@ using Segment;
 using StackExchange.Redis;
 
 using Neon.Tailwind;
-using Neon.Tailwind.HeadlessUI;
 
 namespace NeonDashboard
 {

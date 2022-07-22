@@ -4,7 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <OutputType>Library</OutputType>
     <LangVersion>latest</LangVersion>
-    <Version>10000.0.1650-dev-jeff</Version>
+    <Version>10000.0.2060-dev-marcus</Version>
     <Authors>neonFORGE Team</Authors>
     <Company>neonFORGE LLC</Company>
     <Product>neonSDK</Product>
@@ -23,6 +23,9 @@
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AnalysisLevel>5.0</AnalysisLevel>
+    <Description>A Tailwind CSS library for Blazor. Includes Headless UI components.</Description>
+    <PackageTags>tailwind;tailwindcss;headless;headlessui;headless-ui;css</PackageTags>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net5.0|AnyCPU'">

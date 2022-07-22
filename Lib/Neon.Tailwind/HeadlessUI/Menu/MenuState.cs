@@ -16,7 +16,7 @@
 // limitations under the License.
 
 
-namespace Neon.Tailwind.HeadlessUI
+namespace Neon.Tailwind
 {
     public enum MenuState
     {

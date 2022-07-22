@@ -17,71 +17,118 @@
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Neon.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
-namespace Neon.Tailwind.HeadlessUI
+namespace Neon.Tailwind
 {
     public partial class HeadlessDialogPanel : ComponentBase, IAsyncDisposable
     {
-        private bool isOpen;
-        [CascadingParameter] public HeadlessDialog CascadedDialog { get; set; } = default!;
+        /// <summary>
+        /// The cascaded <see cref="HeadlessDialog"/>.
+        /// </summary>
+        [CascadingParameter] 
+        public HeadlessDialog CascadedDialog { get; set; } = default!;
 
-        [Parameter] public RenderFragment<HeadlessDialogPanel> ChildContent { get; set; }
+        /// <summary>
+        /// The styled Dialog panel.
+        /// </summary>
+        [Parameter] 
+        public RenderFragment<HeadlessDialogPanel> ChildContent { get; set; }
 
+        /// <summary>
+        /// Whether the dialog panel is enabled.
+        /// </summary>
         [Parameter] public bool IsEnabled { get; set; } = true;
+
+        /// <summary>
+        /// Whether the dialog panel is visible.
+        /// </summary>
         [Parameter] public bool IsVisible { get; set; } = true;
 
-        [Parameter] public string SearchValue { get; set; } = "";
+        /// <summary>
+        /// The container ID.
+        /// </summary>
+        [Parameter] 
+        public string Id { get; set; } = HtmlElement.GenerateId();
 
-        [Parameter] public string TagName { get; set; } = "div";
-        [Parameter] public string Id { get; set; } = HtmlElement.GenerateId();
+        /// <summary>
+        /// Whether the panel should be initially shown.
+        /// </summary>
+        [Parameter] 
+        public bool Show { get; set; }
 
+        /// <summary>
+        /// Callback that is called when the dialog is opened.
+        /// </summary>
+        [Parameter]
+        public EventCallback OnOpen { get; set; }
 
-        [Parameter] public string Enter { get; set; }
-        [Parameter] public string EnterFrom { get; set; }
-        [Parameter] public string EnterTo { get; set; }
-        [Parameter] public int EnterDuration { get; set; }
-        [Parameter] public string Leave { get; set; }
-        [Parameter] public string LeaveFrom { get; set; }
-        [Parameter] public string LeaveTo { get; set; }
-        [Parameter] public int LeaveDuration { get; set; }
-        [Parameter] public bool Show { get; set; }
-        [Parameter] public EventCallback OnClose { get; set; }
+        /// <summary>
+        /// Callback that is called when the dialog is closed.
+        /// </summary>
+        [Parameter]
+        public EventCallback OnClose { get; set; }
 
+        /// <summary>
+        /// Additional HTML attributes to be applied to the <see cref="RenderFragment"/>.
+        /// </summary>
         [Parameter(CaptureUnmatchedValues = true)] 
         public IReadOnlyDictionary<string, object> AdditionalAttributes { get; set; }
 
-        private Transition transition;
+        private bool isOpen;
         private HeadlessDialog Dialog { get; set; } = default!;
 
         private HtmlElement rootElement;
-        public static implicit operator ElementReference(HeadlessDialogPanel element) => element?.rootElement ?? default!;
+        public static implicit operator ElementReference(HeadlessDialogPanel element)
+        {
+            return element?.rootElement ?? default!;
+        }
         bool shouldFocus;
 
+        /// <inheritdoc/>
         protected override void OnInitialized()
         {
             isOpen = Show;
-            Dialog.RegisterPanel(this);
         }
+
+        /// <inheritdoc/>
+        protected override async Task OnInitializedAsync()
+        {
+            await Dialog.RegisterPanel(this);
+        }
+
+        /// <inheritdoc/>
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             if (shouldFocus)
             {
                 shouldFocus = false;
                 await Task.Yield();
-                await FocusAsync();
+                //await FocusAsync();
             }
         }
 
+        /// <inheritdoc/>
         public void Dispose()
         {
-            Dialog.UnregisterPanel(this);
+            _ = Dialog.UnregisterPanel(this);
         }
 
         [MemberNotNull(nameof(Dialog), nameof(CascadedDialog))]
+
+        protected override async Task OnParametersSetAsync()
+        {
+            if (Show) 
+            { 
+                await Task.CompletedTask;
+            }
+        }
+
+        /// <inheritdoc/>
         public override Task SetParametersAsync(ParameterView parameters)
         {
             //This is here to follow the pattern/example as implmented in Microsoft's InputBase component
@@ -104,9 +151,10 @@ namespace Neon.Tailwind.HeadlessUI
             return base.SetParametersAsync(ParameterView.Empty);
         }
 
-
         private async Task HandleClick(MouseEventArgs e)
         {
+            await SyncContext.Clear;
+
             if (!IsEnabled) return;
         }
 
@@ -119,6 +167,8 @@ namespace Neon.Tailwind.HeadlessUI
         }
         private async Task HandlePointerMove(PointerEventArgs e)
         {
+            await SyncContext.Clear;
+            
             if (!IsEnabled) return;
         }
         private void HandleMouseOut(MouseEventArgs e)
@@ -131,19 +181,20 @@ namespace Neon.Tailwind.HeadlessUI
         public async Task Open()
         {
             //if (!IsEnabled) return;
-            isOpen = true;
+            Show = true;
             shouldFocus = true;
-            await Dialog.Open();
-            StateHasChanged();
+            await OnOpen.InvokeAsync();
+            //await Dialog.Open();
+            await InvokeAsync(StateHasChanged);
         }
 
         public async Task Close()
         {
             //if (!IsEnabled) return;
-            isOpen = false;
-            await Dialog.Close();
-
-            StateHasChanged();
+            Show = false;
+            //await Dialog.Close();
+            await OnClose.InvokeAsync();
+            await InvokeAsync(StateHasChanged);
         }
 
         public ValueTask DisposeAsync()

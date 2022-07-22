@@ -18,7 +18,7 @@
 using System;
 using System.Timers;
 
-namespace Neon.Tailwind.HeadlessUI
+namespace Neon.Tailwind
 {
     public class SearchAssistant : IDisposable
     {

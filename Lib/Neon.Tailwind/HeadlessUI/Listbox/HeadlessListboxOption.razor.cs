@@ -23,9 +23,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-namespace Neon.Tailwind.HeadlessUI
+namespace Neon.Tailwind
 {
-    public partial class HeadlessListboxOption<TValue> : ComponentBase, IDisposable
+    public partial class HeadlessListboxOption<TValue> : IDisposable
     {
         [CascadingParameter] public HeadlessListbox<TValue> CascadedListbox { get; set; } = default!;
         [CascadingParameter] public HeadlessListboxOptions<TValue> CascadedOptions { get; set; } = default!;
@@ -34,10 +34,10 @@ namespace Neon.Tailwind.HeadlessUI
 
         [Parameter] public bool IsEnabled { get; set; } = true;
         [Parameter] public bool IsVisible { get; set; } = true;
-        
+
         [Parameter] public TValue Value { get; set; }
         [Parameter] public string SearchValue { get; set; } = "";
-        
+
         [Parameter] public string Id { get; set; } = HtmlElement.GenerateId();
         [Parameter] public string TagName { get; set; } = "li";
 
@@ -87,8 +87,18 @@ namespace Neon.Tailwind.HeadlessUI
                 throw new InvalidOperationException($"{nameof(HeadlessListboxOption<TValue>)} does not support changing the {nameof(HeadlessListbox<TValue>)} dynamically.");
             }
         }
-        protected override void OnInitialized() => Listbox.RegisterOption(this);
-        public void Dispose() => Listbox.UnregisterOption(this);
+
+        /// <inheritdoc/>
+        protected override void OnInitialized()
+        {
+            Listbox.RegisterOption(this);
+        }
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            Listbox.UnregisterOption(this);
+        }
 
         private async Task HandleClick()
         {
@@ -108,7 +118,7 @@ namespace Neon.Tailwind.HeadlessUI
 
             Listbox.GoToOption(ListboxFocus.Nothing);
         }
-        protected async Task HandlePointerMove(PointerEventArgs e)
+        protected async Task HandleMouseEnter(MouseEventArgs e)
         {
             if (!IsEnabled) return;
             if (Listbox.State == ListboxState.Closed) return;
@@ -117,7 +127,7 @@ namespace Neon.Tailwind.HeadlessUI
             if (IsActive) return;
             Listbox.GoToOption(this);
         }
-        protected void HandleMouseOut(MouseEventArgs e)
+        protected void HandleMouseLeave(MouseEventArgs e)
         {
             if (!IsEnabled) return;
             if (!IsActive) return;
