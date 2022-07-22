@@ -193,7 +193,7 @@ namespace Neon.Kube.Xunit
         public const string Tiny = @"
 name: hyperv-tiny
 datacenter: $<<<profile:datacenter>>>
-environment: test
+purpose: test
 isLocked: false
 timeSources:
 - pool.ntp.org
@@ -226,7 +226,7 @@ nodes:
         public const string Small = @"
 name: hyperv-small
 datacenter: $<<<profile:datacenter>>>
-environment: test
+purpose: test
 isLocked: false
 timeSources:
 - pool.ntp.org
@@ -268,7 +268,7 @@ nodes:
         public const string Large = @"
 name: hyperv-large
 datacenter: $<<<profile:datacenter>>>
-environment: test
+purpose: test
 isLocked: false
 timeSources:
 - pool.ntp.org

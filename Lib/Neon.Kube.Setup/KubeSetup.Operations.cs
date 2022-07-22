@@ -220,7 +220,7 @@ spec:
                             }
 
                             patch.Metadata.Labels.Add(NodeLabels.LabelDatacenter, cluster.Definition.Datacenter.ToLowerInvariant());
-                            patch.Metadata.Labels.Add(NodeLabels.LabelEnvironment, cluster.Definition.Environment.ToString().ToLowerInvariant());
+                            patch.Metadata.Labels.Add(NodeLabels.LabelEnvironment, cluster.Definition.Purpose.ToString().ToLowerInvariant());
 
                             foreach (var label in node.Metadata.Labels.All)
                             {
@@ -2072,7 +2072,7 @@ subjects:
                             }
 
                             taintDefinitions.Add($"{NodeLabels.LabelDatacenter}={GetLabelValue(cluster.Definition.Datacenter.ToLowerInvariant())}");
-                            taintDefinitions.Add($"{NodeLabels.LabelEnvironment}={GetLabelValue(cluster.Definition.Environment.ToString().ToLowerInvariant())}");
+                            taintDefinitions.Add($"{NodeLabels.LabelEnvironment}={GetLabelValue(cluster.Definition.Purpose.ToString().ToLowerInvariant())}");
 
                             if (node.Metadata.Taints != null)
                             {

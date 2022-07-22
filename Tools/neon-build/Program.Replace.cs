@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GroupAction.cs
-// CONTRIBUTOR: Marcus Bowyer
+// FILE:	    Program.Replace.cs
+// CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,37 +15,40 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if !NETCOREAPP3_1
-
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
+using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
 
 using Neon.Common;
 
-namespace Neon.Web.SignalR
+namespace NeonBuild
 {
-    /// <summary>
-    /// Represents a group action.
-    /// </summary>
-    public enum GroupAction
+    public static partial class Program
     {
         /// <summary>
-        /// Add a member to the group.
+        /// Implements the <b>replace</b> command.
         /// </summary>
-        [EnumMember(Value = "add")]
-        Add,
+        /// <param name="commandLine">The command line.</param>
+        public static void Replace(CommandLine commandLine)
+        {
+            commandLine = commandLine.Shift(1);
 
-        /// <summary>
-        /// Remove a member from the group.
-        /// </summary>
-        [EnumMember(Value = "remove")]
-        Remove,
+            if (commandLine.Arguments.Length != 3)
+            {
+                Console.WriteLine(usage);
+                Program.Exit(1);
+            }
+
+            var path   = commandLine.Arguments[0];
+            var before = commandLine.Arguments[1];
+            var after  = commandLine.Arguments[2];
+            var text   = File.ReadAllText(path);
+
+            text = text.Replace(before, after);
+
+            File.WriteAllText(path, text);
+        }
     }
 }
-
-#endif

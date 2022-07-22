@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Invokation.cs
+// FILE:	    Invocation.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -14,6 +14,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+#if !NETCOREAPP3_1
 
 using System;
 using System.Collections.Generic;
@@ -36,7 +38,7 @@ namespace Neon.Web.SignalR
     /// Represents a method invokation.
     /// </summary>
     [MessagePackObject]
-    public class Invokation
+    public class Invocation
     {
         /// <summary>
         /// The optional invokation ID.
@@ -69,7 +71,7 @@ namespace Neon.Web.SignalR
         public string ReturnChannel { get; set; } = null;
 
         /// <summary>
-        /// Writes a <see cref="Invokation"/> to a byte[].
+        /// Writes a <see cref="Invocation"/> to a byte[].
         /// </summary>
         /// <param name="methodName"></param>
         /// <param name="args"></param>
@@ -78,7 +80,7 @@ namespace Neon.Web.SignalR
             Write(methodName: methodName, args: args, excludedConnectionIds: null);
 
         /// <summary>
-        /// Writes a <see cref="Invokation"/> to a byte[].
+        /// Writes a <see cref="Invocation"/> to a byte[].
         /// </summary>
         /// <param name="methodName"></param>
         /// <param name="args"></param>
@@ -89,7 +91,7 @@ namespace Neon.Web.SignalR
         public static byte[] Write(string methodName, object[] args, string invocationId = null,
                                 IReadOnlyList<string> excludedConnectionIds = null, string returnChannel = null)
         {
-            var invokation = new Invokation()
+            var invokation = new Invocation()
             {
                 InvocationId          = invocationId,
                 MethodName            = methodName,
@@ -102,13 +104,15 @@ namespace Neon.Web.SignalR
         }
 
         /// <summary>
-        /// Reads an <see cref="Invokation"/> from a byte array.
+        /// Reads an <see cref="Invocation"/> from a byte array.
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
-        public static Invokation Read(byte[] message)
+        public static Invocation Read(byte[] message)
         {
-            return MessagePackSerializer.Deserialize<Invokation>(message);
+            return MessagePackSerializer.Deserialize<Invocation>(message);
         }
     }
 }
+
+#endif

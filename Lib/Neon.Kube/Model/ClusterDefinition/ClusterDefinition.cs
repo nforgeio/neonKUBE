@@ -591,11 +591,11 @@ namespace Neon.Kube
         /// <summary>
         /// Indicates how the cluster is being used.
         /// </summary>
-        [JsonProperty(PropertyName = "Environment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "environment", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Purpose", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "purpose", ApplyNamingConventions = false)]
         [JsonConverter(typeof(StringEnumConverter))]
-        [DefaultValue(EnvironmentType.Other)]
-        public EnvironmentType Environment { get; set; } = EnvironmentType.Other;
+        [DefaultValue(ClusterPurpose.NotSet)]
+        public ClusterPurpose Purpose { get; set; } = ClusterPurpose.NotSet;
 
         /// <summary>
         /// Specifies the NTP time sources to be configured for the cluster.  These are the

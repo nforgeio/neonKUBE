@@ -1377,7 +1377,10 @@
         </member>
         <member name="T:Neon.Common.EnvironmentParser">
             <summary>
-            Handles parsing of environment variables.
+            Handles parsing of environment variables by default or optionally variables
+            from a custom source.  This has built-in methods for parsing: <c>int</c>,
+            <c>long</c>, <c>double</c>, <c>TimeSpan</c>, <c>string</c> and <c>enum</c>
+            variables as well as mechanisms to parse custom types.
             </summary>
         </member>
         <member name="T:Neon.Common.EnvironmentParser.Parser`1">
@@ -1398,6 +1401,21 @@
             <param name="input">The input value.</param>
             <returns>Returns <c>true</c> if the input value is valid.</returns>
         </member>
+        <member name="T:Neon.Common.EnvironmentParser.VariableSource">
+            <summary>
+            <para>
+            Used for custom variable lookup implementation.  This will be passed
+            a variable name and should return the value as a string when the variable
+            exists or <c>null</c> if it does not.
+            </para>
+            <para>
+            Pass a custom implementation to the <see cref="T:Neon.Common.EnvironmentParser"/> constructor
+            when necessary.
+            </para>
+            </summary>
+            <param name="variable">The variable name.</param>
+            <returns>The variable's value or <c>null</c>.</returns>
+        </member>
         <member name="M:Neon.Common.EnvironmentParser.StringParser(System.String,System.String@,System.String@)">
             <summary>
             Parses a <see cref="T:System.String"/>.
@@ -1410,6 +1428,15 @@
         <member name="M:Neon.Common.EnvironmentParser.IntParser(System.String,System.Int32@,System.String@)">
             <summary>
             Parses an <see cref="T:System.Int32"/>.
+            </summary>
+            <param name="input">The input value.</param>
+            <param name="value">Returns as the parsed value.</param>
+            <param name="error">Returns as the error message on failure.</param>
+            <returns>Returns <c>true</c> if the input value is valid.</returns>
+        </member>
+        <member name="M:Neon.Common.EnvironmentParser.LongParser(System.String,System.Int64@,System.String@)">
+            <summary>
+            Parses a <see cref="T:System.Int64"/>.
             </summary>
             <param name="input">The input value.</param>
             <param name="value">Returns as the parsed value.</param>
@@ -1443,25 +1470,43 @@
             <param name="error">Returns as the error message on failure.</param>
             <returns>Returns <c>true</c> if the input value is valid.</returns>
         </member>
-        <member name="M:Neon.Common.EnvironmentParser.#ctor(Neon.Diagnostics.INeonLogger)">
+        <member name="M:Neon.Common.EnvironmentParser.EnumParser``1(System.String,``0@,System.String@)">
+            <summary>
+            Parses an enumeration.
+            </summary>
+            <typeparam name="TEnum">The enumeration type.</typeparam>
+            <param name="input">The input value.</param>
+            <param name="value">Returns as the parsed value.</param>
+            <param name="error">Returns as the error message on failure.</param>
+            <returns>Returns <c>true</c> if the input value is valid.</returns>
+        </member>
+        <member name="M:Neon.Common.EnvironmentParser.#ctor(Neon.Diagnostics.INeonLogger,Neon.Common.EnvironmentParser.VariableSource)">
             <summary>
             Constructor.
             </summary>
-            <param name="log">The optional logger.</param>
+            <param name="log">Optionally specifies the logger where parsing errors will be logged.</param>
+            <param name="source">Optionally specifies an alternative variable source.  This defaults to retrieving environment variables.</param>
+        </member>
+        <member name="M:Neon.Common.EnvironmentParser.SetLogger(Neon.Diagnostics.INeonLogger)">
+            <summary>
+            Used for (rare) situations where we need to start without a logger because we're
+            using the <see cref="T:Neon.Common.EnvironmentParser"/> to read the log settings first, create the
+            logger and then initialize the logger parser here.
+            </summary>
+            <param name="log">The logger or <c>null</c> to disable logging.</param>
+        </member>
+        <member name="M:Neon.Common.EnvironmentParser.EnvironmentSource(System.String)">
+            <summary>
+            Implements the default environment variable based source.
+            </summary>
+            <param name="variable">The variable name.</param>
+            <returns>The variable value or <c>null</c>.</returns>
         </member>
         <member name="M:Neon.Common.EnvironmentParser.LogMissingVariable(System.String)">
             <summary>
             Reports a missing environment variable.
             </summary>
             <param name="variable">The variable name.</param>
-        </member>
-        <member name="M:Neon.Common.EnvironmentParser.LogUnparsableVariable(System.String,System.String,System.Object)">
-            <summary>
-            Reports a non-parsable environment variable.
-            </summary>
-            <param name="variable">The variable name.</param>
-            <param name="value">The invalid variable value.</param>
-            <param name="def">The value actually used instead.</param>
         </member>
         <member name="M:Neon.Common.EnvironmentParser.LogInvalidVariable(System.String,System.String,System.String)">
             <summary>
@@ -1480,12 +1525,13 @@
             <param name="def">The value actually used instead.</param>
             <param name="error">Specifies an optional error message.</param>
         </member>
-        <member name="M:Neon.Common.EnvironmentParser.LogVariable(System.String,System.String)">
+        <member name="M:Neon.Common.EnvironmentParser.LogVariable(System.String,System.String,System.Boolean)">
             <summary>
             Reports an environment variable value.
             </summary>
             <param name="variable">The variable name.</param>
             <param name="value">The invalid variable value.</param>
+            <param name="redacted">Whether to redact the log output.</param>
         </member>
         <member name="M:Neon.Common.EnvironmentParser.ThrowNotFound(System.String)">
             <summary>
@@ -1493,7 +1539,7 @@
             </summary>
             <param name="variable">The variable name.</param>
         </member>
-        <member name="M:Neon.Common.EnvironmentParser.Parse``1(System.String,System.String,Neon.Common.EnvironmentParser.Parser{``0},System.Boolean,Neon.Common.EnvironmentParser.Validator{``0})">
+        <member name="M:Neon.Common.EnvironmentParser.Parse``1(System.String,System.String,Neon.Common.EnvironmentParser.Parser{``0},System.Boolean,Neon.Common.EnvironmentParser.Validator{``0},System.Boolean)">
             <summary>
             Attempts to parse an environment variable as a <typeparamref name="T"/>, writting 
             messages to the associated logger if one was passed to the constructor.
@@ -1504,13 +1550,32 @@
             <param name="required">Optionally specifies that the variable is required to exist.</param>
             <param name="parser">The parser function.</param>
             <param name="validator">Optional validation function.</param>
+            <param name="redacted">Optionally redact log output of the variable.</param>
             <returns>The parsed value.</returns>
             <exception cref="T:System.Collections.Generic.KeyNotFoundException">Thrown if the variable does not exists and <paramref name="required"/>=<c>true</c>.</exception>
             <exception cref="T:System.FormatException">Thrown if the variable could not be parsed or the <paramref name="validator"/> returned an error.</exception>
         </member>
-        <member name="M:Neon.Common.EnvironmentParser.Get(System.String,System.String,System.Boolean,Neon.Common.EnvironmentParser.Validator{System.String})">
+        <member name="M:Neon.Common.EnvironmentParser.Get(System.String,System.String,System.Boolean,Neon.Common.EnvironmentParser.Validator{System.String},System.Boolean)">
             <summary>
             Attempts to parse an environment variable as a <see cref="T:System.String"/>, writting messages
+            to the associated logger if one was passed to the constructor.
+            </summary>
+            <param name="variable">The variable name.</param>
+            <param name="defaultInput">The default value.</param>
+            <param name="required">Optionally specifies that the variable is required to exist.</param>
+            <param name="validator">
+            Optional validation function to be called to verify that the parsed variable
+            value is valid.  This should return <c>null</c> for valid values and an error
+            message for invalid ones.
+            </param>
+            <param name="redacted">Optionally redact log output of the variable.</param>
+            <returns>The parsed value.</returns>
+            <exception cref="T:System.Collections.Generic.KeyNotFoundException">Thrown if the variable does not exists and <paramref name="required"/>=<c>true</c>.</exception>
+            <exception cref="T:System.FormatException">Thrown if the variable could not be parsed or the <paramref name="validator"/> returned an error.</exception>
+        </member>
+        <member name="M:Neon.Common.EnvironmentParser.Get(System.String,System.Int32,System.Boolean,Neon.Common.EnvironmentParser.Validator{System.Int32})">
+            <summary>
+            Attempts to parse an environment variable as an <see cref="T:System.Int32"/>, writting messages
             to the associated logger if one was passed to the constructor.
             </summary>
             <param name="variable">The variable name.</param>
@@ -1525,9 +1590,9 @@
             <exception cref="T:System.Collections.Generic.KeyNotFoundException">Thrown if the variable does not exists and <paramref name="required"/>=<c>true</c>.</exception>
             <exception cref="T:System.FormatException">Thrown if the variable could not be parsed or the <paramref name="validator"/> returned an error.</exception>
         </member>
-        <member name="M:Neon.Common.EnvironmentParser.Get(System.String,System.Int32,System.Boolean,Neon.Common.EnvironmentParser.Validator{System.Int32})">
+        <member name="M:Neon.Common.EnvironmentParser.Get(System.String,System.Int64,System.Boolean,Neon.Common.EnvironmentParser.Validator{System.Int64})">
             <summary>
-            Attempts to parse an environment variable as an <see cref="T:System.Int32"/>, writting messages
+            Attempts to parse an environment variable as a <see cref="T:System.Int64"/>, writting messages
             to the associated logger if one was passed to the constructor.
             </summary>
             <param name="variable">The variable name.</param>
@@ -1581,6 +1646,24 @@
             Attempts to parse an environment variable as a <see cref="T:System.TimeSpan"/>, writting messages
             to the associated logger if one was passed to the constructor.
             </summary>
+            <param name="variable">The variable name.</param>
+            <param name="defaultInput">The default value.</param>
+            <param name="required">Optionally specifies that the variable is required to exist.</param>
+            <param name="validator">
+            Optional validation function to be called to verify that the parsed variable
+            value is valid.  This should return <c>null</c> for valid values and an error
+            message for invalid ones.
+            </param>
+            <returns>The parsed value.</returns>
+            <exception cref="T:System.Collections.Generic.KeyNotFoundException">Thrown if the variable does not exists and <paramref name="required"/>=<c>true</c>.</exception>
+            <exception cref="T:System.FormatException">Thrown if the variable could not be parsed or the <paramref name="validator"/> returned an error.</exception>
+        </member>
+        <member name="M:Neon.Common.EnvironmentParser.Get``1(System.String,``0,System.Boolean,Neon.Common.EnvironmentParser.Validator{``0})">
+            <summary>
+            Attempts to parse an environment variable as an eumeration, writting messages
+            to the associated logger if one was passed to the constructor.
+            </summary>
+            <typeparam name="TEnum">The desired enumeration type.</typeparam>
             <param name="variable">The variable name.</param>
             <param name="defaultInput">The default value.</param>
             <param name="required">Optionally specifies that the variable is required to exist.</param>
@@ -1852,42 +1935,18 @@
             </summary>
             <threadsafety instance="true"/>
         </member>
-        <member name="T:Neon.Common.LabelSelectorOptions">
-            <summary>
-            <see cref="T:Neon.Common.LabelSelector`1"/> related options.
-            </summary>
-        </member>
-        <member name="F:Neon.Common.LabelSelectorOptions.None">
-            <summary>
-            No options are selected.
-            </summary>
-        </member>
-        <member name="F:Neon.Common.LabelSelectorOptions.CaseInsensitiveValues">
-            <summary>
-            <para>
-            Normally <see cref="T:Neon.Common.LabelSelector`1"/> matches label values using
-            case sensitive comparisons.  Use this to make the comparisons case
-            insensitive.
-            </para>
-            <note>
-            Label name case sensitivity is determined by the the dictionaries returned
-            by the item <see cref="M:Neon.Common.ILabeled.GetLabels"/> method.
-            </note>
-            </summary>
-        </member>
-        <member name="F:Neon.Common.LabelSelectorOptions.UnConstraintedLabels">
-            <summary>
-            <see cref="T:Neon.Common.LabelSelector`1"/> defaults to parsing label names
-            and values to ensure that they are Kubernetes compliant.  Use this 
-            to disable this so you can use arbitrary labels.
-            </summary>
-        </member>
         <member name="T:Neon.Common.LabelSelector`1">
             <summary>
-            Implements a Kubernetes compatible general purpose label based selector mechanism that 
+            <para>
+            Implements a Kubernetes compatible general purpose label-based selector mechanism that 
             can select a set of items from a collection based on the set of labels assigned to each 
-            item.  This class supports some simple fixed query methods as well as a simple text 
+            item.  This class supports some simple fixed query methods as well as a simple text-based
             query language.
+            </para>
+            <para>
+            This is suitable for operations like selecting Kubernetes related items by labels 
+            or annotations.
+            </para>
             </summary>
             <typeparam name="TItem">The underlying item type.</typeparam>
             <remarks>
@@ -2316,6 +2375,36 @@
             <param name="labelValue">The label value.</param>
             <exception cref="T:System.FormatException">Thrown if the key is not valid.</exception>
         </member>
+        <member name="T:Neon.Common.LabelSelectorOptions">
+            <summary>
+            <see cref="T:Neon.Common.LabelSelector`1"/> related options.
+            </summary>
+        </member>
+        <member name="F:Neon.Common.LabelSelectorOptions.None">
+            <summary>
+            No options are selected.
+            </summary>
+        </member>
+        <member name="F:Neon.Common.LabelSelectorOptions.CaseInsensitiveValues">
+            <summary>
+            <para>
+            Normally <see cref="T:Neon.Common.LabelSelector`1"/> matches label values using
+            case sensitive comparisons.  Use this to make the comparisons case
+            insensitive.
+            </para>
+            <note>
+            Label name case sensitivity is determined by the the dictionaries returned
+            by the item <see cref="M:Neon.Common.ILabeled.GetLabels"/> method.
+            </note>
+            </summary>
+        </member>
+        <member name="F:Neon.Common.LabelSelectorOptions.UnConstraintedLabels">
+            <summary>
+            <see cref="T:Neon.Common.LabelSelector`1"/> defaults to parsing label names
+            and values to ensure that they are Kubernetes compliant.  Use this 
+            to disable this so you can use arbitrary labels.
+            </summary>
+        </member>
         <member name="T:Neon.Common.NotReadyException">
             <summary>
             Indicates that a component is not ready to perform an operation but may
@@ -2670,7 +2759,7 @@
         <member name="T:Neon.Common.ExecuteResponse">
             <summary>
             Holds the process exit code and captured standard output from a process launched by any of the
-            <see cref="M:Neon.Common.NeonHelper.ExecuteCapture(System.String,System.Object[],System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.Action{System.String},System.Action{System.String},System.IO.TextReader,System.Text.Encoding)"/>
+            <see cref="M:Neon.Common.NeonHelper.ExecuteCapture(System.String,System.Object[],System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.Action{System.String},System.Action{System.String},System.IO.TextReader,System.Text.Encoding,System.Action{System.Diagnostics.Process})"/>
             related methods.
             </summary>
         </member>
@@ -2975,6 +3064,12 @@
             <returns>The decoded fields.</returns>
             <exception cref="T:System.FormatException">Thrown if the CSV file format is not valid.</exception>
         </member>
+        <member name="M:Neon.Common.NeonHelper.StartDebugLogStopwatch(System.Boolean)">
+            <summary>
+            Creates and starts the debug log stopwatch when it's not already running.
+            </summary>
+            <param name="restart">Optionally restart the stopwatch.</param>
+        </member>
         <member name="P:Neon.Common.NeonHelper.DebugLogPath">
             <summary>
             <para>
@@ -2995,7 +3090,9 @@
         <member name="M:Neon.Common.NeonHelper.LogDebug(System.String)">
             <summary>
             Appends a line of text to the file at <see cref="P:Neon.Common.NeonHelper.DebugLogPath"/>.  This is intended for
-            low-level debugging when normal logging via <see cref="T:Neon.Diagnostics.LogManager"/> isn't suitable.
+            low-level debugging when normal logging via <see cref="T:Neon.Diagnostics.LogManager"/> isn't suitable (i.e.
+            when debugging logging code or application initialization code running before normal 
+            logging is configured.
             </summary>
             <param name="line">Optionally specifies the line of text.</param>
         </member>
@@ -3573,7 +3670,7 @@
             returns <c>true</c> or <pararef name="timeout"/> exceeded.
             </remarks>
         </member>
-        <member name="M:Neon.Common.NeonHelper.WaitForAsync(System.Func{System.Threading.Tasks.Task{System.Boolean}},System.TimeSpan,System.Nullable{System.TimeSpan},System.String)">
+        <member name="M:Neon.Common.NeonHelper.WaitForAsync(System.Func{System.Threading.Tasks.Task{System.Boolean}},System.TimeSpan,System.Nullable{System.TimeSpan},System.String,System.Threading.CancellationToken)">
             <summary>
             Asynchronously waits for a boolean function to return <c>true</c>.
             </summary>
@@ -3581,6 +3678,7 @@
             <param name="timeout">Optionally specifies the maximum time to wait.</param>
             <param name="pollInterval">Optionally specifies time to wait between each predicate call or <c>null</c> for a reasonable default.</param>
             <param name="timeoutMessage">Optionally overrides the <see cref="T:System.TimeoutException"/> message.</param>
+            <param name="cancellationToken">Optionally specifies a <see cref="T:System.Threading.CancellationToken"/>.</param>
             <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
             <exception cref="T:System.TimeoutException">Thrown if the never returned <c>true</c> before the timeout.</exception>
             <remarks>
@@ -3640,15 +3738,19 @@
             when <paramref name="threads"/> is <c>null</c> or empty.  Also and <c>null</c>
             threads passed will be ignored.
             </summary>
-            <param name="threads">The threads.</param>
+            <param name="threads">The threads being waited on.</param>
         </member>
-        <member name="M:Neon.Common.NeonHelper.WaitAllAsync(System.Collections.Generic.IEnumerable{System.Threading.Tasks.Task},System.Nullable{System.TimeSpan},System.Threading.CancellationToken)">
+        <member name="M:Neon.Common.NeonHelper.WaitAllAsync(System.Collections.Generic.IEnumerable{System.Threading.Tasks.Task},System.Nullable{System.TimeSpan},System.String,System.Threading.CancellationToken)">
             <summary>
             Asynchronously waits for all of the <see cref="T:System.Threading.Tasks.Task"/>s passed to complete.
             </summary>
-            <param name="tasks">The tasks being performed.</param>
-            <param name="timeout">The optional timeout.</param>
-            <param name="cancellationToken">The optional cancellation token.</param>
+            <param name="tasks">Specifies the tasks being waited on..</param>
+            <param name="timeout">Optionally specifies a timeout.</param>
+            <param name="cancellationToken">Optionally a cancellation token.</param>
+            <param name="timeoutMessage">
+            Optionally specifies a message to be included in any <see cref="T:System.TimeoutException"/>
+            thrown to help the what failed.
+            </param>
             <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
             <exception cref="T:System.TimeoutException">Thrown if the <paramref name="timeout"/> was exceeded.</exception>
         </member>
@@ -3826,6 +3928,13 @@
             </param>
             <returns>The converted string.</returns>
         </member>
+        <member name="M:Neon.Common.NeonHelper.GetBaseDirectory">
+            <summary>
+            Returns the fully qualified path to the folder where the executable resides.
+            This will include the terminating "\".
+            </summary>
+            <returns>Path to the folder holding the executable</returns>
+        </member>
         <member name="M:Neon.Common.NeonHelper.GetAssemblyFolder(System.Reflection.Assembly)">
             <summary>
             Returns the fully qualified path to the folder holding the
@@ -3968,7 +4077,7 @@
         <member name="M:Neon.Common.NeonHelper.ToBoolString(System.Boolean)">
             <summary>
             Renders a <c>bool</c> value as either <b>true</b> or <b>false</b>
-            (lower case).
+            (lowercase).
             </summary>
             <param name="value">The value.</param>
             <returns><b>true</b> or <b>false</b>,</returns>
@@ -4070,6 +4179,7 @@
             be the fully qualified pathj to <b>docker.exe</b> on Windows and just <b>docker</b>
             on Linux and OS/X.
             </summary>
+            <exception cref="T:System.IO.FileNotFoundException">Thrown when the Docker client could  not be located.</exception>
         </member>
         <member name="P:Neon.Common.NeonHelper.DockerComposeCli">
             <summary>
@@ -4143,6 +4253,20 @@
             <param name="itemCount">The number of items to be partitioned.</param>
             <param name="partitionSize">The maximim number of items in any partition.</param>
             <returns>The number of partitions required.</returns>
+        </member>
+        <member name="M:Neon.Common.NeonHelper.Min(System.TimeSpan[])">
+            <summary>
+            Determines the minimum <see cref="T:System.TimeSpan"/> value.
+            </summary>
+            <param name="values">The values to compare.</param>
+            <returns>The minimum of the values passed or <see cref="F:System.TimeSpan.Zero"/> when nothing is passed..</returns>
+        </member>
+        <member name="M:Neon.Common.NeonHelper.Max(System.TimeSpan[])">
+            <summary>
+            Determines the maximum <see cref="T:System.TimeSpan"/> value.
+            </summary>
+            <param name="values">The values to compare.</param>
+            <returns>The minimum of the values passed or <see cref="F:System.TimeSpan.Zero"/> when nothing is passed..</returns>
         </member>
         <member name="M:Neon.Common.NeonHelper.DetectOS">
             <summary>
@@ -4241,11 +4365,17 @@
         </member>
         <member name="M:Neon.Common.NeonHelper.GetWindowsOptionalFeatures">
             <summary>
+            <para>
             Returns a dictionary mapping optional Windows feature names to a <see cref="T:Neon.Common.WindowsFeatureStatus"/>
             indicating feature installation status.
+            </para>
+            <note>
+            This method requires elevated permissions.
+            </note>
             </summary>
             <returns>The feature dictionary.</returns>
             <exception cref="T:System.InvalidOperationException">Thrown when not running on Windows.</exception>
+            <exception cref="T:Neon.Common.ExecuteException">Thrown when the current process doesn't have elevated permissions.</exception>
             <remarks>
             <note>
             The feature names are in English and the lookup is case-insensitive.
@@ -4294,6 +4424,21 @@
             This method does nothing when the feature is already disabled.
             </remarks>
         </member>
+        <member name="P:Neon.Common.NeonHelper.HasElevatedPermissions">
+            <summary>
+            Determines whether the current process is running with elevated permissions.  This
+            corresponds to running with administrator privileges for Windows or as the <b>root</b>
+            user for Linux and OS/X.
+            </summary>
+            <exception cref="T:System.PlatformNotSupportedException">Thrown for unsupported platforms.</exception>
+        </member>
+        <member name="M:Neon.Common.NeonHelper.EnsureElevatedPermissions">
+            <summary>
+            Ensures that the current process has elevated permissions.  See <see cref="P:Neon.Common.NeonHelper.HasElevatedPermissions"/>.
+            </summary>
+            <exception cref="T:System.Security.SecurityException">Thrown when the process does not have elevated permissions.</exception>
+            <exception cref="T:System.PlatformNotSupportedException">Thrown for unsupported platforms.</exception>
+        </member>
         <member name="M:Neon.Common.NeonHelper.GetProgramPath(System.String)">
             <summary>
             Returns the path to an executable. 
@@ -4307,7 +4452,7 @@
             </para>
             <para>
             For Windows, the <see cref="M:System.Diagnostics.Process.Start(System.Diagnostics.ProcessStartInfo)"/> method does not 
-            search the PATH for the application.  This method attempts to convert the program
+            search the PATH for the application so this method attempts to convert the program
             file name into a fully qualified path by actually searching the PATH.
             </para>
             <para>
@@ -4340,16 +4485,41 @@
             <summary>
             Forks a child process that will run in parallel with the current process.
             </summary>
-            <param name="path">Path to the executable file.</param>
+            <param name="path">
+            <para>
+            Name or path to the executable file.
+            </para>
+            <note>
+            The <c>PATH</c> environment variable will be searched for the executable file 
+            when no path is specified.
+            </note>
+            </param>
             <param name="args">Command line arguments (or <c>null</c>).</param>
             <returns>The <see cref="T:System.Diagnostics.Process"/> information.</returns>
         </member>
-        <member name="M:Neon.Common.NeonHelper.Execute(System.String,System.Object[],System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.IO.TextReader)">
+        <member name="M:Neon.Common.NeonHelper.GetExecuteCommandLine(System.String,System.Object[])">
+            <summary>
+            Returns the actual command line that will be executed from the command 
+            and arguments passed.
+            </summary>
+            <param name="command">The command to be executed.</param>
+            <param name="args">Optional command arguments.</param>
+            <returns>The actual command line to be executed.</returns>
+        </member>
+        <member name="M:Neon.Common.NeonHelper.Execute(System.String,System.Object[],System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.IO.TextReader,System.Action{System.Diagnostics.Process})">
             <summary>
             Starts a process with an array of arguments to run an executable file and
             then waits for the process to terminate.
             </summary>
-            <param name="path">Path to the executable file.</param>
+            <param name="path">
+            <para>
+            Name or path to the executable file.
+            </para>
+            <note>
+            The <c>PATH</c> environment variable will be searched for the executable file 
+            when no path is specified.
+            </note>
+            </param>
             <param name="args">Command line arguments (or <c>null</c>).</param>
             <param name="timeout">
             Optional maximum time to wait for the process to complete or <c>null</c> to wait
@@ -4368,6 +4538,11 @@
             <param name="input">
             Optionally specifies a <see cref="T:System.IO.TextReader"/> with text to be sent 
             to the process as input.
+            </param>
+            <param name="processCallback">
+            Optionally passed to obtain the details of the process created to execute the command.
+            When a non-null value is passed, the callback will be called with the <see cref="T:System.Diagnostics.Process"/> 
+            instances just after it is launched.
             </param>
             <returns>The process exit code.</returns>
             <exception cref="T:System.TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
@@ -4380,11 +4555,19 @@
             </note>
             </remarks>
         </member>
-        <member name="M:Neon.Common.NeonHelper.Execute(System.String,System.String,System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.IO.TextReader)">
+        <member name="M:Neon.Common.NeonHelper.Execute(System.String,System.String,System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.IO.TextReader,System.Action{System.Diagnostics.Process})">
             <summary>
             Starts a process to run an executable file and then waits for the process to terminate.
             </summary>
-            <param name="path">Path to the executable file.</param>
+            <param name="path">
+            <para>
+            Name or path to the executable file.
+            </para>
+            <note>
+            The <c>PATH</c> environment variable will be searched for the executable file 
+            when no path is specified.
+            </note>
+            </param>
             <param name="args">Command line arguments (or <c>null</c>).</param>
             <param name="timeout">
             Optional maximum time to wait for the process to complete or <c>null</c> to wait
@@ -4404,6 +4587,11 @@
             Optionally specifies a <see cref="T:System.IO.TextReader"/> with text to be sent 
             to the process as input.
             </param>
+            <param name="processCallback">
+            Optionally passed to obtain the details of the process created to execute the command.
+            When a non-null value is passed, the callback will be called with the <see cref="T:System.Diagnostics.Process"/> 
+            instances just after it is launched.
+            </param>
             <returns>The process exit code.</returns>
             <exception cref="T:System.TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
             <remarks>
@@ -4415,12 +4603,20 @@
             </note>
             </remarks>
         </member>
-        <member name="M:Neon.Common.NeonHelper.ExecuteAsync(System.String,System.Object[],System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.IO.TextReader)">
+        <member name="M:Neon.Common.NeonHelper.ExecuteAsync(System.String,System.Object[],System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.IO.TextReader,System.Action{System.Diagnostics.Process})">
             <summary>
             Asynchronously starts a process to run an executable file with an array of
             arguments and then and waits for the process to terminate.
             </summary>
-            <param name="path">Path to the executable file.</param>
+            <param name="path">
+            <para>
+            Name or path to the executable file.
+            </para>
+            <note>
+            The <c>PATH</c> environment variable will be searched for the executable file 
+            when no path is specified.
+            </note>
+            </param>
             <param name="args">Command line arguments (or <c>null</c>).</param>
             <param name="timeout">
             Optional maximum time to wait for the process to complete or <c>null</c> to wait
@@ -4440,6 +4636,11 @@
             Optionally specifies a <see cref="T:System.IO.TextReader"/> with text to be sent 
             to the process as input.
             </param>
+            <param name="processCallback">
+            Optionally passed to obtain the details of the process created to execute the command.
+            When a non-null value is passed, the callback will be called with the <see cref="T:System.Diagnostics.Process"/> 
+            instances just after it is launched.
+            </param>
             <returns>The process exit code.</returns>
             <exception cref="T:System.TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
             <remarks>
@@ -4451,11 +4652,19 @@
             </note>
             </remarks>
         </member>
-        <member name="M:Neon.Common.NeonHelper.ExecuteAsync(System.String,System.String,System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.IO.TextReader)">
+        <member name="M:Neon.Common.NeonHelper.ExecuteAsync(System.String,System.String,System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.IO.TextReader,System.Action{System.Diagnostics.Process})">
             <summary>
             Asynchronously starts a process to run an executable file and then waits for the process to terminate.
             </summary>
-            <param name="path">Path to the executable file.</param>
+            <param name="path">
+            <para>
+            Name or path to the executable file.
+            </para>
+            <note>
+            The <c>PATH</c> environment variable will be searched for the executable file 
+            when no path is specified.
+            </note>
+            </param>
             <param name="args">Command line arguments (or <c>null</c>).</param>
             <param name="timeout">
             Optional maximum time to wait for the process to complete or <c>null</c> to wait
@@ -4474,6 +4683,11 @@
             <param name="input">
             Optionally specifies a <see cref="T:System.IO.TextReader"/> with text to be sent 
             to the process as input.
+            <param name="processCallback">
+            Optionally passed to obtain the details of the process created to execute the command.
+            When a non-null value is passed, the callback will be called with the <see cref="T:System.Diagnostics.Process"/> 
+            instances just after it is launched.
+            </param>
             </param>
             <returns>The process exit code.</returns>
             <exception cref="T:System.TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
@@ -4491,12 +4705,20 @@
             Used to redirect process output streams.
             </summary>
         </member>
-        <member name="M:Neon.Common.NeonHelper.ExecuteCapture(System.String,System.Object[],System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.Action{System.String},System.Action{System.String},System.IO.TextReader,System.Text.Encoding)">
+        <member name="M:Neon.Common.NeonHelper.ExecuteCapture(System.String,System.Object[],System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.Action{System.String},System.Action{System.String},System.IO.TextReader,System.Text.Encoding,System.Action{System.Diagnostics.Process})">
             <summary>
             Starts a process to run an executable file and then waits for the process to terminate
             while capturing any output written to the standard output and error streams.
             </summary>
-            <param name="path">Path to the executable file.</param>
+            <param name="path">
+            <para>
+            Name or path to the executable file.
+            </para>
+            <note>
+            The <c>PATH</c> environment variable will be searched for the executable file 
+            when no path is specified.
+            </note>
+            </param>
             <param name="args">Command line arguments (or <c>null</c>).</param>
             <param name="timeout">
             Optional maximum time to wait for the process to complete or <c>null</c> to wait
@@ -4522,6 +4744,11 @@
             Optionally specifies the expected standard output/error encoding.  This defaults to 
             <c>null</c> which sets the default system codepage.
             </param>
+            <param name="processCallback">
+            Optionally passed to obtain the details of the process created to execute the command.
+            When a non-null value is passed, the callback will be called with the <see cref="T:System.Diagnostics.Process"/> 
+            instances just after it is launched.
+            </param>
             <returns>
             The <see cref="T:Neon.Common.ExecuteResponse"/> including the process exit code and capture 
             standard output and error streams.
@@ -4542,12 +4769,20 @@
             </para>
             </remarks>
         </member>
-        <member name="M:Neon.Common.NeonHelper.ExecuteCapture(System.String,System.String,System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.Action{System.String},System.Action{System.String},System.IO.TextReader,System.Text.Encoding)">
+        <member name="M:Neon.Common.NeonHelper.ExecuteCapture(System.String,System.String,System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.Action{System.String},System.Action{System.String},System.IO.TextReader,System.Text.Encoding,System.Action{System.Diagnostics.Process})">
             <summary>
             Starts a process to run an executable file and then waits for the process to terminate
             while capturing any output written to the standard output and error streams.
             </summary>
-            <param name="path">Path to the executable file.</param>
+            <param name="path">
+            <para>
+            Name or path to the executable file.
+            </para>
+            <note>
+            The <c>PATH</c> environment variable will be searched for the executable file 
+            when no path is specified.
+            </note>
+            </param>
             <param name="args">Command line arguments (or <c>null</c>).</param>
             <param name="timeout">
             Optional maximum time to wait for the process to complete or <c>null</c> to wait
@@ -4573,6 +4808,11 @@
             Optionally specifies the expected standard output/error encoding.  This defaults to 
             <c>null</c> which sets the default system codepage.
             </param>
+            <param name="processCallback">
+            Optionally passed to obtain the details of the process created to execute the command.
+            When a non-null value is passed, the callback will be called with the <see cref="T:System.Diagnostics.Process"/> 
+            instances just after it is launched.
+            </param>
             <returns>
             The <see cref="T:Neon.Common.ExecuteResponse"/> including the process exit code and capture 
             standard output and error streams.
@@ -4593,12 +4833,20 @@
             </para>
             </remarks>
         </member>
-        <member name="M:Neon.Common.NeonHelper.ExecuteCaptureAsync(System.String,System.Object[],System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.IO.TextReader,System.Text.Encoding)">
+        <member name="M:Neon.Common.NeonHelper.ExecuteCaptureAsync(System.String,System.Object[],System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.IO.TextReader,System.Text.Encoding,System.Action{System.Diagnostics.Process})">
             <summary>
             Asynchronously starts a process to run an executable file and then waits for the process to terminate
             while capturing any output written to the standard output and error streams.
             </summary>
-            <param name="path">Path to the executable file.</param>
+            <param name="path">
+            <para>
+            Name or path to the executable file.
+            </para>
+            <note>
+            The <c>PATH</c> environment variable will be searched for the executable file 
+            when no path is specified.
+            </note>
+            </param>
             <param name="args">Command line arguments (or <c>null</c>).</param>
             <param name="timeout">
             Maximum time to wait for the process to complete or <c>null</c> to wait
@@ -4621,6 +4869,11 @@
             <param name="outputEncoding">
             Optionally specifies the expected standard output/error encoding.  This defaults to 
             <c>null</c> which sets the default system codepage.
+            </param>
+            <param name="processCallback">
+            Optionally passed to obtain the details of the process created to execute the command.
+            When a non-null value is passed, the callback will be called with the <see cref="T:System.Diagnostics.Process"/> 
+            instances just after it is launched.
             </param>
             <returns>
             The <see cref="T:Neon.Common.ExecuteResponse"/> including the process exit code and capture 
@@ -4636,12 +4889,20 @@
             </note>
             </remarks>
         </member>
-        <member name="M:Neon.Common.NeonHelper.ExecuteCaptureAsync(System.String,System.String,System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.IO.TextReader,System.Text.Encoding)">
+        <member name="M:Neon.Common.NeonHelper.ExecuteCaptureAsync(System.String,System.String,System.Nullable{System.TimeSpan},System.Diagnostics.Process,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.IO.TextReader,System.Text.Encoding,System.Action{System.Diagnostics.Process})">
             <summary>
             Asynchronously starts a process to run an executable file and then waits for the process to terminate
             while capturing any output written to the standard output and error streams.
             </summary>
-            <param name="path">Path to the executable file.</param>
+            <param name="path">
+            <para>
+            Name or path to the executable file.
+            </para>
+            <note>
+            The <c>PATH</c> environment variable will be searched for the executable file 
+            when no path is specified.
+            </note>
+            </param>
             <param name="args">Command line arguments (or <c>null</c>).</param>
             <param name="timeout">
             Maximum time to wait for the process to complete or <c>null</c> to wait
@@ -4664,6 +4925,11 @@
             <param name="outputEncoding">
             Optionally specifies the expected standard output/error encoding.  This defaults to 
             <c>null</c> which sets the default system codepage.
+            </param>
+            <param name="processCallback">
+            Optionally passed to obtain the details of the process created to execute the command.
+            When a non-null value is passed, the callback will be called with the <see cref="T:System.Diagnostics.Process"/> 
+            instances just after it is launched.
             </param>
             <returns>
             The <see cref="T:Neon.Common.ExecuteResponse"/> including the process exit code and capture 
@@ -4722,6 +4988,16 @@
             no process with the ID where as this one will return <c>null</c>.
             </remarks>
         </member>
+        <member name="M:Neon.Common.NeonHelper.CreateRandom">
+            <summary>
+            <para>
+            Creates the <see cref="F:Neon.Common.NeonHelper.rand"/> instance.
+            </para>
+            <note>
+            THIS MUST BE CALLED WHILE <see cref="F:Neon.Common.NeonHelper.randLock"/> IS LOCKED.
+            </note>
+            </summary>
+        </member>
         <member name="M:Neon.Common.NeonHelper.PseudoRandomInt">
             <summary>
             Returns an integer pseudo random number.
@@ -4747,6 +5023,13 @@
             </summary>
             <param name="limit">The value returned will not exceed one less than this value.</param>
             <returns>The random number.</returns>
+        </member>
+        <member name="M:Neon.Common.NeonHelper.PseudoRandomBytes(System.Int32)">
+            <summary>
+            Returns the specified number of pseudo random bytes.
+            </summary>
+            <param name="count">The requested number of bytes.</param>
+            <returns>The random bytes.</returns>
         </member>
         <member name="M:Neon.Common.NeonHelper.PseudoRandomIndex(System.Int32)">
             <summary>
@@ -4823,6 +5106,19 @@
             </summary>
             <returns>A <see cref="T:System.Random"/>.</returns>
         </member>
+        <member name="M:Neon.Common.NeonHelper.CreateBase36Uuid(System.Boolean)">
+            <summary>
+            Generates a 13 digit base-36 UUID including only lowercase ASCII
+            characters and digits.  This is useful for generating unique shorter
+            names for Kubernetes objects etc.
+            </summary>
+            <param name="secure">
+            Optionally specifies that a cryptographically secure algorithm is
+            is used to generate the UUID, rather than the default pseudo random
+            generator.  Cryptogrphically secure algorithms consume system entropy.
+            </param>
+            <returns>The new base-36 string.</returns>
+        </member>
         <member name="T:Neon.Common.NeonHelper.LowercaseYamlNamingConvention">
             <summary>
             YAML naming convention that renders property names as lowercase
@@ -4870,6 +5166,17 @@
             <param name="strict">Optionally require that all input properties map to route properties.</param>
             <returns>The parsed <typeparamref name="T"/>.</returns>
         </member>
+        <member name="M:Neon.Common.NeonHelper.YamlDeserializeViaJson``1(System.String,System.Boolean)">
+            <summary>
+            Deserializes YAML to an object via JSON.NET. This allows the use of <see cref="T:Newtonsoft.Json.JsonConverter"/>s to deserialize complex types.
+            Strict requires mapping of input properties in the target type.
+            </summary>
+            <typeparam name="T">The desired output type.</typeparam>
+            <param name="yaml">The YAML text.</param>
+            <param name="strict">Optionally require that all input properties map to route properties.</param>
+            <returns>The parsed <typeparamref name="T"/>.</returns>
+            <exception cref="T:YamlDotNet.Core.YamlException"></exception>
+        </member>
         <member name="M:Neon.Common.NeonHelper.JsonToYaml(System.String)">
             <summary>
             Converts a JSON text to YAML.
@@ -4880,7 +5187,7 @@
             <exception cref="T:System.ArgumentException">Thrown if <paramref name="jsonText"/> does not specify a value, array, or object.</exception>
             <remarks>
             <note>
-            Property names are always converted to lower case when converting to YAML.
+            Property names are always converted to lowercase when converting to YAML.
             </note>
             </remarks>
         </member>
@@ -5025,7 +5332,7 @@
         <member name="T:Neon.Common.ByteUnits">
             <summary>
             <para>
-            Converts a byte count string with optional units into a count.
+            Converts a size string with optional units into a count.
             </para>
             <list type="table">
             <item>
@@ -5150,7 +5457,7 @@
         </member>
         <member name="M:Neon.Common.ByteUnits.Parse(System.String)">
             <summary>
-            Parses a byte count and returns a <c>decimal</c>.
+            Parses a size and returns a <c>decimal</c>.
             </summary>
             <param name="text">The value being parsed.</param>
             <returns>The parsed value.</returns>
@@ -5158,7 +5465,7 @@
         </member>
         <member name="M:Neon.Common.ByteUnits.ToByteString(System.Decimal)">
             <summary>
-            Converts a byte count to a string using byte units.
+            Converts a size to a string using byte units.
             </summary>
             <param name="size">The size.</param>
             <returns>The size in bytes.</returns>
@@ -5174,87 +5481,103 @@
         </member>
         <member name="M:Neon.Common.ByteUnits.ToKB(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>KB</b> units.
+            Converts a size to a string using <b>KB</b> units.
             </summary>
             <param name="size">The size.</param>
             <returns>The size in KB.</returns>
         </member>
         <member name="M:Neon.Common.ByteUnits.ToKiB(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>KiB</b> units.
+            Converts a size to a string using <b>KiB</b> units.
             </summary>
             <param name="size">The size.</param>
             <returns>The size in KiB.</returns>
         </member>
         <member name="M:Neon.Common.ByteUnits.ToMB(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>MB</b> units.
+            Converts a size to a string using <b>MB</b> units.
             </summary>
             <param name="size">The size.</param>
             <returns>The size in MB.</returns>
         </member>
         <member name="M:Neon.Common.ByteUnits.ToMiB(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>MiB</b> units.
+            Converts a size to a string using <b>MiB</b> units.
             </summary>
             <param name="size">The size.</param>
             <returns>The size in MiB.</returns>
         </member>
         <member name="M:Neon.Common.ByteUnits.ToGB(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>GB</b> units.
+            Converts a size to a string using <b>GB</b> units.
             </summary>
             <param name="size">The size.</param>
             <returns>The size in GB.</returns>
         </member>
         <member name="M:Neon.Common.ByteUnits.ToGiB(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>GiB</b> units.
+            Converts a size to a string using <b>GiB</b> units.
             </summary>
             <param name="size">The size.</param>
             <returns>The size in GiB.</returns>
         </member>
         <member name="M:Neon.Common.ByteUnits.ToTB(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>TB</b> units.
+            Converts a size to a string using <b>TB</b> units.
             </summary>
             <param name="size">The size.</param>
             <returns>The size in TB.</returns>
         </member>
         <member name="M:Neon.Common.ByteUnits.ToTiB(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>TiB</b> units.
+            Converts a size to a string using <b>TiB</b> units.
             </summary>
             <param name="size">The size.</param>
             <returns>The size in TiB.</returns>
         </member>
         <member name="M:Neon.Common.ByteUnits.ToPB(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>PB</b> units.
+            Converts a size to a string using <b>PB</b> units.
             </summary>
             <param name="size">The size.</param>
             <returns>The size in PB.</returns>
         </member>
         <member name="M:Neon.Common.ByteUnits.ToPiB(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>PiB</b> units.
+            Converts a size to a string using <b>PiB</b> units.
             </summary>
             <param name="size">The size.</param>
             <returns>The size in PiB.</returns>
         </member>
         <member name="M:Neon.Common.ByteUnits.ToEB(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>EB</b> units.
+            Converts a size to a string using <b>EB</b> units.
             </summary>
             <param name="size">The size.</param>
             <returns>The size in EB.</returns>
         </member>
         <member name="M:Neon.Common.ByteUnits.ToEiB(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>EiB</b> units.
+            Converts a size to a string using <b>EiB</b> units.
             </summary>
             <param name="size">The size.</param>
-            <returns>The size in Ei.</returns>
+            <returns>The size in EiB.</returns>
+        </member>
+        <member name="M:Neon.Common.ByteUnits.Humanize(System.Decimal,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Humanizes the size passed into a string using appropriate units.
+            This uses power-of-10 based units by default but you can switch
+            to power-of-2 units by passing <paramref name="powerOfTwo"/> as
+            <c>true</c>.
+            </summary>
+            <param name="size">The size.</param>
+            <param name="powerOfTwo">Optionally returns a power-of-2 based unit.</param>
+            <param name="spaceBeforeUnit">Optionally excludes a space between the value and unit (this defaults to <c>true</c>.</param>
+            <param name="removeByteUnit">
+            Optionally strip any trailing "B" from the unit string.  For example when this
+            is set, a decimal value of 1000 will return <b>1K</b> instead of <b>1KB</b>.
+            </param>
+            <returns>The converted string.</returns>
         </member>
         <member name="T:Neon.Common.ProgramEntrypoint">
             <summary>
@@ -5831,7 +6154,7 @@
         <member name="T:Neon.Data.DateTimeJsonConverter">
             <summary>
             <para>
-            Implements a type converter for <see cref="T:System.DateTime"/> using the culture
+            <b>Newtonsoft:</b> Implements a type converter for <see cref="T:System.DateTime"/> using the culture
             invariant <b>yyyy-MM-ddTHH:mm:ss.fffZ</b> format.
             </para>
             <note>
@@ -5854,7 +6177,7 @@
         </member>
         <member name="T:Neon.Data.DateTimeOffsetJsonConverter">
             <summary>
-            Implements a type converter for <see cref="T:System.DateTimeOffset"/> using the culture
+            <b>Newtonsoft:</b> Implements a type converter for <see cref="T:System.DateTimeOffset"/> using the culture
             invariant <b>yyyy-MM-ddTHH:mm:ss.fffzzz</b> format.
             </summary>
         </member>
@@ -5873,7 +6196,7 @@
         <member name="T:Neon.Data.IEnhancedJsonConverter">
             <summary>
             <para>
-            Extends the standard <see cref="T:Newtonsoft.Json.JsonConverter"/> by returning the type
+            <b>Newtonsoft:</b> Extends the standard <see cref="T:Newtonsoft.Json.JsonConverter"/> by returning the type
             handled by the converter.
             </para>
             <note>
@@ -5896,7 +6219,7 @@
         </member>
         <member name="T:Neon.Data.IntegerEnumConverter`1">
             <summary>
-            Implements a type converter that converts between integers and an enum type.
+            <b>Newtonsoft:</b> Implements a type converter that converts between integers and an enum type.
             </summary>
             <typeparam name="TEnum">The enumation type being converted.</typeparam>
             <remarks>
@@ -5942,18 +6265,6 @@
             The <paramref name="serializer"/> parameter is ignored.
             </note>
             </remarks>
-        </member>
-        <member name="T:Neon.Data.JsonExtensions">
-            <summary>
-            Newtonsoft related extension methods.
-            </summary>
-        </member>
-        <member name="M:Neon.Data.JsonExtensions.CopyTo(Newtonsoft.Json.JsonSerializerSettings,Newtonsoft.Json.JsonSerializerSettings)">
-            <summary>
-            Copies the settings from one <see cref="T:Newtonsoft.Json.JsonSerializerSettings"/> instance to another.
-            </summary>
-            <param name="source">The source settings.</param>
-            <param name="target">The target instance.</param>
         </member>
         <member name="T:Neon.Data.TimeSpanJsonConverter">
             <summary>
@@ -6393,7 +6704,7 @@
             Requests the value of a secret password from 1Password via the assistant.
             </summary>
             <param name="name">Specifies the secret name.</param>
-            <param name="vault">Optionally specifies the 1Password vault.  This defaults to the developer's neonFORGE user name as specified by the <c>NC_USER</c> environment variable.</param>
+            <param name="vault">Optionally specifies the 1Password vault.  This defaults to the current user (as managed by the <see cref="T:Neon.Deployment.IProfileClient"/> implementaton).</param>
             <param name="masterPassword">Optionally specifies the master 1Password when it is already known.</param>
             <param name="nullOnNotFound">Optionally specifies that <c>null</c> should be returned rather than throwing an exception when the secret does not exist.</param>
             <returns>The password value.</returns>
@@ -6404,7 +6715,7 @@
              Requests the value of a secret value from 1Password via the assistant.
             </summary>
             <param name="name">Specifies the secret name.</param>
-            <param name="vault">Optionally specifies the 1Password vault.  This defaults to the developer's neonFORGE user name as specified by the <c>NC_USER</c> environment variable.</param>
+            <param name="vault">Optionally specifies the 1Password vault.  This defaults to the current user (as managed by the <see cref="T:Neon.Deployment.IProfileClient"/> implementaton).</param>
             <param name="masterPassword">Optionally specifies the master 1Password when it is already known.</param>
             <param name="nullOnNotFound">Optionally specifies that <c>null</c> should be returned rather than throwing an exception when the secret does not exist.</param>
             <returns>The password value.</returns>
@@ -6605,10 +6916,16 @@
             context for logged events.  For example, the Neon.Cadence client uses this 
              to record the ID of the workflow recording events.
             </param>
+            <param name="logFilter">
+            Optionally specifies a filter predicate that overrides the parent <see cref="T:Neon.Diagnostics.ILogManager"/> filter
+            (if any) used for filtering log entries.  This examines the <see cref="T:Neon.Diagnostics.LogEvent"/> and returns <c>true</c>
+            if the event should be logged or <c>false</c> when it is to be ignored.  All events will be logged when
+            this is <c>null</c>.
+            </param>
             <param name="isLogEnabledFunc">
-            Optionally specifies a function that will be called at runtime to
-            determine whether to actually log an event.  This defaults to <c>null</c>
-            which will always log events.
+            Optionally specifies a function that will be called at runtime to determine whether to event
+            logging is actually enabled.  This overrides the parent <see cref="T:Neon.Diagnostics.ILogManager"/> function
+            if any.  Events will be logged for <c>null</c> functions.
             </param>
             <returns>The <see cref="T:Neon.Diagnostics.INeonLogger"/> instance.</returns>
         </member>
@@ -6650,8 +6967,14 @@
             <summary>
             Intended to reset the log manager to its default condition.  Implementations may cxustomize
             what this actually does but the default <see cref="T:Neon.Diagnostics.LogManager"/> implementation resets its
-            emitted event counter to zewro, clears and cached loggers, and resets the <see cref="P:Neon.Diagnostics.ILogManager.LoggerCreator"/>
+            emitted event counter to zero, clears and cached loggers, and resets the <see cref="P:Neon.Diagnostics.ILogManager.LoggerCreator"/>
             delegate.
+            </summary>
+        </member>
+        <member name="P:Neon.Diagnostics.ILogManager.Name">
+            <summary>
+            Returns the log manager's name.  This can be useful for debugging the log manager itself.
+            This defaults to <c>null</c>.
             </summary>
         </member>
         <member name="P:Neon.Diagnostics.ILogManager.Version">
@@ -6705,7 +7028,7 @@
         <member name="P:Neon.Diagnostics.ILogManager.LoggerCreator">
             <summary>
             Used to customize what type of <see cref="T:Neon.Diagnostics.INeonLogger"/> will be returned by the 
-            various <see cref="M:Neon.Diagnostics.ILogManager.GetLogger(System.String,System.String,System.Func{System.Boolean})"/> methods.  This defaults
+            various <see cref="M:Neon.Diagnostics.ILogManager.GetLogger(System.String,System.String,System.Func{Neon.Diagnostics.LogEvent,System.Boolean},System.Func{System.Boolean})"/> methods.  This defaults
             to creating <see cref="T:Neon.Diagnostics.TextLogger"/> instances.
             </summary>
             <remarks>
@@ -6718,7 +7041,7 @@
             </para>
             </remarks>
         </member>
-        <member name="M:Neon.Diagnostics.ILogManager.GetLogger(System.String,System.String,System.Func{System.Boolean})">
+        <member name="M:Neon.Diagnostics.ILogManager.GetLogger(System.String,System.String,System.Func{Neon.Diagnostics.LogEvent,System.Boolean},System.Func{System.Boolean})">
             <summary>
             Returns a named logger.
             </summary>
@@ -6726,48 +7049,61 @@
             <param name="contextId">
             Optionally specifies additional information that can be used to identify
             context for logged events.  For example, the Neon.Cadence client uses this 
-             to record the ID of the workflow recording events.
+            to record the ID of the workflow recording events.
+            </param>
+            <param name="logFilter">
+            Optionally overrides the manager's log filter predicate.  This examines the <see cref="T:Neon.Diagnostics.LogEvent"/>
+            and returns <c>true</c> if the event should be logged or <c>false</c> when it is to be ignored.  
+            All events will be logged when this is and the managers filter is <c>null</c>.
             </param>
             <param name="isLogEnabledFunc">
-            Optionally specifies a function that will be called at runtime to
-            determine whether to actually log an event.  This defaults to <c>null</c>
-            which will always log events.
+            Optionally specifies a function that will be called at runtime to determine whether to event
+            logging is actually enabled.  This overrides the parent <see cref="T:Neon.Diagnostics.ILogManager"/> function
+            if any.  Events will be logged for <c>null</c> functions.
             </param>
             <returns>The <see cref="T:Neon.Diagnostics.INeonLogger"/> instance.</returns>
         </member>
-        <member name="M:Neon.Diagnostics.ILogManager.GetLogger(System.Type,System.String,System.Func{System.Boolean})">
+        <member name="M:Neon.Diagnostics.ILogManager.GetLogger(System.Type,System.String,System.Func{Neon.Diagnostics.LogEvent,System.Boolean},System.Func{System.Boolean})">
             <summary>
-            Returns a logger to be associated with a specific type.  This method
-            supports both <c>static</c> and normal types.
+            Returns a logger to be associated with a specific type.  This method supports both <c>static</c> and normal types.
             </summary>
             <param name="type">The type.</param>
             <param name="contextId">
             Optionally specifies additional information that can be used to identify
             context for logged events.  For example, the Neon.Cadence client uses this 
-             to record the ID of the workflow recording events.
+            to record the ID of the workflow recording events.
+            </param>
+            <param name="logFilter">
+            Optionally overrides the manager's log filter predicate.  This examines the <see cref="T:Neon.Diagnostics.LogEvent"/>
+            and returns <c>true</c> if the event should be logged or <c>false</c> when it is to be ignored.  
+            All events will be logged when this is and the managers filter is <c>null</c>.
             </param>
             <param name="isLogEnabledFunc">
-            Optionally specifies a function that will be called at runtime to
-            determine whether to actually log an event.  This defaults to <c>null</c>
-            which will always log events.
+            Optionally specifies a function that will be called at runtime to determine whether to event
+            logging is actually enabled.  This overrides the parent <see cref="T:Neon.Diagnostics.ILogManager"/> function
+            if any.  Events will be logged for <c>null</c> functions.
             </param>
             <returns>The <see cref="T:Neon.Diagnostics.INeonLogger"/> instance.</returns>
         </member>
-        <member name="M:Neon.Diagnostics.ILogManager.GetLogger``1(System.String,System.Func{System.Boolean})">
+        <member name="M:Neon.Diagnostics.ILogManager.GetLogger``1(System.String,System.Func{Neon.Diagnostics.LogEvent,System.Boolean},System.Func{System.Boolean})">
             <summary>
-            Returns a logger to be associated with a specific type.  This
-            method works only for non-<c>static</c> types.
+            Returns a logger to be associated with a specific type.  This method works only for non-<c>static</c> types.
             </summary>
             <typeparam name="T">The type.</typeparam>
             <param name="contextId">
             Optionally specifies additional information that can be used to identify
             context for logged events.  For example, the Neon.Cadence client uses this 
-             to record the ID of the workflow recording events.
+            to record the ID of the workflow recording events.
+            </param>
+            <param name="logFilter">
+            Optionally overrides the manager's log filter predicate.  This examines the <see cref="T:Neon.Diagnostics.LogEvent"/>
+            and returns <c>true</c> if the event should be logged or <c>false</c> when it is to be ignored.  
+            All events will be logged when this is and the managers filter is <c>null</c>.
             </param>
             <param name="isLogEnabledFunc">
-            Optionally specifies a function that will be called at runtime to
-            determine whether to actually log an event.  This defaults to <c>null</c>
-            which will always log events.
+            Optionally specifies a function that will be called at runtime to determine whether to event
+            logging is actually enabled.  This overrides the parent <see cref="T:Neon.Diagnostics.ILogManager"/> function
+            if any.  Events will be logged for <c>null</c> functions.
             </param>
             <returns>The <see cref="T:Neon.Diagnostics.INeonLogger"/> instance.</returns>
         </member>
@@ -7346,18 +7682,35 @@
             Static constructor.
             </summary>
         </member>
-        <member name="M:Neon.Diagnostics.LogManager.#ctor(System.Boolean,System.String,System.IO.TextWriter)">
+        <member name="M:Neon.Diagnostics.LogManager.#ctor(System.Boolean,System.String,System.Func{Neon.Diagnostics.LogEvent,System.Boolean},System.Func{System.Boolean},System.IO.TextWriter,System.String)">
             <summary>
             Default constructor.
             </summary>
             <param name="parseLogLevel">Indicates that the <b>LOG-LEVEL</b> environment variable should be parsed (defaults to <c>true</c>).</param>
             <param name="version">
-            Optionally specifies the semantic version of the current program.  This can be an somewhat string 
-            arbitrary string that matches this regex: <b>"[0-9a-zA-Z\.-_/]+"</b>.  This defaults to <c>null</c>.
+            Optionally specifies the semantic version of the current program.  This can be a somewhat arbitrary
+            string that matches this regex: <b>"[0-9a-zA-Z\.-_/]+"</b>.  This defaults to <c>null</c>.
+            </param>
+            <param name="logFilter">
+            Optionally specifies a filter predicate to be used for filtering log entries.  This examines
+            the <see cref="T:Neon.Diagnostics.LogEvent"/> and returns <c>true</c> if the event should be logged or <c>false</c>
+            when it is to be ignored.  All events will be logged when this is <c>null</c>.
+            </param>
+            <param name="isLogEnabledFunc">
+            Optionally specifies a function that will be called at runtime to
+            determine whether to event logging is actually enabled.  This defaults
+            to <c>null</c> which will always log events.
+            </param>
+            <param name="name">
+            Optionally specifies the logr manager's name.  This can be useful when debugging the
+            log manager itself.
             </param>
             <param name="writer">Optionally specifies the output writer.  This defaults to <see cref="P:System.Console.Error"/>.</param>
         </member>
         <member name="M:Neon.Diagnostics.LogManager.Reset">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Diagnostics.LogManager.Name">
             <inheritdoc/>
         </member>
         <member name="P:Neon.Diagnostics.LogManager.Version">
@@ -7381,7 +7734,7 @@
         <member name="P:Neon.Diagnostics.LogManager.LoggerCreator">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.LogManager.CreateLogger(System.String,System.IO.TextWriter,System.String,System.Func{System.Boolean})">
+        <member name="M:Neon.Diagnostics.LogManager.CreateLogger(System.String,System.IO.TextWriter,System.String,System.Func{Neon.Diagnostics.LogEvent,System.Boolean},System.Func{System.Boolean})">
             <summary>
             Uses the <see cref="P:Neon.Diagnostics.LogManager.LoggerCreator"/> function to construct a logger for a specific 
             source module..
@@ -7393,23 +7746,28 @@
             context for logged events.  For example, the Neon.Cadence client uses this 
              to record the ID of the workflow recording events.
             </param>
+            <param name="logFilter">
+            Optionally overrides the manager's log filter predicate.  This examines the <see cref="T:Neon.Diagnostics.LogEvent"/>
+            and returns <c>true</c> if the event should be logged or <c>false</c> when it is to be ignored.  
+            All events will be logged when this is and the managers filter is <c>null</c>.
+            </param>
             <param name="isLogEnabledFunc">
-            Optionally specifies a function that will be called at runtime to
-            determine whether to actually log an event.  This defaults to <c>null</c>
-            which will always log events.
+            Optionally specifies a function that will be called at runtime to determine whether to event
+            logging is actually enabled.  This overrides the parent <see cref="T:Neon.Diagnostics.ILogManager"/> function
+            if any.  Events will be logged for <c>null</c> functions.
             </param>
             <returns>The <see cref="T:Neon.Diagnostics.INeonLogger"/> instance.</returns>
         </member>
-        <member name="M:Neon.Diagnostics.LogManager.InternalGetLogger(System.String,System.IO.TextWriter,System.String,System.Func{System.Boolean})">
+        <member name="M:Neon.Diagnostics.LogManager.InternalGetLogger(System.String,System.IO.TextWriter,System.String,System.Func{Neon.Diagnostics.LogEvent,System.Boolean},System.Func{System.Boolean})">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.LogManager.GetLogger(System.String,System.String,System.Func{System.Boolean})">
+        <member name="M:Neon.Diagnostics.LogManager.GetLogger(System.String,System.String,System.Func{Neon.Diagnostics.LogEvent,System.Boolean},System.Func{System.Boolean})">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.LogManager.GetLogger(System.Type,System.String,System.Func{System.Boolean})">
+        <member name="M:Neon.Diagnostics.LogManager.GetLogger(System.Type,System.String,System.Func{Neon.Diagnostics.LogEvent,System.Boolean},System.Func{System.Boolean})">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.LogManager.GetLogger``1(System.String,System.Func{System.Boolean})">
+        <member name="M:Neon.Diagnostics.LogManager.GetLogger``1(System.String,System.Func{Neon.Diagnostics.LogEvent,System.Boolean},System.Func{System.Boolean})">
             <inheritdoc/>
         </member>
         <member name="M:Neon.Diagnostics.LogManager.Dispose">
@@ -7425,7 +7783,7 @@
             <summary>
             Creates a logger.
             </summary>
-            <param name="sourceModule">Identifies the source module.</param>
+            <param name="module">Identifies the source module.</param>
             <returns>The created <see cref="T:Microsoft.Extensions.Logging.ILogger"/>.</returns>
         </member>
         <member name="T:Neon.Diagnostics.NamespaceDoc">
@@ -7476,12 +7834,6 @@
             context for logged events.  For example, the Neon.Cadence client uses this 
              to record the ID of the workflow recording events.
             </param>
-            <remarks>
-            <para>
-            The instances returned will log nothing if <paramref name="logManager"/>
-            is passed as <c>null</c>.
-            </para>
-            </remarks>
         </member>
         <member name="M:Neon.Diagnostics.NullLogger.IsLogLevelEnabled(Neon.Diagnostics.LogLevel)">
             <inheritdoc/>
@@ -7629,22 +7981,27 @@
         <member name="P:Neon.Diagnostics.TestLogger.IsLogWarnEnabled">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TestLogger.#ctor(Neon.Diagnostics.ILogManager,System.String,System.IO.TextWriter,System.String,System.Func{System.Boolean})">
+        <member name="M:Neon.Diagnostics.TestLogger.#ctor(Neon.Diagnostics.ILogManager,System.String,System.IO.TextWriter,System.String,System.Func{Neon.Diagnostics.LogEvent,System.Boolean},System.Func{System.Boolean})">
             <summary>
             Constructor.
             </summary>
             <param name="logManager">The parent log manager or <c>null</c>.</param>
             <param name="module">Optionally identifies the event source module or <c>null</c>.</param>
-            <param name="writer">Optionally specifies the output writer.  This defaults to <see cref="P:System.Console.Error"/>.</param>
+            <param name="writer">Optionally specifies the output writer.  This is ignored for the <see cref="T:Neon.Diagnostics.TestLogger"/>.</param>
             <param name="contextId">
             Optionally specifies additional information that can be used to identify
             context for logged events.  For example, the Neon.Cadence client uses this 
              to record the ID of the workflow recording events.
             </param>
+            <param name="logFilter">
+            Optionally specifies a filter predicate to be used for filtering log entries.  This examines
+            the <see cref="T:Neon.Diagnostics.LogEvent"/> and returns <c>true</c> if the event should be logged or <c>false</c>
+            when it is to be ignored.  All events will be logged when this is <c>null</c>.
+            </param>
             <param name="isLogEnabledFunc">
             Optionally specifies a function that will be called at runtime to
-            determine whether to actually log an event.  This defaults to <c>null</c>
-            which will always log events.
+            determine whether to event logging is actually enabled.  This defaults
+            to <c>null</c> which will always log events.
             </param>
             <remarks>
             <para>
@@ -7761,7 +8118,7 @@
             <summary>
             A general purpose implementation of <see cref="T:Neon.Diagnostics.INeonLogger"/> and <see cref="T:Microsoft.Extensions.Logging.ILogger"/> that
             logs to STDERR by default, which is typical for container and Kubernetes applications.  The
-            output can also be directed to a <see cref="T:System.IO.TextWriter"/>.
+            output can also be directed to a custom <see cref="T:System.IO.TextWriter"/>.
             </summary>
         </member>
         <member name="P:Neon.Diagnostics.TextLogger.ContextId">
@@ -7791,7 +8148,7 @@
         <member name="P:Neon.Diagnostics.TextLogger.IsLogWarnEnabled">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.TextLogger.#ctor(Neon.Diagnostics.ILogManager,System.String,System.IO.TextWriter,System.String,System.Func{System.Boolean})">
+        <member name="M:Neon.Diagnostics.TextLogger.#ctor(Neon.Diagnostics.ILogManager,System.String,System.IO.TextWriter,System.String,System.Func{Neon.Diagnostics.LogEvent,System.Boolean},System.Func{System.Boolean})">
             <summary>
             Constructor.
             </summary>
@@ -7803,10 +8160,15 @@
             for logged events.  For example, the <c>Neon.Cadence</c> and <c>Neon.Temporal</c>
             clients use this to record the ID of the workflow recording events.
             </param>
+            <param name="logFilter">
+            Optionally specifies a filter predicate to be used for filtering log entries.  This examines
+            the <see cref="T:Neon.Diagnostics.LogEvent"/> and returns <c>true</c> if the event should be logged or <c>false</c>
+            when it is to be ignored.  All events will be logged when this is <c>null</c>.
+            </param>
             <param name="isLogEnabledFunc">
             Optionally specifies a function that will be called at runtime to
-            determine whether to actually log an event.  This defaults to <c>null</c>
-            which will always log events.
+            determine whether to event logging is actually enabled.  This defaults
+            to <c>null</c> which will always log events.
             </param>
             <remarks>
             <para>
@@ -7833,12 +8195,13 @@
             <param name="message">The message.</param>
             <returns>The normalized message.</returns>
         </member>
-        <member name="M:Neon.Diagnostics.TextLogger.Log(Neon.Diagnostics.LogLevel,System.String,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.Log(Neon.Diagnostics.LogLevel,System.String,System.Exception,System.String)">
             <summary>
             Logs an event.
             </summary>
             <param name="logLevel">The event level.</param>
             <param name="message">The event message.</param>
+            <param name="e">Optionally passed as a related exception.</param>
             <param name="activityId">The optional activity ID.</param>
         </member>
         <member name="M:Neon.Diagnostics.TextLogger.LogDebug(System.String,System.String)">
@@ -9135,7 +9498,7 @@
             <param name="value">The option value.</param>
             <remarks>
             <note>
-            The value set will be lower case <b>true</b> or <b>false</b>.
+            The value set will be lowercase <b>true</b> or <b>false</b>.
             </note>
             </remarks>
         </member>
@@ -11244,7 +11607,7 @@
         </member>
         <member name="M:Neon.Net.NetHelper.AddressToUint(System.Net.IPAddress)">
             <summary>
-            Converts an IPv4 address into a32-bit unsigned integer equivalent.
+            Converts an IPv4 address into a 32-bit unsigned integer equivalent.
             </summary>
             <param name="address">The input IPv4 address.</param>
             <returns>The 32-bit unsigned integer equivalent.</returns>
@@ -11581,6 +11944,13 @@
         <member name="P:Neon.Net.NetworkCidr.AddressCount">
             <summary>
             Returns the number of IP addresses within the subnet.
+            </summary>
+        </member>
+        <member name="P:Neon.Net.NetworkCidr.UsableAddressCount">
+            <summary>
+            Returns the number of usable IP addresses within the subnet.  This returns
+            <c>AddressCount - 1</c> to exclude the first address (.0) in the subnet as
+            well as the last address which is reserved for broadcasting.
             </summary>
         </member>
         <member name="P:Neon.Net.NetworkCidr.FirstAddress">
@@ -11955,15 +12325,10 @@
             Default port for the Grafana dashboard.
             </summary>
         </member>
-        <member name="F:Neon.Net.NetworkPorts.NeonPrometheusScrape">
+        <member name="F:Neon.Net.NetworkPorts.PrometheusMetrics">
             <summary>
             The standard Prometheus scraping port exposed by Neon related services,
             including custom user services built on <b>Neon.Service</b>.
-            </summary>
-        </member>
-        <member name="F:Neon.Net.NetworkPorts.CortexDashboard">
-            <summary>
-            Default port for the Cortex dashboard.
             </summary>
         </member>
         <member name="F:Neon.Net.NetworkPorts.PrometheusDashboard">
@@ -12188,6 +12553,19 @@
             <param name="maxRetryInterval">Optionally specifies the maximum retry interval (defaults to essentially unlimited: 24 hours).</param>
             <param name="timeout">Optionally specifies the maximum time the operation will be retried (defaults to unconstrained)</param>
             <param name="sourceModule">Optionally enables transient error logging by identifying the source module (defaults to <c>null</c>).</param>
+            <remarks>
+            <para>
+            The <paramref name="maxAttempts"/> parameter defaults to <b>-1</b> indicating that the
+            operation should be attempted up to <b>5</b> times, unless a <see cref="T:System.Threading.Timeout"/> is
+            specified.  In this case, <paramref name="maxAttempts"/> will be ignored and the timeout
+            will be honored.
+            </para>
+            <para>
+            When <paramref name="maxAttempts"/> is greater than or equal to zero and <see cref="T:System.Threading.Timeout"/> 
+            is passed, then both <paramref name="maxAttempts"/> and <see cref="T:System.Threading.Timeout"/> will be honored,
+            with retries stopping when either are exceeded.
+            </para>
+            </remarks>
         </member>
         <member name="M:Neon.Retry.ExponentialRetryPolicy.#ctor(System.Type,System.Int32,System.Nullable{System.TimeSpan},System.Nullable{System.TimeSpan},System.Nullable{System.TimeSpan},System.String)">
             <summary>
@@ -12199,6 +12577,19 @@
             <param name="maxRetryInterval">Optionally specifies the maximum retry interval (defaults to essentially unlimited: 24 hours).</param>
             <param name="timeout">Optionally specifies the maximum time the operation will be retried (defaults to unconstrained)</param>
             <param name="sourceModule">Optionally enables transient error logging by identifying the source module (defaults to <c>null</c>).</param>
+            <remarks>
+            <para>
+            The <paramref name="maxAttempts"/> parameter defaults to <b>-1</b> indicating that the
+            operation should be attempted up to <b>5</b> times, unless a <see cref="T:System.Threading.Timeout"/> is
+            specified.  In this case, <paramref name="maxAttempts"/> will be ignored and the timeout
+            will be honored.
+            </para>
+            <para>
+            When <paramref name="maxAttempts"/> is greater than or equal to zero and <see cref="T:System.Threading.Timeout"/> 
+            is passed, then both <paramref name="maxAttempts"/> and <see cref="T:System.Threading.Timeout"/> will be honored,
+            with retries stopping when either are exceeded.
+            </para>
+            </remarks>
         </member>
         <member name="M:Neon.Retry.ExponentialRetryPolicy.#ctor(System.Type[],System.Int32,System.Nullable{System.TimeSpan},System.Nullable{System.TimeSpan},System.Nullable{System.TimeSpan},System.String)">
             <summary>
@@ -12210,6 +12601,19 @@
             <param name="maxRetryInterval">Optionally specifies the maximum retry interval (defaults to essentially unlimited: 24 hours).</param>
             <param name="timeout">Optionally specifies the maximum time the operation will be retried (defaults to unconstrained)</param>
             <param name="sourceModule">Optionally enables transient error logging by identifying the source module (defaults to <c>null</c>).</param>
+            <remarks>
+            <para>
+            The <paramref name="maxAttempts"/> parameter defaults to <b>-1</b> indicating that the
+            operation should be attempted up to <b>5</b> times, unless a <see cref="T:System.Threading.Timeout"/> is
+            specified.  In this case, <paramref name="maxAttempts"/> will be ignored and the timeout
+            will be honored.
+            </para>
+            <para>
+            When <paramref name="maxAttempts"/> is greater than or equal to zero and <see cref="T:System.Threading.Timeout"/> 
+            is passed, then both <paramref name="maxAttempts"/> and <see cref="T:System.Threading.Timeout"/> will be honored,
+            with retries stopping when either are exceeded.
+            </para>
+            </remarks>
         </member>
         <member name="P:Neon.Retry.ExponentialRetryPolicy.MaxAttempts">
             <summary>
@@ -12303,6 +12707,14 @@
             <param name="action">The synchronous action to be performed.</param>
             <returns>The action result.</returns>
         </member>
+        <member name="E:Neon.Retry.IRetryPolicy.OnTransient">
+            <summary>
+            Used to intercept and handle logging for transient exceptions detected by
+            a retry policy.  Handlers can set <see cref="P:Neon.Retry.RetryTransientArgs.Handled"/>
+            in the argument passed to prevent subsequent handlers from being invoked
+            and also prevent the transient exception from being logged.
+            </summary>
+        </member>
         <member name="T:Neon.Retry.LinearRetryPolicy">
             <summary>
             Implements a simple <see cref="T:Neon.Retry.IRetryPolicy"/> that retries an operation 
@@ -12340,6 +12752,19 @@
             <param name="retryInterval">Optionally specifies time interval between retry attempts (defaults to <b>1 second</b>).</param>
             <param name="timeout">Optionally specifies the maximum time the operation will be retried (defaults to unconstrained)</param>
             <param name="sourceModule">Optionally enables transient error logging by identifying the source module (defaults to <c>null</c>).</param>
+            <remarks>
+            <para>
+            The <paramref name="maxAttempts"/> parameter defaults to <b>-1</b> indicating that the
+            operation should be attempted up to <b>5</b> times, unless a <see cref="T:System.Threading.Timeout"/> is
+            specified.  In this case, <paramref name="maxAttempts"/> will be ignored and the timeout
+            will be honored.
+            </para>
+            <para>
+            When <paramref name="maxAttempts"/> is greater than or equal to zero and <see cref="T:System.Threading.Timeout"/> 
+            is passed, then both <paramref name="maxAttempts"/> and <see cref="T:System.Threading.Timeout"/> will be honored,
+            with retries stopping when either are exceeded.
+            </para>
+            </remarks>
         </member>
         <member name="M:Neon.Retry.LinearRetryPolicy.#ctor(System.Type,System.Int32,System.Nullable{System.TimeSpan},System.Nullable{System.TimeSpan},System.String)">
             <summary>
@@ -12350,6 +12775,19 @@
             <param name="retryInterval">Optionally specifies the time interval between retry attempts (defaults to <b>1 second</b>).</param>
             <param name="sourceModule">Optionally enables transient error logging by identifying the source module (defaults to <c>null</c>).</param>
             <param name="timeout">Optionally specifies the maximum time the operation will be retried (defaults to unconstrained)</param>
+            <remarks>
+            <para>
+            The <paramref name="maxAttempts"/> parameter defaults to <b>-1</b> indicating that the
+            operation should be attempted up to <b>5</b> times, unless a <see cref="T:System.Threading.Timeout"/> is
+            specified.  In this case, <paramref name="maxAttempts"/> will be ignored and the timeout
+            will be honored.
+            </para>
+            <para>
+            When <paramref name="maxAttempts"/> is greater than or equal to zero and <see cref="T:System.Threading.Timeout"/> 
+            is passed, then both <paramref name="maxAttempts"/> and <see cref="T:System.Threading.Timeout"/> will be honored,
+            with retries stopping when either are exceeded.
+            </para>
+            </remarks>
         </member>
         <member name="M:Neon.Retry.LinearRetryPolicy.#ctor(System.Type[],System.Int32,System.Nullable{System.TimeSpan},System.Nullable{System.TimeSpan},System.String)">
             <summary>
@@ -12360,6 +12798,19 @@
             <param name="retryInterval">Optionally specifies the time interval between retry attempts (defaults to <b>1 second</b>).</param>
             <param name="timeout">Optionally specifies the maximum time the operation will be retried (defaults to unconstrained)</param>
             <param name="sourceModule">Optionally enables transient error logging by identifying the source module (defaults to <c>null</c>).</param>
+            <remarks>
+            <para>
+            The <paramref name="maxAttempts"/> parameter defaults to <b>-1</b> indicating that the
+            operation should be attempted up to <b>5</b> times, unless a <see cref="T:System.Threading.Timeout"/> is
+            specified.  In this case, <paramref name="maxAttempts"/> will be ignored and the timeout
+            will be honored.
+            </para>
+            <para>
+            When <paramref name="maxAttempts"/> is greater than or equal to zero and <see cref="T:System.Threading.Timeout"/> 
+            is passed, then both <paramref name="maxAttempts"/> and <see cref="T:System.Threading.Timeout"/> will be honored,
+            with retries stopping when either are exceeded.
+            </para>
+            </remarks>
         </member>
         <member name="P:Neon.Retry.LinearRetryPolicy.MaxAttempts">
             <summary>
@@ -12409,6 +12860,9 @@
         <member name="P:Neon.Retry.NoRetryPolicy.Timeout">
             <inheritdoc/>
         </member>
+        <member name="E:Neon.Retry.NoRetryPolicy.OnTransient">
+            <inheritdoc/>
+        </member>
         <member name="M:Neon.Retry.NoRetryPolicy.Clone(System.Func{System.Exception,System.Boolean})">
             <inheritdoc/>
         </member>
@@ -12427,6 +12881,11 @@
         <member name="T:Neon.Retry.RetryPolicy">
             <summary>
             Base class for used to help implement a <see cref="T:Neon.Retry.IRetryPolicy"/>.
+            </summary>
+        </member>
+        <member name="F:Neon.Retry.RetryPolicy.DefaultMaxAttempts">
+            <summary>
+            The default number of times an operation should be attempted for transient exceptions.
             </summary>
         </member>
         <member name="M:Neon.Retry.RetryPolicy.#ctor(System.String,System.Nullable{System.TimeSpan})">
@@ -12454,12 +12913,16 @@
         <member name="M:Neon.Retry.RetryPolicy.Invoke``1(System.Func{``0})">
             <inheritdoc/>
         </member>
+        <member name="E:Neon.Retry.RetryPolicy.OnTransient">
+            <inheritdoc/>
+        </member>
         <member name="M:Neon.Retry.RetryPolicy.LogTransient(System.Exception)">
             <summary>
-            Logs a transient exception that will be retried if logging
-            is enabled.
+            Handles logging of transient exceptions by invoking any <see cref="E:Neon.Retry.RetryPolicy.OnTransient"/>
+            event handlers and then logging the transient exception when none of the handlers
+            indicated that they handled the event.
             </summary>
-            <param name="e">The exception.</param>
+            <param name="e">The transient exception.</param>
         </member>
         <member name="M:Neon.Retry.RetryPolicy.AdjustDelay(System.TimeSpan)">
             <summary>
@@ -12491,6 +12954,9 @@
         <member name="P:Neon.Retry.RetryPolicyBase.Timeout">
             <inheritdoc/>
         </member>
+        <member name="E:Neon.Retry.RetryPolicyBase.OnTransient">
+            <inheritdoc/>
+        </member>
         <member name="M:Neon.Retry.RetryPolicyBase.Clone(System.Func{System.Exception,System.Boolean})">
             <inheritdoc/>
         </member>
@@ -12513,10 +12979,11 @@
         </member>
         <member name="M:Neon.Retry.RetryPolicyBase.LogTransient(System.Exception)">
             <summary>
-            Logs a transient exception that will be retried if logging
-            is enabled.
+            Handles logging of transient exceptions by invoking any <see cref="E:Neon.Retry.RetryPolicyBase.OnTransient"/>
+            event handlers and then logging the transient exception when none of the handlers
+            indicated that they handled the event.
             </summary>
-            <param name="e">The exception.</param>
+            <param name="e">The transient exception.</param>
         </member>
         <member name="M:Neon.Retry.RetryPolicyBase.SysDeadline">
             <summary>
@@ -12538,6 +13005,31 @@
             calling retry policy should immediately stop retrying.
             </note>
             </remarks>
+        </member>
+        <member name="T:Neon.Retry.RetryTransientArgs">
+            <summary>
+            Arguments passed to <see cref="E:Neon.Retry.IRetryPolicy.OnTransient"/> handlers so these can
+            react to transient exceptions and optionally prevent further handlers from being
+            invoked and also prevent the transient exception from being logged.
+            </summary>
+        </member>
+        <member name="M:Neon.Retry.RetryTransientArgs.#ctor(System.Exception)">
+            <summary>
+            Internal constructor.
+            </summary>
+            <param name="e">Specifies the transient exception.</param>
+        </member>
+        <member name="P:Neon.Retry.RetryTransientArgs.Exception">
+            <summary>
+            Returns the transient exception detected by the retry policy.
+            </summary>
+        </member>
+        <member name="P:Neon.Retry.RetryTransientArgs.Handled">
+            <summary>
+            Handlers may set this to <c>true</c> to indicate that no subsequent 
+            handlers should be called and also that the default transient logging
+            should not occur.
+            </summary>
         </member>
         <member name="T:Neon.Retry.TransientDetector">
             <summary>
@@ -13205,18 +13697,6 @@
             Implements an <c>async</c>/<c>await</c> friendly equivalent of <see cref="T:System.Threading.Mutex"/>.
             </summary>
             <remarks>
-            <note>
-            <para>
-            <b>IMPORTANT:</b> This class does not allow a single task to acquire the lock more than once.  
-            This differs from how the regular <see cref="T:System.Threading.Mutex"/> classes work which do allow a single 
-            thread to acquire the mutex more than once.
-            </para>
-            <para>
-            This means that you cannot expect to acquire a mutex in a task and then call into a
-            method that will also attempt to acquire the same mutex.  Doing this will result in 
-            a deadlock.
-            </para>
-            </note>
             <para>
             This class can be used to grant a task exclusive access to a resource.  This class is
             pretty easy to use.  Simply instantiate an instance and then call <see cref="M:Neon.Tasks.AsyncMutex.AcquireAsync"/>
@@ -13251,6 +13731,31 @@
             <para>
             <see cref="T:Neon.Tasks.AsyncMutex"/>'s <see cref="M:Neon.Tasks.AsyncMutex.Dispose"/> method ensures that any tasks
             waiting for a lock will be unblocked with an <see cref="T:System.ObjectDisposedException"/>.
+            </para>
+            <para><b>REENTRANCY NOT SUPPORTED</b></para>
+            <para>
+            <b>IMPORTANT:</b> This class does not allow a single task to acquire the lock more than once.  
+            This differs from how the regular <see cref="T:System.Threading.Mutex"/> classes work which do allow a single 
+            thread to acquire the mutex more than once.
+            </para>
+            <para>
+            This means that you cannot expect to acquire a mutex in a task and then call into a
+            method that will also attempt to acquire the same mutex.  Doing this will result in 
+            a deadlock.
+            </para>
+            <code language="cs">
+            var mutex = new AsyncMutex();
+            
+            using (await mutex.Acquire())
+            {
+                using (await mutex.Acquire())   // $lt;--- This will block forever
+                {
+                    // Protected code
+                }
+            }
+            </code>
+            <para>
+            You can use <see cref="T:Neon.Tasks.AsyncReentrantMutex"/> instead.
             </para>
             </remarks>
             <threadsafety instance="true"/>
@@ -13298,7 +13803,7 @@
             Acquires exclusive access to the mutex.
             </summary>
             <returns>The <see cref="T:System.IDisposable"/> instance to be disposed to release the lock.</returns>
-            <exception cref="T:System.ObjectDisposedException">Thrown if the lock is disposed before or after this method is called.</exception>
+            <exception cref="T:System.ObjectDisposedException">Thrown if the mutex is disposed before or after this method is called.</exception>
         </member>
         <member name="T:Neon.Tasks.AsyncPeriodicTask">
             <summary>
@@ -13533,6 +14038,205 @@
             Called by a <see cref="T:Neon.Tasks.AsyncReaderWriterLock.Lock"/> to release a write lock.
             </summary>
         </member>
+        <member name="T:Neon.Tasks.AsyncReentrantMutex">
+            <summary>
+            Extends <see cref="T:Neon.Tasks.AsyncMutex"/> to support reentrancy.
+            </summary>
+            <remarks>
+            <para>
+            Unlike the <see cref="T:Neon.Tasks.AsyncMutex"/> class, this class supports reentrency, meaning
+            that once an asynchronous <see cref="T:System.Threading.Tasks.Task"/> flow has acquired the mutex, any additional
+            acquistions by nested operations will also be accepted.
+            </para>
+            <code language="cs">
+            var mutex = new AsyncReentrantMutex();
+            
+            await mutex.AcquireAsync(
+                async () =>
+                {
+                    // Protected code
+                    
+                    await mutex.ExecuteActionAsync(   // &lt;--- This doesn't block
+                        async () =>
+                        {
+                            // More protected code
+                        });
+                });
+            </code>
+            <para>
+            The <see cref="M:Neon.Tasks.AsyncReentrantMutex.ExecuteFuncAsync``1(System.Func{System.Threading.Tasks.Task{``0}})"/> can be used to execute an async
+            function that returns a result instead.
+            </para>
+            <para>
+            <see cref="T:Neon.Tasks.AsyncReentrantMutex"/> is disposable.  Calling dispose will cause
+            <see cref="T:System.ObjectDisposedException"/> to be thrown on any tasks waiting
+            to acquire the mutex.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Neon.Tasks.AsyncReentrantMutex.#ctor">
+            <summary>
+            Constructor.
+            </summary>
+        </member>
+        <member name="M:Neon.Tasks.AsyncReentrantMutex.Finalize">
+            <summary>
+            Finalizer.
+            </summary>
+        </member>
+        <member name="M:Neon.Tasks.AsyncReentrantMutex.Dispose">
+            <summary>
+            Releases any important resources associated with the instance.
+            </summary>
+            <remarks>
+            <note>
+            This method will cause a <see cref="T:System.ObjectDisposedException"/> to be thrown on
+            any task waiting to acquire this mutex.
+            </note>
+            </remarks>
+        </member>
+        <member name="M:Neon.Tasks.AsyncReentrantMutex.Dispose(System.Boolean)">
+            <summary>
+            Releases any important resources associated with the instance.
+            </summary>
+            <param name="disposing">Pass <c>true</c> if the instance is being disposed as opposed to being finalized.</param>
+        </member>
+        <member name="M:Neon.Tasks.AsyncReentrantMutex.ExecuteActionAsync(System.Func{System.Threading.Tasks.Task})">
+            <summary>
+            Acquires the mutex and then invokes the asynchronous action passed.  This method
+            returns after the action completes.
+            </summary>
+            <param name="action">The asynchronous action.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="M:Neon.Tasks.AsyncReentrantMutex.ExecuteFuncAsync``1(System.Func{System.Threading.Tasks.Task{``0}})">
+            <summary>
+            Acquires the mutex and then invokes the asynchronous function passed, returning
+            the function's result.
+            </summary>
+            <typeparam name="TResult">Specifies the result returned by the async function.</typeparam>
+            <param name="function">The asynchronous function.</param>
+            <returns>The function result.</returns>
+        </member>
+        <member name="T:Neon.Tasks.AsyncTimer">
+            <summary>
+            Implements a timer that runs on a background <see cref="T:System.Threading.Tasks.Task"/>.
+            </summary>
+            <remarks>
+            <para>
+            This class is pretty easy to use.  Simply use the <see cref="M:Neon.Tasks.AsyncTimer.#ctor(System.Func{System.Threading.Tasks.Task})"/>
+            constructor to create an instance, passing the async callback to be called when the 
+            timer fires and then call <see cref="M:Neon.Tasks.AsyncTimer.Start(System.TimeSpan,System.Boolean,System.Func{System.Threading.Tasks.Task})"/> to start the timer, passing
+            the timer interval.
+            </para>
+            <para>
+            <see cref="M:Neon.Tasks.AsyncTimer.Start(System.TimeSpan,System.Boolean,System.Func{System.Threading.Tasks.Task})"/> starts a background task that fires the callback at the interval
+            specified.  You can call <see cref="M:Neon.Tasks.AsyncTimer.Start(System.TimeSpan,System.Boolean,System.Func{System.Threading.Tasks.Task})"/> again to restart the timer with a different
+            interval.  The <see cref="P:Neon.Tasks.AsyncTimer.IsRunning"/> property can be used to determine whether a 
+            timer is running or not.
+            </para>
+            <para>
+            Call <see cref="M:Neon.Tasks.AsyncTimer.Stop"/> to stop a timer.  <see cref="M:Neon.Tasks.AsyncTimer.Start(System.TimeSpan,System.Boolean,System.Func{System.Threading.Tasks.Task})"/> may be called again to
+            restart the timer.
+            </para>
+            <note>
+            This class implements <see cref="T:System.IDisposable"/> so this should be called for every 
+            instance created or <see cref="M:Neon.Tasks.AsyncTimer.Stop"/> should be called explicitly.
+            </note>
+            <note>
+            This class handles any exceptions thrown by the callback by logging them to the
+            default <see cref="T:Neon.Diagnostics.LogManager"/> and then continuing on with firing ticks.  
+            You'll need to add a try/catch to your callback to do your own exception handling.
+            </note>
+            </remarks>
+        </member>
+        <member name="M:Neon.Tasks.AsyncTimer.#ctor(System.Func{System.Threading.Tasks.Task})">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="callback">Optionally specifies the callback.</param>
+        </member>
+        <member name="M:Neon.Tasks.AsyncTimer.Finalize">
+            <summary>
+            Finalizer.
+            </summary>
+        </member>
+        <member name="M:Neon.Tasks.AsyncTimer.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Tasks.AsyncTimer.Dispose(System.Boolean)">
+            <summary>
+            Releases any important resources associated with the instance.
+            </summary>
+            <param name="disposing">Pass <c>true</c> if the instance is being disposed as opposed to being finalized.</param>
+        </member>
+        <member name="P:Neon.Tasks.AsyncTimer.IsRunning">
+            <summary>
+            <para>
+            Indicates whether the timer is currently running.
+            </para>
+            <note>
+            This returns <see cref="F:System.TimeSpan.Zero"/> until <see cref="M:Neon.Tasks.AsyncTimer.Start(System.TimeSpan,System.Boolean,System.Func{System.Threading.Tasks.Task})"/>
+            is called for the first time.
+            </note>
+            </summary>
+        </member>
+        <member name="P:Neon.Tasks.AsyncTimer.Interval">
+            <summary>
+            Returns the timer interval.
+            </summary>
+        </member>
+        <member name="M:Neon.Tasks.AsyncTimer.CheckDisposed">
+            <summary>
+            Ensures that the instance is not disposed.
+            </summary>
+            <exception cref="T:System.ObjectDisposedException">Thrown then the instance is disposed.</exception>
+        </member>
+        <member name="M:Neon.Tasks.AsyncTimer.Start(System.TimeSpan,System.Boolean,System.Func{System.Threading.Tasks.Task})">
+            <summary>
+            <para>
+            Starts or restarts the timer.
+            </para>
+            <para>
+            The <paramref name="interval"/> must be specified as a positive interval when
+            the timer is first started but this is optional thereafter, defaulting to
+            value from the original <see cref="M:Neon.Tasks.AsyncTimer.Start(System.TimeSpan,System.Boolean,System.Func{System.Threading.Tasks.Task})"/> call.
+            </para>
+            </summary>
+            <param name="interval">Optionally specifies the timer interval.</param>
+            <param name="delayFirstTick">
+            The callback is called immediately by default.  You can delay this until
+            the interval has passed by passing this as <c>true</c>.
+            </param>
+            <param name="callback">
+            <para>
+            Optionally specifies the timer callback.
+            </para>
+            <note>
+            This must be specified if no callback was passed to the constructor or a previous
+            call to <see cref="M:Neon.Tasks.AsyncTimer.Start(System.TimeSpan,System.Boolean,System.Func{System.Threading.Tasks.Task})"/>.
+            </note>
+            </param>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown if this is the first time <see cref="M:Neon.Tasks.AsyncTimer.Start(System.TimeSpan,System.Boolean,System.Func{System.Threading.Tasks.Task})"/> is called for the
+            instance and <paramref name="interval"/> is not passed or when <paramref name="callback"/> is
+            <c>null</c> and no callback was specified in constructor or a previous call to 
+            <see cref="M:Neon.Tasks.AsyncTimer.Start(System.TimeSpan,System.Boolean,System.Func{System.Threading.Tasks.Task})"/>.
+            </exception>
+            <exception cref="T:System.ObjectDisposedException">Thrown then the instance is disposed.</exception>
+        </member>
+        <member name="M:Neon.Tasks.AsyncTimer.Stop">
+            <summary>
+            Stops the timer.
+            </summary>
+            <exception cref="T:System.ObjectDisposedException">Thrown then the instance is disposed.</exception>
+        </member>
+        <member name="M:Neon.Tasks.AsyncTimer.TimerLoopAsync">
+            <summary>
+            Implements the async timer loop.
+            </summary>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
         <member name="T:Neon.Tasks.IAsyncFuture">
             <summary>
             Defines an interface that completes a future operation asynchronously.
@@ -13610,84 +14314,130 @@
             </summary>
         </member>
         <member name="T:Neon.Tasks.SyncContext">
-            <summary>
-            Used by public <c>async</c> library methods to reset the current
-            task <see cref="T:System.Threading.SynchronizationContext"/> so that continuations won't
-            be marshalled back to the current thread improving performance,
-            especially when called from a UI context.
-            </summary>
-            <remarks>
-            <para>
-            This class was adapted from this blog post:
-            </para>
-            <para>
-            <a href="https://blogs.msdn.microsoft.com/benwilli/2017/02/09/an-alternative-to-configureawaitfalse-everywhere/"/>
-            </para>
-            <para>
-            The only real changes are that I renamed the structure and converted
-            it into a singleton.
-            </para>
-            <para>
-            By default, awaited tasks will always be completed on the calling thread.  This is typically required 
-            for applications with user interfaces such as XAML or Windows Forms applications because the awaiter
-            will typically need the results on the single UI thread to be able to manuiplate the user interface.
-            This behavior is great for UI apps, but can introduce substantial overhead for server applications
-            or even portions of UI apps where an async operation performs a lot other async operations.
-            </para>
-            <para>
-            The problem is that typical servers applications run asynchronously on thread pool threads and don't
-            generally care about the thread they're running on.  The default await behavior requires that each
-            async operation be completed on the calling thread, but under load, it's very likely that the calling
-            thread will have been reused for another operation.  This means that when the async operation completes,
-            the task will need to wait for the calling thread to be returned to the thread pool before it can be
-            fetched and task continuation executed on it.  This can result in a substantial performance hit just
-            to manage this process as well what may be a substantial amount of time for the original thread to
-            make it back to the pool.
-            </para>
-            <para>
-            As the blog post describes, developers are encouraged to call <see cref="M:System.Threading.Tasks.Task.ConfigureAwait(System.Boolean)"/>,
-            passing <c>false</c> for every <c>async</c> call where the result doesn't need to be marshalled back
-            to the original synchronization context.  Non-UI class libraries typically don't care about this.
-            </para>
-            <para>
-            The problem is that to do this properly, MSFT recommends that you call <c>Task.ConfigureAwait(false)</c>
-            on <b>EVERY</b> <c>async</c> call you made in these situations.  This is pretty ugly and will be tough
-            to enforce on large projects over long periods of time because it's easy to miss one.
-            </para>
-            <para>
-            This <c>struct</c> implements a custom awaiter that saves the current synchronization context and then
-            clears it for the rest of the current method execution and then restores the original context when
-            when the method returns.  This means that every subsequent <c>await</c>  performed in the method will 
-            simply fetch a pool thread to continue execution, rather than to the original context thread.  To
-            accomplish this, you'll simply await <see cref="P:Neon.Tasks.SyncContext.ClearAsync"/> at or near the top of your method:
-            </para>
-            <code language="C#">
-            using Neon.Task;
+             <summary>
+             Used by public <c>async</c> library methods to reset the current task
+             <see cref="T:System.Threading.SynchronizationContext"/> so that continuations won't be 
+             marshalled back to the current thread which can cause serious problems
+             for UI apps.
+             </summary>
+             <remarks>
+             <para>
+             This class was adapted from this blog post:
+             </para>
+             <para>
+             <a href="https://blogs.msdn.microsoft.com/benwilli/2017/02/09/an-alternative-to-configureawaitfalse-everywhere/"/>
+             </para>
+             <para>
+             I renamed the structure, converted it into a singleton and added an optional <see cref="M:System.Threading.Tasks.Task.Yield"/>
+             call and a global mode to tune the operation for server vs. UI applications.
+             </para>
+             <para>
+             The <b>async/await</b> pattern is more complex than it seems because the code after the await may
+             run on the same thread that performed the await in some circumstances (e.g. for UI applications)
+             or on another thread in other environments.  Library code needs to adapt to both situations.
+             </para>
+             <para>
+             UI platforms like WinForms, WPF, UXP,... require that all user interface manipulation happen
+             on the UI thread and the synchronization context in these cases will be configured to have 
+             all awaits default to continuing on the calling (typically UI) thread to make it easy for 
+             developers to await a long running operation and then update the UI afterwards.
+             </para>
+             <para>
+             The problem for UI applications is that if the awaited operation internally awaits on additional
+             operations (which is quite common), then each of the internal operations will also continue on
+             the UI thread.  This can be big problem because there's only one UI thread and continuing on
+             the UI thread means that the operation needs to be queued to the application's dispatcher possibly
+             leading to serious performance and usability issues.
+             </para>
+             <para>
+             This is less of a problem for console and server apps where awaited operations generally continue
+             on any free threadpool thread, but <see cref="T:System.Threading.Tasks.Task"/> scheduling can be customized so this isn't
+             necessarily always the case.
+             </para>
+             <para>
+             As the blog post linked above describes, developers are encouraged to call <see cref="M:System.Threading.Tasks.Task.ConfigureAwait(System.Boolean)"/>,
+             passing <c>false</c> for every <c>async</c> call where the result doesn't need to be marshalled back
+             to the original synchronization context.  Non-UI class libraries typically don't care about this.
+             The problem is that to do this properly, MSFT recommends that you call <c>Task.ConfigureAwait(false)</c>
+             on <b>EVERY</b> <c>async</c> call you made in these situations.  This is pretty ugly and will be tough
+             to enforce on large projects over long periods of time because it's just too easy to miss one.
+             </para>
+             <para>
+             It's also likely that async library methods will be called serveral, perhaps hundreds of times by
+             applications and it's a shame to require application developers to call <see cref="M:System.Threading.Tasks.Task.ConfigureAwait(System.Boolean)"/>
+             everywhere rather than somehow having the library APIs handle this.
+             </para>
+             <para>
+             This <c>struct</c> implements a custom awaiter that saves the current synchronization context and then
+             clears it for the rest of the current method execution and then restores the original context when
+             when the method returns.  This means that every subsequent <c>await</c>  performed within the method will 
+             simply fetch a pool thread to continue execution, rather than to the original context thread.  To
+             accomplish this, you'll simply await <see cref="P:Neon.Tasks.SyncContext.Clear"/> at or near the top of your 
+             async methods:
+             </para>
+             <para>
+             The global <see cref="P:Neon.Tasks.SyncContext.Mode"/> property controls what the <see cref="P:Neon.Tasks.SyncContext.Clear"/> method actually does.
+             This defaults to <see cref="F:Neon.Tasks.SyncContextMode.ClearOnly"/> which turns <see cref="P:Neon.Tasks.SyncContext.Clear"/> into a NOP
+             which is probably suitable for most non-UI applications that reduce overhead and increase performance.
+             </para>
+             <para>
+             UI applications should probably set the <see cref="F:Neon.Tasks.SyncContextMode.ClearAndYield"/> which prevents
+             nested method continuations from running on the UI thread and also ensures that any initial synchronous
+             code won't run on the UI thread either.
+             </para>
+             <code language="C#">
+             using Neon.Task;
+             
+             public async Task&lt;string&gt; HelloAsync()
+             {
+                 // On UI thread
+                 
+                 await SyncContext.Clear;
+                 
+                 // On background thread
+                 
+                 SlowSyncOperation();
+                 
+                 // On background thread
+                 
+                 await DoSomthingAsync();
+                 
+                 // On background thread
+                 
+                 await DoSomethingElseAsync();
+                 
+                 // On background thread
+                 
+                 return "Hello World!";
+             }
             
-            public async Task&lt;string&gt; HelloAsync()
-            {
-                await SyncContext.ClearAsync;
-                
-                await DoSomthingAsync();
-                await DoSomethingElseAsync();
-                
-                return "Hello World!";
-            }
-            </code>
-            <note>
-            <see cref="P:Neon.Tasks.SyncContext.ClearAsync"/> is not a method so you don't
-            need to pass any parameters.
-            </note>
-            <para>
-            This call clears the current synchronization context such that the
-            subsequent <c>async</c> calls will each marshal back to threads
-            obtained from the thread pool and due to compiler async magic,
-            the original synchronization context will be restored before the
-            <c>HelloAsync()</c> method returns.
-            </para>
-            </remarks>
+             public async Task Main(string[] args)
+             {
+                 // Set a mode suitable for UI apps.
+                 
+                 SyncContext.Mode = SyncContextMode.ClearAndYield;
+                 
+                 // Assume that we're running on a UI thread here.
+                 
+                 var greeting = await HelloAsync();
+                 
+                 // On UI thread
+             }
+             </code>
+             <para>
+             This example sets the <see cref="F:Neon.Tasks.SyncContextMode.ClearAndYield"/> mode 
+             and then awaits <c>HelloAsync()</c> which clears the sync context and
+             then performs a long running synchronous operation and then two async
+             operations.  Note how all of the continuations in <c>HelloAsync()</c>
+             after the clear are running on a background thread but the continuation
+             after <c>await HelloAsync()</c> is back to running on the UI thread.
+             </para>
+             <para>
+             This is pretty close to being ideal behavior.
+             </para>
+             </remarks>
         </member>
-        <member name="P:Neon.Tasks.SyncContext.ClearAsync">
+        <member name="P:Neon.Tasks.SyncContext.Clear">
             <summary>
             <c>await</c> this singleton to clear the current synchronization
             context for the scope of the current method as a potential performance
@@ -13704,7 +14454,7 @@
             
             public async Task&lt;string&gt; HelloAsync()
             {
-                await SyncContext.ClearAsync;
+                await SyncContext.Clear;
                 
                 await DoSomthingAsync();
                 await DoSomethingElseAsync();
@@ -13713,41 +14463,45 @@
             }
             </code>
             <note>
-            <see cref="P:Neon.Tasks.SyncContext.ClearAsync"/> is not a method so you don't
-            need to pass any parameters.
+            <see cref="P:Neon.Tasks.SyncContext.Clear"/> is not a method.
             </note>
             <para>
-            This call clears the current synchronization context such that the
-            subsequent <c>async</c> calls will each marshal back to threads
+            Awaiting this property clears the current synchronization context such 
+            that the subsequent <c>async</c> calls will each marshal back to threads
             obtained from the thread pool and due to the compiler's async magic,
             the original synchronization context will be restored before the
             <c>HelloAsync()</c> method returns.
             </para>
+            <para>
+            The <see cref="P:Neon.Tasks.SyncContext.Mode"/> property controls what awaiting <see cref="P:Neon.Tasks.SyncContext.Clear"/>
+            actually does.  This defaults to <see cref="F:Neon.Tasks.SyncContextMode.ClearOnly"/>
+            which is probably suitable for most non-UI applications.  UI applications
+            will probably want to explicitly set <see cref="F:Neon.Tasks.SyncContextMode.ClearAndYield"/>
+            to help keep continations off the UI thread, which is often desirable.
+            </para>
             </remarks>
         </member>
-        <member name="P:Neon.Tasks.SyncContext.IsDisabled">
+        <member name="P:Neon.Tasks.SyncContext.Mode">
             <summary>
             <para>
-            Optionally disables context resetting globally.  This provides an
-            escape hatch for situations where an application needs to revert
-            back to the default synchronization context behavior.  This turns
-            <c>await SyncContext.ClearAsync</c> calls into a NOP.
+            Used to control what <see cref="P:Neon.Tasks.SyncContext.Clear"/> actually does.  This defaults to
+            <see cref="F:Neon.Tasks.SyncContextMode.ClearOnly"/> which is probably suitable for most
+            non-UI applications by reducing task overhead.  UI application will probably
+            want to set <see cref="F:Neon.Tasks.SyncContextMode.ClearAndYield"/> to keep work from
+            running on the UI thread.
             </para>
-            <note>
-            Most applications should never need to set this.
-            </note>
-            </summary>
-        </member>
-        <member name="M:Neon.Tasks.SyncContext.#cctor">
-            <summary>
-            Static constructor.
+            <para>
+            This defaults to <see cref="F:Neon.Tasks.SyncContextMode.ClearOnly"/> for server code,
+            because we're writing more server applications than UI applications these
+            days.
+            </para>
             </summary>
         </member>
         <member name="M:Neon.Tasks.SyncContext.#ctor(System.Int32)">
             <summary>
             Private constructor.
             </summary>
-            <param name="unused">Ignored.</param>
+            <param name="stub">Ignored.</param>
         </member>
         <member name="P:Neon.Tasks.SyncContext.IsCompleted">
             <summary>
@@ -13768,6 +14522,36 @@
         <member name="M:Neon.Tasks.SyncContext.GetResult">
             <summary>
             <b>INTERNAL USE ONLY:</b> Do not call this directly.
+            </summary>
+        </member>
+        <member name="T:Neon.Tasks.SyncContextMode">
+            <summary>
+            Enumerates the <see cref="T:Neon.Tasks.SyncContext"/> modes, configured by setting <see cref="P:Neon.Tasks.SyncContext.Mode"/>.
+            </summary>
+        </member>
+        <member name="F:Neon.Tasks.SyncContextMode.ClearOnly">
+            <summary>
+            <para>
+            Enables `await SyncContext.Clear;` such that the continuations within the
+            nested scope of the method will not happen on the original thread.
+            </para>
+            <para>
+            This mode is the default and is generally suitable for server and other
+            non-UI applications.
+            </para>
+            </summary>
+        </member>
+        <member name="F:Neon.Tasks.SyncContextMode.ClearAndYield">
+            <summary>
+            <para>
+            Enables `await SyncContext.Clear;` such that the continuations within the
+            nested scope of the method will not happen on the original thread and that
+            the awaitee can immediately release the current thread for other uses.
+            </para>
+            <para>
+            This mode is useful for UI applications because it ensures that any synchronous
+            operations won't be executed on the original thread.
+            </para>
             </summary>
         </member>
         <member name="T:Neon.Time.GatedTimer">
@@ -13828,7 +14612,7 @@
             </summary>
             <param name="state">The timer state.</param>
         </member>
-        <member name="T:Neon.Time.GoTimeSpan">
+        <member name="T:Neon.Time.GoDuration">
             <summary>
             Implements support for GO Language formatted durations.  This class is
             useful for integrating with GO applications.
@@ -13836,80 +14620,91 @@
             <remarks>
             <note>
             <para>
-            <see cref="T:Neon.Time.GoTimeSpan"/> measures time down 1 nanosecond resolution whereas
-            <see cref="P:Neon.Time.GoTimeSpan.TimeSpan"/>'s resolution is 100ns and both implementations use
+            <see cref="T:Neon.Time.GoDuration"/> measures time down 1 nanosecond resolution whereas
+            <see cref="P:Neon.Time.GoDuration.TimeSpan"/>'s resolution is 100ns and both implementations use
             a signed 64-bit integer as the underlying representation.  This means that
-            <see cref="T:Neon.Time.GoTimeSpan"/> can represent of maximum duration of about 290
-            years (positive and negative) where <see cref="P:Neon.Time.GoTimeSpan.TimeSpan"/> can handle 
+            <see cref="T:Neon.Time.GoDuration"/> can represent of maximum duration of about 290
+            years (positive and negative) where <see cref="P:Neon.Time.GoDuration.TimeSpan"/> can handle 
             about 29,000 years.
             </para>
             <para>
             This class will throw a <see cref="T:System.ArgumentOutOfRangeException"/> when converting
-            a <see cref="P:Neon.Time.GoTimeSpan.TimeSpan"/> that is beyound the capability of a <see cref="T:Neon.Time.GoTimeSpan"/>.
+            a <see cref="P:Neon.Time.GoDuration.TimeSpan"/> that is beyound the capability of a <see cref="T:Neon.Time.GoDuration"/>.
             </para>
             </note>
             </remarks>
         </member>
-        <member name="F:Neon.Time.GoTimeSpan.TicksPerMicrosecond">
+        <member name="F:Neon.Time.GoDuration.PartialRegEx">
+            <summary>
+            The partial regular expression that can be used to validate GOLANG duration strings.  This
+            does not include the start/end anchors and is suitable for situations where these are implied.
+            </summary>
+        </member>
+        <member name="F:Neon.Time.GoDuration.RegEx">
+            <summary>
+            The full regular expression (including start/end anchors) use to validate GOLANG duration strings.
+            </summary>
+        </member>
+        <member name="F:Neon.Time.GoDuration.TicksPerMicrosecond">
             <summary>
             The number of nanosecond ticks per micrososecond.
             </summary>
         </member>
-        <member name="F:Neon.Time.GoTimeSpan.TicksPerMillisecond">
+        <member name="F:Neon.Time.GoDuration.TicksPerMillisecond">
             <summary>
             The number of nanosecond ticks per millisecond.
             </summary>
         </member>
-        <member name="F:Neon.Time.GoTimeSpan.TicksPerSecond">
+        <member name="F:Neon.Time.GoDuration.TicksPerSecond">
             <summary>
             The number of nanosecond ticks per second;
             </summary>
         </member>
-        <member name="F:Neon.Time.GoTimeSpan.TicksPerMinute">
+        <member name="F:Neon.Time.GoDuration.TicksPerMinute">
             <summary>
             The number of nanosecond ticks per minute.
             </summary>
         </member>
-        <member name="F:Neon.Time.GoTimeSpan.TicksPerHour">
+        <member name="F:Neon.Time.GoDuration.TicksPerHour">
             <summary>
             The number of nanosecond ticks per minute.
             </summary>
         </member>
-        <member name="P:Neon.Time.GoTimeSpan.Zero">
+        <member name="P:Neon.Time.GoDuration.Zero">
             <summary>
-            Returns a zero <see cref="T:Neon.Time.GoTimeSpan"/> .
+            Returns a zero <see cref="T:Neon.Time.GoDuration"/> .
             </summary>
         </member>
-        <member name="P:Neon.Time.GoTimeSpan.MinValue">
+        <member name="P:Neon.Time.GoDuration.MinValue">
             <summary>
-            Returns the minimum possible <see cref="T:Neon.Time.GoTimeSpan"/>.
+            Returns the minimum possible <see cref="T:Neon.Time.GoDuration"/>.
             </summary>
         </member>
-        <member name="P:Neon.Time.GoTimeSpan.MaxValue">
+        <member name="P:Neon.Time.GoDuration.MaxValue">
             <summary>
-            Returns the maximum possible <see cref="T:Neon.Time.GoTimeSpan"/>.
+            Returns the maximum possible <see cref="T:Neon.Time.GoDuration"/>.
             </summary>
         </member>
-        <member name="F:Neon.Time.GoTimeSpan.MinValueString">
+        <member name="F:Neon.Time.GoDuration.MinValueString">
             <summary>
             The minimum value serialized to a string (computed by hand to avoid 64-bit wrap around issues.
             </summary>
         </member>
-        <member name="M:Neon.Time.GoTimeSpan.op_Implicit(Neon.Time.GoTimeSpan)~System.TimeSpan">
+        <member name="M:Neon.Time.GoDuration.op_Implicit(Neon.Time.GoDuration)~System.TimeSpan">
             <summary>
-            Implicitly converts a <see cref="T:Neon.Time.GoTimeSpan"/> into a <see cref="P:Neon.Time.GoTimeSpan.TimeSpan"/>.
+            Implicitly converts a <see cref="T:Neon.Time.GoDuration"/> into a <see cref="P:Neon.Time.GoDuration.TimeSpan"/>.
             </summary>
-            <param name="goTimeSpan">The input <see cref="T:Neon.Time.GoTimeSpan"/>.</param>
-            <returns>The equivalent <see cref="P:Neon.Time.GoTimeSpan.TimeSpan"/>.</returns>
+            <param name="goTimeSpan">The input <see cref="T:Neon.Time.GoDuration"/>.</param>
+            <returns>The equivalent <see cref="P:Neon.Time.GoDuration.TimeSpan"/>.</returns>
         </member>
-        <member name="M:Neon.Time.GoTimeSpan.op_Implicit(System.TimeSpan)~Neon.Time.GoTimeSpan">
+        <member name="M:Neon.Time.GoDuration.op_Implicit(System.TimeSpan)~Neon.Time.GoDuration">
             <summary>
-            Implicitly converts a <see cref="P:Neon.Time.GoTimeSpan.TimeSpan"/> into a <see cref="T:Neon.Time.GoTimeSpan"/>.
+            Implicitly converts a <see cref="P:Neon.Time.GoDuration.TimeSpan"/> into a <see cref="T:Neon.Time.GoDuration"/>.
             </summary>
-            <param name="timespan">The input <see cref="P:Neon.Time.GoTimeSpan.TimeSpan"/>.</param>
-            <returns>The equivalent <see cref="T:Neon.Time.GoTimeSpan"/>.</returns>
+            <param name="timespan">The input <see cref="P:Neon.Time.GoDuration.TimeSpan"/>.</param>
+            <returns>The equivalent <see cref="T:Neon.Time.GoDuration"/>.</returns>
         </member>
-        <member name="M:Neon.Time.GoTimeSpan.TryParse(System.String,Neon.Time.GoTimeSpan@)">
+        <member name="M:Neon.Time.GoDuration.TryParse(System.String,Neon.Time.GoDuration@)">
             <summary>
             Attempts to parse a GO formatted timespan.  
             </summary>
@@ -13928,165 +14723,186 @@
             </note>
             </remarks>
         </member>
-        <member name="M:Neon.Time.GoTimeSpan.Parse(System.String)">
+        <member name="M:Neon.Time.GoDuration.Parse(System.String)">
             <summary>
-            Parses a <see cref="T:Neon.Time.GoTimeSpan"/> from a string.
+            Parses a <see cref="T:Neon.Time.GoDuration"/> from a string.
             </summary>
             <param name="input">The input string.</param>
-            <returns>The parsed <see cref="T:Neon.Time.GoTimeSpan"/>.</returns>
+            <returns>The parsed <see cref="T:Neon.Time.GoDuration"/>.</returns>
             <exception cref="T:System.FormatException">Thrown if the input is not valid.</exception>
+            <remarks>
+            <para>
+            The input is a possibly signed sequence of decimal numbers, each with 
+            optional fraction and a unit suffix, such as "300ms", "-1.5h" or 
+            "2h45m". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". 
+            </para>
+            <note>
+            <c>null</c> or empty strings are parsed as <see cref="F:System.TimeSpan.Zero"/>.
+            </note>
+            <note>
+            GO timespans are limited to about 290 years (the maximum number of
+            nanoseconds that can be represented in a signed 64-bit integer).
+            </note>
+            </remarks>
         </member>
-        <member name="M:Neon.Time.GoTimeSpan.FromTimeSpan(System.TimeSpan)">
+        <member name="M:Neon.Time.GoDuration.FromTimeSpan(System.TimeSpan)">
             <summary>
-            Creates a <see cref="T:Neon.Time.GoTimeSpan"/> from a <see cref="P:Neon.Time.GoTimeSpan.TimeSpan"/>.
+            Creates a <see cref="T:Neon.Time.GoDuration"/> from a <see cref="P:Neon.Time.GoDuration.TimeSpan"/>.
             </summary>
             <param name="timespan">The input time span.</param>
-            <returns>The new <see cref="T:Neon.Time.GoTimeSpan"/>.</returns>
+            <returns>The new <see cref="T:Neon.Time.GoDuration"/>.</returns>
         </member>
-        <member name="M:Neon.Time.GoTimeSpan.FromNanoseconds(System.Int64)">
+        <member name="M:Neon.Time.GoDuration.FromNanoseconds(System.Int64)">
             <summary>
-            Returns a <see cref="T:Neon.Time.GoTimeSpan"/> from nanoseconds.
+            Returns a <see cref="T:Neon.Time.GoDuration"/> from nanoseconds.
             </summary>
             <param name="nanoseconds">The duration in nanoseconds.</param>
-            <returns>The new <see cref="T:Neon.Time.GoTimeSpan"/>.</returns>
+            <returns>The new <see cref="T:Neon.Time.GoDuration"/>.</returns>
         </member>
-        <member name="M:Neon.Time.GoTimeSpan.FromMicroseconds(System.Double)">
+        <member name="M:Neon.Time.GoDuration.FromMicroseconds(System.Double)">
             <summary>
-            Returns a <see cref="T:Neon.Time.GoTimeSpan"/> from microseconds.
+            Returns a <see cref="T:Neon.Time.GoDuration"/> from microseconds.
             </summary>
             <param name="milliseconds">The duration in microseconds.</param>
-            <returns>The new <see cref="T:Neon.Time.GoTimeSpan"/>.</returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="T:Neon.Time.GoTimeSpan"/>.</exception>
+            <returns>The new <see cref="T:Neon.Time.GoDuration"/>.</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="T:Neon.Time.GoDuration"/>.</exception>
         </member>
-        <member name="M:Neon.Time.GoTimeSpan.FromMilliseconds(System.Double)">
+        <member name="M:Neon.Time.GoDuration.FromMilliseconds(System.Double)">
             <summary>
-            Returns a <see cref="T:Neon.Time.GoTimeSpan"/> from milliseconds.
+            Returns a <see cref="T:Neon.Time.GoDuration"/> from milliseconds.
             </summary>
             <param name="milliseconds">The duration in milliseconds.</param>
-            <returns>The new <see cref="T:Neon.Time.GoTimeSpan"/>.</returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="T:Neon.Time.GoTimeSpan"/>.</exception>
+            <returns>The new <see cref="T:Neon.Time.GoDuration"/>.</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="T:Neon.Time.GoDuration"/>.</exception>
         </member>
-        <member name="M:Neon.Time.GoTimeSpan.FromSeconds(System.Double)">
+        <member name="M:Neon.Time.GoDuration.FromSeconds(System.Double)">
             <summary>
-            Returns a <see cref="T:Neon.Time.GoTimeSpan"/> from seconds.
+            Returns a <see cref="T:Neon.Time.GoDuration"/> from seconds.
             </summary>
             <param name="seconds">The duration in seconds.</param>
-            <returns>The new <see cref="T:Neon.Time.GoTimeSpan"/>.</returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="T:Neon.Time.GoTimeSpan"/>.</exception>
+            <returns>The new <see cref="T:Neon.Time.GoDuration"/>.</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="T:Neon.Time.GoDuration"/>.</exception>
         </member>
-        <member name="M:Neon.Time.GoTimeSpan.FromMinutes(System.Double)">
+        <member name="M:Neon.Time.GoDuration.FromMinutes(System.Double)">
             <summary>
-            Returns a <see cref="T:Neon.Time.GoTimeSpan"/> from minutes.
+            Returns a <see cref="T:Neon.Time.GoDuration"/> from minutes.
             </summary>
             <param name="minutes">The duration in minutes.</param>
-            <returns>The new <see cref="T:Neon.Time.GoTimeSpan"/>.</returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="T:Neon.Time.GoTimeSpan"/>.</exception>
+            <returns>The new <see cref="T:Neon.Time.GoDuration"/>.</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="T:Neon.Time.GoDuration"/>.</exception>
         </member>
-        <member name="M:Neon.Time.GoTimeSpan.FromHours(System.Double)">
+        <member name="M:Neon.Time.GoDuration.FromHours(System.Double)">
             <summary>
-            Returns a <see cref="T:Neon.Time.GoTimeSpan"/> from hours.
+            Returns a <see cref="T:Neon.Time.GoDuration"/> from hours.
             </summary>
             <param name="hours">The duration in hours.</param>
-            <returns>The new <see cref="T:Neon.Time.GoTimeSpan"/>.</returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="T:Neon.Time.GoTimeSpan"/>.</exception>
+            <returns>The new <see cref="T:Neon.Time.GoDuration"/>.</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="T:Neon.Time.GoDuration"/>.</exception>
         </member>
-        <member name="M:Neon.Time.GoTimeSpan.ToTicks(System.Decimal)">
+        <member name="M:Neon.Time.GoDuration.ToTicks(System.Decimal)">
             <summary>
             Converts a <c>double</c> nanosecond count to a <c>long</c>, ensuring that the
-            result can be represented as a <see cref="T:Neon.Time.GoTimeSpan"/>.
+            result can be represented as a <see cref="T:Neon.Time.GoDuration"/>.
             </summary>
             <param name="nanoseconds">The input <c>douuble</c>.</param>
             <returns>The output <c>long</c>.</returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="T:Neon.Time.GoTimeSpan"/>.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="T:Neon.Time.GoDuration"/>.</exception>
         </member>
-        <member name="M:Neon.Time.GoTimeSpan.#ctor(System.Int64)">
+        <member name="M:Neon.Time.GoDuration.#ctor(System.Int64)">
             <summary>
-            Constructs a <see cref="T:Neon.Time.GoTimeSpan"/> from nanoseconds.
+            Constructs a <see cref="T:Neon.Time.GoDuration"/> from nanoseconds.
             </summary>
             <param name="nanoseconds">The duration in nanoseconds.</param>
         </member>
-        <member name="M:Neon.Time.GoTimeSpan.#ctor(System.TimeSpan)">
+        <member name="M:Neon.Time.GoDuration.#ctor(System.TimeSpan)">
             <summary>
-            Constructs an instance from a <see cref="P:Neon.Time.GoTimeSpan.TimeSpan"/>.
+            Constructs an instance from a <see cref="P:Neon.Time.GoDuration.TimeSpan"/>.
             </summary>
             <param name="timespan">The time span.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="T:Neon.Time.GoTimeSpan"/>.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="T:Neon.Time.GoDuration"/>.</exception>
         </member>
-        <member name="P:Neon.Time.GoTimeSpan.Ticks">
+        <member name="P:Neon.Time.GoDuration.Ticks">
             <summary>
             The duration expressed as nanosecond ticks.
             </summary>
         </member>
-        <member name="P:Neon.Time.GoTimeSpan.TotalNanoseconds">
+        <member name="P:Neon.Time.GoDuration.TotalNanoseconds">
             <summary>
             Returns the duration as nanoseconds.
             </summary>
         </member>
-        <member name="P:Neon.Time.GoTimeSpan.TotalMicroseconds">
+        <member name="P:Neon.Time.GoDuration.TotalMicroseconds">
             <summary>
             Returns the total number of microseconds.
             </summary>
         </member>
-        <member name="P:Neon.Time.GoTimeSpan.TotalMilliseconds">
+        <member name="P:Neon.Time.GoDuration.TotalMilliseconds">
             <summary>
             Returns the total number of milliseconds.
             </summary>
         </member>
-        <member name="P:Neon.Time.GoTimeSpan.TotalSeconds">
+        <member name="P:Neon.Time.GoDuration.TotalSeconds">
             <summary>
             Returns the total number of seconds.
             </summary>
         </member>
-        <member name="P:Neon.Time.GoTimeSpan.TotalMinutes">
+        <member name="P:Neon.Time.GoDuration.TotalMinutes">
             <summary>
             Returns the total number of minutes.
             </summary>
         </member>
-        <member name="P:Neon.Time.GoTimeSpan.TotalHours">
+        <member name="P:Neon.Time.GoDuration.TotalHours">
             <summary>
             Returns the total number of hours.
             </summary>
         </member>
-        <member name="P:Neon.Time.GoTimeSpan.Nanoseconds">
+        <member name="P:Neon.Time.GoDuration.Nanoseconds">
             <summary>
             Returns the nanosecond component of the duration.
             </summary>
         </member>
-        <member name="P:Neon.Time.GoTimeSpan.Microseconds">
+        <member name="P:Neon.Time.GoDuration.Microseconds">
             <summary>
             Returns the microsecond component of the duration.
             </summary>
         </member>
-        <member name="P:Neon.Time.GoTimeSpan.Milliseconds">
+        <member name="P:Neon.Time.GoDuration.Milliseconds">
             <summary>
             Returns the millisecond component of the duration.
             </summary>
         </member>
-        <member name="P:Neon.Time.GoTimeSpan.Seconds">
+        <member name="P:Neon.Time.GoDuration.Seconds">
             <summary>
             Returns the second component of the duration.
             </summary>
         </member>
-        <member name="P:Neon.Time.GoTimeSpan.Minutes">
+        <member name="P:Neon.Time.GoDuration.Minutes">
             <summary>
             Returns the minutes component of the duration.
             </summary>
         </member>
-        <member name="P:Neon.Time.GoTimeSpan.Hours">
+        <member name="P:Neon.Time.GoDuration.Hours">
             <summary>
             Returns the hours component of the duration.
             </summary>
         </member>
-        <member name="P:Neon.Time.GoTimeSpan.TimeSpan">
+        <member name="P:Neon.Time.GoDuration.TimeSpan">
             <summary>
-            Returns the equivalent <see cref="P:Neon.Time.GoTimeSpan.TimeSpan"/>.
+            Returns the equivalent <see cref="P:Neon.Time.GoDuration.TimeSpan"/>.
             </summary>
         </member>
-        <member name="M:Neon.Time.GoTimeSpan.ToString">
+        <member name="M:Neon.Time.GoDuration.ToString">
             <summary>
             Renders the time span as a GO Duration compatible string.
             </summary>
             <returns>The GO duration.</returns>
+        </member>
+        <member name="M:Neon.Time.GoDuration.ToPretty">
+            <summary>
+            Renders the duration into a string including hour, minute, and seconds with
+            fractions as required, avoiding millisecond, microsecond, and nanosecond units.
+            </summary>
+            <returns>The pretty string.</returns>
         </member>
         <member name="T:Neon.Time.NamespaceDoc">
             <summary>
@@ -14818,6 +15634,61 @@
             </summary>
             <returns>The formatted string.</returns>
         </member>
+        <member name="T:Neon.Windows.MEMORYSTATUSEX">
+            <summary>
+            Holds information about memory utilization for a Windows computer.
+            </summary>
+        </member>
+        <member name="M:Neon.Windows.MEMORYSTATUSEX.#ctor">
+            <summary>
+            Default constructor.
+            </summary>
+        </member>
+        <member name="F:Neon.Windows.MEMORYSTATUSEX.dwLength">
+            <summary>
+            Size of the structure, in bytes. You must set this member before calling GlobalMemoryStatusEx.
+            </summary>
+        </member>
+        <member name="F:Neon.Windows.MEMORYSTATUSEX.dwMemoryLoad">
+            <summary>
+            Number between 0 and 100 that specifies the approximate percentage of physical memory that is in use (0 indicates no memory use and 100 indicates full memory use).
+            </summary>
+        </member>
+        <member name="F:Neon.Windows.MEMORYSTATUSEX.ullTotalPhys">
+            <summary>
+            Total size of physical memory, in bytes.
+            </summary>
+        </member>
+        <member name="F:Neon.Windows.MEMORYSTATUSEX.ullAvailPhys">
+            <summary>
+            Size of physical memory available, in bytes.
+            </summary>
+        </member>
+        <member name="F:Neon.Windows.MEMORYSTATUSEX.ullTotalPageFile">
+            <summary>
+            Size of the committed memory limit, in bytes. This is physical memory plus the size of the page file, minus a small overhead.
+            </summary>
+        </member>
+        <member name="F:Neon.Windows.MEMORYSTATUSEX.ullAvailPageFile">
+            <summary>
+            Size of available memory to commit, in bytes. The limit is ullTotalPageFile.
+            </summary>
+        </member>
+        <member name="F:Neon.Windows.MEMORYSTATUSEX.ullTotalVirtual">
+            <summary>
+            Total size of the user mode portion of the virtual address space of the calling process, in bytes.
+            </summary>
+        </member>
+        <member name="F:Neon.Windows.MEMORYSTATUSEX.ullAvailVirtual">
+            <summary>
+            Size of unreserved and uncommitted memory in the user mode portion of the virtual address space of the calling process, in bytes.
+            </summary>
+        </member>
+        <member name="F:Neon.Windows.MEMORYSTATUSEX.ullAvailExtendedVirtual">
+            <summary>
+            Size of unreserved and uncommitted memory in the extended portion of the virtual address space of the calling process, in bytes.
+            </summary>
+        </member>
         <member name="T:Neon.Windows.NamespaceDoc">
             <summary>
             This namespace defines low-level Windows P/Invoke mappings as well as
@@ -14924,7 +15795,7 @@
             Low-level Windows system calls.
             </summary>
         </member>
-        <member name="M:Neon.Windows.Win32.GetPhysicallyInstalledSystemMemory(System.Int64@)">
+        <member name="M:Neon.Windows.Win32.GetPhysicallyInstalledSystemMemory(System.UInt64@)">
             <summary>
             Returns the total installed physical RAM as kilobytes.
             </summary>
@@ -14943,6 +15814,13 @@
             Has Windows decrypt a file or folder at rest.
             </summary>
             <param name="path">The file or folder path.</param>
+            <returns><c>true</c> on success.</returns>
+        </member>
+        <member name="M:Neon.Windows.Win32.GlobalMemoryStatusEx(Neon.Windows.MEMORYSTATUSEX)">
+            <summary>
+            Obtains information about memory utilization on the current Windows machine.
+            </summary>
+            <param name="lpBuffer">Returns as a <see cref="T:Neon.Windows.MEMORYSTATUSEX"/> with the infirmation.</param>
             <returns><c>true</c> on success.</returns>
         </member>
         <member name="T:System.Diagnostics.Contracts.Covenant">
@@ -15014,6 +15892,44 @@
             <a href="https://github.com/nforgeio/neonKUBE/issues/531"/>
             </remarks>
         </member>
+        <member name="T:System.DateTimeExtensions">
+            <summary>
+            <see cref="T:System.DateTime"/> extensions.
+            </summary>
+        </member>
+        <member name="M:System.DateTimeExtensions.RoundUp(System.DateTime,System.TimeSpan)">
+            <summary>
+            Rounds a <see cref="T:System.DateTime"/> up to the nearest specified interval.
+            
+            var date = new DateTime(2010, 02, 05, 10, 35, 25, 450); // 2010/02/05 10:35:25
+            var roundedUp = date.RoundUp(TimeSpan.FromMinutes(15)); // 2010/02/05 10:45:00
+            </summary>
+            <param name="dt">The datetime to be rounded.</param>
+            <param name="interval">The time interval to be rounded to.</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.DateTimeExtensions.RoundDown(System.DateTime,System.TimeSpan)">
+            <summary>
+            Rounds a <see cref="T:System.DateTime"/> down to the nearest specified interval.
+            
+            var date = new DateTime(2010, 02, 05, 10, 35, 25, 450);     // 2010/02/05 10:35:25
+            var roundedDown = date.RoundDown(TimeSpan.FromMinutes(15)); // 2010/02/05 10:30:00
+            </summary>
+            <param name="dt">The datetime to be rounded.</param>
+            <param name="interval">The time interval to be rounded to.</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.DateTimeExtensions.RoundToNearest(System.DateTime,System.TimeSpan)">
+            <summary>
+            Rounds a <see cref="T:System.DateTime"/> to the nearest specified interval.
+            
+            var date = new DateTime(2010, 02, 05, 10, 35, 25, 450);               // 2010/02/05 10:35:25
+            var roundedToNearest = date.RoundToNearest(TimeSpan.FromMinutes(15)); // 2010/02/05 10:30:00
+            </summary>
+            <param name="dt">The datetime to be rounded.</param>
+            <param name="interval">The time interval to be rounded to.</param>
+            <returns></returns>
+        </member>
         <member name="T:System.EnumExtensions">
             <summary>
             <see cref="T:System.Enum"/> extensions.
@@ -15068,6 +15984,15 @@
             <param name="e">The exception being tested.</param>
             <param name="exceptionType">The target exception type.</param>
             <returns>The underlying exception or <c>null</c>.</returns>
+        </member>
+        <member name="M:System.ExceptionExtensions.GetNonAggregateException(System.Exception)">
+            <summary>
+            Examines the exception passed and if it's a <see cref="T:System.AggregateException"/> then the
+            first inner exception will be returned.  This is handy when you need to log the details
+            of the underlying exception thrown by an async operation.
+            </summary>
+            <param name="e">The exception.</param>
+            <returns>The underlying exception.</returns>
         </member>
         <member name="T:System.Net.Http.HttpClientExtensions">
             <summary>
@@ -16304,7 +17229,7 @@
         </member>
         <member name="T:System.StringExtensions">
             <summary>
-            String extension methods.
+            <see cref="T:System.String"/> extension methods.
             </summary>
         </member>
         <member name="M:System.StringExtensions.ToLines(System.String)">
@@ -16317,6 +17242,28 @@
             that an empty string will return a single empty line and a <c>null</c>
             string will return no lines.
             </returns>
+        </member>
+        <member name="T:System.Threading.Tasks.TaskExtensions">
+            <summary>
+            <see cref="T:System.Threading.Tasks.Task"/> extension methods.
+            </summary>
+        </member>
+        <member name="M:System.Threading.Tasks.TaskExtensions.WaitWithoutAggregate(System.Threading.Tasks.Task)">
+            <summary>
+            Waits for the task to complete but rethrows original exceptions rather
+            than a wrapper <see cref="T:System.ArgumentException"/>.  Otherwise, this is 
+            a replacement for <see cref="M:System.Threading.Tasks.Task.Wait"/>.
+            </summary>
+            <param name="task">The task</param>
+        </member>
+        <member name="M:System.Threading.Tasks.TaskExtensions.ResultWithoutAggregate``1(System.Threading.Tasks.Task{``0})">
+            <summary>
+            Waits for the task to complete and then returns the result but rethrows 
+            original exceptions rather than a wrapper <see cref="T:System.ArgumentException"/>.
+            Otherwise, this is a replacement for <see cref="P:System.Threading.Tasks.Task`1.Result"/>.
+            </summary>
+            <typeparam name="TResult">The task result type.</typeparam>
+            <param name="task">The task</param>
         </member>
         <member name="T:System.TimeSpanExtensions">
             <summary>
@@ -16411,12 +17358,12 @@
             </param>
             <param name="handler">The delegate to remove.</param>
         </member>
-        <member name="T:Newtonsoft.Json.Linq.JsonExtensions">
+        <member name="T:Newtonsoft.Json.Linq.NewtonsoftExtensions">
             <summary>
             Newtonsoft JSON Linq extensions.
             </summary>
         </member>
-        <member name="M:Newtonsoft.Json.Linq.JsonExtensions.TryGetValue``1(Newtonsoft.Json.Linq.JObject,System.String,``0@)">
+        <member name="M:Newtonsoft.Json.Linq.NewtonsoftExtensions.TryGetValue``1(Newtonsoft.Json.Linq.JObject,System.String,``0@)">
             <summary>
             Attempts to return the value of a specified <see cref="T:Newtonsoft.Json.Linq.JObject"/> property
             converted to a specific type.
@@ -16426,6 +17373,13 @@
             <param name="propertyName">The property name.</param>
             <param name="value">Returns as the property value if present.</param>
             <returns><c>true</c> if the property was present and returned.</returns>
+        </member>
+        <member name="M:Newtonsoft.Json.Linq.NewtonsoftExtensions.CopyTo(Newtonsoft.Json.JsonSerializerSettings,Newtonsoft.Json.JsonSerializerSettings)">
+            <summary>
+            Copies the settings from one <see cref="T:Newtonsoft.Json.JsonSerializerSettings"/> instance to another.
+            </summary>
+            <param name="source">The source settings.</param>
+            <param name="target">The target instance.</param>
         </member>
         <member name="T:YamlDotNet.RepresentationModel.YamlDotNetExtensions">
             <summary>
@@ -16492,22 +17446,22 @@
             <summary>Repository URL: https://github.com/nforgeio/neonKUBE</summary>
         </member>
         <member name="F:ThisAssembly.Git.Branch">
-            <summary>Branch: jeff</summary>
+            <summary>Branch: master</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: f622659e4</summary>
+            <summary>Commit: 7b02bff65</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: f622659e466b3743bec72198609cbc5cb1e7937d</summary>
+            <summary>Sha: 7b02bff6547f9f5b0b5b7ecb9cc65e43bb863a4c</summary>
         </member>
         <member name="F:ThisAssembly.Git.CommitDate">
-            <summary>Commit date: 2021-12-31T19:25:36-08:00</summary>
+            <summary>Commit date: 2022-07-07T13:44:51-07:00</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 83</summary>
+            <summary>Commits on top of base version: 1219</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: neonLIBRARY-v2.19.0-83-gf622659e4</summary>
+            <summary>Tag: neonLIBRARY-v2.19.0-1219-g7b02bff65</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
             <summary>Base tag: neonLIBRARY-v2.19.0</summary>
@@ -16534,7 +17488,7 @@
             <summary>Minor: 19</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 83</summary>
+            <summary>Patch: 1219</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: neonLIBRARY</summary>

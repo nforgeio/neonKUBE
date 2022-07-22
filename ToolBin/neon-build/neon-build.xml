@@ -100,6 +100,12 @@
             </summary>
             <param name="commandLine">The command line.</param>
         </member>
+        <member name="M:NeonBuild.Program.Replace(Neon.Common.CommandLine)">
+            <summary>
+            Implements the <b>replace</b> command.
+            </summary>
+            <param name="commandLine">The command line.</param>
+        </member>
         <member name="M:NeonBuild.Program.Rm(Neon.Common.CommandLine)">
             <summary>
             Implements the <b>rm</b> command.

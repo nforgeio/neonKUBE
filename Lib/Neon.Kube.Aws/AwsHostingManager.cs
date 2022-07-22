@@ -893,7 +893,7 @@ namespace Neon.Kube
 
             this.cluster            = cluster;
             this.clusterName        = cluster.Name;
-            this.clusterEnvironment = NeonHelper.EnumToString(cluster.Definition.Environment);
+            this.clusterEnvironment = NeonHelper.EnumToString(cluster.Definition.Purpose);
             this.hostingOptions     = cluster.Definition.Hosting;
             this.cloudOptions       = hostingOptions.Cloud;
             this.awsOptions         = hostingOptions.Aws;

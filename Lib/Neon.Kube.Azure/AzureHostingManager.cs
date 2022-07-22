@@ -892,7 +892,7 @@ namespace Neon.Kube
 
             this.cluster               = cluster;
             this.clusterName           = cluster.Name;
-            this.clusterEnvironment    = NeonHelper.EnumToString(cluster.Definition.Environment);
+            this.clusterEnvironment    = NeonHelper.EnumToString(cluster.Definition.Purpose);
             this.hostingOptions        = cluster.Definition.Hosting;
             this.cloudOptions          = hostingOptions.Cloud;
             this.azureOptions          = hostingOptions.Azure;
@@ -1062,7 +1062,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
 
             resource.Tags[neonClusterTagKey]     = clusterName;
-            resource.Tags[neonEnvironmentTagKey] = NeonHelper.EnumToString(cluster.Definition.Environment);
+            resource.Tags[neonEnvironmentTagKey] = NeonHelper.EnumToString(cluster.Definition.Purpose);
 
             foreach (var tag in tags)
             {
@@ -1084,7 +1084,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
 
             resource.Tags[neonClusterTagKey] = clusterName;
-            resource.Tags[neonEnvironmentTagKey] = NeonHelper.EnumToString(cluster.Definition.Environment);
+            resource.Tags[neonEnvironmentTagKey] = NeonHelper.EnumToString(cluster.Definition.Purpose);
 
             foreach (var tag in tags)
             {

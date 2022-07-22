@@ -247,9 +247,17 @@ namespace Neon.Service
     /// <para>
     /// Hosting environments such as Kubernetes will often require service instances
     /// to be able to report their health via health probes.  These probes are typically
-    /// implemented as a small executable that is called periodically by the hosting 
-    /// environment with the return code indicating the service instance health.
+    /// implemented as a small executables that is called periodically by the hosting 
+    /// environment with the return code indicating the service instance health.  Alternatively,
+    /// services can expose one or more web endpoints that returns 200 status when the
+    /// service is healthy.
     /// </para>
+    /// <note>
+    /// This class has built-in support for the the small executable health checker approach 
+    /// to make it easier to implement health checks for workloads that don't expose a web
+    /// interface.  Web workloads can continue use the built-in approach or just expose their
+    /// own health endpoints.
+    /// </note>
     /// <para>
     /// The <see cref="Neon.Service.NeonService"/> class supports this by optionally
     /// writing a text file with various strings indicating the health status.  The 
@@ -454,6 +462,8 @@ namespace Neon.Service
 
         //---------------------------------------------------------------------
         // Static members
+
+        private const string disableHealthChecks = "DISABLED";
 
         private static bool                 isInitalized = false;
         private static readonly char[]      equalArray   = new char[] { '=' };
@@ -1239,13 +1249,15 @@ namespace Neon.Service
                 healthFolder = string.Empty;
             }
 
-            if (NeonHelper.IsLinux && NeonHelper.Is64BitOS && !NeonHelper.IsARM && !healthFolder.Equals("DISABLED", StringComparison.InvariantCultureIgnoreCase))
+            if (NeonHelper.IsLinux && NeonHelper.Is64BitOS && !NeonHelper.IsARM && !healthFolder.Equals(disableHealthChecks, StringComparison.InvariantCultureIgnoreCase))
             {
                 if (string.IsNullOrEmpty(healthFolder))
                 {
                     healthFolder = $"/";
                 }
 
+                Log.LogInfo(() => $"Deploying health checkers to: {healthFolder}");
+                
                 healthStatusPath = Path.Combine(healthFolder, "health-status");
                 healthCheckPath  = Path.Combine(healthFolder, "health-check");
                 readyCheckPath   = Path.Combine(healthFolder, "ready-check");
@@ -1316,7 +1328,11 @@ namespace Neon.Service
             }
             else
             {
-                if (!healthFolder.Equals("DISABLED", StringComparison.InvariantCultureIgnoreCase))
+                if (healthFolder.Equals(disableHealthChecks, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    Log.LogInfo("Built-in health check executables are disabled.");
+                }
+                else
                 {
                     Log.LogWarn("NeonService health checking is currently only supported on Linux/AMD64.");
                 }
@@ -1346,7 +1362,7 @@ namespace Neon.Service
 
                     case MetricsMode.Push:
 
-                        metricPusher = new MetricPusher(MetricsOptions.PushUrl, job: Name, intervalMilliseconds: 100 /* (long)MetricsOptions.PushInterval.TotalMilliseconds */, additionalLabels: MetricsOptions.PushLabels);
+                        metricPusher = new MetricPusher(MetricsOptions.PushUrl, job: Name, intervalMilliseconds: (long)MetricsOptions.PushInterval.TotalMilliseconds, additionalLabels: MetricsOptions.PushLabels);
                         metricPusher.Start();
                         break;
 

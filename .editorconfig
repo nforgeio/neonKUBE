@@ -57,6 +57,20 @@ tab_width = 4
 end_of_line = crlf
 insert_final_newline = false
 
+# shell scripts
+[*.{sh}]
+
+#### Core EditorConfig Options ####
+
+# Indentation and spacing
+indent_size = 2
+indent_style = space
+tab_width = 2
+
+# New line preferences
+end_of_line = lf
+insert_final_newline = false
+
 # C# files
 [*.cs]
 

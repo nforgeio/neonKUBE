@@ -85,6 +85,13 @@ ARGUMENTS:
     TARGET          - Path to the (compressed) target file
 
 ---------------------------------------------------------------------
+neon-build replace PATH BEFORE AFTER
+
+Searches and replaces instances of case sensitive the BEFORE string and
+replaces them with the AFTER string in the file at PATH, writing the changes
+to the same file.
+
+---------------------------------------------------------------------
 neon-build read-version [-n] CSPATH NAME
 
 Used to read a version constant from a C# source file.
@@ -521,6 +528,11 @@ ARGUMENTS:
                     case "kustomize":
 
                         Kustomize(commandLine);
+                        break;
+
+                    case "replace":
+
+                        Replace(commandLine);
                         break;
 
                     default:

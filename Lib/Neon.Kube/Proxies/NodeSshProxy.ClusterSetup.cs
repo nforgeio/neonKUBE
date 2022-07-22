@@ -390,7 +390,7 @@ service ntp restart
 
             sb.AppendLine($"NEON_CLUSTER={clusterDefinition.Name}");
             sb.AppendLine($"NEON_DATACENTER={clusterDefinition.Datacenter.ToLowerInvariant()}");
-            sb.AppendLine($"NEON_ENVIRONMENT={clusterDefinition.Environment.ToString().ToLowerInvariant()}");
+            sb.AppendLine($"NEON_ENVIRONMENT={clusterDefinition.Purpose.ToString().ToLowerInvariant()}");
 
             var sbPackageProxies = new StringBuilder();
 

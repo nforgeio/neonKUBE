@@ -202,7 +202,7 @@ namespace Neon.Kube.Xunit
         public const string Tiny = @"
 name: xenserver-tiny
 datacenter: $<<<profile:datacenter>>>
-environment: test
+purpose: test
 isLocked: false
 timeSources:
 - pool.ntp.org
@@ -243,7 +243,7 @@ nodes:
         public const string Small = @"
 name: xenserver-small
 datacenter: $<<<profile:datacenter>>>
-environment: test
+purpose: test
 isLocked: false
 timeSources:
 - pool.ntp.org
@@ -299,7 +299,7 @@ nodes:
         public const string Large = @"
 name: xenserver-large
 datacenter: $<<<profile:datacenter>>>
-environment: test
+purpose: test
 isLocked: false
 timeSources:
 - pool.ntp.org

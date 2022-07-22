@@ -76,7 +76,7 @@ namespace Neon.Kube.Xunit
     ///     private const string clusterDefinitionYaml =
     /// @"name: test
     /// datacenter: test
-    /// environment: test
+    /// purpose: test
     /// isLocked: false         # $lt;-- test clusters need to be unlocked
     /// timeSources:
     /// - pool.ntp.org

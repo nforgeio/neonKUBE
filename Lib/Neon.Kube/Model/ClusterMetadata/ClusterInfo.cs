@@ -55,7 +55,7 @@ namespace Neon.Kube
             Name               = clusterDefinition.Name;
             Description        = clusterDefinition.Description;
             HostingEnvironment = clusterDefinition.Hosting.Environment;
-            Environment        = clusterDefinition.Environment;
+            Environment        = clusterDefinition.Purpose;
             Datacenter         = clusterDefinition.Datacenter;
             Domain             = clusterDefinition.Domain;
             PublicAddresses    = clusterDefinition.PublicAddresses;
@@ -107,12 +107,12 @@ namespace Neon.Kube
         public HostingEnvironment HostingEnvironment { get; set; } = HostingEnvironment.Unknown;
 
         /// <summary>
-        /// Indicates how the cluster is being used as specified by <see cref="ClusterDefinition.Environment"/>.
+        /// Indicates how the cluster is being used as specified by <see cref="ClusterDefinition.Purpose"/>.
         /// definition. 
         /// </summary>
         [JsonProperty(PropertyName = "Environment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(EnvironmentType.Other)]
-        public EnvironmentType Environment { get; set; } = EnvironmentType.Other;
+        [DefaultValue(ClusterPurpose.NotSet)]
+        public ClusterPurpose Environment { get; set; } = ClusterPurpose.NotSet;
 
         /// <summary>
         /// Identifies where the cluster is hosted as specified by <see cref="ClusterDefinition.Datacenter"/> in the cluster
