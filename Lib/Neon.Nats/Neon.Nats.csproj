@@ -5,7 +5,7 @@
 		<OutputType>Library</OutputType>
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>Neon.Nats</RootNamespace>
-		<Version>10000.0.1650-dev-jeff</Version>
+		<Version>10000.0.2060-dev-marcus</Version>
 		<Company>neonFORGE LLC</Company>
 		<Authors>neonFORGE Team</Authors>
 		<Description>NATS messaging extensions</Description>

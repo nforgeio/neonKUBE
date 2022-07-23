@@ -128,7 +128,7 @@ namespace Neon.Kube.Xunit
     /// <item>
     ///     <term><b>xenserver.small0.ip</b></term>
     ///     <description>
-    ///     IPv4 address to be assigned to the cluster master node.
+    ///     IPv4 address to be assigned to the cluster control-plane node.
     ///     </description>
     /// </item>
     /// <item>
@@ -159,19 +159,19 @@ namespace Neon.Kube.Xunit
     /// <item>
     ///     <term><b>xenserver.large0.ip</b></term>
     ///     <description>
-    ///     IPv4 address to be assigned to the first cluster master node.
+    ///     IPv4 address to be assigned to the first cluster control-plane node.
     ///     </description>
     /// </item>
     /// <item>
     ///     <term><b>xenserver.large1.ip</b></term>
     ///     <description>
-    ///     IPv4 address to be assigned to the second cluster master node.
+    ///     IPv4 address to be assigned to the second cluster control-plane node.
     ///     </description>
     /// </item>
     /// <item>
     ///     <term><b>xenserver.large2.ip</b></term>
     ///     <description>
-    ///     IPv4 address to be assigned to the thirg cluster master node.
+    ///     IPv4 address to be assigned to the third cluster control-plane node.
     ///     </description>
     /// </item>
     /// <item>
@@ -202,12 +202,12 @@ namespace Neon.Kube.Xunit
         public const string Tiny = @"
 name: xenserver-tiny
 datacenter: $<<<profile:datacenter>>>
-environment: test
+purpose: test
 isLocked: false
 timeSources:
 - pool.ntp.org
 kubernetes:
-  allowPodsOnMasters: true
+  allowPodsOnControlPlane: true
 hosting:
   environment: xenserver
   vm:
@@ -230,25 +230,25 @@ network:
   - $<<<profile:lan.dns0>>>
   - $<<<profile:lan.dns1>>>
 nodes:
-  master-0:
-    role: master
+  control-0:
+    role: control-plane
     address: $<<<profile:xenserver.tiny0.ip>>>
     vm:
       host: XEN-TEST
 ";
 
         /// <summary>
-        /// <b>XenServer:</b> 1 master and 3 worker cluster definition.
+        /// <b>XenServer:</b> 1 control-plane and 3 worker cluster definition.
         /// </summary>
         public const string Small = @"
 name: xenserver-small
 datacenter: $<<<profile:datacenter>>>
-environment: test
+purpose: test
 isLocked: false
 timeSources:
 - pool.ntp.org
 kubernetes:
-  allowPodsOnMasters: false
+  allowPodsOnControlPlane: false
 hosting:
   environment: xenserver
   vm:
@@ -271,40 +271,40 @@ network:
   - $<<<profile:lan.dns0>>>
   - $<<<profile:lan.dns1>>>
 nodes:
-  master-0:
-    role: master
+  control-0:
+    role: control-plane
     address: $<<<profile:xenserver.small0.ip>>>
     vm:
       host: XEN-TEST
   worker-0:
-    role: master
+    role: worker
     address: $<<<profile:xenserver.small1.ip>>>
     vm:
       host: XEN-TEST
   worker-1:
-    role: master
+    role: worker
     address: $<<<profile:xenserver.small2.ip>>>
     vm:
       host: XEN-TEST
   worker-2:
-    role: master
+    role: worker
     address: $<<<profile:xenserver.small3.ip>>>
     vm:
       host: XEN-TEST
 ";
 
         /// <summary>
-        /// <b>XenServer:</b> 3 master and 3 worker cluster definition.
+        /// <b>XenServer:</b> 3 control-plane and 3 worker cluster definition.
         /// </summary>
         public const string Large = @"
 name: xenserver-large
 datacenter: $<<<profile:datacenter>>>
-environment: test
+purpose: test
 isLocked: false
 timeSources:
 - pool.ntp.org
 kubernetes:
-  allowPodsOnMasters: false
+  allowPodsOnControlPlane: false
 hosting:
   environment: xenserver
   vm:
@@ -327,36 +327,36 @@ network:
   - $<<<profile:lan.dns0>>>
   - $<<<profile:lan.dns1>>>
 nodes:
-  master-0:
-    role: master
+  control-0:
+    role: control-plane
     address: $<<<profile:xenserver.large0.ip>>>
     memory: 4 GiB
     vm:
       host: XEN-TEST
-  master-1:
-    role: master
+  control-1:
+    role: control-plane
     address: $<<<profile:xenserver.large1.ip>>>
     memory: 4 GiB
     vm:
       host: XEN-TEST
-  master-2:
-    role: master
+  control-2:
+    role: control-plane
     address: $<<<profile:xenserver.large2.ip>>>
     memory: 4 GiB
     vm:
       host: XEN-TEST
   worker-0:
-    role: master
+    role: worker
     address: $<<<profile:xenserver.large3.ip>>>
      vm:
        host: XEN-TEST
   worker-1:
-    role: master
+    role: worker
     address: $<<<profile:xenserver.large4.ip>>>
     vm:
       host: XEN-TEST
   worker-2:
-    role: master
+    role: worker
     address: $<<<profile:xenserver.large5.ip>>>
     vm:
       host: XEN-TEST

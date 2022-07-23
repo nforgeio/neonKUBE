@@ -7,7 +7,7 @@ images:
   node:
     repository: calico-node
     tag: v3.22.2
-  cni:
+  cni
     repository: calico-cni
     tag: v3.22.2
   kubeControllers:
@@ -24,7 +24,7 @@ vxlanMode: Never
 
 kubernetes:
   service:
-    host: kubernetes-masters
+    host: kubernetes-controlplane
     port: 6442
 
 # ServiceMonitor configuration

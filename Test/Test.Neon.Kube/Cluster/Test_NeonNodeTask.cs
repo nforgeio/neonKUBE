@@ -269,7 +269,7 @@ touch $NODE_ROOT{filePath}
         public async Task NodeTask_ExitCodeAndStreams()
         {
             //-----------------------------------------------------------------
-            // Submit a task to the first master node that returns a non-zero
+            // Submit a task to the first control-plane node that returns a non-zero
             // exit code as well as writes to the standard output and error
             // streams.
             //
@@ -283,7 +283,7 @@ touch $NODE_ROOT{filePath}
             var metadata = nodeTask.Metadata;
             var spec     = nodeTask.Spec;
 
-            spec.Node             = fixture.Cluster.FirstMaster.Name;
+            spec.Node             = fixture.Cluster.FirstControlNode.Name;
             spec.RetentionSeconds = 30;
             spec.BashScript       =
 @"
@@ -346,7 +346,7 @@ exit 123
             var metadata = nodeTask.Metadata;
             var spec     = nodeTask.Spec;
 
-            spec.Node             = fixture.Cluster.FirstMaster.Name;
+            spec.Node             = fixture.Cluster.FirstControlNode.Name;
             spec.TimeoutSeconds   = 15;
             spec.RetentionSeconds = 30;
             spec.BashScript       =
@@ -407,7 +407,7 @@ sleep 30
             var metadata = nodeTask.Metadata;
             var spec     = nodeTask.Spec;
 
-            spec.Node                 = fixture.Cluster.FirstMaster.Name;
+            spec.Node                 = fixture.Cluster.FirstControlNode.Name;
             spec.StartBeforeTimestamp = DateTime.UtcNow - TimeSpan.FromHours(1);
             spec.TimeoutSeconds       = 15;
             spec.RetentionSeconds     = 30;
@@ -448,7 +448,7 @@ sleep 5
             var spec         = nodeTask.Spec;
             var scheduledUtc = DateTime.UtcNow + TimeSpan.FromSeconds(90);
 
-            spec.Node                = fixture.Cluster.FirstMaster.Name;
+            spec.Node                = fixture.Cluster.FirstControlNode.Name;
             spec.StartAfterTimestamp = scheduledUtc;
             spec.TimeoutSeconds      = 15;
             spec.RetentionSeconds    = 30;

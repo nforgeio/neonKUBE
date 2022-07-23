@@ -397,6 +397,13 @@ namespace Neon.Kube
         public string Name { get; set; }
 
         /// <summary>
+        /// The unique cluster ID.  This is generated during cluster setup and must not be specified by the user.
+        /// </summary>
+        [JsonProperty(PropertyName = "Id", Required = Required.Always)]
+        [YamlMember(Alias = "id", ApplyNamingConventions = false)]
+        public string Id { get; set; }
+
+        /// <summary>
         /// Optionally describes the cluster for humans.  This may be a string up to 256 characters long.
         /// </summary>
         [JsonProperty(PropertyName = "Description", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -433,6 +440,13 @@ namespace Neon.Kube
         public string Domain { get; set; }
 
         /// <summary>
+        /// Returns the <b>neoncluster.io</b> domain for this cluster.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public string NeonClusterDomain => $"{Id}.neoncluster.io";
+
+        /// <summary>
         /// <para>
         /// Optionally specifies the public IP addresses for the cluster.
         /// </para>
@@ -440,7 +454,7 @@ namespace Neon.Kube
         /// <para>
         /// For cloud clusters, this will default to the public IP address assigned to the cluster
         /// load balancer and for on-premise clusters, this defaults to the IP addresses assigned
-        /// to the master nodes.
+        /// to the control-plane nodes.
         /// </para>
         /// <para>
         /// This can also be specified explicitly here in the cluster definition.  This is useful
@@ -589,13 +603,37 @@ namespace Neon.Kube
         public string Datacenter { get; set; } = String.Empty;
 
         /// <summary>
+        /// <para>
+        /// Optionally specifies the latitude of the cluster location.  This is a value
+        /// between -90 and +90 degrees.
+        /// </para>
+        /// <note>
+        /// <see cref="Latitude"/> and <see cref="Longitude"/> must both be specified together or
+        /// not at all.
+        /// </note>
+        /// </summary>
+        public double? Latitude { get; set; } = null;
+
+        /// <summary>
+        /// <para>
+        /// Optionally specifies the longitude of the cluster location.  This is a value
+        /// between -180 and +180 degrees.
+        /// </para>
+        /// <note>
+        /// <see cref="Latitude"/> and <see cref="Longitude"/> must both be specified together or
+        /// not at all.
+        /// </note>
+        /// </summary>
+        public double? Longitude { get; set; } = null;
+
+        /// <summary>
         /// Indicates how the cluster is being used.
         /// </summary>
-        [JsonProperty(PropertyName = "Environment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "environment", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Purpose", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "purpose", ApplyNamingConventions = false)]
         [JsonConverter(typeof(StringEnumConverter))]
-        [DefaultValue(EnvironmentType.Other)]
-        public EnvironmentType Environment { get; set; } = EnvironmentType.Other;
+        [DefaultValue(ClusterPurpose.NotSet)]
+        public ClusterPurpose Purpose { get; set; } = ClusterPurpose.NotSet;
 
         /// <summary>
         /// Specifies the NTP time sources to be configured for the cluster.  These are the
@@ -603,9 +641,9 @@ namespace Neon.Kube
         /// </summary>
         /// <remarks>
         /// <para>
-        /// The cluster masters will be configured to synchronize their time with these
+        /// The cluster control-plane nodes will be configured to synchronize their time with these
         /// time sources and the worker nodes will be configured to synchronize their time
-        /// with the master nodes.
+        /// with the control-plane nodes.
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "TimeSources", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -618,7 +656,7 @@ namespace Neon.Kube
         /// and update Linux packages.  These are endpoints like <b>HOSTNAME:PORT</b> or <b>ADDRESS.PORT</b>
         /// of a <b>apt-cacher-ng</b> or other package proxy server.  The port is generall set to <b>3142</b>
         /// Multiple proxies may be specified by separating them with spaces.  This defaults to
-        /// referencing the <b>apt-cacher-ng</b> instances running on the master nodes.
+        /// referencing the <b>apt-cacher-ng</b> instances running on the control-plane nodes.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -820,18 +858,18 @@ namespace Neon.Kube
         public IEnumerable<NodeDefinition> SortedNodes => Nodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
-        /// Enumerates the cluster master node definitions.
+        /// Enumerates the cluster control-plane node definitions.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public IEnumerable<NodeDefinition> Masters => Nodes.Where(n => n.IsMaster);
+        public IEnumerable<NodeDefinition> ControlNodes => Nodes.Where(n => n.IsControlPane);
 
         /// <summary>
-        /// Enumerates the cluster master node definitions sorted in ascending order by name.
+        /// Enumerates the cluster control-plane node definitions sorted in ascending order by name.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public IEnumerable<NodeDefinition> SortedMasterNodes => Masters.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase);
+        public IEnumerable<NodeDefinition> SortedControlNodes => ControlNodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Enumerates the cluster worker node definitions.
@@ -848,13 +886,13 @@ namespace Neon.Kube
         public IEnumerable<NodeDefinition> SortedWorkerNodes => Workers.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
-        /// Enumerates the cluster master nodes sorted by name follwed by the worker nodes,
+        /// Enumerates the cluster control-plane nodes sorted by name followed by the worker nodes,
         /// also sorted by name.  This is convienent for situations like assigning IP addresses
-        /// or ports such that the masters are grouped together first.
+        /// or ports such that the control-plane nodes are grouped together first.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public IEnumerable<NodeDefinition> SortedMasterThenWorkerNodes => SortedMasterNodes.Union(SortedWorkerNodes);
+        public IEnumerable<NodeDefinition> SortedControlThenWorkerNodes => SortedControlNodes.Union(SortedWorkerNodes);
 
         /// <summary>
         /// Holds the subnet where nodes will be provisioned along with the name of the options 
@@ -1099,9 +1137,9 @@ namespace Neon.Kube
 
             if (PublicAddresses.Count == 0 && !KubeHelper.IsCloudEnvironment(Hosting.Environment))
             {
-                // Default to the master node addresses for non-cloud environments.
+                // Default to the control-plane node addresses for non-cloud environments.
 
-                foreach (var node in SortedMasterNodes)
+                foreach (var node in SortedControlNodes)
                 {
                     PublicAddresses.Add(node.Address);
                 }
@@ -1140,12 +1178,12 @@ namespace Neon.Kube
 
             if (Name.Length > 32)
             {
-                throw new ClusterDefinitionException($"The [{nameof(Name)}={Name}] has more than 32 characters.  Some hosting environments enforce name length limits so please trim your cluster name.");
+                throw new ClusterDefinitionException($"The [{nameof(Name)}={Name}] property has more than 32 characters.  Some hosting environments enforce name length limits so please trim your cluster name.");
             }
 
             if (Description != null && Description.Length > 256)
             {
-                throw new ClusterDefinitionException($"The [{nameof(Description)}] has more than 256 characters.");
+                throw new ClusterDefinitionException($"The [{nameof(Description)}] property has more than 256 characters.");
             }
 
             if (!string.IsNullOrEmpty(Datacenter) && !IsValidName(Datacenter))
@@ -1153,19 +1191,34 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"The [{nameof(Datacenter)}={Datacenter}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
 
-            var masterNodeCount = Masters.Count();
+            if (Latitude.HasValue != Longitude.HasValue)
+            {
+                throw new ClusterDefinitionException($"The [{nameof(Latitude)}] and [{nameof(Longitude)}] properties must be set together or not set at all.");
+            }
 
-            if (masterNodeCount == 0)
+            if (Latitude.HasValue && (Latitude.Value < -90 || 90 < Latitude.Value))
             {
-                throw new ClusterDefinitionException("Clusters must have at least one master node.");
+                throw new ClusterDefinitionException($"The [{nameof(Latitude)}={Latitude}] must be within: -90...+90");
             }
-            else if (masterNodeCount > 5)
+
+            if (Longitude.HasValue && (Longitude.Value < -180 || 180 < Longitude.Value))
             {
-                throw new ClusterDefinitionException("Clusters may not have more than [5] master nodes.");
+                throw new ClusterDefinitionException($"The [{nameof(Latitude)}={Latitude}] must be within: -180...+180");
             }
-            else if (!NeonHelper.IsOdd(masterNodeCount))
+
+            var controlNodeCount = ControlNodes.Count();
+
+            if (controlNodeCount == 0)
             {
-                throw new ClusterDefinitionException($"[{masterNodeCount}] master nodes is not allowed.  Only an odd number of master nodes is allowed: [1, 3, or 5]");
+                throw new ClusterDefinitionException("Clusters must have at least one control-plane node.");
+            }
+            else if (controlNodeCount > KubeConst.MaxControlNodes)
+            {
+                throw new ClusterDefinitionException($"Clusters may not have more than [{KubeConst.MaxControlNodes}] control-plane nodes.");
+            }
+            else if (!NeonHelper.IsOdd(controlNodeCount))
+            {
+                throw new ClusterDefinitionException($"[{controlNodeCount}] control-plane nodes is not allowed.  Only an odd number of control-plane nodes is allowed: [1, 3, 5,...]");
             }
 
             if (!string.IsNullOrEmpty(PackageProxy))
@@ -1192,8 +1245,8 @@ namespace Neon.Kube
                 }
             }
 
-            // Ensure that every node is assigned to an availability set, assigning master
-            // nodes to the [master] set by default and worker nodes to the [worker] set.
+            // Ensure that every node is assigned to an availability set, assigning control-plane
+            // nodes to the [control-plane] set by default and worker nodes to the [worker] set.
 
             foreach (var node in Nodes)
             {
@@ -1202,7 +1255,7 @@ namespace Neon.Kube
                     continue;
                 }
 
-                node.Labels.PhysicalAvailabilitySet = node.IsMaster ? "master" : "worker";
+                node.Labels.PhysicalAvailabilitySet = node.IsControlPane ? "control-plane" : "worker";
             }
         }
     }

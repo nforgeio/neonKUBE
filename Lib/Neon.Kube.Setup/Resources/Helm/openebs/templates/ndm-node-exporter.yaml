@@ -7,7 +7,6 @@ metadata:
   name: {{ template "openebs.ndm-node-exporter.fullname" . }}
   labels:
     {{- include "openebs.ndm-node-exporter.labels" . | nindent 4 }}
-    openebs.io/metrics: openebs-ndm-exporter
 spec:
   updateStrategy:
     type: RollingUpdate

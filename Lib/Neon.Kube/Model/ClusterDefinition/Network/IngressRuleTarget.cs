@@ -32,10 +32,10 @@ namespace Neon.Kube
 
         /// <summary>
         /// Provisioned for required neonKUBE cluster ingress ports, like the Kubernetes
-        /// API port 6443.  This traffic will be routed to the cluster master nodes.
+        /// API port 6443.  This traffic will be routed to the control-plane nodes.
         /// </summary>
-        [EnumMember(Value = "masters")]
-        Masters,
+        [EnumMember(Value = "control-plane")]
+        ControlPlane,
 
         /// <summary>
         /// Provisioned for user-defined ingress rules.  These groups include all

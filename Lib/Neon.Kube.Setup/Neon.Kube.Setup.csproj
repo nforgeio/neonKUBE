@@ -5,7 +5,7 @@
 		<OutputType>Library</OutputType>
 		<RootNamespace>Neon.Kube</RootNamespace>
 		<Authors>neonFORGE Team</Authors>
-		<Version>10000.0.1650-dev-jeff</Version>
+		<Version>10000.0.2060-dev-marcus</Version>
 		<Company>neonFORGE LLC</Company>
 		<Product>neonKUBE</Product>
 		<Description>INTERNAL USE ONLY: Core library used by neonKUBE related tooling.</Description>
@@ -155,6 +155,7 @@
 		<None Remove="Resources\Helm\neon-node-agent\templates\servicemonitor.yaml" />
 		<None Remove="Resources\Helm\neon-node-agent\templates\_helpers.tpl" />
 		<None Remove="Resources\Helm\neon-node-agent\values.yaml" />
+		<None Remove="Resources\Helm\oauth2-proxy\templates\_config-render.tpl" />
 		<None Remove="Resources\Helm\postgres-operator\templates\configmap-metric-exporter.yaml" />
 		<None Remove="Resources\Helm\postgres-operator\templates\healthcheck-role.yaml" />
 		<None Remove="Resources\Helm\postgres-operator\templates\healthcheck-rolebinding.yaml" />

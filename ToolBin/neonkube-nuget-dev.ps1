@@ -338,6 +338,7 @@ SetVersion Neon.ModelGenerator              $libraryVersion
 SetVersion Neon.Nats                        $libraryVersion
 SetVersion Neon.Postgres                    $libraryVersion
 SetVersion Neon.SSH                         $libraryVersion
+SetVersion Neon.Tailwind                    $libraryVersion
 SetVersion Neon.Temporal                    $libraryVersion
 SetVersion Neon.Web                         $libraryVersion
 SetVersion Neon.WinTTY                      $libraryVersion
@@ -385,6 +386,7 @@ Publish Neon.ModelGenerator                 $libraryVersion
 Publish Neon.Nats                           $libraryVersion
 Publish Neon.Postgres                       $libraryVersion
 Publish Neon.SSH                            $libraryVersion
+Publish Neon.Tailwind                       $libraryVersion
 Publish Neon.Temporal                       $libraryVersion
 Publish Neon.Web                            $libraryVersion
 Publish Neon.WinTTY                         $libraryVersion
@@ -432,6 +434,7 @@ RestoreVersion Neon.ModelGenerator
 RestoreVersion Neon.Nats
 RestoreVersion Neon.Postgres
 RestoreVersion Neon.SSH
+RestoreVersion Neon.Tailwind
 RestoreVersion Neon.Temporal
 RestoreVersion Neon.Web
 RestoreVersion Neon.WinTTY

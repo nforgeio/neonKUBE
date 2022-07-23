@@ -35,6 +35,12 @@ namespace NeonDashboard.Shared.Components
 {
     public partial class SegmentTracker : ComponentBase, IDisposable
     {
+        [Inject]
+        AppState AppState { get; set; }
+
+        [Inject]
+        NavigationManager NavigationManager { get; set; }
+
         [Parameter]
         public string Name { get; set; }
 

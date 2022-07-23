@@ -8,7 +8,6 @@ metadata:
   name: {{ template "openebs.ndm-cluster-exporter.fullname" . }}-service
   labels:
     {{- include "openebs.ndm-cluster-exporter.labels" . | nindent 4 }}
-    openebs.io/metrics: openebs-ndm-exporter
 spec:
   clusterIP: None
   ports:

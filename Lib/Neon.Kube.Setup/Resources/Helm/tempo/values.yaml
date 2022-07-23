@@ -151,7 +151,7 @@ ingester:
     # -- Enable creating PVCs which is required when using boltdb-shipper
     enabled: true
     # -- Size of persistent disk
-    size: 1Gi
+    size: 5Gi
     # -- Storage class to be used.
     # If defined, storageClassName: <storageClass>.
     # If set to "-", storageClassName: "", which disables dynamic provisioning.

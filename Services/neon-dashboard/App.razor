@@ -10,11 +10,8 @@
       <Found Context="routeData">
           <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
                    <NotAuthorized>
-                    @{
-                         var returnUrl = UriHelper.ToBaseRelativePath(UriHelper.Uri);
-                         UriHelper.NavigateTo($"login?redirectUri=/{returnUrl}", forceLoad: true);
-                     }
-                 </NotAuthorized>
+                       <RedirectToSignin />
+                   </NotAuthorized>
                    <Authorizing>
                        <main class="w-screen h-screen place-items-center">
                         <p class="text-5">Loading... </p>

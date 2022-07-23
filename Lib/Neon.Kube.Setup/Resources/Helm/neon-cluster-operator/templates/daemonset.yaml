@@ -22,7 +22,7 @@ spec:
         sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
     spec:
       nodeSelector: 
-        neonkube.io/node.role: master
+        neonkube.io/node.role: control-plane
       serviceAccountName: neon-cluster-operator
       tolerations:
       - operator: Exists

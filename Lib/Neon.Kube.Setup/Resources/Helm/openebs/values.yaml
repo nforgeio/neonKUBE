@@ -13,34 +13,11 @@ serviceAccount:
 
 release:
   # "openebs.io/version" label for control plane components
-  version: "2.4.0"
+  version: "3.2.0"
 
 image:
   pullPolicy: IfNotPresent
   repository: ""
-
-apiserver:
-  enabled: true
-  image:
-    organization: neon-registry.node.local
-    repository: openebs-m-apiserver
-    tag: 2.12.2
-  replicas: 1
-  ports:
-    externalPort: 5656
-    internalPort: 5656
-  sparse:
-    enabled: "false"
-  nodeSelector: {}
-  tolerations: 
-  - operator: "Exists"
-    effect: "NoSchedule"
-  - operator: "Exists"
-    effect: "NoExecute"
-  affinity: {}
-  healthCheck:
-    initialDelaySeconds: 30
-    periodSeconds: 60
 
 defaultStorageConfig:
   enabled: "true"
@@ -50,31 +27,12 @@ defaultStorageConfig:
 varDirectoryPath:
   baseDir: "/var/openebs"
 
-provisioner:
-  enabled: true
-  image:
-    organization: neon-registry.node.local
-    repository: openebs-k8s-provisioner
-    tag: 2.12.2
-  replicas: 1
-  enableLeaderElection: true
-  nodeSelector: {}
-  tolerations: 
-  - operator: "Exists"
-    effect: "NoSchedule"
-  - operator: "Exists"
-    effect: "NoExecute"
-  affinity: {}
-  healthCheck:
-    initialDelaySeconds: 30
-    periodSeconds: 60
-
 localprovisioner:
   enabled: true
   image:
     organization: neon-registry.node.local
     repository: openebs-provisioner-localpv
-    tag: 3.0.0
+    tag: 3.2.0
   replicas: 1
   enableLeaderElection: true
   basePath: "/var/openebs/local"
@@ -85,32 +43,7 @@ localprovisioner:
   - operator: "Exists"
     effect: "NoExecute"
   affinity: {}
-  healthCheck:
-    initialDelaySeconds: 30
-    periodSeconds: 60
-
-snapshotOperator:
-  enabled: true
-  controller:
-    image:
-      organization: neon-registry.node.local
-      repository: openebs-snapshot-controller
-      tag: 2.12.2
-  provisioner:
-    image:
-      organization: neon-registry.node.local
-      repository: openebs-snapshot-provisioner
-      tag: 2.12.2
-  replicas: 1
-  enableLeaderElection: true
-  upgradeStrategy: "Recreate"
-  nodeSelector: {}
-  tolerations: 
-  - operator: "Exists"
-    effect: "NoSchedule"
-  - operator: "Exists"
-    effect: "NoExecute"
-  affinity: {}
+  waitForBDBindTimeoutRetryCount: "12"
   healthCheck:
     initialDelaySeconds: 30
     periodSeconds: 60
@@ -120,7 +53,7 @@ ndm:
   image:
     organization: neon-registry.node.local
     repository: openebs-node-disk-manager
-    tag: 1.7.0
+    tag: 1.9.0
   sparse:
     path: "/var/openebs/sparse"
     size: "10737418240"
@@ -149,7 +82,7 @@ ndmOperator:
   image:
     organization: neon-registry.node.local
     repository: openebs-node-disk-operator
-    tag: 1.7.0
+    tag: 1.9.0
   replicas: 1
   upgradeStrategy: Recreate
   nodeSelector: {}
@@ -171,7 +104,8 @@ ndmExporter:
   image:
     organization: neon-registry.node.local
     repository: openebs-node-disk-exporter
-    tag: 1.7.0
+    tag: 1.9.0
+    pullPolicy: IfNotPresent
   nodeExporter:
     name: ndm-node-exporter
     podLabels:
@@ -189,66 +123,33 @@ ndmExporter:
     # and listen-port flag will not be set and container port will be empty.
     metricsPort: 9100
 
-webhook:
-  enabled: true
-  image:
-    organization: neon-registry.node.local
-    repository: openebs-admission-server
-    tag: 2.12.2
-  failurePolicy: "Fail"
-  replicas: 1
-  healthCheck:
-    initialDelaySeconds: 30
-    periodSeconds: 60
-  nodeSelector: {}
-  tolerations: 
-  - operator: "Exists"
-    effect: "NoSchedule"
-  - operator: "Exists"
-    effect: "NoExecute"
-  affinity: {}
-  hostNetwork: false
-
-jiva:
-  image:
-    organization: neon-registry.node.local
-    repository: openebs-jiva
-    tag: 3.0.0
-  replicas: 3
-  defaultStoragePath: "/var/openebs"
-
 cstor:
   pool:
     image:
       organization: neon-registry.node.local
       repository: openebs-cstor-pool
-      tag: 3.0.0
+      tag: 3.2.0
   poolMgmt:
     image:
       organization: neon-registry.node.local
       repository: openebs-cstor-pool-manager
-      tag: 3.0.0
+      tag: 3.2.0
   target:
     image:
       organization: neon-registry.node.local
       repository: openebs-cstor-istgt
-      tag: 3.0.0
-  volumeMgmt:
-    image:
-      organization: neon-registry.node.local
-      repository: openebs-cstor-volume-mgmt
-      tag: 2.12.2
+      tag: 3.2.0
   webhook:
     image:
       organization: neon-registry.node.local
       repository: openebs-cstor-webhook
-      tag: 3.0.0
+      tag: 3.2.0
 
 helper:
   image:
     organization: neon-registry.node.local
     repository: openebs-linux-utils
-    tag: 3.0.0
+    tag: 3.2.0
 
 featureGates:
   enabled: true
@@ -258,12 +159,16 @@ featureGates:
   APIService:
     enabled: false
     featureGateFlag: "APIService"
+    address: "0.0.0.0:9115"
   UseOSDisk:
     enabled: false
     featureGateFlag: "UseOSDisk"
-  MountChangeDetection:
+  ChangeDetection:
     enabled: false
-    featureGateFlag: "MountChangeDetection"
+    featureGateFlag: "ChangeDetection"
+  PartitionTableUUID:
+    enabled: false
+    featureGateFlag: "PartitionTableUUID"
 
 crd:
   enableInstall: true
@@ -274,7 +179,7 @@ policies:
     image:
       organization: neon-registry.node.local
       repository: openebs-m-exporter
-      tag: 3.0.0
+      tag: 3.2.0
 
 analytics:
   enabled: false

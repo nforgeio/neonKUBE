@@ -76,12 +76,12 @@ namespace Neon.Kube.Xunit
     ///     private const string clusterDefinitionYaml =
     /// @"name: test
     /// datacenter: test
-    /// environment: test
+    /// purpose: test
     /// isLocked: false         # $lt;-- test clusters need to be unlocked
     /// timeSources:
     /// - pool.ntp.org
     /// kubernetes:
-    ///   allowPodsOnMasters: true
+    ///   allowPodsOnControlPlane: true
     /// hosting:
     ///   environment: hyperv
     ///   hyperv:
@@ -96,7 +96,7 @@ namespace Neon.Kube.Xunit
     ///   gateway: 100.64.0.1
     /// nodes:
     ///   master:
-    ///     role: master
+    ///     role: control-plane
     ///     address: 100.64.0.2
     /// ";
     ///     

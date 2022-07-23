@@ -1,4 +1,6 @@
 {{- if .Values.ndm.enabled }}
+{{- $ndmValues := index .Values "openebs-ndm" }}
+{{- if not $ndmValues.enabled }}
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -29,6 +31,10 @@ spec:
         name: openebs-ndm
         openebs.io/version: {{ .Values.release.version }}
     spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
       serviceAccountName: {{ template "openebs.serviceAccountName" . }}
       hostNetwork: true
       # host PID is used to check status of iSCSI Service when the NDM
@@ -55,11 +61,18 @@ spec:
 {{- if .Values.featureGates.UseOSDisk.enabled }}
           - --feature-gates={{ .Values.featureGates.UseOSDisk.featureGateFlag }}
 {{- end}}
-{{- if .Values.featureGates.MountChangeDetection.enabled }}
-          - --feature-gates={{ .Values.featureGates.MountChangeDetection.featureGateFlag }}
+{{- if .Values.featureGates.ChangeDetection.enabled }}
+          - --feature-gates={{ .Values.featureGates.ChangeDetection.featureGateFlag }}
+{{- end}}
+{{- if .Values.featureGates.PartitionTableUUID.enabled }}
+          - --feature-gates={{ .Values.featureGates.PartitionTableUUID.featureGateFlag }}
 {{- end}}
 {{- end}}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+{{- if .Values.ndm.resources }}
+        resources:
+{{ toYaml .Values.ndm.resources | trimSuffix "\n" | indent 10 }}
+{{- end }}
         securityContext:
           privileged: true
         env:
@@ -169,5 +182,6 @@ spec:
 {{- if .Values.ndm.tolerations }}
       tolerations:
 {{ toYaml .Values.ndm.tolerations | indent 8 }}
+{{- end }}
 {{- end }}
 {{- end }}

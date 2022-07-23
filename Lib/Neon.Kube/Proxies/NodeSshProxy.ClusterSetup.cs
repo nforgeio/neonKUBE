@@ -146,7 +146,7 @@ EOF
 # Append the time sources to the configuration file.
 #
 # We're going to prefer the first source.  This will generally
-# be the first master node.  The nice thing about this
+# be the first control-plane node.  The nice thing about this
 # the worker nodes will be using the same time source on
 # the local network, so the clocks should be very close to
 # being closely synchronized.
@@ -390,7 +390,7 @@ service ntp restart
 
             sb.AppendLine($"NEON_CLUSTER={clusterDefinition.Name}");
             sb.AppendLine($"NEON_DATACENTER={clusterDefinition.Datacenter.ToLowerInvariant()}");
-            sb.AppendLine($"NEON_ENVIRONMENT={clusterDefinition.Environment.ToString().ToLowerInvariant()}");
+            sb.AppendLine($"NEON_ENVIRONMENT={clusterDefinition.Purpose.ToString().ToLowerInvariant()}");
 
             var sbPackageProxies = new StringBuilder();
 
@@ -425,9 +425,9 @@ service ntp restart
             sb.AppendLine($"NEON_RUN_FOLDER={KubeNodeFolder.NeonRun}");
             sb.AppendLine($"NEON_TMPFS_FOLDER={KubeNodeFolder.Tmpfs}");
 
-            // Kubernetes related variables for masters.
+            // Kubernetes related variables for control-plane nodes.
 
-            if (nodeDefinition.IsMaster)
+            if (nodeDefinition.IsControlPane)
             {
                 sb.AppendLine($"KUBECONFIG=/etc/kubernetes/admin.conf");
             }
@@ -475,7 +475,7 @@ service ntp restart
             sbHosts.Append(
 $@"
 127.0.0.1	    localhost
-127.0.0.1       kubernetes-masters neon-desktop
+127.0.0.1       kubernetes-controlplane neon-desktop
 {nodeAddress}{separator}{Name}{separator}{KubeConst.LocalClusterRegistry}
 ::1             localhost ip6-localhost ip6-loopback
 ff02::1         ip6-allnodes
@@ -501,9 +501,9 @@ ff02::2         ip6-allrouters
                 {
                     controller.LogProgress(this, verb: "configure", message: "apt package proxy");
 
-                    // Configure the [apt-cacher-ng] pckage proxy service on master nodes.
+                    // Configure the [apt-cacher-ng] pckage proxy service on control-plane nodes.
 
-                    if (NodeDefinition.Role == NodeRole.Master)
+                    if (NodeDefinition.Role == NodeRole.ControlPlane)
                     {
                         var proxyServiceScript =
 $@"
@@ -537,8 +537,8 @@ $@"
                         }
                     }
 
-                    // Configure the package manager to use the first master as the proxy by default,
-                    // failing over to the other masters (in order) when necessary.
+                    // Configure the package manager to use the first control-plane as the proxy by default,
+                    // failing over to the other control-plane nodes (in order) when necessary.
 
                     var proxySelectorScript =
 $@"
@@ -747,7 +747,7 @@ systemctl enable kubelet
         }
 
         /// <summary>
-        /// Installs a prepositioned Helm chart from a master node.
+        /// Installs a prepositioned Helm chart from a control-plane node.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="chartName">

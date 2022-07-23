@@ -55,9 +55,7 @@ using Segment;
 
 using StackExchange.Redis;
 
-using Tailwind;
-using System.Security.Cryptography;
-using System.Text;
+using Neon.Tailwind;
 
 namespace NeonDashboard
 {
@@ -130,7 +128,7 @@ namespace NeonDashboard
                 options.AccessDeniedPath       = "/Forbidden/";
                 options.DataProtectionProvider = new CookieProtector(NeonDashboardService.AesCipher);
             })
-            .AddOpenIdConnect("oidc", options =>
+            .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
             {
                 options.ClientId                      = "kubernetes";
                 options.ClientSecret                  = NeonDashboardService.SsoClientSecret;
@@ -177,6 +175,7 @@ namespace NeonDashboard
                 .AddHttpContextAccessor()
                 .AddHttpClient()
                 .AddBlazoredLocalStorage()
+                .AddTailwind()
                 .AddSingleton<INeonLogger>(NeonDashboardService.LogManager.GetLogger())
                 .AddGoogleAnalytics("G-PYMLFS3FX4")
                 .AddRouting()
@@ -197,7 +196,7 @@ namespace NeonDashboard
         {
             if (NeonHelper.IsDevWorkstation)
             {
-                app.RunTailwind("dev", "./");
+                app.RunTailwind(script: "dev");
             }
 
             if (env.IsDevelopment())
@@ -223,8 +222,8 @@ namespace NeonDashboard
             app.UseRouting();
             app.UseHttpMetrics();
             app.UseCookiePolicy();
-            app.UseAuthentication();
-            app.UseAuthorization();
+                app.UseAuthentication();
+                app.UseAuthorization();
             app.UseHttpLogging();
             app.UseEndpoints(endpoints =>
             {

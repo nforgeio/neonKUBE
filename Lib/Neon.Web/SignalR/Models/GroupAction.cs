@@ -15,6 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if !NETCOREAPP3_1
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -24,7 +26,6 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Common;
-
 
 namespace Neon.Web.SignalR
 {
@@ -46,3 +47,5 @@ namespace Neon.Web.SignalR
         Remove,
     }
 }
+
+#endif

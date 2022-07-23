@@ -191,6 +191,7 @@ namespace NeonDashboard
                 port = 11001;
                 SetEnvironmentVariable("LOG_LEVEL", "debug");
                 SetEnvironmentVariable("DO_NOT_TRACK", "true");
+                SetEnvironmentVariable("COOKIE_CIPHER", "/HwPfpfACC70Rh1DeiMdubHINQHRGfc4JP6DYcSkAQ8="); 
                 await ConfigureDevAsync();
             }
 

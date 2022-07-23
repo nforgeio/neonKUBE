@@ -13,33 +13,17 @@
 #comment out this line to silence output
 $InformationPreference = 'Continue'
 
+Write-Information -MessageData ('[NPM Package Check] Checking dependencies.') 
+
 $devdep = (Get-Content package.json) -join "`n" | ConvertFrom-Json -AsHashtable | Select -ExpandProperty "devDependencies"
-$_, $installedList = npm list --depth=0 
+$_, $installedList = npm list --location=project --silent
 
 $shouldRunInstall = $false
-Write-Information -MessageData ('[NPM Package Check]-----------') 
-$count = 0
-foreach ($key in $devdep.keys)
+if($LastExitCode -eq 1)
 {
-  $testKey = "*"+$key+"*"
-  if($installedList -like $testKey ) {
-    #Write-Information -MessageData ('   - '+$Key+' is installed')
-
-    $count++
-  } 
-  else 
-  {
-    $shouldRunInstall = $true
-    Write-Information -MessageData ($key+' is not installed on this machine >_>') 
-    break;
-  }
+  Write-Information -MessageData "[NPM Package Check] Installing node packages ^_^" 
+  npm i --silent
 }
-
-if ( $shouldRunInstall ) 
-{
-  Write-Information -MessageData "Installing node packages ^_^" 
-  npm i
-} else {
-  Write-Information -MessageData ('['+$count+'/'+($installedList.Length -1)+'] npm packages found ^_^ continuing build') 
+else{
+  Write-Information -MessageData ('[NPM Package Check] npm packages found ^_^ continuing build') 
 }
-Write-Information -MessageData ('------------------------------') 

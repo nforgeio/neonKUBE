@@ -15,6 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if !NETCOREAPP3_1
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -236,7 +238,7 @@ namespace Neon.Web.SignalR
             Covenant.Requires<ArgumentNullException>(methodName != null, nameof(methodName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
-            await PublishAsync(subjects.All, Invokation.Write(methodName: methodName, args: args));
+            await PublishAsync(subjects.All, Invocation.Write(methodName: methodName, args: args));
         }
 
         /// <inheritdoc />
@@ -248,7 +250,7 @@ namespace Neon.Web.SignalR
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
             Covenant.Requires<ArgumentNullException>(excludedConnectionIds != null, nameof(excludedConnectionIds));
 
-            await PublishAsync(subjects.All, Invokation.Write(methodName: methodName, args: args, excludedConnectionIds: excludedConnectionIds));
+            await PublishAsync(subjects.All, Invocation.Write(methodName: methodName, args: args, excludedConnectionIds: excludedConnectionIds));
         }
 
         /// <inheritdoc />
@@ -260,7 +262,7 @@ namespace Neon.Web.SignalR
             Covenant.Requires<ArgumentNullException>(methodName != null, nameof(methodName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
-            await PublishAsync(subjects.Connection(connectionId), Invokation.Write(methodName: methodName, args: args));
+            await PublishAsync(subjects.Connection(connectionId), Invocation.Write(methodName: methodName, args: args));
         }
 
         /// <inheritdoc />
@@ -273,7 +275,7 @@ namespace Neon.Web.SignalR
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
             var tasks   = new List<Task>();
-            var message = Invokation.Write(methodName: methodName, args: args);
+            var message = Invocation.Write(methodName: methodName, args: args);
 
             foreach (var connectionId in connectionIds)
             {
@@ -292,7 +294,7 @@ namespace Neon.Web.SignalR
             Covenant.Requires<ArgumentNullException>(methodName != null, nameof(methodName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
-            await PublishAsync(subjects.Group(groupName), Invokation.Write(methodName: methodName, args: args));
+            await PublishAsync(subjects.Group(groupName), Invocation.Write(methodName: methodName, args: args));
         }
 
         /// <inheritdoc />
@@ -305,7 +307,7 @@ namespace Neon.Web.SignalR
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
             Covenant.Requires<ArgumentNullException>(excludedConnectionIds != null, nameof(excludedConnectionIds));
 
-            await PublishAsync(subjects.Group(groupName), Invokation.Write(methodName: methodName, args: args, excludedConnectionIds: excludedConnectionIds));
+            await PublishAsync(subjects.Group(groupName), Invocation.Write(methodName: methodName, args: args, excludedConnectionIds: excludedConnectionIds));
         }
 
         /// <inheritdoc />
@@ -318,7 +320,7 @@ namespace Neon.Web.SignalR
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
             var tasks = new List<Task>();
-            var message = Invokation.Write(methodName: methodName, args: args);
+            var message = Invocation.Write(methodName: methodName, args: args);
 
             foreach (var groupName in groupNames)
             {
@@ -337,7 +339,7 @@ namespace Neon.Web.SignalR
             Covenant.Requires<ArgumentNullException>(methodName != null, nameof(methodName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
-            await PublishAsync(subjects.User(userId), Invokation.Write(methodName: methodName, args: args));
+            await PublishAsync(subjects.User(userId), Invocation.Write(methodName: methodName, args: args));
         }
 
         /// <inheritdoc />
@@ -350,7 +352,7 @@ namespace Neon.Web.SignalR
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
             var tasks   = new List<Task>();
-            var message = Invokation.Write(methodName: methodName, args: args);
+            var message = Invocation.Write(methodName: methodName, args: args);
 
             foreach (var userId in userIds)
             {
@@ -405,7 +407,7 @@ namespace Neon.Web.SignalR
 
                     try
                     {
-                        var invocation = Invokation.Read(args.Message.Data);
+                        var invocation = Invocation.Read(args.Message.Data);
                         var message = new InvocationMessage(invocation.MethodName, invocation.Args);
 
                         await connection.WriteAsync(message).AsTask();
@@ -451,7 +453,7 @@ namespace Neon.Web.SignalR
 
                     try
                     {
-                        var invocation = Invokation.Read(args.Message.Data);
+                        var invocation = Invocation.Read(args.Message.Data);
                         var tasks      = new List<Task>(subscriptions.Count);
                         var message    = new InvocationMessage(invocation.MethodName, invocation.Args);
 
@@ -487,7 +489,7 @@ namespace Neon.Web.SignalR
 
                 try
                 {
-                    var invocation = Invokation.Read(args.Message.Data);
+                    var invocation = Invocation.Read(args.Message.Data);
                     var tasks      = new List<Task>(groupConnections.Count);
                     var message    = new InvocationMessage(invocation.MethodName, invocation.Args);
 
@@ -598,7 +600,7 @@ namespace Neon.Web.SignalR
 
                 try
                 {
-                    var invocation = Invokation.Read(args.Message.Data);
+                    var invocation = Invocation.Read(args.Message.Data);
                     var tasks      = new List<Task>(hubConnections.Count);
                     var message    = new InvocationMessage(invocation.MethodName, invocation.Args);
 
@@ -688,3 +690,5 @@ namespace Neon.Web.SignalR
         }
     }
 }
+
+#endif

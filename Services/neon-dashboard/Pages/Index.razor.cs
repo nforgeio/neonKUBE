@@ -90,7 +90,7 @@ namespace NeonDashboard.Pages
 
             AppState.CurrentDashboard = CurrentDashboard;
 
-            if (!string.IsNullOrEmpty(CurrentDashboard) && httpContextAccessor.HttpContext.Request.HttpContext.WebSockets.IsWebSocketRequest)
+            if (!string.IsNullOrEmpty(CurrentDashboard) && HttpContextAccessor.HttpContext.Request.HttpContext.WebSockets.IsWebSocketRequest)
             {
                 PageTitle = $"{AppState.NeonDashboardService.ClusterInfo.Name} - {AppState.GetCurrentDashboard(CurrentDashboard).Name}";
                 Program.Service.DashboardViewCounter.WithLabels(CurrentDashboard).Inc();

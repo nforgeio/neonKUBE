@@ -73,7 +73,7 @@ namespace Neon.Kube
     /// <para>
     /// While not required, some method of clock synchronization between nodes in the
     /// cluster is highly recommended. It's important to keep in mind when configuring
-    /// this client that the tolerance to skew rate varies inversely to master node
+    /// this client that the tolerance to skew rate varies inversely to control-plane node
     /// availability.
     /// </para>
     /// <para>
@@ -82,7 +82,7 @@ namespace Neon.Kube
     /// should be monitored and RetryPeriod and LeaseDuration should be increased
     /// until the rate is stable and acceptably low. It's important to keep in mind
     /// when configuring this client that the tolerance to API latency varies inversely
-    /// to master availability.
+    /// to control-plane availability.
     /// </para>
     /// <para>
     /// This class is very easy to use:

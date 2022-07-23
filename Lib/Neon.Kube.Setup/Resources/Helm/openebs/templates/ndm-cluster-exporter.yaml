@@ -7,7 +7,6 @@ metadata:
   name: {{ template "openebs.ndm-cluster-exporter.fullname" . }}
   labels:
     {{- include "openebs.ndm-cluster-exporter.labels" . | nindent 4 }}
-    openebs.io/metrics: openebs-ndm-exporter
 spec:
   replicas: 1
   strategy:

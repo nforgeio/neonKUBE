@@ -33,16 +33,16 @@ using NeonDashboard;
 namespace NeonDashboard.Shared.Components
 {
     public partial class Logo : ComponentBase, IDisposable
-	{
-		/// <summary>
-		/// Constructor.
-		/// </summary>
-		public Logo() { }
+    {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public Logo() { }
 
-		/// <inheritdoc/>
-		protected override void OnInitialized() { }
+        /// <inheritdoc/>
+        protected override void OnInitialized() { }
 
-		/// <inheritdoc/>
-		public void Dispose() { }
-	}
+        /// <inheritdoc/>
+        public void Dispose() { }
+    }
 }

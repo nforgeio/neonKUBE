@@ -69,7 +69,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Determines whether the hosting environment supports <b>zeroing</b>
-        /// clock devices.
+        /// block devices.
         /// </summary>
         /// <param name="environment">Specifies the hosting environment.</param>
         /// <returns><c>true</c> if <b>fstrim</b> is supported.</returns>
@@ -301,7 +301,7 @@ namespace Neon.Kube
                 }
             }
 
-            foreach (var azureNode in clusterDefinition.SortedMasterThenWorkerNodes)
+            foreach (var azureNode in clusterDefinition.SortedControlThenWorkerNodes)
             {
                 if (!string.IsNullOrEmpty(azureNode.Address))
                 {

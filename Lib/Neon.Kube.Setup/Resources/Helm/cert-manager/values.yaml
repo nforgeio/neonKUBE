@@ -186,7 +186,7 @@ prometheus:
 #          - key: foo.bar.com/role
 #            operator: In
 #            values:
-#            - master
+#            - control-plane
 affinity: {}
 
 # expects input structure as per specification https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#toleration-v1-core
@@ -194,7 +194,7 @@ affinity: {}
 #   tolerations:
 #   - key: foo.bar.com/role
 #     operator: Equal
-#     value: master
+#     value: control-plane
 #     effect: NoSchedule
 tolerations: []
 

@@ -1,12 +1,12 @@
 name: neon-desktop
 datacenter: neondesktop
-environment: development
+purpose: development
 isDesktopBuiltIn: true
 isLocked: false
 timeSources:
 - pool.ntp.org
 kubernetes:
-  allowPodsOnMasters: true
+  allowPodsOnControlPlane: true
 hosting:
   environment: hyperv
   hyperv:
@@ -22,5 +22,5 @@ network:
   gateway: 100.64.0.1
 nodes:
   neon-desktop:
-    role: master
+    role: control-plane
     address: 100.64.0.254

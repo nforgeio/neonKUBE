@@ -29,11 +29,15 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
 using NeonDashboard;
+using NeonDashboard.Shared.Components;
 
 namespace NeonDashboard.Shared
 {
     public partial class Alerts : ComponentBase, IDisposable
     {
+        [Inject]
+        public AppState AppState { get; set; }
+
         /// <summary>
         /// adds timestamp to "events" for demo purposes, refactor later
         /// </summary>

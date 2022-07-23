@@ -5,7 +5,6 @@ metadata:
   labels:
     {{- include "kiali-operator.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.service.type }}
   ports:
     - port: 8383
       protocol: TCP

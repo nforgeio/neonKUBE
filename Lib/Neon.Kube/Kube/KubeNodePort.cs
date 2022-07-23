@@ -51,7 +51,7 @@ namespace Neon.Kube
         public const int IstioIngressHttps = 30443;
 
         /// <summary>
-        /// The port exposed by the Kubernetes API servers on the master nodes.
+        /// The port exposed by the Kubernetes API servers on the control-plane nodes.
         /// </summary>
         public const int KubeApiServer = NetworkPorts.KubernetesApiServer;
     }

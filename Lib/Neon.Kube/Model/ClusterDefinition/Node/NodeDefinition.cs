@@ -110,24 +110,24 @@ namespace Neon.Kube
         public string Address { get; set; } = null;
 
         /// <summary>
-        /// Indicates that the node will act as a master node (defaults to <c>false</c>).
+        /// Indicates that the node will act as a control-plane node (defaults to <c>false</c>).
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Master nodes are reponsible for managing service discovery and coordinating 
+        /// Control-plane nodes are reponsible for managing service discovery and coordinating 
         /// pod deployment across the cluster.
         /// </para>
         /// <para>
-        /// An odd number of master nodes must be deployed in a cluster (to help prevent
-        /// split-brain).  One master node may be deployed for non-production environments,
-        /// but to enable high-availability, three or five master nodes may be deployed.
+        /// An odd number of control-plane nodes must be deployed in a cluster (to help prevent
+        /// split-brain).  One control-plane node may be deployed for non-production environments,
+        /// but to enable high-availability, three or five control-plane nodes may be deployed.
         /// </para>
         /// </remarks>
         [JsonIgnore]
         [YamlIgnore]
-        public bool IsMaster
+        public bool IsControlPane
         {
-            get { return Role.Equals(NodeRole.Master, StringComparison.InvariantCultureIgnoreCase); }
+            get { return Role.Equals(NodeRole.ControlPlane, StringComparison.InvariantCultureIgnoreCase); }
         }
 
         /// <summary>
@@ -174,7 +174,7 @@ namespace Neon.Kube
         /// If all nodes have <see cref="OpenEbsStorage"/> set to <c>false</c> then most neonKUBE 
         /// hosting managers will automatically choose the nodes that will host the cStor
         /// block devices by configuring up to three nodes to do this, favoring worker nodes
-        /// over masters when possible.
+        /// over control-plane nodes when possible.
         /// </note>
         /// <note>
         /// The <see cref="HostingEnvironment.BareMetal"/> hosting manager works a bit differently
@@ -369,9 +369,9 @@ namespace Neon.Kube
                 Role = NodeRole.Worker;
             }
 
-            if (!Role.Equals(NodeRole.Master, StringComparison.InvariantCultureIgnoreCase) && !Role.Equals(NodeRole.Worker, StringComparison.InvariantCultureIgnoreCase))
+            if (!Role.Equals(NodeRole.ControlPlane, StringComparison.InvariantCultureIgnoreCase) && !Role.Equals(NodeRole.Worker, StringComparison.InvariantCultureIgnoreCase))
             {
-                throw new ClusterDefinitionException($"[{nodeDefinitionPrefix}.{nameof(Name)}={Name}] has invalid [{nameof(Role)}={Role}].  This must be [{NodeRole.Master}] or [{NodeRole.Worker}].");
+                throw new ClusterDefinitionException($"[{nodeDefinitionPrefix}.{nameof(Name)}={Name}] has invalid [{nameof(Role)}={Role}].  This must be [{NodeRole.ControlPlane}] or [{NodeRole.Worker}].");
             }
 
             // We don't need to check the node address for cloud providers.

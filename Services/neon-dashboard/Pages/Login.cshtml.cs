@@ -22,20 +22,52 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
+using Neon.Diagnostics;
 using Neon.Tasks;
 
 namespace NeonDashboard.Pages
 {
+    /// <summary>
+    /// Handles login.
+    /// </summary>
     public class LoginModel : PageModel
     {
+        private Service           neonDashboardService;
+        private INeonLogger       logger;
+        private IDistributedCache cache;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="neonDashboardService"></param>
+        /// <param name="neonLogger"></param>
+        /// <param name="cache"></param>
+        public LoginModel(
+            Service                 neonDashboardService,
+            INeonLogger             neonLogger,
+            IDistributedCache       cache)
+        {
+            this.neonDashboardService = neonDashboardService;
+            this.logger               = neonLogger;
+            this.cache                = cache;
+        }
+
+        /// <summary>
+        /// Forwards the client to the upstream provider.
+        /// </summary>
+        /// <param name="redirectUri"></param>
+        /// <returns></returns>
         public async Task OnGet(string redirectUri)
         {
             await HttpContext.ChallengeAsync(
-                "oidc", 
+                OpenIdConnectDefaults.AuthenticationScheme, 
                 new AuthenticationProperties 
                 { 
                     RedirectUri = redirectUri,
