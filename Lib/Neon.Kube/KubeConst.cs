@@ -373,6 +373,6 @@ namespace Neon.Kube
         /// <summary>
         /// The CIR-O socket.
         /// </summary>
-        public const string CrioSocket = "/var/run/crio/crio.sock";
+        public const string CrioSocketPath = "/var/run/crio/crio.sock";
     }
 }

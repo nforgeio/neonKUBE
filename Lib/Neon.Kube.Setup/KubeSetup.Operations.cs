@@ -430,10 +430,10 @@ $@"
 apiVersion: kubeadm.k8s.io/v1beta3
 kind: InitConfiguration
 nodeRegistration:
-  criSocket: {KubeConst.CrioSocket}
+  criSocket: unix://{KubeConst.CrioSocketPath}
   imagePullPolicy: IfNotPresent
 ---
-apiVersion: kubeadm.k8s.io/v1beta2
+apiVersion: kubeadm.k8s.io/v1beta3
 kind: ClusterConfiguration
 clusterName: {cluster.Name}
 kubernetesVersion: ""v{KubeVersions.Kubernetes}""
@@ -554,7 +554,7 @@ mode: {kubeProxyMode}");
 
                                     var socketResponse = firstControlNode.SudoCommand("cat", new object[] { "/proc/net/unix" });
 
-                                    return socketResponse.Success && socketResponse.OutputText.Contains(KubeConst.CrioSocket);
+                                    return socketResponse.Success && socketResponse.OutputText.Contains(KubeConst.CrioSocketPath);
                                 },
                                 pollInterval: TimeSpan.FromSeconds(0.5),
                                 timeout:      TimeSpan.FromSeconds(60));
