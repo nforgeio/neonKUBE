@@ -228,29 +228,29 @@ namespace Neon.Kube
         /// <returns>The quoted and space separated list of IP address or DNS hostnames for the node's NTP time sources in priority order.</returns>
         /// <remarks>
         /// <para>
-        /// The cluster will be configured such that the first master node (by sorted name) will be the primary timesource
-        /// for the cluster.  All other master and worker nodes will be configured to use the first master by default.
-        /// Secondary masters will be configured to use the external timesource next so any master can automatically
+        /// The cluster will be configured such that the first control-plane node (by sorted name) will be the primary timesource
+        /// for the cluster.  All other control-plane and worker nodes will be configured to use the first control-plane node by default.
+        /// Secondary control-plane nodes will be configured to use the external timesource next so any control-plane can automatically
         /// assume these duities.
         /// </para>
         /// <para>
-        /// Worker nodes will be configured to use master node in sorted order but will not be configured to use the 
+        /// Worker nodes will be configured to use control-plane node in sorted order but will not be configured to use the 
         /// external time sources to avoid having large clusters spam the sources.
         /// </para>
         /// <para>
-        /// The nice thing about this is that the cluster will almost always be closly synchronized with the first master
-        /// with gracefull fallback on node failures.
+        /// The nice thing about this is that the cluster will almost always be closly synchronized with the first control-plane
+        /// with graceful fallback on node failures.
         /// </para>
         /// </remarks>
         /// <exception cref="InvalidOperationException">Thrown when there is no associated cluster proxy.</exception>
         public string GetNtpSources()
         {
-            var clusterDefinition = Cluster.Definition;
-            var nodeDefinition    = NodeDefinition;
-            var sortedMasters     = clusterDefinition.SortedMasterNodes.ToArray();
-            var firstMaster       = sortedMasters.First();
-            var sbExternalSources = new StringBuilder();
-            var sbNodeSources     = new StringBuilder();
+            var clusterDefinition  = Cluster.Definition;
+            var nodeDefinition     = NodeDefinition;
+            var sortedControlNodes = clusterDefinition.SortedControlNodes.ToArray();
+            var firstControlNode   = sortedControlNodes.First();
+            var sbExternalSources  = new StringBuilder();
+            var sbNodeSources      = new StringBuilder();
 
             // Normalize the external time sources.
 
@@ -268,34 +268,34 @@ namespace Neon.Kube
 
             switch (nodeDefinition.Role)
             {
-                case NodeRole.Master:
+                case NodeRole.ControlPlane:
 
-                    if (nodeDefinition.Name.Equals(firstMaster.Name, StringComparison.InvariantCultureIgnoreCase))
+                    if (nodeDefinition.Name.Equals(firstControlNode.Name, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        // The first master is configured to use the external time sources only.
+                        // The first control-plane is configured to use the external time sources only.
 
                         sbNodeSources.AppendWithSeparator(sbExternalSources.ToString());
                     }
                     else
                     {
-                        // The remaining masters are configured to prioritize the first master and
+                        // The remaining control-plane nodes are configured to prioritize the first control-plane and
                         // then fallback to the external sources.
 
-                        sbNodeSources.AppendWithSeparator($"\"{firstMaster.Address}\"");
+                        sbNodeSources.AppendWithSeparator($"\"{firstControlNode.Address}\"");
                         sbNodeSources.AppendWithSeparator(sbExternalSources.ToString());
                     }
                     break;
 
                 case NodeRole.Worker:
 
-                    // Workers are configured to priortize the first master and then fall
-                    // back to the remaining masters.  Workers will not be configured to
+                    // Workers are configured to priortize the first control-plane and then fall
+                    // back to the remaining control-plane nodes.  Workers will not be configured to
                     // use the external time sources to avoid having large clusters spam
                     // the sources.
 
-                    foreach (var master in sortedMasters)
+                    foreach (var controlNode in sortedControlNodes)
                     {
-                        sbNodeSources.AppendWithSeparator($"\"{master.Address}\"");
+                        sbNodeSources.AppendWithSeparator($"\"{controlNode.Address}\"");
                     }
 
                     sbNodeSources.AppendWithSeparator(sbExternalSources.ToString());

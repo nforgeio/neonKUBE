@@ -221,11 +221,11 @@ namespace Neon.Kube
         //
         //      https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html
         //
-        // neonKUBE will be deployed using two partition placement groups, one for master
-        // nodes and the other for workers.  The number of master placement partitions is
-        // controlled by [AwsHostingOptions.MasterPlacementPartitions] which defaults to
-        // the number of master nodes in the cluster.  Doing this helps to avoid losing
-        // a majority of the master nodes with the loss of a single partition, which would
+        // neonKUBE will be deployed using two partition placement groups, one for control-plane
+        // nodes and the other for workers.  The number of control-plane placement partitions is
+        // controlled by [AwsHostingOptions.ControlPlanePlacementPartitions] which defaults to
+        // the number of control-plane nodes in the cluster.  Doing this helps to avoid losing
+        // a majority of the control-plane nodes with the loss of a single partition, which would
         // dramatically impact cluster functionality.
         //
         // Worker placement partitions are controlled by [AwsOptions.WorkerPlacementGroups].
@@ -314,9 +314,9 @@ namespace Neon.Kube
             public string Address => Node.Address.ToString();
 
             /// <summary>
-            /// Returns <c>true</c> if the node is a master.
+            /// Returns <c>true</c> if the node is a control-plane.
             /// </summary>
-            public bool IsMaster => Node.Metadata.Role == NodeRole.Master;
+            public bool IsControlPlane => Node.Metadata.Role == NodeRole.ControlPlane;
 
             /// <summary>
             /// Returns <c>true</c> if the node is a worker.
@@ -823,7 +823,7 @@ namespace Neon.Kube
         private string                              natGatewayName;
         private string                              loadBalancerName;
         private string                              elbName;
-        private string                              masterPlacementGroupName;
+        private string                              controlPlacementGroupName;
         private string                              workerPlacementGroupName;
 
         // These reference the AWS resources.
@@ -841,7 +841,7 @@ namespace Neon.Kube
         private InternetGateway                     internetGateway;
         private NatGateway                          natGateway;
         private LoadBalancer                        loadBalancer;
-        private PlacementGroup                      masterPlacementGroup;
+        private PlacementGroup                      controlPlanePlacementGroup;
         private PlacementGroup                      workerPlacementGroup;
 
         /// <summary>
@@ -923,20 +923,20 @@ namespace Neon.Kube
 
             // Initialize the cluster resource names.
 
-            ingressAddressName       = GetResourceName("ingress-address");
-            egressAddressName        = GetResourceName("egress-address");
-            vpcName                  = GetResourceName("vpc");
-            securityGroupName        = GetResourceName("security-group");
-            publicSubnetName         = GetResourceName("public-subnet");
-            nodeSubnetName           = GetResourceName("node-subnet");
-            publicRouteTableName     = GetResourceName("public-route-table");
-            nodeRouteTableName       = GetResourceName("node-route-table");
-            internetGatewayName      = GetResourceName("internet-gateway");
-            natGatewayName           = GetResourceName("nat-gateway");
-            loadBalancerName         = GetResourceName("load-balancer");
-            elbName                  = GetLoadBalancerName(clusterName, "elb");
-            masterPlacementGroupName = GetResourceName("master-placement");
-            workerPlacementGroupName = GetResourceName("worker-placement");
+            ingressAddressName        = GetResourceName("ingress-address");
+            egressAddressName         = GetResourceName("egress-address");
+            vpcName                   = GetResourceName("vpc");
+            securityGroupName         = GetResourceName("security-group");
+            publicSubnetName          = GetResourceName("public-subnet");
+            nodeSubnetName            = GetResourceName("node-subnet");
+            publicRouteTableName      = GetResourceName("public-route-table");
+            nodeRouteTableName        = GetResourceName("node-route-table");
+            internetGatewayName       = GetResourceName("internet-gateway");
+            natGatewayName            = GetResourceName("nat-gateway");
+            loadBalancerName          = GetResourceName("load-balancer");
+            elbName                   = GetLoadBalancerName(clusterName, "elb");
+            controlPlacementGroupName = GetResourceName("control-placement");
+            workerPlacementGroupName  = GetResourceName("worker-placement");
 
             // Initialize the dictionary we'll use for mapping ELB target group
             // names to the specific target group.
@@ -988,19 +988,19 @@ namespace Neon.Kube
         private IEnumerable<AwsInstance> SortedNodes => Nodes.OrderBy(node => node.Name, StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
-        /// Enumerates the cluster master nodes in no particular order.
+        /// Enumerates the cluster control-plane nodes in no particular order.
         /// </summary>
-        private IEnumerable<AwsInstance> MasterNodes => Nodes.Where(node => node.IsMaster);
+        private IEnumerable<AwsInstance> ControlNodes => Nodes.Where(node => node.IsControlPlane);
 
         /// <summary>
-        /// Enumerates the cluster master nodes in ascending order by name.
+        /// Enumerates the cluster control-plane nodes in ascending order by name.
         /// </summary>
-        private IEnumerable<AwsInstance> SortedMasterNodes => Nodes.Where(node => node.IsMaster).OrderBy(node => node.Name, StringComparer.InvariantCultureIgnoreCase);
+        private IEnumerable<AwsInstance> SortedControlNodes => Nodes.Where(node => node.IsControlPlane).OrderBy(node => node.Name, StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
         /// Enumerates the cluster worker nodes in no particular order.
         /// </summary>
-        private IEnumerable<AwsInstance> WorkerNodes => Nodes.Where(node => node.IsMaster);
+        private IEnumerable<AwsInstance> WorkerNodes => Nodes.Where(node => node.IsControlPlane);
 
         /// <summary>
         /// Enumerates the cluster worker nodes in ascending order by name.
@@ -1010,7 +1010,7 @@ namespace Neon.Kube
         /// <summary>
         /// Enumerates the cluster worker nodes in ascending order by name followed by the sorted worker nodes.
         /// </summary>
-        private IEnumerable<AwsInstance> SortedMasterThenWorkerNodes => SortedMasterNodes.Union(SorteWorkerNodes);
+        private IEnumerable<AwsInstance> SortedControlThenWorkerNodes => SortedControlNodes.Union(SorteWorkerNodes);
 
         /// <summary>
         /// <para>
@@ -1676,16 +1676,16 @@ namespace Neon.Kube
 
             foreach (var placementGroupItem in placementGroupPaginator.PlacementGroups)
             {
-                if (placementGroupItem.GroupName == masterPlacementGroupName)
+                if (placementGroupItem.GroupName == controlPlacementGroupName)
                 {
-                    masterPlacementGroup = placementGroupItem;
+                    controlPlanePlacementGroup = placementGroupItem;
                 }
                 else if (placementGroupItem.GroupName == workerPlacementGroupName)
                 {
                     workerPlacementGroup = placementGroupItem;
                 }
 
-                if (masterPlacementGroup != null && workerPlacementGroup != null)
+                if (controlPlanePlacementGroup != null && workerPlacementGroup != null)
                 {
                     break;  // We have both groups.
                 }
@@ -1933,16 +1933,16 @@ namespace Neon.Kube
 
                 switch (node.Metadata.Role)
                 {
-                    case NodeRole.Master:
+                    case NodeRole.ControlPlane:
 
-                        if (instanceTypeInfo.VCpuInfo.DefaultVCpus < KubeConst.MinMasterCores)
+                        if (instanceTypeInfo.VCpuInfo.DefaultVCpus < KubeConst.MinControlNodeCores)
                         {
-                            throw new NeonKubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [Cores={instanceTypeInfo.VCpuInfo.DefaultVCpus}] which is lower than the required [{KubeConst.MinMasterCores}] cores.]");
+                            throw new NeonKubeException($"Control-plane node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [Cores={instanceTypeInfo.VCpuInfo.DefaultVCpus}] which is lower than the required [{KubeConst.MinControlNodeCores}] cores.]");
                         }
 
-                        if (instanceTypeInfo.MemoryInfo.SizeInMiB < KubeConst.MinMasterRamMiB)
+                        if (instanceTypeInfo.MemoryInfo.SizeInMiB < KubeConst.MinControlNodeRamMiB)
                         {
-                            throw new NeonKubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [RAM={instanceTypeInfo.MemoryInfo.SizeInMiB} MiB] which is lower than the required [{KubeConst.MinMasterRamMiB} MiB].]");
+                            throw new NeonKubeException($"Control-plane node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [RAM={instanceTypeInfo.MemoryInfo.SizeInMiB} MiB] which is lower than the required [{KubeConst.MinControlNodeRamMiB} MiB].]");
                         }
                         break;
 
@@ -2136,7 +2136,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Creates the the master and worker placement groups used to provision the cluster node instances.
+        /// Creates the the control-plane and worker placement groups used to provision the cluster node instances.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -2145,18 +2145,18 @@ namespace Neon.Kube
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            if (masterPlacementGroup == null)
+            if (controlPlanePlacementGroup == null)
             {
-                controller.SetGlobalStepStatus($"configure: [{masterPlacementGroupName}] placement group");
+                controller.SetGlobalStepStatus($"configure: [{controlPlacementGroupName}] placement group");
 
                 var partitionGroupResponse = await ec2Client.CreatePlacementGroupAsync(
-                    new CreatePlacementGroupRequest(masterPlacementGroupName, PlacementStrategy.Partition)
+                    new CreatePlacementGroupRequest(controlPlacementGroupName, PlacementStrategy.Partition)
                     {
-                        PartitionCount    = awsOptions.MasterPlacementPartitions,
-                        TagSpecifications = GetTagSpecifications(masterPlacementGroupName, ResourceType.PlacementGroup)
+                        PartitionCount    = awsOptions.ControlPlanePlacementPartitions,
+                        TagSpecifications = GetTagSpecifications(controlPlacementGroupName, ResourceType.PlacementGroup)
                     });
 
-                masterPlacementGroup = partitionGroupResponse.PlacementGroup;
+                controlPlanePlacementGroup = partitionGroupResponse.PlacementGroup;
             }
 
             if (workerPlacementGroup == null)
@@ -2393,7 +2393,7 @@ namespace Neon.Kube
 
             var nextUnallocatedPortIndex = 0;
 
-            foreach (var awsInstance in SortedMasterThenWorkerNodes.Where(awsInstance => awsInstance.ExternalSshPort == 0))
+            foreach (var awsInstance in SortedControlThenWorkerNodes.Where(awsInstance => awsInstance.ExternalSshPort == 0))
             {
                 awsInstance.ExternalSshPort = unallocatedPorts[nextUnallocatedPortIndex++];
             }
@@ -2808,11 +2808,11 @@ namespace Neon.Kube
                 var placementGroupName = (string)null;
                 var partitionNumber = -1;
 
-                if (node.Metadata.IsMaster)
+                if (node.Metadata.IsControlPane)
                 {
-                    placementGroupName = masterPlacementGroupName;
+                    placementGroupName = controlPlacementGroupName;
 
-                    if (awsOptions.MasterPlacementPartitions <= 1)
+                    if (awsOptions.ControlPlanePlacementPartitions <= 1)
                     {
                         // No effective partitioning.
 
@@ -2820,23 +2820,23 @@ namespace Neon.Kube
                     }
                     else
                     {
-                        // Spread the master instances across the partitions while honoring
+                        // Spread the control-plane instances across the partitions while honoring
                         // node specific partition settings.
 
                         var partitionAssignmentCounts = new List<int>();
 
-                        for (int i = 1; i < awsOptions.MasterPlacementPartitions; i++)
+                        for (int i = 1; i < awsOptions.ControlPlanePlacementPartitions; i++)
                         {
                             partitionAssignmentCounts.Add(0);
                         }
 
-                        foreach (var master in cluster.Definition.SortedMasterNodes.ToList())
+                        foreach (var controlNode in cluster.Definition.SortedControlNodes.ToList())
                         {
-                            if (master.Aws.PlacementPartition > 0)
+                            if (controlNode.Aws.PlacementPartition > 0)
                             {
                                 // User explicitly specified the partition.
 
-                                partitionNumber = master.Aws.PlacementPartition;
+                                partitionNumber = controlNode.Aws.PlacementPartition;
                             }
                             else
                             {
@@ -3376,7 +3376,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             KubeHelper.EnsureIngressNodes(cluster.Definition);
 
             // We need to add a special ingress rule for the Kubernetes API on port 6442 and
-            // load balance this traffic to the master nodes.
+            // load balance this traffic to the control-plane nodes.
 
             var clusterRules = new IngressRule[]
                 {
@@ -3386,7 +3386,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                         Protocol              = IngressProtocol.Tcp,
                         ExternalPort          = NetworkPorts.KubernetesApiServer,
                         NodePort              = NetworkPorts.KubernetesApiServer,
-                        Target                = IngressRuleTarget.Masters,
+                        Target                = IngressRuleTarget.ControlPlane,
                         AddressRules          = networkOptions.ManagementAddressRules,
                         IdleTcpReset          = true,
                         TcpIdleTimeoutMinutes = 5
@@ -3400,11 +3400,11 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
             var defaultHealthCheck = networkOptions.IngressHealthCheck ?? new HealthCheckOptions();
 
-            var targetMasterNodes = SortedMasterNodes
+            var targetControlNodes = SortedControlNodes
                 .Select(awsInstance => new TargetDescription() { Id = awsInstance.InstanceId })
                 .ToList();
 
-            var targetIngressNodes = SortedMasterThenWorkerNodes
+            var targetIngressNodes = SortedControlThenWorkerNodes
                 .Where(awsInstance => awsInstance.Node.Metadata.Ingress)
                 .Select(awsInstance => new TargetDescription() { Id = awsInstance.InstanceId })
                 .ToList();
@@ -3455,9 +3455,9 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
                 switch (ingressRule.Target)
                 {
-                    case IngressRuleTarget.Masters:
+                    case IngressRuleTarget.ControlPlane:
 
-                        targetNodes = targetMasterNodes;
+                        targetNodes = targetControlNodes;
                         break;
 
                     case IngressRuleTarget.Ingress:
@@ -3486,7 +3486,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             // We'll enable/disable external SSH access by creating or removing the listeners
             // further below.
 
-            foreach (var awsInstance in SortedMasterThenWorkerNodes)
+            foreach (var awsInstance in SortedControlThenWorkerNodes)
             {
                 Covenant.Assert(awsInstance.ExternalSshPort != 0, $"Node [{awsInstance.Name}] does not have an external SSH port assignment.");
 
@@ -3556,7 +3556,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
                 switch (ingressRule.Target)
                 {
-                    case IngressRuleTarget.Masters:
+                    case IngressRuleTarget.ControlPlane:
                     case IngressRuleTarget.Ingress:
 
                         targetGroup = nameToTargetGroup[GetTargetGroupName(clusterName, ingressRule.Target, ingressRule.Protocol, ingressRule.ExternalPort)];
@@ -4178,9 +4178,9 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             //-----------------------------------------------------------------
             // Step 2: Remove the placement groups
 
-            if (masterPlacementGroup != null)
+            if (controlPlanePlacementGroup != null)
             {
-                await retry.InvokeAsync(async () => await ec2Client.DeletePlacementGroupAsync(new DeletePlacementGroupRequest(masterPlacementGroup.GroupName)));
+                await retry.InvokeAsync(async () => await ec2Client.DeletePlacementGroupAsync(new DeletePlacementGroupRequest(controlPlanePlacementGroup.GroupName)));
             }
 
             if (workerPlacementGroup != null)

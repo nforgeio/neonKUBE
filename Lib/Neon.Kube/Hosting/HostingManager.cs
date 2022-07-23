@@ -301,7 +301,7 @@ namespace Neon.Kube
                 }
             }
 
-            foreach (var azureNode in clusterDefinition.SortedMasterThenWorkerNodes)
+            foreach (var azureNode in clusterDefinition.SortedControlThenWorkerNodes)
             {
                 if (!string.IsNullOrEmpty(azureNode.Address))
                 {

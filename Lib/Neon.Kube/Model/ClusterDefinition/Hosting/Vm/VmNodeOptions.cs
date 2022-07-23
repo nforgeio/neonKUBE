@@ -67,7 +67,7 @@ namespace Neon.Kube
         /// defaults to the value specified by <see cref="VmHostingOptions.Cores"/>.
         /// </para>
         /// <note>
-        /// neonKUBE requires that each master and worker node have at least 4 CPUs.
+        /// neonKUBE requires that each control-plane and worker node have at least 4 CPUs.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Cores", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -83,7 +83,7 @@ namespace Neon.Kube
         /// <see cref="VmHostingOptions.Memory"/>.
         /// </para>
         /// <note>
-        /// neonKUBE requires that each master and worker node have at least 4GiB of RAM.
+        /// neonKUBE requires that each control-plane and worker node have at least 4GiB of RAM.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Memory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

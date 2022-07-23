@@ -191,7 +191,7 @@ namespace Neon.Kube
         /// Returns the IP address to be used to access the cluster.  For clusters
         /// deployed the the cloud, this will be the ingress IP address assigned to
         /// the load balancer.  For on-premise clusters, this returns the private
-        /// IP addresses for the master nodes.
+        /// IP addresses for the control-plane nodes.
         /// </summary>
         /// <returns>The list of cluster IP addresses.</returns>
         IEnumerable<string> GetClusterAddresses();

@@ -107,12 +107,12 @@ namespace Neon.Kube
         // that virtual air-gapped clusters can be supported (more on that below).
         //
         // Nodes will be deployed in two Azure availability sets, one set for the
-        // masters and the other one for the workers.  We're doing this to ensure
-        // that there will always be a quorum of masters available during planned
+        // control-plane nodes and the other one for the workers.  We're doing this to ensure
+        // that there will always be a quorum of control-plane nodes available during planned
         // Azure maintenance.
         //
         // By default, we're also going to create an Azure proximity placement group
-        // for the cluster and then add both the master and worker availability sets
+        // for the cluster and then add both the control-plane and worker availability sets
         // to the proximity group.  This ensures the shortest possible network latency
         // between all of the cluster nodes but with the increased chance that Azure
         // won't be able to satisfy the deployment constraints.  The user can disable
@@ -265,9 +265,9 @@ namespace Neon.Kube
             public NetworkInterfaceResource Nic { get; set; }
 
             /// <summary>
-            /// Returns <c>true</c> if the node is a master.
+            /// Returns <c>true</c> if the node is a control-plane.
             /// </summary>
-            public bool IsMaster => Node.Metadata.Role == NodeRole.Master;
+            public bool IsControlPlane => Node.Metadata.Role == NodeRole.ControlPlane;
 
             /// <summary>
             /// Returns <c>true</c> if the node is a worker.
@@ -845,7 +845,7 @@ namespace Neon.Kube
         private readonly string                             loadbalancerName;
         private readonly string                             loadbalancerFrontendName;
         private readonly string                             loadbalancerIngressBackendName;
-        private readonly string                             loadbalancerMasterBackendName;
+        private readonly string                             loadbalancerControlPlaneBackendName;
         private readonly string                             subnetNsgName;
         private readonly string                             natGatewayName;
 
@@ -931,19 +931,19 @@ namespace Neon.Kube
             //
             // optionally combined with the cluster name.
 
-            this.publicIngressAddressName       = GetResourceName("pip", "cluster-ingress", true);
-            this.publicEgressAddressName        = GetResourceName("pip", "cluster-egress", true);
-            this.publicEgressPrefixName         = GetResourceName("ippre", "cluster-egress", true);
-            this.vnetName                       = GetResourceName("vnet", "cluster", true);
-            this.subnetName                     = GetResourceName("snet", "cluster", true);
-            this.primaryNicName                 = "primary";
-            this.proximityPlacementGroupName    = GetResourceName("ppg", "cluster", true);
-            this.loadbalancerName               = GetResourceName("lbe", "public", true);
-            this.subnetNsgName                  = GetResourceName("nsg", "subnet");
-            this.natGatewayName                 = GetResourceName("ng", "cluster", true);
-            this.loadbalancerFrontendName       = "ingress";
-            this.loadbalancerIngressBackendName = "ingress-nodes";
-            this.loadbalancerMasterBackendName  = "master-nodes";
+            this.publicIngressAddressName            = GetResourceName("pip", "cluster-ingress", true);
+            this.publicEgressAddressName             = GetResourceName("pip", "cluster-egress", true);
+            this.publicEgressPrefixName              = GetResourceName("ippre", "cluster-egress", true);
+            this.vnetName                            = GetResourceName("vnet", "cluster", true);
+            this.subnetName                          = GetResourceName("snet", "cluster", true);
+            this.primaryNicName                      = "primary";
+            this.proximityPlacementGroupName         = GetResourceName("ppg", "cluster", true);
+            this.loadbalancerName                    = GetResourceName("lbe", "public", true);
+            this.subnetNsgName                       = GetResourceName("nsg", "subnet");
+            this.natGatewayName                      = GetResourceName("ng", "cluster", true);
+            this.loadbalancerFrontendName            = "ingress";
+            this.loadbalancerIngressBackendName      = "ingress-nodes";
+            this.loadbalancerControlPlaneBackendName = "control-plane";
 
             // Initialize the vm/node mapping dictionary and also ensure
             // that each node has reasonable Azure node options.
@@ -990,19 +990,19 @@ namespace Neon.Kube
         private IEnumerable<AzureVm> SortedNodes => Nodes.OrderBy(node => node.Name, StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
-        /// Enumerates the cluster master nodes in no particular order.
+        /// Enumerates the cluster control-plane nodes in no particular order.
         /// </summary>
-        private IEnumerable<AzureVm> MasterNodes => Nodes.Where(node => node.IsMaster);
+        private IEnumerable<AzureVm> ControlNodes => Nodes.Where(node => node.IsControlPlane);
 
         /// <summary>
-        /// Enumerates the cluster master nodes in ascending order by name.
+        /// Enumerates the cluster control-plane nodes in ascending order by name.
         /// </summary>
-        private IEnumerable<AzureVm> SortedMasterNodes => Nodes.Where(node => node.IsMaster).OrderBy(node => node.Name, StringComparer.InvariantCultureIgnoreCase);
+        private IEnumerable<AzureVm> SortedControlNodes => Nodes.Where(node => node.IsControlPlane).OrderBy(node => node.Name, StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
         /// Enumerates the cluster worker nodes in no particular order.
         /// </summary>
-        private IEnumerable<AzureVm> WorkerNodes => Nodes.Where(node => node.IsMaster);
+        private IEnumerable<AzureVm> WorkerNodes => Nodes.Where(node => node.IsControlPlane);
 
         /// <summary>
         /// Enumerates the cluster worker nodes in ascending order by name.
@@ -1012,7 +1012,7 @@ namespace Neon.Kube
         /// <summary>
         /// Enumerates the cluster worker nodes in ascending order by name followed by the sorted worker nodes.
         /// </summary>
-        private IEnumerable<AzureVm> SortedMasterThenWorkerNodes => SortedMasterNodes.Union(SorteWorkerNodes);
+        private IEnumerable<AzureVm> SortedControlThenWorkerNodes => SortedControlNodes.Union(SorteWorkerNodes);
 
         /// <summary>
         /// <para>
@@ -1798,21 +1798,21 @@ namespace Neon.Kube
 
                 switch (node.Metadata.Role)
                 {
-                    case NodeRole.Master:
+                    case NodeRole.ControlPlane:
 
-                        if (vmSku.VirtualCpus < KubeConst.MinMasterCores)
+                        if (vmSku.VirtualCpus < KubeConst.MinControlNodeCores)
                         {
-                            throw new NeonKubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSkuName}] with [Cores={vmSku.VirtualCpus} MiB] which is lower than the required [{KubeConst.MinMasterCores}] cores.]");
+                            throw new NeonKubeException($"Control-plane node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSkuName}] with [Cores={vmSku.VirtualCpus} MiB] which is lower than the required [{KubeConst.MinControlNodeCores}] cores.]");
                         }
 
-                        if (vmSku.MemoryGiB < KubeConst.MinMasterRamMiB / 1024)
+                        if (vmSku.MemoryGiB < KubeConst.MinControlNodeRamMiB / 1024)
                         {
-                            throw new NeonKubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSkuName}] with [RAM={vmSku.MemoryGiB} MiB] which is lower than the required [{KubeConst.MinMasterRamMiB * 1024} MiB].]");
+                            throw new NeonKubeException($"Control-plane node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSkuName}] with [RAM={vmSku.MemoryGiB} MiB] which is lower than the required [{KubeConst.MinControlNodeRamMiB * 1024} MiB].]");
                         }
 
                         if (vmSku.MaxDataDisks < 1)
                         {
-                            throw new NeonKubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSkuName}] that supports up to [{vmSku.MaxDataDisks}] disks.  A minimum of [1] drive is required.");
+                            throw new NeonKubeException($"Control-plane node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSkuName}] that supports up to [{vmSku.MaxDataDisks}] disks.  A minimum of [1] drive is required.");
                         }
                         break;
 
@@ -1893,9 +1893,9 @@ namespace Neon.Kube
                 }
             }
         }
-         
+
         /// <summary>
-        /// Creates an availability set for the master VMs and a separate one for the worker VMs
+        /// Creates an availability set for the control-plane VMs and a separate one for the worker VMs
         /// as well as the cluster's proximity placement group.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -2254,7 +2254,7 @@ namespace Neon.Kube
 
             var nextUnallocatedPortIndex = 0;
 
-            foreach (var azureVm in SortedMasterThenWorkerNodes.Where(vm => vm.ExternalSshPort == 0))
+            foreach (var azureVm in SortedControlThenWorkerNodes.Where(vm => vm.ExternalSshPort == 0))
             {
                 azureVm.ExternalSshPort = unallocatedPorts[nextUnallocatedPortIndex++];
             }
@@ -2312,7 +2312,7 @@ namespace Neon.Kube
                 loadBalancerData.BackendAddressPools.Add(
                     new BackendAddressPoolData()
                     {
-                         Name = loadbalancerMasterBackendName
+                         Name = loadbalancerControlPlaneBackendName
                     });
 
                 loadBalancerData.BackendAddressPools.Add(
@@ -2566,7 +2566,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             // Add the virtual machine NICs to the backend pools as required.
 
             var nicCollection          = resourceGroup.GetNetworkInterfaces();
-            var masterBackendPoolData  = loadBalancer.Data.BackendAddressPools.Single(pool => pool.Name.Equals(loadbalancerMasterBackendName, StringComparison.InvariantCultureIgnoreCase));
+            var controlBackendPoolData = loadBalancer.Data.BackendAddressPools.Single(pool => pool.Name.Equals(loadbalancerControlPlaneBackendName, StringComparison.InvariantCultureIgnoreCase));
             var ingressBackendPoolData = loadBalancer.Data.BackendAddressPools.Single(pool => pool.Name.Equals(loadbalancerIngressBackendName, StringComparison.InvariantCultureIgnoreCase));
 
             await Parallel.ForEachAsync(nameToVm.Values, parallelOptions,
@@ -2576,14 +2576,14 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                     var nicBackendAddressPools = ipConfiguration.LoadBalancerBackendAddressPools;
                     var changed                = false;
 
-                    if (azureVm.IsMaster && !nicBackendAddressPools.Any(pool => pool.Id == masterBackendPoolData.Id))
+                    if (azureVm.IsControlPlane && !nicBackendAddressPools.Any(pool => pool.Id == controlBackendPoolData.Id))
                     {
                         changed = true;
 
                         nicBackendAddressPools.Add(
                             new BackendAddressPoolData()
                             {
-                                Id = masterBackendPoolData.Id
+                                Id = controlBackendPoolData.Id
                             });
                     }
 
@@ -2612,7 +2612,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             // Add the load balancer ingress rules and health probes.
 
             // We need to add a special ingress rule for the Kubernetes API on its standard
-            // port 6443 and load balance this traffic to the master nodes.
+            // port 6443 and load balance this traffic to the control-plane nodes.
 
             var clusterRules = new IngressRule[]
             {
@@ -2622,7 +2622,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                     Protocol              = IngressProtocol.Tcp,
                     ExternalPort          = NetworkPorts.KubernetesApiServer,
                     NodePort              = NetworkPorts.KubernetesApiServer,
-                    Target                = IngressRuleTarget.Masters,
+                    Target                = IngressRuleTarget.ControlPlane,
                     AddressRules          = networkOptions.ManagementAddressRules,
                     IdleTcpReset          = true,
                     TcpIdleTimeoutMinutes = IngressRule.DefaultTcpIdleTimeoutMinutes
@@ -2693,9 +2693,9 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                         backendPoolId = nameToBackEndPoolId[loadbalancerIngressBackendName];
                         break;
 
-                    case IngressRuleTarget.Masters:
+                    case IngressRuleTarget.ControlPlane:
 
-                        backendPoolId = nameToBackEndPoolId[loadbalancerMasterBackendName];
+                        backendPoolId = nameToBackEndPoolId[loadbalancerControlPlaneBackendName];
                         break;
 
                     default:
@@ -3381,7 +3381,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
             await ConnectAzureAsync();
 
-            await Parallel.ForEachAsync(cluster.Definition.SortedMasterThenWorkerNodes, parallelOptions,
+            await Parallel.ForEachAsync(cluster.Definition.SortedControlThenWorkerNodes, parallelOptions,
                 async (node, cancellationToken) =>
                 {
                     var azureVm = nameToVm[node.Name];
@@ -3403,7 +3403,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
             await ConnectAzureAsync();
 
-            await Parallel.ForEachAsync(cluster.Definition.SortedMasterThenWorkerNodes, parallelOptions,
+            await Parallel.ForEachAsync(cluster.Definition.SortedControlThenWorkerNodes, parallelOptions,
                 async (node, cancellationToken) =>
                 {
                     var azureVm = nameToVm[node.Name];

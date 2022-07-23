@@ -46,14 +46,14 @@ namespace Neon.Kube
         public static readonly TimeSpan MaxJitter = TimeSpan.FromMilliseconds(250);
 
         /// <summary>
-        /// The maximum number of cluster master nodes.
+        /// The maximum number of cluster control-plane nodes.
         /// </summary>
-        public const int MaxMasters = 5;
+        public const int MaxControlNodes = 5;
 
         /// <summary>
-        /// The minimum number of cores required by master nodes.
+        /// The minimum number of cores required by control-plane nodes.
         /// </summary>
-        public const int MinMasterCores = 4;
+        public const int MinControlNodeCores = 4;
 
         /// <summary>
         /// The minimum number of cores required by worker nodes.
@@ -61,9 +61,9 @@ namespace Neon.Kube
         public const int MinWorkerCores = 4;
 
         /// <summary>
-        /// The minimum RAM (MiB) required for master nodes.
+        /// The minimum RAM (MiB) required for control-plane nodes.
         /// </summary>
-        public const int MinMasterRamMiB = 8192;
+        public const int MinControlNodeRamMiB = 8192;
 
         /// <summary>
         /// The minimum RAM (MiB) required for worker nodes.
@@ -71,9 +71,9 @@ namespace Neon.Kube
         public const int MinWorkerRamMiB = 8192;
 
         /// <summary>
-        /// The minimum required network interface cards for master nodes.
+        /// The minimum required network interface cards for control-plane nodes.
         /// </summary>
-        public const int MinMasterNics = 1;
+        public const int MinControlNodeNics = 1;
 
         /// <summary>
         /// The minimum required network interface cards for worker nodes.

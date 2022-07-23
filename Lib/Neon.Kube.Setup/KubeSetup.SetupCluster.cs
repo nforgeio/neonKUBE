@@ -310,14 +310,14 @@ namespace Neon.Kube
             // We need to do this so the the package cache will be running
             // when the remaining nodes are configured.
 
-            var configureMasterStepLabel = cluster.Definition.Masters.Count() > 1 ? "setup first master" : "setup master";
+            var configureControlPlaneStepLabel = cluster.Definition.ControlNodes.Count() > 1 ? "setup first control-plane node" : "setup control-plane node";
 
-            controller.AddNodeStep(configureMasterStepLabel,
+            controller.AddNodeStep(configureControlPlaneStepLabel,
                 (controller, node) =>
                 {
                     node.SetupNode(controller, KubeSetup.ClusterManifest);
                 },
-                (controller, node) => node == cluster.FirstMaster);
+                (controller, node) => node == cluster.FirstControlNode);
 
             // Perform common configuration for the remaining nodes (if any).
 
@@ -329,7 +329,7 @@ namespace Neon.Kube
                         node.SetupNode(controller, KubeSetup.ClusterManifest);
                         node.InvokeIdempotent("setup/setup-node-restart", () => node.Reboot(wait: true));
                     },
-                    (controller, node) => node != cluster.FirstMaster);
+                    (controller, node) => node != cluster.FirstControlNode);
             }
 
             if (debugMode)
@@ -354,15 +354,15 @@ namespace Neon.Kube
                 controller.AddNodeStep("upload helm charts",
                     (controller, node) =>
                     {
-                        cluster.FirstMaster.SudoCommand($"rm -rf {KubeNodeFolder.Helm}/*");
-                        cluster.FirstMaster.NodeInstallHelmArchive(controller);
+                        cluster.FirstControlNode.SudoCommand($"rm -rf {KubeNodeFolder.Helm}/*");
+                        cluster.FirstControlNode.NodeInstallHelmArchive(controller);
 
                         var zipPath = LinuxPath.Combine(KubeNodeFolder.Helm, "charts.zip");
 
-                        cluster.FirstMaster.SudoCommand($"unzip {zipPath} -d {KubeNodeFolder.Helm}");
-                        cluster.FirstMaster.SudoCommand($"rm -f {zipPath}");
+                        cluster.FirstControlNode.SudoCommand($"unzip {zipPath} -d {KubeNodeFolder.Helm}");
+                        cluster.FirstControlNode.SudoCommand($"rm -f {zipPath}");
                     },
-                    (controller, node) => node == cluster.FirstMaster);
+                    (controller, node) => node == cluster.FirstControlNode);
             }
 
             //-----------------------------------------------------------------
@@ -382,12 +382,12 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Verify the cluster.
 
-            controller.AddNodeStep("check masters",
+            controller.AddNodeStep("check control-plane nodes",
                 (controller, node) =>
                 {
-                    KubeDiagnostics.CheckMaster(node, cluster.Definition);
+                    KubeDiagnostics.CheckControlNode(node, cluster.Definition);
                 },
-                (controller, node) => node.Metadata.IsMaster);
+                (controller, node) => node.Metadata.IsControlPane);
 
             if (cluster.Workers.Count() > 0)
             {

@@ -59,21 +59,20 @@ namespace Neon.Kube
     /// </summary>
     public static class KubeDiagnostics
     {
-
         /// <summary>
-        /// Verifies that a cluster master node is healthy.
+        /// Verifies that a cluster control-plane node is healthy.
         /// </summary>
-        /// <param name="node">The master node.</param>
+        /// <param name="node">The control-plane node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        public static void CheckMaster(NodeSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        public static void CheckControlNode(NodeSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
-            Covenant.Requires<ArgumentException>(node.Metadata.IsMaster, nameof(node));
+            Covenant.Requires<ArgumentException>(node.Metadata.IsControlPane, nameof(node));
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             if (!node.IsFaulted)
             {
-                CheckMasterNtp(node, clusterDefinition);
+                CheckControlNodeNtp(node, clusterDefinition);
             }
 
             node.Status = "healthy";
@@ -99,11 +98,11 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Verifies that a master node's NTP health.
+        /// Verifies that a control-plane node's NTP health.
         /// </summary>
-        /// <param name="node">The master node.</param>
+        /// <param name="node">The control-plane node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        private static void CheckMasterNtp(NodeSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        private static void CheckControlNodeNtp(NodeSshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             // We're going to use [ntpq -pw] to query the configured time sources.
             // We should get something back that looks like
@@ -115,7 +114,7 @@ namespace Neon.Kube
             //      + 173.44.32.10    18.26.4.105      2 u  200  256  377   96.981 - 0.623   3.284
             //      + pacific.latt.ne 44.24.199.34     3 u  243  256  377   41.457 - 8.929   8.497
             //
-            // For master nodes, we're simply going to verify that we have at least one external 
+            // For control-plane nodes, we're simply going to verify that we have at least one external 
             // time source answering.
 
             node.Status = "check: NTP";
@@ -207,7 +206,7 @@ namespace Neon.Kube
             //           + 10.0.1.7        198.60.22.240    2 u  111  128  377    0.062    3.409   0.608
             //           + 10.0.1.7        198.60.22.240    2 u  111  128  377    0.062    3.409   0.608
             //
-            // For worker nodes, we need to verify that each of the masters are answering
+            // For worker nodes, we need to verify that each of the control-plane nodes are answering
             // by confirming that their IP addresses are present.
 
             node.Status = "check: NTP";
@@ -222,16 +221,16 @@ namespace Neon.Kube
             {
                 var output = node.SudoCommand("/usr/bin/ntpq -pw", RunOptions.LogOutput).OutputText;
 
-                foreach (var master in clusterDefinition.SortedMasterNodes)
+                foreach (var controlNode in clusterDefinition.SortedControlNodes)
                 {
-                    // We're going to check the for presence of the master's IP address
+                    // We're going to check the for presence of the control-plane node's IP address
                     // or its name, the latter because [ntpq] appears to attempt a reverse
                     // IP address lookup which will resolve into one of the DNS names defined
                     // in the local [/etc/hosts] file.
 
-                    if (!output.Contains(master.Address.ToString()) && !output.Contains(master.Name.ToLower()))
+                    if (!output.Contains(controlNode.Address.ToString()) && !output.Contains(controlNode.Name.ToLower()))
                     {
-                        fault = $"NTP: Manager [{master.Name}/{master.Address}] is not answering.";
+                        fault = $"NTP: Manager [{controlNode.Name}/{controlNode.Address}] is not answering.";
 
                         Thread.Sleep(retryDelay);
                         continue;
@@ -253,7 +252,7 @@ namespace Neon.Kube
                     // that the connection attempt was rejected.  I manually restarted
                     // the node and then it worked.  I'm not sure if the rejected connection
                     // was being made to the local NTP service or from the local service
-                    // to NTP running on the master.
+                    // to NTP running on the control-plane.
                     //
                     // I'm going to assume that it was to the local NTP service and I'm
                     // going to try mitigating this by restarting the local NTP service

@@ -321,11 +321,11 @@ namespace Neon.Kube
         /// more than one VM at a time will be taken offline for maintenance.
         /// </para>
         /// <para>
-        /// This defaults to <b>master</b> for cluster master nodes and <b>worker</b>
+        /// This defaults to <b>control-plane</b> for cluster control-plane nodes and <b>worker</b>
         /// for worker nodes.
         /// </para>
         /// <note>
-        /// <b>IMPORTANT:</b> Master nodes should generally be located within their
+        /// <b>IMPORTANT:</b> Control-plane nodes should generally be located within their
         /// own availability set.
         /// </note>
         /// </summary>

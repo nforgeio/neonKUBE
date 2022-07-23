@@ -75,7 +75,7 @@ namespace Neon.Kube
         /// package caches are already deployed in an environment.
         /// </para>
         /// <note>
-        /// Package cache servers are deployed to the masters by default.
+        /// Package cache servers are deployed to the control-plane nodes by default.
         /// </note>
         /// </param>
         /// <param name="unredacted">

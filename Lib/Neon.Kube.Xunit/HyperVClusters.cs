@@ -119,7 +119,7 @@ namespace Neon.Kube.Xunit
     /// <item>
     ///     <term><b>hyperv.small0.ip</b></term>
     ///     <description>
-    ///     IPv4 address to be assigned to the cluster master node.
+    ///     IPv4 address to be assigned to the cluster control-plane node.
     ///     </description>
     /// </item>
     /// <item>
@@ -150,19 +150,19 @@ namespace Neon.Kube.Xunit
     /// <item>
     ///     <term><b>hyperv.large0.ip</b></term>
     ///     <description>
-    ///     IPv4 address to be assigned to the first cluster master node.
+    ///     IPv4 address to be assigned to the first cluster control-plane node.
     ///     </description>
     /// </item>
     /// <item>
     ///     <term><b>hyperv.large1.ip</b></term>
     ///     <description>
-    ///     IPv4 address to be assigned to the second cluster master node.
+    ///     IPv4 address to be assigned to the second cluster control-plane node.
     ///     </description>
     /// </item>
     /// <item>
     ///     <term><b>hyperv.large2.ip</b></term>
     ///     <description>
-    ///     IPv4 address to be assigned to the thirg cluster master node.
+    ///     IPv4 address to be assigned to the third cluster control-plane node.
     ///     </description>
     /// </item>
     /// <item>
@@ -198,7 +198,7 @@ isLocked: false
 timeSources:
 - pool.ntp.org
 kubernetes:
-  allowPodsOnMasters: true
+  allowPodsOnControlPlane: true
 hosting:
   environment: hyperv
   vm:
@@ -215,13 +215,13 @@ network:
   - $<<<profile:lan.dns0>>>
   - $<<<profile:lan.dns1>>>
 nodes:
-  master-0:
-    role: master
+  control-0:
+    role: control-plane
     address: $<<<profile:hyperv.tiny0.ip>>>
 ";
 
         /// <summary>
-        /// <b>HYper-V:</b> 1 master and 3 worker cluster definition.
+        /// <b>HYper-V:</b> 1 control-plane and 3 worker cluster definition.
         /// </summary>
         public const string Small = @"
 name: hyperv-small
@@ -231,7 +231,7 @@ isLocked: false
 timeSources:
 - pool.ntp.org
 kubernetes:
-  allowPodsOnMasters: false
+  allowPodsOnControlPlane: false
 hosting:
   environment: hyperv
   vm:
@@ -248,22 +248,22 @@ network:
   - $<<<profile:lan.dns0>>>
   - $<<<profile:lan.dns1>>>
 nodes:
-  master-0:
-    role: master
+  control-0:
+    role: control-plane
     address: $<<<profile:hyperv.small0.ip>>>
   worker-0:
-    role: master
+    role: worker
     address: $<<<profile:hyperv.small1.ip>>>
   worker-1:
-    role: master
+    role: worker
     address: $<<<profile:hyperv.small2.ip>>>
   worker-2:
-    role: master
+    role: worker
     address: $<<<profile:hyperv.small3.ip>>>
 ";
 
         /// <summary>
-        /// <b>HYper-V:</b> 3 master and 3 worker cluster definition.
+        /// <b>HYper-V:</b> 3 control-plane and 3 worker cluster definition.
         /// </summary>
         public const string Large = @"
 name: hyperv-large
@@ -273,7 +273,7 @@ isLocked: false
 timeSources:
 - pool.ntp.org
 kubernetes:
-  allowPodsOnMasters: false
+  allowPodsOnControlPlane: false
 hosting:
   environment: hyperv
   vm:
@@ -290,26 +290,26 @@ network:
   - $<<<profile:lan.dns0>>>
   - $<<<profile:lan.dns1>>>
 nodes:
-  master-0:
-    role: master
+  control-0:
+    role: control-plane
     address: $<<<profile:hyperv.large0.ip>>>
     memory: 4 GiB
-  master-1:
-    role: master
+  control-1:
+    role: control-plane
     address: $<<<profile:hyperv.large1.ip>>>
     memory: 4 GiB
-  master-2:
-    role: master
+  control-2:
+    role: control-plane
     address: $<<<profile:hyperv.large2.ip>>>
     memory: 4 GiB
   worker-0:
-    role: master
+    role: worker
     address: $<<<profile:hyperv.large3.ip>>>
   worker-1:
-    role: master
+    role: worker
     address: $<<<profile:hyperv.large4.ip>>>
   worker-2:
-    role: master
+    role: worker
     address: $<<<profile:hyperv.large5.ip>>>
 ";
     }

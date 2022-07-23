@@ -236,7 +236,7 @@ namespace Neon.Kube
             }
 
             this.Nodes       = nodes;
-            this.FirstMaster = Nodes.Where(n => n.Metadata.IsMaster).OrderBy(n => n.Name).First();
+            this.FirstControlNode = Nodes.Where(n => n.Metadata.IsControlPane).OrderBy(n => n.Name).First();
 
             // Create the hosting manager.
 
@@ -317,9 +317,9 @@ namespace Neon.Kube
         public List<LinuxSshProxy> Hosts { get; private set; } = new List<LinuxSshProxy>();
 
         /// <summary>
-        /// Returns the first cluster master node as sorted by name.
+        /// Returns the first cluster control-plane node as sorted by name.
         /// </summary>
-        public NodeSshProxy<NodeDefinition> FirstMaster { get; private set; }
+        public NodeSshProxy<NodeDefinition> FirstControlNode { get; private set; }
 
         /// <summary>
         /// Specifies the <see cref="RunOptions"/> to use when executing commands that 
@@ -330,11 +330,11 @@ namespace Neon.Kube
         public RunOptions SecureRunOptions { get; set; } = RunOptions.Redact | RunOptions.FaultOnError;
 
         /// <summary>
-        /// Enumerates the cluster master node proxies sorted in ascending order by name.
+        /// Enumerates the cluster control-plane node proxies sorted in ascending order by name.
         /// </summary>
-        public IEnumerable<NodeSshProxy<NodeDefinition>> Masters
+        public IEnumerable<NodeSshProxy<NodeDefinition>> ControlNodes
         {
-            get { return Nodes.Where(n => n.Metadata.IsMaster).OrderBy(n => n.Name); }
+            get { return Nodes.Where(n => n.Metadata.IsControlPane).OrderBy(n => n.Name); }
         }
 
         /// <summary>
@@ -459,21 +459,21 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns a master node that is reachable because it answers a ping.
+        /// Returns a control-plane node that is reachable because it answers a ping.
         /// </summary>
-        /// <param name="failureMode">Specifies what should happen when there are no reachable masters.</param>
-        /// <returns>The reachable master node or <c>null</c>.</returns>
+        /// <param name="failureMode">Specifies what should happen when there are no reachable control-plane nodes.</param>
+        /// <returns>The reachable control-plane node or <c>null</c>.</returns>
         /// <exception cref="NeonKubeException">
-        /// Thrown if no masters are reachable and <paramref name="failureMode"/> 
+        /// Thrown if no control-plane nodes are reachable and <paramref name="failureMode"/> 
         /// is passed as <see cref="ReachableHostMode.Throw"/>.
         /// </exception>
-        public NodeSshProxy<NodeDefinition> GetReachableMaster(ReachableHostMode failureMode = ReachableHostMode.ReturnFirst)
+        public NodeSshProxy<NodeDefinition> GetReachableControlNode(ReachableHostMode failureMode = ReachableHostMode.ReturnFirst)
         {
-            var masterAddresses = Masters
+            var controlNodeAddresses = ControlNodes
                 .Select(n => n.Address.ToString())
                 .ToList();
 
-            var reachableHost = NetHelper.GetReachableHost(masterAddresses, failureMode);
+            var reachableHost = NetHelper.GetReachableHost(controlNodeAddresses, failureMode);
 
             if (reachableHost == null)
             {
@@ -482,7 +482,7 @@ namespace Neon.Kube
 
             // Return the node that is assigned the reachable address.
 
-            return Masters.Where(n => n.Address.ToString() == reachableHost.Host).First();
+            return ControlNodes.Where(n => n.Address.ToString() == reachableHost.Host).First();
         }
 
         /// <summary>
@@ -1054,7 +1054,7 @@ namespace Neon.Kube
                 // of all of those not being retained, including the [default] namespace.  Note
                 // that we're going to perform these deletions in parallel to speed things up.
                 //
-                // We're going to SSH into the first master and execute this via [kubectl] to
+                // We're going to SSH into the first control-plane and execute this via [kubectl] to
                 // remove the contents of each namespace:
                 //
                 //      kubectl delete all --all --cascade --namespace NAMESPACE
@@ -1069,22 +1069,22 @@ namespace Neon.Kube
                     .Select(item => item.Metadata.Name)
                     .ToArray();
 
-                var master = GetReachableMaster(ReachableHostMode.Throw);
+                var controlNode = GetReachableControlNode(ReachableHostMode.Throw);
 
                 try
                 {
-                    master.Connect();
+                    controlNode.Connect();
 
                     // Note that we're going to limit the number commands in-flight so that
                     // we don't consume too much RAM (for thread stacks) here on the client
-                    // as well as not overloading the master node.
+                    // as well as not overloading the control-plane node.
 
                     var parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 10 };
 
                     Parallel.ForEach(resetNamespaces, parallelOptions,
                         @namespace =>
                         {
-                            master.SudoCommand("kubectl", new object[] { "delete", "all", "--all", "--cascade", "--namespace", @namespace });
+                            controlNode.SudoCommand("kubectl", new object[] { "delete", "all", "--all", "--cascade", "--namespace", @namespace });
                         });
 
                     // Delete all of the cleared namespaces other than [default].
@@ -1092,7 +1092,7 @@ namespace Neon.Kube
                     Parallel.ForEach(resetNamespaces.Where(@namespace => @namespace != "default"), parallelOptions,
                         @namespace =>
                         {
-                            master.SudoCommand("kubectl", new object[] { "delete", "namespace", @namespace });
+                            controlNode.SudoCommand("kubectl", new object[] { "delete", "namespace", @namespace });
                         });
 
                     // The [kubectl] command doesn't actually delete everything in a namespace.  This isn't
@@ -1122,12 +1122,12 @@ namespace Neon.Kube
 
                     if (sbResourceTypes.Length > 0)
                     {
-                        master.SudoCommand("kubectl", new object[] { "delete", sbResourceTypes, "--all", "--cascade", "--namespace", "default" }).EnsureSuccess();
+                        controlNode.SudoCommand("kubectl", new object[] { "delete", sbResourceTypes, "--all", "--cascade", "--namespace", "default" }).EnsureSuccess();
                     }
                 }
                 finally
                 {
-                    master.Disconnect();
+                    controlNode.Disconnect();
                 }
             }
 
