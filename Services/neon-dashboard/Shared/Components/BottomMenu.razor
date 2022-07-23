@@ -5,8 +5,8 @@
 
 <DropUp Title="Switch Dashboard" Active=@AppState.GetCurrentDashboard(AppState.CurrentDashboard) Icon=@Icons.Server Items=@AppState.Dashboards >
      <DropList Context="dashboard">
-			 <div class="px-1 ">
-        <div class="px-2 py-1 flex w-full justify-between items-center hover:bg-slate-800 rounded-2 cursor-pointer " @onmouseout:stopPropagation @onclick="@(() => NavigationManager.NavigateTo(dashboard.GetId()))">
+			 <div class=" ">
+        <div class="px-2 py-1 flex w-full justify-between items-center hover:bg-slate-800  cursor-pointer " @onmouseout:stopPropagation @onclick="@(() => NavigationManager.NavigateTo(dashboard.GetId()))">
 				  <h3>@dashboard.GetName()</h3>
 				  @if (dashboard.GetId() == AppState.CurrentDashboard)
 				  {
@@ -19,7 +19,10 @@
 			
     </DropList>
 </DropUp>
-
+<button class="hover:bg-slate-700 rounded-1 text-2 underline cursor-pointer activebg-slate-600 "> 
+	  <p>Log out</p>
+	  <Icon Content=@Icons.ArrowRight Size=16 />
+</button>
 @*<div class="button">
 		<Icon Content=@Icons.Settings />
 </div>*@

@@ -21,6 +21,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="Shared\Components\Button.razor.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <None Remove="Shared\Components\LoadingCircle.razor.css" />
 	</ItemGroup>
 
@@ -61,6 +65,7 @@
 	<ItemGroup>
 		<!-- Include the PDB in the nuget so stack traces can include line numbers -->
 		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
+		<Content Include="Shared\Components\Button.razor.cs" />
 		<Content Include="Shared\Components\LoadingCircle.razor.css" />
 	</ItemGroup>
 

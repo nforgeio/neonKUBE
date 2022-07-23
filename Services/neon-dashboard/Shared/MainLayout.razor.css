@@ -23,17 +23,10 @@
     height: 100%;
     border-radius: var(--f1);
     border: 2px solid var(--c-bg-dark);
-    height: 94vh;
 }
 
 .bottom {
-    padding: 0 var(--f3);
     grid-row: 2;
-    background: var(--c-bg);
-    display: flex;
-    justify-content: flex-end;
-    color: var(--c-fg);
 
-    height: 6vh;
-        
+
 }

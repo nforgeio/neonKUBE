@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Icon.razor.cs
-// CONTRIBUTOR: Marcus Bowyer
+// FILE:	   Button.razor.cs
+// CONTRIBUTOR: Simon Zhang
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,53 +15,59 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
+using Microsoft.AspNetCore.Components;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-
-using NeonDashboard;
 
 namespace NeonDashboard.Shared.Components
 {
-    public partial class Icon : ComponentBase, IDisposable
+     public enum StyleType
+    {
+       Primary,
+       Secondary,
+       Outline,
+       Transparent
+    };
+
+    public partial class Button : ComponentBase, IDisposable
     {
         /// <summary>
-        /// type of icon to display
+        /// alert card css style one of StyleType
         /// </summary>
         [Parameter]
-        public string Content { get; set; }
+        public StyleType Type { get; set; } = StyleType.Default;
 
         /// <summary>
-        /// override color, by default copies current text color
+        /// title text
         /// </summary>
         [Parameter]
-        public string Color { get; set; }
-
+        public string Title { get; set; }
 
         /// <summary>
-        /// set icon size in px, defaults 24px
+        /// content on left side of body
         /// </summary>
         [Parameter]
-        public int Size { get; set; } = 24;
+        public RenderFragment Left { get; set; }
 
         /// <summary>
-        /// Constructor.
+        /// content on right side of body
         /// </summary>
-        public Icon() { }
+        [Parameter]
+        public RenderFragment Right { get; set; }
 
-        /// <inheritdoc/>
-        protected override void OnInitialized()
+        /// <summary>
+        /// main body content. eg. description 
+        /// </summary>
+        [Parameter]
+        public RenderFragment ChildContent { get; set; }
+
+        private static  Dictionary<StyleType, string> CardStyle = new Dictionary<StyleType, string>()
         {
-        }
+            {StyleType.Primary,"text-slate-50 bg-card " },
+            {StyleType.Secondary,"text-slate-50 border border-slate-500" },
+            {StyleType.Outline,"" },
+            {StyleType.Transparent,"" },
+        };
 
         /// <inheritdoc/>
         public void Dispose()
