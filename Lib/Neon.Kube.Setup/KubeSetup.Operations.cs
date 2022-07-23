@@ -392,35 +392,45 @@ spec:
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
-            var hostingEnvironment   = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
             var cluster              = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var controlPlaneEndpoint = $"kubernetes-controlplane:6442";
             var sbCertSANs           = new StringBuilder();
             var clusterAdvice        = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
 
-            sbCertSANs.AppendLine($"  - \"kubernetes-controlplane\"");
+            // Append the names to be included as the certificate SANs.  Note that
+            // we're using a dictionary here to avoid duplicating names.
 
-            if (cluster.Definition.Domain != null)
+            var sanNames = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+
+            sanNames["kubernetes-controlplane"] = null;
+
+            if (!string.IsNullOrEmpty(cluster.Definition.Domain))
             {
-                sbCertSANs.AppendLine($"  - \"{cluster.Definition.Domain}\"");
+                sanNames[cluster.Definition.Domain] = null;
             }
 
             foreach (var address in cluster.Definition.PublicAddresses)
             {
-                sbCertSANs.AppendLine($"  - \"{address}\"");
+                sanNames[address] = null;
             }
 
             foreach (var node in cluster.ControlNodes)
             {
-                sbCertSANs.AppendLine($"  - \"{node.Metadata.Address}\"");
-                sbCertSANs.AppendLine($"  - \"{node.Name}\"");
+                sanNames[node.Metadata.Address] = null;
+                sanNames[node.Name]             = null;
             }
 
             if (cluster.Definition.IsDesktopBuiltIn)
             {
-                sbCertSANs.AppendLine($"  - \"{Dns.GetHostName()}\"");
-                sbCertSANs.AppendLine($"  - \"{cluster.Definition.Name}\"");
+                sanNames[cluster.Definition.Name] = null;
             }
+
+            foreach (var name in sanNames.Keys)
+            {
+                sbCertSANs.AppendLine($"  - \"{name}\"");
+            }
+
+            // Append the InitConfiguration
 
             var kubeletFailSwapOnLine = string.Empty;
             var clusterConfig         = new StringBuilder();
@@ -487,6 +497,7 @@ runtimeRequestTimeout: 5m
 maxPods: {cluster.Definition.Kubernetes.MaxPodsPerNode}
 rotateCertificates: true
 ");
+            // Append the KubeProxyConfiguration
 
             var kubeProxyMode = "ipvs";
 
