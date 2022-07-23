@@ -173,7 +173,7 @@ namespace {targetNamespace}
                 writer.WriteLine();
                 writer.WriteLine($"        /// <summary>");
                 writer.WriteLine($"        /// Handles initialzation of the stock <see cref=\"Kubernetes\"/> client's JSON serializer to");
-                writer.WriteLine($"        /// support <see cref=\"EnumMemberAttribute\"/> and perhaps customize other settings.  This");
+                writer.WriteLine($"        /// support <see cref=\"JsonStringEnumMemberConverter\"/> and perhaps customize other settings.  This");
                 writer.WriteLine($"        /// is required to support our custom resources.");
                 writer.WriteLine($"        /// </summary>");
                 writer.WriteLine($"        public static void Initialize()");
