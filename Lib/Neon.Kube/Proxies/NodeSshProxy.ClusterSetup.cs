@@ -481,7 +481,7 @@ $@"
 ff02::1         ip6-allnodes
 ff02::2         ip6-allrouters
 ");
-            UploadText("/etc/hosts", sbHosts, 4, Encoding.UTF8);
+            UploadText("/etc/hosts", sbHosts, tabStop: 4, outputEncoding: Encoding.UTF8);
         }
 
         /// <summary>
