@@ -106,33 +106,35 @@ backend kubernetes_controlplane_backend
             {
                 sbHaProxyConfig.Append(
 $@"
-    server {controlNode.Name}         {controlNode.Metadata.Address}:{KubeNodePort.KubeApiServer}");
+    server                  {controlNode.Name} {controlNode.Metadata.Address}:{KubeNodePort.KubeApiServer}");
             }
 
             sbHaProxyConfig.Append(
 $@"
+
 backend harbor_backend_http
     mode                    http
     balance                 roundrobin");
 
-            foreach (var n in cluster.Nodes.Where(n => n.Metadata.Labels.Istio))
+            foreach (var istioNode in cluster.Nodes.Where(n => n.Metadata.Labels.Istio))
             {
                 sbHaProxyConfig.Append(
 $@"
-    server                  {n.Name} {n.Metadata.Address}:{KubeNodePort.IstioIngressHttp}");
+    server                  {istioNode.Name} {istioNode.Metadata.Address}:{KubeNodePort.IstioIngressHttp}");
             }
 
             sbHaProxyConfig.Append(
 $@"
+
 backend harbor_backend
     mode                    tcp
     balance                 roundrobin");
 
-            foreach (var n in cluster.Nodes.Where(n => n.Metadata.Labels.Istio))
+            foreach (var istioNode in cluster.Nodes.Where(n => n.Metadata.Labels.Istio))
             {
                 sbHaProxyConfig.Append(
 $@"
-    server                  {n.Name} {n.Metadata.Address}:{KubeNodePort.IstioIngressHttps}");
+    server                  {istioNode.Name} {istioNode.Metadata.Address}:{KubeNodePort.IstioIngressHttps}");
             }
 
             node.UploadText("/etc/neonkube/neon-etcd-proxy.cfg", sbHaProxyConfig);
@@ -393,7 +395,7 @@ spec:
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
             var cluster              = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var controlPlaneEndpoint = $"kubernetes-controlplane:6442";
+            var controlPlaneEndpoint = $"kubernetes-control-plane:6442";
             var sbCertSANs           = new StringBuilder();
             var clusterAdvice        = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
 
@@ -402,7 +404,7 @@ spec:
 
             var sanNames = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 
-            sanNames["kubernetes-controlplane"] = null;
+            sanNames["kubernetes-control-plane"] = null;
 
             if (!string.IsNullOrEmpty(cluster.Definition.Domain))
             {
@@ -1134,7 +1136,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     var configText = clusterLogin.SetupDetails.ControlNodeFiles["/etc/kubernetes/admin.conf"].Text;
                     var port       = NetworkPorts.KubernetesApiServer;
 
-                    configText = configText.Replace("https://kubernetes-controlplane:6442", $"https://{cluster.Definition.Domain}:{port}");
+                    configText = configText.Replace("https://kubernetes-control-plane:6442", $"https://{cluster.Definition.Domain}:{port}");
 
                     if (!File.Exists(kubeConfigPath))
                     {
@@ -1274,7 +1276,7 @@ kubectl apply -f priorityclasses.yaml
                 {
                     var coreDnsDeployment = await k8s.ReadNamespacedDeploymentAsync("coredns", KubeNamespace.KubeSystem);
 
-                    var spec = NeonHelper.JsonSerialize(coreDnsDeployment.Spec);
+                    var spec             = NeonHelper.JsonSerialize(coreDnsDeployment.Spec);
                     var coreDnsDaemonset = new V1DaemonSet()
                     {
                         Metadata = new V1ObjectMeta()
@@ -1291,11 +1293,8 @@ kubectl apply -f priorityclasses.yaml
                         { "neonkube.io/node.role", "control-plane" }
                     };
 
-                    coreDnsDaemonset.Spec.Template.Spec.Containers.First().Resources.Requests["memory"] =
-                        new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryRequest));
-
-                    coreDnsDaemonset.Spec.Template.Spec.Containers.First().Resources.Limits["memory"] =
-                        new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryLimit));
+                    coreDnsDaemonset.Spec.Template.Spec.Containers.First().Resources.Requests["memory"] = new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryRequest));
+                    coreDnsDaemonset.Spec.Template.Spec.Containers.First().Resources.Limits["memory"]   = new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryLimit));
 
                     await k8s.CreateNamespacedDaemonSetAsync(coreDnsDaemonset, KubeNamespace.KubeSystem);
                     await k8s.DeleteNamespacedDeploymentAsync(coreDnsDeployment.Name(), coreDnsDeployment.Namespace());
@@ -1462,7 +1461,7 @@ kubectl apply -f priorityclasses.yaml
                         {
                             Metadata = new V1ObjectMeta()
                             {
-                                Name = "kube-dns",
+                                Name              = "kube-dns",
                                 NamespaceProperty = "kube-system"
                             },
                             Spec = new ServiceMonitorSpec()
