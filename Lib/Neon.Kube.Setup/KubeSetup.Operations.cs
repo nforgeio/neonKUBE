@@ -167,7 +167,7 @@ spec:
         - name: neon-etcd-proxy-config
           mountPath: /etc/haproxy/haproxy.cfg
       ports:
-        - name: k8s-controlplane
+        - name: k8s-control
           containerPort: 6442
           protocol: TCP
 ");
@@ -613,12 +613,6 @@ echo 'FAILED: kubeadm init...' >&2
 exit 1
 ";
                             controller.LogProgress(firstControlNode, verb: "initialize", message: "kubernetes");
-
-                            //###############################
-                            // $debug(jefflill): DELETE THIS!
-                            firstControlNode.UploadText("/home/sysadmin/init.sh", kubeInitScript);
-                            firstControlNode.UploadText("/home/sysadmin/cluster.yaml", clusterConfig.ToString());
-                            //###############################
 
                             var response = firstControlNode.SudoCommand(CommandBundle.FromScript(kubeInitScript).AddFile("cluster.yaml", clusterConfig.ToString()));
 
