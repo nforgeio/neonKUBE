@@ -241,7 +241,7 @@ namespace Neon.Kube
         {
             var list = new List<PriorityDef>();
 
-            list.Add(SystemNodeCritical    = new PriorityDef("system-node-critical ",   2000001000, isSystem: true));
+            list.Add(SystemNodeCritical    = new PriorityDef("system-node-critical",    2000001000, isSystem: true));
             list.Add(SystemClusterCritical = new PriorityDef("system-cluster-critical", 2000000000, isSystem: true));
 
             list.Add(NeonMax               = new PriorityDef("neon-max",                 999999999, description: "Maximum priority reserved by neonKUBE"));
