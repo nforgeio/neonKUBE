@@ -150,12 +150,12 @@ namespace Neon.Kube
             {
                 UseInternalSwitch = true;   // neonDESKTOP built-in clusters always use the internal switch.
 
-                // Ensure that cluster has only one master node and set its
+                // Ensure that cluster has only one control-plane node and set its
                 // address to the reserved IP.
 
-                if (clusterDefinition.NodeDefinitions.Count != 1 || !clusterDefinition.NodeDefinitions.Values.First().IsMaster)
+                if (clusterDefinition.NodeDefinitions.Count != 1 || !clusterDefinition.NodeDefinitions.Values.First().IsControlPane)
                 {
-                    throw new ClusterDefinitionException("The neonDESKTOP built-in cluster must include only one node and that must be a [master].");
+                    throw new ClusterDefinitionException("The neonDESKTOP built-in cluster must include only one node and that must be a [control-plane].");
                 }
 
                 clusterDefinition.NodeDefinitions.Values.First().Address = NeonDesktopNodeAddress.ToString();

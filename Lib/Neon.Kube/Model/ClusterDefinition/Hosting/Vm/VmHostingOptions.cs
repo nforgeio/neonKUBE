@@ -95,7 +95,7 @@ namespace Neon.Kube
         /// The default number of virtual processors to assign to each cluster virtual machine.  
         /// </para>
         /// <note>
-        /// neonKUBE requires that each master and worker node have at least 4 CPUs.
+        /// neonKUBE requires that each control-plane and worker node have at least 4 CPUs.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Cores", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -110,7 +110,7 @@ namespace Neon.Kube
         /// This defaults to <b>4GiB</b>.
         /// </para>
         /// <note>
-        /// neonKUBE requires that each master and worker node have at least 4GiB of RAM.
+        /// neonKUBE requires that each control-plane and worker node have at least 4GiB of RAM.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Memory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

@@ -54,7 +54,7 @@ namespace Neon.Kube
         /// specify an VM size using a Intel or AMD 64-bit processor.
         /// </note>
         /// <note>
-        /// neonKUBE requires master and worker instances to have at least 4 CPUs and 8GiB RAM.  Choose
+        /// neonKUBE requires control-plane and worker instances to have at least 4 CPUs and 8GiB RAM.  Choose
         /// an Azure VM size instance type that satisfies these requirements.
         /// </note>
         /// </summary>

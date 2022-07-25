@@ -83,7 +83,7 @@ namespace Neon.Kube
             // Clusters require that at least one node has [OpenEbsStorage=true].  We'll set
             // this automatically when the user hasn't already done this.  All workers will have
             // this set to true when there are workers, otherwise we'll set this to true for all
-            // masters.
+            // control-plane nodes.
 
             if (!clusterDefinition.Nodes.Any(node => node.OpenEbsStorage))
             {
@@ -96,9 +96,9 @@ namespace Neon.Kube
                 }
                 else
                 {
-                    foreach (var master in clusterDefinition.Masters)
+                    foreach (var controlNode in clusterDefinition.ControlNodes)
                     {
-                        master.OpenEbsStorage = true;
+                        controlNode.OpenEbsStorage = true;
                     }
                 }
             }

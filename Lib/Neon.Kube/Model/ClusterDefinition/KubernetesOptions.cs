@@ -84,15 +84,15 @@ namespace Neon.Kube
         public string HelmVersion { get; set; } = "default";
 
         /// <summary>
-        /// Enable pods to be scheduled on cluster master nodes.  This defaults to <c>null</c>
-        /// which will allow pods to be scheduled on masters if the cluster consists only of
-        /// master nodes (e.g. for a single node cluster.  This defaults to <c>false</c> for
+        /// Enable pods to be scheduled on cluster control-plane nodes.  This defaults to <c>null</c>
+        /// which will allow pods to be scheduled on control-plane nodes if the cluster consists only of
+        /// control-plane nodes (e.g. for a single node cluster.  This defaults to <c>false</c> for
         /// clusters with worker nodes.
         /// </summary>
-        [JsonProperty(PropertyName = "AllowPodsOnMasters", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "allowPodsOnMasters", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "AllowPodsOnControlPlane", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "allowPodsOnControlPlane", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public bool? AllowPodsOnMasters { get; set; } = null;
+        public bool? AllowPodsOnControlPlane { get; set; } = null;
 
         /// <summary>
         /// The maximum number of Pods that can run on this Kubelet. The value must be a non-negative integer. If DynamicKubeletConfig 
@@ -146,9 +146,9 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(HelmVersion)}={HelmVersion}] is invalid].");
             }
 
-            if (!AllowPodsOnMasters.HasValue)
+            if (!AllowPodsOnControlPlane.HasValue)
             {
-                AllowPodsOnMasters = clusterDefinition.Workers.Count() == 0;
+                AllowPodsOnControlPlane = clusterDefinition.Workers.Count() == 0;
             }
 
             var podSubnetCidr = NetworkCidr.Parse(clusterDefinition.Network.PodSubnet);
@@ -169,12 +169,12 @@ or decrease [{kubernetesOptionsPrefix}.{nameof(clusterDefinition.Nodes)}] to [{m
 
             if (!clusterDefinition.Nodes.Any(node => node.Labels.NeonSystem))
             {
-                foreach (var manager in clusterDefinition.Masters)
+                foreach (var manager in clusterDefinition.ControlNodes)
                 {
                     manager.Labels.NeonSystem = true;
                 }
 
-                if (clusterDefinition.Masters.Count() < 3)
+                if (clusterDefinition.ControlNodes.Count() < 3)
                 {
                     foreach (var w in clusterDefinition.Workers)
                     {
@@ -185,12 +185,12 @@ or decrease [{kubernetesOptionsPrefix}.{nameof(clusterDefinition.Nodes)}] to [{m
 
             if (!clusterDefinition.Nodes.Any(node => node.Labels.NeonSystemDb))
             {
-                foreach (var manager in clusterDefinition.Masters)
+                foreach (var manager in clusterDefinition.ControlNodes)
                 {
                     manager.Labels.NeonSystemDb = true;
                 }
 
-                if (clusterDefinition.Masters.Count() < 3)
+                if (clusterDefinition.ControlNodes.Count() < 3)
                 {
                     foreach (var worker in clusterDefinition.Workers)
                     {
@@ -201,12 +201,12 @@ or decrease [{kubernetesOptionsPrefix}.{nameof(clusterDefinition.Nodes)}] to [{m
 
             if (!clusterDefinition.Nodes.Any(node => node.Labels.NeonSystemRegistry))
             {
-                foreach (var manager in clusterDefinition.Masters)
+                foreach (var manager in clusterDefinition.ControlNodes)
                 {
                     manager.Labels.NeonSystemRegistry = true;
                 }
 
-                if (clusterDefinition.Masters.Count() < 3)
+                if (clusterDefinition.ControlNodes.Count() < 3)
                 {
                     foreach (var worker in clusterDefinition.Workers)
                     {
@@ -217,7 +217,7 @@ or decrease [{kubernetesOptionsPrefix}.{nameof(clusterDefinition.Nodes)}] to [{m
 
             if (!clusterDefinition.Nodes.Any(node => node.Labels.Istio))
             {
-                if (AllowPodsOnMasters.GetValueOrDefault())
+                if (AllowPodsOnControlPlane.GetValueOrDefault())
                 {
                     foreach (var node in clusterDefinition.Nodes)
                     {
@@ -235,7 +235,7 @@ or decrease [{kubernetesOptionsPrefix}.{nameof(clusterDefinition.Nodes)}] to [{m
 
             if (!clusterDefinition.Nodes.Any(node => node.Labels.OpenEBS))
             {
-                if (AllowPodsOnMasters.GetValueOrDefault())
+                if (AllowPodsOnControlPlane.GetValueOrDefault())
                 {
                     foreach (var node in clusterDefinition.Nodes)
                     {

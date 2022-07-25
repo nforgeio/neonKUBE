@@ -262,7 +262,7 @@ tolerations: []
 #               "key": "foo.bar.com/role",
 #               "operator": "In",
 #               "values": [
-#                 "master"
+#                 "control-plane"
 #               ]
 #             }
 #           ]

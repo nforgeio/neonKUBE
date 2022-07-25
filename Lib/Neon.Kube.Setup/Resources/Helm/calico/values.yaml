@@ -24,7 +24,7 @@ vxlanMode: Never
 
 kubernetes:
   service:
-    host: kubernetes-masters
+    host: kubernetes-control-plane
     port: 6442
 
 # ServiceMonitor configuration

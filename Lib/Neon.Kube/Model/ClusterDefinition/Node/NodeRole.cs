@@ -26,9 +26,9 @@ namespace Neon.Kube
     public static class NodeRole
     {
         /// <summary>
-        /// The node is a a cluster master.
+        /// The node is a cluster control-plane node.
         /// </summary>
-        public const string Master = "master";
+        public const string ControlPlane = "control-plane";
 
         /// <summary>
         /// The node is a cluster worker.

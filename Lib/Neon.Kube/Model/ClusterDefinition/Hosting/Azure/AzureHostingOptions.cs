@@ -129,17 +129,17 @@ namespace Neon.Kube
         /// <para>
         /// For neonKUBE clusters the additional risk of an Azure provisioning failure is going
         /// to be very low due to how we use availability sets, which is as similar deployment
-        /// constraint: master nodes are deployed to one availability set and workers to another.
-        /// Without a proximity placement group, Azure could deploy the masters to one datacenter
+        /// constraint: control-plane nodes are deployed to one availability set and workers to another.
+        /// Without a proximity placement group, Azure could deploy the control-plane nodes to one datacenter
         /// and the workers to another.  This wasn't that likely in the past but as Azure has
         /// added more datacenters, the chance of this happening has increased.
         /// </para>
         /// <para>
-        /// Adding the proximity placement constrain, requires that Azure deploy both the masters
-        /// and workers in the same datacenter.  So say your cluster has 3 masters and 50 workers.
+        /// Adding the proximity placement constrain, requires that Azure deploy both the control-plane nodes
+        /// and workers in the same datacenter.  So say your cluster has 3 control-plane nodes and 50 workers.
         /// With proximity placement enabled, the Azure region will need to have a datacenter with
         /// 53 VMs available with the specified sizes.  With proximity placement disabled, Azure
-        /// could deploy the 3 masters in one datacenter and the 50 workers in another.
+        /// could deploy the 3 control-plane nodes in one datacenter and the 50 workers in another.
         /// </para>
         /// </note>
         /// <para>
@@ -286,7 +286,7 @@ namespace Neon.Kube
         /// specify an VM size using a Intel or AMD 64-bit processor.
         /// </note>
         /// <note>
-        /// neonKUBE requires master and worker instances to have at least 4 CPUs and 8GiB RAM.  Choose
+        /// neonKUBE requires control-plane and worker instances to have at least 4 CPUs and 8GiB RAM.  Choose
         /// an Azure VM size instance type that satisfies these requirements.
         /// </note>
         /// </summary>
@@ -528,9 +528,9 @@ namespace Neon.Kube
 
             // Check Azure cluster limits.
 
-            if (clusterDefinition.Masters.Count() > KubeConst.MaxMasters)
+            if (clusterDefinition.ControlNodes.Count() > KubeConst.MaxControlNodes)
             {
-                throw new ClusterDefinitionException($"cluster master count [{clusterDefinition.Masters.Count()}] exceeds the [{KubeConst.MaxMasters}] limit for clusters.");
+                throw new ClusterDefinitionException($"cluster control-plane count [{clusterDefinition.ControlNodes.Count()}] exceeds the [{KubeConst.MaxControlNodes}] limit for clusters.");
             }
 
             if (clusterDefinition.Nodes.Count() > AzureHelper.MaxClusterNodes)

@@ -194,4 +194,4 @@ spec:
             - key: neonkube.io/node.role 
               operator: In
               values:
-                - master
+                - control-plane

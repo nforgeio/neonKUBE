@@ -876,7 +876,7 @@ namespace Neon.Kube
                 return cluster.Definition.PublicAddresses;
             }
 
-            return cluster.Definition.Masters.Select(master => master.Address);
+            return cluster.Definition.ControlNodes.Select(controlPlane => controlPlane.Address);
         }
 
         /// <inheritdoc/>

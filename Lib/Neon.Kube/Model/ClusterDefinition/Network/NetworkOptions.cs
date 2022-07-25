@@ -421,7 +421,7 @@ namespace Neon.Kube
             // -----
             // We're not going to allow users to specify an ingress rule for the Kubernetes
             // API server here because that mapping is special and needs to be routed only
-            // to the master nodes.  We're just going to delete any rule using this port.
+            // to the control-plane nodes.  We're just going to delete any rule using this port.
 
             IngressRules ??= new List<IngressRule>();
 

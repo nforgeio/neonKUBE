@@ -108,9 +108,9 @@ namespace Neon.Kube
         public string Region => AvailabilityZone?.Substring(0, AvailabilityZone.Length - 1);
 
         /// <summary>
-        /// Specifies the number of master placement group partitions the cluster master node
+        /// Specifies the number of control-plane placement group partitions the cluster control-plane node
         /// instances will be deployed to.  This defaults to <b>-1</b> which means that the number 
-        /// of partitions will equal the number of master nodes.  AWS supports a maximum of 7
+        /// of partitions will equal the number of control-plane nodes.  AWS supports a maximum of 7
         /// placement partitions.
         /// </summary>
         /// <remarks>
@@ -124,11 +124,11 @@ namespace Neon.Kube
         /// </para>
         /// <para>
         /// neonKUBE provisions instances using two <b>partition placement groups</b>, one for
-        /// the cluster master nodes and the other for the workers.  The idea is that master
+        /// the cluster control-plane nodes and the other for the workers.  The idea is that control-plane
         /// nodes should be deployed on separate hardware for fault tolerance because if the
-        /// majority of master nodes go offline, the entire cluster will be dramatically impacted.
-        /// In general, the number of <see cref="MasterPlacementPartitions"/> partitions should
-        /// equal the number of master nodes.
+        /// majority of control-plane nodes go offline, the entire cluster will be dramatically impacted.
+        /// In general, the number of <see cref="ControlPlanePlacementPartitions"/> partitions should
+        /// equal the number of control-plane nodes.
         /// </para>
         /// <para>
         /// Worker nodes are distributed across <see cref="WorkerPlacementPartitions"/> partitions
@@ -143,10 +143,10 @@ namespace Neon.Kube
         /// can be as low as 1 partition.  
         /// </para>
         /// </remarks>
-        [JsonProperty(PropertyName = "MasterPlacementPartitions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "masterPlacementPartitions", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "ControlPlanePlacementPartitions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "controlPlanePlacementPartitions", ApplyNamingConventions = false)]
         [DefaultValue(-1)]
-        public int MasterPlacementPartitions { get; set; } = -1;
+        public int ControlPlanePlacementPartitions { get; set; } = -1;
 
         /// <summary>
         /// Specifies the number of worker placement group partitions the cluster worker node
@@ -165,11 +165,11 @@ namespace Neon.Kube
         /// </para>
         /// <para>
         /// neonKUBE provisions instances using two <b>partition placement groups</b>, one for
-        /// the cluster master nodes and the other for the workers.  The idea is that master
+        /// the cluster control-plane nodes and the other for the workers.  The idea is that control-plane
         /// nodes should be deployed on separate hardware for fault tolerance because if the
-        /// majority of master nodes go offline, the entire cluster will be dramatically impacted.
-        /// In general, the number of <see cref="MasterPlacementPartitions"/> partitions should
-        /// equal the number of master nodes.
+        /// majority of control-plane nodes go offline, the entire cluster will be dramatically impacted.
+        /// In general, the number of <see cref="ControlPlanePlacementPartitions"/> partitions should
+        /// equal the number of control-plane nodes.
         /// </para>
         /// <para>
         /// Worker nodes are distributed across <see cref="WorkerPlacementPartitions"/> partitions
@@ -210,7 +210,7 @@ namespace Neon.Kube
         /// specify an instance type using a Intel or AMD 64-bit processor.
         /// </note>
         /// <note>
-        /// neonKUBE requires master and worker instances to have at least 4 CPUs and 8GiB RAM.  Choose
+        /// neonKUBE requires control-plane and worker instances to have at least 4 CPUs and 8GiB RAM.  Choose
         /// an AWS instance type that satisfies these requirements.
         /// </note>
         /// </summary>
@@ -416,21 +416,21 @@ namespace Neon.Kube
                 }
             }
 
-            // Verify [MasterPlacementPartitions]
+            // Verify [ControlPlanePlacementPartitions]
 
-            if (MasterPlacementPartitions < 0)
+            if (ControlPlanePlacementPartitions < 0)
             {
-                MasterPlacementPartitions = Math.Min(MaxPlacementPartitions, clusterDefinition.Masters.Count());
+                ControlPlanePlacementPartitions = Math.Min(MaxPlacementPartitions, clusterDefinition.ControlNodes.Count());
             }
             else
             {
-                if (MasterPlacementPartitions < 1 || MaxPlacementPartitions < MasterPlacementPartitions)
+                if (ControlPlanePlacementPartitions < 1 || MaxPlacementPartitions < ControlPlanePlacementPartitions)
                 {
-                    throw new ClusterDefinitionException($"[{awsHostionOptionsPrefix}.{nameof(MasterPlacementPartitions)}={MasterPlacementPartitions}] cannot be in the range [1...{MaxPlacementPartitions}]");
+                    throw new ClusterDefinitionException($"[{awsHostionOptionsPrefix}.{nameof(ControlPlanePlacementPartitions)}={ControlPlanePlacementPartitions}] cannot be in the range [1...{MaxPlacementPartitions}]");
                 }
             }
 
-            // Verify [MasterPlacementPartitions]
+            // Verify [ControlPlanePlacementPartitions]
 
             if (WorkerPlacementPartitions < 1 || MaxPlacementPartitions < WorkerPlacementPartitions)
             {
@@ -470,9 +470,9 @@ namespace Neon.Kube
 
             // Check AWS cluster limits.
 
-            if (clusterDefinition.Masters.Count() > KubeConst.MaxMasters)
+            if (clusterDefinition.ControlNodes.Count() > KubeConst.MaxControlNodes)
             {
-                throw new ClusterDefinitionException($"cluster master count [{awsHostionOptionsPrefix}.{clusterDefinition.Masters.Count()}] exceeds the [{KubeConst.MaxMasters}] limit for clusters.");
+                throw new ClusterDefinitionException($"cluster control-plane count [{awsHostionOptionsPrefix}.{clusterDefinition.ControlNodes.Count()}] exceeds the [{KubeConst.MaxControlNodes}] limit for clusters.");
             }
 
             if (clusterDefinition.Nodes.Count() > AwsHelper.MaxClusterNodes)

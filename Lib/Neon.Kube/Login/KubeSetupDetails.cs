@@ -70,13 +70,13 @@ namespace Neon.Kube
         public string ClusterJoinCommand { get; set; }
 
         /// <summary>
-        /// Holds files captured from the boot master node that will need to be provisioned
-        /// on the remaining masters.  The dictionary key is the file path and the value 
+        /// Holds files captured from the boot control-plane node that will need to be provisioned
+        /// on the remaining control-plane nodes.  The dictionary key is the file path and the value 
         /// specifies the file text, permissions, and owner.
         /// </summary>
-        [JsonProperty(PropertyName = "MasterFiles", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "masterFiles", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "ControlNodeFiles", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "controlNodeFiles", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public Dictionary<string, KubeFileDetails> MasterFiles { get; set; } = new Dictionary<string, KubeFileDetails>();
+        public Dictionary<string, KubeFileDetails> ControlNodeFiles { get; set; } = new Dictionary<string, KubeFileDetails>();
     }
 }

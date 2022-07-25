@@ -162,7 +162,7 @@ namespace Neon.Kube
         /// <para>
         /// For cloud deployed clusters, this will be configured by default with the public IP
         /// address assigned to the cluster load balancer.  For on-premis clusters, this will
-        /// be set to the IP addresses of the master nodes by default.
+        /// be set to the IP addresses of the control-plane nodes by default.
         /// </para>
         /// <para>
         /// Users may also customize this by setting IP addresses in the cluster definition.

@@ -294,12 +294,12 @@ namespace Neon.Kube
 
                     if (Nodes.First().Metadata != null)
                     {
-                        if (Nodes.Any(node => (node.Metadata as NodeDefinition).IsMaster))
+                        if (Nodes.Any(node => (node.Metadata as NodeDefinition).IsControlPane))
                         {
                             sbDisplay.AppendLine();
-                            sbDisplay.AppendLine(" Masters:");
+                            sbDisplay.AppendLine(" Control-Plane:");
 
-                            foreach (var node in Nodes.Where(node => (node.Metadata as NodeDefinition).IsMaster))
+                            foreach (var node in Nodes.Where(node => (node.Metadata as NodeDefinition).IsControlPane))
                             {
                                 sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNodeNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
                             }

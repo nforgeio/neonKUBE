@@ -54,7 +54,7 @@ namespace Neon.Kube
         /// specify an instance type using a Intel or AMD 64-bit processor.
         /// </note>
         /// <note>
-        /// neonKUBE requires master and worker instances to have at least 4 CPUs and 8GiB RAM.  Choose
+        /// neonKUBE requires control-plane and worker instances to have at least 4 CPUs and 8GiB RAM.  Choose
         /// an AWS instance type that satisfies these requirements.
         /// </note>
         /// </summary>
@@ -114,10 +114,10 @@ namespace Neon.Kube
         /// </summary>
         /// <remarks>
         /// <para>
-        /// You generally don't need to customize this for master nodes since there will generally
-        /// be a separate partition available for each master and AWS will spread the instances
-        /// across these automatically.  When you specify this for master nodes, the partition index
-        /// must be in the range of [1...<see cref="AwsHostingOptions.MasterPlacementPartitions"/>].
+        /// You generally don't need to customize this for control-plane nodes since there will generally
+        /// be a separate partition available for each control-plane and AWS will spread the instances
+        /// across these automatically.  When you specify this for control-plane nodes, the partition index
+        /// must be in the range of [1...<see cref="AwsHostingOptions.ControlPlanePlacementPartitions"/>].
         /// </para>
         /// <para>
         /// For some cluster scenarios like a noSQL database cluster, you may wish to explicitly
@@ -241,18 +241,18 @@ namespace Neon.Kube
 
             if (PlacementPartition > 0)
             {
-                if (node.IsMaster)
+                if (node.IsControlPane)
                 {
-                    var masterNodeCount = clusterDefinition.Masters.Count();
-                    var partitionCount  = 0;
+                    var controlNodeCount = clusterDefinition.ControlNodes.Count();
+                    var partitionCount   = 0;
 
-                    if (clusterDefinition.Hosting.Aws.MasterPlacementPartitions == -1)
+                    if (clusterDefinition.Hosting.Aws.ControlPlanePlacementPartitions == -1)
                     {
-                        partitionCount = masterNodeCount;
+                        partitionCount = controlNodeCount;
                     }
                     else
                     {
-                        partitionCount = clusterDefinition.Hosting.Aws.MasterPlacementPartitions;
+                        partitionCount = clusterDefinition.Hosting.Aws.ControlPlanePlacementPartitions;
                     }
 
                     partitionCount = Math.Min(partitionCount, AwsHostingOptions.MaxPlacementPartitions);
