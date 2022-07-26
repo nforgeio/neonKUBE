@@ -111,7 +111,7 @@ namespace Neon.Kube
         /// Indicates how the cluster is being used as specified by <see cref="ClusterDefinition.Purpose"/>.
         /// definition. 
         /// </summary>
-        [JsonProperty(PropertyName = "Environment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Purpose", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(ClusterPurpose.NotSet)]
         public ClusterPurpose Purpose { get; set; } = ClusterPurpose.NotSet;
 
