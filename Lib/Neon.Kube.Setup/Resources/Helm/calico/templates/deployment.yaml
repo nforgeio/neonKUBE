@@ -1,5 +1,5 @@
 # Source: calico/templates/calico-kube-controllers.yaml
-# See https://github.com/projectneon-registry.node.local/calico-kube-controllers
+# See https://github.com/projectregistry.neon.local/calico-kube-controllers
 apiVersion: apps/v1
 kind: Deployment
 metadata:

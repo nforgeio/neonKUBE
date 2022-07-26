@@ -1644,7 +1644,7 @@ systemctl start crio
                     // We need to extract the image ID from the internal digest reference which
                     // look something like this:
                     //
-                    //      neon-registry.node.local/redis@sha256:561AABD123...
+                    //      registry.neon.local/redis@sha256:561AABD123...
                     //
                     // where we need to extract the HEX bytes after the [@sha256:] prefix
 

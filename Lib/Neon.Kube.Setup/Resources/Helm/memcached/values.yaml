@@ -67,7 +67,7 @@ diagnosticMode:
 ## @param image.debug Specify if debug values should be set
 ##
 image:
-  registry: neon-registry.node.local
+  registry: registry.neon.local
   repository: memcached
   tag: 1.6.15-alpine3.15
   ## Specify a imagePullPolicy
@@ -560,7 +560,7 @@ metrics:
   ## @param metrics.image.pullSecrets Specify docker-registry secret names as an array
   ##
   image:
-    registry: neon-registry.node.local
+    registry: registry.neon.local
     repository: bitnami-memcached-exporter
     tag: 0.9.0-debian-10-r348
     pullPolicy: IfNotPresent

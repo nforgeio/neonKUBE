@@ -4,19 +4,19 @@
 
 keycloak:
   image: 
-    organization: neon-registry.node.local
+    organization: registry.neon.local
     repository: keycloak-keycloak
     tag: 15.0.2
 
 #operator:
 #  image: 
-#    organization: neon-registry.node.local
+#    organization: registry.neon.local
 #    repository: keycloak-keycloak-operator
 #    tag: 15.0.2
 
 operator:
   image: 
-    organization: neon-registry.node.local
+    organization: registry.neon.local
     repository: keycloak-keycloak-operator
     tag: 15.0.2
     imagePullPolicy: IfNotPresent
@@ -25,7 +25,7 @@ initContainer:
   # this is just a busybox containner that exits right away
   # We modified the keycloak container to download the plugins on startup.
   image: 
-    organization: neon-registry.node.local
+    organization: registry.neon.local
     repository: keycloak-keycloak-init-container
     tag: 1.32.0 
 

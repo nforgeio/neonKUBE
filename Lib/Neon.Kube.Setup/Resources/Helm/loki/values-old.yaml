@@ -1,5 +1,5 @@
 image:
-  organization: neon-registry.node.local
+  organization: registry.neon.local
   repository: grafana-loki
   tag: 2.4.2
   pullPolicy: IfNotPresent

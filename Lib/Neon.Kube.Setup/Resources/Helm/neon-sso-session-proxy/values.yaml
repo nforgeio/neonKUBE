@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  organization: neon-registry.node.local
+  organization: registry.neon.local
   repository: neon-sso-session-proxy
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.

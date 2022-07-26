@@ -1,9 +1,9 @@
-organization: neon-registry.node.local
+organization: registry.neon.local
 tag: 1.14.1-distroless
 
 
 images:
-  organization: neon-registry.node.local
+  organization: registry.neon.local
   operator: 
     repository: operator
     tag: 1.14.1-distroless

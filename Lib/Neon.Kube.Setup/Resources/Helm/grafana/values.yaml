@@ -50,7 +50,7 @@ livenessProbe:
 
 operator:
   image:
-    organization: neon-registry.node.local
+    organization: registry.neon.local
     repository: grafana-operator-grafana-operator
     tag: v4.4.0
     sha: ""
@@ -58,14 +58,14 @@ operator:
 
 pluginsInit:
   image:
-    organization: neon-registry.node.local
+    organization: registry.neon.local
     repository: grafana-operator-grafana_plugins_init
     tag: 0.0.5
     sha: ""
     pullPolicy: IfNotPresent
 
 image:
-  organization: neon-registry.node.local
+  organization: registry.neon.local
   repository: grafana-grafana
   tag: 9.0.3-ubuntu
   sha: ""
@@ -105,7 +105,7 @@ extraEmptyDirMounts: []
 # priorityClassName:
 
 downloadDashboardsImage:
-  organization: neon-registry.node.local
+  organization: registry.neon.local
   repository: curlimages-curl
   tag: 7.70.0
   pullPolicy: IfNotPresent
@@ -223,7 +223,7 @@ initChownData:
   ## initChownData container image
   ##
   image:
-    organization: neon-registry.node.local
+    organization: registry.neon.local
     repository: busybox
     tag: 1.32.0
     pullPolicy: IfNotPresent
@@ -526,7 +526,7 @@ smtp:
 ## Requires at least Grafana 5 to work and can't be used together with parameters dashboardProviders, datasources and dashboards
 sidecar:
   image:
-    organization: neon-registry.node.local
+    organization: registry.neon.local
     repository: kiwigrid-sidecar
     tag: 0.1.151
     sha: ""

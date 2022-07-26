@@ -3,7 +3,7 @@
 # network, vxlan and ipam according to your deployment. 
 
 images:
-  organization: neon-registry.node.local
+  organization: registry.neon.local
   node:
     repository: calico-node
     tag: v3.22.2

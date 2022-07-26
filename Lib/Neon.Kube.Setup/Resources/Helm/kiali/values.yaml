@@ -3,13 +3,13 @@ fullnameOverride: ""
 
 image:
   operator:
-    organization: neon-registry.node.local
+    organization: registry.neon.local
     repository: kiali-kiali-operator
     tag: v1.44.0
     pullPolicy: IfNotPresent
     pullSecrets: []
   kiali:
-    organization: neon-registry.node.local
+    organization: registry.neon.local
     repository: kiali-kiali
     tag: v1.44.0
     pullPolicy: IfNotPresent

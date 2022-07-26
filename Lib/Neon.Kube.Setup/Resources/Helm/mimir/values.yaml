@@ -12,7 +12,7 @@ fullnameOverride: mimir
 # Container image settings.
 # Since the image is unique for all microservices, so are image settings.
 image:
-  organization: neon-registry.node.local
+  organization: registry.neon.local
   repository: grafana-mimir
   tag: 2.0.0
   pullPolicy: IfNotPresent

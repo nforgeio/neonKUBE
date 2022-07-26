@@ -2,7 +2,7 @@
 ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
 ##
 image:
-  organization: neon-registry.node.local
+  organization: registry.neon.local
   repository: redis
   tag: 6.0.7-alpine
   pullPolicy: IfNotPresent
@@ -67,7 +67,7 @@ rbac:
 sysctlImage:
   enabled: false
   command: []
-  registry: neon-registry.node.local
+  registry: registry.neon.local
   repository: busybox
   tag: 1.31.1
   pullPolicy: IfNotPresent
@@ -256,7 +256,7 @@ affinity: |
 exporter:
   enabled: true
   image:
-    organization: neon-registry.node.local
+    organization: registry.neon.local
     repository: oliver006-redis_exporter
     tag: v1.13.1
     pullPolicy: IfNotPresent

@@ -1014,7 +1014,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             //      - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
             //      - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
             //      - --feature-gates=EphemeralContainers=true,...                              <--- WE'RE INSERTING SOMETHING LIKE THIS!
-            //      image: neon-registry.node.local/kube-apiserver:v1.21.4
+            //      image: registry.neon.local/kube-apiserver:v1.21.4
             //      imagePullPolicy: IfNotPresent
             //      livenessProbe:
             //        failureThreshold: 8
@@ -4279,7 +4279,7 @@ $@"- name: StorageType
                     var sbArgs   = new StringBuilder();
 
                     sbScript.AppendLineLinux("#!/bin/bash");
-                    sbScript.AppendLineLinux($"echo '{password}' | podman login neon-registry.node.local --username {user.Name} --password-stdin");
+                    sbScript.AppendLineLinux($"echo '{password}' | podman login registry.neon.local --username {user.Name} --password-stdin");
 
                     foreach (var node in cluster.Nodes)
                     {

@@ -203,12 +203,12 @@ namespace Neon.Kube
         /// be resolved on the cluster nodes to access internal Kubernetes
         /// services like the Harbor registry etc.
         /// </summary>
-        public const string ClusterNodeDomain = "node.local";
+        public const string ClusterNodeDomain = "neon.local";
 
         /// <summary>
         /// Hostname used to reference the local Harbor registry within the cluster.
         /// </summary>
-        public const string LocalClusterRegistry = "neon-registry.node.local";
+        public const string LocalClusterRegistry = "registry.neon.local";
 
         /// <summary>
         /// User name used to log CRI-O on the cluster nodes into the local

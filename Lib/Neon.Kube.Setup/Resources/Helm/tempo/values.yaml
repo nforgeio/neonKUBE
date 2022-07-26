@@ -23,7 +23,7 @@ serviceMesh:
 tempo:
   image:
     # -- The Docker registry
-    registry: neon-registry.node.local
+    registry: registry.neon.local
     # -- Docker image repository
     repository: grafana-tempo
     # -- Overrides the image tag whose default is the chart's appVersion

@@ -71,7 +71,7 @@ strategy:
   type: RollingUpdate
 
 image:
-  organization: neon-registry.node.local
+  organization: registry.neon.local
   repository: prom-blackbox-exporter
   tag: v0.21.1
   pullPolicy: IfNotPresent

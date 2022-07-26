@@ -8,7 +8,7 @@ spec:
     istio: ingressgateway
   servers:
     - hosts:
-        - neon-registry.node.local
+        - registry.neon.local
       port:
         name: http-neoncluster
         number: 8080
@@ -28,7 +28,7 @@ spec:
   hosts:
     - {{ .Values.neonkube.clusterDomain.harborRegistry }}.{{ .Values.cluster.domain }}
     - {{ .Values.neonkube.clusterDomain.harborNotary }}.{{ .Values.cluster.domain }}
-    - neon-registry.node.local
+    - registry.neon.local
   http:
     - match:
         - uri:

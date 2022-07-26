@@ -2,7 +2,7 @@
 prometheusScrape: true
 
 image:
-  organization: neon-registry.node.local
+  organization: registry.neon.local
   repository: kube-state-metrics
   tag: v2.5.0
   pullPolicy: IfNotPresent

@@ -54,7 +54,7 @@ strategy: {}
 featureGates: ""
 
 image:
-  registry: neon-registry.node.local
+  registry: registry.neon.local
   repository: jetstack-cert-manager-controller
 
   # Override the image tag to deploy by setting this variable.
@@ -268,7 +268,7 @@ webhook:
   podLabels: {}
 
   image:
-    registry: neon-registry.node.local
+    registry: registry.neon.local
     repository: jetstack-cert-manager-webhook
 
     # Override the image tag to deploy by setting this variable.
@@ -369,7 +369,7 @@ cainjector:
   podLabels: {}
 
   image:
-    registry: neon-registry.node.local
+    registry: registry.neon.local
     repository: jetstack-cert-manager-cainjector
 
     # Override the image tag to deploy by setting this variable.

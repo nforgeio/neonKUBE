@@ -1,5 +1,5 @@
 image:
-  registry: neon-registry.node.local
+  registry: registry.neon.local
   repository: zalan-postgres-operator
   tag: v1.7.1
   pullPolicy: "IfNotPresent"
@@ -40,7 +40,7 @@ configGeneral:
   # Select if setup uses endpoints (default), or configmaps to manage leader (DCS=k8s)
   kubernetes_use_configmaps: true
   # Spilo docker image
-  docker_image: neon-registry.node.local/zalan-spilo-14:2.1-p3
+  docker_image: registry.neon.local/zalan-spilo-14:2.1-p3
   # min number of instances in Postgres cluster. -1 = no limit
   min_instances: -1
   # max number of instances in Postgres cluster. -1 = no limit
@@ -446,14 +446,14 @@ controllerID:
 healthCheck:
   enabled: true
   image: 
-    organization: neon-registry.node.local
+    organization: registry.neon.local
     repository: zalan-postgres-health-check
     tag: neonkube-0.5.0-alpha
 
 metrics:
   enabled: true
   image: 
-    organization: neon-registry.node.local
+    organization: registry.neon.local
     repository: prometheuscommunity-postgres-exporter
     tag: v0.10.0
   port: 9187

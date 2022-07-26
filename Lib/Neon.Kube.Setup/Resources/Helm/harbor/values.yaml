@@ -1,5 +1,5 @@
 image:
-  organization: neon-registry.node.local
+  organization: registry.neon.local
   repository: goharbor-harbor-operator
   # image.pullPolicy -- The image pull policy for the controller.
   pullPolicy: IfNotPresent
