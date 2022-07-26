@@ -49,7 +49,7 @@ USAGE:
     neon login export       USER@CLUSTER[/NAMESPACE] [PATH]
     neon login import       PATH
     neon login list|ls
-    neon login remove|rm    USER@CLUSTER[/NAMESPACE]
+    neon login delete       USER@CLUSTER[/NAMESPACE]
 
     neon logout
 

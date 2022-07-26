@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    LoginRemoveCommand.cs
+// FILE:	    LoginDeleteCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -34,18 +34,17 @@ using Neon.Kube;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>login remove</b> command.
+    /// Implements the <b>login delete</b> command.
     /// </summary>
     [Command]
-    public class LoginRemoveCommand : CommandBase
+    public class LoginDeleteCommand : CommandBase
     {
         private const string usage = @"
 Removes a Kubernetes context from the local computer.
 
 USAGE:
 
-    neon login rm       [--force] [ USER@CLUSTER[/NAMESPACE] ]
-    neon login remove   [--force] [ USER@CLUSTER[/NAMESPACE] ]
+    neon login delete   [--force] [ USER@CLUSTER[/NAMESPACE] ]
 
 ARGUMENTS:
 
@@ -62,10 +61,7 @@ USER@CLUSTER[/NAMESPACE is not specified.
 ";
 
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "login", "remove" }; 
-
-        /// <inheritdoc/>
-        public override string[] AltWords => new string[] { "login", "rm" }; 
+        public override string[] Words => new string[] { "login", "delete" }; 
 
         /// <inheritdoc/>
         public override string[] ExtendedOptions => new string[] { "--force" }; 

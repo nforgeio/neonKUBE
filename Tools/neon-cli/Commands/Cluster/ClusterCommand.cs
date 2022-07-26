@@ -46,14 +46,13 @@ USAGE:
 
     neon cluster check
     neon cluster dashboard
+    neon cluster delete     [OPTIONS]
     neon cluster health
     neon cluster info
     neon cluster islocked
     neon cluster lock
     neon cluster prepare    CLUSTER-DEF
     neon cluster pause      [OPTIONS]
-    neon cluster remove     [OPTIONS]
-    neon cluster rm         [OPTIONS]
     neon cluster reset      [OPTIONS]
     neon cluster setup      [OPTIONS] root@CLUSTER-NAME
     neon cluster space      [SPACE-NAME] [--reset]
