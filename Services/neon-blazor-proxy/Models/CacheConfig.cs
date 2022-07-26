@@ -54,6 +54,14 @@ namespace NeonBlazorProxy
         public int DurationSeconds { get; set; } = 300;
 
         /// <summary>
+        /// Memcached cache config.
+        /// </summary>
+        [JsonProperty(PropertyName = "Memcached", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "memcached", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public MemcachedConfig Memcached { get; set; } = new MemcachedConfig();
+
+        /// <summary>
         /// Redis cache config.
         /// </summary>
         [JsonProperty(PropertyName = "Redis", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

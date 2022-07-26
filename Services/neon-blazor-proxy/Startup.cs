@@ -37,6 +37,8 @@ using Neon.Web;
 
 using DnsClient;
 
+using Enyim;
+
 using Prometheus;
 
 using StackExchange.Redis;
@@ -81,9 +83,10 @@ namespace NeonBlazorProxy
         {
             switch (NeonBlazorProxyService.Config.Cache.Backend)
             {
-                case CacheType.InMemory:
+                case CacheType.Memcached:
 
-                    services.AddDistributedMemoryCache();
+                    services.AddEnyimMemcached(options => { NeonBlazorProxyService.Config.Cache.Memcached.GetOptions(); });
+
                     break;
 
                 case CacheType.Redis:
@@ -91,6 +94,7 @@ namespace NeonBlazorProxy
                     services.AddStackExchangeRedisCache(options => { NeonBlazorProxyService.Config.Cache.Redis.GetOptions(); });
                     break;
 
+                case CacheType.InMemory:
                 default:
 
                     services.AddDistributedMemoryCache();
