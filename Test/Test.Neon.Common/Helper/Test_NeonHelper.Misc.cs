@@ -21,6 +21,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -414,6 +415,159 @@ namespace TestCommon
             Assert.Equal(TimeSpan.Zero, NeonHelper.Max(TimeSpan.Zero, TimeSpan.FromSeconds(-1)));
             Assert.Equal(TimeSpan.FromSeconds(3), NeonHelper.Max(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(3)));
             Assert.Equal(TimeSpan.FromSeconds(3), NeonHelper.Max(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(1)));
+        }
+
+        private enum TestEnum
+        {
+            Zero,
+            One,
+            Two
+        }
+
+        private enum TestEnum_WithAttributes
+        {
+            [EnumMember(Value = "_ZERO")]
+            Zero,
+
+            [EnumMember(Value = "_ONE")]
+            One,
+
+            [EnumMember(Value = "_TWO")]
+            Two
+        }
+
+        private enum TestEnum_MixedAttributes
+        {
+            [EnumMember(Value = "_ZERO")]
+            Zero,
+
+            One,
+
+            [EnumMember(Value = "_TWO")]
+            Two
+        }
+
+        [Fact]
+        public void EnumMember_WithoutAttributes()
+        {
+            //-----------------------------------------------------------------
+            // Parsing
+
+            Assert.Equal(TestEnum.Zero, NeonHelper.ParseEnum<TestEnum>("Zero"));
+            Assert.Equal(TestEnum.One, NeonHelper.ParseEnum<TestEnum>("One"));
+            Assert.Equal(TestEnum.Two, NeonHelper.ParseEnum<TestEnum>("Two"));
+
+            Assert.True(NeonHelper.TryParseEnum(typeof(TestEnum), "Zero", out var untyped));
+            Assert.Equal(TestEnum.Zero, (TestEnum)untyped);
+
+            Assert.True(NeonHelper.TryParseEnum(typeof(TestEnum), "One", out untyped));
+            Assert.Equal(TestEnum.One, (TestEnum)untyped);
+
+            Assert.True(NeonHelper.TryParseEnum(typeof(TestEnum), "Two", out untyped));
+            Assert.Equal(TestEnum.Two, (TestEnum)untyped);
+
+            Assert.True(NeonHelper.TryParseEnum<TestEnum>("Zero", out var value));
+            Assert.Equal(TestEnum.Zero, value);
+
+            Assert.True(NeonHelper.TryParseEnum<TestEnum>("One", out value));
+            Assert.Equal(TestEnum.One, value);
+
+            Assert.True(NeonHelper.TryParseEnum<TestEnum>("Two", out value));
+            Assert.Equal(TestEnum.Two, value);
+
+            //-----------------------------------------------------------------
+            // Parsing Errors
+
+            Assert.Throws<ArgumentException>(() => NeonHelper.ParseEnum<TestEnum>("ABC"));
+            Assert.False(NeonHelper.TryParseEnum(typeof(TestEnum), "ABC", out untyped));
+            Assert.False(NeonHelper.TryParseEnum<TestEnum>("ABC", out value));
+
+            //-----------------------------------------------------------------
+            // Enum names
+
+            Assert.Equal(new string[] { "Zero", "One", "Two" }, NeonHelper.GetEnumNames<TestEnum>());
+        }
+
+        [Fact]
+        public void EnumMember_WithAttributes()
+        {
+            //-----------------------------------------------------------------
+            // Parsing
+
+            Assert.Equal(TestEnum_WithAttributes.Zero, NeonHelper.ParseEnum<TestEnum_WithAttributes>("_ZERO"));
+            Assert.Equal(TestEnum_WithAttributes.One, NeonHelper.ParseEnum<TestEnum_WithAttributes>("_ONE"));
+            Assert.Equal(TestEnum_WithAttributes.Two, NeonHelper.ParseEnum<TestEnum_WithAttributes>("_TWO"));
+
+            Assert.True(NeonHelper.TryParseEnum(typeof(TestEnum_WithAttributes), "_ZERO", out var untyped));
+            Assert.Equal(TestEnum_WithAttributes.Zero, (TestEnum_WithAttributes)untyped);
+
+            Assert.True(NeonHelper.TryParseEnum(typeof(TestEnum_WithAttributes), "_ONE", out untyped));
+            Assert.Equal(TestEnum_WithAttributes.One, (TestEnum_WithAttributes)untyped);
+
+            Assert.True(NeonHelper.TryParseEnum(typeof(TestEnum_WithAttributes), "_TWO", out untyped));
+            Assert.Equal(TestEnum_WithAttributes.Two, (TestEnum_WithAttributes)untyped);
+
+            Assert.True(NeonHelper.TryParseEnum<TestEnum_WithAttributes>("_ZERO", out var value));
+            Assert.Equal(TestEnum_WithAttributes.Zero, value);
+
+            Assert.True(NeonHelper.TryParseEnum<TestEnum_WithAttributes>("_ONE", out value));
+            Assert.Equal(TestEnum_WithAttributes.One, value);
+
+            Assert.True(NeonHelper.TryParseEnum<TestEnum_WithAttributes>("_TWO", out value));
+            Assert.Equal(TestEnum_WithAttributes.Two, value);
+
+            //-----------------------------------------------------------------
+            // Parsing Errors
+
+            Assert.Throws<ArgumentException>(() => NeonHelper.ParseEnum<TestEnum_WithAttributes>("ABC"));
+            Assert.False(NeonHelper.TryParseEnum(typeof(TestEnum_WithAttributes), "ABC", out untyped));
+            Assert.False(NeonHelper.TryParseEnum<TestEnum_WithAttributes>("ABC", out value));
+
+            //-----------------------------------------------------------------
+            // Enum names
+
+            Assert.Equal(new string[] { "_ZERO", "_ONE", "_TWO" }, NeonHelper.GetEnumNames<TestEnum_WithAttributes>());
+        }
+
+        [Fact]
+        public void EnumMember_MixedAttributes()
+        {
+            //-----------------------------------------------------------------
+            // Parsing
+
+            Assert.Equal(TestEnum_MixedAttributes.Zero, NeonHelper.ParseEnum<TestEnum_MixedAttributes>("_ZERO"));
+            Assert.Equal(TestEnum_MixedAttributes.One, NeonHelper.ParseEnum<TestEnum_MixedAttributes>("One"));
+            Assert.Equal(TestEnum_MixedAttributes.Two, NeonHelper.ParseEnum<TestEnum_MixedAttributes>("_TWO"));
+
+            Assert.True(NeonHelper.TryParseEnum(typeof(TestEnum_MixedAttributes), "_ZERO", out var untyped));
+            Assert.Equal(TestEnum_MixedAttributes.Zero, (TestEnum_MixedAttributes)untyped);
+
+            Assert.True(NeonHelper.TryParseEnum(typeof(TestEnum_MixedAttributes), "One", out untyped));
+            Assert.Equal(TestEnum_MixedAttributes.One, (TestEnum_MixedAttributes)untyped);
+
+            Assert.True(NeonHelper.TryParseEnum(typeof(TestEnum_MixedAttributes), "_TWO", out untyped));
+            Assert.Equal(TestEnum_MixedAttributes.Two, (TestEnum_MixedAttributes)untyped);
+
+            Assert.True(NeonHelper.TryParseEnum<TestEnum_MixedAttributes>("_ZERO", out var value));
+            Assert.Equal(TestEnum_MixedAttributes.Zero, value);
+
+            Assert.True(NeonHelper.TryParseEnum<TestEnum_MixedAttributes>("One", out value));
+            Assert.Equal(TestEnum_MixedAttributes.One, value);
+
+            Assert.True(NeonHelper.TryParseEnum<TestEnum_MixedAttributes>("_TWO", out value));
+            Assert.Equal(TestEnum_MixedAttributes.Two, value);
+
+            //-----------------------------------------------------------------
+            // Parsing Errors
+
+            Assert.Throws<ArgumentException>(() => NeonHelper.ParseEnum<TestEnum_MixedAttributes>("ABC"));
+            Assert.False(NeonHelper.TryParseEnum(typeof(TestEnum_MixedAttributes), "ABC", out untyped));
+            Assert.False(NeonHelper.TryParseEnum<TestEnum_MixedAttributes>("ABC", out value));
+
+            //-----------------------------------------------------------------
+            // Enum names
+
+            Assert.Equal(new string[] { "_ZERO", "One", "_TWO" }, NeonHelper.GetEnumNames<TestEnum_MixedAttributes>());
         }
     }
 }
