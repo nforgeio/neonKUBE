@@ -497,8 +497,29 @@ cgroupDriver: systemd
 runtimeRequestTimeout: 5m
 {kubeletFailSwapOnLine}
 maxPods: {cluster.Definition.Kubernetes.MaxPodsPerNode}
-rotateCertificates: true
-");
+rotateCertificates: true");
+
+            clusterConfig.AppendLine($@"
+systemReserved:");
+            foreach (var systemReservedkey in cluster.Definition.Kubernetes.SystemReserved.Keys)
+            {
+                clusterConfig.AppendLine($@"
+  {systemReservedkey}: {cluster.Definition.Kubernetes.SystemReserved[systemReservedkey]}");
+            }
+                clusterConfig.AppendLine($@"
+kubeReserved:");
+            foreach (var kubeReservedKey in cluster.Definition.Kubernetes.KubeReserved.Keys)
+            {
+                clusterConfig.AppendLine($@"
+  {kubeReservedKey}: {cluster.Definition.Kubernetes.KubeReserved[kubeReservedKey]}");
+            }
+                clusterConfig.AppendLine($@"
+evictionHard:");
+            foreach (var evictionHardKey in cluster.Definition.Kubernetes.EvictionHard.Keys)
+            {
+                clusterConfig.AppendLine($@"
+  {evictionHardKey}: {cluster.Definition.Kubernetes.EvictionHard[evictionHardKey]}");
+            }
             // Append the KubeProxyConfiguration
 
             var kubeProxyMode = "ipvs";
@@ -509,6 +530,8 @@ apiVersion: kubeproxy.config.k8s.io/v1alpha1
 kind: KubeProxyConfiguration
 mode: {kubeProxyMode}");
 
+
+            var s = clusterConfig.ToString();
             return clusterConfig.ToString();
         }
 

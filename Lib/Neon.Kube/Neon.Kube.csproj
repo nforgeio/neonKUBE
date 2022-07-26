@@ -119,6 +119,10 @@
 		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Model\CRDs\Kubernetes\" />
+	</ItemGroup>
+
 	<!--
     Generates the [KubernetesWithRetry.cs] file.
     -->
