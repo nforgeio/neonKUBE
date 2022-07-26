@@ -112,8 +112,8 @@ namespace Neon.Kube
         /// definition. 
         /// </summary>
         [JsonProperty(PropertyName = "Purpose", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(ClusterPurpose.NotSet)]
-        public ClusterPurpose Purpose { get; set; } = ClusterPurpose.NotSet;
+        [DefaultValue(ClusterPurpose.Unspecified)]
+        public ClusterPurpose Purpose { get; set; } = ClusterPurpose.Unspecified;
 
         /// <summary>
         /// Identifies where the cluster is hosted as specified by <see cref="ClusterDefinition.Datacenter"/> in the cluster

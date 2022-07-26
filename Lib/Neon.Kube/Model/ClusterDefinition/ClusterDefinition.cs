@@ -632,8 +632,8 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Purpose", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "purpose", ApplyNamingConventions = false)]
         [JsonConverter(typeof(StringEnumConverter))]
-        [DefaultValue(ClusterPurpose.NotSet)]
-        public ClusterPurpose Purpose { get; set; } = ClusterPurpose.NotSet;
+        [DefaultValue(ClusterPurpose.Unspecified)]
+        public ClusterPurpose Purpose { get; set; } = ClusterPurpose.Unspecified;
 
         /// <summary>
         /// Specifies the NTP time sources to be configured for the cluster.  These are the

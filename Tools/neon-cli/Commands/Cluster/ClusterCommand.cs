@@ -52,6 +52,7 @@ USAGE:
     neon cluster islocked
     neon cluster lock
     neon cluster prepare    CLUSTER-DEF
+    neon cluster purpose    [unspecified | development | test | stage | production]
     neon cluster pause      [OPTIONS]
     neon cluster reset      [OPTIONS]
     neon cluster setup      [OPTIONS] root@CLUSTER-NAME
