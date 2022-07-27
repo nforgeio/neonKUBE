@@ -44,7 +44,7 @@ loki:
     timeoutSeconds: 1
   image:
     # -- The Docker registry
-    registry: neon-registry.node.local
+    registry: registry.neon.local
     # -- Docker image repository
     repository: grafana-loki
     # -- Overrides the image tag whose default is the chart's appVersion
@@ -75,7 +75,9 @@ loki:
   # -- Config file contents for Loki
   # @default -- See values.yaml
   config: |
-    auth_enabled: false
+    auth_enabled: true
+    analytics:
+      reporting_enabled: false
     common:
       storage:
         s3:
@@ -90,6 +92,7 @@ loki:
       ring:
         kvstore:
           store: memberlist
+      compactor_address: http://loki-compactor:3100
     server:
       http_listen_port: 3100
       log_level: info
@@ -106,6 +109,7 @@ loki:
       wal:
         dir: /var/loki/wal
         flush_on_shutdown: true
+        replay_memory_ceiling: {{ .Values.ingester.config.wal.replay_memory_ceiling }}
 
     limits_config:
       {{- toYaml .Values.limits_config | nindent 2 }}
@@ -165,6 +169,11 @@ loki:
     {{- else }}
       shared_store: filesystem
     {{- end }}
+      working_directory: /var/loki/compactor
+      compaction_interval: 10m
+      retention_enabled: true
+      delete_request_cancel_period: 1h
+      deletion_mode: filter-and-delete
     ruler:
       storage:
     {{- if .Values.minio.enabled }}
@@ -288,6 +297,9 @@ ingester:
   kind: StatefulSet
   # -- Number of replicas for the ingester
   replicas: 1
+  config:
+    wal:
+      replay_memory_ceiling: 4GB
   image:
     # -- The Docker registry for the ingester image. Overrides `loki.image.registry`
     registry: null
@@ -636,7 +648,7 @@ queryFrontend:
 # Configuration for the table-manager
 tableManager:
   # -- Specifies whether the table-manager should be enabled
-  enabled: true
+  enabled: false
   image:
     # -- The Docker registry for the table-manager image. Overrides `loki.image.registry`
     registry: null
@@ -794,7 +806,7 @@ compactor:
             topologyKey: failure-domain.beta.kubernetes.io/zone
   persistence:
     # -- Enable creating PVCs for the compactor
-    enabled: true
+    enabled: false
     # -- Size of persistent disk
     size: 1Gi
     # -- Storage class to be used.
@@ -1066,6 +1078,7 @@ limits_config:
   max_cache_freshness_per_query: 10m
   split_queries_by_interval: 15m
   retention_period: 168h
+  allow_deletes: true
 
 table_manager:
   retention_deletes_enabled: true

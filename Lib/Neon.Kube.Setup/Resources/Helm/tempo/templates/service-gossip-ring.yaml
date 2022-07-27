@@ -9,10 +9,12 @@ metadata:
 spec:
   type: ClusterIP
   clusterIP: None
+  publishNotReadyAddresses: true
+  sessionAffinity: None
   ports:
     - name: gossip-ring
       port: 7946
       protocol: TCP
-      targetPort: http-memberlist
+      targetPort: 7946
   selector:
     {{- include "tempo.gossipRing.selectorLabels" . | nindent 4 }}

@@ -7,18 +7,37 @@ spec:
   hosts:
     - {{ template "loki.name" . }}
   http:
-    - match:
-        - uri:
-            prefix: /api/prom/push
-        - uri:
-            prefix: /loki/api/v1/push
-      name: {{ include "loki.distributorFullname" . }}
+    - name: {{ include "loki.distributorFullname" . }}
       route:
         - destination:
             host: {{ include "loki.distributorFullname" . }}
             port:
               number: 3100
-    - match:
+      match:
+        - uri:
+            prefix: /distributor
+        - uri:
+            prefix: /api/prom/push
+        - uri:
+            prefix: /loki/api/v1/push
+    - name: {{ include "loki.ingesterFullname" . }}
+      route:
+        - destination:
+            host: {{ include "loki.ingesterFullname" . }}
+            port:
+              number: 3100
+      match:
+        - uri:
+            prefix: /ingester
+        - uri:
+            prefix: /flush
+    - name: {{ include "loki.rulerFullname" . }}
+      route:
+        - destination:
+            host: {{ include "loki.rulerFullname" . }}
+            port:
+              number: 3100
+      match:
         - uri:
             prefix: /ruler
         - uri:
@@ -31,13 +50,35 @@ spec:
             prefix: /api/prom/rules
         - uri:
             prefix: /api/prom/alerts
-      name: {{ include "loki.rulerFullname" . }}
+    - name: {{ include "loki.querierFullname" . }}
       route:
         - destination:
-            host: {{ include "loki.rulerFullname" . }}
+            host: {{ include "loki.querierFullname" . }}
             port:
               number: 3100
-    - match:
+      match:
+        - uri:
+            prefix: /api/prom/tail
+        - uri:
+            prefix: /loki/api/v1/tail
+    - name: {{ include "loki.compactorFullname" . }}
+      route:
+        - destination:
+            host: {{ include "loki.compactorFullname" . }}
+            port:
+              number: 3100
+      match:
+        - uri:
+            prefix: /compactor
+        - uri:
+            prefix: /loki/api/v1/delete
+    - name: {{ include "loki.queryFrontendFullname" . }}
+      route:
+        - destination:
+            host: {{ include "loki.queryFrontendFullname" . }}
+            port:
+              number: 3100
+      match:
         - uri:
             prefix: /loki/api/v1/query
         - uri:
@@ -47,14 +88,4 @@ spec:
         - uri:
             prefix: /loki/api/v1/labels
         - uri:
-            prefix: /api/prom/tail
-        - uri:
-            prefix: /loki/api/v1/tail
-        - uri:
             prefix: /
-      name: {{ include "loki.queryFrontendFullname" . }}
-      route:
-        - destination:
-            host: {{ include "loki.queryFrontendFullname" . }}
-            port:
-              number: 3100

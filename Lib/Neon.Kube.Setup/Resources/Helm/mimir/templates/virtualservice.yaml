@@ -7,31 +7,46 @@ spec:
   hosts:
     - {{ template "mimir.fullname" . }}
   http:
-    - match:
-        - uri:
-            prefix: /distributor
-        - uri:
-            prefix: /api/v1/push
-      name: {{ include "mimir.distributorFullname" . }}
+    - name: {{ include "mimir.distributorFullname" . }}
       route:
         - destination:
             host: {{ include "mimir.distributorFullname" . }}
             port:
               number: 8080
-    - match:
+      match:
+        - uri:
+            prefix: /distributor
+        - uri:
+            prefix: /api/v1/push
+    - name: {{ include "mimir.ingesterFullname" . }}
+      route:
+        - destination:
+            host: {{ include "mimir.ingesterFullname" . }}
+            port:
+              number: 8080
+      match:
+        - uri:
+            prefix: /ingester
+    - name: {{ include "mimir.alertmanagerFullname" . }}
+      route:
+        - destination:
+            host: {{ include "mimir.alertmanagerFullname" . }}
+            port:
+              number: 8080
+      match:
         - uri:
             prefix: /alertmanager
         - uri:
             prefix: /multitenant_alertmanager
         - uri:
             prefix: /api/v1/alerts
-      name: {{ include "mimir.alertmanagerFullname" . }}
+    - name: {{ include "mimir.rulerFullname" . }}
       route:
         - destination:
-            host: {{ include "mimir.alertmanagerFullname" . }}
+            host: {{ include "mimir.rulerFullname" . }}
             port:
               number: 8080
-    - match:
+      match:
         - uri:
             prefix: /prometheus/config/v1/rules
         - uri:
@@ -44,18 +59,32 @@ spec:
             prefix: /prometheus/rules
         - uri:
             prefix: /ruler
-      name: {{ include "mimir.rulerFullname" . }}
+    - name: {{ include "mimir.compactorFullname" . }}
       route:
         - destination:
-            host: {{ include "mimir.rulerFullname" . }}
+            host: {{ include "mimir.compactorFullname" . }}
             port:
               number: 8080
-    - match:
+      match:
         - uri:
-            prefix: /prometheus
-      name: {{ include "mimir.queryFrontendFullname" . }}
+            prefix: /api/v1/upload/block/
+        - uri:
+            prefix: /compactor
+    - name: {{ include "mimir.storeGatewayFullname" . }}
+      route:
+        - destination:
+            host: {{ include "mimir.storeGatewayFullname" . }}
+            port:
+              number: 8080
+      match:
+        - uri:
+            prefix: /store-gateway
+    - name: {{ include "mimir.queryFrontendFullname" . }}
       route:
         - destination:
             host: {{ include "mimir.queryFrontendFullname" . }}
             port:
               number: 8080
+      match:
+        - uri:
+            prefix: /prometheus

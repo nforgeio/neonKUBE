@@ -3164,12 +3164,15 @@ $@"- name: StorageType
                     values.Add($"serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
                     values.Add($"minio.enabled", true);
+                    values.Add($"compactor.config.deletion_delay", "12h");
 
                     if (cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() == 1)
                     {
                         values.Add($"blocksStorage.tsdb.block_ranges_period[0]", "1h0m0s");
                         values.Add($"blocksStorage.tsdb.retention_period", "2h0m0s");
                         values.Add($"limits.compactor_blocks_retention_period", "12h");
+                        values.Add($"compactor.config.deletion_delay", "1h");
+                        values.Add($"blocksStorage.bucketStore.ignore_deletion_mark_delay", "15m");
                     }
 
                     await CreateMinioBucketAsync(controller, controlNode, KubeMinioBucket.Mimir, clusterAdvice.MetricsQuota);
@@ -3315,11 +3318,6 @@ $@"- name: StorageType
                     values.Add($"ruler.resources.limits.memory", ToSiString(rulerAdvice.PodMemoryLimit));
                     values.Add($"ruler.priorityClassName", PriorityClass.NeonMonitor.Name);
 
-                    values.Add($"tableManager.replicas", tableManagerAdvice.ReplicaCount);
-                    values.Add($"tableManager.resources.requests.memory", ToSiString(tableManagerAdvice.PodMemoryRequest));
-                    values.Add($"tableManager.resources.limits.memory", ToSiString(tableManagerAdvice.PodMemoryLimit));
-                    values.Add($"tableManager.priorityClassName", PriorityClass.NeonMonitor.Name);
-
                     values.Add($"serviceMonitor.enabled", lokiAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"serviceMonitor.interval", lokiAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add($"serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
@@ -3343,6 +3341,8 @@ $@"- name: StorageType
                         values.Add($"limits_config.reject_old_samples_max_age", "6h");
                         values.Add($"table_manager.retention_period", "24h");
                     }
+
+                    values.Add("ingester.config.wal.replay_memory_ceiling", ToSiString(ingesterAdvice.PodMemoryRequest * 0.75m));
 
                     int i = 0;
 

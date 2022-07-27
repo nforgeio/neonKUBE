@@ -51,7 +51,7 @@ skipConfigSecret: false
 mimir:
   # -- Config file for Grafana Mimir, enables templates. Needs to be copied in full for modifications.
   config: |
-    multitenancy_enabled: false
+    multitenancy_enabled: true
 
     limits:
       {{- toYaml .Values.limits | nindent 2 }}
@@ -92,6 +92,7 @@ mimir:
 
     compactor:
       data_dir: "/data"
+      deletion_delay: {{ .Values.compactor.config.deletion_delay }}
 
     store_gateway:
       sharding_ring:
@@ -126,6 +127,7 @@ mimir:
         {{- toYaml .Values.blocksStorage.tsdb | nindent 4 }}
       bucket_store:
         sync_dir: /data/tsdb-sync
+        ignore_deletion_mark_delay: {{ .Values.blocksStorage.bucketStore.ignore_deletion_mark_delay }}
         {{- if .Values.memcached.enabled }}
         chunks_cache:
           backend: memcached
@@ -430,7 +432,9 @@ distributor:
   extraVolumes: []
   extraVolumeMounts: []
   extraPorts: []
-  env: []
+  env:
+    - name: GOGC
+      value: "10"
 
 ingester:
   replicas: 1
@@ -834,7 +838,9 @@ query_frontend:
   extraVolumes: []
   extraVolumeMounts: []
   extraPorts: []
-  env: []
+  env:
+    - name: GOGC
+      value: "10"
 
 store_gateway:
   replicas: 1
@@ -952,6 +958,8 @@ store_gateway:
       value: "10"
 
 compactor:
+  config:
+    deletion_delay: 12h
   replicas: 1
 
   service:
@@ -1052,7 +1060,19 @@ compactor:
   extraVolumes: []
   extraVolumeMounts: []
   extraPorts: []
-  env: []
+  env:
+    - name: ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: minio
+          key: accesskey
+    - name: SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: minio
+          key: secretkey
+    - name: GOGC
+      value: "10"
 
 memcached:
   enabled: true
@@ -1079,9 +1099,11 @@ limits:
   max_global_metadata_per_metric: 0
   max_label_names_per_series: 250
   ingestion_rate: 50000
-  compactor_blocks_retention_period: 0s
+  compactor_blocks_retention_period: 168h
 
 blocksStorage:
+  bucketStore:
+    ignore_deletion_mark_delay: 1h
   tsdb:
     dir: /data/tsdb
     block_ranges_period: 
