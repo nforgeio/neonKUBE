@@ -52,7 +52,7 @@ operator:
   image:
     organization: neon-registry.node.local
     repository: grafana-operator-grafana-operator
-    tag: v4.4.0
+    tag: v4.5.1
     sha: ""
     pullPolicy: IfNotPresent
 
@@ -67,7 +67,7 @@ pluginsInit:
 image:
   organization: neon-registry.node.local
   repository: grafana-grafana
-  tag: 9.0.3-ubuntu
+  tag: 9.0.5-ubuntu
   sha: ""
   pullPolicy: IfNotPresent
   ## Optionally specify an array of imagePullSecrets.
