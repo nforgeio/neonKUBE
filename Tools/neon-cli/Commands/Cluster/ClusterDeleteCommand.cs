@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterRemoveCommand.cs
+// FILE:	    ClusterDeleteCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -51,10 +51,10 @@ using Neon.Time;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>cluster remove</b> command.
+    /// Implements the <b>cluster delete</b> command.
     /// </summary>
     [Command]
-    public class ClusterRemoveCommand : CommandBase
+    public class ClusterDeleteCommand : CommandBase
     {
         private const string usage = @"
 Removes the current cluster.  This is not supported by all hosting environments.
@@ -62,7 +62,6 @@ Removes the current cluster.  This is not supported by all hosting environments.
 USAGE:
 
     neon cluster remove [--force]
-    neon cluster rm [--force]
 
 OPTIONS:
 
@@ -82,10 +81,7 @@ cluster definition or by executing this command on your cluster:
 
 ";
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "cluster", "remove" };
-
-        /// <inheritdoc/>
-        public override string[] AltWords => new string[] { "cluster", "rm" };
+        public override string[] Words => new string[] { "cluster", "delete" };
 
         /// <inheritdoc/>
         public override string[] ExtendedOptions => new string[] { "--force" };
@@ -152,7 +148,7 @@ cluster definition or by executing this command on your cluster:
                 try
                 {
                     Console.WriteLine($"Removing: {cluster.Name}...");
-                    await cluster.RemoveAsync();
+                    await cluster.DeleteAsync();
                     KubeHelper.Config.RemoveContext(context);
 
                     Console.WriteLine($"REMOVED:  {cluster.Name}");

@@ -71,7 +71,7 @@ namespace Neon.Kube
             /// <summary>
             /// <para>
             /// Only cluster lifecycle operations like <see cref="StartAsync()"/>, <see cref="StopAsync(StopMode)"/>,
-            /// amd <see cref="RemoveAsync(bool)"/> will be enabled.
+            /// amd <see cref="DeleteAsync(bool)"/> will be enabled.
             /// </para>
             /// <note>
             /// These life cycle methods do not required a URI or file reference to a node image.
@@ -901,6 +901,21 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Set information about a cluster.
+        /// </summary>
+        /// <param name="clusterInfo">The information being set.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task SetClusterInfo(ClusterInfo clusterInfo)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(clusterInfo != null);
+
+            var clusterInfoMap = new TypeSafeConfigMap<ClusterInfo>(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus, clusterInfo);
+
+            await K8s.ReplaceNamespacedConfigMapAsync(clusterInfoMap.ConfigMap, KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus);
+        }
+
+        /// <summary>
         /// Returns the health status of a cluster.
         /// </summary>
         /// <param name="timeout">Optionally specifies the maximum time to wait for the result.  This defaults to <b>15 seconds</b>.</param>
@@ -1204,7 +1219,7 @@ namespace Neon.Kube
         /// This operation may not be supported for all environments.
         /// </note>
         /// </summary>
-        /// <param name="removeOrphans">
+        /// <param name="deleteOrphans">
         /// Optionally specifies that VMs or clusters with the same VM or resource group prefix
         /// will be tewrminated and removed.  See the remarks for more information.
         /// </param>
@@ -1212,12 +1227,12 @@ namespace Neon.Kube
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
         /// <remarks>
         /// <para>
-        /// The <paramref name="removeOrphans"/> parameter is typically enabled when running unit tests
+        /// The <paramref name="deleteOrphans"/> parameter is typically enabled when running unit tests
         /// via the <b>ClusterFixture</b> to ensure that clusters and VMs orphaned by previous interrupted
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        public async Task RemoveAsync(bool removeOrphans = false)
+        public async Task DeleteAsync(bool deleteOrphans = false)
         {
             await SyncContext.Clear;
             Covenant.Assert(HostingManager != null);
@@ -1226,7 +1241,7 @@ namespace Neon.Kube
             var context     = KubeHelper.Config.GetContext(contextName);
             var login       = KubeHelper.GetClusterLogin(contextName);
 
-            await HostingManager.RemoveClusterAsync(removeOrphans);
+            await HostingManager.RemoveClusterAsync(deleteOrphans);
 
             if (context != null)
             {

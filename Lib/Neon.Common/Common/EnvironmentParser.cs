@@ -684,7 +684,7 @@ namespace Neon.Common
         /// <exception cref="KeyNotFoundException">Thrown if the variable does not exists and <paramref name="required"/>=<c>true</c>.</exception>
         /// <exception cref="FormatException">Thrown if the variable could not be parsed or the <paramref name="validator"/> returned an error.</exception>
         public TEnum Get<TEnum>(string variable, TEnum defaultInput, bool required = false, Validator<TEnum> validator = null)
-            where TEnum : Enum
+            where TEnum : struct, Enum
         {
             return Parse<TEnum>(variable, NeonHelper.EnumToString(defaultInput), EnumParser, required, validator);
         }

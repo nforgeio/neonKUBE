@@ -29,13 +29,16 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Neon.Common;
+using Neon.Net;
+
+using k8s.Models;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using YamlDotNet.Serialization;
 
-using Neon.Common;
-using Neon.Net;
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube
 {
@@ -106,6 +109,35 @@ namespace Neon.Kube
         public int MaxPodsPerNode { get; set; } = 250;
 
         /// <summary>
+        /// A set of ResourceName=ResourceQuantity (e.g. cpu=200m,memory=150G) pairs that describe resources reserved for non-kubernetes components. 
+        /// Currently only cpu and memory are supported. See http://kubernetes.io/docs/user-guide/compute-resources for more detail. Default: nil
+        /// </summary>
+        [JsonProperty(PropertyName = "SystemReserved", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "systemReserved", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public Dictionary<string, string> SystemReserved { get; set; } = new Dictionary<string, string>();
+
+        /// <summary>
+        /// A set of ResourceName=ResourceQuantity (e.g. cpu=200m,memory=150G) pairs that describe resources reserved for kubernetes system components.
+        /// Currently cpu, memory and local storage for root file system are supported. 
+        /// See https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/ for more details. Default: nil
+        /// </summary>
+        [JsonProperty(PropertyName = "KubeReserved", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "kubeReserved", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public Dictionary<string, string> KubeReserved { get; set; } = new Dictionary<string, string>();
+
+        /// <summary>
+        /// A is a map of signal names to quantities that defines hard eviction thresholds. For example: {"memory.available": "300Mi"}. 
+        /// To explicitly disable, pass a 0% or 100% threshold on an arbitrary resource. 
+        /// Default: memory.available: "100Mi" nodefs.available: "10%" nodefs.inodesFree: "5%" imagefs.available: "15%"
+        /// </summary>
+        [JsonProperty(PropertyName = "EvictionHard", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "evictionHard", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public Dictionary<string, string> EvictionHard { get; set; } = new Dictionary<string, string>();
+
+        /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
@@ -149,6 +181,43 @@ namespace Neon.Kube
             if (!AllowPodsOnControlPlane.HasValue)
             {
                 AllowPodsOnControlPlane = clusterDefinition.Workers.Count() == 0;
+            }
+
+            var controlPlaneMemory = (decimal)clusterDefinition.ControlNodes.First().Vm.GetMemory(clusterDefinition);
+
+            if (EvictionHard == null
+                || !EvictionHard.ContainsKey("memory.available"))
+            {
+                EvictionHard["memory.available"] = 
+                    new ResourceQuantity(
+                        controlPlaneMemory * 0.05m, 
+                        0, 
+                        ResourceQuantity.SuffixFormat.BinarySI)
+                    .CanonicalizeString();
+            }
+
+            if (SystemReserved == null
+                || !SystemReserved.ContainsKey("memory"))
+            {
+                var evictionHard = new ResourceQuantity(EvictionHard["memory.available"]);
+
+                SystemReserved["memory"] =
+                    new ResourceQuantity(
+                        (controlPlaneMemory * 0.10m) + evictionHard.ToDecimal(),
+                        0,
+                        ResourceQuantity.SuffixFormat.BinarySI)
+                    .CanonicalizeString();
+            }
+
+            if (KubeReserved == null
+                || !KubeReserved.ContainsKey("memory"))
+            {
+                KubeReserved["memory"] =
+                    new ResourceQuantity(
+                        controlPlaneMemory * 0.10m,
+                        0,
+                        ResourceQuantity.SuffixFormat.BinarySI)
+                    .CanonicalizeString();
             }
 
             var podSubnetCidr = NetworkCidr.Parse(clusterDefinition.Network.PodSubnet);

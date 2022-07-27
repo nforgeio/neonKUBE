@@ -28,8 +28,8 @@ namespace Neon.Kube
         /// <summary>
         /// Unspecified.
         /// </summary>
-        [EnumMember(Value = "not-set")]
-        NotSet = 0,
+        [EnumMember(Value = "unspecified")]
+        Unspecified = 0,
 
         /// <summary>
         /// Development environment.
@@ -38,21 +38,21 @@ namespace Neon.Kube
         Development,
 
         /// <summary>
-        /// Test environment.
+        /// Production environment.
         /// </summary>
-        [EnumMember(Value = "test")]
-        Test,
+        [EnumMember(Value = "production")]
+        Production,
 
         /// <summary>
         /// Staging environment.
         /// </summary>
-        [EnumMember(Value = "staging")]
-        Staging,
+        [EnumMember(Value = "stage")]
+        Stage,
 
         /// <summary>
-        /// Production environment.
+        /// Test environment.
         /// </summary>
-        [EnumMember(Value = "production")]
-        Production
+        [EnumMember(Value = "test")]
+        Test
     }
 }
