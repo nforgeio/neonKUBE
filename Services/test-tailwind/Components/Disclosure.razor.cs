@@ -9,6 +9,5 @@ namespace TestTailwind.Components
 {
     public partial class Disclosure : ComponentBase
     {
-        HeadlessDisclosure headlessDisclosure;
     }
 }

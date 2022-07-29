@@ -47,7 +47,7 @@ namespace Neon.Tailwind
         /// <summary>
         /// The current 
         /// </summary>
-        public DisclosureState State { get; protected set; } = DisclosureState.Closed;
+        public DisclosureState State { get; protected set; } = DisclosureState.Open;
 
         /// <summary>
         /// Constructor.
@@ -60,7 +60,7 @@ namespace Neon.Tailwind
         protected override void OnInitialized()
         {
             base.OnInitialized();
-            IsOpen = Show;
+            State = Show ? DisclosureState.Open : DisclosureState.Closed;
         }
 
         public async Task RegisterButton(HeadlessDisclosureButton button)

@@ -11,4 +11,14 @@
                     within 90 days and we'll refund you in full, no questions asked.
         </HeadlessDisclosurePanel>
     </HeadlessDisclosure>
+     <HeadlessDisclosure Context="headlessDisclosure">
+        <HeadlessDisclosureButton class="flex w-full justify-between rounded-lg bg-purple-100 px-4 py-2 text-left text-sm font-medium text-purple-900 hover:bg-purple-200 focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75">
+            test
+            <ChevronDownIcon class=@($"h-5 w-5 text-purple-500 {(headlessDisclosure.State == DisclosureState.Open ? "rotate-180 transform": "" )}") aria-hidden="true" />
+        </HeadlessDisclosureButton>
+        <HeadlessDisclosurePanel class="px-4 pt-4 pb-2 text-sm text-gray-500">
+                  If you're unhappy with your purchase for any reason, email us
+                    within 90 days and we'll refund you in full, no questions asked.
+        </HeadlessDisclosurePanel>
+    </HeadlessDisclosure>
 </div>

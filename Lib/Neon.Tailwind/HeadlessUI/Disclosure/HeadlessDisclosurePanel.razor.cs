@@ -19,7 +19,7 @@ namespace Neon.Tailwind
         /// <summary>
         /// Whether the disclosure panel is visible.
         /// </summary>
-        [Parameter] public DisclosureState IsVisible { get; set; } = DisclosureState.Open;
+        [Parameter] public DisclosureState IsVisible { get; set; } = DisclosureState.Closed;
 
         protected HeadlessDisclosure Disclosure { get; set; } = default!;
 
