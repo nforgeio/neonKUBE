@@ -27,15 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Remove="Components\Disclosure.razor" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Watch Remove="Components\Disclosure.razor" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="Components\Disclosure.razor" />
   </ItemGroup>
 
   <ItemGroup>

@@ -2,12 +2,13 @@
 
 @inherits HtmlBase
 
-<HtmlElement 
+    <HtmlElement 
     Id="@Id"
-    aria-expanded="@((Disclosure.State == DisclosureState.Open).ToString())"  
-
+    aria-expanded="@((IsVisible == DisclosureState.Open).ToString())"  
+    @attributes="AdditionalAttributes"
     @ref="rootElement" >
-
+    @if (IsVisible == DisclosureState.Open) {
     @ChildContent
+    }
 
 </HtmlElement>

@@ -26,7 +26,6 @@ namespace Neon.Tailwind
 {
     public partial class HeadlessDisclosure : ComponentBase, IAsyncDisposable
     {
-        private bool isOpen = true;
 
         /// <summary>
         /// The UI content.
@@ -40,17 +39,7 @@ namespace Neon.Tailwind
         [Parameter]
         public bool Show { get; set; } = false;
 
-        /// <summary>
-        /// Called when the disclosure is closed.
-        /// </summary>
-        [Parameter]
-        public EventCallback OnClose { get; set; }
-
-        /// <summary>
-        /// Called when the disclosure is opened.
-        /// </summary>
-        [Parameter]
-        public EventCallback OnOpen { get; set; }
+        [Parameter] public bool IsEnabled { get; set; } = true;
 
         private HeadlessDisclosurePanel disclosurePanel { get; set; }
         private HeadlessDisclosureButton disclosureButton { get; set; }
@@ -71,11 +60,16 @@ namespace Neon.Tailwind
         protected override void OnInitialized()
         {
             base.OnInitialized();
-            isOpen = Show;
+            IsOpen = Show;
         }
 
-        public void RegisterButton(HeadlessDisclosureButton button)
-    => disclosureButton = button;
+        public async Task RegisterButton(HeadlessDisclosureButton button)
+        {
+            await Task.CompletedTask;
+            disclosureButton = button;
+
+
+        }
 
         public async Task RegisterPanel(HeadlessDisclosurePanel item)
         {
@@ -93,6 +87,17 @@ namespace Neon.Tailwind
             await Task.CompletedTask;
             disclosurePanel = null;
         }
+        /// <summary>
+        /// Method called by a <see cref="HeadlessDisclosurePanel"/> to unregister itself with
+        /// the current <see cref="HeadlessDisclosure"/>.
+        /// </summary>
+        /// <param name="item"></param>
+        public async Task UnregisterButton(HeadlessDisclosureButton button)
+        {
+            await Task.CompletedTask;
+            disclosureButton = null;
+        }
+
 
         /// <summary>
         /// Opens the current <see cref="HeadlessDisclosure"/>
@@ -101,8 +106,8 @@ namespace Neon.Tailwind
         public async Task Open()
         {
             Show = true;
-            await OnOpen.InvokeAsync();
-
+            await disclosurePanel.Open();
+            State = DisclosureState.Open;
             await InvokeAsync(StateHasChanged);
         }
 
@@ -113,8 +118,9 @@ namespace Neon.Tailwind
         public async Task Close()
         {
             Show = false;
-            await OnClose.InvokeAsync();
             await disclosurePanel.Close();
+            State = DisclosureState.Closed;
+
             await InvokeAsync(StateHasChanged);
         }
 
