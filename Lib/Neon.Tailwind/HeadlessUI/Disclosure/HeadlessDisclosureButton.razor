@@ -1,0 +1,13 @@
+﻿@namespace Neon.Tailwind
+
+@inherits HtmlBase
+
+
+
+<HtmlElement 
+        TagName="@TagName" 
+        role="button" 
+        @onclick="HandleClick" @attributes="AdditionalAttributes" Id="@Id" 
+        disabled="@(!IsEnabled)">
+    @ChildContent
+</HtmlElement>

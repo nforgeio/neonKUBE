@@ -1,0 +1,13 @@
+﻿@namespace Neon.Tailwind
+
+@inherits HtmlBase
+
+<HtmlElement 
+    Id="@Id"
+    aria-expanded="@((Disclosure.State == DisclosureState.Open).ToString())"  
+
+    @ref="rootElement" >
+
+    @ChildContent
+
+</HtmlElement>

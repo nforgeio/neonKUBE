@@ -27,6 +27,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Remove="Components\Disclosure.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Watch Remove="Components\Disclosure.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Components\Disclosure.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="HeroIcons.Blazor" Version="1.0.6" />
   </ItemGroup>
 
