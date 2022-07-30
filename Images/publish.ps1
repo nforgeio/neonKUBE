@@ -142,6 +142,8 @@ try
 
     if ($services)
     {
+        Publish "$image_root\neon-acme"
+        Publish "$image_root\neon-blazor-proxy"
         Publish "$image_root\neon-cluster-operator"
         Publish "$image_root\neon-dashboard"
         Publish "$image_root\neon-node-agent"
