@@ -15,15 +15,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Rendering;
-using Microsoft.Extensions.Logging;
+
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Timers;
+
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Rendering;
+using Microsoft.Extensions.Logging;
+
+using Neon.Tasks;
 
 namespace Neon.Tailwind
 {
@@ -202,13 +206,13 @@ namespace Neon.Tailwind
                     {
                         return;
                     }
-                    transitionTimer = new System.Timers.Timer(leaveDuration);
+                    transitionTimer = new Timer(leaveDuration);
                     break;
             }
             
-            transitionTimer.Elapsed += OnEndTransition;
+            transitionTimer.Elapsed   += OnEndTransition;
             transitionTimer.AutoReset = false;
-            transitionTimer.Enabled = true;
+            transitionTimer.Enabled   = true;
         }
 
         private void OnEndTransition(object source, ElapsedEventArgs e)
@@ -275,7 +279,7 @@ namespace Neon.Tailwind
                     enterDuration = EnterDuration.Value;
                 }
 
-                enterDurationString = $"duration-{enterDuration}";
+                enterDurationString = $"duration-[{enterDuration}ms]";
                 enter = Regex.Replace(Enter, durationPattern, "");
             }
 
@@ -299,7 +303,7 @@ namespace Neon.Tailwind
                     leaveDuration = LeaveDuration.Value;
                 }
 
-                leaveDurationString = $"duration-{leaveDuration}";
+                leaveDurationString = $"duration-[{leaveDuration}ms]";
                 leave = Regex.Replace(Leave, durationPattern, "");
             }
 

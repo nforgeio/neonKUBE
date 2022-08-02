@@ -40,3 +40,20 @@
 <div class="w-72 inline-block">
     <TransitionDemo/>
 </div>
+
+<br />
+<br />
+
+<TransitionGroup Show="@true">
+    <Transition Enter="transform transition ease-linear"
+                EnterDuration="4000"
+                EnterFrom="opacity-0"
+                EnterTo="opacity-100"
+                Leave="transform transition ease-linear"
+                LeaveDuration="4000"
+                LeaveFrom="opacity-100"
+                LeaveTo="opacity-0"
+                Context="transitionCss">
+        <div class="@("w-[200px] h-[200px] bg-black " + transitionCss)" />
+    </Transition>
+</TransitionGroup>
