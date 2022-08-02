@@ -3342,7 +3342,13 @@ $@"- name: StorageType
                         values.Add($"table_manager.retention_period", "24h");
                     }
 
-                    values.Add("ingester.config.wal.replay_memory_ceiling", ToSiString(ingesterAdvice.PodMemoryRequest * 0.75m));
+                    var replayMemoryCeiling = ByteUnits.Humanize(ingesterAdvice.PodMemoryLimit.Value * 0.75m, false, true, false);
+
+                    var byteUnitParts = replayMemoryCeiling.Split(' ');
+                    var bytes = double.Parse(byteUnitParts.First());
+                    replayMemoryCeiling = $"{Math.Round(bytes)}{byteUnitParts.Last()}";
+
+                    values.Add("ingester.config.wal.replay_memory_ceiling", replayMemoryCeiling);
 
                     int i = 0;
 
@@ -3380,7 +3386,6 @@ $@"- name: StorageType
                     await k8s.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "loki-querier", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                     await k8s.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "loki-query-frontend", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                     await k8s.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "loki-ruler", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
-                    await k8s.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "loki-table-manager", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
         }
 
