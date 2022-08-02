@@ -113,10 +113,13 @@ namespace NeonAcme.Controllers
         {
             LogInfo($"Challenge request [{challenge.Request.Action}] [{challenge.Request.DnsName}]");
             LogDebug($"Headers: {NeonHelper.JsonSerialize(HttpContext.Request.Headers)}");
+            LogDebug(NeonHelper.JsonSerialize(challenge));
 
-            var response = await jsonClient.PostAsync("acme/challenge", challenge.Request);
+            var response = await jsonClient.PostAsync<ChallengePayload>("acme/challenge", challenge);
 
-            return response.As<JsonResult>();
+            challenge.Response = response.Response;
+
+            return new JsonResult(challenge);
         }
     }
 }
