@@ -11,14 +11,14 @@ agent:
   image:
     organization: registry.neon.local
     repository: grafana-agent
-    tag: v0.25.1
+    tag: v0.26.1
     pullPolicy: IfNotPresent
 
 operator:
   image:
     organization: registry.neon.local
     repository: grafana-agent-operator
-    tag: v0.25.1
+    tag: v0.26.1
     pullPolicy: IfNotPresent
 
 configReloader:

@@ -15,28 +15,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Neon.Data;
+using Neon.Tasks;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
-using System.Numerics;
 using System.Reflection;
 using System.Runtime.Serialization;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
-using Neon.Data;
-using Neon.Tasks;
 
 namespace Neon.Common
 {
@@ -49,7 +41,7 @@ namespace Neon.Common
         private class EnumMemberSerializationInfo
         {
             /// <summary>
-            /// Maps serialized enum [EnumMember] strings to their ordinal value.
+            /// Maps serialized enum [EnumMember] strings to their ordinal values.
             /// </summary>
             public Dictionary<string, long> EnumToStrings = new Dictionary<string, long>(StringComparer.InvariantCultureIgnoreCase);
 
@@ -1030,7 +1022,7 @@ namespace Neon.Common
         /// </summary>
         /// <typeparam name="TEnum">The enumeration type.</typeparam>
         private static EnumMemberSerializationInfo GetEnumMembers<TEnum>()
-            where TEnum : Enum
+            where TEnum : struct, Enum
         {
             return GetEnumMembers(typeof(TEnum));
         }
@@ -1198,6 +1190,43 @@ namespace Neon.Common
         }
 
         /// <summary>
+        /// <c>enum</c> parser that also honors any <see cref="EnumMemberAttribute"/>
+        /// decorating the enumeration values.  This is case insensitive.
+        /// </summary>
+        /// <typeparam name="TEnum">Specifies the enumeration type.</typeparam>
+        /// <param name="input">The input string.</param>
+        /// <param name="output">Returns as the parsed value.</param>
+        /// <returns><c>true</c> if the value was parsed.</returns>
+        public static bool TryParseEnum<TEnum>(string input, out TEnum output)
+        {
+            var type = typeof(TEnum);
+            var info = GetEnumMembers(type);
+
+            if (info.EnumToStrings.TryGetValue(input, out var value1))
+            {
+                output = (TEnum)Enum.ToObject(type, value1);
+
+                return true;
+            }
+
+            // Try parsing the enumeration using the standard mechanism.
+            // Note that this does not honor any [EnumMember] attributes.
+
+            try
+            {
+                output = (TEnum)Enum.Parse(type, input, ignoreCase: true);
+
+                return true;
+            }
+            catch
+            {
+                output = default(TEnum);
+
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Type-safe <c>enum</c> serializer that also honors any <see cref="EnumMemberAttribute"/>
         /// decorating the enumeration values.
         /// </summary>
@@ -1205,7 +1234,7 @@ namespace Neon.Common
         /// <param name="input">The input value.</param>
         /// <returns>The deserialized value.</returns>
         public static string EnumToString<TEnum>(TEnum input)
-            where TEnum : Enum
+            where TEnum : struct, Enum
         {
             var info = GetEnumMembers<TEnum>();
 
@@ -1245,6 +1274,25 @@ namespace Neon.Common
         }
 
         /// <summary>
+        /// Returns the value names for an enumeration type.  This is similar to <see cref="Enum.GetNames(Type)"/>
+        /// but also honors value names customized via <see cref="EnumMemberAttribute"/>.
+        /// </summary>
+        /// <returns>The array of value names.</returns>
+        public static string[] GetEnumNames<TEnum>()
+            where TEnum : struct, Enum
+        {
+            var type  = typeof(TEnum);
+            var names = new List<string>();
+
+            foreach (TEnum value in Enum.GetValues(type))
+            {
+                names.Add(NeonHelper.EnumToString(type, value));
+            }
+
+            return names.ToArray();
+        }
+
+        /// <summary>
         /// Encodes a byte array into a form suitable for using as a URI path
         /// segment or query parameter.
         /// </summary>
@@ -1254,22 +1302,32 @@ namespace Neon.Common
         public static string UrlTokenEncode(byte[] input)
         {
             if (input == null)
+            {
                 throw new ArgumentNullException("input");
+            }
+
             if (input.Length < 1)
+            {
                 return String.Empty;
+            }
 
-            string base64Str = null;
-            int endPos = 0;
-            char[] base64Chars = null;
+            string  base64Str = null;
+            int     endPos = 0;
+            char[]  base64Chars = null;
 
-            ////////////////////////////////////////////////////////
+            //------------------------------------------------------
             // Step 1: Do a Base64 encoding
-            base64Str = Convert.ToBase64String(input);
-            if (base64Str == null)
-                return null;
 
-            ////////////////////////////////////////////////////////
+            base64Str = Convert.ToBase64String(input);
+
+            if (base64Str == null)
+            {
+                return null;
+            }
+
+            //------------------------------------------------------
             // Step 2: Find how many padding chars are present in the end
+
             for (endPos = base64Str.Length; endPos > 0; endPos--)
             {
                 if (base64Str[endPos - 1] != '=') // Found a non-padding char!
@@ -1278,37 +1336,44 @@ namespace Neon.Common
                 }
             }
 
-            ////////////////////////////////////////////////////////
+            //------------------------------------------------------
             // Step 3: Create char array to store all non-padding chars,
             //      plus a char to indicate how many padding chars are needed
-            base64Chars = new char[endPos + 1];
+
+            base64Chars         = new char[endPos + 1];
             base64Chars[endPos] = (char)((int)'0' + base64Str.Length - endPos); // Store a char at the end, to indicate how many padding chars are needed
 
-            ////////////////////////////////////////////////////////
+            //------------------------------------------------------
             // Step 3: Copy in the other chars. Transform the "+" to "-", and "/" to "_"
-            for (int iter = 0; iter < endPos; iter++)
-            {
-                char c = base64Str[iter];
 
-                switch (c)
+            for (int i = 0; i < endPos; i++)
+            {
+                var ch = base64Str[i];
+
+                switch (ch)
                 {
                     case '+':
-                        base64Chars[iter] = '-';
+
+                        base64Chars[i] = '-';
                         break;
 
                     case '/':
-                        base64Chars[iter] = '_';
+
+                        base64Chars[i] = '_';
                         break;
 
                     case '=':
-                        base64Chars[iter] = c;
+
+                        base64Chars[i] = ch;
                         break;
 
                     default:
-                        base64Chars[iter] = c;
+
+                        base64Chars[i] = ch;
                         break;
                 }
             }
+
             return new string(base64Chars);
         }
 
@@ -1322,56 +1387,70 @@ namespace Neon.Common
         public static byte[] UrlTokenDecode(string input)
         {
             if (input == null)
+            {
                 throw new ArgumentNullException("input");
+            }
 
-            int len = input.Length;
-            if (len < 1)
+            var length = input.Length;
+
+            if (length < 1)
+            {
                 return Array.Empty<byte>();
+            }
 
-            ///////////////////////////////////////////////////////////////////
+            //------------------------------------------------------
             // Step 1: Calculate the number of padding chars to append to this string.
             //         The number of padding chars to append is stored in the last char of the string.
-            int numPadChars = (int)input[len - 1] - (int)'0';
+
+            int numPadChars = (int)input[length - 1] - (int)'0';
+
             if (numPadChars < 0 || numPadChars > 10)
+            {
                 return null;
+            }
 
-
-            ///////////////////////////////////////////////////////////////////
+            //------------------------------------------------------
             // Step 2: Create array to store the chars (not including the last char)
             //          and the padding chars
-            char[] base64Chars = new char[len - 1 + numPadChars];
 
+            var base64Chars = new char[length - 1 + numPadChars];
 
-            ////////////////////////////////////////////////////////
+            //------------------------------------------------------
             // Step 3: Copy in the chars. Transform the "-" to "+", and "*" to "/"
-            for (int iter = 0; iter < len - 1; iter++)
+
+            for (int i = 0; i < length - 1; i++)
             {
-                char c = (char)input[iter];
+                char c = (char)input[i];
 
                 switch (c)
                 {
                     case '-':
-                        base64Chars[iter] = '+';
+
+                        base64Chars[i] = '+';
                         break;
 
                     case '_':
-                        base64Chars[iter] = '/';
+
+                        base64Chars[i] = '/';
                         break;
 
                     default:
-                        base64Chars[iter] = c;
+
+                        base64Chars[i] = c;
                         break;
                 }
             }
 
-            ////////////////////////////////////////////////////////
+            //------------------------------------------------------
             // Step 4: Add padding chars
-            for (int iter = len - 1; iter < base64Chars.Length; iter++)
+
+            for (int i = length - 1; i < base64Chars.Length; i++)
             {
-                base64Chars[iter] = '=';
+                base64Chars[i] = '=';
             }
 
             // Do the actual conversion
+
             return Convert.FromBase64CharArray(base64Chars, 0, base64Chars.Length);
         }
 

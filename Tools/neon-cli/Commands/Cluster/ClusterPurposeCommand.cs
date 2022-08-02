@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterDeleteCommand.cs
+// FILE:	    ClusterPurposeCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -51,40 +51,39 @@ using Neon.Time;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>cluster delete</b> command.
+    /// Implements the <b>cluster purpose</b> command.
     /// </summary>
     [Command]
-    public class ClusterDeleteCommand : CommandBase
+    public class ClusterPurposeCommand : CommandBase
     {
         private const string usage = @"
-Removes the current cluster.  This is not supported by all hosting environments.
+Prints or sets the current cluster's purpose.
 
 USAGE:
 
-    neon cluster remove [--force]
-
-OPTIONS:
-
-    --force     - forces cluster removal without user confirmation and
-                  also without checking the cluster lock status
+    neon cluster purpose [unspecified | development | test | stage | production]
 
 REMARKS:
 
-This command will not work on a locked clusters as a safety measure.  The idea
-it to add some friction to avoid impacting production clusters by accident.
+Use this command to print the purpose of the current cluster:
 
-All clusters besides neon-desktop built-in clusters are locked by default when
-they're deployed.  You can disable this by setting [IsLocked=false] in your
-cluster definition or by executing this command on your cluster:
+    neon cluster purpose
 
-    neon cluster unlock
+and this command to change the purpose to one of the possible values:
+
+    neon cluster purpose PURPOSE
+
+where PURPOSE can be passed as (case insensitive):
+
+    unspecified
+    development
+    test
+    stage
+    production
 
 ";
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "cluster", "delete" };
-
-        /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--force" };
+        public override string[] Words => new string[] { "cluster", "purpose" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -101,8 +100,6 @@ cluster definition or by executing this command on your cluster:
                 Program.Exit(0);
             }
 
-            Console.WriteLine();
-
             var context = KubeHelper.CurrentContext;
 
             if (context == null)
@@ -111,52 +108,41 @@ cluster definition or by executing this command on your cluster:
                 Program.Exit(1);
             }
 
-            var force = commandLine.HasOption("--force");
-
             using (var cluster = new ClusterProxy(context, new HostingManagerFactory()))
             {
-                var capabilities = cluster.Capabilities;
+                var purposeArg  = commandLine.Arguments.ElementAtOrDefault(0);
+                var clusterInfo = await cluster.GetClusterInfoAsync();
 
-                if ((capabilities & HostingCapabilities.Removable) == 0)
+                if (purposeArg == null)
                 {
-                    Console.Error.WriteLine($"*** ERROR: Cluster is not removable.");
-                    Program.Exit(1);
+                    Console.WriteLine(NeonHelper.EnumToString(clusterInfo.Purpose));
                 }
-
-                if (!force)
-                {
-                    var isLocked = await cluster.IsLockedAsync();
-
-                    if (!isLocked.HasValue)
-                    {
-                        Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] lock status is unknown.");
-                        Program.Exit(1);
-                    }
-
-                    if (isLocked.Value)
-                    {
-                        Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] is locked.");
-                        Program.Exit(1);
-                    }
-
-                    if (!Program.PromptYesNo($"Are you sure you want to remove: {cluster.Name}?"))
-                    {
-                        Program.Exit(0);
-                    }
-                }
-
-                try
-                {
-                    Console.WriteLine($"Removing: {cluster.Name}...");
-                    await cluster.DeleteAsync();
-                    KubeHelper.Config.RemoveContext(context);
-
-                    Console.WriteLine($"REMOVED:  {cluster.Name}");
-                }
-                catch (TimeoutException)
+                else
                 {
                     Console.WriteLine();
-                    Console.WriteLine($"*** ERROR: Timeout waiting for cluster.");
+
+                    if (!NeonHelper.TryParse<ClusterPurpose>(purposeArg, out var newPurpose))
+                    {
+                        Console.Error.WriteLine($"*** ERROR: Unknown cluster purpose: {purposeArg}");
+                        Console.Error.WriteLine();
+                        Console.Error.WriteLine("Specify one of these purposes:");
+                        Console.Error.WriteLine();
+
+                        foreach (var purpose in Enum.GetValues<ClusterPurpose>())
+                        {
+                            Console.Error.WriteLine($"    {NeonHelper.EnumToString(purpose)}");
+                        }
+
+                        Program.Exit(1);
+                    }
+
+                    clusterInfo.Purpose = newPurpose;
+
+                    Console.WriteLine($"Updating cluster purpose...");
+                    await cluster.SetClusterInfo(clusterInfo);
+                    Console.WriteLine($"Cluster purpose is now: {NeonHelper.EnumToString(newPurpose)}");
+
+                    Program.Exit(0);
                 }
             }
         }

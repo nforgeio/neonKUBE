@@ -33,8 +33,13 @@ namespace NeonBlazorProxy
         InMemory,
 
         /// <summary>
-        /// Redis Cache. This option must be used when running multiple instances of the 
-        /// neon-blazor-proxy.
+        /// Memcached.
+        /// </summary>
+        [EnumMember(Value = "memcached")]
+        Memcached,
+
+        /// <summary>
+        /// Redis.
         /// </summary>
         [EnumMember(Value = "redis")]
         Redis

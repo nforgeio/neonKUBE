@@ -5,7 +5,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "tempo.ingesterLabels" . | nindent 4 }}
-  {{- with .Values.annotations }}
+  {{- with .Values.ingester.annotations }}
   annotations:
     {{ toYaml . | indent 4 }}
   {{- end }}

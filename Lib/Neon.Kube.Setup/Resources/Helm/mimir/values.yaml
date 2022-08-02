@@ -14,7 +14,7 @@ fullnameOverride: mimir
 image:
   organization: registry.neon.local
   repository: grafana-mimir
-  tag: 2.0.0
+  tag: 2.2.0
   pullPolicy: IfNotPresent
   # Optionally specify an array of imagePullSecrets.
   # Secrets must be manually created in the namespace.

@@ -832,7 +832,7 @@ namespace Neon.Cadence.Internal
         /// <param name="key">The property key.</param>
         /// <param name="value">The property value.</param>
         internal void SetEnumProperty<TEnum>(PropertyNameUtf8 key, TEnum value)
-            where TEnum : Enum
+            where TEnum : struct, Enum
         {
             Properties[key] = NeonHelper.EnumToString(value);
         }
