@@ -1142,6 +1142,7 @@ namespace Neon.Kube
 
                                 throw new NotSupportedException($"Cannot shutdown the saved (hibernating) virtual machine: {vmName}");
 
+                            case VirtualMachineState.Paused:
                             case VirtualMachineState.Running: 
                             case VirtualMachineState.Starting:
 
@@ -1165,7 +1166,6 @@ namespace Neon.Kube
                                 break;
 
                             default:
-                            case VirtualMachineState.Paused:
                             case VirtualMachineState.Unknown:
 
                                 throw new NotImplementedException($"Unexpected VM state: {vmName}:{vm.State}");
