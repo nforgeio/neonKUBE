@@ -333,7 +333,7 @@ namespace Neon.Kube
         /// for creating the internal virtual switch where the neonDESKTOP built-in cluster
         /// as well as user-defined internal clusters will be attached.
         /// </summary>
-        public const string HyperVInternalSwitchName = "neonkube";
+        public const string HyperVInternalSwitchName = "neon-internal";
 
         /// <summary>
         /// Identifies the Kubernetes context name for the neon-desktop built-in cluster.
