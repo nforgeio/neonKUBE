@@ -47,7 +47,7 @@ namespace NeonBlazorProxy
         /// <summary>
         /// The Memcached port.
         /// </summary>
-        [JsonProperty(PropertyName = "Port", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Port", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "port", ApplyNamingConventions = false)]
         [DefaultValue(11211)]
         public int Port { get; set; } = 11211;

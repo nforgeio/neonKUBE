@@ -60,7 +60,7 @@ namespace NeonBlazorProxy
         /// <summary>
         /// The scheme to use when connecting to the backend. Defaults to http.
         /// </summary>
-        [JsonProperty(PropertyName = "Scheme", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Scheme", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "scheme", ApplyNamingConventions = false)]
         [DefaultValue("http")]
         public string Scheme { get; set; } = "http";
