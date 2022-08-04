@@ -168,8 +168,9 @@ namespace Neon.Tasks
         /// </summary>
         /// <param name="interval">Optionally specifies the timer interval.</param>
         /// <param name="delayFirstTick">
-        /// The callback is called immediately by default.  You can delay this until
-        /// the interval has passed by passing this as <c>true</c>.
+        /// The callback is called immediately by default.  You can delay this for 
+        /// <paramref name="interval"/> by passing this as <c>true</c>.  This defaults
+        /// to <c>false</c>.
         /// </param>
         /// <param name="callback">
         /// <para>
