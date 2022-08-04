@@ -10,24 +10,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doc", "Doc", "{2CFE7466-98C
 		Doc\CADENCE.md = Doc\CADENCE.md
 		Doc\CODEDOC.md = Doc\CODEDOC.md
 		Doc\DEVELOPER.md = Doc\DEVELOPER.md
-		Lib\Neon.Kube.HyperV\HyperVHostingManager.cs = Lib\Neon.Kube.HyperV\HyperVHostingManager.cs
 		Doc\SUDO and WinSCP.docx = Doc\SUDO and WinSCP.docx
 		Doc\TECHNIQUES.md = Doc\TECHNIQUES.md
 		Doc\TEST-VERSION.md = Doc\TEST-VERSION.md
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{4442F115-52D3-4E88-BE9B-9E4B32AD33A0}"
-	ProjectSection(SolutionItems) = preProject
-		.dockerignore = .dockerignore
-		.gitattributes = .gitattributes
-		.gitignore = .gitignore
-		.password-name = .password-name
-		buildenv.cmd = buildenv.cmd
-		buildenv.ps1 = buildenv.ps1
-		LICENSE = LICENSE
-		nuget.config = nuget.config
-		README.md = README.md
-		wsl.conf = wsl.conf
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lib", "Lib", "{DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}"
@@ -76,8 +61,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "External", "External", "{1A3C35E5-1C30-44F2-AB46-F5E7F99E524C}"
 	ProjectSection(SolutionItems) = preProject
 		External\innosetup-qsp-5.6.1-unicode.exe = External\innosetup-qsp-5.6.1-unicode.exe
-		External\SHFBInstaller_v2015.1.12.0.zip = External\SHFBInstaller_v2015.1.12.0.zip
-		External\XenCenterSetup.msi = External\XenCenterSetup.msi
+		External\XCP-ng-Center-20.04.01.33.msi = External\XCP-ng-Center-20.04.01.33.msi
 		External\zenburn-ligh-putty.reg = External\zenburn-ligh-putty.reg
 	EndProjectSection
 EndProject
@@ -2193,7 +2177,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{4442F115-52D3-4E88-BE9B-9E4B32AD33A0} = {1A3C35E5-1C30-44F2-AB46-F5E7F99E524C}
 		{8D3BD5BA-AAF6-4233-879F-69A63EB6CDA1} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{C23307A1-4E5A-4B83-A8EB-90DE334868C6} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{893C943F-C1A7-448B-AACF-825DB9560AB4} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
