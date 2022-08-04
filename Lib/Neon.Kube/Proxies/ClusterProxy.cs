@@ -994,7 +994,7 @@ namespace Neon.Kube
                         return false;
                     }
                 },
-                pollInterval: TimeSpan.FromSeconds(5),
+                pollInterval: TimeSpan.FromSeconds(2.5),
                 timeout:      TimeSpan.FromMinutes(5));
         }
 
@@ -1032,7 +1032,7 @@ namespace Neon.Kube
                         return false;
                     }
                 },
-                pollInterval: TimeSpan.FromSeconds(5),
+                pollInterval: TimeSpan.FromSeconds(2.5),
                 timeout:      TimeSpan.FromMinutes(5));
         }
 
