@@ -322,35 +322,6 @@ if (-not $?)
 # implicit package dependencies will work for external projects importing
 # these packages.
 
-SetVersion Neon.Cadence                     $libraryVersion
-SetVersion Neon.Cassandra                   $libraryVersion
-SetVersion Neon.Common                      $libraryVersion
-SetVersion Neon.Couchbase                   $libraryVersion
-SetVersion Neon.Cryptography                $libraryVersion
-SetVersion Neon.CSharp                      $libraryVersion
-SetVersion Neon.Deployment                  $libraryVersion
-SetVersion Neon.Docker                      $libraryVersion
-SetVersion Neon.JsonConverters              $libraryVersion
-SetVersion Neon.HyperV                      $libraryVersion
-SetVersion Neon.Service                     $libraryVersion
-SetVersion Neon.ModelGen                    $libraryVersion
-SetVersion Neon.ModelGenerator              $libraryVersion
-SetVersion Neon.Nats                        $libraryVersion
-SetVersion Neon.Postgres                    $libraryVersion
-SetVersion Neon.SSH                         $libraryVersion
-SetVersion Neon.Tailwind                    $libraryVersion
-SetVersion Neon.Temporal                    $libraryVersion
-SetVersion Neon.Web                         $libraryVersion
-SetVersion Neon.WinTTY                      $libraryVersion
-SetVersion Neon.WSL                         $libraryVersion
-SetVersion Neon.XenServer                   $libraryVersion
-SetVersion Neon.Xunit                       $libraryVersion
-SetVersion Neon.Xunit.Cadence               $libraryVersion
-SetVersion Neon.Xunit.Couchbase             $libraryVersion
-SetVersion Neon.Xunit.Temporal              $libraryVersion
-SetVersion Neon.Xunit.YugaByte              $libraryVersion
-SetVersion Neon.YugaByte                    $libraryVersion
-
 SetVersion Neon.Kube                        $kubeVersion
 SetVersion Neon.Kube.Aws                    $kubeVersion
 SetVersion Neon.Kube.Azure                  $kubeVersion
@@ -370,35 +341,6 @@ SetVersion Neon.Kube.Xunit                  $kubeVersion
 
 # Build and publish the projects.
 
-Publish Neon.Cadence                        $libraryVersion
-Publish Neon.Cassandra                      $libraryVersion
-Publish Neon.Common                         $libraryVersion
-Publish Neon.Couchbase                      $libraryVersion
-Publish Neon.Cryptography                   $libraryVersion
-Publish Neon.CSharp                         $libraryVersion
-Publish Neon.Deployment                     $libraryVersion
-Publish Neon.Docker                         $libraryVersion
-Publish Neon.JsonConverters                 $libraryVersion
-Publish Neon.HyperV                         $libraryVersion
-Publish Neon.Service                        $libraryVersion
-Publish Neon.ModelGen                       $libraryVersion
-Publish Neon.ModelGenerator                 $libraryVersion
-Publish Neon.Nats                           $libraryVersion
-Publish Neon.Postgres                       $libraryVersion
-Publish Neon.SSH                            $libraryVersion
-Publish Neon.Tailwind                       $libraryVersion
-Publish Neon.Temporal                       $libraryVersion
-Publish Neon.Web                            $libraryVersion
-Publish Neon.WinTTY                         $libraryVersion
-Publish Neon.WSL                            $libraryVersion
-Publish Neon.XenServer                      $libraryVersion
-Publish Neon.Xunit                          $libraryVersion
-Publish Neon.Xunit.Cadence                  $libraryVersion
-Publish Neon.Xunit.Couchbase                $libraryVersion
-Publish Neon.Xunit.Temporal                 $libraryVersion
-Publish Neon.Xunit.YugaByte                 $libraryVersion
-Publish Neon.YugaByte                       $libraryVersion
-
 Publish Neon.Kube                           $kubeVersion
 Publish Neon.Kube.Aws                       $kubeVersion
 Publish Neon.Kube.Azure                     $kubeVersion
@@ -417,35 +359,6 @@ Publish Neon.Kube.XenServer                 $kubeVersion
 Publish Neon.Kube.Xunit                     $kubeVersion
 
 # Restore the project versions
-
-RestoreVersion Neon.Cadence
-RestoreVersion Neon.Cassandra
-RestoreVersion Neon.Common
-RestoreVersion Neon.Couchbase
-RestoreVersion Neon.Cryptography
-RestoreVersion Neon.CSharp
-RestoreVersion Neon.Deployment
-RestoreVersion Neon.Docker
-RestoreVersion Neon.JsonConverters
-RestoreVersion Neon.HyperV
-RestoreVersion Neon.Service
-RestoreVersion Neon.ModelGen
-RestoreVersion Neon.ModelGenerator
-RestoreVersion Neon.Nats
-RestoreVersion Neon.Postgres
-RestoreVersion Neon.SSH
-RestoreVersion Neon.Tailwind
-RestoreVersion Neon.Temporal
-RestoreVersion Neon.Web
-RestoreVersion Neon.WinTTY
-RestoreVersion Neon.WSL
-RestoreVersion Neon.XenServer
-RestoreVersion Neon.Xunit
-RestoreVersion Neon.Xunit.Cadence
-RestoreVersion Neon.Xunit.Couchbase
-RestoreVersion Neon.Xunit.Temporal
-RestoreVersion Neon.Xunit.YugaByte
-RestoreVersion Neon.YugaByte
 
 RestoreVersion Neon.Kube
 RestoreVersion Neon.Kube.Aws
