@@ -384,11 +384,11 @@ Hello World! Goodbye!
 
             // Verify that environment variables work.
 
-            Environment.SetEnvironmentVariable("NF_TEST_VARIABLE", "Hello World!");
+            Environment.SetEnvironmentVariable("NK_TEST_VARIABLE", "Hello World!");
 
             await VerifyAsync(
 @"
----$<<NF_TEST_VARIABLE>>---
+---$<<NK_TEST_VARIABLE>>---
 ",
 @"
 ---Hello World!---
@@ -436,11 +436,11 @@ Hello World! Goodbye!
 
                 // Verify that environment variables work.
 
-                Environment.SetEnvironmentVariable("NF_TEST_VARIABLE", "Hello World!");
+                Environment.SetEnvironmentVariable("NK_TEST_VARIABLE", "Hello World!");
 
                 await VerifyAsync(
 @"
->>>${{NF_TEST_VARIABLE}}<<<
+>>>${{NK_TEST_VARIABLE}}<<<
 ",
 @"
 >>>Hello World!<<<
@@ -519,8 +519,8 @@ Hello World! Goodbye!
                 {
                     await VerifyAsync(
 @"
----$<<NF_TEST_VARIABLE>>---
----$<<NF_UNDEFINED_VARIABLE>>---
+---$<<NK_TEST_VARIABLE>>---
+---$<<NK_UNDEFINED_VARIABLE>>---
 ",
 @"
 ---Hello World!---
@@ -531,7 +531,7 @@ Hello World! Goodbye!
             // Verify that undefined environment variables are replaced with
             // a default value.
 
-            Environment.SetEnvironmentVariable("NF_TEST_VARIABLE", "Hello World!");
+            Environment.SetEnvironmentVariable("NK_TEST_VARIABLE", "Hello World!");
 
             defaultEnvironmentVariable = "DEFAULT-VALUE";
 
@@ -539,8 +539,8 @@ Hello World! Goodbye!
             {
                 await VerifyAsync(
 @"
----$<<NF_TEST_VARIABLE>>---
----$<<NF_UNDEFINED_VARIABLE>>---
+---$<<NK_TEST_VARIABLE>>---
+---$<<NK_UNDEFINED_VARIABLE>>---
 ",
 @"
 ---Hello World!---
@@ -554,7 +554,7 @@ Hello World! Goodbye!
             // Verify that undefined environment variables are replaced with
             // a default value.
 
-            Environment.SetEnvironmentVariable("NF_TEST_VARIABLE", "Hello World!");
+            Environment.SetEnvironmentVariable("NK_TEST_VARIABLE", "Hello World!");
 
             defaultEnvironmentVariable = "DEFAULT-VALUE";
 
@@ -562,8 +562,8 @@ Hello World! Goodbye!
             {
                 await VerifyAsync(
 @"
----$<<NF_TEST_VARIABLE>>---
----$<<NF_UNDEFINED_VARIABLE>>---
+---$<<NK_TEST_VARIABLE>>---
+---$<<NK_UNDEFINED_VARIABLE>>---
 ",
 @"
 ---Hello World!---
@@ -605,11 +605,11 @@ Hello World! Goodbye!
 
                 // Verify that environment variables work.
 
-                Environment.SetEnvironmentVariable("NF_TEST_VARIABLE", "Hello World!");
+                Environment.SetEnvironmentVariable("NK_TEST_VARIABLE", "Hello World!");
 
                 await VerifyAsync(
 @"
->>>$((NF_TEST_VARIABLE))<<<
+>>>$((NK_TEST_VARIABLE))<<<
 ",
 @"
 >>>Hello World!<<<

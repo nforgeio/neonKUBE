@@ -21,7 +21,7 @@
 
 # Import the global solution include file.
 
-. $env:NF_ROOT/Powershell/includes.ps1
+. $env:NK_ROOT/Powershell/includes.ps1
 
 # Verify that the user has the required environment variables.  These will
 # be available only for maintainers and are intialized by the neonCLOUD
@@ -59,7 +59,7 @@ function SetVersion
     )
 
     "$project"
-	neon-build pack-version NeonLibraryVersion "$env:NF_ROOT\Lib\$project\$project.csproj"
+	neon-build pack-version NeonLibraryVersion "$env:NK_ROOT\Lib\$project\$project.csproj"
     ThrowOnExitCode
 }
 
@@ -76,14 +76,14 @@ function Publish
         [string]$version
     )
 
-    $projectPath = [io.path]::combine($env:NF_ROOT, "Lib", "$project", "$project" + ".csproj")
+    $projectPath = [io.path]::combine($env:NK_ROOT, "Lib", "$project", "$project" + ".csproj")
 
-	dotnet pack $projectPath -c Release -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -o "$env:NF_BUILD\nuget"
+	dotnet pack $projectPath -c Release -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -o "$env:NK_BUILD\nuget"
     ThrowOnExitCode
 
-    if (Test-Path "$env:NF_ROOT\Lib\$project\prerelease.txt")
+    if (Test-Path "$env:NK_ROOT\Lib\$project\prerelease.txt")
     {
-        $prerelease = Get-Content "$env:NF_ROOT\Lib\$project\prerelease.txt" -First 1
+        $prerelease = Get-Content "$env:NK_ROOT\Lib\$project\prerelease.txt" -First 1
         $prerelease = $prerelease.Trim()
 
         if ($prerelease -ne "")
@@ -96,16 +96,16 @@ function Publish
         $prerelease = ""
     }
 
-	nuget push -Source nuget.org -ApiKey $nugetApiKey "$env:NF_BUILD\nuget\$project.$libraryVersion$prerelease.nupkg" -SkipDuplicate -Timeout 600
+	nuget push -Source nuget.org -ApiKey $nugetApiKey "$env:NK_BUILD\nuget\$project.$libraryVersion$prerelease.nupkg" -SkipDuplicate -Timeout 600
     ThrowOnExitCode
 }
 
 # Load the library and neonKUBE versions.
 
 $msbuild         = $env:MSBUILDPATH
-$nfRoot          = "$env:NF_ROOT"
+$nfRoot          = "$env:NK_ROOT"
 $nfSolution      = "$nfRoot\neonKUBE.sln"
-$nfBuild         = "$env:NF_BUILD"
+$nfBuild         = "$env:NK_BUILD"
 $nfLib           = "$nfRoot\Lib"
 $nfTools         = "$nfRoot\Tools"
 $nfToolBin       = "$nfRoot\ToolBin"
@@ -247,7 +247,7 @@ Publish Neon.YugaByte               $libraryVersion
 
 # Remove all of the generated nuget files so these don't accumulate.
 
-Remove-Item "$env:NF_BUILD\nuget\*"
+Remove-Item "$env:NK_BUILD\nuget\*"
 
 ""
 "** Package publication completed"

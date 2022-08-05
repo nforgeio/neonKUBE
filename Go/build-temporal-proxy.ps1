@@ -17,18 +17,18 @@
 # limitations under the License.
 #
 # This script builds the [temporal-proxy] GOLANG executables and writes
-# them to: $NF_BUILD.
+# them to: $NK_BUILD.
 #
 # USAGE: pwsh -file build-temporal-proxy.ps1
 
 # Import the global solution include file.
 
-. $env:NF_ROOT/Powershell/includes.ps1
+. $env:NK_ROOT/Powershell/includes.ps1
 
 # Initialize
 
-$env:GOPATH   = "$env:NF_ROOT\Go"
-$buildPath    = "$env:NF_BUILD"
+$env:GOPATH   = "$env:NK_ROOT\Go"
+$buildPath    = "$env:NK_BUILD"
 $projectPath  = "$env:GOPATH\src\temporal-proxy"
 $logPath      = "$buildPath\build-temporal-proxy.log"
 
@@ -94,7 +94,7 @@ try
     # Compress the binaries to the [Neon.Temporal] project where they'll
     # be embedded as binary resources.
 
-    $neonTemporalResourceFolder = "$env:NF_ROOT\Lib\Neon.Temporal\Resources"
+    $neonTemporalResourceFolder = "$env:NK_ROOT\Lib\Neon.Temporal\Resources"
 
     neon-build gzip "$buildPath\temporal-proxy.linux"   "$neonTemporalResourceFolder\temporal-proxy.linux.gz"   >> "$logPath" 2>&1
     ThrowOnExitCode

@@ -30,7 +30,7 @@ param
 
 #----------------------------------------------------------
 # Global Includes
-$image_root = "$env:NF_ROOT\Images"
+$image_root = "$env:NK_ROOT\Images"
 . $image_root/includes.ps1
 #----------------------------------------------------------
 

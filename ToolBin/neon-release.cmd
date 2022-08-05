@@ -1,2 +1,2 @@
 @echo off
-pwsh -file "%NF_ROOT%\ToolBin\neon-release.ps1" %*
+pwsh -file "%NK_ROOT%\ToolBin\neon-release.ps1" %*

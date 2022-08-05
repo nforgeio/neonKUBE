@@ -107,9 +107,9 @@ REMARKS:
 
 This utility is designed to be called from within a .NET Core project's
 POST-BUILD event using Visual Studio post-build event macros.  Here's
-an example that publishes a standalone [win10-x64] app to: %NF_BUILD%\neon
+an example that publishes a standalone [win10-x64] app to: %NK_BUILD%\neon
 
-    pubcore ""$(ProjectPath)"" ""$(TargetName)"" ""$(ConfigurationName)"" ""%NF_BUILD%\neon"" win10-x64
+    pubcore ""$(ProjectPath)"" ""$(TargetName)"" ""$(ConfigurationName)"" ""%NK_BUILD%\neon"" win10-x64
 
 Note that you MUST ADD the following to the <PropertyGroup>...</PropertyGroup>
 section on your project CSPROJ file for this to work:

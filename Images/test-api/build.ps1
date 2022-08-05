@@ -29,7 +29,7 @@ param
 $appname           = "test-api"
 $organization      = LibraryRegistryOrg
 $base_organization = KubeBaseRegistryOrg
-$branch            = GitBranch $env:NF_ROOT
+$branch            = GitBranch $env:NK_ROOT
 
 # Copy the common scripts.
 

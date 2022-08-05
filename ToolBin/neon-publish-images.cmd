@@ -1,2 +1,2 @@
 @echo off 
-pwsh -file "%NF_ROOT%\Images\publish.ps1" %*
+pwsh -file "%NK_ROOT%\Images\publish.ps1" %*

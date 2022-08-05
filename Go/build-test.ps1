@@ -17,17 +17,17 @@
 # limitations under the License.
 #
 # This script builds the [tests] GOLANG executables and writes
-# them to: $NF_BUILD/go-test.
+# them to: $NK_BUILD/go-test.
 #
 # USAGE: pwsh -file build-test.ps1
 
 # Import the global solution include file.
 
-. $env:NF_ROOT/Powershell/includes.ps1
+. $env:NK_ROOT/Powershell/includes.ps1
 
 $env:GO111MODULE = "on"
-$projectPath     = "$env:NF_ROOT\Go\test"
-$buildPath       = "$env:NF_BUILD\go-test"
+$projectPath     = "$env:NK_ROOT\Go\test"
+$buildPath       = "$env:NK_BUILD\go-test"
 $logPath         = "$buildPath\build.log"
 
 Push-Location $projectPath | Out-Null

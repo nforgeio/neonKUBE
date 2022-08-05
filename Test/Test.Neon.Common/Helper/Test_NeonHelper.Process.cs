@@ -41,7 +41,7 @@ namespace TestCommon
 #else
                 var confguration = "Release";
 #endif
-                return Path.Combine(Environment.GetEnvironmentVariable("NF_ROOT"), "Test", "Test.ExecTarget", "bin", confguration, "net6.0", "Test.ExecTarget.exe");
+                return Path.Combine(Environment.GetEnvironmentVariable("NK_ROOT"), "Test", "Test.ExecTarget", "bin", confguration, "net6.0", "Test.ExecTarget.exe");
             }
         }
 

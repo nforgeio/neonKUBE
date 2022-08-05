@@ -80,7 +80,7 @@ param
 
 # Import the global solution include file.
 
-. $env:NF_ROOT/Powershell/includes.ps1
+. $env:NK_ROOT/Powershell/includes.ps1
 
 # Verify that the user has the required environment variables.  These will
 # be available only for maintainers and are intialized by the neonCLOUD
@@ -120,7 +120,7 @@ function SetVersion
 
     "* SetVersion: ${project}:${version}"
 
-    $projectPath    = [io.path]::combine($env:NF_ROOT, "Lib", "$project", "$project" + ".csproj")
+    $projectPath    = [io.path]::combine($env:NK_ROOT, "Lib", "$project", "$project" + ".csproj")
     $orgProjectFile = Get-Content "$projectPath" -Encoding utf8
     $regex          = [regex]'<Version>(.*)</Version>'
     $match          = $regex.Match($orgProjectFile)
@@ -148,7 +148,7 @@ function RestoreVersion
 
     "* Restore: ${project}"
 
-    $projectPath = [io.path]::combine($env:NF_ROOT, "Lib", "$project", "$project" + ".csproj")
+    $projectPath = [io.path]::combine($env:NK_ROOT, "Lib", "$project", "$project" + ".csproj")
 
     Copy-Item "$projectPath.bak" "$projectPath"
     Remove-Item "$projectPath.bak"
@@ -179,25 +179,25 @@ function Publish
     "* Publishing: ${project}:${version}${localIndicator}"
     "==============================================================================="
 
-    $projectPath = [io.path]::combine($env:NF_ROOT, "Lib", "$project", "$project" + ".csproj")
+    $projectPath = [io.path]::combine($env:NK_ROOT, "Lib", "$project", "$project" + ".csproj")
 
-    dotnet pack $projectPath -c $config -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -o "$env:NF_BUILD\nuget"
+    dotnet pack $projectPath -c $config -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -o "$env:NK_BUILD\nuget"
     ThrowOnExitCode
 
     if ($local)
     {
-        nuget add -Source $env:NC_NUGET_LOCAL "$env:NF_BUILD\nuget\$project.$version.nupkg"
+        nuget add -Source $env:NC_NUGET_LOCAL "$env:NK_BUILD\nuget\$project.$version.nupkg"
         ThrowOnExitCode
     }
     else
     {
-        nuget push -Source $env:NC_NUGET_DEVFEED -ApiKey $devFeedApiKey "$env:NF_BUILD\nuget\$project.$version.nupkg" -SkipDuplicate -Timeout 600
+        nuget push -Source $env:NC_NUGET_DEVFEED -ApiKey $devFeedApiKey "$env:NK_BUILD\nuget\$project.$version.nupkg" -SkipDuplicate -Timeout 600
         ThrowOnExitCode
     }
 }
 
 $msbuild     = $env:MSBUILDPATH
-$nfRoot      = "$env:NF_ROOT"
+$nfRoot      = "$env:NK_ROOT"
 $nfSolution  = "$nfRoot\neonKUBE.sln"
 $branch      = GitBranch $nfRoot
 
@@ -466,7 +466,7 @@ RestoreVersion Neon.Kube.Xunit
 
 # Remove all of the generated nuget files so these don't accumulate.
 
-Remove-Item "$env:NF_BUILD\nuget\*"
+Remove-Item "$env:NK_BUILD\nuget\*"
 
 ""
 "** Package publication completed"

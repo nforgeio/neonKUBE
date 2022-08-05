@@ -61,7 +61,7 @@ param
 
 # Import the global solution include file.
 
-. $env:NF_ROOT/Powershell/includes.ps1
+. $env:NK_ROOT/Powershell/includes.ps1
 
 # Initisalize the AWS credentisls.
 

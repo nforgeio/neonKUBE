@@ -17,18 +17,18 @@
 # limitations under the License.
 #
 # This script builds the [cadence-proxy] GOLANG executables and writes
-# them to: $NF_BUILD.
+# them to: $NK_BUILD.
 #
 # USAGE: pwsh -file build-cadence-proxy.ps1
 
 # Import the global solution include file.
 
-. $env:NF_ROOT/Powershell/includes.ps1
+. $env:NK_ROOT/Powershell/includes.ps1
 
 # Initialize
 
-$env:GOPATH  = "$env:NF_ROOT\Go"
-$buildPath   = "$env:NF_BUILD"
+$env:GOPATH  = "$env:NK_ROOT\Go"
+$buildPath   = "$env:NK_BUILD"
 $projectPath = "$env:GOPATH\src\github.com\cadence-proxy"
 $logPath     = "$buildPath\build-cadence-proxy.log"
 
@@ -94,7 +94,7 @@ try
     # Compress the binaries to the [Neon.Cadence] project where they'll
     # be embedded as binary resources.
 
-    $neonCadenceResourceFolder = "$env:NF_ROOT\Lib\Neon.Cadence\Resources"
+    $neonCadenceResourceFolder = "$env:NK_ROOT\Lib\Neon.Cadence\Resources"
 
     neon-build gzip "$buildPath\cadence-proxy.linux"   "$neonCadenceResourceFolder\cadence-proxy.linux.gz"   >> "$logPath" 2>&1
     ThrowOnExitCode

@@ -39,14 +39,14 @@ if ($all)
 
 # Import the global solution include file.
 
-. $env:NF_ROOT/Powershell/includes.ps1
+. $env:NK_ROOT/Powershell/includes.ps1
 
 # Initialize
 
 $msbuild          = $env:MSBUILDPATH
-$nfRoot           = "$env:NF_ROOT"
+$nfRoot           = "$env:NK_ROOT"
 $nfSolution       = "$nfRoot\neonKUBE.sln"
-$nfBuild          = "$env:NF_BUILD"
+$nfBuild          = "$env:NK_BUILD"
 $nfLib            = "$nfRoot\Lib"
 $nfTools          = "$nfRoot\Tools"
 $nfToolBin        = "$nfRoot\ToolBin"

@@ -142,15 +142,15 @@ Follow the steps below to configure a development or test workstation:
     You can do this manually or use the CMD script below: 
 
     ```
-    cd "%NF_ROOT%\.."
+    cd "%NK_ROOT%\.."
     mkdir nforgeio.github.io
     git clone https://github.com/nforgeio/nforgeio.github.io.git
 
-    cd "%NF_ROOT%\.."
+    cd "%NK_ROOT%\.."
     mkdir cadence-samples
     git clone https://github.com/nforgeio/cadence-samples.git
 
-    cd "%NF_ROOT%\.."
+    cd "%NK_ROOT%\.."
     mkdir temporal-samples
     git clone https://github.com/nforgeio/temporal-samples.git
     ```

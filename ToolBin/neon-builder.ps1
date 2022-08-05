@@ -54,7 +54,7 @@ if ($codedoc)
 
 # Import the global solution include file.
 
-. $env:NF_ROOT/Powershell/includes.ps1
+. $env:NK_ROOT/Powershell/includes.ps1
 
 # Initialize
 
@@ -74,9 +74,9 @@ else
 }
 
 $msbuild     = $env:MSBUILDPATH
-$nfRoot      = $env:NF_ROOT
+$nfRoot      = $env:NK_ROOT
 $nfSolution  = "$nfRoot\neonKUBE.sln"
-$nfBuild     = "$env:NF_BUILD"
+$nfBuild     = "$env:NK_BUILD"
 $nfLib       = "$nfRoot\Lib"
 $nfTools     = "$nfRoot\Tools"
 $nfToolBin   = "$nfRoot\ToolBin"
@@ -110,7 +110,7 @@ function PublishCore
     Write-Info "**************************************************************************"
     Write-Info ""
 
-    # Ensure that the NF_BUILD folder exists:
+    # Ensure that the NK_BUILD folder exists:
 
     [System.IO.Directory]::CreateDirectory($nfBuild) | Out-Null
 
@@ -195,7 +195,7 @@ try
 
         # Ensure-VisualStudioNotRunning
 
-        # Clear the NF_BUILD folder and delete any [bin] or [obj] folders
+        # Clear the NK_BUILD folder and delete any [bin] or [obj] folders
         # to be really sure we're doing a clean build.  I've run into 
         # situations where I've upgraded SDKs or Visual Studio and Files
         # left over from previous builds that caused build trouble.

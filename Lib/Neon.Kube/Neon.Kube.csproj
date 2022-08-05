@@ -127,8 +127,8 @@
     Generates the [KubernetesWithRetry.cs] file.
     -->
 
-	<Target Name="K8sWithRetry" BeforeTargets="BeforeBuild" Condition="Exists('$(NF_ROOT)\Tools\prebuilder\bin\$(Configuration)\net6.0\prebuilder.exe')">
-		<Exec Command="$(NF_ROOT)\Tools\prebuilder\bin\$(Configuration)\net6.0\prebuilder generate-kubernetes-with-retry &quot;$(ProjectDir)Kubernetes\KubernetesWithRetry.cs&quot; Neon.Kube" />
+	<Target Name="K8sWithRetry" BeforeTargets="BeforeBuild" Condition="Exists('$(NK_ROOT)\Tools\prebuilder\bin\$(Configuration)\net6.0\prebuilder.exe')">
+		<Exec Command="$(NK_ROOT)\Tools\prebuilder\bin\$(Configuration)\net6.0\prebuilder generate-kubernetes-with-retry &quot;$(ProjectDir)Kubernetes\KubernetesWithRetry.cs&quot; Neon.Kube" />
 	</Target>
 
 </Project>

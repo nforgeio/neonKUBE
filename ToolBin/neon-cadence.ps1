@@ -35,7 +35,7 @@
 #
 # REQUIREMENTS:
 #
-# You must have http://github.com/nforgeio/cadence cloned to [%NF_REPOS/neon-cadence].
+# You must have http://github.com/nforgeio/cadence cloned to [%NK_REPOS/neon-cadence].
 #
 # REMARKS:
 #
@@ -53,13 +53,13 @@ param
 
 # Import the global solution include file.
 
-. $env:NF_ROOT/Powershell/includes.ps1
+. $env:NK_ROOT/Powershell/includes.ps1
 
 # Initialize
 
-$nfRepos = "$env:NF_REPOS"
+$nfRepos = "$env:NK_REPOS"
 
-# Ensure that there's a local [neon-cadence] repository in NF_REPOS.
+# Ensure that there's a local [neon-cadence] repository in NK_REPOS.
 
 if (!(Test-Path "$nfRepos/neon-cadence/.git/index"))
 {

@@ -36,7 +36,7 @@ param
 
 #----------------------------------------------------------
 # Global includes
-$image_root = [System.IO.Path]::Combine($env:NF_ROOT, "Images")
+$image_root = [System.IO.Path]::Combine($env:NK_ROOT, "Images")
 . $image_root/includes.ps1
 #----------------------------------------------------------
 

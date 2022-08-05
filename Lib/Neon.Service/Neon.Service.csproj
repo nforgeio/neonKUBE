@@ -87,10 +87,10 @@
 
 	<Target Name="BuildProbes" BeforeTargets="Build">
 		<Message Importance="high" Text="Building: health-check" />
-		<Exec Command="wsl-util gcc &quot;$(NF_ROOT)\Lib\Neon.Service\health-probes\health-check&quot; &quot;$(NF_ROOT)\Lib\Neon.Service\Resources\health-check&quot;" />
+		<Exec Command="wsl-util gcc &quot;$(NK_ROOT)\Lib\Neon.Service\health-probes\health-check&quot; &quot;$(NK_ROOT)\Lib\Neon.Service\Resources\health-check&quot;" />
 
 		<Message Importance="high" Text="Building: ready-check" />
-		<Exec Command="wsl-util gcc &quot;$(NF_ROOT)\Lib\Neon.Service\health-probes\ready-check&quot; &quot;$(NF_ROOT)\Lib\Neon.Service\Resources\ready-check&quot;" />
+		<Exec Command="wsl-util gcc &quot;$(NK_ROOT)\Lib\Neon.Service\health-probes\ready-check&quot; &quot;$(NK_ROOT)\Lib\Neon.Service\Resources\ready-check&quot;" />
 	</Target>
 
 </Project>

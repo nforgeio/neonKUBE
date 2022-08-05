@@ -96,18 +96,18 @@
 
 		<!-- Clear the [modelgen] tool platform target folders -->
 
-		<RemoveDir Directories="$(NF_ROOT)\Lib\Neon.ModelGenerator\linux-x64;$(NF_ROOT)\Lib\Neon.ModelGenerator\osx-x64;$(NF_ROOT)\Lib\Neon.ModelGenerator\win-x64" />
+		<RemoveDir Directories="$(NK_ROOT)\Lib\Neon.ModelGenerator\linux-x64;$(NK_ROOT)\Lib\Neon.ModelGenerator\osx-x64;$(NK_ROOT)\Lib\Neon.ModelGenerator\win-x64" />
 
 		<!-- Build the [modelgen] tool for the supported platforms -->
 
-		<Message Importance="high" Text="neon-build dotnet publish &quot;$(NF_ROOT)\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework net6.0 --output &quot;$(NF_ROOT)\Lib\Neon.ModelGenerator\linux-x64&quot; --configuration $(configuration) --self-contained --runtime linux-x64"/>
-		<Exec Command="neon-build dotnet publish &quot;$(NF_ROOT)\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework net6.0 --output &quot;$(NF_ROOT)\Lib\Neon.ModelGenerator\linux-x64&quot; --configuration $(configuration) --self-contained --runtime linux-x64" />
+		<Message Importance="high" Text="neon-build dotnet publish &quot;$(NK_ROOT)\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework net6.0 --output &quot;$(NK_ROOT)\Lib\Neon.ModelGenerator\linux-x64&quot; --configuration $(configuration) --self-contained --runtime linux-x64"/>
+		<Exec Command="neon-build dotnet publish &quot;$(NK_ROOT)\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework net6.0 --output &quot;$(NK_ROOT)\Lib\Neon.ModelGenerator\linux-x64&quot; --configuration $(configuration) --self-contained --runtime linux-x64" />
 
-		<Message Importance="high" Text="neon-build dotnet publish &quot;$(NF_ROOT)\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework net6.0 --output &quot;$(NF_ROOT)\Lib\Neon.ModelGenerator\osx-x64&quot; --configuration $(configuration) --self-contained --runtime osx-x64"/>
-		<Exec Command="neon-build dotnet publish &quot;$(NF_ROOT)\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework net6.0 --output &quot;$(NF_ROOT)\Lib\Neon.ModelGenerator\osx-x64&quot; --configuration $(configuration) --self-contained --runtime osx-x64" />
+		<Message Importance="high" Text="neon-build dotnet publish &quot;$(NK_ROOT)\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework net6.0 --output &quot;$(NK_ROOT)\Lib\Neon.ModelGenerator\osx-x64&quot; --configuration $(configuration) --self-contained --runtime osx-x64"/>
+		<Exec Command="neon-build dotnet publish &quot;$(NK_ROOT)\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework net6.0 --output &quot;$(NK_ROOT)\Lib\Neon.ModelGenerator\osx-x64&quot; --configuration $(configuration) --self-contained --runtime osx-x64" />
 
-		<Message Importance="high" Text="neon-build dotnet publish &quot;$(NF_ROOT)\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework net6.0 --output &quot;$(NF_ROOT)\Lib\Neon.ModelGenerator\win-x64&quot; --configuration $(configuration) --self-contained --runtime win-x64"/>
-		<Exec Command="neon-build dotnet publish &quot;$(NF_ROOT)\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework net6.0 --output &quot;$(NF_ROOT)\Lib\Neon.ModelGenerator\win-x64&quot; --configuration $(configuration) --self-contained --runtime win-x64" />
+		<Message Importance="high" Text="neon-build dotnet publish &quot;$(NK_ROOT)\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework net6.0 --output &quot;$(NK_ROOT)\Lib\Neon.ModelGenerator\win-x64&quot; --configuration $(configuration) --self-contained --runtime win-x64"/>
+		<Exec Command="neon-build dotnet publish &quot;$(NK_ROOT)\Tools\neon-modelgen\neon-modelgen.csproj&quot; --framework net6.0 --output &quot;$(NK_ROOT)\Lib\Neon.ModelGenerator\win-x64&quot; --configuration $(configuration) --self-contained --runtime win-x64" />
 	</Target>
 
 </Project>

@@ -2188,7 +2188,7 @@ exit 0
 
             // Fall back to the executable from our Git repo.
 
-            var repoFolder = Environment.GetEnvironmentVariable("NF_ROOT");
+            var repoFolder = Environment.GetEnvironmentVariable("NK_ROOT");
             var path2      = repoFolder != null ? Path.Combine(repoFolder, "External", "SSH", "ssh-keygen.exe") : null;
 
             if (path2 != null && File.Exists(path2))

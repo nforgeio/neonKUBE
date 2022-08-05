@@ -24,23 +24,23 @@
 
 # Import the global solution include file.
 
-. $env:NF_ROOT/Powershell/includes.ps1
+. $env:NK_ROOT/Powershell/includes.ps1
 
 #------------------------------------------------------------------------------
 # Important source code paths.
 
-$NF_ROOT     = $env:NF_ROOT
-$nfImages   = "$NF_ROOT\Images"
-$nfLib      = "$NF_ROOT\Lib"
-$nfServices = "$NF_ROOT\Services"
-$nfTools    = "$NF_ROOT\Tools"
+$NK_ROOT     = $env:NK_ROOT
+$nfImages   = "$NK_ROOT\Images"
+$nfLib      = "$NK_ROOT\Lib"
+$nfServices = "$NK_ROOT\Services"
+$nfTools    = "$NK_ROOT\Tools"
 
 #------------------------------------------------------------------------------
 # Global constants.
 
 # neonKUBE release Version.
 
-$neonKUBE_Version = $(& "$NF_ROOT\ToolBin\neon-build" read-version "$nfLib\Neon.Kube\KubeVersions.cs" NeonKube)
+$neonKUBE_Version = $(& "$NK_ROOT\ToolBin\neon-build" read-version "$nfLib\Neon.Kube\KubeVersions.cs" NeonKube)
 ThrowOnExitCode
 
 $neonKUBE_Tag = "neonkube-" + $neonKUBE_Version
@@ -86,7 +86,7 @@ function UtcDate
 
 function ImageTag
 {
-	$branch = GitBranch $env:NF_ROOT
+	$branch = GitBranch $env:NK_ROOT
 	$date   = UtcDate
 	$commit = git log -1 --pretty=%h
 	$tag    = "$branch-$date-$commit"
@@ -111,7 +111,7 @@ function ImageTag
 
 function IsRelease
 {
-    $branch = GitBranch $env:NF_ROOT
+    $branch = GitBranch $env:NK_ROOT
 
 	return ($branch -like "release-*")
 }
@@ -126,7 +126,7 @@ function IsRelease
 
 function TagAsLatest
 {
-	$branch = GitBranch $env:NF_ROOT
+	$branch = GitBranch $env:NK_ROOT
 
 	return ($branch -like "release-*") -or ($branch -eq "master")
 }

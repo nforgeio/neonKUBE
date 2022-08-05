@@ -62,7 +62,7 @@ namespace TestTemporal
         // 
         // [cwf-args.exe] is built by the solution and will be located at:
         //
-        //      %NF_ROOT%\Build\go-test\temporal\twf-args.exe
+        //      %NK_ROOT%\Build\go-test\temporal\twf-args.exe
         //
         // We need to verify that the .NET client can interop with a workflow
         // written in GOLANG and presumably with workflows written in other 
@@ -97,7 +97,7 @@ namespace TestTemporal
                     twfProcess.Kill();
                 }
 
-                var goTestDir     = Path.Combine(Environment.GetEnvironmentVariable("NF_BUILD"), "go-test", "temporal");
+                var goTestDir     = Path.Combine(Environment.GetEnvironmentVariable("NK_BUILD"), "go-test", "temporal");
                 var workerExePath = Path.Combine(goTestDir, "twf-args.exe");
 
                 // The worker app polls for the existence of a temporary stop file and

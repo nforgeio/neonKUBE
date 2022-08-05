@@ -22,14 +22,14 @@
 #
 # ARGUMENTS: NONE
 
-$env:NF_GOROOT   = "$env:NF_ROOT\Go"
+$env:NK_GOROOT   = "$env:NK_ROOT\Go"
 $env:GO111MODULE = "on"
 
 # Import the global solution include file.
 
-. $env:NF_ROOT/Powershell/includes.ps1
+. $env:NK_ROOT/Powershell/includes.ps1
 
-Push-Cwd $env:NF_GOROOT | Out-Null
+Push-Cwd $env:NK_GOROOT | Out-Null
 
 try
 {

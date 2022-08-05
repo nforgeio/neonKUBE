@@ -5,10 +5,10 @@ set DEBUG_ORG=ghcr.io/neonkube-dev
 set DEBUG_REPO=neon-node-agent
 set DEBUG_TAG=neonkube-%NEON_GITHUB_USER%
 
-cd %NF_ROOT%\Images\neon-node-agent
+cd %NK_ROOT%\Images\neon-node-agent
 pwsh -f publish.ps1 %DEBUG_TAG%
 
-cd %NF_ROOT%\Lib\Neon.Kube.Setup\Resources\Helm\neon-node-agent
+cd %NK_ROOT%\Lib\Neon.Kube.Setup\Resources\Helm\neon-node-agent
 neon delete clusterrole/neon-node-agent-role
 neon helm uninstall neon-node-agent --namespace neon-system
 neon helm install neon-node-agent --namespace neon-system -f values.yaml --set logLevel=%DEBUG_LOGLEVEL% --set image.pullPolicy=Always --set image.organization=%DEBUG_ORG% --set image.repository=%DEBUG_REPO% --set image.tag=%DEBUG_TAG% .

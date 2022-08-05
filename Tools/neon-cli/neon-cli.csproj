@@ -122,7 +122,7 @@
 
 	<Target Name="PubCore" AfterTargets="AfterBuild" Condition="true">
 		<Message Importance="high" Text="Publish: $(ProjectPath)" />
-		<Exec Command="pubcore --no-cmd &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; $(ConfigurationName) &quot;$(NF_BUILD)\neon&quot; win10-x64" />
+		<Exec Command="pubcore --no-cmd &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; $(ConfigurationName) &quot;$(NK_BUILD)\neon&quot; win10-x64" />
 	</Target>
 
 </Project>

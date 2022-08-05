@@ -62,7 +62,7 @@ namespace Neon.Common
         /// locate user test files in the folder specified by this variable
         /// (when set).
         /// </summary>
-        public const string TestModeFolderVar = "NF_TESTMODE_FOLDER";
+        public const string TestModeFolderVar = "NK_TESTMODE_FOLDER";
 
         /// <summary>
         /// Determines whether an integer is odd.

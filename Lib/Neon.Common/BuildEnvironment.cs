@@ -46,7 +46,7 @@ namespace Neon
         {
             get
             {
-                return Environment.GetEnvironmentVariable("NF_ROOT");
+                return Environment.GetEnvironmentVariable("NK_ROOT");
             }
         }
 
@@ -57,7 +57,7 @@ namespace Neon
         {
             get
             {
-                return Environment.GetEnvironmentVariable("NF_BUILD");
+                return Environment.GetEnvironmentVariable("NK_BUILD");
             }
         }
     }
