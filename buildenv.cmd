@@ -51,8 +51,6 @@ set NK_SNIPPETS=%NK_ROOT%\Snippets
 set NK_TEST=%NK_ROOT%\Test
 set NK_TEMP=C:\Temp
 set NK_ACTIONS_ROOT=%NC_REPOS%\neonCLOUD\Automation\actions
-set DOTNETPATH=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319
-set MSBUILDPATH=C:\Program Files\Microsoft Visual Studio\2022\Community\Msbuild\Current\Bin\MSBuild.exe
 set NEON_CLUSTER_TESTING=1
 
 REM Persist the environment variables.
@@ -69,10 +67,7 @@ setx NK_TEMP "%NK_TEMP%" /M                                   > nul
 setx NK_ACTIONS_ROOT "%NK_ACTIONS_ROOT%" /M                   > nul
 setx NEON_CLUSTER_TESTING "%NEON_CLUSTER_TESTING%" /M         > nul
 
-setx DOTNETPATH "%DOTNETPATH%" /M                             > nul
-setx MSBUILDPATH "%MSBUILDPATH%" /M                           > nul
 setx DOTNET_CLI_TELEMETRY_OPTOUT 1 /M                         > nul
-setx DEV_WORKSTATION 1 /M                                     > nul
 
 REM Make sure required folders exist.
 
@@ -82,26 +77,11 @@ if not exist "%NK_BUILD%" mkdir "%NK_BUILD%"
 if not exist "%NK_BUILD%\neon" mkdir "%NK_BUILD%\neon"
 
 REM Configure the PATH.
-REM
-REM Note that some tools like PuTTY and 7-Zip may be installed as
-REM x86 or x64 to different directories.  We'll include commands that
-REM attempt to add both locations to the path and [pathtool] is
-REM smart enough to only add directories that actually exist.
 
 %NK_TOOLBIN%\pathtool -dedup -system -add "%NK_BUILD%"
 %NK_TOOLBIN%\pathtool -dedup -system -add "%NK_BUILD%\neon"
 %NK_TOOLBIN%\pathtool -dedup -system -add "%NK_TOOLBIN%"
 %NK_TOOLBIN%\pathtool -dedup -system -add "%NK_ROOT%\External\OpenSSL"
-%NK_TOOLBIN%\pathtool -dedup -system -add "%DOTNETPATH%"
-%NK_TOOLBIN%\pathtool -dedup -system -add "C:\cygwin64\bin"
-%NK_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles%\7-Zip"
-%NK_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles(x86)%\7-Zip"
-%NK_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles%\PuTTY"
-%NK_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles(x86)%\PuTTY"
-%NK_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles%\WinSCP"
-%NK_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles(x86)%\WinSCP"
-%NK_TOOLBIN%\pathtool -dedup -system -add "C:\Go"
-%NK_TOOLBIN%\pathtool -dedup -system -add "C:\Program Files (x86)\HTML Help Workshop"
 
 REM Configure the neonKUBE program folder and add it to the PATH.
 
