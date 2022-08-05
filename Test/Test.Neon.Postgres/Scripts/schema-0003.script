@@ -1,1 +1,0 @@
-UPDATE my_table SET version = 3;

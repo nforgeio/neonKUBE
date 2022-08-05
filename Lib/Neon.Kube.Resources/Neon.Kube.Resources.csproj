@@ -51,8 +51,4 @@
 		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <ProjectReference Include="..\Neon.JsonConverters\Neon.JsonConverters.csproj" />
-	</ItemGroup>
-
 </Project>

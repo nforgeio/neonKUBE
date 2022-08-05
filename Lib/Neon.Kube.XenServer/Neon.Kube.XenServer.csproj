@@ -50,9 +50,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
 		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
-		<ProjectReference Include="..\Neon.XenServer\Neon.XenServer.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

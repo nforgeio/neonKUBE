@@ -42,10 +42,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
 		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
 

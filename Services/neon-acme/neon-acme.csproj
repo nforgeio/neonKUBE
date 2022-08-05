@@ -17,10 +17,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Service\Neon.Service.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Web\Neon.Web.csproj" />
   </ItemGroup>
 
   <ItemGroup>

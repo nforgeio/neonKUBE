@@ -51,7 +51,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
 		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
 	</ItemGroup>
 

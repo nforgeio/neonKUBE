@@ -50,7 +50,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
 		<ProjectReference Include="..\Neon.Kube.Aws\Neon.Kube.Aws.csproj" />
 		<ProjectReference Include="..\Neon.Kube.Azure\Neon.Kube.Azure.csproj" />
 		<ProjectReference Include="..\Neon.Kube.BareMetal\Neon.Kube.BareMetal.csproj" />

@@ -73,7 +73,6 @@ setx DOTNETPATH "%DOTNETPATH%" /M                             > nul
 setx MSBUILDPATH "%MSBUILDPATH%" /M                           > nul
 setx DOTNET_CLI_TELEMETRY_OPTOUT 1 /M                         > nul
 setx DEV_WORKSTATION 1 /M                                     > nul
-setx OPENSSL_CONF "%NK_ROOT%\External\OpenSSL\openssl.cnf" /M > nul
 
 REM Make sure required folders exist.
 
