@@ -21,7 +21,7 @@
 # (e.g. Go vendor files) that are not part of the source tree before
 # generating the archive.
 #
-# USAGE: pwsh -file ./neon-archive.ps1 [-target PATH]
+# USAGE: pwsh -f neon-archive.ps1 [-target PATH]
 #
 # OPTIONS:
 #
@@ -41,7 +41,7 @@ param
 
 # Initialize
 
-$nfRoot = "$env:NK_ROOT"
+$nkRoot = "$env:NK_ROOT"
 
 # This removes the [$/Build], [$/Build-cache], and all [bin] and [obj] folders.
 
@@ -51,12 +51,12 @@ neon-build clean --all
 # Remove the contents of [$/packages].
 
 "ARCHIVE: Removing packages"
-Remove-Item "$nfRoot\packages\*" -Recurse -ErrorAction Ignore
+Remove-Item "$nkRoot\packages\*" -Recurse -ErrorAction Ignore
 
 # Remove GOLANG related files that don't need to be archived.
 
 "ARCHIVE: Removing GOLANG files"
-Remove-Item "$nfRoot\Go\pkg" -Recurse -ErrorAction Ignore
+Remove-Item "$nkRoot\Go\pkg" -Recurse -ErrorAction Ignore
 
 # Zip the archive
 
@@ -69,7 +69,7 @@ Remove-Item "$target" -ErrorAction Ignore
 #
 # We'll use [7-zip] instead.
 
-7z a -tzip -r -mmt4 -mx9 -bsp1 "$target" "$nfRoot"
+7z a -tzip -r -mmt4 -mx9 -bsp1 "$target" "$nkRoot"
 
 Write-Info " "
 Write-Info "**************************"

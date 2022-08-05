@@ -20,7 +20,7 @@
 #
 # NOTE: You must be already logged into the target container registry.
 #
-# USAGE: pwsh -file ./publish.ps1 [-all]
+# USAGE: pwsh -f publish.ps1 [-all]
 
 param 
 (

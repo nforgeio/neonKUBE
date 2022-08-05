@@ -103,7 +103,7 @@ dotnet new --install KubeOps.Templates::* > /nul
 
 REM Perform additional implementation in via Powershell.
 
-pwsh -File "%NK_ROOT%\buildenv.ps1"
+pwsh -f "%NK_ROOT%\buildenv.ps1"
 
 :done
 echo.

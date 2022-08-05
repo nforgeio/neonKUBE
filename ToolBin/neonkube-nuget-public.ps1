@@ -103,14 +103,14 @@ function Publish
 # Load the library and neonKUBE versions.
 
 $msbuild         = $env:MSBUILDPATH
-$nfRoot          = "$env:NK_ROOT"
-$nfSolution      = "$nfRoot\neonKUBE.sln"
-$nfBuild         = "$env:NK_BUILD"
-$nfLib           = "$nfRoot\Lib"
-$nfTools         = "$nfRoot\Tools"
-$nfToolBin       = "$nfRoot\ToolBin"
-$libraryVersion  = $(& "$nfToolBin\neon-build" read-version "$nfLib/Neon.Common/Build.cs" NeonLibraryVersion)
-$neonkubeVersion = $(& "$nfToolBin\neon-build" read-version "$nfLib/Neon.Kube/KubeVersions.cs" NeonKube)
+$nkRoot          = "$env:NK_ROOT"
+$nkSolution      = "$nkRoot\neonKUBE.sln"
+$nkBuild         = "$env:NK_BUILD"
+$nkLib           = "$nkRoot\Lib"
+$nkTools         = "$nkRoot\Tools"
+$nkToolBin       = "$nkRoot\ToolBin"
+$libraryVersion  = $(& "neon-build" read-version "$nkLib/Neon.Common/Build.cs" NeonLibraryVersion)
+$neonkubeVersion = $(& "neon-build" read-version "$nkLib/Neon.Kube/KubeVersions.cs" NeonKube)
 
 # We need to do a release solution build to ensure that any tools or other
 # dependencies are built before we build and publish the individual packages.
@@ -121,7 +121,7 @@ Write-Info "***                            CLEAN SOLUTION                       
 Write-Info "********************************************************************************"
 Write-Info ""
 
-& "$msbuild" "$nfSolution" $buildConfig -t:Clean -m -verbosity:quiet
+& "$msbuild" "$nkSolution" $buildConfig -t:Clean -m -verbosity:quiet
 
 if (-not $?)
 {
@@ -134,7 +134,7 @@ Write-Info "***                           RESTORE PACKAGES                      
 Write-Info "********************************************************************************"
 Write-Info ""
 
-& "$msbuild" "$nfSolution" -t:restore -verbosity:quiet
+& "$msbuild" "$nkSolution" -t:restore -verbosity:quiet
 
 Write-Info  ""
 Write-Info  "*******************************************************************************"
@@ -142,7 +142,7 @@ Write-Info  "***                           BUILD SOLUTION                       
 Write-Info  "*******************************************************************************"
 Write-Info  ""
 
-& "$msbuild" "$nfSolution" -p:Configuration=Release -restore -m -verbosity:quiet
+& "$msbuild" "$nkSolution" -p:Configuration=Release -restore -m -verbosity:quiet
 
 if (-not $?)
 {

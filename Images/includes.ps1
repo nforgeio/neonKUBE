@@ -30,17 +30,17 @@
 # Important source code paths.
 
 $NK_ROOT     = $env:NK_ROOT
-$nfImages   = "$NK_ROOT\Images"
-$nfLib      = "$NK_ROOT\Lib"
-$nfServices = "$NK_ROOT\Services"
-$nfTools    = "$NK_ROOT\Tools"
+$nkImages   = "$NK_ROOT\Images"
+$nkLib      = "$NK_ROOT\Lib"
+$nkServices = "$NK_ROOT\Services"
+$nkTools    = "$NK_ROOT\Tools"
 
 #------------------------------------------------------------------------------
 # Global constants.
 
 # neonKUBE release Version.
 
-$neonKUBE_Version = $(& "$NK_ROOT\ToolBin\neon-build" read-version "$nfLib\Neon.Kube\KubeVersions.cs" NeonKube)
+$neonKUBE_Version = $(& "neon-build" read-version "$nkLib\Neon.Kube\KubeVersions.cs" NeonKube)
 ThrowOnExitCode
 
 $neonKUBE_Tag = "neonkube-" + $neonKUBE_Version

@@ -1,2 +1,2 @@
 @echo off 
-pwsh -file "%~dp0\neonkube-archive.ps1" %*
+pwsh -f "%~dp0\neonkube-archive.ps1" %*

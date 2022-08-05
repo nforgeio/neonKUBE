@@ -77,7 +77,7 @@
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="pwsh -f ./prebuild.ps1" ContinueOnError="true" />
+    <Exec Command="pwsh -f prebuild.ps1" ContinueOnError="true" />
   </Target>
 
   <Target Name="NodeCheck" BeforeTargets="PreBuild">

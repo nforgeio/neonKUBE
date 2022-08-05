@@ -43,15 +43,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "External", "External", "{1A
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ToolBin", "ToolBin", "{E9E3D01B-F890-4F0A-88F1-5F87E5D1F198}"
 	ProjectSection(SolutionItems) = preProject
-		ToolBin\gh-tool.cmd = ToolBin\gh-tool.cmd
-		ToolBin\neon-build.cmd = ToolBin\neon-build.cmd
-		ToolBin\neon-builder.cmd = ToolBin\neon-builder.cmd
-		ToolBin\neon-builder.ps1 = ToolBin\neon-builder.ps1
-		ToolBin\neon-publish-images.cmd = ToolBin\neon-publish-images.cmd
-		ToolBin\neon-release.cmd = ToolBin\neon-release.cmd
-		ToolBin\neon-release.ps1 = ToolBin\neon-release.ps1
 		ToolBin\neonkube-archive.cmd = ToolBin\neonkube-archive.cmd
 		ToolBin\neonkube-archive.ps1 = ToolBin\neonkube-archive.ps1
+		ToolBin\neonkube-builder.cmd = ToolBin\neonkube-builder.cmd
+		ToolBin\neonkube-builder.ps1 = ToolBin\neonkube-builder.ps1
 		ToolBin\neonkube-nuget-dev.cmd = ToolBin\neonkube-nuget-dev.cmd
 		ToolBin\neonkube-nuget-dev.ps1 = ToolBin\neonkube-nuget-dev.ps1
 		ToolBin\neonkube-nuget-public.cmd = ToolBin\neonkube-nuget-public.cmd
@@ -75,8 +70,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Hosting", "Lib\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj", "{08B7000C-F261-4543-B611-5710D12263DB}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Kube", "Test\Test.Neon.Kube\Test.Neon.Kube.csproj", "{41302EE4-1607-4BE1-A2C6-C881C3D05740}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-build", "Tools\neon-build\neon-build.csproj", "{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{9BF7513A-5219-4862-A290-7D2A00589312}"
 EndProject
@@ -387,24 +380,6 @@ Global
 		{41302EE4-1607-4BE1-A2C6-C881C3D05740}.Release|x64.Build.0 = Release|Any CPU
 		{41302EE4-1607-4BE1-A2C6-C881C3D05740}.Release|x86.ActiveCfg = Release|Any CPU
 		{41302EE4-1607-4BE1-A2C6-C881C3D05740}.Release|x86.Build.0 = Release|Any CPU
-		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.CodeDoc|Any CPU.ActiveCfg = CodeDoc|Any CPU
-		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.CodeDoc|Any CPU.Build.0 = CodeDoc|Any CPU
-		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.CodeDoc|x64.ActiveCfg = CodeDoc|Any CPU
-		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.CodeDoc|x64.Build.0 = CodeDoc|Any CPU
-		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.CodeDoc|x86.ActiveCfg = CodeDoc|Any CPU
-		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.CodeDoc|x86.Build.0 = CodeDoc|Any CPU
-		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Debug|x64.Build.0 = Debug|Any CPU
-		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Debug|x86.Build.0 = Debug|Any CPU
-		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Release|x64.ActiveCfg = Release|Any CPU
-		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Release|x64.Build.0 = Release|Any CPU
-		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Release|x86.ActiveCfg = Release|Any CPU
-		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Release|x86.Build.0 = Release|Any CPU
 		{9F508BA8-DE43-4D48-AF91-B03E009C0BD4}.CodeDoc|Any CPU.ActiveCfg = CodeDoc|Any CPU
 		{9F508BA8-DE43-4D48-AF91-B03E009C0BD4}.CodeDoc|Any CPU.Build.0 = CodeDoc|Any CPU
 		{9F508BA8-DE43-4D48-AF91-B03E009C0BD4}.CodeDoc|x64.ActiveCfg = CodeDoc|Any CPU
@@ -689,7 +664,6 @@ Global
 		{22CA72EE-FFA9-412A-B995-D51C617B8FEF} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{08B7000C-F261-4543-B611-5710D12263DB} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{41302EE4-1607-4BE1-A2C6-C881C3D05740} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
-		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89} = {FE7764F7-F5B5-4A92-9BE2-F51690EDF870}
 		{9F508BA8-DE43-4D48-AF91-B03E009C0BD4} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
 		{8AB98A6E-B8C3-4387-ADA8-BB3E2DDF3275} = {2CFE7466-98C4-490A-9519-4702DF7A4E15}
 		{58D183E5-41FC-4A97-9942-42B5CFDC0854} = {8AB98A6E-B8C3-4387-ADA8-BB3E2DDF3275}

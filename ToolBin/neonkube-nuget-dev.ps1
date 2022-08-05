@@ -22,7 +22,7 @@
 # at https://nuget-dev.neoncloud.io so intermediate builds can be shared 
 # by maintainers.
 #
-# USAGE: pwsh -file ,/neonkube-nuget-dev.ps1 [OPTIONS]
+# USAGE: pwsh -f neonkube-nuget-dev.ps1 [OPTIONS]
 #
 # OPTIONS:
 #
@@ -197,9 +197,9 @@ function Publish
 }
 
 $msbuild     = $env:MSBUILDPATH
-$nfRoot      = "$env:NK_ROOT"
-$nfSolution  = "$nfRoot\neonKUBE.sln"
-$branch      = GitBranch $nfRoot
+$nkRoot      = "$env:NK_ROOT"
+$nkSolution  = "$nkRoot\neonKUBE.sln"
+$branch      = GitBranch $nkRoot
 
 if ($localVersion)
 {
@@ -210,14 +210,14 @@ if ($localVersion)
 {
     # EMERGENCY MODE: Use local counters.
 
-    $nfVersionPath = [System.IO.Path]::Combine($env:NC_NUGET_LOCAL, "neonKUBE.version.txt")
+    $nkVersionPath = [System.IO.Path]::Combine($env:NC_NUGET_LOCAL, "neonKUBE.version.txt")
     $nlVersionPath = [System.IO.Path]::Combine($env:NC_NUGET_LOCAL, "neonLIBRARY.version.txt")
 
-    if (![System.IO.File]::Exists("$nfVersionPath") -or ![System.IO.File]::Exists("$nlVersionPath"))
+    if (![System.IO.File]::Exists("$nkVersionPath") -or ![System.IO.File]::Exists("$nlVersionPath"))
     {
         Write-Error "You'll need to manually initialize the local version files at:" -ErrorAction continue
         Write-Error ""                   -ErrorAction continue
-        Write-Error "    $nfVersionPath" -ErrorAction continue
+        Write-Error "    $nkVersionPath" -ErrorAction continue
         Write-Error "    $nlVersionPath" -ErrorAction continue
         Write-Error "" -ErrorAction continue
         Write-Error "Create these files with the minor version number currently referenced" -ErrorAction continue
@@ -240,9 +240,9 @@ if ($localVersion)
     [System.IO.File]::WriteAllText($nlVersionPath, $version)
     $libraryVersion = "10000.0.$version-dev-$branch"
 
-    $version = [int](Get-Content -TotalCount 1 $nfVersionPath).Trim()
+    $version = [int](Get-Content -TotalCount 1 $nkVersionPath).Trim()
     $version++
-    [System.IO.File]::WriteAllText($nfVersionPath, $version)
+    [System.IO.File]::WriteAllText($nkVersionPath, $version)
     $kubeVersion = "10000.0.$version-dev-$branch"
 }
 else
@@ -290,7 +290,7 @@ Write-Info "***                            CLEAN SOLUTION                       
 Write-Info "********************************************************************************"
 Write-Info ""
 
-& "$msbuild" "$nfSolution" $buildConfig -t:Clean -m -verbosity:quiet
+& "$msbuild" "$nkSolution" $buildConfig -t:Clean -m -verbosity:quiet
 
 if (-not $?)
 {
@@ -303,7 +303,7 @@ Write-Info "***                           RESTORE PACKAGES                      
 Write-Info "********************************************************************************"
 Write-Info ""
 
-& "$msbuild" "$nfSolution" -t:restore -verbosity:quiet
+& "$msbuild" "$nkSolution" -t:restore -verbosity:quiet
 
 Write-Info  ""
 Write-Info  "*******************************************************************************"
@@ -311,7 +311,7 @@ Write-Info  "***                           BUILD SOLUTION                       
 Write-Info  "*******************************************************************************"
 Write-Info  ""
 
-& "$msbuild" "$nfSolution" -p:Configuration=$config -restore -m -verbosity:quiet
+& "$msbuild" "$nkSolution" -p:Configuration=$config -restore -m -verbosity:quiet
 
 if (-not $?)
 {
