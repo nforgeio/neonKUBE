@@ -51,8 +51,6 @@ set NK_SNIPPETS=%NK_ROOT%\Snippets
 set NK_TEST=%NK_ROOT%\Test
 set NK_TEMP=C:\Temp
 set NK_ACTIONS_ROOT=%NC_REPOS%\neonCLOUD\Automation\actions
-set NK_CODEDOC=%NK_ROOT%\..\nforgeio.github.io
-set NK_SAMPLES_CADENCE=%NK_ROOT%\..\cadence-samples
 set DOTNETPATH=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319
 set MSBUILDPATH=C:\Program Files\Microsoft Visual Studio\2022\Community\Msbuild\Current\Bin\MSBuild.exe
 set NEON_CLUSTER_TESTING=1
@@ -69,8 +67,6 @@ setx NK_SNIPPETS "%NK_SNIPPETS%" /M                           > nul
 setx NK_TEST "%NK_TEST%" /M                                   > nul
 setx NK_TEMP "%NK_TEMP%" /M                                   > nul
 setx NK_ACTIONS_ROOT "%NK_ACTIONS_ROOT%" /M                   > nul
-setx NK_CODEDOC "%NK_CODEDOC%" /M                             > nul
-setx NK_SAMPLES_CADENCE "%NK_SAMPLES_CADENCE%" /M             > nul
 setx NEON_CLUSTER_TESTING "%NEON_CLUSTER_TESTING%" /M         > nul
 
 setx DOTNETPATH "%DOTNETPATH%" /M                             > nul
