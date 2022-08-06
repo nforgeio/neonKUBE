@@ -1613,7 +1613,7 @@ chmod 664 /etc/neonkube/pinned-images
 # Replace the CRI-O binary with our custom one.
 
 systemctl stop crio
-curl {KubeHelper.CurlOptions} {KubeDownloads.NeonPublicBucketUri}/cri-o/crio.{KubeVersions.Crio}.gz | gunzip --stdout > /usr/bin/crio
+curl {KubeHelper.CurlOptions} {NeonHelper.NeonPublicBucketUri}/cri-o/crio.{KubeVersions.Crio}.gz | gunzip --stdout > /usr/bin/crio
 systemctl start crio
 ";
                 var bundle         = CommandBundle.FromScript(crioUpdateScript);
