@@ -51,37 +51,15 @@ namespace NeonBlazorProxy.Controllers
     [ApiController]
     public class BlazorController : NeonControllerBase
     {
-        /// <summary>
-        /// Lock used for updating the load balancer status.
-        /// </summary>
-        public static readonly object server_lock = new object();
-        
-        /// <summary>
-        /// The host name of the last server to be sent a request.
-        /// </summary>
-        public static string LastServer { get; private set; }
-
-        private static ForwarderRequestConfig forwarderRequestConfig;
-
-        private Service            blazorProxyService;
-        private ProxyConfig        config;
-        private HttpMessageInvoker httpClient;
-        private IHttpForwarder     forwarder;
-        private SessionTransformer transformer;
-        private IDistributedCache  cache;
-        private AesCipher          cipher;
-        private LookupClient       dnsClient;
-
-        /// <summary>
-        /// Static Constructor.
-        /// </summary>
-        static BlazorController()
-        {
-            forwarderRequestConfig = new ForwarderRequestConfig()
-            {
-                ActivityTimeout = TimeSpan.FromSeconds(100)
-            };
-        }
+        private Service                blazorProxyService;
+        private ProxyConfig            config;
+        private HttpMessageInvoker     httpClient;
+        private IHttpForwarder         forwarder;
+        private SessionTransformer     transformer;
+        private IDistributedCache      cache;
+        private AesCipher              cipher;
+        private LookupClient           dnsClient;
+        private ForwarderRequestConfig forwarderRequestConfig;
 
         /// <summary>
         /// Constructor.
@@ -102,16 +80,18 @@ namespace NeonBlazorProxy.Controllers
             IDistributedCache            cache,
             AesCipher                    aesCipher,
             LookupClient                 dnsClient,
-            SessionTransformer           sessionTransformer)
+            SessionTransformer           sessionTransformer,
+            ForwarderRequestConfig       forwarderRequestConfig)
         {
-            this.blazorProxyService = blazorProxyService;
-            this.config             = config;
-            this.httpClient         = httpClient;
-            this.forwarder          = forwarder;
-            this.cache              = cache;
-            this.cipher             = aesCipher;
-            this.transformer        = sessionTransformer;
-            this.dnsClient          = dnsClient;
+            this.blazorProxyService     = blazorProxyService;
+            this.config                 = config;
+            this.httpClient             = httpClient;
+            this.forwarder              = forwarder;
+            this.cache                  = cache;
+            this.cipher                 = aesCipher;
+            this.transformer            = sessionTransformer;
+            this.dnsClient              = dnsClient;
+            this.forwarderRequestConfig = forwarderRequestConfig;
         }
 
         /// <summary>
@@ -206,25 +186,25 @@ namespace NeonBlazorProxy.Controllers
                 return host;
             }
 
-            LogDebug($"Dns: [{NeonHelper.JsonSerialize(dns)}]");
+            //LogDebug($"Dns: [{NeonHelper.JsonSerialize(dns)}]");
 
             var srv = dns.Answers.SrvRecords().Where(r => r.Port == config.Backend.Port).ToList();
 
             LogDebug($"SRV: [{NeonHelper.JsonSerialize(srv)}]");
 
-            lock (server_lock)
+            lock (Service.ServerLock)
             {
                 DnsMetrics.DnsLookupsRequested += 1;
 
-                var index = srv.FindIndex(r => r.Target.Value == LastServer) + 1;
+                var index = srv.FindIndex(r => r.Target.Value == Service.LastServer) + 1;
                 if (index >= srv.Count()
                     || index < 0)
                 {
                     index = 0;
                 }
 
-                LastServer = srv.ElementAt(index).Target.Value;
-                host = LastServer.Trim('.');
+                Service.LastServer = srv.ElementAt(index).Target.Value;
+                host = Service.LastServer.Trim('.');
             }
 
             LogDebug($"Dns host: [{host}]");

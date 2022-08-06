@@ -105,6 +105,10 @@ namespace NeonBlazorProxy
             services.AddSingleton(NeonBlazorProxyService.Config);
             services.AddSingleton<INeonLogger>(NeonBlazorProxyService.Log);
             services.AddSingleton(NeonBlazorProxyService.DnsClient);
+            services.AddSingleton(new ForwarderRequestConfig()
+            {
+                ActivityTimeout = TimeSpan.FromSeconds(100)
+            });
             services.AddHealthChecks();
             services.AddHttpForwarder();
             services.AddHttpClient();

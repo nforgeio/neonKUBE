@@ -80,6 +80,15 @@ namespace NeonBlazorProxy
         /// </summary>
         public HashSet<string> CurrentConnections;
 
+        /// <summary>
+        /// Lock used for updating the load balancer status.
+        /// </summary>
+        public static readonly object ServerLock = new object();
+
+        /// <summary>
+        /// The host name of the last server to be sent a request.
+        /// </summary>
+        public static string LastServer { get; set; }
 
         // private fields
         private IWebHost webHost;
