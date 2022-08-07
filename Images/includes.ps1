@@ -137,9 +137,9 @@ function TagAsLatest
 # name starts with "release-" the image will be pushed to "ghcr.io/neonrelease/"
 # otherwise it will be pushed to "ghcr.io/neonrelease-dev/".
 
-function GetLibraryRegistry($image)
+function GetSdkRegistry($image)
 {
-	$org = LibraryRegistryOrg
+	$org = SdkRegistryOrg
 	
 	return "$org/$image"
 }
@@ -147,7 +147,7 @@ function GetLibraryRegistry($image)
 #------------------------------------------------------------------------------
 # Returns the neonLIBRARY registry organization corresponding to the current git branch.
 
-function LibraryRegistryOrg
+function SdkRegistryOrg
 {
 	if (IsRelease)
 	{

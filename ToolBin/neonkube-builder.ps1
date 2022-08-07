@@ -17,8 +17,7 @@
 # limitations under the License.
 
 # Performs a clean build of the neonKUBE solution and publishes binaries
-# to the [$/build] folder.  This can also optionally build the neonKUBE
-# Desktop installer.
+# to the [$/build] folder.
 #
 # USAGE: pwsh -f neonkube-builder.ps1 [OPTIONS]
 #
@@ -83,7 +82,7 @@ $nkToolBin   = "$nkRoot\ToolBin"
 $buildConfig = "-p:Configuration=$config"
 $env:PATH   += ";$nkBuild"
 
-$libraryVersion = $(& "neon-build" read-version "$nkLib\Neon.Common\Build.cs" NeonLibraryVersion)
+$neonSdkVersion = $(& "neon-build" read-version "$nkLib\Neon.Kube\KubeVersions.cs" NeonKube)
 ThrowOnExitCode
 
 #------------------------------------------------------------------------------

@@ -50,7 +50,7 @@
 # within the local feed folder:
 #
 #   C:\nc-nuget-local\neonKUBE.version.txt
-#   C:\nc-nuget-local\neonLIBRARY.version.txt
+#   C:\nc-nuget-local\neonSDK.version.txt
 #
 # These simply hold the next version as an integer on the first line for 
 # each set of packages.  You'll need to manually initialize these files
@@ -210,15 +210,15 @@ if ($localVersion)
 {
     # EMERGENCY MODE: Use local counters.
 
+    $nfVersionPath = [System.IO.Path]::Combine($env:NC_NUGET_LOCAL, "neonSDK.version.txt")
     $nkVersionPath = [System.IO.Path]::Combine($env:NC_NUGET_LOCAL, "neonKUBE.version.txt")
-    $nlVersionPath = [System.IO.Path]::Combine($env:NC_NUGET_LOCAL, "neonLIBRARY.version.txt")
 
-    if (![System.IO.File]::Exists("$nkVersionPath") -or ![System.IO.File]::Exists("$nlVersionPath"))
+    if (![System.IO.File]::Exists("$nkVersionPath") -or ![System.IO.File]::Exists("$nfVersionPath"))
     {
         Write-Error "You'll need to manually initialize the local version files at:" -ErrorAction continue
         Write-Error ""                   -ErrorAction continue
         Write-Error "    $nkVersionPath" -ErrorAction continue
-        Write-Error "    $nlVersionPath" -ErrorAction continue
+        Write-Error "    $nfVersionPath" -ErrorAction continue
         Write-Error "" -ErrorAction continue
         Write-Error "Create these files with the minor version number currently referenced" -ErrorAction continue
         Write-Error "by your local neonCLOUD solution:" -ErrorAction continue
@@ -227,7 +227,7 @@ if ($localVersion)
         Write-Error "file extract the minor version for the package references as described below:" -ErrorAction continue
         Write-Error "" -ErrorAction continue
         Write-Error "    neonKUBE.version.txt:    from Neon.Kube" -ErrorAction continue
-        Write-Error "    neonLIBRARY.version.txt: from Neon.Common" -ErrorAction continue
+        Write-Error "    neonSDK.version.txt: from Neon.Common" -ErrorAction continue
         Write-Error "" -ErrorAction continue
         Write-Error "NOTE: These two version numbers are currently the same (Jan 2022), but they" -ErrorAction continue
         Write-Error "      may diverge at any time and will definitely diverge after we separate " -ErrorAction continue
@@ -235,15 +235,15 @@ if ($localVersion)
         exit 1
     }
 
-    $version = [int](Get-Content -TotalCount 1 $nlVersionPath).Trim()
+    $version = [int](Get-Content -TotalCount 1 $nfVersionPath).Trim()
     $version++
-    [System.IO.File]::WriteAllText($nlVersionPath, $version)
-    $libraryVersion = "10000.0.$version-dev-$branch"
+    [System.IO.File]::WriteAllText($nfVersionPath, $version)
+    $neonSdkVersion = "10000.0.$version-dev-$branch"
 
     $version = [int](Get-Content -TotalCount 1 $nkVersionPath).Trim()
     $version++
     [System.IO.File]::WriteAllText($nkVersionPath, $version)
-    $kubeVersion = "10000.0.$version-dev-$branch"
+    $neonSdkVersion = "10000.0.$version-dev-$branch"
 }
 else
 {
@@ -274,11 +274,11 @@ else
     # Submit PUTs request to the versioner service, specifying the counter name.  The service will
     # atomically increment the counter and return the next value.
 
-    $reply          = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonLIBRARY-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
-    $libraryVersion = "10000.0.$reply-dev-$branch"
+    $reply           = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonLIBRARY-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
+    $neonSdkVersion  = "10000.0.$reply-dev-$branch"
 
-    $reply          = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonKUBE-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
-    $kubeVersion    = "10000.0.$reply-dev-$branch"
+    $reply           = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonKUBE-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
+    $neonkubeVersion = "10000.0.$reply-dev-$branch"
 }
 
 # We need to do a solution build to ensure that any tools or other dependencies 
@@ -322,41 +322,41 @@ if (-not $?)
 # implicit package dependencies will work for external projects importing
 # these packages.
 
-SetVersion Neon.Kube                        $kubeVersion
-SetVersion Neon.Kube.Aws                    $kubeVersion
-SetVersion Neon.Kube.Azure                  $kubeVersion
-SetVersion Neon.Kube.BareMetal              $kubeVersion
-SetVersion Neon.Kube.DesktopServer          $kubeVersion
-SetVersion Neon.Kube.Google                 $kubeVersion
-SetVersion Neon.Kube.GrpcProto              $kubeVersion
-SetVersion Neon.Kube.Hosting                $kubeVersion
-SetVersion Neon.Kube.HyperV                 $kubeVersion
-SetVersion Neon.Kube.Models                 $kubeVersion
-SetVersion Neon.Kube.Operator               $kubeVersion
-SetVersion Neon.Kube.ResourceDefinitions    $kubeVersion
-SetVersion Neon.Kube.Resources              $kubeVersion
-SetVersion Neon.Kube.Setup                  $kubeVersion
-SetVersion Neon.Kube.XenServer              $kubeVersion
-SetVersion Neon.Kube.Xunit                  $kubeVersion
+SetVersion Neon.Kube                        $neonkubeVersion
+SetVersion Neon.Kube.Aws                    $neonkubeVersion
+SetVersion Neon.Kube.Azure                  $neonkubeVersion
+SetVersion Neon.Kube.BareMetal              $neonkubeVersion
+SetVersion Neon.Kube.DesktopServer          $neonkubeVersion
+SetVersion Neon.Kube.Google                 $neonkubeVersion
+SetVersion Neon.Kube.GrpcProto              $neonkubeVersion
+SetVersion Neon.Kube.Hosting                $neonkubeVersion
+SetVersion Neon.Kube.HyperV                 $neonkubeVersion
+SetVersion Neon.Kube.Models                 $neonkubeVersion
+SetVersion Neon.Kube.Operator               $neonkubeVersion
+SetVersion Neon.Kube.ResourceDefinitions    $neonkubeVersion
+SetVersion Neon.Kube.Resources              $neonkubeVersion
+SetVersion Neon.Kube.Setup                  $neonkubeVersion
+SetVersion Neon.Kube.XenServer              $neonkubeVersion
+SetVersion Neon.Kube.Xunit                  $neonkubeVersion
 
 # Build and publish the projects.
 
-Publish Neon.Kube                           $kubeVersion
-Publish Neon.Kube.Aws                       $kubeVersion
-Publish Neon.Kube.Azure                     $kubeVersion
-Publish Neon.Kube.BareMetal                 $kubeVersion
-Publish Neon.Kube.DesktopServer             $kubeVersion
-Publish Neon.Kube.Google                    $kubeVersion
-Publish Neon.Kube.GrpcProto                 $kubeVersion
-Publish Neon.Kube.Hosting                   $kubeVersion
-Publish Neon.Kube.HyperV                    $kubeVersion
-Publish Neon.Kube.Models                    $kubeVersion
-Publish Neon.Kube.Operator                  $kubeVersion
-Publish Neon.Kube.ResourceDefinitions       $kubeVersion
-Publish Neon.Kube.Resources                 $kubeVersion
-Publish Neon.Kube.Setup                     $kubeVersion
-Publish Neon.Kube.XenServer                 $kubeVersion
-Publish Neon.Kube.Xunit                     $kubeVersion
+Publish Neon.Kube                           $neonkubeVersion
+Publish Neon.Kube.Aws                       $neonkubeVersion
+Publish Neon.Kube.Azure                     $neonkubeVersion
+Publish Neon.Kube.BareMetal                 $neonkubeVersion
+Publish Neon.Kube.DesktopServer             $neonkubeVersion
+Publish Neon.Kube.Google                    $neonkubeVersion
+Publish Neon.Kube.GrpcProto                 $neonkubeVersion
+Publish Neon.Kube.Hosting                   $neonkubeVersion
+Publish Neon.Kube.HyperV                    $neonkubeVersion
+Publish Neon.Kube.Models                    $neonkubeVersion
+Publish Neon.Kube.Operator                  $neonkubeVersion
+Publish Neon.Kube.ResourceDefinitions       $neonkubeVersion
+Publish Neon.Kube.Resources                 $neonkubeVersion
+Publish Neon.Kube.Setup                     $neonkubeVersion
+Publish Neon.Kube.XenServer                 $neonkubeVersion
+Publish Neon.Kube.Xunit                     $neonkubeVersion
 
 # Restore the project versions
 

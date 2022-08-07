@@ -99,7 +99,7 @@ function Publish
         $prerelease = ""
     }
 
-	nuget push -Source nuget.org -ApiKey $nugetApiKey "$env:NK_BUILD\nuget\$project.$libraryVersion$prerelease.nupkg" -SkipDuplicate -Timeout 600
+	nuget push -Source nuget.org -ApiKey $nugetApiKey "$env:NK_BUILD\nuget\$project.$neonSdkVersion.nupkg" -SkipDuplicate -Timeout 600
     ThrowOnExitCode
 }
 
@@ -112,7 +112,7 @@ $nkBuild         = "$env:NK_BUILD"
 $nkLib           = "$nkRoot\Lib"
 $nkTools         = "$nkRoot\Tools"
 $nkToolBin       = "$nkRoot\ToolBin"
-$libraryVersion  = $(& "neon-build" read-version "$nkLib/Neon.Common/Build.cs" NeonLibraryVersion)
+$neonSdkVersion  = $(& "neon-build" read-version "$nkLib/Neon.Common/Build.cs" NeonLibraryVersion)
 $neonkubeVersion = $(& "neon-build" read-version "$nkLib/Neon.Kube/KubeVersions.cs" NeonKube)
 
 # We need to do a release solution build to ensure that any tools or other
@@ -154,41 +154,41 @@ if (-not $?)
 
 # Update the project versions.
 
-SetVersion Neon.Kube                      $kubeVersion
-SetVersion Neon.Kube.Aws                  $kubeVersion
-SetVersion Neon.Kube.Azure                $kubeVersion
-SetVersion Neon.Kube.BareMetal            $kubeVersion
-SetVersion Neon.Kube.DesktopServer        $kubeVersion
-SetVersion Neon.Kube.Google               $kubeVersion
-SetVersion Neon.Kube.GrpcProto            $kubeVersion
-SetVersion Neon.Kube.Hosting              $kubeVersion
-SetVersion Neon.Kube.HyperV               $kubeVersion
-SetVersion Neon.Kube.Models               $kubeVersion
-SetVersion Neon.Kube.Operator             $kubeVersion
-SetVersion Neon.Kube.ResourceDefinitions  $kubeVersion
-SetVersion Neon.Kube.Resources            $kubeVersion
-SetVersion Neon.Kube.Setup                $kubeVersion
-SetVersion Neon.Kube.XenServer            $kubeVersion
-SetVersion Neon.Kube.Xunit                $kubeVersion
+SetVersion Neon.Kube                      $neonkubeVersion
+SetVersion Neon.Kube.Aws                  $neonkubeVersion
+SetVersion Neon.Kube.Azure                $neonkubeVersion
+SetVersion Neon.Kube.BareMetal            $neonkubeVersion
+SetVersion Neon.Kube.DesktopServer        $neonkubeVersion
+SetVersion Neon.Kube.Google               $neonkubeVersion
+SetVersion Neon.Kube.GrpcProto            $neonkubeVersion
+SetVersion Neon.Kube.Hosting              $neonkubeVersion
+SetVersion Neon.Kube.HyperV               $neonkubeVersion
+SetVersion Neon.Kube.Models               $neonkubeVersion
+SetVersion Neon.Kube.Operator             $neonkubeVersion
+SetVersion Neon.Kube.ResourceDefinitions  $neonkubeVersion
+SetVersion Neon.Kube.Resources            $neonkubeVersion
+SetVersion Neon.Kube.Setup                $neonkubeVersion
+SetVersion Neon.Kube.XenServer            $neonkubeVersion
+SetVersion Neon.Kube.Xunit                $neonkubeVersion
 
 # Build and publish the projects.
 
-Publish Neon.Kube                         $kubeVersion
-Publish Neon.Kube.Aws                     $kubeVersion
-Publish Neon.Kube.Azure                   $kubeVersion
-Publish Neon.Kube.BareMetal               $kubeVersion
-Publish Neon.Kube.DesktopServer           $kubeVersion
-Publish Neon.Kube.Google                  $kubeVersion
-Publish Neon.Kube.GrpcProto               $kubeVersion
-Publish Neon.Kube.Hosting                 $kubeVersion
-Publish Neon.Kube.HyperV                  $kubeVersion
-Publish Neon.Kube.Models                  $kubeVersion
-Publish Neon.Kube.Operator                $kubeVersion
-Publish Neon.Kube.ResourceDefinitions     $kubeVersion
-Publish Neon.Kube.Resources               $kubeVersion
-Publish Neon.Kube.Setup                   $kubeVersion
-Publish Neon.Kube.XenServer               $kubeVersion
-Publish Neon.Kube.Xunit                   $kubeVersion
+Publish Neon.Kube                         $neonkubeVersion
+Publish Neon.Kube.Aws                     $neonkubeVersion
+Publish Neon.Kube.Azure                   $neonkubeVersion
+Publish Neon.Kube.BareMetal               $neonkubeVersion
+Publish Neon.Kube.DesktopServer           $neonkubeVersion
+Publish Neon.Kube.Google                  $neonkubeVersion
+Publish Neon.Kube.GrpcProto               $neonkubeVersion
+Publish Neon.Kube.Hosting                 $neonkubeVersion
+Publish Neon.Kube.HyperV                  $neonkubeVersion
+Publish Neon.Kube.Models                  $neonkubeVersion
+Publish Neon.Kube.Operator                $neonkubeVersion
+Publish Neon.Kube.ResourceDefinitions     $neonkubeVersion
+Publish Neon.Kube.Resources               $neonkubeVersion
+Publish Neon.Kube.Setup                   $neonkubeVersion
+Publish Neon.Kube.XenServer               $neonkubeVersion
+Publish Neon.Kube.Xunit                   $neonkubeVersion
 
 # Remove all of the generated nuget files so these don't accumulate.
 
