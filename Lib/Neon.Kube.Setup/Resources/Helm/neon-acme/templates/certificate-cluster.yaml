@@ -72,6 +72,8 @@ spec:
   dnsNames:
   - registry-webhook-service.neon-system.svc
   - registry-webhook-service.neon-system.svc.cluster.local
+  duration: {{ .Values.certficateDuration }}
+  renewBefore: {{ .Values.certficateRenewBefore }}
   issuerRef:
     kind: Issuer
     name: neon-system-selfsigned-issuer
@@ -89,6 +91,8 @@ spec:
   dnsNames:
   - {{ .Values.cluster.domain }}
   - "*.{{ .Values.cluster.domain }}"
+  duration: {{ .Values.certficateDuration }}
+  renewBefore: {{ .Values.certficateRenewBefore }}
   issuerRef:
     kind: Issuer
     name: neon-system-selfsigned-issuer

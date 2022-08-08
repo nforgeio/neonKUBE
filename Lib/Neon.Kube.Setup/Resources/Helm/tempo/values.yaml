@@ -602,7 +602,7 @@ config: |
     abort_if_cluster_join_fails: false
     randomize_node_name: false
     join_members:
-      - dnssrv+{{ include "tempo.fullname" . }}-gossip-ring.{{ .Release.Namespace }}.svc.cluster.local:7946
+      - {{ include "tempo.fullname" . }}-gossip-ring.{{ .Release.Namespace }}.svc.cluster.local:7946
   overrides:
     {{- toYaml .Values.global_overrides | nindent 2 }}
   server:

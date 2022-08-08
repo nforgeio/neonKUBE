@@ -117,7 +117,7 @@ mimir:
       abort_if_cluster_join_fails: false
       compression_enabled: false
       join_members:
-        - dnssrv+{{ include "mimir.fullname" . }}-gossip-ring.{{ .Release.Namespace }}.svc.cluster.local:7946
+        - {{ include "mimir.fullname" . }}-gossip-ring.{{ .Release.Namespace }}.svc.cluster.local:7946
 
     # This configures how the store-gateway synchronizes blocks stored in the bucket. It uses Minio by default for getting started (configured via flags) but this should be changed for production deployments.
     blocks_storage:

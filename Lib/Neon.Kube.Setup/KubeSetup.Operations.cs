@@ -3164,7 +3164,6 @@ $@"- name: StorageType
                     values.Add($"serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
                     values.Add($"minio.enabled", true);
-                    values.Add($"compactor.config.deletion_delay", "12h");
 
                     if (cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() == 1)
                     {

@@ -99,7 +99,7 @@ loki:
     memberlist:
       randomize_node_name: false
       join_members:
-        - dnssrv+{{ include "loki.fullname" . }}-memberlist.{{ .Release.Namespace }}.svc.cluster.local:7946
+        - {{ include "loki.fullname" . }}-memberlist.{{ .Release.Namespace }}.svc.cluster.local:7946
 
     ingester:
       chunk_idle_period: 30m

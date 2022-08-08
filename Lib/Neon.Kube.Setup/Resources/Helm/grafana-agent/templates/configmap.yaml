@@ -284,7 +284,7 @@ data:
               protocols:
                 grpc:
                   endpoint: "0.0.0.0:4317"
-                grpc:
+                http:
                   endpoint: "0.0.0.0:4318"
             opencensus:
               endpoint: "0.0.0.0:55678"
@@ -299,11 +299,14 @@ data:
             # policies define the rules by which traces will be sampled. Multiple policies
             # can be added to the same pipeline.
             policies:
-              - probabilistic:
+              - type: probabilistic
+                probabilistic:
                   sampling_percentage: 100
-              - latency:
+              - type: latency
+                latency:
                   threshold_ms: 100
-              - status_code:
+              - type: status_code
+                status_code:
                   status_codes:
                     - "ERROR"
             # Time that to wait before making a decision for a trace.
@@ -316,7 +319,7 @@ data:
               insecure: true
             resolver:
               dns:
-                hostname: grafana-agent-node.neon-monitor
+                hostname: grafana-agent-node.neon-monitor.svc.cluster.local
                 port: 4319
           service_graphs:
             enabled: true
