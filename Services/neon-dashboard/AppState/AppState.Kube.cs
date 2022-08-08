@@ -76,7 +76,7 @@ namespace NeonDashboard
             /// <summary>
             /// The number of failed nodes in the cluster.
             /// </summary>
-            public int FailedNodes { get; private set; }
+            public int UnhealthyNodes { get; private set; }
 
             /// <summary>
             /// The date that the cluster was created.
@@ -147,7 +147,7 @@ namespace NeonDashboard
                     Nodes = await K8s.ListNodeAsync();
 
                     TotalNodes = Nodes.Items.Count();
-                    FailedNodes = Nodes.Items.Where(node => node.Status.Conditions.Any(condition => negativeNodeConditions.Contains(condition.Type) && condition.Status == "True")).Count();
+                    UnhealthyNodes = Nodes.Items.Where(node => node.Status.Conditions.Any(condition => negativeNodeConditions.Contains(condition.Type) && condition.Status == "True")).Count();
                     ActiveNodes = Nodes.Items.Where(node => node.Status.Conditions.Any(condition => condition.Type == "Ready" && condition.Status == "True")).Count();
 
                     NotifyStateChanged();

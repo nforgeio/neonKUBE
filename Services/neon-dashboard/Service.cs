@@ -197,6 +197,7 @@ namespace NeonDashboard
 
             var metricsHost = GetEnvironmentVariable("METRICS_HOST", "http://mimir-query-frontend.neon-monitor.svc.cluster.local:8080");
             PrometheusClient = new PrometheusClient($"{metricsHost}/prometheus/");
+            PrometheusClient.JsonClient.DefaultRequestHeaders.Add("X-Scope-OrgID", ClusterInfo.Name);
 
             SsoClientSecret = GetEnvironmentVariable("SSO_CLIENT_SECRET", redacted: !Log.IsLogDebugEnabled);
 

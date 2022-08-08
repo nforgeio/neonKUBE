@@ -63,10 +63,10 @@
         </div>
         <div class="flex flex-col mt-2 py-2 px-4 bg-slate-900 mx-2 rounded-2">
           <p class="text-4">
-             @(AppState.Kube.Nodes != null ? AppState.Kube?.FailedNodes : "-")
+             @(AppState.Kube.Nodes != null ? AppState.Kube?.UnhealthyNodes : "-")
           </p>
           <label class="text-2 text-slate-300">
-            failed nodes
+            Unhealthy Nodes
           </label>
         </div>
       </div>
