@@ -97,8 +97,9 @@ loki:
       http_listen_port: 3100
       log_level: info
     memberlist:
+      randomize_node_name: false
       join_members:
-        - {{ include "loki.fullname" . }}-memberlist
+        - dnssrv+{{ include "loki.fullname" . }}-memberlist.{{ .Release.Namespace }}.svc.cluster.local:7946
 
     ingester:
       chunk_idle_period: 30m
@@ -131,13 +132,15 @@ loki:
       max_look_back_period: 0s
       chunk_cache_config:
         memcached:
-          batch_size: 100
+          batch_size: 1024
           parallelism: 100
         memcached_client:
+          addresses: dns+neon-memcached.neon-system:11211
           consistent_hash: true
-          addresses: dns+neon-memcached.neon-system.svc:11211
+          max_idle_conns: 16
           service: http
           timeout: 1000ms
+          update_interval: 1m
     table_manager:
       {{- toYaml .Values.table_manager | nindent 2 }}
 
@@ -147,9 +150,12 @@ loki:
       cache_results: true
       results_cache:
         cache:
+          memcached:
+            batch_size: 1024
+            parallelism: 100
           memcached_client:
-            consistent_hash: true
             addresses: dns+neon-memcached.neon-system:11211
+            consistent_hash: true
             max_idle_conns: 16
             service: http
             timeout: 1000ms
@@ -208,12 +214,15 @@ loki:
       directory: /var/loki/chunks
     index_queries_cache_config:
       memcached:
-        batch_size: 100
+        batch_size: 1024
         parallelism: 100
       memcached_client:
+        addresses: dns+neon-memcached.neon-system:11211
         consistent_hash: true
-        addresses: dns+neon-memcached.neon-system.svc:11211
+        max_idle_conns: 16
         service: http
+        timeout: 1000ms
+        update_interval: 1m
 # -- Uncomment to configure each storage individually
 #   azure: {}
 #   gcs: {}

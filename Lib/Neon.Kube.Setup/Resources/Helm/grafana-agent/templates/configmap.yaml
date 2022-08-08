@@ -272,25 +272,35 @@ data:
               endpoint: "0.0.0.0:9411"
             jaeger:
               protocols:
+                grpc: 
+                  endpoint: "0.0.0.0:14250"
+                thrift_binary: 
+                  endpoint: "0.0.0.0:6832"
                 thrift_compact: 
                   endpoint: "0.0.0.0:6831"
+                thrift_http: 
+                  endpoint: "0.0.0.0:14268"
             otlp:
               protocols:
                 grpc:
                   endpoint: "0.0.0.0:4317"
+                grpc:
+                  endpoint: "0.0.0.0:4318"
+            opencensus:
+              endpoint: "0.0.0.0:55678"
           remote_write:
-            - endpoint: tempo-distributor:55680
+            - endpoint: tempo-distributor:4317
               headers: 
                 X-Scope-OrgID: {{ .Values.cluster.name | default "neonkube" }}
               insecure: true
               retry_on_failure:
-                enabled: false
+                enabled: true
           tail_sampling:
             # policies define the rules by which traces will be sampled. Multiple policies
             # can be added to the same pipeline.
             policies:
               - probabilistic:
-                  sampling_percentage: 5
+                  sampling_percentage: 100
               - latency:
                   threshold_ms: 100
               - status_code:
@@ -301,13 +311,13 @@ data:
             # the cost of higher memory usage.
             decision_wait: 5s
           load_balancing:
-            receiver_port: 4318
+            receiver_port: 4319
             exporter:
               insecure: true
             resolver:
               dns:
                 hostname: grafana-agent-node.neon-monitor
-                port: 4318
+                port: 4319
           service_graphs:
             enabled: true
           spanmetrics:
@@ -335,5 +345,5 @@ data:
                   insecure_skip_verify: false
 {{- end }}
 {{- if .Values.tracing.enabled }}
-  strategies.json: '{"default_strategy": {"param": 0.010, "type": "probabilistic"}}'
+  strategies.json: '{"default_strategy": {"param": 1.0, "type": "probabilistic"}}'
 {{- end }}

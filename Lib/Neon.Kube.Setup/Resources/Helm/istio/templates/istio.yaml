@@ -10,8 +10,8 @@ spec:
   meshConfig:
     rootNamespace: {{ .Release.Namespace }}
     enablePrometheusMerge: false
-    accessLogFile: "/dev/stdout"
-    accessLogFormat: '{"authority":"%REQ(:AUTHORITY)%","client_ip":"%REQ(X-FORWARDED-FOR)%","forwarded_host":"%REQ(X-FORWARDED-HOST)%","forwarded_proto":"%REQ(X-FORWARDED-PROTO)%","host":"%REQ(:Host)%","method":"%REQ(:METHOD)%","mode":"%PROTOCOL%","path":"%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%","referer":"%REQ(:Referer)%","request_id":"%REQ(X-REQUEST-ID)%","requested_server_name":"%REQUESTED_SERVER_NAME%","response_code":"%RESPONSE_CODE%","trace_id":"%REQ(x-b3-traceid)%","user_agent":"%REQ(USER-AGENT)%"}'
+    accessLogFile: ""
+    accessLogFormat: '{"authority":"%REQ(:AUTHORITY)%","client_ip":"%REQ(X-FORWARDED-FOR)%","forwarded_host":"%REQ(X-FORWARDED-HOST)%","forwarded_proto":"%REQ(X-FORWARDED-PROTO)%","host":"%REQ(:Host)%","method":"%REQ(:METHOD)%","mode":"%PROTOCOL%","path":"%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%","referer":"%REQ(:Referer)%","request_id":"%REQ(X-REQUEST-ID)%","requested_server_name":"%REQUESTED_SERVER_NAME%","response_code":"%RESPONSE_CODE%","trace_id":"%REQ(traceparent)%","user_agent":"%REQ(USER-AGENT)%"}'
     accessLogEncoding: "JSON"
     #accessLogFormat: >
     #  [%START_TIME%] "%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%
@@ -26,9 +26,9 @@ spec:
     defaultConfig:
       tracing:
         sampling: 100.0
-        max_path_tag_length: 256
-        zipkin:
-          address: grafana-agent-node.neon-monitor.svc:9411
+        openCensusAgent:
+          address: grafana-agent-node.neon-monitor:55678
+          context: ["W3C_TRACE_CONTEXT", "GRPC_BIN", "CLOUD_TRACE_CONTEXT", "B3"]
     enableTracing: true
     extensionProviders:
       - envoyExtAuthzHttp:
@@ -114,6 +114,7 @@ spec:
       imagePullPolicy: IfNotPresent
       jwtPolicy: third-party-jwt
       proxy:
+        tracer: openCensusAgent
         holdApplicationUntilProxyStarts: true
         resources:
           requests:
@@ -121,9 +122,6 @@ spec:
             memory: "{{ .Values.resources.proxy.requests.memory }}"
       defaultNodeSelector: 
         neonkube.io/istio: true
-      tracer:
-        zipkin:
-          address: jaeger-collector.monitoring.svc.cluster.local:9411
     gateways:
       istio-ingressgateway:
         type: NodePort

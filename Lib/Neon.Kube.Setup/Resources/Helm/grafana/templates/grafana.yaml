@@ -62,7 +62,7 @@ spec:
       app: grafana
     annotations:
       sidecar.istio.io/inject: "true"
-      reloader.stakater.com/search: "true"
+      reloader.stakater.com/auto: "true"
     envFrom:
       - secretRef:
           name: grafana-secret

@@ -50,7 +50,7 @@ spec:
         image: "{{ .Values.agent.image.organization }}/{{ .Values.agent.image.repository }}:{{ .Values.agent.image.tag }}"
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 8080
+        - containerPort: 12345
           name: http-metrics
         - containerPort: 6831
           name: thrift-compact
@@ -67,11 +67,19 @@ spec:
         - containerPort: 9411
           name: zipkin
           protocol: TCP
-        - containerPort: 55680
-          name: otlp
+        - containerPort: 4317
+          name: otlp-grpc
+          protocol: TCP
+        - containerPort: 4318
+          name: http-otlp-http
+        - containerPort: 4319
+          name: otlp-grpc-lb
           protocol: TCP
         - containerPort: 55678
-          name: opencensus
+          name: tcp-opencensus
+          protocol: TCP
+        - containerPort: 5140
+          name: syslog
           protocol: TCP
         securityContext:
           capabilities:

@@ -560,7 +560,7 @@ config: |
         protocols:
           {{- if .Values.traces.otlp.http }}
           http:
-            endpoint: 0.0.0.0:55681
+            endpoint: 0.0.0.0:4318
           {{- end }}
           {{- if .Values.traces.otlp.grpc }}
           grpc:
@@ -600,12 +600,9 @@ config: |
     {{- end }}
   memberlist:
     abort_if_cluster_join_fails: false
-    randomize_node_name: true
-    stream_timeout: 60s
-    retransmit_factor: 2
-    gossip_to_dead_nodes_time: 60s
+    randomize_node_name: false
     join_members:
-      - {{ include "tempo.fullname" . }}-gossip-ring
+      - dnssrv+{{ include "tempo.fullname" . }}-gossip-ring.{{ .Release.Namespace }}.svc.cluster.local:7946
   overrides:
     {{- toYaml .Values.global_overrides | nindent 2 }}
   server:
@@ -638,7 +635,10 @@ config: |
       memcached:
         consistent_hash: true
         addresses: dns+neon-memcached.neon-system.svc:11211
-        timeout: 500ms
+        max_idle_conns: 16
+        service: http
+        timeout: 1000ms
+        update_interval: 1m
   metrics_generator_enabled: true
   metrics_generator:
     storage:
@@ -685,6 +685,8 @@ storage:
 # Global overrides
 global_overrides:
   per_tenant_override_config: /conf/overrides.yaml
+  max_traces_per_user: 0
+  max_search_bytes_per_trace: 0
 
 # Per tenants overrides
 overrides: |
