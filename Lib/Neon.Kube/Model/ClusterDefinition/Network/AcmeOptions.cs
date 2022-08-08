@@ -47,8 +47,8 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Implementation
 
-        private const string    defaultCertificateDuration      = "504h";
-        private const string    defaultCertificateRenewBefore   = "336h";
+        private const string    defaultCertificateDuration      = "2160h0m0s";
+        private const string    defaultCertificateRenewBefore   = "720h0m0s";
 
         /// <summary>
         /// Default constructor.
