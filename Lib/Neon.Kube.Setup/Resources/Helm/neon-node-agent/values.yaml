@@ -19,7 +19,7 @@ resources: {}
 
 resources:
   limits:
-    memory: 100Mi
+    memory: 160Mi
   requests:
     memory: 50Mi
 

@@ -203,7 +203,7 @@ namespace Neon.Kube
 
                 SystemReserved["memory"] =
                     new ResourceQuantity(
-                        (controlPlaneMemory * 0.10m) + evictionHard.ToDecimal(),
+                        (controlPlaneMemory * 0.05m) + evictionHard.ToDecimal(),
                         0,
                         ResourceQuantity.SuffixFormat.BinarySI)
                     .CanonicalizeString();
@@ -214,7 +214,7 @@ namespace Neon.Kube
             {
                 KubeReserved["memory"] =
                     new ResourceQuantity(
-                        controlPlaneMemory * 0.10m,
+                        controlPlaneMemory * 0.05m,
                         0,
                         ResourceQuantity.SuffixFormat.BinarySI)
                     .CanonicalizeString();
