@@ -1162,7 +1162,7 @@ namespace Neon.Kube
         /// will be set during installation to point to the program installation folder.
         /// </para>
         /// <para>
-        /// This folder will be structured like for a <b>neon-cli only</b> installation:
+        /// This folder will be structured like for a <b>neon-cli only</b>installation:
         /// </para>
         /// <code>
         /// C:\Program Files\neonFORGE\neon-cli\
@@ -2188,7 +2188,7 @@ exit 0
 
             // Fall back to the executable from our Git repo.
 
-            var repoFolder = Environment.GetEnvironmentVariable("NF_ROOT");
+            var repoFolder = Environment.GetEnvironmentVariable("NK_ROOT");
             var path2      = repoFolder != null ? Path.Combine(repoFolder, "External", "SSH", "ssh-keygen.exe") : null;
 
             if (path2 != null && File.Exists(path2))
@@ -2232,7 +2232,7 @@ exit 0
                     throw new NeonKubeException("Cannot generate SSH key:\r\n\r\n" + result.AllText);
                 }
 
-                var publicPUB = File.ReadAllText(Path.Combine(tempFolder.Path, "key.pub"));
+                var publicPUB      = File.ReadAllText(Path.Combine(tempFolder.Path, "key.pub"));
                 var privateOpenSSH = File.ReadAllText(Path.Combine(tempFolder.Path, "key"));
 
                 //-------------------------------------------------------------

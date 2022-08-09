@@ -4,7 +4,7 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<LangVersion>latest</LangVersion>
-		<Version>10000.0.2060-dev-marcus</Version>
+		<Version>10000.0.2130-dev-repo-split</Version>
 		<Company>neonFORGE LLC</Company>
 		<Product>neonKUBE</Product>
 		<Description>INTERNAL USE ONLY: neonKUBE Kubernetes custom resource definitions.</Description>
@@ -58,6 +58,7 @@
 	<ItemGroup>
 		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
 		<PackageReference Include="Macross.Json.Extensions" Version="2.2.0" />
+		<PackageReference Include="Neon.JsonConverters" Version="10000.0.2131-dev-jeff" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -70,7 +71,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Neon.JsonConverters\Neon.JsonConverters.csproj" />
 	  <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
 	</ItemGroup>
 

@@ -49,12 +49,6 @@ namespace Neon.Kube
         public static readonly string HelmWindowsUri = $"https://get.helm.sh/helm-v{KubeVersions.Helm}-windows-amd64.zip";
 
         /// <summary>
-        /// The URI for the public AWS S3 bucket where we persist cluster VM images 
-        /// and other things.
-        /// </summary>
-        public const string NeonPublicBucketUri = "https://neon-public.s3.us-west-2.amazonaws.com";
-
-        /// <summary>
         /// <para>
         /// The URI for the cluster manifest (<see cref="ClusterManifest"/>) JSON file for the current
         /// neonKUBE cluster version.
@@ -63,7 +57,7 @@ namespace Neon.Kube
         /// This does not include a trailing <b>"/"</b>.
         /// </note>
         /// </summary>
-        public const string NeonClusterManifestUri = NeonPublicBucketUri + "/cluster-manifests/neonkube-" + KubeVersions.NeonKube + ".json";
+        public const string NeonClusterManifestUri = NeonHelper.NeonPublicBucketUri + "/cluster-manifests/neonkube-" + KubeVersions.NeonKube + ".json";
 
         /// <summary>
         /// Returns the URI for the cluster manifest for a specific neonKUBE version.
@@ -74,7 +68,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(version));
 
-            return $"{NeonPublicBucketUri}/cluster-manifests/neonkube-{version}.json";
+            return $"{NeonHelper.NeonPublicBucketUri}/cluster-manifests/neonkube-{version}.json";
         }
 
         /// <summary>
@@ -128,22 +122,22 @@ namespace Neon.Kube
 
                     if (setupDebugMode)
                     {
-                        return $"{NeonPublicBucketUri}/vm-images/hyperv/base/{baseImageName}";
+                        return $"{NeonHelper.NeonPublicBucketUri}/vm-images/hyperv/base/{baseImageName}";
                     }
                     else
                     {
-                        return $"{NeonPublicBucketUri}/vm-images/hyperv/node/neonkube-{KubeVersions.NeonKube}.hyperv.amd64.vhdx.gz.manifest";
+                        return $"{NeonHelper.NeonPublicBucketUri}/vm-images/hyperv/node/neonkube-{KubeVersions.NeonKube}.hyperv.amd64.vhdx.gz.manifest";
                     }
 
                 case HostingEnvironment.XenServer:
 
                     if (setupDebugMode)
                     {
-                        return $"{NeonPublicBucketUri}/vm-images/xenserver/base/{baseImageName}";
+                        return $"{NeonHelper.NeonPublicBucketUri}/vm-images/xenserver/base/{baseImageName}";
                     }
                     else
                     {
-                        return $"{NeonPublicBucketUri}/vm-images/xenserver/node/neonkube-{KubeVersions.NeonKube}.xenserver.amd64.xva.gz.manifest";
+                        return $"{NeonHelper.NeonPublicBucketUri}/vm-images/xenserver/node/neonkube-{KubeVersions.NeonKube}.xenserver.amd64.xva.gz.manifest";
                     }
 
                 default:

@@ -29,11 +29,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
-		<ProjectReference Include="..\..\Lib\Neon.Deployment\Neon.Deployment.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<Folder Include="Properties\PublishProfiles\" />
 	</ItemGroup>
 

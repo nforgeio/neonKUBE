@@ -5,10 +5,10 @@ set DEBUG_ORG=ghcr.io/neonkube-dev
 set DEBUG_REPO=neon-cluster-operator
 set DEBUG_TAG=neonkube-%NEON_GITHUB_USER%
 
-cd %NF_ROOT%\Images\neon-cluster-operator
+cd %NK_ROOT%\Images\neon-cluster-operator
 pwsh -f publish.ps1 %DEBUG_TAG%
 
-cd %NF_ROOT%\Lib\Neon.Kube.Setup\Resources\Helm\neon-cluster-operator
+cd %NK_ROOT%\Lib\Neon.Kube.Setup\Resources\Helm\neon-cluster-operator
 neon delete clusterrole/neon-cluster-operator-role
 neon helm uninstall neon-cluster-operator --namespace neon-system
 neon helm install neon-cluster-operator --namespace neon-system -f values.yaml --set logLevel=%DEBUG_LOGLEVEL% --set image.pullPolicy=Always --set image.organization=%DEBUG_ORG% --set image.repository=%DEBUG_REPO% --set image.tag=%DEBUG_TAG% .

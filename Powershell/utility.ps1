@@ -616,8 +616,7 @@ function Logout-Docker
 #
 # ARGUMENTS:
 #
-#		image		- The fully qualified image path including the neonKUBE
-#				      version tag
+#		image		- The fully qualified image path including the version tag
 #
 #		baseTag		- Optionally specifies the original base image tag for
 #					  image (used for tagging setupm images for cluster setup

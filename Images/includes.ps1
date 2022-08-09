@@ -24,23 +24,35 @@
 
 # Import the global solution include file.
 
-. $env:NF_ROOT/Powershell/includes.ps1
+. $env:NK_ROOT/Powershell/includes.ps1
 
 #------------------------------------------------------------------------------
-# Important source code paths.
+# Important source repo paths.
 
-$NF_ROOT     = $env:NF_ROOT
-$nfImages   = "$NF_ROOT\Images"
-$nfLib      = "$NF_ROOT\Lib"
-$nfServices = "$NF_ROOT\Services"
-$nfTools    = "$NF_ROOT\Tools"
+$nfRoot     = $env:NF_ROOT
+$nfImages   = "$nfRoot\Images"
+$nfLib      = "$nfRoot\Lib"
+$nfServices = "$nfRoot\Services"
+$nfTools    = "$nfRoot\Tools"
+
+$nkRoot     = $env:NK_ROOT
+$nkImages   = "$nkRoot\Images"
+$nkLib      = "$nkRoot\Lib"
+$nkServices = "$nkRoot\Services"
+$nkTools    = "$nkRoot\Tools"
+
+$ncRoot     = $env:NC_ROOT
+$ncImages   = "$ncRoot\Images"
+$ncLib      = "$ncRoot\Lib"
+$ncServices = "$ncRoot\Services"
+$ncTools    = "$ncRoot\Tools"
 
 #------------------------------------------------------------------------------
 # Global constants.
 
 # neonKUBE release Version.
 
-$neonKUBE_Version = $(& "$NF_ROOT\ToolBin\neon-build" read-version "$nfLib\Neon.Kube\KubeVersions.cs" NeonKube)
+$neonKUBE_Version = $(& "neon-build" read-version "$nkLib\Neon.Kube\KubeVersions.cs" NeonKube)
 ThrowOnExitCode
 
 $neonKUBE_Tag = "neonkube-" + $neonKUBE_Version
@@ -86,7 +98,7 @@ function UtcDate
 
 function ImageTag
 {
-	$branch = GitBranch $env:NF_ROOT
+	$branch = GitBranch $env:NK_ROOT
 	$date   = UtcDate
 	$commit = git log -1 --pretty=%h
 	$tag    = "$branch-$date-$commit"
@@ -111,7 +123,7 @@ function ImageTag
 
 function IsRelease
 {
-    $branch = GitBranch $env:NF_ROOT
+    $branch = GitBranch $env:NK_ROOT
 
 	return ($branch -like "release-*")
 }
@@ -126,7 +138,7 @@ function IsRelease
 
 function TagAsLatest
 {
-	$branch = GitBranch $env:NF_ROOT
+	$branch = GitBranch $env:NK_ROOT
 
 	return ($branch -like "release-*") -or ($branch -eq "master")
 }
@@ -137,9 +149,9 @@ function TagAsLatest
 # name starts with "release-" the image will be pushed to "ghcr.io/neonrelease/"
 # otherwise it will be pushed to "ghcr.io/neonrelease-dev/".
 
-function GetLibraryRegistry($image)
+function GetSdkRegistry($image)
 {
-	$org = LibraryRegistryOrg
+	$org = SdkRegistryOrg
 	
 	return "$org/$image"
 }
@@ -147,7 +159,7 @@ function GetLibraryRegistry($image)
 #------------------------------------------------------------------------------
 # Returns the neonLIBRARY registry organization corresponding to the current git branch.
 
-function LibraryRegistryOrg
+function SdkRegistryOrg
 {
 	if (IsRelease)
 	{

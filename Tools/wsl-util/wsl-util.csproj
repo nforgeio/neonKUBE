@@ -23,11 +23,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
-		<ProjectReference Include="..\..\Lib\Neon.WSL\Neon.WSL.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<Folder Include="Properties\PublishProfiles\" />
 	</ItemGroup>
 

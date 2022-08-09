@@ -5,7 +5,7 @@
 		<OutputType>Library</OutputType>
 		<RootNamespace>Neon.Kube</RootNamespace>
 		<Authors>neonFORGE Team</Authors>
-		<Version>10000.0.2060-dev-marcus</Version>
+		<Version>10000.0.2130-dev-repo-split</Version>
 		<Company>neonFORGE LLC</Company>
 		<Product>neonKUBE</Product>
 		<Description>INTERNAL USE ONLY: neonKUBE hosting manager for AWS</Description>
@@ -51,7 +51,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
 		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
 	</ItemGroup>
 

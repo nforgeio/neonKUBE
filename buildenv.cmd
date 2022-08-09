@@ -12,123 +12,88 @@ echo ===========================================
 echo * neonKUBE Build Environment Configurator *
 echo ===========================================
 
-REM Default NF_ROOT to the folder holding this batch file after stripping
+REM Default NK_ROOT to the folder holding this batch file after stripping
 REM off the trailing backslash.
 
-set NF_ROOT=%~dp0 
-set NF_ROOT=%NF_ROOT:~0,-2%
+set NK_ROOT=%~dp0 
+set NK_ROOT=%NK_ROOT:~0,-2%
 
-if not [%1]==[] set NF_ROOT=%1
+if not [%1]==[] set NK_ROOT=%1
 
-if exist %NF_ROOT%\neonKUBE.sln goto goodPath
-echo The [%NF_ROOT%\neonKUBE.sln] file does not exist.  Please pass the path
+if exist %NK_ROOT%\neonKUBE.sln goto goodPath
+echo The [%NK_ROOT%\neonKUBE.sln] file does not exist.  Please pass the path
 echo to the neonKUBE solution folder.
 goto done
 
 :goodPath 
 
-REM Set NF_REPOS to the parent directory holding the neonFORGE repositories.
+REM Set NK_REPOS to the parent directory holding the neonFORGE repositories.
 
-pushd "%NF_ROOT%\.."
-set NF_REPOS=%cd%
+pushd "%NK_ROOT%\.."
+set NK_REPOS=%cd%
 popd 
-
-REM Some scripts need to know the developer's GitHub username:
-
-echo.
-set /p NEON_GITHUB_USER="Enter your GitHub username: "
-
-echo.
-echo Configuring...
-echo.
 
 REM Configure the environment variables.
 
-set NF_TOOLBIN=%NF_ROOT%\ToolBin
-set NF_BUILD=%NF_ROOT%\Build
-set NF_CACHE=%NF_ROOT%\Build-cache
-set NF_SNIPPETS=%NF_ROOT%\Snippets
-set NF_TEST=%NF_ROOT%\Test
-set NF_TEMP=C:\Temp
-set NF_ACTIONS_ROOT=%NC_REPOS%\neonCLOUD\Automation\actions
-set NF_CODEDOC=%NF_ROOT%\..\nforgeio.github.io
-set NF_SAMPLES_CADENCE=%NF_ROOT%\..\cadence-samples
-set DOTNETPATH=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319
-set MSBUILDPATH=C:\Program Files\Microsoft Visual Studio\2022\Community\Msbuild\Current\Bin\MSBuild.exe
+set NK_TOOLBIN=%NK_ROOT%\ToolBin
+set NK_BUILD=%NK_ROOT%\Build
+set NK_CACHE=%NK_ROOT%\Build-cache
+set NK_SNIPPETS=%NK_ROOT%\Snippets
+set NK_TEST=%NK_ROOT%\Test
+set NK_TEMP=C:\Temp
+set NK_ACTIONS_ROOT=%NC_REPOS%\neonCLOUD\Automation\actions
 set NEON_CLUSTER_TESTING=1
 
 REM Persist the environment variables.
 
-setx NEON_GITHUB_USER "%NEON_GITHUB_USER%" /M                 > nul
-setx NF_REPOS "%NF_REPOS%" /M                                 > nul
-setx NF_ROOT "%NF_ROOT%" /M                                   > nul
-setx NF_TOOLBIN "%NF_TOOLBIN%" /M                             > nul
-setx NF_BUILD "%NF_BUILD%" /M                                 > nul
-setx NF_CACHE "%NF_CACHE%" /M                                 > nul
-setx NF_SNIPPETS "%NF_SNIPPETS%" /M                           > nul
-setx NF_TEST "%NF_TEST%" /M                                   > nul
-setx NF_TEMP "%NF_TEMP%" /M                                   > nul
-setx NF_ACTIONS_ROOT "%NF_ACTIONS_ROOT%" /M                   > nul
-setx NF_CODEDOC "%NF_CODEDOC%" /M                             > nul
-setx NF_SAMPLES_CADENCE "%NF_SAMPLES_CADENCE%" /M             > nul
-setx NEON_CLUSTER_TESTING "%NEON_CLUSTER_TESTING%" /M         > nul
+setx NK_REPOS "%NK_REPOS%" /M                          > nul
+setx NK_ROOT "%NK_ROOT%" /M                           > nul
+setx NK_TOOLBIN "%NK_TOOLBIN%" /M                     > nul
+setx NK_BUILD "%NK_BUILD%" /M                         > nul
+setx NK_CACHE "%NK_CACHE%" /M                         > nul
+setx NK_SNIPPETS "%NK_SNIPPETS%" /M                   > nul
+setx NK_TEST "%NK_TEST%" /M                           > nul
+setx NK_TEMP "%NK_TEMP%" /M                           > nul
+setx NK_ACTIONS_ROOT "%NK_ACTIONS_ROOT%" /M           > nul
+setx NEON_CLUSTER_TESTING "%NEON_CLUSTER_TESTING%" /M > nul
 
-setx DOTNETPATH "%DOTNETPATH%" /M                             > nul
-setx MSBUILDPATH "%MSBUILDPATH%" /M                           > nul
-setx DOTNET_CLI_TELEMETRY_OPTOUT 1 /M                         > nul
-setx DEV_WORKSTATION 1 /M                                     > nul
-setx OPENSSL_CONF "%NF_ROOT%\External\OpenSSL\openssl.cnf" /M > nul
+setx DOTNET_CLI_TELEMETRY_OPTOUT 1 /M                 > nul
 
 REM Make sure required folders exist.
 
-if not exist "%NF_TEMP%" mkdir "%NF_TEMP%"
-if not exist "%NF_TOOLBIN%" mkdir "%NF_TOOLBIN%"
-if not exist "%NF_BUILD%" mkdir "%NF_BUILD%"
-if not exist "%NF_BUILD%\neon" mkdir "%NF_BUILD%\neon"
+if not exist "%NK_TEMP%" mkdir "%NK_TEMP%"
+if not exist "%NK_TOOLBIN%" mkdir "%NK_TOOLBIN%"
+if not exist "%NK_BUILD%" mkdir "%NK_BUILD%"
+if not exist "%NK_BUILD%\neon" mkdir "%NK_BUILD%\neon"
 
 REM Configure the PATH.
-REM
-REM Note that some tools like PuTTY and 7-Zip may be installed as
-REM x86 or x64 to different directories.  We'll include commands that
-REM attempt to add both locations to the path and [pathtool] is
-REM smart enough to only add directories that actually exist.
 
-%NF_TOOLBIN%\pathtool -dedup -system -add "%NF_BUILD%"
-%NF_TOOLBIN%\pathtool -dedup -system -add "%NF_BUILD%\neon"
-%NF_TOOLBIN%\pathtool -dedup -system -add "%NF_TOOLBIN%"
-%NF_TOOLBIN%\pathtool -dedup -system -add "%NF_ROOT%\External\OpenSSL"
-%NF_TOOLBIN%\pathtool -dedup -system -add "%DOTNETPATH%"
-%NF_TOOLBIN%\pathtool -dedup -system -add "C:\cygwin64\bin"
-%NF_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles%\7-Zip"
-%NF_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles(x86)%\7-Zip"
-%NF_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles%\PuTTY"
-%NF_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles(x86)%\PuTTY"
-%NF_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles%\WinSCP"
-%NF_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles(x86)%\WinSCP"
-%NF_TOOLBIN%\pathtool -dedup -system -add "C:\Go"
-%NF_TOOLBIN%\pathtool -dedup -system -add "C:\Program Files (x86)\HTML Help Workshop"
+pathtool -dedup -system -add "%NK_BUILD%"
+pathtool -dedup -system -add "%NK_BUILD%\neon"
+pathtool -dedup -system -add "%NK_TOOLBIN%"
+pathtool -dedup -system -add "%NK_ROOT%\External\OpenSSL"
 
 REM Configure the neonKUBE program folder and add it to the PATH.
 
 if not exist "%ProgramFiles%\neonKUBE" mkdir "%ProgramFiles%\neonKUBE"
-%NF_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles%\neonKUBE"
+pathtool -dedup -system -add "%ProgramFiles%\neonKUBE"
 
 REM Remove obsolete paths if they exist.
 
-%NF_TOOLBIN%\pathtool --dedup -del "%NF_TOOLBIN%\OpenSSL"
+pathtool --dedup -del "%NK_TOOLBIN%\OpenSSL"
 
 REM Configure the neonKUBE kubeconfig path (as a USER environment variable).
 
 set KUBECONFIG=%USERPROFILE%\.kube\admin.conf
 reg add HKCU\Environment /v KUBECONFIG /t REG_EXPAND_SZ /d %USERPROFILE%\.kube\config /f > /nul
 
-REM Install the KubeOps project templates: https://buehler.github.io/dotnet-operator-sdk/docs/templates.html
+REM Install the KubeOps project templates: https://buehler.github.io/dotnet-operator-sdk/docs/templates.htmlK
 
 dotnet new --install KubeOps.Templates::* > /nul
 
 REM Perform additional implementation in via Powershell.
 
-pwsh -File "%NF_ROOT%\buildenv.ps1"
+pwsh -f "%NK_ROOT%\buildenv.ps1"
 
 :done
 echo.

@@ -26,18 +26,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
-		<ProjectReference Include="..\..\Lib\Neon.ModelGen\Neon.ModelGen.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<Folder Include="Properties\" />
 		<Folder Include="Properties\PublishProfiles\" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<!-- Include the PDB in the nuget so stack traces can include line numbers -->
-		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true"/>
+		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
 	</ItemGroup>
 
 </Project>

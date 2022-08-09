@@ -5,7 +5,7 @@
 		<OutputType>Library</OutputType>
 		<RootNamespace>Neon.Kube</RootNamespace>
 		<Authors>neonFORGE Team</Authors>
-		<Version>10000.0.2060-dev-marcus</Version>
+		<Version>10000.0.2130-dev-repo-split</Version>
 		<Company>neonFORGE LLC</Company>
 		<Product>neonKUBE</Product>
 		<Description>INTERNAL USE ONLY: Common library used by neonKUBE related projects.</Description>
@@ -81,8 +81,14 @@
 		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
     <PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />
-    <PackageReference Include="Microsoft.OpenApi" Version="1.2.3" />
+    <PackageReference Include="Microsoft.OpenApi" Version="1.3.2" />
 		<PackageReference Include="Microsoft.Windows.Compatibility" Version="6.0.0" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2131-dev-jeff" />
+		<PackageReference Include="Neon.Cryptography" Version="10000.0.2131-dev-jeff" />
+		<PackageReference Include="Neon.Deployment" Version="10000.0.2131-dev-jeff" />
+		<PackageReference Include="Neon.JsonConverters" Version="10000.0.2131-dev-jeff" />
+		<PackageReference Include="Neon.Postgres" Version="10000.0.2131-dev-jeff" />
+		<PackageReference Include="Neon.SSH" Version="10000.0.2131-dev-jeff" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 		<PackageReference Include="Npgsql" Version="6.0.2" />
 		<PackageReference Include="prometheus-net" Version="6.0.0" />
@@ -100,14 +106,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
-		<ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
-		<ProjectReference Include="..\Neon.Deployment\Neon.Deployment.csproj" />
-		<ProjectReference Include="..\Neon.JsonConverters\Neon.JsonConverters.csproj" />
 		<ProjectReference Include="..\Neon.Kube.Models\Neon.Kube.Models.csproj" />
 		<ProjectReference Include="..\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
-		<ProjectReference Include="..\Neon.Postgres\Neon.Postgres.csproj" />
-		<ProjectReference Include="..\Neon.SSH\Neon.SSH.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -127,8 +127,8 @@
     Generates the [KubernetesWithRetry.cs] file.
     -->
 
-	<Target Name="K8sWithRetry" BeforeTargets="BeforeBuild" Condition="Exists('$(NF_ROOT)\Tools\prebuilder\bin\$(Configuration)\net6.0\prebuilder.exe')">
-		<Exec Command="$(NF_ROOT)\Tools\prebuilder\bin\$(Configuration)\net6.0\prebuilder generate-kubernetes-with-retry &quot;$(ProjectDir)Kubernetes\KubernetesWithRetry.cs&quot; Neon.Kube" />
+	<Target Name="K8sWithRetry" BeforeTargets="BeforeBuild" Condition="Exists('$(NK_ROOT)\Tools\prebuilder\bin\$(Configuration)\net6.0\prebuilder.exe')">
+		<Exec Command="$(NK_ROOT)\Tools\prebuilder\bin\$(Configuration)\net6.0\prebuilder generate-kubernetes-with-retry &quot;$(ProjectDir)Kubernetes\KubernetesWithRetry.cs&quot; Neon.Kube" />
 	</Target>
 
 </Project>
