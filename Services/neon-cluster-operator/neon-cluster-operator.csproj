@@ -41,8 +41,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2123-dev-jeff" />
-		<PackageReference Include="Neon.Service" Version="10000.0.2123-dev-jeff" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2131-dev-jeff" />
+		<PackageReference Include="Neon.Service" Version="10000.0.2131-dev-jeff" />
 	</ItemGroup>
 
 	<ItemGroup>

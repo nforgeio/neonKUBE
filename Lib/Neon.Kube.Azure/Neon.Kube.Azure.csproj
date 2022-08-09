@@ -4,7 +4,7 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<LangVersion>latest</LangVersion>
-		<Version>2.18.2</Version>
+		<Version>10000.0.2130-dev-repo-split</Version>
 		<Authors>neonFORGE Team</Authors>
 		<Company>neonFORGE LLC</Company>
 		<Product>neonKUBE</Product>

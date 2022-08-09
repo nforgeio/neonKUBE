@@ -5,7 +5,7 @@
 		<OutputType>Library</OutputType>
 		<RootNamespace>Neon.Kube</RootNamespace>
 		<Authors>neonFORGE Team</Authors>
-		<Version>2.18.2</Version>
+		<Version>10000.0.2130-dev-repo-split</Version>
 		<Company>neonFORGE LLC</Company>
 		<Product>neonKUBE</Product>
 		<Description>INTERNAL USE ONLY: Core library used by neonKUBE related tooling.</Description>
@@ -175,9 +175,9 @@
 
 	<ItemGroup>
 		<PackageReference Include="Minio" Version="3.1.13" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2123-dev-jeff" />
-		<PackageReference Include="Neon.Cryptography" Version="10000.0.2123-dev-jeff" />
-		<PackageReference Include="Neon.Postgres" Version="10000.0.2123-dev-jeff" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2131-dev-jeff" />
+		<PackageReference Include="Neon.Cryptography" Version="10000.0.2131-dev-jeff" />
+		<PackageReference Include="Neon.Postgres" Version="10000.0.2131-dev-jeff" />
 		<PackageReference Include="Samboy063.Tomlet" Version="3.1.2" />
 		<PackageReference Include="Tomlyn" Version="0.3.1" />
 		<PackageReference Include="Npgsql" Version="6.0.2" />
