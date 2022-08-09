@@ -27,13 +27,25 @@
 . $env:NK_ROOT/Powershell/includes.ps1
 
 #------------------------------------------------------------------------------
-# Important source code paths.
+# Important source repo paths.
 
-$NK_ROOT     = $env:NK_ROOT
-$nkImages   = "$NK_ROOT\Images"
-$nkLib      = "$NK_ROOT\Lib"
-$nkServices = "$NK_ROOT\Services"
-$nkTools    = "$NK_ROOT\Tools"
+$nfRoot     = $env:NF_ROOT
+$nfImages   = "$nfRoot\Images"
+$nfLib      = "$nfRoot\Lib"
+$nfServices = "$nfRoot\Services"
+$nfTools    = "$nfRoot\Tools"
+
+$nkRoot     = $env:NK_ROOT
+$nkImages   = "$nkRoot\Images"
+$nkLib      = "$nkRoot\Lib"
+$nkServices = "$nkRoot\Services"
+$nkTools    = "$nkRoot\Tools"
+
+$ncRoot     = $env:NC_ROOT
+$ncImages   = "$ncRoot\Images"
+$ncLib      = "$ncRoot\Lib"
+$ncServices = "$ncRoot\Services"
+$ncTools    = "$ncRoot\Tools"
 
 #------------------------------------------------------------------------------
 # Global constants.

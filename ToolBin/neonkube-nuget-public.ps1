@@ -62,7 +62,7 @@ function SetVersion
     )
 
     "$project"
-	neon-build pack-version NeonLibraryVersion "$env:NK_ROOT\Lib\$project\$project.csproj"
+	neon-build pack-version "$env:NK_ROOT\Lib\Neon.Kube\KubeVersions.cs" NeonKube "$env:NK_ROOT\Lib\$project\$project.csproj"
     ThrowOnExitCode
 }
 
