@@ -4,7 +4,7 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<LangVersion>latest</LangVersion>
-		<Version>10000.0.2060-dev-marcus</Version>
+		<Version>2.18.2</Version>
 		<Authors>neonFORGE Team</Authors>
 		<Company>neonFORGE LLC</Company>
 		<Product>neonKUBE</Product>
@@ -66,6 +66,10 @@
 		<!-- Include the PDB in the nuget so stack traces can include line numbers -->
 
 		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Neon.Common" Version="10000.0.2123-dev-jeff" />
 	</ItemGroup>
 
 </Project>

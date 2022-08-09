@@ -79,7 +79,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Returns the fully qualified source image name from one of the 
-        /// <see cref="NeonHelper.NeonLibraryProdRegistry"/> or <see cref="NeonHelper.NeonLibraryDevRegistry"/>
+        /// <see cref="NeonHelper.NeonSdkProdRegistry"/> or <see cref="NeonHelper.NeonSdkDevRegistry"/>
         /// container registries and will be tagged with the cluster version.
         /// </summary>
         public string SourceImage { get; private set; }
