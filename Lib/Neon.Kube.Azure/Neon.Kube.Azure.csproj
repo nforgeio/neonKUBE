@@ -4,7 +4,7 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<LangVersion>latest</LangVersion>
-		<Version>10000.0.2060-dev-marcus</Version>
+		<Version>10000.0.2130-dev-repo-split</Version>
 		<Authors>neonFORGE Team</Authors>
 		<Company>neonFORGE LLC</Company>
 		<Product>neonKUBE</Product>
@@ -50,7 +50,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
 		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
 	</ItemGroup>
 

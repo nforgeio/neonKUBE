@@ -286,11 +286,11 @@ ARGUMENTS:
 
             try
             {
-                Program.NeonKubeRepoPath = Environment.GetEnvironmentVariable("NF_ROOT");
+                Program.NeonKubeRepoPath = Environment.GetEnvironmentVariable("NK_ROOT");
 
                 if (string.IsNullOrEmpty(Program.NeonKubeRepoPath) || !Directory.Exists(Program.NeonKubeRepoPath))
                 {
-                    Console.Error.WriteLine("*** ERROR: NF_ROOT environment variable does not reference the local neonKUBE repostory.");
+                    Console.Error.WriteLine("*** ERROR: NK_ROOT environment variable does not reference the local neonKUBE repostory.");
                     Program.Exit(1);
                 }
 

@@ -5,7 +5,7 @@
 		<OutputType>Library</OutputType>
 		<Configurations>Debug;Release;CodeDoc</Configurations>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-		<Version>10000.0.2060-dev-marcus</Version>
+		<Version>10000.0.2130-dev-repo-split</Version>
 		<Authors>neonFORGE Team</Authors>
 		<Company>neonFORGE LLC</Company>
 		<Product>neonKUBE</Product>
@@ -51,13 +51,13 @@
 		<PackageReference Include="JsonPatch.Net" Version="1.1.2" />
 		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
 		<PackageReference Include="KubernetesClient" Version="7.2.19" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2131-dev-jeff" />
+		<PackageReference Include="Neon.Service" Version="10000.0.2131-dev-jeff" />
 		<PackageReference Include="prometheus-net" Version="6.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
 		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
-		<ProjectReference Include="..\Neon.Service\Neon.Service.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

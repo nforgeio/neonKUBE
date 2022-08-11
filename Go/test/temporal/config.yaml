@@ -1,4 +1,0 @@
-# config for sample
-namespace: "test-namespace"
-service: "temporal-frontend"
-hostport: "127.0.0.1:7233

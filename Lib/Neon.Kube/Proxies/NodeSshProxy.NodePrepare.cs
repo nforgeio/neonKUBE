@@ -727,10 +727,10 @@ net.ipv4.conf.default.log_martians = 1
 net.ipv4.tcp_rfc1337 = 1
 
 # set max number of connections
-net.netfilter.nf_conntrack_max=1000000
-net.nf_conntrack_max=1000000
-net.netfilter.nf_conntrack_expect_max=1000
-net.netfilter.nf_conntrack_buckets=250000
+net.netfilter.NK_conntrack_max=1000000
+net.NK_conntrack_max=1000000
+net.netfilter.NK_conntrack_expect_max=1000
+net.netfilter.NK_conntrack_buckets=250000
 
 # Randomize addresses of mmap base, heap, stack and VDSO page
 kernel.randomize_va_space = 2
@@ -756,10 +756,10 @@ EOF
 # default.  We're going to explicitly set the limit to 1 million connections.
 # This will consume about 8MiB of RAM (so not too bad).
 
-# cat <<EOF > /etc/modprobe.d/nf_conntrack.conf
+# cat <<EOF > /etc/modprobe.d/NK_conntrack.conf
 # Explicitly set the maximum number of TCP connections that iptables can track.
 # Note that this number is multiplied by 8 to obtain the connection count.
-# options nf_conntrack hashsize = 393216
+# options NK_conntrack hashsize = 393216
 # EOF
 
 cat > /etc/modules <<EOF
@@ -767,7 +767,7 @@ ip_vs
 ip_vs_rr
 ip_vs_wrr
 ip_vs_sh
-nf_conntrack
+NK_conntrack
 EOF
 
 #------------------------------------------------------------------------------
@@ -1613,7 +1613,7 @@ chmod 664 /etc/neonkube/pinned-images
 # Replace the CRI-O binary with our custom one.
 
 systemctl stop crio
-curl {KubeHelper.CurlOptions} {KubeDownloads.NeonPublicBucketUri}/cri-o/crio.{KubeVersions.Crio}.gz | gunzip --stdout > /usr/bin/crio
+curl {KubeHelper.CurlOptions} {NeonHelper.NeonPublicBucketUri}/cri-o/crio.{KubeVersions.Crio}.gz | gunzip --stdout > /usr/bin/crio
 systemctl start crio
 ";
                 var bundle         = CommandBundle.FromScript(crioUpdateScript);

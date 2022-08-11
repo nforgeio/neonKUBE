@@ -149,13 +149,13 @@ namespace Neon.Kube.Xunit
         {
             get
             {
-                // We're going to run the command from the NF_BUILD directory.
+                // We're going to run the command from the NK_BUILD directory.
 
-                var buildFolder = Environment.GetEnvironmentVariable("NF_BUILD");
+                var buildFolder = Environment.GetEnvironmentVariable("NK_BUILD");
 
                 if (string.IsNullOrEmpty(buildFolder))
                 {
-                    throw new Exception("The NF_BUILD environment variable is not defined.");
+                    throw new Exception("The NK_BUILD environment variable is not defined.");
                 }
 
                 if (NeonHelper.IsWindows)

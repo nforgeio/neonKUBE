@@ -6,7 +6,7 @@
 #
 # Builds the Neon [neon-cluster-operator] image.
 #
-# USAGE: pwsh -file build.ps1 REGISTRY VERSION TAG
+# USAGE: pwsh -f build.ps1 REGISTRY VERSION TAG
 
 param 
 (
@@ -31,7 +31,7 @@ DeleteFolder bin
 mkdir bin
 ThrowOnExitCode
 
-dotnet publish "$nfServices\$appname\$appname.csproj" -c Release -o "$pwd\bin"
+dotnet publish "$nkServices\$appname\$appname.csproj" -c Release -o "$pwd\bin"
 ThrowOnExitCode
 
 # Split the build binaries into [__app] (application) and [__dep] dependency subfolders

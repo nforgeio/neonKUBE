@@ -1,11 +1,19 @@
-﻿# Neon: Open Source Libraries and Kubernetes Distribution
+﻿# neonKUBE: An open source Kubernetes distribution
 
-Neon/neonKUBE is an open source project released under the MIT license.  This project includes several class general purpose libraries published as nuget packages (known as the Neon libraries) as well as a nacent Kubernetes distribution called neonKUBE which is still very much a work in progress.
+---
 
-The central theme behind these projects is to fill in some gaps developers encounter when developing scalable services intended to be hosted on public cloud providers such as AWS, Azure, and Google Cloud, or hosted within in private datacenters.  Here's a link to the documentation:
+**neonSDK:** A new home for general purpose libraries.
 
-&nbsp;&nbsp;&nbsp;&nbsp;[https://doc.neonkube.com/](https://doc.neonkube.com/)
+We're expecting neonKUBE to be ready for a public preview in Sept/Oct 2022 and one of our TODOs has 
+been to relocate the general purpose Neon libraries to their own GitHub repo since these will be versioned
+independently from neonKUBE.  We finally relocated the non **Neon.Kube.*** libraries to:
 
-### Neon Developers
+https://github.com/nforgeio/neonSDK
+
+---
+
+neonKUBE is an open source project released under the MIT license.
+
+### Maintainers:
 
 See [DEVELOPER.md](Doc/DEVELOPER.md) for setup instructions.

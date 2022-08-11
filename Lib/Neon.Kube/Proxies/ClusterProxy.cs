@@ -620,7 +620,8 @@ namespace Neon.Kube
                     namespaceParameter: minioPod.Namespace(),
                     name:               minioPod.Name(),
                     container:          "minio-operator",
-                    command:            command);
+                    command:            command,
+                    cancellationToken:  cancellationToken);
             }
             else
             {
@@ -629,7 +630,8 @@ namespace Neon.Kube
                     name:               minioPod.Name(),
                     container:          "minio-operator",
                     command:            command,
-                    noSuccessCheck:     noSuccessCheck);
+                    noSuccessCheck:     noSuccessCheck,
+                    cancellationToken:  cancellationToken);
             }
         }
 

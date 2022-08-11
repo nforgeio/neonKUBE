@@ -1,4 +1,0 @@
-# config for sample
-domain: "test-domain"
-service: "cadence-frontend"
-host: "127.0.0.1:7933"

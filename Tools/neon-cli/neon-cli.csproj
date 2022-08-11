@@ -71,6 +71,9 @@
 		<PackageReference Include="KubernetesClient" Version="7.2.19" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
 		<PackageReference Include="Microsoft.Windows.Compatibility" Version="6.0.0" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2131-dev-jeff" />
+		<PackageReference Include="Neon.Deployment" Version="10000.0.2131-dev-jeff" />
+		<PackageReference Include="Neon.WinTTY" Version="10000.0.2131-dev-jeff" />
 		<PackageReference Include="System.Diagnostics.StackTrace" Version="4.3.0" />
 		<PackageReference Include="System.Runtime" Version="4.3.1" />
 		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
@@ -80,8 +83,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
-		<ProjectReference Include="..\..\Lib\Neon.Deployment\Neon.Deployment.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Aws\Neon.Kube.Aws.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Azure\Neon.Kube.Azure.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.BareMetal\Neon.Kube.BareMetal.csproj" />
@@ -93,7 +94,6 @@
 		<ProjectReference Include="..\..\Lib\Neon.Kube.XenServer\Neon.Kube.XenServer.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Xunit\Neon.Kube.Xunit.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
-		<ProjectReference Include="..\..\Lib\Neon.WinTTY\Neon.WinTTY.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -122,7 +122,7 @@
 
 	<Target Name="PubCore" AfterTargets="AfterBuild" Condition="true">
 		<Message Importance="high" Text="Publish: $(ProjectPath)" />
-		<Exec Command="pubcore --no-cmd &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; $(ConfigurationName) &quot;$(NF_BUILD)\neon&quot; win10-x64" />
+		<Exec Command="pubcore --no-cmd &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; $(ConfigurationName) &quot;$(NK_BUILD)\neon&quot; win10-x64" />
 	</Target>
 
 </Project>

@@ -20,7 +20,7 @@
 #
 # NOTE: You must be already logged into the target container registry.
 #
-# USAGE: pwsh -file ./publish-all.ps1 [-all]
+# USAGE: pwsh -f publish-all.ps1 [-all]
 
 param 
 (
@@ -36,7 +36,7 @@ param
 
 #----------------------------------------------------------
 # Global includes
-$image_root = [System.IO.Path]::Combine($env:NF_ROOT, "Images")
+$image_root = [System.IO.Path]::Combine($env:NK_ROOT, "Images")
 . $image_root/includes.ps1
 #----------------------------------------------------------
 
@@ -143,12 +143,10 @@ try
     if ($services)
     {
         Publish "$image_root\neon-acme"
-        Publish "$image_root\neon-blazor-proxy"
         Publish "$image_root\neon-cluster-operator"
         Publish "$image_root\neon-dashboard"
         Publish "$image_root\neon-node-agent"
         Publish "$image_root\neon-sso-session-proxy"
-        Publish "$image_root\test-api"
     }
 
     # Purge any local Docker images as well as the image build cache.

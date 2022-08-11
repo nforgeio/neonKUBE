@@ -4,7 +4,7 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<LangVersion>latest</LangVersion>
-		<Version>10000.0.2060-dev-marcus</Version>
+		<Version>10000.0.2130-dev-repo-split</Version>
 		<Company>neonFORGE LLC</Company>
 		<Product>neonKUBE</Product>
 		<Description>INTERNAL USE ONLY: neonKUBE hosting manager for Google Cloud.</Description>
@@ -38,7 +38,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
 		<ProjectReference Include="..\Neon.Kube.GrpcProto\Neon.Kube.GrpcProto.csproj" />
 		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
 	</ItemGroup>
@@ -50,6 +49,10 @@
 		<!-- Include the PDB in the nuget so stack traces can include line numbers -->
 
 		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Neon.Common" Version="10000.0.2131-dev-jeff" />
 	</ItemGroup>
 
 </Project>
