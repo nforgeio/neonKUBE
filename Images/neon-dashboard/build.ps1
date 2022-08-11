@@ -17,13 +17,6 @@ param
 $appname      = "neon-dashboard"
 $organization = KubeSetupRegistryOrg
 
-# Copy the common scripts.
-
-DeleteFolder _common
-
-mkdir _common
-copy ..\_common\*.* .\_common
-
 # Build and publish the app to a local [bin] folder.
 
 DeleteFolder bin
@@ -47,4 +40,4 @@ $result = Invoke-CaptureStreams "docker build -t ${registry}:${tag} --build-arg 
 # Clean up
 
 DeleteFolder bin
-DeleteFolder _common
+
