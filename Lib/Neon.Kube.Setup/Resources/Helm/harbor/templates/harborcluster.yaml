@@ -78,7 +78,7 @@ spec:
         bucket: harbor
         encrypt: false
         region: neon
-        regionendpoint: http://minio.neon-system
+        regionendpoint: http://minio-neon.neon-system
         secretkeyRef: {{ .Values.storage.s3.secretKeyRef }}
         secure: false
         skipverify: true

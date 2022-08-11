@@ -7,10 +7,30 @@ spec:
   hosts:
     - {{ template "mimir.fullname" . }}
   http:
+    - name: prometheus-health-check
+      route:
+        - destination:
+            host: {{ include "mimir.queryFrontendFullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+            port:
+              number: 8080
+      match:
+        - uri:
+            exact: /prometheus/-/healthy
+      redirect:
+        uri: /ready
+    - name: mimir-health-check
+      route:
+        - destination:
+            host: {{ template "mimir.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+            port:
+              number: 80
+      match:
+        - uri:
+            exact: /ready
     - name: {{ include "mimir.distributorFullname" . }}
       route:
         - destination:
-            host: {{ include "mimir.distributorFullname" . }}
+            host: {{ include "mimir.distributorFullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
             port:
               number: 8080
       match:
@@ -21,7 +41,7 @@ spec:
     - name: {{ include "mimir.ingesterFullname" . }}
       route:
         - destination:
-            host: {{ include "mimir.ingesterFullname" . }}
+            host: {{ include "mimir.ingesterFullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
             port:
               number: 8080
       match:
@@ -30,7 +50,7 @@ spec:
     - name: {{ include "mimir.alertmanagerFullname" . }}
       route:
         - destination:
-            host: {{ include "mimir.alertmanagerFullname" . }}
+            host: {{ include "mimir.alertmanagerFullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
             port:
               number: 8080
       match:
@@ -43,7 +63,7 @@ spec:
     - name: {{ include "mimir.rulerFullname" . }}
       route:
         - destination:
-            host: {{ include "mimir.rulerFullname" . }}
+            host: {{ include "mimir.rulerFullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
             port:
               number: 8080
       match:
@@ -62,7 +82,7 @@ spec:
     - name: {{ include "mimir.compactorFullname" . }}
       route:
         - destination:
-            host: {{ include "mimir.compactorFullname" . }}
+            host: {{ include "mimir.compactorFullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
             port:
               number: 8080
       match:
@@ -73,7 +93,7 @@ spec:
     - name: {{ include "mimir.storeGatewayFullname" . }}
       route:
         - destination:
-            host: {{ include "mimir.storeGatewayFullname" . }}
+            host: {{ include "mimir.storeGatewayFullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
             port:
               number: 8080
       match:
@@ -82,9 +102,11 @@ spec:
     - name: {{ include "mimir.queryFrontendFullname" . }}
       route:
         - destination:
-            host: {{ include "mimir.queryFrontendFullname" . }}
+            host: {{ include "mimir.queryFrontendFullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
             port:
               number: 8080
       match:
         - uri:
             prefix: /prometheus
+        - uri:
+            exact: /ready

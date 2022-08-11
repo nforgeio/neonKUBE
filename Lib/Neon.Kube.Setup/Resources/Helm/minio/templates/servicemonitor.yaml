@@ -20,4 +20,5 @@ spec:
   selector:
     matchLabels:
       v1.min.io/tenant: minio
+      app.kubernetes.io/name: minio
 {{- end }}

@@ -1,0 +1,30 @@
+﻿apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: tenant-header
+spec:
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: SIDECAR_INBOUND
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.http_connection_manager
+              subFilter:
+                name: envoy.filters.http.router
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: envoy.lua
+          typed_config:
+            '@type': type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+            inlineCode: |
+              function envoy_on_request(request_handle)
+                if not response_handle:headers():get("X-Scope-OrgID") then
+                  response_handle:headers():add("X-Scope-OrgID", "{{ .Values.cluster.name }}");
+                end
+              end
+  workloadSelector:
+    labels:
+      app.kubernetes.io/name: mimir-distributed

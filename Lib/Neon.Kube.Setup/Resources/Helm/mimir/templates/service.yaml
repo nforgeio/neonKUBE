@@ -18,7 +18,7 @@ spec:
   ports:
     - name: http-metric
       port: {{ .Values.istio.service.port }}
-      targetPort: http-metric
+      targetPort: 8080
       {{- if and (eq "NodePort" .Values.istio.service.type) .Values.istio.service.nodePort }}
       nodePort: {{ .Values.istio.service.nodePort }}
       {{- end }}

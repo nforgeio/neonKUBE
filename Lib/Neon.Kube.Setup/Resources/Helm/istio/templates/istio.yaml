@@ -61,6 +61,9 @@ spec:
           requests:
             cpu: "{{ .Values.resources.pilot.requests.cpu }}"
             memory: "{{ .Values.resources.pilot.requests.memory }}"
+          limits:
+            cpu: "{{ .Values.resources.pilot.limits.cpu }}"
+            memory: "{{ .Values.resources.pilot.limits.memory }}"
         hpaSpec:
           maxReplicas: 1
     ingressGateways:
@@ -93,6 +96,9 @@ spec:
           requests:
             cpu: "{{ .Values.resources.ingress.requests.cpu }}"
             memory: "{{ .Values.resources.ingress.requests.memory }}"
+          limits:
+            cpu: "{{ .Values.resources.ingress.limits.cpu }}"
+            memory: "{{ .Values.resources.ingress.limits.memory }}"
     cni:
       k8s:
         tolerations:

@@ -51,7 +51,7 @@ tempo:
       backend: s3
       s3:
         bucket: tempo
-        endpoint: minio.neon-system
+        endpoint: minio-neon.neon-system
         access_key: ${ACCESS_KEY_ID}
         secret_key: ${SECRET_ACCESS_KEY}
         insecure: true

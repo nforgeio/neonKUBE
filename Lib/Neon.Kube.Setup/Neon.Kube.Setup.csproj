@@ -113,6 +113,7 @@
 		<None Remove="Resources\Helm\mimir\templates\compactor\compactor-dashboard.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\config-dashboard.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\datasource-mimir-alertmanager.yaml" />
+		<None Remove="Resources\Helm\mimir\templates\envoyfilter.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\overrides-exporter\overrides-dashboard.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\querier\queries-dashboard.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\reads-dashboard.yaml" />
@@ -133,6 +134,7 @@
 		<None Remove="Resources\Helm\mimir\templates\writes-resources-dashboard.yaml" />
 		<None Remove="Resources\Helm\minio\templates\console-config-env.yaml" />
 		<None Remove="Resources\Helm\minio\templates\grafana-dashboard.yaml" />
+		<None Remove="Resources\Helm\minio\templates\tenant-service.yaml" />
 		<None Remove="Resources\Helm\neon-cluster-operator\.helmignore" />
 		<None Remove="Resources\Helm\neon-cluster-operator\Chart.yaml" />
 		<None Remove="Resources\Helm\neon-cluster-operator\templates\configmap.yaml" />
