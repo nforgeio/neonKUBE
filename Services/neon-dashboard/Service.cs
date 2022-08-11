@@ -45,6 +45,7 @@ using k8s.Models;
 
 using Prometheus;
 using Prometheus.DotNetRuntime;
+using System.Net.Http;
 
 namespace NeonDashboard
 {
@@ -138,11 +139,22 @@ namespace NeonDashboard
 
             Kubernetes = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
 
+            var metricsHost = GetEnvironmentVariable("METRICS_HOST", "http://mimir-query-frontend.neon-monitor.svc.cluster.local:8080");
+            PrometheusClient = new PrometheusClient($"{metricsHost}/prometheus/");
+
             _ = Kubernetes.WatchAsync<V1ConfigMap>(async (@event) =>
             {
                 await SyncContext.Clear;
 
                 ClusterInfo = TypeSafeConfigMap<ClusterInfo>.From(@event.Value).Config;
+                
+                if (PrometheusClient.JsonClient.DefaultRequestHeaders.Contains("X-Scope-OrgID"))
+                {
+                    PrometheusClient.JsonClient.DefaultRequestHeaders.Remove("X-Scope-OrgID");
+                }
+
+                PrometheusClient.JsonClient.DefaultRequestHeaders.Add("X-Scope-OrgID", ClusterInfo.Name);
+
                 Log.LogInfo($"Updated cluster info");
             },
             KubeNamespace.NeonStatus,
@@ -194,10 +206,6 @@ namespace NeonDashboard
                 SetEnvironmentVariable("COOKIE_CIPHER", "/HwPfpfACC70Rh1DeiMdubHINQHRGfc4JP6DYcSkAQ8="); 
                 await ConfigureDevAsync();
             }
-
-            var metricsHost = GetEnvironmentVariable("METRICS_HOST", "http://mimir-query-frontend.neon-monitor.svc.cluster.local:8080");
-            PrometheusClient = new PrometheusClient($"{metricsHost}/prometheus/");
-            PrometheusClient.JsonClient.DefaultRequestHeaders.Add("X-Scope-OrgID", ClusterInfo.Name);
 
             SsoClientSecret = GetEnvironmentVariable("SSO_CLIENT_SECRET", redacted: !Log.IsLogDebugEnabled);
 

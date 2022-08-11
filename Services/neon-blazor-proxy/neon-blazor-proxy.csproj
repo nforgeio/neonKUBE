@@ -7,7 +7,7 @@
         <LangVersion>latest</LangVersion>
         <RootNamespace>NeonBlazorProxy</RootNamespace>
         <LangVersion>latest</LangVersion>
-        <ServerGarbageCollection>true</ServerGarbageCollection>
+        <ServerGarbageCollection>false</ServerGarbageCollection>
         <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
         <AssemblyName>neon-blazor-proxy</AssemblyName>
         <Configurations>Debug;Release;CodeDoc</Configurations>
