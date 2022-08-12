@@ -67,7 +67,7 @@ mimir:
     alertmanager_storage:
       backend: s3
       s3:
-        endpoint: minio.neon-system.svc:80
+        endpoint: minio-neon.neon-system.svc:80
         bucket_name: mimir-ruler
         access_key_id: ${ACCESS_KEY_ID}
         secret_access_key: ${SECRET_ACCESS_KEY}
@@ -145,6 +145,8 @@ mimir:
             max_item_size: {{ (index .Values "memcached-metadata").maxItemMemory }}
             timeout: 1000ms
         {{- end }}
+        bucket_index:
+          max_stale_period: 4h
         {{- if index .Values "memcached-queries" "enabled" }}
         index_cache:
           backend: memcached
@@ -155,7 +157,7 @@ mimir:
         {{- end }}
       {{- if .Values.minio.enabled }}
       s3:
-        endpoint: minio.neon-system.svc:80
+        endpoint: minio-neon.neon-system.svc:80
         bucket_name: mimir-tsdb
         access_key_id: ${ACCESS_KEY_ID}
         secret_access_key: ${SECRET_ACCESS_KEY}
@@ -165,7 +167,7 @@ mimir:
     ruler_storage:
       backend: s3
       s3:
-        endpoint: minio.neon-system.svc:80
+        endpoint: minio-neon.neon-system.svc:80
         bucket_name: mimir-ruler
         access_key_id: ${ACCESS_KEY_ID}
         secret_access_key: ${SECRET_ACCESS_KEY}

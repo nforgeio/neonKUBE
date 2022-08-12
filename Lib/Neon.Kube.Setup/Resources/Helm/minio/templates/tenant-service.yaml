@@ -1,0 +1,25 @@
+{{ range .Values.tenants }}
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ .name }}-neon
+  namespace: {{ .namespace }}
+  labels:
+    app: minio
+spec:
+  ports:
+    - name: http-minio
+      protocol: TCP
+      port: 80
+      targetPort: 9000
+  selector:
+    v1.min.io/tenant: {{ .name }}
+  type: ClusterIP
+  sessionAffinity: None
+  publishNotReadyAddresses: true
+  ipFamilies:
+    - IPv4
+  ipFamilyPolicy: SingleStack
+  internalTrafficPolicy: Cluster
+{{ end }}

@@ -35,8 +35,7 @@ spec:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "id": 10,
-      "iteration": 1650672332886,
+      "id": 9,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -53,10 +52,10 @@ spec:
           },
           "id": 14,
           "options": {
-            "content": "<div id=\"wrapper\">\n    <div id=\"div1\" style=\"display: inline-block\">\n         <img src=\"./public/img/neonkube/neonkube-transparent.png\"\n     alt=\"neonkube logo\"\n     style=\"float: left; margin-right: 0px; height: 200px\" />\n\n    </div>\n    <div id=\"div2\" style=\"display: inline-block;\">\n         <table >\n              <tr>\n                   <td>Cluster</td>\n                   <td>`}}{{ .Values.cluster.name }}{{`</td>\n               </tr>\n               <tr>\n                    <td>Datacenter</td>\n                    <td>`}}{{ .Values.cluster.datacenter }}{{`</td>\n               </tr>\n               <tr>\n                    <td>Hosting Environment</td>\n                    <td>`}}{{ .Values.cluster.hostingEnvironment }}{{`</td>\n               </tr>\n               <tr>\n                    <td>neonKUBE Version</td>\n                    <td>`}}{{ .Values.cluster.version }}{{`</td>\n               </tr>\n          </table>\n    </div>\n</div>\n\n\n",
+            "content": "<div id=\"wrapper\">\n    <div id=\"div1\" style=\"display: inline-block\">\n         <img src=\"./public/img/neonkube/neonkube-transparent.png\"\n     alt=\"neonkube logo\"\n     style=\"float: left; margin-right: 0px; height: 200px\" />\n\n    </div>\n    <div id=\"div2\" style=\"display: inline-block;\">\n         <table >\n              <tr>\n                   <td>Cluster</td>\n                   <td>wrt-00-draco</td>\n               </tr>\n               <tr>\n                    <td>Datacenter</td>\n                    <td>wrt-00</td>\n               </tr>\n               <tr>\n                    <td>Hosting Environment</td>\n                    <td>XenServer</td>\n               </tr>\n               <tr>\n                    <td>neonKUBE Version</td>\n                    <td>0.7.0-alpha</td>\n               </tr>\n          </table>\n    </div>\n</div>\n\n\n",
             "mode": "html"
           },
-          "pluginVersion": "8.5.0",
+          "pluginVersion": "9.0.5",
           "title": " ",
           "type": "text"
         },
@@ -110,7 +109,7 @@ spec:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "8.5.0",
+          "pluginVersion": "9.0.5",
           "targets": [
             {
               "datasource": {
@@ -118,7 +117,7 @@ spec:
                 "uid": "mimir"
               },
               "exemplar": true,
-              "expr": "node_memory_MemTotal_bytes{instance=\"$node\",job=\"integrations/node_exporter\"} - node_memory_MemAvailable_bytes{instance=\"$node\",job=\"integrations/node_exporter\"}",
+              "expr": "sum(node_memory_MemTotal_bytes{instance=~\"$node\",job=\"integrations/node_exporter\"} - node_memory_MemAvailable_bytes{instance=~\"$node\",job=\"integrations/node_exporter\"})",
               "instant": false,
               "interval": "",
               "intervalFactor": 2,
@@ -179,7 +178,7 @@ spec:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "8.5.0",
+          "pluginVersion": "9.0.5",
           "targets": [
             {
               "datasource": {
@@ -187,7 +186,7 @@ spec:
                 "uid": "mimir"
               },
               "exemplar": true,
-              "expr": "node_memory_MemAvailable_bytes{instance=\"$node\",job=\"integrations/node_exporter\"}",
+              "expr": "sum(node_memory_MemAvailable_bytes{instance=~\"$node\",job=\"integrations/node_exporter\"})",
               "instant": false,
               "interval": "",
               "intervalFactor": 2,
@@ -248,7 +247,7 @@ spec:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "8.5.0",
+          "pluginVersion": "9.0.5",
           "targets": [
             {
               "datasource": {
@@ -317,7 +316,7 @@ spec:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "8.5.0",
+          "pluginVersion": "9.0.5",
           "targets": [
             {
               "datasource": {
@@ -420,15 +419,17 @@ spec:
                 "type": "prometheus",
                 "uid": "mimir"
               },
+              "editorMode": "code",
               "exemplar": true,
-              "expr": "sum(container_memory_working_set_bytes{cluster=~\"$cluster\", instance=~\"$node\", namespace=~\"$namespace\", container=~\"$container\"}) by (pod)",
+              "expr": "sum(container_memory_working_set_bytes{cluster=~\"$cluster\", instance=~\"$node\", namespace=~\"$namespace\", container=~\"$container\"}) by (pod, container)",
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{pod}}",
+              "legendFormat": "{{pod}}/{{container}}",
+              "range": true,
               "refId": "A"
             }
           ],
-          "title": "Memory by pod",
+          "title": "Memory by pod/container",
           "type": "timeseries"
         },
         {
@@ -827,12 +828,13 @@ spec:
                 "type": "prometheus",
                 "uid": "mimir"
               },
+              "editorMode": "code",
               "exemplar": true,
-              "expr": "max(kube_pod_container_resource_requests{cluster=~\"$cluster\", node=~\"$node\", namespace=~\"$namespace\", container=~\"$container\", resource=\"memory\"}) by (pod) - sum(container_memory_working_set_bytes{cluster=~\"$cluster\", node=~\"$node\", namespace=~\"$namespace\", container=~\"$container\"}) by (pod)",
+              "expr": "max(kube_pod_container_resource_requests{cluster=~\"$cluster\", node=~\"$node\", namespace=~\"$namespace\", container=~\"$container\", resource=\"memory\"}) by (pod, container) - sum(container_memory_working_set_bytes{cluster=~\"$cluster\", node=~\"$node\", namespace=~\"$namespace\", container=~\"$container\"}) by (pod, container)",
               "hide": false,
               "instant": false,
               "interval": "",
-              "legendFormat": "{{pod}}",
+              "legendFormat": "{{pod}}/{{container}}",
               "refId": "A"
             }
           ],
@@ -848,6 +850,11 @@ spec:
       "templating": {
         "list": [
           {
+            "current": {
+              "selected": false,
+              "text": "wrt-00-draco",
+              "value": "wrt-00-draco"
+            },
             "datasource": {
               "type": "prometheus",
               "uid": "mimir"
@@ -869,6 +876,15 @@ spec:
             "type": "query"
           },
           {
+            "current": {
+              "selected": true,
+              "text": [
+                "All"
+              ],
+              "value": [
+                "$__all"
+              ]
+            },
             "datasource": {
               "type": "prometheus",
               "uid": "mimir"
@@ -890,6 +906,15 @@ spec:
             "type": "query"
           },
           {
+            "current": {
+              "selected": true,
+              "text": [
+                "All"
+              ],
+              "value": [
+                "$__all"
+              ]
+            },
             "datasource": {
               "type": "prometheus",
               "uid": "mimir"
@@ -911,6 +936,11 @@ spec:
             "type": "query"
           },
           {
+            "current": {
+              "selected": false,
+              "text": "All",
+              "value": "$__all"
+            },
             "datasource": {
               "type": "prometheus",
               "uid": "mimir"
@@ -932,6 +962,11 @@ spec:
             "type": "query"
           },
           {
+            "current": {
+              "selected": false,
+              "text": "All",
+              "value": "$__all"
+            },
             "datasource": {
               "type": "prometheus",
               "uid": "mimir"
@@ -953,6 +988,11 @@ spec:
             "type": "query"
           },
           {
+            "current": {
+              "selected": true,
+              "text": "wrt-00",
+              "value": "wrt-00"
+            },
             "datasource": {
               "type": "prometheus",
               "uid": "mimir"
@@ -974,6 +1014,11 @@ spec:
             "type": "query"
           },
           {
+            "current": {
+              "selected": true,
+              "text": "XenServer",
+              "value": "XenServer"
+            },
             "datasource": {
               "type": "prometheus",
               "uid": "mimir"
@@ -995,6 +1040,11 @@ spec:
             "type": "query"
           },
           {
+            "current": {
+              "selected": false,
+              "text": "0.7.0-alpha",
+              "value": "0.7.0-alpha"
+            },
             "datasource": {
               "type": "prometheus",
               "uid": "mimir"
@@ -1024,7 +1074,7 @@ spec:
       "timepicker": {},
       "timezone": "",
       "title": "Neon dashboard",
-      "uid": "neonkube-default-dashboard",
-      "version": 4,
+      "uid": "Ts7677m4z",
+      "version": 2,
       "weekStart": ""
     }`}}

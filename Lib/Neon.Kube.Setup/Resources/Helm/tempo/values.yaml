@@ -676,7 +676,7 @@ storage:
   trace:
     backend: local
     s3:
-      endpoint: minio.neon-system.svc:80
+      endpoint: minio-neon.neon-system.svc:80
       bucket: tempo
       access_key: ${ACCESS_KEY_ID}
       secret_key: ${SECRET_ACCESS_KEY}

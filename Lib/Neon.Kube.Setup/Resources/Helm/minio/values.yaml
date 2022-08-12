@@ -165,26 +165,26 @@ tenants:
     ## serviceMetadata allows passing additional labels and annotations to MinIO and Console specific
     ## services created by the operator.
     serviceMetadata:
-      minioServiceAnnotations:
-        reloader.stakater.com/search: "true"
-      consoleServiceAnnotations:
-        reloader.stakater.com/search: "true"
+      minioServiceLabels:
+        app.kubernetes.io/name: minio
     ## Add environment variables to be set in MinIO container (https://github.com/minio/minio/tree/master/docs/config)
     env:
       - name: GOGC
         value: "25"
       - name: CONSOLE_PROMETHEUS_URL
-        value: http://mimir.neon-monitor:9009/api/prom
+        value: http://mimir.neon-monitor.svc.cluster.local/prometheus
       - name: CONSOLE_PROMETHEUS_AUTH_TYPE
         value: public
       - name: CONSOLE_PROMETHEUS_JOB_ID
-        value: integrations/agent
+        value: minio
       - name: MINIO_PROMETHEUS_URL
-        value: http://mimir.neon-monitor:9009/api/prom
+        value: http://mimir.neon-monitor.svc.cluster.local/prometheus
       - name: MINIO_PROMETHEUS_AUTH_TYPE
         value: public
       - name: MINIO_PROMETHEUS_JOB_ID
-        value: integrations/agent
+        value: minio
+      - name: MINIO_STORAGE_CLASS_STANDARD
+        value: EC:3
     ## PriorityClassName indicates the Pod priority and hence importance of a Pod relative to other Pods.
     ## This is applied to MinIO pods only.
     ## Refer Kubernetes documentation for details https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/#priorityclass/
@@ -200,7 +200,7 @@ clients:
   version: '10'
   aliases:
     minio:
-      url: http://minio.neon-system
+      url: http://minio-neon.neon-system
       accessKey: ''
       secretKey: ''
       api: S3v4

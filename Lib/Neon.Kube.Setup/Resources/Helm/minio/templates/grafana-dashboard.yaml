@@ -15,7 +15,10 @@ spec:
         "list": [
           {
             "builtIn": 1,
-            "datasource": "-- Grafana --",
+            "datasource": {
+              "type": "datasource",
+              "uid": "grafana"
+            },
             "enable": true,
             "hide": true,
             "iconColor": "rgba(0, 211, 255, 1)",
@@ -35,7 +38,7 @@ spec:
       "fiscalYearStartMonth": 0,
       "gnetId": 13502,
       "graphTooltip": 0,
-      "id": 64,
+      "id": 10,
       "links": [
         {
           "icon": "external link",
@@ -49,6 +52,17 @@ spec:
       ],
       "liveNow": false,
       "panels": [
+        {
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 88,
+          "title": "Row title",
+          "type": "row"
+        },
         {
           "datasource": {
             "type": "prometheus",
@@ -85,7 +99,7 @@ spec:
             "h": 6,
             "w": 3,
             "x": 0,
-            "y": 0
+            "y": 1
           },
           "id": 1,
           "links": [],
@@ -105,9 +119,13 @@ spec:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "exemplar": true,
               "expr": "time() - max(minio_node_process_starttime_seconds)",
               "format": "time_series",
@@ -159,7 +177,7 @@ spec:
             "h": 3,
             "w": 3,
             "x": 3,
-            "y": 0
+            "y": 1
           },
           "id": 65,
           "links": [],
@@ -179,9 +197,13 @@ spec:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "expr": "sum by (instance) (minio_s3_traffic_received_bytes{job=\"minio-job\"})",
               "format": "table",
               "hide": false,
@@ -232,7 +254,7 @@ spec:
             "h": 6,
             "w": 3,
             "x": 6,
-            "y": 0
+            "y": 1
           },
           "id": 50,
           "interval": "1m",
@@ -251,15 +273,20 @@ spec:
             "showThresholdMarkers": true,
             "text": {}
           },
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "targets": [
             {
-              "expr": "topk(1, sum(minio_cluster_capacity_usable_free_bytes) by (instance))",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
+              "editorMode": "code",
+              "expr": "topk(1, minio_cluster_capacity_usable_free_bytes{service=\"minio\"})",
               "format": "time_series",
               "instant": false,
               "interval": "1m",
               "intervalFactor": 1,
-              "legendFormat": "",
+              "legendFormat": "__auto",
               "refId": "A",
               "step": 300
             }
@@ -282,7 +309,7 @@ spec:
             "h": 6,
             "w": 7,
             "x": 9,
-            "y": 0
+            "y": 1
           },
           "hiddenSeries": false,
           "id": 68,
@@ -302,7 +329,7 @@ spec:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -312,6 +339,10 @@ spec:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "exemplar": true,
               "expr": "sum(minio_bucket_usage_total_bytes) by (instance)",
               "interval": "",
@@ -379,12 +410,14 @@ spec:
             "h": 6,
             "w": 5,
             "x": 16,
-            "y": 0
+            "y": 1
           },
           "id": 52,
           "links": [],
           "options": {
             "displayMode": "basic",
+            "minVizHeight": 10,
+            "minVizWidth": 0,
             "orientation": "horizontal",
             "reduceOptions": {
               "calcs": [
@@ -396,9 +429,13 @@ spec:
             "showUnfilled": false,
             "text": {}
           },
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "expr": "max by (range) (minio_bucket_objects_size_distribution)",
               "format": "time_series",
               "instant": false,
@@ -452,7 +489,7 @@ spec:
             "h": 3,
             "w": 3,
             "x": 21,
-            "y": 0
+            "y": 1
           },
           "id": 61,
           "links": [],
@@ -472,9 +509,13 @@ spec:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "exemplar": true,
               "expr": "sum (minio_node_file_descriptor_open_total)",
               "format": "table",
@@ -527,7 +568,7 @@ spec:
             "h": 3,
             "w": 3,
             "x": 3,
-            "y": 3
+            "y": 4
           },
           "id": 64,
           "links": [],
@@ -547,9 +588,13 @@ spec:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "expr": "sum by (instance) (minio_s3_traffic_sent_bytes{job=\"minio-job\"})",
               "format": "table",
               "hide": false,
@@ -605,7 +650,7 @@ spec:
             "h": 3,
             "w": 3,
             "x": 21,
-            "y": 3
+            "y": 4
           },
           "id": 62,
           "links": [],
@@ -625,9 +670,13 @@ spec:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "exemplar": true,
               "expr": "sum without (server,instance) (minio_node_go_routine_total)",
               "format": "table",
@@ -684,7 +733,7 @@ spec:
             "h": 2,
             "w": 3,
             "x": 0,
-            "y": 6
+            "y": 7
           },
           "id": 53,
           "links": [],
@@ -704,9 +753,13 @@ spec:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "expr": "minio_cluster_nodes_online_total",
               "format": "table",
               "hide": false,
@@ -762,7 +815,7 @@ spec:
             "h": 2,
             "w": 3,
             "x": 3,
-            "y": 6
+            "y": 7
           },
           "id": 9,
           "links": [],
@@ -782,9 +835,13 @@ spec:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "exemplar": true,
               "expr": "minio_cluster_disk_online_total",
               "format": "table",
@@ -844,7 +901,7 @@ spec:
             "h": 3,
             "w": 3,
             "x": 6,
-            "y": 6
+            "y": 7
           },
           "id": 66,
           "links": [],
@@ -864,9 +921,13 @@ spec:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "expr": "count(count by (bucket) (minio_bucket_usage_total_bytes))",
               "format": "time_series",
               "instant": false,
@@ -880,180 +941,101 @@ spec:
           "type": "stat"
         },
         {
-          "aliasColors": {
-            "S3 Errors": "light-red",
-            "S3 Requests": "light-green"
-          },
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
           "datasource": {
             "type": "prometheus",
             "uid": "mimir"
           },
-          "fill": 1,
-          "fillGradient": 0,
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "bytes"
+            },
+            "overrides": []
+          },
           "gridPos": {
             "h": 6,
-            "w": 7,
+            "w": 15,
             "x": 9,
-            "y": 6
+            "y": 7
           },
-          "hiddenSeries": false,
-          "id": 63,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "nullPointMode": "null",
+          "id": 90,
           "options": {
-            "alertThreshold": true
+            "legend": {
+              "calcs": [
+                "last"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true,
+              "sortBy": "Last",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
           },
-          "percentage": false,
-          "pluginVersion": "8.3.1",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
           "targets": [
             {
-              "exemplar": true,
-              "expr": "sum by (server) (rate(minio_s3_traffic_received_bytes[$__rate_interval]))",
-              "interval": "1m",
-              "intervalFactor": 2,
-              "legendFormat": "Data Received [{{server}}]",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
+              "editorMode": "code",
+              "expr": "max(minio_bucket_usage_total_bytes) by (bucket)",
+              "legendFormat": "__auto",
+              "range": true,
               "refId": "A"
             }
           ],
-          "thresholds": [],
-          "timeRegions": [],
-          "title": "S3 API Data Received Rate ",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:331",
-              "format": "bytes",
-              "logBase": 1,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:332",
-              "format": "short",
-              "logBase": 1,
-              "show": false
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
-        },
-        {
-          "aliasColors": {
-            "S3 Errors": "light-red",
-            "S3 Requests": "light-green"
-          },
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "mimir"
-          },
-          "fill": 1,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 6,
-            "w": 8,
-            "x": 16,
-            "y": 6
-          },
-          "hiddenSeries": false,
-          "id": 70,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "8.3.1",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "exemplar": true,
-              "expr": "sum by (server) (rate(minio_s3_traffic_sent_bytes[$__rate_interval]))",
-              "interval": "1m",
-              "intervalFactor": 2,
-              "legendFormat": "Data Sent [{{server}}]",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeRegions": [],
-          "title": "S3 API Data Sent Rate ",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:331",
-              "format": "bytes",
-              "logBase": 1,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:332",
-              "format": "short",
-              "logBase": 1,
-              "show": false
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
+          "title": "Usage by bucket",
+          "type": "timeseries"
         },
         {
           "datasource": {
@@ -1095,7 +1077,7 @@ spec:
             "h": 2,
             "w": 3,
             "x": 0,
-            "y": 8
+            "y": 9
           },
           "id": 69,
           "links": [],
@@ -1115,9 +1097,13 @@ spec:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "expr": "minio_cluster_nodes_offline_total",
               "format": "table",
               "hide": false,
@@ -1173,7 +1159,7 @@ spec:
             "h": 2,
             "w": 3,
             "x": 3,
-            "y": 8
+            "y": 9
           },
           "id": 78,
           "links": [],
@@ -1193,9 +1179,13 @@ spec:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "exemplar": true,
               "expr": "minio_cluster_disk_offline_total",
               "format": "table",
@@ -1255,7 +1245,7 @@ spec:
             "h": 3,
             "w": 3,
             "x": 6,
-            "y": 9
+            "y": 10
           },
           "id": 44,
           "links": [],
@@ -1275,9 +1265,13 @@ spec:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "expr": "topk(1, sum(minio_bucket_usage_object_total) by (instance))",
               "format": "time_series",
               "instant": false,
@@ -1319,7 +1313,7 @@ spec:
             "h": 2,
             "w": 3,
             "x": 0,
-            "y": 10
+            "y": 11
           },
           "id": 80,
           "links": [],
@@ -1339,9 +1333,13 @@ spec:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "exemplar": true,
               "expr": "minio_heal_time_last_activity_nano_seconds",
               "format": "time_series",
@@ -1386,7 +1384,7 @@ spec:
             "h": 2,
             "w": 3,
             "x": 3,
-            "y": 10
+            "y": 11
           },
           "id": 81,
           "links": [],
@@ -1406,9 +1404,13 @@ spec:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "exemplar": true,
               "expr": "minio_usage_last_activity_nano_seconds",
               "format": "time_series",
@@ -1423,6 +1425,17 @@ spec:
           ],
           "title": "Time Since Last Scan Activity",
           "type": "stat"
+        },
+        {
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 13
+          },
+          "id": 86,
+          "title": "Row title",
+          "type": "row"
         },
         {
           "aliasColors": {
@@ -1442,7 +1455,7 @@ spec:
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 12
+            "y": 14
           },
           "hiddenSeries": false,
           "id": 60,
@@ -1462,7 +1475,7 @@ spec:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1472,6 +1485,10 @@ spec:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "exemplar": true,
               "expr": "sum by (server,api) (rate(minio_s3_requests_total[$__rate_interval]))",
               "interval": "1m",
@@ -1527,10 +1544,194 @@ spec:
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
+            "h": 6,
+            "w": 6,
+            "x": 12,
+            "y": 14
+          },
+          "hiddenSeries": false,
+          "id": 63,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "9.1.0-beta1",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
+              "exemplar": true,
+              "expr": "sum by (server) (rate(minio_s3_traffic_received_bytes[$__rate_interval]))",
+              "interval": "1m",
+              "intervalFactor": 2,
+              "legendFormat": "Data Received [{{server}}]",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeRegions": [],
+          "title": "S3 API Data Received Rate ",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "$$hashKey": "object:331",
+              "format": "bytes",
+              "logBase": 1,
+              "show": true
+            },
+            {
+              "$$hashKey": "object:332",
+              "format": "short",
+              "logBase": 1,
+              "show": false
+            }
+          ],
+          "yaxis": {
+            "align": false
+          }
+        },
+        {
+          "aliasColors": {
+            "S3 Errors": "light-red",
+            "S3 Requests": "light-green"
+          },
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 6,
+            "w": 6,
+            "x": 18,
+            "y": 14
+          },
+          "hiddenSeries": false,
+          "id": 70,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "9.1.0-beta1",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
+              "exemplar": true,
+              "expr": "sum by (server) (rate(minio_s3_traffic_sent_bytes[$__rate_interval]))",
+              "interval": "1m",
+              "intervalFactor": 2,
+              "legendFormat": "Data Sent [{{server}}]",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeRegions": [],
+          "title": "S3 API Data Sent Rate ",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "$$hashKey": "object:331",
+              "format": "bytes",
+              "logBase": 1,
+              "show": true
+            },
+            {
+              "$$hashKey": "object:332",
+              "format": "short",
+              "logBase": 1,
+              "show": false
+            }
+          ],
+          "yaxis": {
+            "align": false
+          }
+        },
+        {
+          "aliasColors": {
+            "S3 Errors": "light-red",
+            "S3 Requests": "light-green"
+          },
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 12
+            "y": 20
           },
           "hiddenSeries": false,
           "id": 71,
@@ -1550,7 +1751,7 @@ spec:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1560,6 +1761,10 @@ spec:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "exemplar": true,
               "expr": "rate(minio_s3_requests_errors_total[$__rate_interval])",
               "interval": "1m",
@@ -1626,7 +1831,7 @@ spec:
             "h": 9,
             "w": 12,
             "x": 0,
-            "y": 22
+            "y": 24
           },
           "hiddenSeries": false,
           "id": 17,
@@ -1648,7 +1853,7 @@ spec:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1658,6 +1863,10 @@ spec:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "exemplar": true,
               "expr": "rate(minio_inter_node_traffic_sent_bytes{job=\"minio-job\"}[$__rate_interval])",
               "format": "time_series",
@@ -1669,6 +1878,10 @@ spec:
               "step": 4
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "exemplar": true,
               "expr": "rate(minio_inter_node_traffic_received_bytes{job=\"minio-job\"}[$__rate_interval])",
               "interval": "",
@@ -1713,13 +1926,17 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
             "h": 9,
             "w": 12,
             "x": 12,
-            "y": 22
+            "y": 30
           },
           "hiddenSeries": false,
           "id": 84,
@@ -1739,7 +1956,7 @@ spec:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1749,6 +1966,10 @@ spec:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "exemplar": true,
               "expr": "sum by (instance) (minio_heal_objects_heal_total)",
               "interval": "",
@@ -1756,6 +1977,10 @@ spec:
               "refId": "A"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "exemplar": true,
               "expr": "sum by (instance) (minio_heal_objects_error_total)",
               "hide": false,
@@ -1764,6 +1989,10 @@ spec:
               "refId": "B"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "exemplar": true,
               "expr": "sum by (instance) (minio_heal_objects_total) ",
               "hide": false,
@@ -1817,7 +2046,7 @@ spec:
             "h": 9,
             "w": 12,
             "x": 0,
-            "y": 31
+            "y": 33
           },
           "hiddenSeries": false,
           "id": 77,
@@ -1837,7 +2066,7 @@ spec:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1847,6 +2076,10 @@ spec:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "exemplar": true,
               "expr": "rate(minio_node_process_cpu_total_seconds[$__rate_interval])",
               "interval": "",
@@ -1901,7 +2134,7 @@ spec:
             "h": 9,
             "w": 12,
             "x": 12,
-            "y": 31
+            "y": 39
           },
           "hiddenSeries": false,
           "id": 76,
@@ -1921,7 +2154,7 @@ spec:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1931,6 +2164,10 @@ spec:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "exemplar": true,
               "expr": "minio_node_process_resident_memory_bytes",
               "interval": "",
@@ -1985,7 +2222,7 @@ spec:
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 40
+            "y": 42
           },
           "hiddenSeries": false,
           "id": 74,
@@ -2005,7 +2242,7 @@ spec:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -2015,6 +2252,10 @@ spec:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "exemplar": true,
               "expr": "minio_node_disk_used_bytes",
               "format": "time_series",
@@ -2071,7 +2312,7 @@ spec:
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 40
+            "y": 48
           },
           "hiddenSeries": false,
           "id": 82,
@@ -2091,7 +2332,7 @@ spec:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -2101,6 +2342,10 @@ spec:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "exemplar": true,
               "expr": "minio_cluster_disk_free_inodes",
               "format": "time_series",
@@ -2167,7 +2412,7 @@ spec:
             "h": 9,
             "w": 12,
             "x": 0,
-            "y": 48
+            "y": 50
           },
           "hiddenSeries": false,
           "id": 11,
@@ -2189,7 +2434,7 @@ spec:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -2199,6 +2444,10 @@ spec:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "exemplar": true,
               "expr": "rate(minio_node_syscall_read_total[$__rate_interval])",
               "format": "time_series",
@@ -2210,6 +2459,10 @@ spec:
               "step": 60
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "exemplar": true,
               "expr": "rate(minio_node_syscall_write_total[$__rate_interval])",
               "interval": "",
@@ -2276,7 +2529,7 @@ spec:
             "h": 9,
             "w": 12,
             "x": 12,
-            "y": 48
+            "y": 56
           },
           "hiddenSeries": false,
           "id": 8,
@@ -2298,7 +2551,7 @@ spec:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -2308,6 +2561,10 @@ spec:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "exemplar": true,
               "expr": "minio_node_file_descriptor_open_total",
               "interval": "",
@@ -2364,7 +2621,7 @@ spec:
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 57
+            "y": 65
           },
           "hiddenSeries": false,
           "id": 73,
@@ -2384,7 +2641,7 @@ spec:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.1.0-beta1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -2394,6 +2651,10 @@ spec:
           "steppedLine": false,
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "exemplar": true,
               "expr": "rate(minio_node_io_rchar_bytes[$__rate_interval])",
               "format": "time_series",
@@ -2403,6 +2664,10 @@ spec:
               "refId": "A"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
               "exemplar": true,
               "expr": "rate(minio_node_io_wchar_bytes[$__rate_interval])",
               "interval": "",
@@ -2443,17 +2708,15 @@ spec:
           }
         }
       ],
-      "refresh": "10s",
-      "schemaVersion": 33,
+      "refresh": "1m",
+      "schemaVersion": 37,
       "style": "dark",
-      "tags": [
-        "minio"
-      ],
+      "tags": [],
       "templating": {
         "list": []
       },
       "time": {
-        "from": "now-3h",
+        "from": "now-1h",
         "to": "now"
       },
       "timepicker": {
@@ -2482,8 +2745,8 @@ spec:
       },
       "timezone": "",
       "title": "MinIO Overview",
-      "uid": "Df3YY4Ynk",
-      "version": 1,
+      "uid": "Nl7Qnkk4z",
+      "version": 6,
       "weekStart": ""
     }`}}
 {{- end }}
