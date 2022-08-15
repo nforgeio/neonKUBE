@@ -80,26 +80,7 @@ namespace NeonAcme.Controllers
 
             LogDebug($"Headers: {NeonHelper.JsonSerialize(HttpContext.Request.Headers)}");
 
-            var api = new V1APIResourceList()
-            {
-                ApiVersion = "v1",
-                GroupVersion = "acme.neoncloud.io/v1alpha1",
-                Resources = new List<V1APIResource>()
-                {
-                    new V1APIResource()
-                    {
-                        Name = "neoncluster_io",
-                        SingularName = "neoncluster_io",
-                        Namespaced = false,
-                        Group = "webhook.acme.cert-manager.io",
-                        Version = "v1alpha1",
-                        Kind = "ChallengePayload",
-                        Verbs = new List<string>(){ "create"}
-                    }
-                }
-            };
-
-            return new JsonResult(api);
+            return new JsonResult(service.Resources);
         }
 
         /// <summary>
