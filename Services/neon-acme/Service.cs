@@ -39,6 +39,7 @@ using k8s;
 
 using Prometheus;
 using Prometheus.DotNetRuntime;
+using k8s.Models;
 
 namespace NeonAcme
 {
@@ -56,6 +57,11 @@ namespace NeonAcme
         /// The Kubernetes client.
         /// </summary>
         public KubernetesWithRetry Kubernetes;
+
+        /// <summary>
+        /// Resources used for discovery.
+        /// </summary>
+        public V1APIResourceList Resources;
 
         // private fields
         private IWebHost webHost;
@@ -89,6 +95,25 @@ namespace NeonAcme
             await SetStatusAsync(NeonServiceStatus.Starting);
 
             Kubernetes = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
+
+            Resources = new V1APIResourceList()
+            {
+                ApiVersion = "v1",
+                GroupVersion = "acme.neoncloud.io/v1alpha1",
+                Resources = new List<V1APIResource>()
+                {
+                    new V1APIResource()
+                    {
+                        Name = "neoncluster_io",
+                        SingularName = "neoncluster_io",
+                        Namespaced = false,
+                        Group = "webhook.acme.cert-manager.io",
+                        Version = "v1alpha1",
+                        Kind = "ChallengePayload",
+                        Verbs = new List<string>(){ "create"}
+                    }
+                }
+            };
 
             // Start the web service.
             var port = 443;
