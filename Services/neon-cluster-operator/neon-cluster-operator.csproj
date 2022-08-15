@@ -41,8 +41,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2154-dev-master" />
-		<PackageReference Include="Neon.Service" Version="10000.0.2154-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2131-dev-jeff" />
+		<PackageReference Include="Neon.Service" Version="10000.0.2131-dev-jeff" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -95,23 +95,13 @@
     files are always regenerated.
     -->
 
-	<!--<Target Name="RemoveConfig" BeforeTargets="GenerateAfterBuild">
-		<RemoveDir Directories="$(ProjectDir)config.gitignore" />
-	</Target>-->
-
-	<!-- 
-	This target removes any existing generated CRDs to avoid having old ones accumulate and
-	cause problems.
-	-->
-
-	<Target Name="PurgeCRDs" BeforeTargets="GenerateAfterBuild">
+	<Target Name="RemoveConfig" BeforeTargets="BeforeBuild">
 		<Message Importance="high" Text="Purge CRDs" />
-		<Exec Command="neon-build rm &quot;$(ProjectDir)config.gitignore\crds\*&quot;" />
+		<RemoveDir Directories="$(ProjectDir)config.gitignore" />
 	</Target>
-	
+
 	<!--
-    This target publishes all generated CRDs to [$/Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/crds/*],
-    deleting any existing CRD files first to ensure that the CRDs are fully in sync.
+    This target publishes all generated CRDs to [$/Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/crds/*].
   
     NOTE: This does not copy any other deployment related files to [$/Lib/Neon.Kube.Setup].  We'll edit deployment,
   	      RBAC and other files in place there, like we do for all other charts.
@@ -121,7 +111,7 @@
     -->
 
 	<Target Name="PublishCRDs" AfterTargets="GenerateAfterBuild">
-		<Message Importance="high" Text="Publish CRDs" />
+		<Message Importance="high" Text="Publish CRDs to: Neon.Kube.Setup" />
 		<Exec Command="neon-build rm &quot;$(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds\*&quot;" />
 		<Exec Command="neon-build publish-files &quot;$(ProjectDir)config.gitignore\crds\*&quot; &quot;$(NK_ROOT)\Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds&quot; --exclude-kustomize" />
 	</Target>
