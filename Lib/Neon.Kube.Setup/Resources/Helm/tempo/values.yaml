@@ -89,6 +89,7 @@ ingester:
   # -- Annotations for ingester deployment
   annotations: 
     reloader.stakater.com/search: 'true'
+  podManagementPolicy: Parallel
   # -- Additional CLI args for the ingester
   extraArgs: []
   # -- Environment variables to add to the ingester pods

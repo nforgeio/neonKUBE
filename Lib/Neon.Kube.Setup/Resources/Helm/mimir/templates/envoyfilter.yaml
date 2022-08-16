@@ -21,8 +21,8 @@ spec:
             '@type': type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
             inlineCode: |
               function envoy_on_request(request_handle)
-                if not response_handle:headers():get("X-Scope-OrgID") then
-                  response_handle:headers():add("X-Scope-OrgID", "{{ .Values.cluster.name }}");
+                if not request_handle:headers():get("X-Scope-OrgID") then
+                  request_handle:headers():add("X-Scope-OrgID", "wrt-00-draco");
                 end
               end
   workloadSelector:

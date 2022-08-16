@@ -10,6 +10,7 @@ metadata:
     {{ toYaml . | indent 4 }}
   {{- end }}
 spec:
+  podManagementPolicy: {{ .Values.ingester.podManagementPolicy }}
   replicas: {{ .Values.ingester.replicas }}
   selector:
     matchLabels:

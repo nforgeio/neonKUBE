@@ -302,31 +302,7 @@ extraVolumeMounts: []
 
 ## Pass the plugins you want installed as a list.
 ##
-plugins:
-  - grafana-clock-panel
-  - grafana-worldmap-panel
-  - briangann-gauge-panel
-  - grafana-kubernetes-app
-  - grafana-piechart-panel
-  - novatec-sdg-panel
-  - andig-darksky-datasource
-  - xginn8-pagerduty-datasource
-  - camptocamp-prometheus-alertmanager-datasource
-  - redis-datasource
-  - grafana-strava-datasource
-  - thalysantana-appcenter-datasource
-  - grafana-athena-datasource
-  - gapit-htmlgraphics-panel
-  - boazreicher-mosaicplot-panel
-  - marcusolsson-hexmap-panel
-  - hadesarchitect-cassandra-datasource
-  - grafana-github-datasource
-  - fifemon-graphql-datasource
-  - grafana-googlesheets-datasource
-  - grafana-timestream-datasource
-  - grafana-polystat-panel
-  - grafana-salesforce-datasource
-  - marcusolsson-json-datasource
+plugins: []
 
 ## Configure grafana datasources
 ## ref: http://docs.grafana.org/administration/provisioning/#datasources

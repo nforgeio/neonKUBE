@@ -10,12 +10,15 @@ spec:
     - inputName: "DS_PROMETHEUS"
       datasourceName: "Mimir"
   json: >
-    {{`{
+        {{`{
       "annotations": {
         "list": [
           {
             "builtIn": 1,
-            "datasource": "-- Grafana --",
+            "datasource": {
+              "type": "datasource",
+              "uid": "grafana"
+            },
             "enable": true,
             "hide": true,
             "iconColor": "rgba(0, 211, 255, 1)",
@@ -35,8 +38,7 @@ spec:
       "fiscalYearStartMonth": 0,
       "gnetId": 3063,
       "graphTooltip": 0,
-      "id": 27,
-      "iteration": 1649542835768,
+      "id": 24,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -105,10 +107,14 @@ spec:
             "showThresholdLabels": false,
             "showThresholdMarkers": true
           },
-          "pluginVersion": "8.4.4",
+          "pluginVersion": "9.0.5",
           "targets": [
             {
-              "expr": "sum(memcached_current_bytes{kubernetes_pod_name=~\"$pod\",kubernetes_namespace=~\"$namespace\"}) / sum(memcached_limit_bytes{kubernetes_pod_name=~\"$pod\",kubernetes_namespace=~\"$namespace\"})",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
+              "expr": "sum(memcached_current_bytes{pod=~\"$pod\",namespace=~\"$namespace\"}) / sum(memcached_limit_bytes{pod=~\"$pod\",namespace=~\"$namespace\"})",
               "format": "time_series",
               "intervalFactor": 1,
               "refId": "A",
@@ -119,56 +125,89 @@ spec:
           "type": "gauge"
         },
         {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
           "datasource": {
             "type": "prometheus",
             "uid": "mimir"
           },
-          "editable": true,
-          "error": false,
-          "fill": 1,
-          "fillGradient": 0,
-          "grid": {},
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "percentunit"
+            },
+            "overrides": []
+          },
           "gridPos": {
             "h": 7,
             "w": 8,
             "x": 8,
             "y": 0
           },
-          "height": "240px",
-          "hiddenSeries": false,
           "id": 14,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": false,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 2,
           "links": [],
-          "nullPointMode": "connected",
           "options": {
-            "alertThreshold": true
+            "legend": {
+              "calcs": [],
+              "displayMode": "hidden",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
           },
-          "percentage": false,
-          "pluginVersion": "8.4.4",
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
+          "pluginVersion": "9.0.5",
           "targets": [
             {
-              "expr": "sum (irate (memcached_commands_total{status=\"hit\",command=\"get\",kubernetes_pod_name=~\"$pod\",kubernetes_namespace=~\"$namespace\"}[5m])) / sum (irate (memcached_commands_total{command=\"get\",kubernetes_pod_name=~\"$pod\",kubernetes_namespace=~\"$namespace\"}[5m]\n))",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
+              "expr": "sum (irate (memcached_commands_total{status=\"hit\",command=\"get\",pod=~\"$pod\",namespace=~\"$namespace\"}[5m])) / sum (irate (memcached_commands_total{command=\"get\",pod=~\"$pod\",namespace=~\"$namespace\"}[5m]\n))",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "Hit",
@@ -176,100 +215,138 @@ spec:
               "step": 5
             }
           ],
-          "thresholds": [],
-          "timeRegions": [],
           "title": "Hit rate",
-          "tooltip": {
-            "msResolution": true,
-            "shared": false,
-            "sort": 0,
-            "value_type": "cumulative"
-          },
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": [
-              "total"
-            ]
-          },
-          "yaxes": [
-            {
-              "format": "percentunit",
-              "logBase": 1,
-              "min": 0,
-              "show": true
-            },
-            {
-              "format": "short",
-              "logBase": 1,
-              "show": false
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
+          "type": "timeseries"
         },
         {
-          "aliasColors": {
-            "evicts": "#890F02",
-            "memcached_items_evicted_total{instance=\"172.17.0.1:9150\",job=\"prometheus\"}": "#890F02",
-            "reclaims": "#3F6833"
-          },
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
           "datasource": {
             "type": "prometheus",
             "uid": "mimir"
           },
-          "editable": true,
-          "error": false,
-          "fill": 1,
-          "fillGradient": 0,
-          "grid": {},
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "evicts"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "#890F02",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "memcached_items_evicted_total{instance=\"172.17.0.1:9150\",job=\"prometheus\"}"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "#890F02",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "reclaims"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "#3F6833",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
           "gridPos": {
             "h": 7,
             "w": 8,
             "x": 16,
             "y": 0
           },
-          "height": "240px",
-          "hiddenSeries": false,
           "id": 8,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 2,
           "links": [],
-          "nullPointMode": "connected",
           "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "8.4.4",
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [
-            {
-              "alias": "reclaims",
-              "yaxis": 2
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
             }
-          ],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
+          },
+          "pluginVersion": "9.0.5",
           "targets": [
             {
-              "expr": "sum (irate (memcached_items_evicted_total{kubernetes_pod_name=~\"$pod\",kubernetes_namespace=~\"$namespace\"}[5m]))",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
+              "expr": "sum (irate (memcached_items_evicted_total{pod=~\"$pod\",namespace=~\"$namespace\"}[5m]))",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "evicts",
@@ -278,7 +355,11 @@ spec:
               "target": ""
             },
             {
-              "expr": "sum (irate (memcached_items_reclaimed_total{kubernetes_pod_name=~\"$pod\",kubernetes_namespace=~\"$namespace\"}[5m]))",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
+              "expr": "sum (irate (memcached_items_reclaimed_total{pod=~\"$pod\",namespace=~\"$namespace\"}[5m]))",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "reclaims",
@@ -286,36 +367,8 @@ spec:
               "step": 5
             }
           ],
-          "thresholds": [],
-          "timeRegions": [],
           "title": "Evicts & Reclaims rate",
-          "tooltip": {
-            "msResolution": false,
-            "shared": true,
-            "sort": 0,
-            "value_type": "cumulative"
-          },
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "logBase": 1,
-              "show": true
-            },
-            {
-              "format": "short",
-              "logBase": 1,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
+          "type": "timeseries"
         },
         {
           "datasource": {
@@ -379,10 +432,14 @@ spec:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "8.4.4",
+          "pluginVersion": "9.0.5",
           "targets": [
             {
-              "expr": "sum (memcached_current_bytes{kubernetes_pod_name=~\"$pod\", kubernetes_namespace=~\"$namespace\"})",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
+              "expr": "sum (memcached_current_bytes{pod=~\"$pod\", namespace=~\"$namespace\"})",
               "format": "time_series",
               "intervalFactor": 1,
               "refId": "A",
@@ -454,10 +511,14 @@ spec:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "8.4.4",
+          "pluginVersion": "9.0.5",
           "targets": [
             {
-              "expr": "sum (memcached_limit_bytes{kubernetes_pod_name=~\"$pod\", kubernetes_namespace=~\"$namespace\"})",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
+              "expr": "sum (memcached_limit_bytes{pod=~\"$pod\", namespace=~\"$namespace\"})",
               "format": "time_series",
               "intervalFactor": 1,
               "refId": "A",
@@ -468,61 +529,106 @@ spec:
           "type": "stat"
         },
         {
-          "aliasColors": {},
-          "bars": true,
-          "dashLength": 10,
-          "dashes": false,
           "datasource": {
             "type": "prometheus",
             "uid": "mimir"
           },
-          "editable": true,
-          "error": false,
-          "fill": 1,
-          "fillGradient": 0,
-          "grid": {},
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "bars",
+                "fillOpacity": 100,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "max": 1,
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "percentunit"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "miss"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "#E24D42",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
           "gridPos": {
             "h": 4,
             "w": 8,
             "x": 8,
             "y": 7
           },
-          "height": "120px",
-          "hiddenSeries": false,
           "id": 12,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": false,
-            "total": false,
-            "values": false
-          },
-          "lines": false,
-          "linewidth": 2,
           "links": [],
-          "nullPointMode": "connected",
           "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "8.4.4",
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [
-            {
-              "alias": "miss",
-              "color": "#E24D42"
+            "legend": {
+              "calcs": [],
+              "displayMode": "hidden",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
             }
-          ],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
+          },
+          "pluginVersion": "9.0.5",
           "targets": [
             {
-              "expr": "sum (memcached_commands_total{status=\"hit\",command=\"get\",kubernetes_pod_name=~\"$pod\",kubernetes_namespace=~\"$namespace\"}) / sum (memcached_commands_total{command=\"get\",kubernetes_pod_name=~\"$pod\",kubernetes_namespace=~\"$namespace\"})",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
+              "expr": "sum (memcached_commands_total{status=\"hit\",command=\"get\",pod=~\"$pod\",namespace=~\"$namespace\"}) / sum (memcached_commands_total{command=\"get\",pod=~\"$pod\",namespace=~\"$namespace\"})",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 1,
@@ -531,7 +637,11 @@ spec:
               "step": 5
             },
             {
-              "expr": "sum (memcached_commands_total{status=\"miss\",command=\"get\",kubernetes_pod_name=~\"$pod\",kubernetes_namespace=~\"$namespace\"}) / sum (memcached_commands_total{command=\"get\",kubernetes_pod_name=~\"$pod\",kubernetes_namespace=~\"$namespace\"})",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
+              "expr": "sum (memcached_commands_total{status=\"miss\",command=\"get\",pod=~\"$pod\",namespace=~\"$namespace\"}) / sum (memcached_commands_total{command=\"get\",pod=~\"$pod\",namespace=~\"$namespace\"})",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "miss",
@@ -539,40 +649,8 @@ spec:
               "step": 5
             }
           ],
-          "thresholds": [],
-          "timeRegions": [],
           "title": "Hit & Miss ratio",
-          "tooltip": {
-            "msResolution": true,
-            "shared": false,
-            "sort": 0,
-            "value_type": "cumulative"
-          },
-          "type": "graph",
-          "xaxis": {
-            "mode": "series",
-            "show": true,
-            "values": [
-              "current"
-            ]
-          },
-          "yaxes": [
-            {
-              "format": "percentunit",
-              "logBase": 1,
-              "max": "1",
-              "min": 0,
-              "show": true
-            },
-            {
-              "format": "short",
-              "logBase": 1,
-              "show": false
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
+          "type": "timeseries"
         },
         {
           "datasource": {
@@ -635,10 +713,14 @@ spec:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "8.4.4",
+          "pluginVersion": "9.0.5",
           "targets": [
             {
-              "expr": "sum (memcached_items_evicted_total{kubernetes_pod_name=~\"$pod\", kubernetes_namespace=~\"$namespace\"})",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
+              "expr": "sum (memcached_items_evicted_total{pod=~\"$pod\", namespace=~\"$namespace\"})",
               "format": "time_series",
               "intervalFactor": 1,
               "refId": "A",
@@ -709,10 +791,14 @@ spec:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "8.4.4",
+          "pluginVersion": "9.0.5",
           "targets": [
             {
-              "expr": "sum (memcached_items_reclaimed_total{kubernetes_pod_name=~\"$pod\", kubernetes_namespace=~\"$namespace\"})",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
+              "expr": "sum (memcached_items_reclaimed_total{pod=~\"$pod\", namespace=~\"$namespace\"})",
               "format": "time_series",
               "intervalFactor": 1,
               "refId": "A",
@@ -723,63 +809,104 @@ spec:
           "type": "stat"
         },
         {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
           "datasource": {
             "type": "prometheus",
             "uid": "mimir"
           },
-          "editable": true,
-          "error": false,
-          "fill": 1,
-          "fillGradient": 0,
-          "grid": {},
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "count"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "#5195CE",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
           "gridPos": {
             "h": 7,
             "w": 24,
             "x": 0,
             "y": 11
           },
-          "height": "",
-          "hiddenSeries": false,
           "id": 5,
-          "legend": {
-            "alignAsTable": false,
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "rightSide": false,
-            "show": false,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 2,
           "links": [],
-          "nullPointMode": "connected",
           "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "8.4.4",
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [
-            {
-              "alias": "count",
-              "color": "#5195CE"
+            "legend": {
+              "calcs": [],
+              "displayMode": "hidden",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
             }
-          ],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
+          },
+          "pluginVersion": "9.0.5",
           "targets": [
             {
-              "expr": "sum (memcached_current_items{kubernetes_pod_name=~\"$pod\",kubernetes_namespace=~\"$namespace\"})",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
+              "expr": "sum (memcached_current_items{pod=~\"$pod\",namespace=~\"$namespace\"})",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "count",
@@ -788,94 +915,110 @@ spec:
               "target": ""
             }
           ],
-          "thresholds": [],
-          "timeRegions": [],
           "title": "Items in cache",
-          "tooltip": {
-            "msResolution": false,
-            "shared": true,
-            "sort": 0,
-            "value_type": "cumulative"
-          },
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "none",
-              "logBase": 1,
-              "show": true
-            },
-            {
-              "format": "short",
-              "logBase": 1,
-              "show": false
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
+          "type": "timeseries"
         },
         {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
           "datasource": {
             "type": "prometheus",
             "uid": "mimir"
           },
-          "editable": true,
-          "error": false,
-          "fill": 1,
-          "fillGradient": 0,
-          "grid": {},
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "bytes"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "written"
+                },
+                "properties": [
+                  {
+                    "id": "custom.transform",
+                    "value": "negative-Y"
+                  }
+                ]
+              }
+            ]
+          },
           "gridPos": {
             "h": 7,
             "w": 14,
             "x": 0,
             "y": 18
           },
-          "hiddenSeries": false,
           "id": 6,
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": true,
-            "max": true,
-            "min": false,
-            "rightSide": false,
-            "show": true,
-            "total": true,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 2,
           "links": [],
-          "nullPointMode": "connected",
           "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "8.4.4",
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [
-            {
-              "alias": "written",
-              "transform": "negative-Y"
+            "legend": {
+              "calcs": [
+                "mean",
+                "lastNotNull",
+                "max",
+                "sum"
+              ],
+              "displayMode": "table",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
             }
-          ],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
+          },
+          "pluginVersion": "9.0.5",
           "targets": [
             {
-              "expr": "sum (irate (memcached_read_bytes_total{kubernetes_pod_name=~\"$pod\",kubernetes_namespace=~\"$namespace\"}[5m]))",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
+              "expr": "sum (irate (memcached_read_bytes_total{pod=~\"$pod\",namespace=~\"$namespace\"}[5m]))",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "read",
@@ -884,7 +1027,11 @@ spec:
               "target": ""
             },
             {
-              "expr": "sum (irate (memcached_written_bytes_total{kubernetes_pod_name=~\"$pod\",kubernetes_namespace=~\"$namespace\"}[5m]))",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
+              "expr": "sum (irate (memcached_written_bytes_total{pod=~\"$pod\",namespace=~\"$namespace\"}[5m]))",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "written",
@@ -893,96 +1040,128 @@ spec:
               "target": ""
             }
           ],
-          "thresholds": [],
-          "timeRegions": [],
           "title": "Network",
-          "tooltip": {
-            "msResolution": false,
-            "shared": true,
-            "sort": 0,
-            "value_type": "cumulative"
-          },
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "bytes",
-              "logBase": 1,
-              "show": true
-            },
-            {
-              "format": "bytes",
-              "logBase": 1,
-              "show": false
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
+          "type": "timeseries"
         },
         {
-          "aliasColors": {
-            "172.17.0.1:9150": "#0A437C"
-          },
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
           "datasource": {
             "type": "prometheus",
             "uid": "mimir"
           },
-          "editable": true,
-          "error": false,
-          "fill": 1,
-          "fillGradient": 0,
-          "grid": {},
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "172.17.0.1:9150"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "#0A437C",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "count"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "#806EB7",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
           "gridPos": {
             "h": 7,
             "w": 10,
             "x": 14,
             "y": 18
           },
-          "height": "",
-          "hiddenSeries": false,
           "id": 4,
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": true,
-            "max": true,
-            "min": false,
-            "show": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 2,
           "links": [],
-          "nullPointMode": "connected",
           "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "8.4.4",
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [
-            {
-              "alias": "count",
-              "color": "#806EB7"
+            "legend": {
+              "calcs": [
+                "mean",
+                "lastNotNull",
+                "max"
+              ],
+              "displayMode": "table",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
             }
-          ],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
+          },
+          "pluginVersion": "9.0.5",
           "targets": [
             {
-              "expr": "sum (memcached_current_connections{kubernetes_pod_name=~\"$pod\",kubernetes_namespace=~\"$namespace\"})",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
+              "expr": "sum (memcached_current_connections{pod=~\"$pod\",namespace=~\"$namespace\"})",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "count",
@@ -991,92 +1170,109 @@ spec:
               "target": ""
             }
           ],
-          "thresholds": [],
-          "timeRegions": [],
           "title": "Connections",
-          "tooltip": {
-            "msResolution": false,
-            "shared": true,
-            "sort": 0,
-            "value_type": "cumulative"
-          },
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "logBase": 1,
-              "min": "0",
-              "show": true
-            },
-            {
-              "format": "short",
-              "logBase": 1,
-              "show": false
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
+          "type": "timeseries"
         },
         {
-          "aliasColors": {
-            "ratio": "#6ED0E0"
-          },
-          "bars": true,
-          "dashLength": 10,
-          "dashes": false,
           "datasource": {
             "type": "prometheus",
             "uid": "mimir"
           },
-          "editable": true,
-          "error": false,
-          "fill": 0,
-          "fillGradient": 0,
-          "grid": {},
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "bars",
+                "fillOpacity": 100,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "max": 1,
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "percentunit"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "ratio"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "#6ED0E0",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
           "gridPos": {
             "h": 7,
             "w": 8,
             "x": 0,
             "y": 25
           },
-          "hiddenSeries": false,
           "id": 3,
-          "legend": {
-            "alignAsTable": false,
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "rightSide": false,
-            "show": false,
-            "total": false,
-            "values": false
-          },
-          "lines": false,
-          "linewidth": 2,
           "links": [],
-          "nullPointMode": "connected",
           "options": {
-            "alertThreshold": true
+            "legend": {
+              "calcs": [],
+              "displayMode": "hidden",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
           },
-          "percentage": false,
-          "pluginVersion": "8.4.4",
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
+          "pluginVersion": "9.0.5",
           "targets": [
             {
-              "expr": "sum (memcached_commands_total{command=\"get\",kubernetes_pod_name=~\"$pod\",kubernetes_namespace=~\"$namespace\"}) / (sum (memcached_commands_total{command=\"get\",kubernetes_pod_name=~\"$pod\",kubernetes_namespace=~\"$namespace\"}) + sum (memcached_commands_total{command=\"set\",kubernetes_pod_name=~\"$pod\",kubernetes_namespace=~\"$namespace\"}))",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
+              "expr": "sum (memcached_commands_total{command=\"get\",pod=~\"$pod\",namespace=~\"$namespace\"}) / (sum (memcached_commands_total{command=\"get\",pod=~\"$pod\",namespace=~\"$namespace\"}) + sum (memcached_commands_total{command=\"set\",pod=~\"$pod\",namespace=~\"$namespace\"}))",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "Get",
@@ -1085,7 +1281,11 @@ spec:
               "target": ""
             },
             {
-              "expr": "sum (memcached_commands_total{command=\"set\",kubernetes_pod_name=~\"$pod\",kubernetes_namespace=~\"$namespace\"})  / (sum (memcached_commands_total{command=\"get\",kubernetes_pod_name=~\"$pod\",kubernetes_namespace=~\"$namespace\"}) + sum (memcached_commands_total{command=\"set\",kubernetes_pod_name=~\"$pod\",kubernetes_namespace=~\"$namespace\"}))",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
+              "expr": "sum (memcached_commands_total{command=\"set\",pod=~\"$pod\",namespace=~\"$namespace\"})  / (sum (memcached_commands_total{command=\"get\",pod=~\"$pod\",namespace=~\"$namespace\"}) + sum (memcached_commands_total{command=\"set\",pod=~\"$pod\",namespace=~\"$namespace\"}))",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "Set",
@@ -1093,96 +1293,94 @@ spec:
               "step": 10
             }
           ],
-          "thresholds": [],
-          "timeRegions": [],
           "title": "Get & Set ratio",
-          "tooltip": {
-            "msResolution": false,
-            "shared": false,
-            "sort": 0,
-            "value_type": "cumulative"
-          },
-          "type": "graph",
-          "xaxis": {
-            "mode": "series",
-            "show": true,
-            "values": [
-              "current"
-            ]
-          },
-          "yaxes": [
-            {
-              "format": "percentunit",
-              "logBase": 1,
-              "max": "1",
-              "min": "0",
-              "show": true
-            },
-            {
-              "format": "short",
-              "logBase": 1,
-              "show": false
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
+          "type": "timeseries"
         },
         {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
           "datasource": {
             "type": "prometheus",
             "uid": "mimir"
           },
-          "editable": true,
-          "error": false,
-          "fill": 1,
-          "fillGradient": 0,
-          "grid": {},
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
           "gridPos": {
             "h": 7,
             "w": 16,
             "x": 8,
             "y": 25
           },
-          "hiddenSeries": false,
           "id": 2,
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": true,
-            "hideEmpty": false,
-            "hideZero": false,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "sideWidth": 120,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 2,
           "links": [],
-          "nullPointMode": "connected",
           "options": {
-            "alertThreshold": true
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "width": 120
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
           },
-          "percentage": false,
-          "pluginVersion": "8.4.4",
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
+          "pluginVersion": "9.0.5",
           "targets": [
             {
-              "expr": "sum (irate (memcached_commands_total{kubernetes_pod_name=~\"$pod\",kubernetes_namespace=~\"$namespace\"}[5m])) by (command)",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mimir"
+              },
+              "expr": "sum (irate (memcached_commands_total{pod=~\"$pod\",namespace=~\"$namespace\"}[5m])) by (command)",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{command}}",
@@ -1191,45 +1389,14 @@ spec:
               "target": ""
             }
           ],
-          "thresholds": [],
-          "timeRegions": [],
           "title": "Commands",
-          "tooltip": {
-            "msResolution": false,
-            "shared": true,
-            "sort": 0,
-            "value_type": "cumulative"
-          },
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "logBase": 1,
-              "show": true
-            },
-            {
-              "format": "short",
-              "logBase": 1,
-              "show": false
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
+          "type": "timeseries"
         }
       ],
       "refresh": "1m",
-      "schemaVersion": 35,
+      "schemaVersion": 36,
       "style": "dark",
-      "tags": [
-        "prometheus",
-        "memcached"
-      ],
+      "tags": [],
       "templating": {
         "list": [
           {
@@ -1246,15 +1413,15 @@ spec:
               "type": "prometheus",
               "uid": "mimir"
             },
-            "definition": "",
+            "definition": "label_values(memcached_up, pod)",
             "hide": 0,
             "includeAll": true,
             "multi": true,
             "name": "pod",
             "options": [],
             "query": {
-              "query": "label_values(memcached_up, kubernetes_pod_name)",
-              "refId": "Cortex-pod-Variable-Query"
+              "query": "label_values(memcached_up, pod)",
+              "refId": "StandardVariableQuery"
             },
             "refresh": 1,
             "regex": "",
@@ -1279,15 +1446,15 @@ spec:
               "type": "prometheus",
               "uid": "mimir"
             },
-            "definition": "",
+            "definition": "label_values(memcached_up, namespace)",
             "hide": 0,
             "includeAll": true,
             "multi": true,
             "name": "namespace",
             "options": [],
             "query": {
-              "query": "label_values(memcached_up, kubernetes_namespace)",
-              "refId": "Cortex-namespace-Variable-Query"
+              "query": "label_values(memcached_up, namespace)",
+              "refId": "StandardVariableQuery"
             },
             "refresh": 1,
             "regex": "",
@@ -1301,7 +1468,7 @@ spec:
         ]
       },
       "time": {
-        "from": "now-24h",
+        "from": "now-15m",
         "to": "now"
       },
       "timepicker": {
@@ -1331,8 +1498,8 @@ spec:
       },
       "timezone": "browser",
       "title": "Memcached Pods monitoring (via Prometheus)",
-      "uid": "z2frqO87z",
-      "version": 1,
+      "uid": "uor7TKi4k",
+      "version": 4,
       "weekStart": ""
     }`}}
 {{- end }}

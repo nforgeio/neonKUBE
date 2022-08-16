@@ -235,11 +235,6 @@ if ($localVersion)
         exit 1
     }
 
-    $version = [int](Get-Content -TotalCount 1 $nfVersionPath).Trim()
-    $version++
-    [System.IO.File]::WriteAllText($nfVersionPath, $version)
-    $neonSdkVersion = "10000.0.$version-dev-$branch"
-
     $version = [int](Get-Content -TotalCount 1 $nkVersionPath).Trim()
     $version++
     [System.IO.File]::WriteAllText($nkVersionPath, $version)
@@ -273,9 +268,6 @@ else
 
     # Submit PUTs request to the versioner service, specifying the counter name.  The service will
     # atomically increment the counter and return the next value.
-
-    $reply           = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonSDK-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
-    $neonSdkVersion  = "10000.0.$reply-dev-$branch"
 
     $reply           = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonKUBE-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
     $neonkubeVersion = "10000.0.$reply-dev-$branch"

@@ -26,10 +26,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using k8s;
-using k8s.Models;
-using Newtonsoft.Json;
-
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
@@ -38,7 +34,11 @@ using Neon.Net;
 using Neon.SSH;
 using Neon.Tasks;
 using Neon.Kube.Operator;
-using System.Dynamic;
+
+using k8s;
+using k8s.Models;
+
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Neon.Kube
@@ -2389,6 +2389,8 @@ subjects:
                             });
 
                     await CreateHostPathStorageClass(controller, controlNode, "openebs-hostpath");
+                    await CreateStorageClass(controller, controlNode, "default", @default: true);
+
                     await WaitForOpenEbsReady(controller, controlNode);
 
                     switch (cluster.Definition.Storage.OpenEbs.Engine)
@@ -2688,7 +2690,8 @@ subjects:
             NodeSshProxy<NodeDefinition>    controlNode,
             string                          name,
             int                             replicaCount = 3,
-            string                          storagePool  = "default")
+            string                          storagePool  = "default",
+            bool                            @default = false)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -2724,6 +2727,14 @@ subjects:
                         VolumeBindingMode = "WaitForFirstConsumer"
                     };
 
+                    if (@default)
+                    {
+                        storageClass.Metadata.Annotations = new Dictionary<string, string>()
+                        {
+                            { "storageclass.kubernetes.io/is-default-class", "true" }
+                        };
+                    }
+
                     await k8s.CreateStorageClassAsync(storageClass);
                 });
         }
@@ -2734,11 +2745,13 @@ subjects:
         /// <param name="controller">The setup controller.</param>
         /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
         /// <param name="name">The new <see cref="V1StorageClass"/> name.</param>
+        /// <param name="default">Specifies whether the storage class should be the default.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateHostPathStorageClass(
             ISetupController                controller,
             NodeSshProxy<NodeDefinition>    controlNode,
-            string                          name)
+            string                          name,
+            bool                            @default = false)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -2772,6 +2785,11 @@ $@"- name: StorageType
                         VolumeBindingMode = "WaitForFirstConsumer"
                     };
 
+                    if (@default)
+                    {
+                        storageClass.Metadata.Annotations.Add("storageclass.kubernetes.io/is-default-class", "true");
+                    }
+
                     await k8s.CreateStorageClassAsync(storageClass);
                 });
         }
@@ -2784,13 +2802,15 @@ $@"- name: StorageType
         /// <param name="name">The new <see cref="V1StorageClass"/> name.</param>
         /// <param name="cstorPoolCluster">Specifies the cStor pool name.</param>
         /// <param name="replicaCount">Specifies the data replication factor.</param>
+        /// <param name="default">Specifies whether the storage class should be the default.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateCstorStorageClass(
             ISetupController                controller,
             NodeSshProxy<NodeDefinition>    controlNode,
             string                          name,
             string                          cstorPoolCluster = "cspc-stripe",
-            int                             replicaCount     = 3)
+            int                             replicaCount     = 3,
+            bool                            @default = false)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -2827,6 +2847,14 @@ $@"- name: StorageType
                         VolumeBindingMode    = "Immediate"
                     };
 
+                    if (@default)
+                    {
+                        storageClass.Metadata.Annotations = new Dictionary<string, string>()
+                        {
+                            { "storageclass.kubernetes.io/is-default-class", "true" }
+                        };
+                    }
+
                     await k8s.CreateStorageClassAsync(storageClass);
                 });
         }
@@ -2838,12 +2866,14 @@ $@"- name: StorageType
         /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
         /// <param name="name">The new <see cref="V1StorageClass"/> name.</param>
         /// <param name="replicaCount">Specifies the data replication factor.</param>
+        /// <param name="replicaCount">Specifies whether this should be the default storage class.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateStorageClass(
             ISetupController                controller,
             NodeSshProxy<NodeDefinition>    controlNode,
             string                          name,
-            int                             replicaCount = 3)
+            int                             replicaCount = 3,
+            bool                            @default = false)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -2863,17 +2893,17 @@ $@"- name: StorageType
 
                 case OpenEbsEngine.HostPath:
 
-                    await CreateHostPathStorageClass(controller, controlNode, name);
+                    await CreateHostPathStorageClass(controller, controlNode, name, @default: @default);
                     break;
 
                 case OpenEbsEngine.cStor:
 
-                    await CreateCstorStorageClass(controller, controlNode, name);
+                    await CreateCstorStorageClass(controller, controlNode, name, @default: @default);
                     break;
 
                 case OpenEbsEngine.Jiva:
 
-                    await CreateJivaStorageClass(controller, controlNode, name);
+                    await CreateJivaStorageClass(controller, controlNode, name, @default: @default);
                     break;
 
                 case OpenEbsEngine.Mayastor:
