@@ -67,7 +67,7 @@ pluginsInit:
 image:
   organization: registry.neon.local
   repository: grafana-grafana
-  tag: 9.0.5-ubuntu
+  tag: 9.1.0-ubuntu
   sha: ""
   pullPolicy: IfNotPresent
   ## Optionally specify an array of imagePullSecrets.
