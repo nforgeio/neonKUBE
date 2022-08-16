@@ -91,14 +91,35 @@ namespace Neon.Kube
         /// Specifies the base image file name (but not the bucket and path) when <paramref name="setupDebugMode"/><c>==true</c>.
         /// For example: <b>ubuntu-22.04.1.hyperv.amd64.vhdx.gz.manifest</b>
         /// </param>
+        /// <param name="architecture">The process ro architecture.</param>
         /// <returns>The download URI or <c>null</c>.</returns>
-        public static string GetDefaultNodeImageUri(HostingEnvironment hostingEnvironment, bool setupDebugMode = false, string baseImageName = null)
+        public static string GetDefaultNodeImageUri(
+            HostingEnvironment hostingEnvironment, 
+            bool setupDebugMode = false, 
+            string baseImageName = null, 
+            string architecture = "amd64")
         {
             var hostingEnvironmentUpper = hostingEnvironment.ToString().ToUpper();
 
             if (setupDebugMode && string.IsNullOrEmpty(baseImageName))
             {
                 throw new NotSupportedException($"[{KubeSetupProperty.BaseImageName}] must be passed when [{nameof(setupDebugMode)}=true].");
+            }
+
+            if (!setupDebugMode)
+            {
+                using (var jsonClient = new JsonClient())
+                {
+                    jsonClient.BaseAddress = new Uri(KubeConst.NeonCloudHeadendUri);
+
+                    var args = new ArgDictionary();
+                    args.Add("hostingEnvironment", hostingEnvironment);
+                    args.Add("version", KubeVersions.NeonKube);
+                    args.Add("architecture", architecture);
+                    args.Add("api-version", KubeConst.NeonCloudHeadendVersion);
+
+                    return jsonClient.PostAsync<string>($"/cluster-setup/domain", args: args).Result;
+                }
             }
 
             switch (hostingEnvironment)
@@ -111,34 +132,15 @@ namespace Neon.Kube
                 case HostingEnvironment.Azure:
                 case HostingEnvironment.Google:
 
-                    if (setupDebugMode)
-                    {
-                        throw new NotSupportedException("Cluster setup debug mode is not supported for cloud environments.");
-                    }
-
-                    throw new NotImplementedException($"Node images are not available for the [{hostingEnvironmentUpper}] environment yet.");
+                    throw new NotSupportedException("Cluster setup debug mode is not supported for cloud environments.");
 
                 case HostingEnvironment.HyperV:
 
-                    if (setupDebugMode)
-                    {
-                        return $"{NeonHelper.NeonPublicBucketUri}/vm-images/hyperv/base/{baseImageName}";
-                    }
-                    else
-                    {
-                        return $"{NeonHelper.NeonPublicBucketUri}/vm-images/hyperv/node/neonkube-{KubeVersions.NeonKube}.hyperv.amd64.vhdx.gz.manifest";
-                    }
+                    return $"{NeonHelper.NeonPublicBucketUri}/vm-images/hyperv/base/{baseImageName}";
 
                 case HostingEnvironment.XenServer:
 
-                    if (setupDebugMode)
-                    {
-                        return $"{NeonHelper.NeonPublicBucketUri}/vm-images/xenserver/base/{baseImageName}";
-                    }
-                    else
-                    {
-                        return $"{NeonHelper.NeonPublicBucketUri}/vm-images/xenserver/node/neonkube-{KubeVersions.NeonKube}.xenserver.amd64.xva.gz.manifest";
-                    }
+                    return $"{NeonHelper.NeonPublicBucketUri}/vm-images/xenserver/base/{baseImageName}";
 
                 default:
 
