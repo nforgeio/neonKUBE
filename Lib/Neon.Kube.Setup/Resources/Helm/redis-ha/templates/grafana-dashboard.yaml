@@ -10,12 +10,15 @@ spec:
     - inputName: "DS_PROMETHEUS"
       datasourceName: "Mimir"
   json: >
-    {{`{
+        {{`{
       "annotations": {
         "list": [
           {
             "builtIn": 1,
-            "datasource": "-- Grafana --",
+            "datasource": {
+              "type": "datasource",
+              "uid": "grafana"
+            },
             "enable": true,
             "hide": true,
             "iconColor": "rgba(0, 211, 255, 1)",
@@ -35,12 +38,15 @@ spec:
       "fiscalYearStartMonth": 0,
       "gnetId": 11835,
       "graphTooltip": 0,
-      "id": 61,
-      "iteration": 1646782455561,
+      "id": 25,
       "links": [],
       "liveNow": false,
       "panels": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -99,7 +105,7 @@ spec:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.0.5",
           "targets": [
             {
               "datasource": {
@@ -121,6 +127,10 @@ spec:
           "type": "stat"
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -180,7 +190,7 @@ spec:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.0.5",
           "targets": [
             {
               "datasource": {
@@ -203,6 +213,10 @@ spec:
           "type": "stat"
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -265,7 +279,7 @@ spec:
             "showThresholdLabels": false,
             "showThresholdMarkers": true
           },
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.0.5",
           "targets": [
             {
               "datasource": {
@@ -289,57 +303,83 @@ spec:
           "type": "gauge"
         },
         {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "editable": true,
-          "error": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "fieldConfig": {
             "defaults": {
-              "links": []
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "links": [],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "short"
             },
             "overrides": []
           },
-          "fill": 1,
-          "fillGradient": 0,
-          "grid": {},
           "gridPos": {
             "h": 7,
             "w": 8,
             "x": 8,
             "y": 0
           },
-          "hiddenSeries": false,
           "id": 2,
-          "isNew": true,
-          "legend": {
-            "alignAsTable": false,
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "rightSide": false,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 2,
+          "interval": "60s",
           "links": [],
-          "nullPointMode": "connected",
           "options": {
-            "alertThreshold": true
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
           },
-          "percentage": false,
-          "pluginVersion": "8.3.1",
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
+          "pluginVersion": "9.0.5",
           "targets": [
             {
               "datasource": {
@@ -358,40 +398,14 @@ spec:
               "target": ""
             }
           ],
-          "thresholds": [],
-          "timeRegions": [],
           "title": "Commands Executed / sec",
-          "tooltip": {
-            "msResolution": false,
-            "shared": true,
-            "sort": 0,
-            "value_type": "cumulative"
-          },
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:134",
-              "format": "short",
-              "logBase": 1,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:135",
-              "format": "short",
-              "logBase": 1,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
+          "type": "timeseries"
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -452,6 +466,7 @@ spec:
             "y": 0
           },
           "id": 1,
+          "interval": "60s",
           "links": [],
           "options": {
             "legend": {
@@ -460,7 +475,8 @@ spec:
               "placement": "bottom"
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "single",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.3.1",
@@ -504,6 +520,10 @@ spec:
           "type": "timeseries"
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -588,7 +608,8 @@ spec:
               "placement": "bottom"
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "single",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.3.1",
@@ -629,6 +650,10 @@ spec:
           "type": "timeseries"
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -688,6 +713,7 @@ spec:
             "y": 7
           },
           "id": 10,
+          "interval": "60s",
           "links": [],
           "options": {
             "legend": {
@@ -696,7 +722,8 @@ spec:
               "placement": "bottom"
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "single",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.3.1",
@@ -734,6 +761,10 @@ spec:
           "type": "timeseries"
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -805,7 +836,8 @@ spec:
               "sortDesc": true
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "single",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.3.1",
@@ -834,6 +866,10 @@ spec:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "editable": true,
           "error": false,
           "fieldConfig": {
@@ -871,7 +907,7 @@ spec:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "8.3.1",
+          "pluginVersion": "9.0.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -943,6 +979,10 @@ spec:
           }
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1048,6 +1088,7 @@ spec:
             "y": 21
           },
           "id": 8,
+          "interval": "60s",
           "links": [],
           "options": {
             "legend": {
@@ -1056,7 +1097,8 @@ spec:
               "placement": "bottom"
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "single",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.3.1",
@@ -1097,6 +1139,10 @@ spec:
           "type": "timeseries"
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1156,6 +1202,7 @@ spec:
             "y": 21
           },
           "id": 14,
+          "interval": "60s",
           "links": [],
           "options": {
             "legend": {
@@ -1164,7 +1211,8 @@ spec:
               "placement": "right"
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "single",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.3.1",
@@ -1189,6 +1237,10 @@ spec:
           "type": "timeseries"
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1228,8 +1280,7 @@ spec:
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -1256,7 +1307,8 @@ spec:
               "placement": "bottom"
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "single",
+              "sort": "none"
             }
           },
           "pluginVersion": "8.3.1",
@@ -1279,8 +1331,8 @@ spec:
           "type": "timeseries"
         }
       ],
-      "refresh": "",
-      "schemaVersion": 33,
+      "refresh": false,
+      "schemaVersion": 36,
       "style": "dark",
       "tags": [],
       "templating": {
@@ -1288,8 +1340,8 @@ spec:
           {
             "current": {
               "selected": false,
-              "text": "Cortex",
-              "value": "Cortex"
+              "text": "Mimir",
+              "value": "Mimir"
             },
             "hide": 0,
             "includeAll": false,
@@ -1313,32 +1365,6 @@ spec:
               "uid": "mimir"
             },
             "definition": "label_values(redis_up, namespace)",
-            "error": {
-              "config": {
-                "data": {
-                  "end": "1646782399",
-                  "match[]": "redis_up",
-                  "start": "1646778799"
-                },
-                "headers": {
-                  "Content-Type": "application/x-www-form-urlencoded",
-                  "X-Grafana-Org-Id": 1
-                },
-                "hideFromInspector": true,
-                "method": "POST",
-                "retry": 0,
-                "url": "api/datasources/proxy/1/api/v1/series"
-              },
-              "data": {
-                "error": "rpc error: code = Canceled desc = grpc: the client connection is closing",
-                "errorType": "execution",
-                "message": "rpc error: code = Canceled desc = grpc: the client connection is closing",
-                "status": "error"
-              },
-              "message": "rpc error: code = Canceled desc = grpc: the client connection is closing",
-              "status": 422,
-              "statusText": ""
-            },
             "hide": 0,
             "includeAll": false,
             "label": "Namespace",
@@ -1372,31 +1398,6 @@ spec:
               "uid": "mimir"
             },
             "definition": "label_values(redis_up{namespace=\"$namespace\"}, pod)",
-            "error": {
-              "config": {
-                "data": {
-                  "end": "1646782426",
-                  "match[]": "redis_up{namespace=\"neon-system\"}",
-                  "start": "1646778826"
-                },
-                "headers": {
-                  "Content-Type": "application/x-www-form-urlencoded",
-                  "X-Grafana-Org-Id": 1
-                },
-                "hideFromInspector": true,
-                "method": "POST",
-                "retry": 0,
-                "url": "api/datasources/proxy/1/api/v1/series"
-              },
-              "data": {
-                "error": "",
-                "message": "",
-                "response": ""
-              },
-              "message": "Query error: 502 ",
-              "status": 502,
-              "statusText": ""
-            },
             "hide": 0,
             "includeAll": true,
             "label": "Pod Name",
@@ -1449,8 +1450,8 @@ spec:
       },
       "timezone": "browser",
       "title": "Redis Dashboard for Prometheus Redis Exporter (helm stable/redis-ha)",
-      "uid": "pVrsOGL7k",
-      "version": 11,
+      "uid": "quQToKiVz",
+      "version": 3,
       "weekStart": ""
     }`}}
 {{- end }}

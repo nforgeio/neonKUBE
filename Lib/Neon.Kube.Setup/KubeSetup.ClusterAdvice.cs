@@ -326,6 +326,9 @@ namespace Neon.Kube
                 advice.MetricsEnabled = false;
             }
 
+            advice.PodMemoryLimit = ByteUnits.Parse("128Mi");
+            advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
+
             return advice;
         }
 
@@ -594,8 +597,8 @@ namespace Neon.Kube
             {
                 advice.MetricsEnabled   = false;
                 advice.ReplicaCount     = 3;
-                advice.PodMemoryLimit   = ByteUnits.Parse("1Gi");
-                advice.PodMemoryRequest = ByteUnits.Parse("1Gi");
+                advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
+                advice.PodMemoryRequest = ByteUnits.Parse("512Mi");
             }
 
             return advice;
@@ -653,8 +656,8 @@ namespace Neon.Kube
             else
             {
                 advice.MetricsEnabled   = false;
-                advice.PodMemoryLimit   = ByteUnits.Parse("1Gi");
-                advice.PodMemoryRequest = ByteUnits.Parse("1Gi");
+                advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
+                advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
             }
 
             return advice;
@@ -723,7 +726,7 @@ namespace Neon.Kube
             var advice = new KubeServiceAdvice(KubeClusterAdvice.LokiDistributor);
 
             advice.ReplicaCount     = 1;
-            advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
+            advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("32Mi");
             advice.MetricsEnabled   = false;
             advice.ReplicaCount     = 1;
@@ -760,8 +763,8 @@ namespace Neon.Kube
             else
             {
                 advice.MetricsEnabled   = false;
-                advice.PodMemoryLimit   = ByteUnits.Parse("2Gi");
-                advice.PodMemoryRequest = ByteUnits.Parse("2Gi");
+                advice.PodMemoryLimit   = ByteUnits.Parse("1Gi");
+                advice.PodMemoryRequest = ByteUnits.Parse("1Gi");
             }
 
             return advice;
@@ -783,8 +786,8 @@ namespace Neon.Kube
             else
             {
                 advice.MetricsEnabled   = false;
-                advice.PodMemoryLimit   = ByteUnits.Parse("1Gi");
-                advice.PodMemoryRequest = ByteUnits.Parse("1Gi");
+                advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
+                advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
             }
 
             return advice;
@@ -1183,7 +1186,7 @@ namespace Neon.Kube
             var advice = new KubeServiceAdvice(KubeClusterAdvice.TempoDistributor);
 
             advice.ReplicaCount     = 1;
-            advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
+            advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("32Mi");
             advice.ReplicaCount     = 1;
 
@@ -1241,9 +1244,8 @@ namespace Neon.Kube
             else
             {
                 advice.MetricsEnabled   = true;
-                advice.PodMemoryLimit   = ByteUnits.Parse("1Gi");
-                advice.PodMemoryRequest = ByteUnits.Parse("1Gi");
-                advice.ReplicaCount     = 1;
+                advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
+                advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
             }
 
             return advice;
