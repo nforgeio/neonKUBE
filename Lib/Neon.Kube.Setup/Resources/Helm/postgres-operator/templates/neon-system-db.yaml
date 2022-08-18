@@ -163,9 +163,8 @@ spec:
         secretKeyRef:
           name: neon-admin.neon-system-db.credentials.postgresql
           key: password
-    args:
-    - "--extend.query-path=/etc/queries.yaml"
-    - "--log.level={{ .Values.metrics.logLevel }}"
+    - name: LOG_LEVEL
+      value: {{ .Values.metrics.logLevel }}
     volumeMounts:
     - name: queries
       mountPath: /etc/queries.yaml
