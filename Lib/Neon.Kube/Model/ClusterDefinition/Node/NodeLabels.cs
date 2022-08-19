@@ -687,7 +687,7 @@ namespace Neon.Kube
             }
             catch (Exception e)
             {
-                log.LogWarn(() => $"[node={Node.Name}]: [{e.GetType().Name}] parsing [{label.Key}={label.Value}");
+                log.LogWarning(() => $"[node={Node.Name}]: [{e.GetType().Name}] parsing [{label.Key}={label.Value}");
             }
         }
 

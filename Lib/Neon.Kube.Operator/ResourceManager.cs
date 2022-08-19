@@ -346,7 +346,7 @@ namespace Neon.Kube.Operator
         /// </summary>
         private void OnPromotion()
         {
-            log.LogInfo("PROMOTED");
+            log.LogInformation("PROMOTED");
 
             IsLeader = true;
 
@@ -368,7 +368,7 @@ namespace Neon.Kube.Operator
         /// </summary>
         private async void OnDemotion()
         {
-            log.LogInfo("DEMOTED");
+            log.LogInformation("DEMOTED");
 
             IsLeader = false;
 
@@ -403,7 +403,7 @@ namespace Neon.Kube.Operator
         {
             LeaderIdentity = identity;
 
-            log.LogInfo($"LEADER-IS: {identity}");
+            log.LogInformation($"LEADER-IS: {identity}");
         }
 
         /// <summary>

@@ -202,7 +202,7 @@ namespace NeonClusterOperator
 
             if (pods.Items.Any(p => p.Metadata.Name == "check-node-images-busybox"))
             {
-                Log.LogInfo($"[check-node-images] Removing existing busybox pod.");
+                Log.LogInformation($"[check-node-images] Removing existing busybox pod.");
                 
                 await k8s.DeleteNamespacedPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem);
 
@@ -217,7 +217,7 @@ namespace NeonClusterOperator
                     pollInterval: TimeSpan.FromSeconds(2));
             }
 
-            Log.LogInfo($"[check-node-images] Creating busybox pod.");
+            Log.LogInformation($"[check-node-images] Creating busybox pod.");
 
             var busybox = await k8s.CreateNamespacedPodAsync(
                 new V1Pod()
@@ -286,12 +286,12 @@ namespace NeonClusterOperator
                 timeout:      TimeSpan.FromSeconds(60),
                 pollInterval: TimeSpan.FromSeconds(2));
 
-            Log.LogInfo($"[check-node-images] Loading cluster manifest.");
+            Log.LogInformation($"[check-node-images] Loading cluster manifest.");
 
             var clusterManifestJson = Program.Resources.GetFile("/cluster-manifest.json").ReadAllText();
             var clusterManifest     = NeonHelper.JsonDeserialize<ClusterManifest>(clusterManifestJson);
 
-            Log.LogInfo($"[check-node-images] Getting images currently on node.");
+            Log.LogInformation($"[check-node-images] Getting images currently on node.");
 
             var crioOutput = NeonHelper.JsonDeserialize<dynamic>(await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"crictl images --output json",  retry: true));
             var nodeImages = ((IEnumerable<dynamic>)crioOutput.images).Select(image => image.repoTags).SelectMany(x => (JArray)x);
@@ -300,24 +300,24 @@ namespace NeonClusterOperator
             {
                 if (nodeImages.Contains(image.InternalRef))
                 {
-                    Log.LogInfo($"[check-node-images] Image [{image.InternalRef}] exists. Pushing to registry.");
+                    Log.LogInformation($"[check-node-images] Image [{image.InternalRef}] exists. Pushing to registry.");
                     await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"podman push {image.InternalRef}", retry: true);
                 } 
                 else
                 {
-                    Log.LogInfo($"[check-node-images] Image [{image.InternalRef}] doesn't exist. Pulling from [{image.SourceRef}].");
+                    Log.LogInformation($"[check-node-images] Image [{image.InternalRef}] doesn't exist. Pulling from [{image.SourceRef}].");
                     await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"podman pull {image.SourceRef}", retry: true);
                     await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"podman tag {image.SourceRef} {image.InternalRef}");
 
-                    Log.LogInfo($"[check-node-images] Pushing [{image.InternalRef}] to cluster registry.");
+                    Log.LogInformation($"[check-node-images] Pushing [{image.InternalRef}] to cluster registry.");
                     await ExecInPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem, $@"podman push {image.InternalRef}", retry: true);
                 }
             }
 
-            Log.LogInfo($"[check-node-images] Removing busybox.");
+            Log.LogInformation($"[check-node-images] Removing busybox.");
             await k8s.DeleteNamespacedPodAsync("check-node-images-busybox", KubeNamespaces.NeonSystem);
 
-            Log.LogInfo($"[check-node-images] Finished.");
+            Log.LogInformation($"[check-node-images] Finished.");
         }
 
         /// <summary>

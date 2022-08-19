@@ -182,7 +182,7 @@ CLUSTER MANAGEMENT ARGUMENTS:
 ";
             // Disable any logging that might be performed by library classes.
 
-            LogManager.Default.LogLevel = LogLevel.None;
+            LogManager.Default.LogLevel = NeonLogLevel.None;
 
             // Use the version of Powershell Core installed with the application,
             // if present.

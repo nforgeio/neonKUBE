@@ -64,7 +64,7 @@ namespace Neon.Kube.Operator
                 {
                     switch (logEvent.LogLevel)
                     {
-                        case LogLevel.Info:
+                        case NeonLogLevel.Information:
 
 // $debug(jefflill): reenable this?
 #if DISABLED
@@ -100,7 +100,7 @@ namespace Neon.Kube.Operator
 #endif
                             break;
 
-                        case LogLevel.Error:
+                        case NeonLogLevel.Error:
 
 // $debug(jefflill): reenable this?
 #if DISABLED

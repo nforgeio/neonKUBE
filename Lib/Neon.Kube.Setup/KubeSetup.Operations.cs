@@ -2389,7 +2389,7 @@ subjects:
                             });
 
                     await CreateHostPathStorageClass(controller, controlNode, "openebs-hostpath");
-                    await CreateStorageClass(controller, controlNode, "default", @default: true);
+                    await CreateStorageClass(controller, controlNode, "default", isDefault: true);
 
                     await WaitForOpenEbsReady(controller, controlNode);
 
@@ -2684,6 +2684,7 @@ subjects:
         /// <param name="name">The new <see cref="V1StorageClass"/> name.</param>
         /// <param name="replicaCount">Specifies the data replication factor.</param>
         /// <param name="storagePool">Specifies the OpenEBS storage pool.</param>
+        /// <param name="isDefault">Optionally indicates that this is the default storage class.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateJivaStorageClass(
             ISetupController                controller,
@@ -2691,7 +2692,7 @@ subjects:
             string                          name,
             int                             replicaCount = 3,
             string                          storagePool  = "default",
-            bool                            @default = false)
+            bool                            isDefault    = false)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -2727,7 +2728,7 @@ subjects:
                         VolumeBindingMode = "WaitForFirstConsumer"
                     };
 
-                    if (@default)
+                    if (isDefault)
                     {
                         storageClass.Metadata.Annotations = new Dictionary<string, string>()
                         {
@@ -2745,13 +2746,13 @@ subjects:
         /// <param name="controller">The setup controller.</param>
         /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
         /// <param name="name">The new <see cref="V1StorageClass"/> name.</param>
-        /// <param name="default">Specifies whether the storage class should be the default.</param>
+        /// <param name="isDefault">Specifies whether this should be the default storage class.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateHostPathStorageClass(
             ISetupController                controller,
             NodeSshProxy<NodeDefinition>    controlNode,
             string                          name,
-            bool                            @default = false)
+            bool                            isDefault = false)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -2785,7 +2786,7 @@ $@"- name: StorageType
                         VolumeBindingMode = "WaitForFirstConsumer"
                     };
 
-                    if (@default)
+                    if (isDefault)
                     {
                         storageClass.Metadata.Annotations.Add("storageclass.kubernetes.io/is-default-class", "true");
                     }
@@ -2802,7 +2803,7 @@ $@"- name: StorageType
         /// <param name="name">The new <see cref="V1StorageClass"/> name.</param>
         /// <param name="cstorPoolCluster">Specifies the cStor pool name.</param>
         /// <param name="replicaCount">Specifies the data replication factor.</param>
-        /// <param name="default">Specifies whether the storage class should be the default.</param>
+        /// <param name="isDefault">Specifies whether this should be the default storage class.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateCstorStorageClass(
             ISetupController                controller,
@@ -2810,7 +2811,7 @@ $@"- name: StorageType
             string                          name,
             string                          cstorPoolCluster = "cspc-stripe",
             int                             replicaCount     = 3,
-            bool                            @default = false)
+            bool                            isDefault        = false)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -2847,7 +2848,7 @@ $@"- name: StorageType
                         VolumeBindingMode    = "Immediate"
                     };
 
-                    if (@default)
+                    if (isDefault)
                     {
                         storageClass.Metadata.Annotations = new Dictionary<string, string>()
                         {
@@ -2866,14 +2867,14 @@ $@"- name: StorageType
         /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
         /// <param name="name">The new <see cref="V1StorageClass"/> name.</param>
         /// <param name="replicaCount">Specifies the data replication factor.</param>
-        /// <param name="replicaCount">Specifies whether this should be the default storage class.</param>
+        /// <param name="isDefault">Specifies whether this should be the default storage class.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task CreateStorageClass(
             ISetupController                controller,
             NodeSshProxy<NodeDefinition>    controlNode,
             string                          name,
             int                             replicaCount = 3,
-            bool                            @default = false)
+            bool                            isDefault    = false)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -2893,17 +2894,17 @@ $@"- name: StorageType
 
                 case OpenEbsEngine.HostPath:
 
-                    await CreateHostPathStorageClass(controller, controlNode, name, @default: @default);
+                    await CreateHostPathStorageClass(controller, controlNode, name, isDefault: isDefault);
                     break;
 
                 case OpenEbsEngine.cStor:
 
-                    await CreateCstorStorageClass(controller, controlNode, name, @default: @default);
+                    await CreateCstorStorageClass(controller, controlNode, name, isDefault: isDefault);
                     break;
 
                 case OpenEbsEngine.Jiva:
 
-                    await CreateJivaStorageClass(controller, controlNode, name, @default: @default);
+                    await CreateJivaStorageClass(controller, controlNode, name, isDefault: isDefault);
                     break;
 
                 case OpenEbsEngine.Mayastor:

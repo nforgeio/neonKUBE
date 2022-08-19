@@ -262,7 +262,7 @@ namespace Neon.Kube
             {
                 // This normal: we'll see this when the watcher is disposed.
 
-                logger?.LogInfo("Disposing");
+                logger?.LogInformation("Disposing");
             }
         }
 

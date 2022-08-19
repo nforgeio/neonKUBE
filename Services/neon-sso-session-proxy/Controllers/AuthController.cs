@@ -98,7 +98,7 @@ namespace NeonSsoSessionProxy.Controllers
                 var errorFeature = HttpContext.GetForwarderErrorFeature();
                 var exception    = errorFeature.Exception;
 
-                LogError("CatchAll", exception);
+                Logger.LogError("CatchAll", exception);
             }
         }
 
@@ -110,11 +110,11 @@ namespace NeonSsoSessionProxy.Controllers
         [Route("/token")]
         public async Task<ActionResult<TokenResponse>> TokenAsync([FromForm] string code)
         {
-            LogDebug($"Processing request for code: [{code}]");
+            Logger.LogDebug($"Processing request for code: [{code}]");
             
             var responseJson = NeonHelper.JsonDeserialize<TokenResponse>(cipher.DecryptBytesFrom(await cache.GetAsync(code)));
             
-            LogDebug($"[{code}]: [{NeonHelper.JsonSerialize(responseJson)}]");
+            Logger.LogDebug($"[{code}]: [{NeonHelper.JsonSerialize(responseJson)}]");
 
             _ = cache.RemoveAsync(code);
 

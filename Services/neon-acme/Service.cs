@@ -147,7 +147,7 @@ namespace NeonAcme
 
             _ = webHost.RunAsync();
 
-            Log.LogInfo($"Listening on {IPAddress.Any}:{port}");
+            Log.LogInformation($"Listening on {IPAddress.Any}:{port}");
 
             // Indicate that the service is ready for business.
 

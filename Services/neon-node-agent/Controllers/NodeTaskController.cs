@@ -212,7 +212,7 @@ rm $0
         /// <inheritdoc/>
         public async Task IdleAsync()
         {
-            log.LogInfo("[IDLE]");
+            log.LogInformation("[IDLE]");
 
             // Handle execution of scheduled tasks.
 
@@ -253,7 +253,7 @@ rm $0
 
             var name = resource.Name();
 
-            log.LogInfo($"RECONCILED: {name}");
+            log.LogInformation($"RECONCILED: {name}");
 
             // We have a new node task targeting the host node:
             //
@@ -272,8 +272,8 @@ rm $0
             }
             catch (Exception e)
             {
-                log.LogWarn($"Invalid NodeTask: [{name}]", e);
-                log.LogWarn($"Deleting invalid NodeTask: [{name}]");
+                log.LogWarning($"Invalid NodeTask: [{name}]", e);
+                log.LogWarning($"Deleting invalid NodeTask: [{name}]");
                 await k8s.DeleteClusterCustomObjectAsync(nodeTask);
 
                 return null;
@@ -312,7 +312,7 @@ rm $0
 
                 if (retentionTime >= TimeSpan.FromSeconds(nodeTask.Spec.RetentionSeconds))
                 {
-                    log.LogInfo($"NodeTask [{name}] retained for [{retentionTime}] (deleting now).");
+                    log.LogInformation($"NodeTask [{name}] retained for [{retentionTime}] (deleting now).");
                     await k8s.DeleteClusterCustomObjectAsync(nodeTask);
 
                     return null;
@@ -329,7 +329,7 @@ rm $0
 
                 if (nodeTask.Spec.StartBeforeTimestamp.HasValue && nodeTask.Spec.StartBeforeTimestamp < utcNow)
                 {
-                    log.LogWarn($"Detected tardy [nodetask={nodeTask.Name()}]: task execution didn't start before [{nodeTask.Spec.StartBeforeTimestamp}].");
+                    log.LogWarning($"Detected tardy [nodetask={nodeTask.Name()}]: task execution didn't start before [{nodeTask.Spec.StartBeforeTimestamp}].");
 
                     // Update the node task status to: TARDY
 
@@ -413,8 +413,8 @@ rm $0
                 }
                 catch (Exception e)
                 {
-                    log.LogWarn($"Invalid NodeTask: [{taskName}]", e);
-                    log.LogWarn($"Deleting invalid NodeTask: [{taskName}]");
+                    log.LogWarning($"Invalid NodeTask: [{taskName}]", e);
+                    log.LogWarning($"Deleting invalid NodeTask: [{taskName}]");
                     await k8s.DeleteClusterCustomObjectAsync(nodeTask);
                     continue;
                 }
@@ -426,7 +426,7 @@ rm $0
 
                     if (nodeTask.Status.AgentId != Node.AgentId)
                     {
-                        log.LogWarn($"Detected orphaned [nodetask={taskName}]: task [agentID={nodeTask.Status.AgentId}] does not match operator [agentID={Node.AgentId}]");
+                        log.LogWarning($"Detected orphaned [nodetask={taskName}]: task [agentID={nodeTask.Status.AgentId}] does not match operator [agentID={Node.AgentId}]");
 
                         // Update the node task status to: ORPHANED
 
@@ -448,7 +448,7 @@ rm $0
                     if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.Running &&
                         utcNow - nodeTask.Status.StartTimestamp >= TimeSpan.FromSeconds(nodeTask.Spec.TimeoutSeconds))
                     {
-                        log.LogWarn($"Execution timeout [nodetask={taskName}]: execution time exceeds [{nodeTask.Spec.TimeoutSeconds}].");
+                        log.LogWarning($"Execution timeout [nodetask={taskName}]: execution time exceeds [{nodeTask.Spec.TimeoutSeconds}].");
                         await KillTaskAsync(nodeTask);
 
                         // Update the node task status to: TIMEOUT
@@ -470,7 +470,7 @@ rm $0
                     if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.Pending &&
                         nodeTask.Spec.StartBeforeTimestamp.HasValue && nodeTask.Spec.StartBeforeTimestamp <= utcNow)
                     {
-                        log.LogWarn($"Detected tardy [nodetask={taskName}]: task execution didn't start before [{nodeTask.Spec.StartBeforeTimestamp}].");
+                        log.LogWarning($"Detected tardy [nodetask={taskName}]: task execution didn't start before [{nodeTask.Spec.StartBeforeTimestamp}].");
 
                         // Update the node task status to: TARDY
 
@@ -493,7 +493,7 @@ rm $0
                 .Where(task => task.Status.Phase != V1NeonNodeTask.Phase.New && task.Status.Phase != V1NeonNodeTask.Phase.Running)
                 .Where(task => (utcNow - task.Status.FinishTimestamp) >= TimeSpan.FromSeconds(task.Spec.RetentionSeconds)))
             {
-                log.LogWarn($"[nodetask={nodeTask.Name()}]: has been retained for [{nodeTask.Spec.RetentionSeconds}] (deleting now).");
+                log.LogWarning($"[nodetask={nodeTask.Name()}]: has been retained for [{nodeTask.Spec.RetentionSeconds}] (deleting now).");
                 await k8s.DeleteClusterCustomObjectAsync(nodeTask);
             }
 
@@ -515,7 +515,7 @@ rm $0
 
                     if (!nodeTaskExecuteIds.Contains(scriptFolderName))
                     {
-                        log.LogWarn($"Removing node task host script folder: {scriptFolderName}");
+                        log.LogWarning($"Removing node task host script folder: {scriptFolderName}");
                         NeonHelper.DeleteFolder(scriptFolderPath);
                     }
                 }
@@ -568,7 +568,7 @@ rm $0
 
                         if (result.ExitCode != 0)
                         {
-                            log.LogWarn($"[NodeTask: {taskName}]: Cannot kill orphaned task process [{nodeTask.Status.ProcessId}]. [exitcode={result.ExitCode}]");
+                            log.LogWarning($"[NodeTask: {taskName}]: Cannot kill orphaned task process [{nodeTask.Status.ProcessId}]. [exitcode={result.ExitCode}]");
                             return;
                         }
                     }
@@ -654,7 +654,7 @@ export SCRIPT_DIR={taskFolder}
                         {
                             processId = newProcess.Id;
 
-                            log.LogInfo($"Starting [nodetask={taskName}]: [command={Node.GetBashCommandLine(scriptPath)}] [processID={processId}]");
+                            log.LogInformation($"Starting [nodetask={taskName}]: [command={Node.GetBashCommandLine(scriptPath)}] [processID={processId}]");
                         };
 
                     task = Node.BashExecuteCaptureAsync(
@@ -667,7 +667,7 @@ export SCRIPT_DIR={taskFolder}
                     // We shouldn't ever see an error here because [/bin/bash] should always
                     // exist, but we'll log something just in case.
 
-                    log.LogWarn(e);
+                    log.LogWarning(e);
 
                     var failedPatch = OperatorHelper.CreatePatch<V1NeonNodeTask>();
 
@@ -693,7 +693,7 @@ export SCRIPT_DIR={taskFolder}
                 // It's possible but unlikely that the update above failed for some reason.
                 // We'll log this and then hope for the best.
 
-                log.LogWarn(e);
+                log.LogWarning(e);
             }
 
             // Update the node task status to: RUNNING
@@ -719,13 +719,13 @@ export SCRIPT_DIR={taskFolder}
                 try
                 {
                     result = await task;
-                    log.LogInfo($"Finished [nodetask={taskName}]: [command={nodeTask.Status.CommandLine}] [exitcode={result.ExitCode}]");
+                    log.LogInformation($"Finished [nodetask={taskName}]: [command={nodeTask.Status.CommandLine}] [exitcode={result.ExitCode}]");
                 }
                 catch (TimeoutException)
                 {
                     timeout = true;
 
-                    log.LogWarn($"Timeout [nodetask={taskName}]");
+                    log.LogWarning($"Timeout [nodetask={taskName}]");
                 }
 
                 var utcNow = DateTime.UtcNow;
@@ -760,7 +760,7 @@ export SCRIPT_DIR={taskFolder}
             }
             catch (Exception e)
             {
-                log.LogWarn(e);
+                log.LogWarning(e);
             }
         }
     }
