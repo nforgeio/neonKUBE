@@ -112,7 +112,7 @@ namespace NeonSsoSessionProxy
             }
             catch (Exception e)
             {
-                NeonSsoSessionProxyService.Log.LogError(e);
+                NeonSsoSessionProxyService.Logger.LogError(e);
             }
 
             await _next(context);

@@ -33,6 +33,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 
@@ -176,7 +177,8 @@ namespace NeonDashboard
                 .AddHttpClient()
                 .AddBlazoredLocalStorage()
                 .AddTailwind()
-                .AddSingleton<INeonLogger>(NeonDashboardService.LogManager.GetLogger())
+                .AddSingleton<ILogger>(Program.Service.Logger)
+                .AddSingleton<INeonLogger>(Program.Service.Logger)
                 .AddGoogleAnalytics("G-PYMLFS3FX4")
                 .AddRouting()
                 .AddScoped<AppState>()

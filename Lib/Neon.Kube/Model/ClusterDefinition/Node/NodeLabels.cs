@@ -72,7 +72,7 @@ namespace Neon.Kube
     /// </remarks>
     public class NodeLabels
     {
-        private INeonLogger     log = LogManager.Default.GetLogger<NodeLabels>();
+        private INeonLogger     log = TelemetryHub.Default.GetLogger<NodeLabels>();
 
         /// <summary>
         /// Default constructor.

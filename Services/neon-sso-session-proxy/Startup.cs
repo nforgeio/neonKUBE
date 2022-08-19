@@ -81,13 +81,14 @@ namespace NeonSsoSessionProxy
                     options.ConfigurationOptions.EndPoints.Add("neon-redis.neon-system:26379");
                 });
             }
-            services.AddSingleton<INeonLogger>(NeonSsoSessionProxyService.Log);
+            services.AddSingleton<ILogger>(Program.Service.Logger);
+            services.AddSingleton<INeonLogger>(Program.Service.Logger);
             services.AddHealthChecks();
             services.AddHttpForwarder();
             services.AddHttpClient();
 
             // Dex config
-            var dexClient  = new DexClient(new Uri($"http://{KubeService.Dex}:5556"), NeonSsoSessionProxyService.Log);
+            var dexClient  = new DexClient(new Uri($"http://{KubeService.Dex}:5556"), NeonSsoSessionProxyService.Logger);
             
             // Load in each of the clients from the Dex config into the client.
             foreach (var client in NeonSsoSessionProxyService.Config.StaticClients)
@@ -110,7 +111,7 @@ namespace NeonSsoSessionProxy
 
             // Cookie encryption cipher.
 
-            var aesCipher = new AesCipher(NeonSsoSessionProxyService.GetEnvironmentVariable("COOKIE_CIPHER", AesCipher.GenerateKey(), redacted: !NeonSsoSessionProxyService.Log.IsLogDebugEnabled));
+            var aesCipher = new AesCipher(NeonSsoSessionProxyService.GetEnvironmentVariable("COOKIE_CIPHER", AesCipher.GenerateKey(), redacted: !NeonSsoSessionProxyService.Logger.IsLogDebugEnabled));
 
             services.AddSingleton(aesCipher);
 
@@ -123,7 +124,7 @@ namespace NeonSsoSessionProxy
             services.AddSingleton<SessionTransformer>(
                 serviceProvider =>
                 {
-                    return new SessionTransformer(serviceProvider.GetService<IDistributedCache>(), aesCipher, dexClient, NeonSsoSessionProxyService.Log, cacheOptions);
+                    return new SessionTransformer(serviceProvider.GetService<IDistributedCache>(), aesCipher, dexClient, NeonSsoSessionProxyService.Logger, cacheOptions);
                 });
             
             services.AddControllers()

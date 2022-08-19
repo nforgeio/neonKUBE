@@ -29,6 +29,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 
 using Neon.Common;
@@ -78,19 +79,21 @@ namespace NeonAcme
                 BaseAddress = new Uri(NeonAcmeService.GetEnvironmentVariable("HEADEND_URL", "https://headend.neoncloud.io"))
             };
 
-            services.AddSingleton(NeonAcmeService)
-                    .AddSingleton(NeonAcmeService.Log)
-                    .AddSingleton(jsonClient)
-                    .AddSwaggerGen(c =>
-                    {
-                        c.SwaggerDoc("v3",
-                            new OpenApiInfo
-                            {
-                                Title = "v1",
-                                Version = "v1"
-                            }
-                         );
-                    });
+            services
+                .AddSingleton(NeonAcmeService)
+                .AddSingleton<ILogger>(Program.Service.Logger)
+                .AddSingleton<INeonLogger>(Program.Service.Logger)
+                .AddSingleton(jsonClient)
+                .AddSwaggerGen(c =>
+                {
+                    c.SwaggerDoc("v3",
+                        new OpenApiInfo
+                        {
+                            Title = "v1",
+                            Version = "v1"
+                        }
+                        );
+                });
 
             services.AddControllers()
                 .AddNeon();

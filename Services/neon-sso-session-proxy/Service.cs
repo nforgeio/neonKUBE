@@ -107,7 +107,7 @@ namespace NeonSsoSessionProxy
 
             _ = webHost.RunAsync();
 
-            Log.LogInformation($"Listening on {IPAddress.Any}:80");
+            Logger.LogInformation($"Listening on {IPAddress.Any}:80");
 
             // Indicate that the service is ready for business.
 

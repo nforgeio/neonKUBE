@@ -67,7 +67,7 @@ namespace Neon.Kube
     /// </summary>
     public static class KubeHelper
     {
-        private static INeonLogger          log = LogManager.Default.GetLogger(typeof(KubeHelper));
+        private static INeonLogger          logger = TelemetryHub.Default.GetLogger(typeof(KubeHelper));
         private static string               orgKUBECONFIG;
         private static string               userHomeFolder;
         private static string               neonkubeHomeFolder;
@@ -161,7 +161,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(log != null, nameof(log));
 
-            KubeHelper.log = log;
+            KubeHelper.logger = log;
         }
 
         /// <summary>

@@ -221,7 +221,7 @@ namespace NeonNodeAgent
                         logging =>
                         {
                             logging.ClearProviders();
-                            logging.AddProvider(base.LogManager);
+                            logging.AddProvider(base.TelemetryHub);
                         })
                     .ConfigureWebHostDefaults(builder => builder.UseStartup<Startup>())
                     .Build()

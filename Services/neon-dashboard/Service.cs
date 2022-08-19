@@ -155,7 +155,7 @@ namespace NeonDashboard
 
                 PrometheusClient.JsonClient.DefaultRequestHeaders.Add("X-Scope-OrgID", ClusterInfo.Name);
 
-                Log.LogInformation($"Updated cluster info");
+                Logger.LogInformation($"Updated cluster info");
             },
             KubeNamespace.NeonStatus,
             fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
@@ -207,9 +207,9 @@ namespace NeonDashboard
                 await ConfigureDevAsync();
             }
 
-            SsoClientSecret = GetEnvironmentVariable("SSO_CLIENT_SECRET", redacted: !Log.IsLogDebugEnabled);
+            SsoClientSecret = GetEnvironmentVariable("SSO_CLIENT_SECRET", redacted: !Logger.IsLogDebugEnabled);
 
-            AesCipher = new AesCipher(GetEnvironmentVariable("COOKIE_CIPHER", AesCipher.GenerateKey(), redacted: !Log.IsLogDebugEnabled));
+            AesCipher = new AesCipher(GetEnvironmentVariable("COOKIE_CIPHER", AesCipher.GenerateKey(), redacted: !Logger.IsLogDebugEnabled));
 
             // Start the web service.
 
@@ -227,7 +227,7 @@ namespace NeonDashboard
 
             _ = webHost.RunAsync();
 
-            Log.LogInformation($"Listening on {IPAddress.Any}:{port}");
+            Logger.LogInformation($"Listening on {IPAddress.Any}:{port}");
 
             // Indicate that the service is running.
 
@@ -270,7 +270,7 @@ namespace NeonDashboard
         {
             await SyncContext.Clear;
 
-            Log.LogInformation("Configuring cluster SSO for development.");
+            Logger.LogInformation("Configuring cluster SSO for development.");
 
             // wait for cluster info to be set
             await NeonHelper.WaitForAsync(async () =>
@@ -301,14 +301,14 @@ namespace NeonDashboard
                     await Kubernetes.ReplaceNamespacedConfigMapAsync(dexConfigMap, dexConfigMap.Metadata.Name, KubeNamespace.NeonSystem);
                 }
 
-                Log.LogInformation("SSO configured.");
+                Logger.LogInformation("SSO configured.");
             }
             catch (Exception e)
             {
-                Log.LogError("Error configuring SSO", e);
+                Logger.LogError("Error configuring SSO", e);
             }
 
-            Log.LogInformation("Configure metrics.");
+            Logger.LogInformation("Configure metrics.");
 
             var virtualServices = await Kubernetes.ListNamespacedCustomObjectAsync<VirtualService>(KubeNamespace.NeonIngress);
             if (!virtualServices.Items.Any(vs => vs.Name() == "metrics-external"))

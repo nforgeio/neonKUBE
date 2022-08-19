@@ -259,7 +259,7 @@ namespace NeonNodeAgent
 
         private const string podmanPath = "/usr/bin/podman";
 
-        private static readonly INeonLogger log             = Program.Service.LogManager.GetLogger<ContainerRegistryController>();
+        private static readonly INeonLogger log             = Program.Service.TelemetryHub.GetLogger<ContainerRegistryController>();
         private static readonly string      configMountPath = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
         private static TimeSpan             reloginInterval;
         private static TimeSpan             reloginMaxRandomInterval;

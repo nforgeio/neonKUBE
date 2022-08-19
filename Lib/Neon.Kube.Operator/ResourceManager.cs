@@ -227,7 +227,7 @@ namespace Neon.Kube.Operator
             this.k8s          = k8s;  // $todo(jefflill): Can we obtain this from KubeOps or the [IServiceProvider] somehow?
             this.options      = options ?? new ResourceManagerOptions();
             this.filter       = filter ?? new Func<TEntity, bool>(resource => true);
-            this.log          = logger ?? LogManager.Default.GetLogger($"Neon.Kube.Operator.ResourceManager({typeof(TEntity).Name})");
+            this.log          = logger ?? TelemetryHub.Default.GetLogger($"Neon.Kube.Operator.ResourceManager({typeof(TEntity).Name})");
             this.leaderConfig = leaderConfig;
 
             options.Validate();

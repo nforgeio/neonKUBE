@@ -79,7 +79,7 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly INeonLogger log = Program.Service.LogManager.GetLogger<NodeTaskController>();
+        private static readonly INeonLogger log = Program.Service.TelemetryHub.GetLogger<NodeTaskController>();
 
         private static ResourceManager<V1NeonNodeTask, NodeTaskController>  resourceManager;
 
