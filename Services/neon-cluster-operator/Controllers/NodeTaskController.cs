@@ -79,7 +79,7 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly INeonLogger log = Program.Service.TelemetryHub.GetLogger<NodeTaskController>();
+        private static readonly INeonLogger log = TelemetryHub.Default.GetLogger<NodeTaskController>();
 
         private static ResourceManager<V1NeonNodeTask, NodeTaskController>  resourceManager;
 
@@ -98,6 +98,7 @@ namespace NeonClusterOperator
         public static async Task StartAsync(IKubernetes k8s)
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+
             // Load the configuration settings.
 
             var leaderConfig = 

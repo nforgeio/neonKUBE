@@ -71,7 +71,7 @@ namespace NeonNodeAgent
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly INeonLogger log = Program.Service.TelemetryHub.GetLogger<NodeTaskController>();
+        private static readonly INeonLogger log = TelemetryHub.Default.GetLogger<NodeTaskController>();
 
         private static ResourceManager<V1NeonNodeTask, NodeTaskController>  resourceManager;
 
