@@ -24,6 +24,8 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Logging;
+
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Tasks;
@@ -62,14 +64,14 @@ namespace Neon.Kube
         private AsyncAutoResetEvent     eventReady;
         private Queue<WatchEvent<T>>    eventQueue;
         private IKubernetes             k8s;
-        private INeonLogger             logger;
+        private ILogger                 logger;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="k8s">The Kubernetes clien.</param>
         /// <param name="logger">Optionally specifies the logger to use.</param>
-        public Watcher(IKubernetes k8s, INeonLogger logger = null)
+        public Watcher(IKubernetes k8s, ILogger logger = null)
         {
             this.k8s    = k8s;
             this.logger = logger;

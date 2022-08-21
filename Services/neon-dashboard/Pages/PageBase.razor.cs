@@ -63,7 +63,7 @@ namespace NeonDashboard.Pages
         [Parameter]
         public string Description { get; set; } = "";
 
-        public INeonLogger Logger => AppState.Logger;
+        public ILogger Logger => AppState.Logger;
 
         public Service NeonDashboardService => AppState.NeonDashboardService;
 

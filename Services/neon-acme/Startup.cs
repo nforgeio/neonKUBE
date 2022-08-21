@@ -82,7 +82,6 @@ namespace NeonAcme
             services
                 .AddSingleton(NeonAcmeService)
                 .AddSingleton<ILogger>(Program.Service.Logger)
-                .AddSingleton<INeonLogger>(Program.Service.Logger)
                 .AddSingleton(jsonClient)
                 .AddSwaggerGen(c =>
                 {

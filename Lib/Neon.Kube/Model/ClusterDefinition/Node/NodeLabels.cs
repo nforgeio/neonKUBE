@@ -27,9 +27,12 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+
 using YamlDotNet.Serialization;
 
 using Neon.Common;
@@ -72,7 +75,7 @@ namespace Neon.Kube
     /// </remarks>
     public class NodeLabels
     {
-        private INeonLogger     log = TelemetryHub.Default.GetLogger<NodeLabels>();
+        private ILogger log = TelemetryHub.CreateLogger<NodeLabels>();
 
         /// <summary>
         /// Default constructor.

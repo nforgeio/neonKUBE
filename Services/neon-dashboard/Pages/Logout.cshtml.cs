@@ -40,7 +40,7 @@ namespace NeonDashboard.Pages
     {
         private Service neonDashboardService;
         private IHttpContextAccessor httpContextAccessor;
-        private INeonLogger logger;
+        private ILogger logger;
         private IDistributedCache cache;
 
         /// <summary>
@@ -48,17 +48,17 @@ namespace NeonDashboard.Pages
         /// </summary>
         /// <param name="neonDashboardService"></param>
         /// <param name="httpContextAccessor"></param>
-        /// <param name="neonLogger"></param>
+        /// <param name="logger"></param>
         /// <param name="cache"></param>
         public LogoutModel(
             Service                 neonDashboardService,
             IHttpContextAccessor    httpContextAccessor,
-            INeonLogger             neonLogger,
+            ILogger                 logger,
             IDistributedCache       cache)
         {
             this.neonDashboardService = neonDashboardService;
             this.httpContextAccessor  = httpContextAccessor;
-            this.logger               = neonLogger;
+            this.logger               = logger;
             this.cache                = cache;
         }
 

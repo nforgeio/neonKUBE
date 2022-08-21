@@ -40,22 +40,22 @@ namespace NeonDashboard.Pages
     public class LoginModel : PageModel
     {
         private Service           neonDashboardService;
-        private INeonLogger       logger;
+        private ILogger           logger;
         private IDistributedCache cache;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="neonDashboardService"></param>
-        /// <param name="neonLogger"></param>
+        /// <param name="logger"></param>
         /// <param name="cache"></param>
         public LoginModel(
             Service                 neonDashboardService,
-            INeonLogger             neonLogger,
+            ILogger                 logger,
             IDistributedCache       cache)
         {
             this.neonDashboardService = neonDashboardService;
-            this.logger               = neonLogger;
+            this.logger               = logger;
             this.cache                = cache;
         }
 

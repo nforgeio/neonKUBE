@@ -29,6 +29,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Logging;
+
 using k8s;
 using k8s.Autorest;
 using k8s.Models;
@@ -188,7 +190,7 @@ namespace Neon.Kube
         /// <param name="resourceVersion">The start resource version.</param>
         /// <param name="resourceVersionMatch">The optional resourceVersionMatch setting.</param>
         /// <param name="timeoutSeconds">Optional timeout override.</param>
-        /// <param name="logger">An optional <see cref="INeonLogger"/>.</param>
+        /// <param name="logger">An optional <see cref="ILogger"/>.</param>
         /// <returns></returns>
         public async Task WatchAsync<T>(
             Func<WatchEvent<T>, Task> action,
@@ -198,7 +200,7 @@ namespace Neon.Kube
             string resourceVersion = null,
             string resourceVersionMatch = null,
             int? timeoutSeconds = null,
-            INeonLogger logger = null) where T : IKubernetesObject<V1ObjectMeta>, new()
+            ILogger logger = null) where T : IKubernetesObject<V1ObjectMeta>, new()
         {
             await SyncContext.Clear;
             await k8s.WatchAsync<T>(action,

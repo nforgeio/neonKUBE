@@ -30,6 +30,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
@@ -179,7 +180,7 @@ namespace Neon.Kube.Operator
         private string                          resourceNamespace;
         private ConstructorInfo                 controllerConstructor;
         private Func<TEntity, bool>             filter;
-        private INeonLogger                     log;
+        private ILogger                         logger;
         private DateTime                        nextIdleReconcileUtc;
         private LeaderElectionConfig            leaderConfig;
         private LeaderElector                   leaderElector;
@@ -219,7 +220,7 @@ namespace Neon.Kube.Operator
             IKubernetes             k8s,
             ResourceManagerOptions  options      = null,
             Func<TEntity, bool>     filter       = null,
-            INeonLogger             logger       = null,
+            ILogger                 logger       = null,
             LeaderElectionConfig    leaderConfig = null)
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
@@ -227,7 +228,7 @@ namespace Neon.Kube.Operator
             this.k8s          = k8s;  // $todo(jefflill): Can we obtain this from KubeOps or the [IServiceProvider] somehow?
             this.options      = options ?? new ResourceManagerOptions();
             this.filter       = filter ?? new Func<TEntity, bool>(resource => true);
-            this.log          = logger ?? TelemetryHub.Default.GetLogger($"Neon.Kube.Operator.ResourceManager({typeof(TEntity).Name})");
+            this.logger       = logger ?? TelemetryHub.CreateLogger($"Neon.Kube.Operator.ResourceManager({typeof(TEntity).Name})");
             this.leaderConfig = leaderConfig;
 
             options.Validate();
@@ -346,7 +347,7 @@ namespace Neon.Kube.Operator
         /// </summary>
         private void OnPromotion()
         {
-            log.LogInformation("PROMOTED");
+            logger.LogInformation("PROMOTED");
 
             IsLeader = true;
 
@@ -368,7 +369,7 @@ namespace Neon.Kube.Operator
         /// </summary>
         private async void OnDemotion()
         {
-            log.LogInformation("DEMOTED");
+            logger.LogInformation("DEMOTED");
 
             IsLeader = false;
 
@@ -403,7 +404,7 @@ namespace Neon.Kube.Operator
         {
             LeaderIdentity = identity;
 
-            log.LogInformation($"LEADER-IS: {identity}");
+            logger.LogInformation($"LEADER-IS: {identity}");
         }
 
         /// <summary>
@@ -533,7 +534,7 @@ namespace Neon.Kube.Operator
                                 catch (Exception e)
                                 {
                                     options.IdleErrorCounter?.Inc();
-                                    log.LogError(e);
+                                    logger.LogError(e);
                                 }
                             });
                     }
@@ -601,7 +602,7 @@ namespace Neon.Kube.Operator
                                         catch (Exception e)
                                         {
                                             options.ReconcileErrorCounter.Inc();
-                                            log.LogError(e);
+                                            logger.LogError(e);
                                         }
 
                                         generationCache[resourceName] = newGeneration;
@@ -626,14 +627,14 @@ namespace Neon.Kube.Operator
 
                                         if (!string.IsNullOrEmpty(resourceNamespace))
                                         {
-                                            log.LogCritical($"Critical error watching: [namespace={resourceNamespace}] {stub.ApiGroupAndVersion}/{stub.Kind}");
+                                            logger.LogCritical($"Critical error watching: [namespace={resourceNamespace}] {stub.ApiGroupAndVersion}/{stub.Kind}");
                                         }
                                         else
                                         {
-                                            log.LogCritical($"Critical error watching: {stub.ApiGroupAndVersion}/{stub.Kind}");
+                                            logger.LogCritical($"Critical error watching: {stub.ApiGroupAndVersion}/{stub.Kind}");
                                         }
 
-                                        log.LogCritical("Terminating the pod so Kubernetes can reschedule it and we can restart the watch.");
+                                        logger.LogCritical("Terminating the pod so Kubernetes can reschedule it and we can restart the watch.");
                                         Environment.Exit(1);
                                         break;
 
@@ -647,7 +648,7 @@ namespace Neon.Kube.Operator
                                         catch (Exception e)
                                         {
                                             options.DeleteErrorCounter?.Inc();
-                                            log.LogError(e);
+                                            logger.LogError(e);
                                         }
 
                                         generationCache.Remove(resourceName);
@@ -673,7 +674,7 @@ namespace Neon.Kube.Operator
                                             catch (Exception e)
                                             {
                                                 options.ReconcileErrorCounter?.Inc();
-                                                log.LogError(e);
+                                                logger.LogError(e);
                                             }
                                         }
 
@@ -699,7 +700,7 @@ namespace Neon.Kube.Operator
                                             catch (Exception e)
                                             {
                                                 options.StatusModifyErrorCounter?.Inc();
-                                                log.LogError(e);
+                                                logger.LogError(e);
                                             }
                                         }
                                         break;
@@ -707,8 +708,8 @@ namespace Neon.Kube.Operator
                             }
                             catch (Exception e)
                             {
-                                log.LogCritical(e);
-                                log.LogCritical("Cannot recover from exception within watch loop.  Terminating process.");
+                                logger.LogCritical(e);
+                                logger.LogCritical("Cannot recover from exception within watch loop.  Terminating process.");
                                 Environment.Exit(1);
                             }
                         });

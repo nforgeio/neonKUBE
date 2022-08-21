@@ -57,7 +57,7 @@ namespace NeonSsoSessionProxy
                 IDistributedCache               cache, 
                 AesCipher                       cipher,
                 DistributedCacheEntryOptions    cacheOptions,
-                INeonLogger                     logger)
+                ILogger                         logger)
         {
             try
             {

@@ -82,7 +82,6 @@ namespace NeonSsoSessionProxy
                 });
             }
             services.AddSingleton<ILogger>(Program.Service.Logger);
-            services.AddSingleton<INeonLogger>(Program.Service.Logger);
             services.AddHealthChecks();
             services.AddHttpForwarder();
             services.AddHttpClient();
@@ -111,7 +110,13 @@ namespace NeonSsoSessionProxy
 
             // Cookie encryption cipher.
 
-            var aesCipher = new AesCipher(NeonSsoSessionProxyService.GetEnvironmentVariable("COOKIE_CIPHER", AesCipher.GenerateKey(), redacted: !NeonSsoSessionProxyService.Logger.IsLogDebugEnabled));
+            var redact =
+#if DEBUG
+                false;
+#else
+                true;
+#endif
+            var aesCipher = new AesCipher(NeonSsoSessionProxyService.GetEnvironmentVariable("COOKIE_CIPHER", AesCipher.GenerateKey(), redacted: redact));
 
             services.AddSingleton(aesCipher);
 

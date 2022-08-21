@@ -27,9 +27,10 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.JSInterop;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
+using Microsoft.JSInterop;
 
 using Neon.Common;
 using Neon.Diagnostics;
@@ -97,9 +98,9 @@ namespace NeonDashboard
         public HttpContext HttpContext;
 
         /// <summary>
-        /// The Navigation Manager.
+        /// The <see cref="ILogger"/>.
         /// </summary>
-        public INeonLogger Logger;
+        public ILogger Logger;
 
         /// <summary>
         /// The Web Host Environment.
@@ -154,7 +155,7 @@ namespace NeonDashboard
         public AppState(
             Service                 neonDashboardService,
             IHttpContextAccessor    httpContextAccessor,
-            INeonLogger             neonLogger,
+            ILogger                 logger,
             IJSRuntime              jSRuntime,
             NavigationManager       navigationManager,
             IWebHostEnvironment     webHostEnv,
@@ -164,7 +165,7 @@ namespace NeonDashboard
         {
             this.NeonDashboardService = neonDashboardService;
             this.NavigationManager    = navigationManager;
-            this.Logger               = neonLogger;
+            this.Logger               = logger;
             this.JSRuntime            = jSRuntime;
             this.HttpContextAccessor  = httpContextAccessor;
             this.WebHostEnvironment   = webHostEnv;

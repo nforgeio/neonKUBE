@@ -36,7 +36,7 @@ namespace NeonSsoSessionProxy
         private AesCipher                    cipher;
         private DexClient                    dexClient;
         private string                       dexHost;
-        private INeonLogger                  logger;
+        private ILogger                      logger;
         private DistributedCacheEntryOptions cacheOptions;
         /// <summary>
         /// Constructor.
@@ -49,7 +49,7 @@ namespace NeonSsoSessionProxy
             IDistributedCache cache,
             AesCipher aesCipher,
             DexClient dexClient,
-            INeonLogger logger,
+            ILogger logger,
             DistributedCacheEntryOptions cacheOptions)
         { 
             this.cache        = cache;

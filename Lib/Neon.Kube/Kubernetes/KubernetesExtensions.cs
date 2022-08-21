@@ -31,6 +31,7 @@ using System.Threading;
 
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
@@ -847,7 +848,7 @@ namespace Neon.Kube
         /// <param name="resourceVersionMatch">The optional <b>resourceVersionMatch</b> setting.</param>
         /// <param name="timeoutSeconds">Optional timeout override.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
-        /// <param name="logger">Optional <see cref="INeonLogger"/></param>
+        /// <param name="logger">Optional <see cref="ILogger"/></param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task WatchAsync<T>(
             this IKubernetes            k8s,
@@ -859,7 +860,7 @@ namespace Neon.Kube
             string                      resourceVersionMatch = null,
             int?                        timeoutSeconds       = null,
             CancellationToken           cancellationToken    = default,
-            INeonLogger                 logger               = null) 
+            ILogger                     logger               = null) 
             
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {

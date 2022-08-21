@@ -181,10 +181,6 @@ CLUSTER MANAGEMENT ARGUMENTS:
 
 ===============================================================================
 ";
-            // Disable any logging that might be performed by library classes.
-
-            TelemetryHub.Default.LogLevel = LogLevel.None;
-
             // Use the version of Powershell Core installed with the application,
             // if present.
 

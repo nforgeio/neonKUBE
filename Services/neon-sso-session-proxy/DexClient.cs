@@ -32,12 +32,12 @@ namespace NeonSsoSessionProxy
     {
         public Dictionary<string, BasicAuthenticationHeaderValue> AuthHeaders;
         public Uri BaseAddress => jsonClient.BaseAddress;
-        public INeonLogger Logger { get; set; }
+        public ILogger Logger { get; set; }
 
         private readonly    JsonClient jsonClient;
         private bool        isDisposed;
         
-        public DexClient(Uri baseAddress, INeonLogger logger = null)
+        public DexClient(Uri baseAddress, ILogger logger = null)
         {
             this.jsonClient = new JsonClient()
             {

@@ -41,7 +41,9 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
+
 using Newtonsoft.Json;
 using SharpCompress.Readers;
 
@@ -67,7 +69,7 @@ namespace Neon.Kube
     /// </summary>
     public static class KubeHelper
     {
-        private static INeonLogger          logger = TelemetryHub.Default.GetLogger(typeof(KubeHelper));
+        private static ILogger              logger = TelemetryHub.CreateLogger(typeof(KubeHelper).FullName);
         private static string               orgKUBECONFIG;
         private static string               userHomeFolder;
         private static string               neonkubeHomeFolder;
@@ -153,15 +155,15 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Explicitly sets the class <see cref="INeonLogger"/> implementation.  This defaults to
+        /// Explicitly sets the class <see cref="ILogger"/> implementation.  This defaults to
         /// a reasonable value.
         /// </summary>
-        /// <param name="log">The logger.</param>
-        public static void SetLogger(INeonLogger log)
+        /// <param name="logger">The logger.</param>
+        public static void SetLogger(ILogger logger)
         {
-            Covenant.Requires<ArgumentNullException>(log != null, nameof(log));
+            Covenant.Requires<ArgumentNullException>(logger != null, nameof(logger));
 
-            KubeHelper.logger = log;
+            KubeHelper.logger = logger;
         }
 
         /// <summary>

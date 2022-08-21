@@ -178,7 +178,6 @@ namespace NeonDashboard
                 .AddBlazoredLocalStorage()
                 .AddTailwind()
                 .AddSingleton<ILogger>(Program.Service.Logger)
-                .AddSingleton<INeonLogger>(Program.Service.Logger)
                 .AddGoogleAnalytics("G-PYMLFS3FX4")
                 .AddRouting()
                 .AddScoped<AppState>()

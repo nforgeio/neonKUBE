@@ -203,13 +203,20 @@ namespace NeonDashboard
                 port = 11001;
                 SetEnvironmentVariable("LOG_LEVEL", "debug");
                 SetEnvironmentVariable("DO_NOT_TRACK", "true");
-                SetEnvironmentVariable("COOKIE_CIPHER", "/HwPfpfACC70Rh1DeiMdubHINQHRGfc4JP6DYcSkAQ8="); 
+                SetEnvironmentVariable("COOKIE_CIPHER", "/HwPfpfACC70Rh1DeiMdubHINQHRGfc4JP6DYcSkAQ8=");
                 await ConfigureDevAsync();
             }
 
-            SsoClientSecret = GetEnvironmentVariable("SSO_CLIENT_SECRET", redacted: !Logger.IsLogDebugEnabled);
+            var redact =
+#if DEBUG
+                false;
+#else
+                true;
+#endif
 
-            AesCipher = new AesCipher(GetEnvironmentVariable("COOKIE_CIPHER", AesCipher.GenerateKey(), redacted: !Logger.IsLogDebugEnabled));
+            SsoClientSecret = GetEnvironmentVariable("SSO_CLIENT_SECRET", redacted: redact);
+
+            AesCipher = new AesCipher(GetEnvironmentVariable("COOKIE_CIPHER", AesCipher.GenerateKey(), redacted: redact));
 
             // Start the web service.
 
