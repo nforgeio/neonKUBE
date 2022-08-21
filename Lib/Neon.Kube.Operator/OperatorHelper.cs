@@ -60,91 +60,6 @@ namespace Neon.Kube.Operator
         /// </summary>
         static OperatorHelper()
         {
-            LogFilter =
-                logEvent =>
-                {
-                    switch (logEvent.LogLevel)
-                    {
-                        case LogLevel.Information:
-
-// $debug(jefflill): reenable this?
-#if DISABLED
-                            //---------------------------------------------
-                            // KubeOps spams the logs with unnecessary INFO events when events are raised to
-                            // the controller.  We're going to filter these and do our own logging using this
-                            // filter.  The filter returns TRUE for events to be logged and FALSE for events
-                            // to be ignored.
-
-                            if (logEvent.Module == "KubeOps.Operator.Controller.ManagedResourceController")
-                            {
-                                // This is SPAM because we're logging info like this ourselves.
-
-                                if (logEvent.Message.Contains("successfully reconciled"))
-                                {
-                                    return false;
-                                }
-                            }
-
-                            //---------------------------------------------
-                            // KubeOPs also spams the logs with reconnection attempts.
-
-                            if (logEvent.Module == "KubeOps.Operator.Kubernetes.ResourceWatcher")
-                            {
-                                // I believe we're seeing this when there are no resources for given watch.
-                                // KubeOps seems to be having trouble with empty list responses.
-
-                                if (logEvent.Message.StartsWith("Trying to reconnect with exponential backoff"))
-                                {
-                                    return false;
-                                }
-                            }
-#endif
-                            break;
-
-                        case LogLevel.Error:
-
-// $debug(jefflill): reenable this?
-#if DISABLED
-                            if (logEvent.Module == "KubeOps.Operator.Kubernetes.ResourceWatcher")
-                            {
-                                //---------------------------------------------
-                                // $hack(jefflill):
-                                //
-                                // Kubernetes client is not handling watches correctly when there are no objects
-                                // to be watched.  I read that the API server is returning a blank body in this
-                                // case but the Kubernetes client is expecting valid JSON, like an empty array.
-
-                                if (logEvent.Message.Contains("The input does not contain any JSON tokens"))
-                                {
-                                    return false;
-                                }
-
-                                //---------------------------------------------
-                                // These seem to be a transient problems happens occasionally on operator start.
-
-                                if (logEvent.Exception != null &&
-                                    logEvent.Exception.InnerException != null &&
-                                    logEvent.Exception.InnerException is IOException &&
-                                    logEvent.Exception.InnerException.Message.Contains("Unable to read data from the transport connection: Connection reset by peer."))
-                                {
-                                    return false;
-                                }
-
-                                if (logEvent.Exception != null &&
-                                    logEvent.Exception.InnerException != null &&
-                                    logEvent.Exception.InnerException is IOException &&
-                                    logEvent.Exception.InnerException.Message.Contains("The request was aborted."))
-                                {
-                                    return false;
-                                }
-                            }
-#endif
-                            break;
-                    }
-
-                    return true;
-                };
-
             // Create a NewtonSoft JSON serializer with settings compatible with Kubernetes.
 
             k8sSerializerSettings = new JsonSerializerSettings()
@@ -153,12 +68,6 @@ namespace Neon.Kube.Operator
                 Converters       = new List<JsonConverter>() { new Newtonsoft.Json.Converters.StringEnumConverter() }
             };
         }
-
-        /// <summary>
-        /// Returns a log filter that can be used to filter out some of the log spam from KubeOps
-        /// and the Kubernetes client.
-        /// </summary>
-        public static Func<LogEvent, bool> LogFilter { get; private set; }
 
         /// <summary>
         /// Returns <c>true</c> when <see cref="HandleGeneratorCommand{TStartup}(string[])"/> has been
