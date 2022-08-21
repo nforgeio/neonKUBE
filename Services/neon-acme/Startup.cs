@@ -91,12 +91,17 @@ namespace NeonAcme
                         {
                             Title = "v1",
                             Version = "v1"
-                        }
-                        );
+                        });
                 });
 
             services.AddControllers()
                 .AddNeon();
+
+            // $debug(jefflill): DELETE THIS!
+
+            ILogger logger = null;
+
+            logger.LogInformation("");
         }
 
         /// <summary>

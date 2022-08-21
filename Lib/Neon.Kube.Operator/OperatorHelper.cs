@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Net.Http;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -28,6 +29,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
@@ -43,7 +45,6 @@ using k8s.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
-using System.Net.Http;
 
 namespace Neon.Kube.Operator
 {
@@ -64,7 +65,7 @@ namespace Neon.Kube.Operator
                 {
                     switch (logEvent.LogLevel)
                     {
-                        case NeonLogLevel.Information:
+                        case LogLevel.Information:
 
 // $debug(jefflill): reenable this?
 #if DISABLED
@@ -100,7 +101,7 @@ namespace Neon.Kube.Operator
 #endif
                             break;
 
-                        case NeonLogLevel.Error:
+                        case LogLevel.Error:
 
 // $debug(jefflill): reenable this?
 #if DISABLED

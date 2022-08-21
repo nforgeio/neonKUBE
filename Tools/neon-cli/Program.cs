@@ -35,6 +35,7 @@ using k8s;
 using k8s.Models;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 using Neon;
 using Neon.Common;
@@ -182,7 +183,7 @@ CLUSTER MANAGEMENT ARGUMENTS:
 ";
             // Disable any logging that might be performed by library classes.
 
-            TelemetryHub.Default.LogLevel = NeonLogLevel.None;
+            TelemetryHub.Default.LogLevel = LogLevel.None;
 
             // Use the version of Powershell Core installed with the application,
             // if present.
