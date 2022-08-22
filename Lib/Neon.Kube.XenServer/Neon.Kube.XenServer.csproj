@@ -63,8 +63,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Neon.Common" Version="10000.0.2178-dev-jeff" />
-	  <PackageReference Include="Neon.SSH" Version="10000.0.2178-dev-jeff" />
+	  <PackageReference Include="Neon.Common" Version="10000.0.2179-dev-jeff" />
+	  <PackageReference Include="Neon.SSH" Version="10000.0.2179-dev-jeff" />
 	</ItemGroup>
 
 </Project>
