@@ -155,7 +155,7 @@ namespace NeonDashboard
 
                 PrometheusClient.JsonClient.DefaultRequestHeaders.Add("X-Scope-OrgID", ClusterInfo.Name);
 
-                Logger.LogInformation($"Updated cluster info");
+                Logger.LogInformationEx("Updated cluster info");
             },
             KubeNamespace.NeonStatus,
             fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
@@ -234,7 +234,7 @@ namespace NeonDashboard
 
             _ = webHost.RunAsync();
 
-            Logger.LogInformation($"Listening on {IPAddress.Any}:{port}");
+            Logger.LogInformationEx(() => $"Listening on {IPAddress.Any}:{port}");
 
             // Indicate that the service is running.
 
@@ -277,7 +277,7 @@ namespace NeonDashboard
         {
             await SyncContext.Clear;
 
-            Logger.LogInformation("Configuring cluster SSO for development.");
+            Logger.LogInformationEx("Configuring cluster SSO for development.");
 
             // wait for cluster info to be set
             await NeonHelper.WaitForAsync(async () =>
@@ -308,14 +308,14 @@ namespace NeonDashboard
                     await Kubernetes.ReplaceNamespacedConfigMapAsync(dexConfigMap, dexConfigMap.Metadata.Name, KubeNamespace.NeonSystem);
                 }
 
-                Logger.LogInformation("SSO configured.");
+                Logger.LogInformationEx("SSO configured.");
             }
             catch (Exception e)
             {
-                Logger.LogError("Error configuring SSO", e);
+                Logger.LogErrorEx(e, "Error configuring SSO");
             }
 
-            Logger.LogInformation("Configure metrics.");
+            Logger.LogInformationEx("Configure metrics.");
 
             var virtualServices = await Kubernetes.ListNamespacedCustomObjectAsync<VirtualService>(KubeNamespace.NeonIngress);
             if (!virtualServices.Items.Any(vs => vs.Name() == "metrics-external"))

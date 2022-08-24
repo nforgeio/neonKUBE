@@ -68,7 +68,7 @@ namespace NeonDashboard.Pages
         /// <returns></returns>
         public async Task<IActionResult> OnGet()
         {
-            logger.LogDebug($"Logging out.");
+            logger.LogDebugEx("Logging out.");
 
             await HttpContext.SignOutAsync();
             return Redirect("/");

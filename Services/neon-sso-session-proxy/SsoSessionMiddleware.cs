@@ -86,19 +86,20 @@ namespace NeonSsoSessionProxy
                             {
                                 if (!NeonSsoSessionProxyService.Config.StaticClients.Where(client => client.Id == clientId).First().RedirectUris.Contains(redirectUri))
                                 {
-                                    logger.LogError("Invalid redirect URI");
+                                    logger.LogErrorEx("Invalid redirect URI");
 
                                     throw new HttpRequestException("Invalid redirect URI.");
                                 }
-                                    context.Response.StatusCode       = StatusCodes.Status302Found;
-                                    context.Response.Headers.Location = QueryHelpers.AddQueryString(redirectUri, query);
-                                    logger.LogDebug($"Client and Redirect URI confirmed. [ClientID={clientId}] [RedirectUri={redirectUri}]");
-                                
-                                    return;
+
+                                context.Response.StatusCode       = StatusCodes.Status302Found;
+                                context.Response.Headers.Location = QueryHelpers.AddQueryString(redirectUri, query);
+
+                                logger.LogDebugEx(() => $"Client and Redirect URI confirmed. [ClientID={clientId}] [RedirectUri={redirectUri}]");
+                                return;
                             }
                             else
                             {
-                                logger.LogError("No Client ID specified.");
+                                logger.LogErrorEx("No Client ID specified.");
 
                                 throw new HttpRequestException("Invalid Client ID.");
                             }
@@ -112,7 +113,7 @@ namespace NeonSsoSessionProxy
             }
             catch (Exception e)
             {
-                NeonSsoSessionProxyService.Logger.LogError(e);
+                NeonSsoSessionProxyService.Logger.LogErrorEx(e);
             }
 
             await _next(context);

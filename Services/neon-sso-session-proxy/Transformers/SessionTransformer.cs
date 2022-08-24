@@ -96,18 +96,18 @@ namespace NeonSsoSessionProxy
             {
                 try
                 {
-                    logger.LogDebug($"Decrypting existing cookie.");
+                    logger.LogDebugEx(() => $"Decrypting existing cookie.");
                     cookie = NeonHelper.JsonDeserialize<Cookie>(cipher.DecryptBytesFrom(requestCookieBase64));
                 }
                 catch (Exception e)
                 {
-                    logger.LogError(e);
+                    logger.LogErrorEx(e);
                     cookie = new Cookie();
                 }
             }
             else
             {
-                logger.LogDebug($"Cookie not present.");
+                logger.LogDebugEx("Cookie not present.");
                 cookie = new Cookie();
             }
 
@@ -116,16 +116,17 @@ namespace NeonSsoSessionProxy
                 && Uri.IsWellFormedUriString(httpContext.Response.Headers.Location.Single(), UriKind.Absolute))
             {
                 var location = new Uri(httpContext.Response.Headers.Location.Single());
-                var code = HttpUtility.ParseQueryString(location.Query).Get("code");
+                var code     = HttpUtility.ParseQueryString(location.Query).Get("code");
+
                 if (!string.IsNullOrEmpty(code))
                 {
                     if (cookie != null)
                     {
                         var redirect = cookie.RedirectUri;
+                        var token    = await dexClient.GetTokenAsync(cookie.ClientId, code, redirect, "authorization_code");
 
-                        var token = await dexClient.GetTokenAsync(cookie.ClientId, code, redirect, "authorization_code");
                         await cache.SetAsync(code, cipher.EncryptToBytes(NeonHelper.JsonSerializeToBytes(token)), cacheOptions);
-                        logger.LogDebug(NeonHelper.JsonSerialize(token));
+                        logger.LogDebugEx(NeonHelper.JsonSerialize(token));
                         cookie.TokenResponse = token;
 
                         httpContext.Response.Cookies.Append(
@@ -133,9 +134,9 @@ namespace NeonSsoSessionProxy
                             cipher.EncryptToBase64(NeonHelper.JsonSerialize(cookie)),
                             new CookieOptions()
                             {
-                                Path = "/",
-                                Expires = DateTime.UtcNow.AddSeconds(token.ExpiresIn.Value).AddMinutes(-60),
-                                Secure = true,
+                                Path     = "/",
+                                Expires  = DateTime.UtcNow.AddSeconds(token.ExpiresIn.Value).AddMinutes(-60),
+                                Secure   = true,
                                 SameSite = SameSiteMode.Strict
                             });
 
@@ -147,31 +148,31 @@ namespace NeonSsoSessionProxy
             // Add query parameters to the cookie.
             if (httpContext.Request.Query.TryGetValue("client_id", out var clientId))
             {
-                logger.LogDebug($"Client ID: [{clientId}]");
+                logger.LogDebugEx(() => $"Client ID: [{clientId}]");
                 cookie.ClientId = clientId;
             }
 
             if (httpContext.Request.Query.TryGetValue("state", out var state))
             {
-                logger.LogDebug($"State: [{state}]");
+                logger.LogDebugEx(() => $"State: [{state}]");
                 cookie.State = state;
             }
 
             if (httpContext.Request.Query.TryGetValue("redirect_uri", out var redirectUri))
             {
-                logger.LogDebug($"Redirect Uri: [{redirectUri}]");
+                logger.LogDebugEx(() => $"Redirect Uri: [{redirectUri}]");
                 cookie.RedirectUri = redirectUri;
             }
 
             if (httpContext.Request.Query.TryGetValue("scope", out var scope))
             {
-                logger.LogDebug($"Scope: [{scope}]");
+                logger.LogDebugEx(() => $"Scope: [{scope}]");
                 cookie.Scope = scope;
             }
 
             if (httpContext.Request.Query.TryGetValue("response_type", out var responseType))
             {
-                logger.LogDebug($"Response Type: [{responseType}]");
+                logger.LogDebugEx(() => $"Response Type: [{responseType}]");
                 cookie.ResponseType = responseType;
             }
 

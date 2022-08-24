@@ -80,7 +80,7 @@ namespace NeonAcme.Controllers
         {
             await SyncContext.Clear;
 
-            Logger.LogDebug($"Headers: {NeonHelper.JsonSerialize(HttpContext.Request.Headers)}");
+            Logger.LogDebugEx(() => $"Headers: {NeonHelper.JsonSerialize(HttpContext.Request.Headers)}");
 
             return new JsonResult(service.Resources);
         }
@@ -94,9 +94,9 @@ namespace NeonAcme.Controllers
         [Produces("application/json")]
         public async Task<ActionResult> PresentNeonclusterChallengeAsync([FromBody] ChallengePayload challenge)
         {
-            Logger.LogInformation($"Challenge request [{challenge.Request.Action}] [{challenge.Request.DnsName}]");
-            Logger.LogDebug($"Headers: {NeonHelper.JsonSerialize(HttpContext.Request.Headers)}");
-            Logger.LogDebug(NeonHelper.JsonSerialize(challenge));
+            Logger.LogInformationEx(() => $"Challenge request [{challenge.Request.Action}] [{challenge.Request.DnsName}]");
+            Logger.LogDebugEx(() => $"Headers: {NeonHelper.JsonSerialize(HttpContext.Request.Headers)}");
+            Logger.LogDebugEx(NeonHelper.JsonSerialize(challenge));
 
             var response = await jsonClient.PostAsync<ChallengePayload>("acme/challenge", challenge);
 

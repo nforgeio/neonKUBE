@@ -234,7 +234,7 @@ namespace NeonDashboard
         {
             await SyncContext.Clear;
 
-            Logger.LogError(exception);
+            Logger.LogErrorEx(exception);
 
             await Analytics.TrackEvent(method.Name, new 
             { 
@@ -250,7 +250,7 @@ namespace NeonDashboard
 
         public void LogException(Exception e)
         {
-            Logger.LogError(e);
+            Logger.LogErrorEx(e);
         }
 
         public Dashboard GetCurrentDashboard(string dashboardId)

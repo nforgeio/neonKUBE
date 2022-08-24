@@ -138,7 +138,7 @@ namespace NeonDashboard
                 }
                 catch (Exception e)
                 {
-                    Logger.LogError(e);
+                    Logger.LogErrorEx(e);
                 }
 
                 try
@@ -154,7 +154,7 @@ namespace NeonDashboard
                 } 
                 catch (Exception e)
                 {
-                    Logger.LogError(e);
+                    Logger.LogErrorEx(e);
                 }
             }
 

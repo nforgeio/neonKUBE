@@ -29,6 +29,7 @@ using Microsoft.Extensions.Caching.Distributed;
 
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Service;
 using Neon.Tasks;
@@ -98,7 +99,7 @@ namespace NeonSsoSessionProxy.Controllers
                 var errorFeature = HttpContext.GetForwarderErrorFeature();
                 var exception    = errorFeature.Exception;
 
-                Logger.LogError("CatchAll", exception);
+                Logger.LogErrorEx(exception, "CatchAll");
             }
         }
 
@@ -110,11 +111,11 @@ namespace NeonSsoSessionProxy.Controllers
         [Route("/token")]
         public async Task<ActionResult<TokenResponse>> TokenAsync([FromForm] string code)
         {
-            Logger.LogDebug($"Processing request for code: [{code}]");
+            Logger.LogDebugEx(() => $"Processing request for code: [{code}]");
             
             var responseJson = NeonHelper.JsonDeserialize<TokenResponse>(cipher.DecryptBytesFrom(await cache.GetAsync(code)));
             
-            Logger.LogDebug($"[{code}]: [{NeonHelper.JsonSerialize(responseJson)}]");
+            Logger.LogDebugEx(() => $"[{code}]: [{NeonHelper.JsonSerialize(responseJson)}]");
 
             _ = cache.RemoveAsync(code);
 

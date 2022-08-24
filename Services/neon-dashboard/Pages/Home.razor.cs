@@ -36,6 +36,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 
 using Neon.Common;
+using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Tasks;
 
@@ -192,7 +193,7 @@ namespace NeonDashboard.Pages
             }
             catch (Exception e)
             {
-                Logger.LogError(NeonHelper.JsonSerialize(e));
+                Logger.LogErrorEx(NeonHelper.JsonSerialize(e));
             }
         }
 

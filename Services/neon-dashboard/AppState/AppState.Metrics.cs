@@ -262,11 +262,12 @@ namespace NeonDashboard
             {
                 await SyncContext.Clear;
 
-                // round intervals so that they cache better.
+                // Round intervals so that they cache better.
+
                 start = start.RoundDown(TimeSpan.FromMinutes(cacheInterval));
                 end   = end.RoundDown(TimeSpan.FromMinutes(cacheInterval));
 
-                Logger.LogDebug($"[Metrics] Executing range query. Query: [{query}], Start [{start}], End: [{end}], StepSize: [{stepSize}], CacheInterval: [{cacheInterval}]");
+                Logger.LogDebugEx(() => $"[Metrics] Executing range query. Query: [{query}], Start [{start}], End: [{end}], StepSize: [{stepSize}], CacheInterval: [{cacheInterval}]");
 
                 var key = $"neon-dashboard_{Neon.Cryptography.CryptoHelper.ComputeMD5String(query)}";
 
@@ -275,14 +276,14 @@ namespace NeonDashboard
                     var value = await Cache.GetAsync<PrometheusResponse<PrometheusMatrixResult>>(key);
                     if (value != null)
                     {
-                        Logger.LogDebug($"[Metrics] Returning from Cache. Query: [{query}], Start [{start}], End: [{end}], StepSize: [{stepSize}], CacheInterval: [{cacheInterval}]");
+                        Logger.LogDebugEx(() => $"[Metrics] Returning from Cache. Query: [{query}], Start [{start}], End: [{end}], StepSize: [{stepSize}], CacheInterval: [{cacheInterval}]");
 
                         return value;
                     }
                 }
                 catch (Exception e)
                 {
-                    Logger.LogError(e);
+                    Logger.LogErrorEx(e);
                 }
 
                 try
@@ -295,7 +296,7 @@ namespace NeonDashboard
                 }
                 catch (Exception e)
                 {
-                    Logger.LogError(e);
+                    Logger.LogErrorEx(e);
                     return null;
                 }
             }
@@ -304,7 +305,7 @@ namespace NeonDashboard
             {
                 await SyncContext.Clear;
 
-                Logger.LogDebug($"[Metrics] Executing query. Query: [{query}]");
+                Logger.LogDebugEx(() => $"[Metrics] Executing query. Query: [{query}]");
 
                 var key = Neon.Cryptography.CryptoHelper.ComputeMD5String(query);
 
@@ -313,14 +314,14 @@ namespace NeonDashboard
                     var value = await Cache.GetAsync<PrometheusResponse<PrometheusVectorResult>>(key);
                     if (value != null)
                     {
-                        Logger.LogDebug($"[Metrics] Returning from Cache. Query: [{query}]");
+                        Logger.LogDebugEx(() => $"[Metrics] Returning from Cache. Query: [{query}]");
 
                         return value;
                     }
                 }
                 catch (Exception e)
                 {
-                    Logger.LogError(e);
+                    Logger.LogErrorEx(e);
                 }
 
                 try
@@ -333,7 +334,7 @@ namespace NeonDashboard
                 }
                 catch (Exception e)
                 {
-                    Logger.LogError(e);
+                    Logger.LogErrorEx(e);
                     return null;
                 }
             }

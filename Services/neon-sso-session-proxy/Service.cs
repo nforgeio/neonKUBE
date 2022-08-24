@@ -31,6 +31,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Service;
 using Neon.Common;
+using Neon.Diagnostics;
 using Neon.Kube;
 
 using Prometheus;
@@ -107,7 +108,7 @@ namespace NeonSsoSessionProxy
 
             _ = webHost.RunAsync();
 
-            Logger.LogInformation($"Listening on {IPAddress.Any}:80");
+            Logger.LogInformationEx(() => $"Listening on {IPAddress.Any}:80");
 
             // Indicate that the service is ready for business.
 

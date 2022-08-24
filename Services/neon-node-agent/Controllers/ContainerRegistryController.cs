@@ -407,7 +407,7 @@ rm $0
                 return;
             }
 
-            log.LogInformation($"IDLE");
+            log.LogInformationEx("IDLE");
             await UpdateContainerRegistriesAsync();
 
             return;
@@ -423,7 +423,7 @@ rm $0
                 return null;
             }
 
-            log.LogInformation($"RECONCILED: {resource.Name()}");
+            log.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
             await UpdateContainerRegistriesAsync();
 
             return null;
@@ -439,7 +439,7 @@ rm $0
                 return;
             }
 
-            log.LogInformation($"DELETED: {resource.Name()}");
+            log.LogInformationEx(() => $"DELETED: {resource.Name()}");
             await UpdateContainerRegistriesAsync();
         }
 
@@ -585,7 +585,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                             // Note that we're not ensuring success here because we may not be
                             // logged-in which is OK: we don't want to see that error.
 
-                            log.LogInformation($"{podmanPath} logout {loginFile.Location}");
+                            log.LogInformationEx(() => $"{podmanPath} logout {loginFile.Location}");
                             
                             if (NeonHelper.IsLinux)
                             {
@@ -598,7 +598,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                 catch (Exception e)
                 {
                     loginErrorCounter.Inc();
-                    log.LogError(e);
+                    log.LogErrorEx(e);
                 }
             }
 
@@ -613,7 +613,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                     await retry.InvokeAsync(
                         async () =>
                         {
-                            log.LogInformation($"{podmanPath} login {loginFile.Location} --username {loginFile.Username} --password REDACTED");
+                            log.LogInformationEx(() => $"{podmanPath} login {loginFile.Location} --username {loginFile.Username} --password REDACTED");
 
                             if (NeonHelper.IsLinux)
                             {
@@ -626,7 +626,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                 catch (Exception e)
                 {
                     loginErrorCounter.Inc();
-                    log.LogError(e);
+                    log.LogErrorEx(e);
                 }
             }
 
@@ -652,7 +652,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
 
                 if (registry == null)
                 {
-                    log.LogWarning($"Cannot locate [{nameof(V1NeonContainerRegistry)}] resource for [location={loginFile.Location}].");
+                    log.LogWarningEx(() => $"Cannot locate [{nameof(V1NeonContainerRegistry)}] resource for [location={loginFile.Location}].");
                     continue;
                 }
 
@@ -669,7 +669,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                         await retry.InvokeAsync(
                             async () =>
                             {
-                                log.LogInformation($"{podmanPath} login {loginFile.Location} --username {loginFile.Username} --password REDACTED");
+                                log.LogInformationEx(() => $"{podmanPath} login {loginFile.Location} --username {loginFile.Username} --password REDACTED");
 
                                 if (NeonHelper.IsLinux)
                                 {
@@ -682,7 +682,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                     catch (Exception e)
                     {
                         loginErrorCounter.Inc();
-                        log.LogError(e);
+                        log.LogErrorEx(e);
                     }
                 }
             }

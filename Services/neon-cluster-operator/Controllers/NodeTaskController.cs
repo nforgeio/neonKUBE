@@ -155,7 +155,7 @@ namespace NeonClusterOperator
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task IdleAsync()
         {
-            log.LogInformation("[IDLE]");
+            log.LogInformationEx("[IDLE]");
 
             // We're going to handle this by looking at each node task and checking
             // to see whether the target node actually exists.  Rather than listing
@@ -179,7 +179,7 @@ namespace NeonClusterOperator
                     }
                     else
                     {
-                        log.LogInformation(deleteMessage);
+                        log.LogInformationEx(deleteMessage);
 
                         try
                         {
@@ -187,7 +187,7 @@ namespace NeonClusterOperator
                         }
                         catch (Exception e)
                         {
-                            log.LogError(e);
+                            log.LogErrorEx(e);
                         }
 
                         continue;
@@ -212,19 +212,19 @@ namespace NeonClusterOperator
                     }
                     else
                     {
-                        log.LogError(e);
+                        log.LogErrorEx(e);
                         continue;
                     }
                 }
                 catch (Exception e)
                 {
-                    log.LogError(e);
+                    log.LogErrorEx(e);
                     continue;
                 }
 
                 if (!nodeExists)
                 {
-                    log.LogInformation(deleteMessage);
+                    log.LogInformationEx(deleteMessage);
 
                     try
                     {
@@ -232,7 +232,7 @@ namespace NeonClusterOperator
                     }
                     catch (Exception e)
                     {
-                        log.LogError(e);
+                        log.LogErrorEx(e);
                     }
                 }
             }

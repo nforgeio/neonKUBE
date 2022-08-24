@@ -97,7 +97,7 @@ namespace NeonSsoSessionProxy
             }
             else
             {
-                Logger.LogDebug(await response.HttpResponse.Content.ReadAsStringAsync());
+                Logger.LogDebugEx(() => response.HttpResponse.Content.ReadAsStringAsync().Result);
                 throw new HttpException(response.HttpResponse);
             }
         }

@@ -32,6 +32,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Diagnostics;
 using Neon.Service;
 using Neon.Kube;
 
@@ -147,7 +148,7 @@ namespace NeonAcme
 
             _ = webHost.RunAsync();
 
-            Logger.LogInformation($"Listening on {IPAddress.Any}:{port}");
+            Logger.LogInformationEx(() => $"Listening on {IPAddress.Any}:{port}");
 
             // Indicate that the service is ready for business.
 

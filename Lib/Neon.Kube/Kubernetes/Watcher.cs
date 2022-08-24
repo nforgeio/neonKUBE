@@ -197,7 +197,7 @@ namespace Neon.Kube
                     }
                     catch (KubernetesException kubernetesException)
                     {
-                        logger?.LogError(kubernetesException);
+                        logger?.LogErrorEx(kubernetesException);
 
                         // Deal with this non-recoverable condition "too old resource version"
 
@@ -264,7 +264,7 @@ namespace Neon.Kube
             {
                 // This normal: we'll see this when the watcher is disposed.
 
-                logger?.LogInformation("Disposing");
+                logger?.LogInformationEx("Disposing");
             }
         }
 
@@ -316,7 +316,7 @@ namespace Neon.Kube
             }
             catch (KubernetesException kubernetesException)
             {
-                logger?.LogError(kubernetesException);
+                logger?.LogErrorEx(kubernetesException);
 
                 // Deal with this non-recoverable condition "too old resource version"
 
