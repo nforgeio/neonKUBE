@@ -15,14 +15,7 @@ param
 )
 
 $appname      = "neon-cluster-operator"
-$organization = KubeSetupRegistryOrg
-
-# Copy the common scripts.
-
-DeleteFolder _common
-
-mkdir _common
-copy ..\_common\*.* .\_common
+$organization = SdkRegistryOrg
 
 # Build and publish the app to a local [bin] folder.
 
@@ -42,7 +35,7 @@ ThrowOnExitCode
 
 # Build the image.
 
-$result = Invoke-CaptureStreams "docker build -t ${registry}:${tag} --build-arg `"APPNAME=$appname`" ." -interleave
+$result = Invoke-CaptureStreams "docker build -t ${registry}:${tag} --build-arg `"APPNAME=$appname`" --build-arg `"ORGANIZATION=$organization`" ." -interleave
 
 # Clean up
 

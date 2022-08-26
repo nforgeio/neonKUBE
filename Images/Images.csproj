@@ -21,8 +21,4 @@
 		<DefineConstants />
 	</PropertyGroup>
 
-	<ItemGroup>
-		<Folder Include="_common\" />
-	</ItemGroup>
-
 </Project>

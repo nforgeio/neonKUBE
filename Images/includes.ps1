@@ -163,11 +163,11 @@ function SdkRegistryOrg
 {
 	if (IsRelease)
 	{
-		return "ghcr.io/neonrelease"
+		return "ghcr.io/neon-sdk"
 	}
 	else
 	{
-		return "ghcr.io/neonrelease-dev"
+		return "ghcr.io/neon-sdk-dev"
 	}
 }
 
