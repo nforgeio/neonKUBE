@@ -10,7 +10,7 @@ spec:
     - inputName: "DS_PROMETHEUS"
       datasourceName: "Mimir"
   json: >
-        {{`{
+    {{`{
       "annotations": {
         "list": [
           {
