@@ -1074,7 +1074,7 @@ spec:
       "timepicker": {},
       "timezone": "",
       "title": "Neon dashboard",
-      "uid": "Ts7677m4z",
+      "uid": "neonkube-default-dashboard",
       "version": 2,
       "weekStart": ""
     }`}}
