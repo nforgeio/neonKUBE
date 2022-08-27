@@ -121,11 +121,29 @@ ARGUMENTS:
                     await k8s.ListNamespaceAsync();
                 }
 
+                var login = KubeHelper.GetClusterLogin(KubeHelper.CurrentContextName);
+
+                string userHomeFolder;
+                if (NeonHelper.IsWindows)
+                {
+                    userHomeFolder = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"));
+                }
+                else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
+                {
+                    userHomeFolder = Path.Combine(Environment.GetEnvironmentVariable("HOME"));
+                }
+                else
+                {
+                    throw new NotSupportedException("Operating system not supported.");
+                }
+
+                File.WriteAllText(
+                    Path.Combine(userHomeFolder, ".ssh", KubeHelper.CurrentContextName.ToString()),
+                    login.SshKey.PrivatePEM);
+               
                 if (!string.IsNullOrEmpty(NeonHelper.DockerCli))
                 {
                     Console.WriteLine($"Login: Docker to Harbor...");
-
-                    var login = KubeHelper.GetClusterLogin(KubeHelper.CurrentContextName);
 
                     NeonHelper.Execute(NeonHelper.DockerCli,
                         new object[]
