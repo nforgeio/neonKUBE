@@ -3741,6 +3741,7 @@ $@"- name: StorageType
                     values.Add($"serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add("replicas", serviceAdvice.ReplicaCount);
 
                     controller.ThrowIfCancelled();
                     await controlNode.InvokeIdempotentAsync("setup/db-credentials-grafana",

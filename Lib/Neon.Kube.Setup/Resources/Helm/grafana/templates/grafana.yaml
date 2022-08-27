@@ -9,7 +9,7 @@ spec:
     server:
       root_url: "https://{{ .Values.neonkube.clusterDomain.grafana }}.{{ .Values.cluster.domain }}"
     feature_toggles:
-      enable: recordedQueries tempoSearch newNavigation persistNotifications serviceAccounts explore2Dashboard 
+      enable: recordedQueries tempoSearch newNavigation persistNotifications serviceAccounts explore2Dashboard publicDashboards
     security:
       cookie_secure: true
       cookie_samesite: none
@@ -58,6 +58,7 @@ spec:
         port: 3001
         targetPort: grafana-http
   deployment:
+    replicas: {{ .Values.replicas }}
     labels:
       app: grafana
     annotations:
