@@ -166,7 +166,11 @@ namespace Neon.Kube
         {
             get
             {
-                if (SshUsername != null && SshPassword != null)
+                if (SshKey.PrivatePEM != null)
+                {
+                    return SshCredentials.FromPrivateKey(SshUsername, SshKey.PrivatePEM);
+                }
+                else if (SshUsername != null && SshPassword != null)
                 {
                     return SshCredentials.FromUserPassword(SshUsername, SshPassword);
                 }

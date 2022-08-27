@@ -313,13 +313,6 @@ namespace Neon.Kube
                     clusterLogin.SsoPassword = cluster.Definition.RootPassword ?? NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
 
                     clusterLogin.Save();
-
-                    // Update node proxies with the generated SSH credentials.
-
-                    foreach (var node in cluster.Nodes)
-                    {
-                        node.UpdateCredentials(clusterLogin.SshCredentials);
-                    }
                 });
 
             // Have the hosting manager add any custom proviosioning steps.
@@ -380,6 +373,10 @@ namespace Neon.Kube
                 (controller, node) =>
                 {
                     node.ConfigureSshKey(controller);
+
+                    // Update node proxies with the generated SSH credentials.
+
+                    node.UpdateCredentials(clusterLogin.SshCredentials);
                 });
 
             controller.AddNodeStep("prepare nodes",

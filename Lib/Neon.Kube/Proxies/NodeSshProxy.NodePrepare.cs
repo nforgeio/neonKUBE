@@ -182,6 +182,8 @@ systemctl restart sshd
                     bundle.AddFile("config.sh", configScript, isExecutable: true);
                     bundle.AddFile("ssh_host_rsa_key.pub", clusterLogin.SshKey.PublicPUB);
                     SudoCommand(bundle, RunOptions.FaultOnError);
+                    
+                    SetSshPasswordLogin(false);
                 });
 
             // Verify that we can login with the new SSH private key and also verify that
@@ -204,7 +206,7 @@ systemctl restart sshd
             controller.LogProgress(this, verb: "verify", message: "ssh password");
 
             Disconnect();
-            UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword));
+            UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, clusterLogin.SshKey.PrivatePEM));
             WaitForBoot();
         }
 
