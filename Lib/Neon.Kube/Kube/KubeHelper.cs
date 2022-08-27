@@ -2129,6 +2129,15 @@ fi
 done
 
 echo ""Node is prepared.""
+
+# Enable password login.
+
+sed -iE 's/#*PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+# Restart SSHD to pick up the changes.
+
+systemctl restart sshd
+
 exit 0
 ";
             nodePrepScript = NeonHelper.ToLinuxLineEndings(nodePrepScript);
@@ -2491,7 +2500,7 @@ exit 0
 #IgnoreRhosts yes
 
 # To disable tunneled clear text passwords, change to no here!
-#PasswordAuthentication yes
+PasswordAuthentication yes
 #PermitEmptyPasswords no
 
 # Change to yes to enable challenge-response passwords (beware issues with
@@ -2557,7 +2566,6 @@ Subsystem sftp  /usr/lib/openssh/sftp-server
 #       AllowTcpForwarding no
 #       PermitTTY no
 #       ForceCommand cvs server
-PasswordAuthentication yes
 
 ###############################################################################
 # neonKUBE customization: relocated from the top of the original file         #
@@ -2604,6 +2612,7 @@ PermitRootLogin no
 usePAM {allowPasswordAuthValue}
 PasswordAuthentication {allowPasswordAuthValue}
 AuthorizedKeysFile %h/.ssh/authorized_keys
+PubkeyAcceptedKeyTypes +ssh-rsa
 
 #------------------------------------------------------------------------------
 # Interfactive login
