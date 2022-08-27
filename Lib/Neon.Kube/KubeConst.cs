@@ -368,7 +368,7 @@ namespace Neon.Kube
         /// <summary>
         /// The latest API version for neonCLOUD production headend services.
         /// </summary>
-        public const string NeonCloudHeadendVersion = "0.1.0";
+        public const string NeonCloudHeadendVersion = "0.1";
 
         /// <summary>
         /// The minimum amount of OS disk on a cluster node after accounting for Minio volumes.
