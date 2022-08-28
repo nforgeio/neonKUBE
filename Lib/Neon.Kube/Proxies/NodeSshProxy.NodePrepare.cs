@@ -182,8 +182,6 @@ systemctl restart sshd
                     bundle.AddFile("config.sh", configScript, isExecutable: true);
                     bundle.AddFile("ssh_host_rsa_key.pub", clusterLogin.SshKey.PublicPUB);
                     SudoCommand(bundle, RunOptions.FaultOnError);
-                    
-                    SetSshPasswordLogin(false);
                 });
 
             // Verify that we can login with the new SSH private key and also verify that
@@ -321,9 +319,6 @@ systemctl restart rsyslog.service
 
                     controller.ThrowIfCancelled();
                     BaseConfigureApt(controller, clusterDefinition.NodeOptions.PackageManagerRetries, clusterDefinition.NodeOptions.AllowPackageManagerIPv6);
-
-                    controller.ThrowIfCancelled();
-                    BaseConfigureOpenSsh(controller);
 
                     controller.ThrowIfCancelled();
                     DisableSnap(controller);

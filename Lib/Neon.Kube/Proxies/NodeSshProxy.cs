@@ -662,17 +662,21 @@ set -euo pipefail
 
 if [ -f ""/etc/ssh/sshd_config.d/50-neonkube.conf"" ]; 
 then     
+
     sed -iE 's/#*PasswordAuthentication.*/PasswordAuthentication {(enabled ? "yes" : "no")}/' /etc/ssh/sshd_config.d/50-neonkube.conf
+
     sed -iE 's/^PasswordAuthentication.*/#PasswordAuthentication {(enabled ? "yes" : "no")}/' /etc/ssh/sshd_config
+
 else
+
     sed -iE 's/#*PasswordAuthentication.*/PasswordAuthentication {(enabled ? "yes" : "no")}/' /etc/ssh/sshd_config
+
 fi
-
-# Restart SSHD to pick up the changes.
-
-systemctl restart sshd";
+";
 
             SudoCommand(CommandBundle.FromScript(script), RunOptions.FaultOnError);
+
+            SudoCommand("systemctl", "restart", "sshd", RunOptions.FaultOnError);
         }
 
         //---------------------------------------------------------------------

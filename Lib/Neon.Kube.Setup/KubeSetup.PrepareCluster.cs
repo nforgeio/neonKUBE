@@ -373,7 +373,7 @@ namespace Neon.Kube
                 (controller, node) =>
                 {
                     node.ConfigureSshKey(controller);
-
+                    node.SetSshPasswordLogin(false);
                     // Update node proxies with the generated SSH credentials.
 
                     node.UpdateCredentials(clusterLogin.SshCredentials);
