@@ -126,7 +126,7 @@ namespace NeonSsoSessionProxy
                         var token    = await dexClient.GetTokenAsync(cookie.ClientId, code, redirect, "authorization_code");
 
                         await cache.SetAsync(code, cipher.EncryptToBytes(NeonHelper.JsonSerializeToBytes(token)), cacheOptions);
-                        logger.LogDebugEx(NeonHelper.JsonSerialize(token));
+                        logger.LogDebugEx(() => NeonHelper.JsonSerialize(token));
                         cookie.TokenResponse = token;
 
                         httpContext.Response.Cookies.Append(

@@ -272,7 +272,7 @@ rm $0
             }
             catch (Exception e)
             {
-                logger.LogWarningEx(e, $"Invalid NodeTask: [{name}]");
+                logger.LogWarningEx(e, () => $"Invalid NodeTask: [{name}]");
                 logger.LogWarningEx(() => $"Deleting invalid NodeTask: [{name}]");
                 await k8s.DeleteClusterCustomObjectAsync(nodeTask);
 

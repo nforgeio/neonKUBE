@@ -96,7 +96,7 @@ namespace NeonAcme.Controllers
         {
             Logger.LogInformationEx(() => $"Challenge request [{challenge.Request.Action}] [{challenge.Request.DnsName}]");
             Logger.LogDebugEx(() => $"Headers: {NeonHelper.JsonSerialize(HttpContext.Request.Headers)}");
-            Logger.LogDebugEx(NeonHelper.JsonSerialize(challenge));
+            Logger.LogDebugEx(() => NeonHelper.JsonSerialize(challenge));
 
             var response = await jsonClient.PostAsync<ChallengePayload>("acme/challenge", challenge);
 
