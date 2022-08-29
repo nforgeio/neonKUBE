@@ -204,7 +204,7 @@ systemctl restart sshd
             controller.LogProgress(this, verb: "verify", message: "ssh password");
 
             Disconnect();
-            UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword));
+            UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, clusterLogin.SshKey.PrivatePEM));
             WaitForBoot();
         }
 
@@ -319,9 +319,6 @@ systemctl restart rsyslog.service
 
                     controller.ThrowIfCancelled();
                     BaseConfigureApt(controller, clusterDefinition.NodeOptions.PackageManagerRetries, clusterDefinition.NodeOptions.AllowPackageManagerIPv6);
-
-                    controller.ThrowIfCancelled();
-                    BaseConfigureOpenSsh(controller);
 
                     controller.ThrowIfCancelled();
                     DisableSnap(controller);

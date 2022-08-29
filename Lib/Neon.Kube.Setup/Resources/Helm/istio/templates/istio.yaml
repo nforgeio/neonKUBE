@@ -10,28 +10,46 @@ spec:
   meshConfig:
     rootNamespace: {{ .Release.Namespace }}
     enablePrometheusMerge: false
-    accessLogFile: ""
-    accessLogFormat: '{"authority":"%REQ(:AUTHORITY)%","client_ip":"%REQ(X-FORWARDED-FOR)%","forwarded_host":"%REQ(X-FORWARDED-HOST)%","forwarded_proto":"%REQ(X-FORWARDED-PROTO)%","host":"%REQ(:Host)%","method":"%REQ(:METHOD)%","mode":"%PROTOCOL%","path":"%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%","referer":"%REQ(:Referer)%","request_id":"%REQ(X-REQUEST-ID)%","requested_server_name":"%REQUESTED_SERVER_NAME%","response_code":"%RESPONSE_CODE%","trace_id":"%REQ(traceparent)%","user_agent":"%REQ(USER-AGENT)%"}'
-    accessLogEncoding: "JSON"
-    #accessLogFormat: >
-    #  [%START_TIME%] "%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%
-    #  %PROTOCOL%" %RESPONSE_CODE% %RESPONSE_FLAGS% %RESPONSE_CODE_DETAILS%
-    #  %CONNECTION_TERMINATION_DETAILS% "%UPSTREAM_TRANSPORT_FAILURE_REASON%"
-    #  %BYTES_RECEIVED% %BYTES_SENT% %DURATION%
-    #  %RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)% "%REQ(X-FORWARDED-FOR)%"
-    #  "%REQ(USER-AGENT)%" "%REQ(X-REQUEST-ID)%" "%REQ(:AUTHORITY)%"
-    #  "%UPSTREAM_HOST%" %UPSTREAM_CLUSTER% %UPSTREAM_LOCAL_ADDRESS%
-    #  %DOWNSTREAM_LOCAL_ADDRESS% %DOWNSTREAM_REMOTE_ADDRESS%
-    #  %REQUESTED_SERVER_NAME% %ROUTE_NAME% traceID=%REQ(x-b3-traceid)%
     defaultConfig:
       tracing:
         sampling: 100.0
         openCensusAgent:
           address: grafana-agent-node.neon-monitor:55678
           context: ["W3C_TRACE_CONTEXT", "GRPC_BIN", "CLOUD_TRACE_CONTEXT", "B3"]
-    enableTracing: true
+    defaultProviders:
+      tracing:
+        - opencensus
     extensionProviders:
-      - envoyExtAuthzHttp:
+      - name: access-log
+        envoyFileAccessLog:
+          path: '/dev/stdout'
+          logFormat:
+            labels:
+              authority: "%REQ(:AUTHORITY)%"
+              client_ip: "%REQ(X-FORWARDED-FOR)%"
+              forwarded_host: "%REQ(X-FORWARDED-HOST)%"
+              forwarded_proto: "%REQ(X-FORWARDED-PROTO)%"
+              host: "%REQ(:Host)%"
+              method: "%REQ(:METHOD)%"
+              mode: "%PROTOCOL%"
+              path: "%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%"
+              referer: "%REQ(:Referer)%"
+              request_id: "%REQ(X-REQUEST-ID)%"
+              requested_server_name: "%REQUESTED_SERVER_NAME%"
+              response_code: "%RESPONSE_CODE%"
+              trace_id: "%REQ(traceparent)%"
+              user_agent: "%REQ(USER-AGENT)%"
+      - name: opencensus
+        opencensus:
+          context:
+            - W3C_TRACE_CONTEXT
+            - GRPC_BIN
+            - CLOUD_TRACE_CONTEXT
+            - B3
+          port: 55678
+          service: grafana-agent-node.neon-monitor.svc.cluster.local
+      - name: neon-sso-service
+        envoyExtAuthzHttp:
           headersToDownstreamOnDeny:
             - content-type
             - set-cookie
@@ -44,9 +62,8 @@ spec:
           includeHeadersInCheck:
             - authorization
             - cookie
-          port: '4180'
+          port: 4180
           service: neon-sso-oauth2-proxy.neon-system.svc.cluster.local
-        name: neon-sso-service
   components:
     pilot:
       k8s:

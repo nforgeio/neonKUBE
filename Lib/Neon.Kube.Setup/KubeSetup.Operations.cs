@@ -1205,6 +1205,24 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     // Make sure that the config cached by [KubeHelper] is up to date.
 
                     KubeHelper.LoadConfig();
+
+                    string userHomeFolder;
+                    if (NeonHelper.IsWindows)
+                    {
+                        userHomeFolder = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"));
+                    }
+                    else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
+                    {
+                        userHomeFolder = Path.Combine(Environment.GetEnvironmentVariable("HOME"));
+                    }
+                    else
+                    {
+                        throw new NotSupportedException("Operating system not supported.");
+                    }
+
+                    File.WriteAllText(
+                        Path.Combine(userHomeFolder, ".ssh", KubeHelper.CurrentContextName.ToString()),
+                        clusterLogin.SshKey.PrivatePEM);
                 }));
         }
 
@@ -1736,8 +1754,66 @@ kubectl apply -f priorityclasses.yaml
                             k8s.WaitForDaemonsetAsync(KubeNamespace.NeonIngress, "istio-ingressgateway", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                             k8s.WaitForDaemonsetAsync(KubeNamespace.KubeSystem, "istio-cni-node", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                         },
-                        timeoutMessage:    "setup/ingress-ready",
+                        timeoutMessage: "setup/ingress-ready",
                         cancellationToken: controller.CancellationToken);
+                });
+
+            controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/ingress-crds-ready",
+                async () =>
+                {
+                    controller.LogProgress(controlNode, verb: "wait for", message: "istio CRDs");
+
+                    await NeonHelper.WaitForAsync(
+                        async () =>
+                        {
+                            try
+                            {
+                                await k8s.ListNamespacedCustomObjectAsync<Telemetry>(KubeNamespace.NeonIngress);
+                                return true;
+                            }
+                            catch
+                            {
+                                return false;
+                            }
+                        },
+                        timeout: TimeSpan.FromSeconds(300),
+                        pollInterval: TimeSpan.FromMilliseconds(500));
+                });
+
+            controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/ingress-telemetry",
+                async () =>
+                {
+                    controller.LogProgress(controlNode, verb: "setup", message: "telemetry");
+
+                    var telemetry = new Telemetry()
+                    {
+                        Metadata = new V1ObjectMeta()
+                        {
+                            Name = "mesh-default",
+                            NamespaceProperty = KubeNamespace.NeonIngress
+                        },
+                        Spec = new TelemetrySpec()
+                        {
+                            Tracing = new List<Tracing>()
+                            {
+                                new Tracing()
+                                {
+                                    Providers = new List<TracingProvider>()
+                                    {
+                                        new TracingProvider()
+                                        {
+                                            Name = "opencensus"
+                                        }
+                                    },
+                                    RandomSamplingPercentage = 100.0
+                                }
+                            }
+                        }
+                    };
+
+                    await k8s.UpsertNamespacedCustomObjectAsync<Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
                 });
         }
 
@@ -2118,7 +2194,7 @@ subjects:
                             }
                         }
 
-                        controlNode.SudoCommand(CommandBundle.FromScript(sbScript));
+                        controlNode.SudoCommand(CommandBundle.FromScript(sbScript), RunOptions.FaultOnError);
                     }
                     finally
                     {
@@ -3666,6 +3742,7 @@ $@"- name: StorageType
                     values.Add($"serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add("replicas", serviceAdvice.ReplicaCount);
 
                     controller.ThrowIfCancelled();
                     await controlNode.InvokeIdempotentAsync("setup/db-credentials-grafana",

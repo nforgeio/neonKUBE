@@ -250,15 +250,6 @@ namespace Neon.Kube
                 clusterLogin.Save();
             }
 
-            // Update the cluster node SSH credentials to use the secure password.
-
-            var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword);
-
-            foreach (var node in cluster.Nodes)
-            {
-                node.UpdateCredentials(sshCredentials);
-            }
-
             // Configure the setup controller state.
 
             controller.Add(KubeSetupProperty.Preparing, false);

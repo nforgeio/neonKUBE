@@ -646,6 +646,39 @@ rm -rf /var/lib/dhcp/*
                 });
         }
 
+        /// <summary>
+        /// <para>
+        /// Manually sets whether SSH login using a password is enabled. 
+        /// </para>
+        /// </summary>
+        /// <param name="enabled">
+        /// Pass <c>true</c> to enable login using a password, or false to disable.
+        /// </param>        
+        public void SetSshPasswordLogin(bool enabled)
+        {
+            var script =
+$@"
+set -euo pipefail
+
+if [ -f ""/etc/ssh/sshd_config.d/50-neonkube.conf"" ]; 
+then     
+
+    sed -iE 's/#*PasswordAuthentication.*/PasswordAuthentication {(enabled ? "yes" : "no")}/' /etc/ssh/sshd_config.d/50-neonkube.conf
+
+    sed -iE 's/^PasswordAuthentication.*/#PasswordAuthentication {(enabled ? "yes" : "no")}/' /etc/ssh/sshd_config
+
+else
+
+    sed -iE 's/#*PasswordAuthentication.*/PasswordAuthentication {(enabled ? "yes" : "no")}/' /etc/ssh/sshd_config
+
+fi
+";
+
+            SudoCommand(CommandBundle.FromScript(script), RunOptions.FaultOnError);
+
+            SudoCommand("systemctl", "restart", "sshd", RunOptions.FaultOnError);
+        }
+
         //---------------------------------------------------------------------
         // Override the base log related methods and write to the internal logs
         // as well.

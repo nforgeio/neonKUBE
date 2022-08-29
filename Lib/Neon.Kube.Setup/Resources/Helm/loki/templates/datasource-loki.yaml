@@ -19,7 +19,7 @@ spec:
 {{- if .Values.tracing.enabled }}
         derivedFields:
           - datasourceUid: tempo
-            matcherRegex: '[\"]?(?:trace|Trace|TRACE|activity|Activity|ACTIVITY)[-_]?(?:id|Id|ID)[:=\s\"]*(\w+)\b'
+            matcherRegex: '[\"]?(?:trace|Trace|TRACE|activity|Activity|ACTIVITY)[-_]?(?:id|Id|ID)[:=\s\"]*(?:[0-9]{2}[-])*(\w+)\b'
             name: trace_id
             url: "$${__value.raw}"
 {{- end }}

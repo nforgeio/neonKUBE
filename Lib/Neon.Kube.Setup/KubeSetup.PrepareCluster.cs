@@ -313,13 +313,6 @@ namespace Neon.Kube
                     clusterLogin.SsoPassword = cluster.Definition.RootPassword ?? NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
 
                     clusterLogin.Save();
-
-                    // Update node proxies with the generated SSH credentials.
-
-                    foreach (var node in cluster.Nodes)
-                    {
-                        node.UpdateCredentials(clusterLogin.SshCredentials);
-                    }
                 });
 
             // Have the hosting manager add any custom proviosioning steps.
@@ -380,6 +373,10 @@ namespace Neon.Kube
                 (controller, node) =>
                 {
                     node.ConfigureSshKey(controller);
+                    node.SetSshPasswordLogin(false);
+                    // Update node proxies with the generated SSH credentials.
+
+                    node.UpdateCredentials(clusterLogin.SshCredentials);
                 });
 
             controller.AddNodeStep("prepare nodes",
@@ -400,7 +397,11 @@ namespace Neon.Kube
                     {
                         jsonClient.BaseAddress = new Uri(controller.Get<string>(KubeSetupProperty.NeonCloudHeadendUri));
 
-                        var result = await jsonClient.PostAsync<Dictionary<string, string>>($"/cluster-setup/domain?addresses={string.Join(',', clusterAddresses)}&api-version=0.1.0");
+                        var args = new ArgDictionary();
+                        args.Add("addresses", string.Join(',', clusterAddresses));
+                        args.Add("api-version", KubeConst.NeonCloudHeadendVersion);
+
+                        var result = await jsonClient.PostAsync<Dictionary<string, string>>($"/cluster-setup/domain", args: args);
 
                         clusterLogin.ClusterDefinition.Id     = result["Id"];
                         clusterLogin.ClusterDefinition.Domain = result["Domain"];
