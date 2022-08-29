@@ -207,16 +207,8 @@ namespace NeonDashboard
                 await ConfigureDevAsync();
             }
 
-            var redact =
-#if DEBUG
-                false;
-#else
-                true;
-#endif
-
-            SsoClientSecret = GetEnvironmentVariable("SSO_CLIENT_SECRET", redacted: redact);
-
-            AesCipher = new AesCipher(GetEnvironmentVariable("COOKIE_CIPHER", AesCipher.GenerateKey(), redacted: redact));
+            SsoClientSecret = GetEnvironmentVariable("SSO_CLIENT_SECRET", redact: true);
+            AesCipher       = new AesCipher(GetEnvironmentVariable("COOKIE_CIPHER", AesCipher.GenerateKey(), redact: true));
 
             // Start the web service.
 
