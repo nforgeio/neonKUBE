@@ -35,10 +35,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Neon.Common" Version="10000.0.2193-dev-master" />
-    <PackageReference Include="Neon.Service" Version="10000.0.2193-dev-master" />
-    <PackageReference Include="Neon.Tailwind" Version="10000.0.2193-dev-master" />
-    <PackageReference Include="Neon.Web" Version="10000.0.2193-dev-master" />
+    <PackageReference Include="Neon.Common" Version="10000.0.2195-dev-master" />
+    <PackageReference Include="Neon.Service" Version="10000.0.2195-dev-master" />
+    <PackageReference Include="Neon.Tailwind" Version="10000.0.2195-dev-master" />
+    <PackageReference Include="Neon.Web" Version="10000.0.2195-dev-master" />
     <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.2.0-rc1" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.0.0-rc8" />
     <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.0.0-rc8" />
