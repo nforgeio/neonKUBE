@@ -10,7 +10,7 @@
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
     <AssemblyName>neon-dashboard</AssemblyName>
-    <Configurations>Debug;Release;CodeDoc</Configurations>
+    <Configurations>Debug;Release</Configurations>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
     <AnalysisLevel>5.0</AnalysisLevel>
