@@ -7,7 +7,7 @@
 		<AssemblyName>neon</AssemblyName>
 		<LangVersion>latest</LangVersion>
 		<RuntimeIdentifier>win10-x64</RuntimeIdentifier>
-		<Configurations>Debug;Release;CodeDoc</Configurations>
+		<Configurations>Debug;Release</Configurations>
 		<Authors>neonFORGE Team</Authors>
 		<Company>neonFORGE LLC</Company>
 		<Description>Manage neonKUBE clusters from the command line</Description>
@@ -37,10 +37,6 @@
 		<PublishTrimmed>false</PublishTrimmed>
 		<TrimMode>copyused</TrimMode>
 		<PublishReadyToRun>false</PublishReadyToRun>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
-		<DefineConstants />
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

@@ -8,7 +8,7 @@
 		<RootNamespace>TestDeployment</RootNamespace>
 		<AssemblyName>Test.Neon.Grpc</AssemblyName>
 		<IsPackable>false</IsPackable>
-		<Configurations>Debug;Release;CodeDoc</Configurations>
+		<Configurations>Debug;Release</Configurations>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
 		<GenerateDocumentationFile>false</GenerateDocumentationFile>

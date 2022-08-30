@@ -5,7 +5,7 @@
 		<TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
 		<IsPackable>false</IsPackable>
 		<LangVersion>latest</LangVersion>
-		<Configurations>Debug;Release;CodeDoc</Configurations>
+		<Configurations>Debug;Release</Configurations>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
 		<GenerateDocumentationFile>false</GenerateDocumentationFile>
@@ -25,13 +25,6 @@
 		<WarningsAsErrors>NU1605</WarningsAsErrors>
 		<NoWarn></NoWarn>
 		<PlatformTarget>x64</PlatformTarget>
-		<DefineConstants />
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
-		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-		<WarningsAsErrors>NU1605</WarningsAsErrors>
-		<NoWarn></NoWarn>
 		<DefineConstants />
 	</PropertyGroup>
 

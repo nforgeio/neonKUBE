@@ -6,7 +6,7 @@
 	  <IsPackable>false</IsPackable>
 	  <RootNamespace>TestKube</RootNamespace>
 	  <LangVersion>latest</LangVersion>
-	  <Configurations>Debug;Release;CodeDoc</Configurations>
+	  <Configurations>Debug;Release</Configurations>
 	  <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 	  <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
 	  <GenerateDocumentationFile>false</GenerateDocumentationFile>
