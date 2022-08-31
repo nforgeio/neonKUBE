@@ -2504,6 +2504,7 @@ exit 0
 # To disable tunneled clear text passwords, change to no here!
 PasswordAuthentication yes
 #PermitEmptyPasswords no
+PubkeyAcceptedKeyTypes +ssh-rsa
 
 # Change to yes to enable challenge-response passwords (beware issues with
 # some PAM modules and threads)
@@ -2614,7 +2615,6 @@ PermitRootLogin no
 usePAM {allowPasswordAuthValue}
 PasswordAuthentication {allowPasswordAuthValue}
 AuthorizedKeysFile %h/.ssh/authorized_keys
-PubkeyAcceptedKeyTypes +ssh-rsa
 
 #------------------------------------------------------------------------------
 # Interfactive login

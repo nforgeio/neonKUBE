@@ -91,10 +91,10 @@
     files are always regenerated.
     -->
 
-	<Target Name="RemoveConfig" BeforeTargets="BeforeBuild">
+	<!--<Target Name="RemoveConfig" BeforeTargets="BeforeBuild">
 		<Message Importance="high" Text="Purge CRDs" />
 		<RemoveDir Directories="$(ProjectDir)config.gitignore" />
-	</Target>
+	</Target>-->
 
 	<!--
     This target publishes all generated CRDs to [$/Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/crds/*].
@@ -108,7 +108,7 @@
 
 	<Target Name="PublishCRDs" AfterTargets="GenerateAfterBuild">
 		<Message Importance="high" Text="Publish CRDs to: Neon.Kube.Setup" />
-		<Exec Command="neon-build rm &quot;$(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds\*&quot;" />
+		<!--<Exec Command="neon-build rm &quot;$(SolutionDir)Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds\*&quot;" />-->
 		<Exec Command="neon-build publish-files &quot;$(ProjectDir)config.gitignore\crds\*&quot; &quot;$(NK_ROOT)\Lib\Neon.Kube.Setup\Resources\Helm\$(MSBuildProjectName)\crds&quot; --exclude-kustomize" />
 	</Target>
 
