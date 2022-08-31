@@ -5,7 +5,7 @@
 		<OutputType>Library</OutputType>
 		<LangVersion>latest</LangVersion>
 		<IsPackable>true</IsPackable>
-		<Version>10000.0.2130-dev-repo-split</Version>
+		<Version>10000.0.2236-dev-master</Version>
 		<Company>neonFORGE LLC</Company>
 		<Product>neonKUBE</Product>
 		<Description>INTERNAL USE ONLY: Implements the Neon Desktop (gRPC) Service</Description>
@@ -39,8 +39,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Neon.Common" Version="10000.0.2198-dev-jeff" />
-		<PackageReference Include="Neon.HyperV" Version="10000.0.2198-dev-jeff" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2199-dev-master" />
+		<PackageReference Include="Neon.HyperV" Version="10000.0.2199-dev-master" />
 		<PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.0.152" />
 	</ItemGroup>
 

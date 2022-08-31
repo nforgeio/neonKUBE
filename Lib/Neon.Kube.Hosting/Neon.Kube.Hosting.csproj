@@ -4,7 +4,7 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<LangVersion>latest</LangVersion>
-		<Version>10000.0.2130-dev-repo-split</Version>
+		<Version>10000.0.2236-dev-master</Version>
 		<Authors>neonFORGE Team</Authors>
 		<Company>neonFORGE LLC</Company>
 		<Product>neonKUBE</Product>
@@ -63,7 +63,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Neon.Common" Version="10000.0.2198-dev-jeff" />
+	  <PackageReference Include="Neon.Common" Version="10000.0.2199-dev-master" />
 	</ItemGroup>
 
 </Project>

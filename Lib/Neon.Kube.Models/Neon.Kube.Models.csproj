@@ -5,7 +5,7 @@
 		<OutputType>Library</OutputType>
 		<RootNamespace>Neon.Kube.Models</RootNamespace>
 		<Authors>neonFORGE Team</Authors>
-		<Version>10000.0.2130-dev-repo-split</Version>
+		<Version>10000.0.2236-dev-master</Version>
 		<Company>neonFORGE LLC</Company>
 		<Product>neonKUBE</Product>
 		<Description>INTERNAL USE ONLY: neonKUBE related data models.</Description>
@@ -51,7 +51,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Neon.Common" Version="10000.0.2198-dev-jeff" />
+	  <PackageReference Include="Neon.Common" Version="10000.0.2199-dev-master" />
 	</ItemGroup>
 
 </Project>

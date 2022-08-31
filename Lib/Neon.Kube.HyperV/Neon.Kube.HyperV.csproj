@@ -4,7 +4,7 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<LangVersion>latest</LangVersion>
-		<Version>10000.0.2130-dev-repo-split</Version>
+		<Version>10000.0.2236-dev-master</Version>
 		<Authors>neonFORGE Team</Authors>
 		<Company>neonFORGE LLC</Company>
 		<Description>INTERNAL USE ONLY: neonKUBE hosting manager for Windows Hyper-V on remote servers (e.g. production)</Description>
@@ -44,8 +44,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2198-dev-jeff" />
-		<PackageReference Include="Neon.HyperV" Version="10000.0.2198-dev-jeff" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2199-dev-master" />
+		<PackageReference Include="Neon.HyperV" Version="10000.0.2199-dev-master" />
 	</ItemGroup>
 
 	<ItemGroup>
