@@ -109,7 +109,7 @@ reloader:
     # The name of the ServiceAccount to use.
     # If not set and create is true, a name is generated using the fullname template
     name:
-  # Optional flags to pass to the Reloader entrypoint
+  # Optional flags to pass to the Reloader entry point
   # Example:
   #   custom_annotations:
   #     configmap: "my.company.com/configmap"

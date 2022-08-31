@@ -34,7 +34,7 @@
 	<PropertyGroup>
 		<!-- 
 		We need to prevent the KubeOps build targets from trying to call the non-existent
-		program entrypoint (due to this assembly being a Library) to generate the CRDs
+		program entry point (due to this assembly being a Library) to generate the CRDs
 		and other installation related files.
 		-->
 		<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
@@ -177,9 +177,9 @@
 
 	<ItemGroup>
 		<PackageReference Include="Minio" Version="3.1.13" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2195-dev-master" />
-		<PackageReference Include="Neon.Cryptography" Version="10000.0.2195-dev-master" />
-		<PackageReference Include="Neon.Postgres" Version="10000.0.2195-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2198-dev-jeff" />
+		<PackageReference Include="Neon.Cryptography" Version="10000.0.2198-dev-jeff" />
+		<PackageReference Include="Neon.Postgres" Version="10000.0.2198-dev-jeff" />
 		<PackageReference Include="Samboy063.Tomlet" Version="3.1.2" />
 		<PackageReference Include="Tomlyn" Version="0.3.1" />
 		<PackageReference Include="Npgsql" Version="6.0.2" />

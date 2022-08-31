@@ -112,7 +112,7 @@ namespace NeonClusterOperator
         /// <param name="name">The service name.</param>
         /// <param name="serviceMap">Optionally specifies the service map.</param>
         public Service(string name, ServiceMap serviceMap = null)
-            : base(name, version: KubeVersions.NeonKube, metricsPrefix: "neonclusteroperator")
+            : base(name, version: KubeVersions.NeonKube, new NeonServiceOptions() { MetricsPrefix = "neonclusteroperator" })
         {
         }
 

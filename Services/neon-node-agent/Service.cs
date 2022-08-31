@@ -162,7 +162,7 @@ namespace NeonNodeAgent
         /// </summary>
         /// <param name="name">The service name.</param>
         public Service(string name)
-            : base(name, version: KubeVersions.NeonKube, metricsPrefix: "neonnodeagent")
+            : base(name, version: KubeVersions.NeonKube, new NeonServiceOptions() { MetricsPrefix = "neonnodeagent" })
         {
         }
 

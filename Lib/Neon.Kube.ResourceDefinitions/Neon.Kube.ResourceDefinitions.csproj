@@ -32,7 +32,7 @@
 	<PropertyGroup>
 		<!-- 
 		We need to prevent the KubeOps build targets from trying to call the non-existent
-		program entrypoint (due to this assembly being a Library) to generate the CRDs
+		program entry point (due to this assembly being a Library) to generate the CRDs
 		and other installation related files.
 		-->
 		<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
@@ -54,7 +54,7 @@
 	<ItemGroup>
 		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
 		<PackageReference Include="Macross.Json.Extensions" Version="2.2.0" />
-		<PackageReference Include="Neon.JsonConverters" Version="10000.0.2195-dev-master" />
+		<PackageReference Include="Neon.JsonConverters" Version="10000.0.2198-dev-jeff" />
 	</ItemGroup>
 
 	<ItemGroup>

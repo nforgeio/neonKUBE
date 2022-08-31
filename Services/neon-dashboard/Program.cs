@@ -43,13 +43,11 @@ namespace NeonDashboard
         public static Service Service { get; private set; }
 
         /// <summary>
-        /// The program entrypoint.
+        /// The program entry point.
         /// </summary>
         /// <param name="args">The command line arguments.</param>
         public static async Task Main(string[] args)
         {
-            NeonService.Initialize();
-
             try
             {
                 Service = new Service(KubeService.NeonDashboard);

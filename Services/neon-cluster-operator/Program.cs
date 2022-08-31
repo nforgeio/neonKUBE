@@ -41,7 +41,7 @@ using KubeOps.Operator.Builder;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// The <b>neon-cluster-operator</b> entrypoint.
+    /// The <b>neon-cluster-operator</b> entry point.
     /// </summary>
     public static class Program
     {
@@ -57,8 +57,6 @@ namespace NeonClusterOperator
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task Main(string[] args)
         {
-            NeonService.Initialize();
-
             try
             {
                 //-------------------------------------------------------------

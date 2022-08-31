@@ -1487,7 +1487,7 @@ pause_image = ""{KubeConst.LocalClusterRegistry}/pause:{KubeVersions.Pause}""
 pause_image_auth_file = """"
 
 # The command to run to have a container stay in the paused state.
-# When explicitly set to """", it will fallback to the entrypoint and command
+# When explicitly set to """", it will fallback to the entry point and command
 # specified in the pause image. When commented out, it will fallback to the
 # default: ""/pause"". This option supports live configuration reload.
 pause_command = ""/pause""

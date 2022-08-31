@@ -100,7 +100,7 @@ namespace Neon.Kube.Operator
         /// Otherwise, your <b>Main()</b> method should continue with normal application startup.
         /// </para>
         /// <para>
-        /// Your operator <b>Main()</b> entrypoint should look something like:
+        /// Your operator <b>Main()</b> entry point should look something like:
         /// </para>
         /// <code language="C#">
         /// public static async Task Main(string[] args)
