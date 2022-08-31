@@ -593,6 +593,8 @@ rm -rf /var/lib/dhcp/*
 
 {fsZero}
 {fstrim}
+
+passwd --delete {KubeConst.SysAdminUser}
 ";
             SudoCommand(CommandBundle.FromScript(cleanScript), RunOptions.FaultOnError);
         }

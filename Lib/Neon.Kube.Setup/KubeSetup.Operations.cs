@@ -1814,6 +1814,18 @@ kubectl apply -f priorityclasses.yaml
                     };
 
                     await k8s.UpsertNamespacedCustomObjectAsync<Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
+
+                    // turn down tracing in neon namespaces.
+
+                    telemetry.Metadata.Name = "neon-monitor-default";
+                    telemetry.Metadata.NamespaceProperty = KubeNamespace.NeonMonitor;
+                    telemetry.Spec.Tracing.First().RandomSamplingPercentage = 2.0;
+                    await k8s.UpsertNamespacedCustomObjectAsync<Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
+
+                    telemetry.Metadata.Name = "neon-system-default";
+                    telemetry.Metadata.NamespaceProperty = KubeNamespace.NeonSystem;
+                    telemetry.Spec.Tracing.First().RandomSamplingPercentage = 2.0;
+                    await k8s.UpsertNamespacedCustomObjectAsync<Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
                 });
         }
 
