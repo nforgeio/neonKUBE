@@ -2483,7 +2483,8 @@ exit 0
 #MaxAuthTries 6
 #MaxSessions 10
 
-#PubkeyAuthentication yes
+PubkeyAuthentication yes
+PubkeyAcceptedKeyTypes +ssh-rsa
 
 # Expect .ssh/authorized_keys2 to be disregarded by default in future.
 #AuthorizedKeysFile     .ssh/authorized_keys .ssh/authorized_keys2
@@ -2504,7 +2505,6 @@ exit 0
 # To disable tunneled clear text passwords, change to no here!
 PasswordAuthentication yes
 #PermitEmptyPasswords no
-PubkeyAcceptedKeyTypes +ssh-rsa
 
 # Change to yes to enable challenge-response passwords (beware issues with
 # some PAM modules and threads)
