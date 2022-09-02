@@ -79,12 +79,9 @@ namespace Neon.Kube
 
         private const string    defaultPodSubnet                = KubeConst.DefaultPodSubnet;
         private const string    defaultServiceSubnet            = KubeConst.DefaultServiceSubnet;
-        private const string    defaultCloudNodeSubnet          = "10.100.0.0/16";
         private const int       defaultReservedIngressStartPort = 64000;
         private const int       defaultReservedIngressEndPort   = 64999;
         private const int       additionalReservedPorts         = 100;
-        private const string    defaultCertificateDuration      = "504h";
-        private const string    defaultCertificateRenewBefore   = "336h";
 
         /// <summary>
         /// Default constructor.
