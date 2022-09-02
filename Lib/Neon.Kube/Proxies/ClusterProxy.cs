@@ -106,6 +106,17 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="context">The Kubernetes confug context.</param>
         /// <param name="hostingManagerFactory">The hosting manager factory,</param>
+        /// <param name="cloudMarketplace">
+        /// <para>
+        /// For cloud environments, this specifies whether the cluster should be provisioned
+        /// using a VM image from the public cloud marketplace when <c>true</c> or from the
+        /// private neonFORGE image gallery for testing when <c>false</c>.  This is ignored
+        /// for on-premise environments.
+        /// </para>
+        /// <note>
+        /// Only neonFORGE maintainers will have permission to use the private image.
+        /// </note>
+        /// </param>
         /// <param name="operation">Optionally identifies the operations that will be performed using the proxy.  This defaults to <see cref="Operation.LifeCycle"/>.</param>
         /// <param name="nodeImageUri">Optionally passed as the URI to the (GZIP compressed) node image.</param>
         /// <param name="nodeImagePath">Optionally passed as the local path to the (GZIP compressed) node image file.</param>
@@ -122,6 +133,7 @@ namespace Neon.Kube
         public ClusterProxy(
             KubeConfigContext       context,
             IHostingManagerFactory  hostingManagerFactory,
+            bool                    cloudMarketplace,
             Operation               operation         = Operation.LifeCycle,
             string                  nodeImageUri      = null,
             string                  nodeImagePath     = null,
@@ -131,6 +143,7 @@ namespace Neon.Kube
             : this(
                   clusterDefinition:        context.Extension.ClusterDefinition,
                   hostingManagerFactory:    hostingManagerFactory, 
+                  cloudMarketplace:         cloudMarketplace,
                   operation:                operation, 
                   nodeImageUri:             nodeImageUri, 
                   nodeImagePath:            nodeImagePath, 
@@ -145,6 +158,17 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="hostingManagerFactory">The hosting manager factory,</param>
+        /// <param name="cloudMarketplace">
+        /// <para>
+        /// For cloud environments, this specifies whether the cluster should be provisioned
+        /// using a VM image from the public cloud marketplace when <c>true</c> or from the
+        /// private neonFORGE image gallery for testing when <c>false</c>.  This is ignored
+        /// for on-premise environments.
+        /// </para>
+        /// <note>
+        /// Only neonFORGE maintainers will have permission to use the private image.
+        /// </note>
+        /// </param>
         /// <param name="operation">Optionally identifies the operations that will be performed using the proxy.  This defaults to <see cref="Operation.LifeCycle"/>.</param>
         /// <param name="nodeImageUri">Optionally passed as the URI to the (GZIP compressed) node image.</param>
         /// <param name="nodeImagePath">Optionally passed as the local path to the (GZIP compressed) node image file.</param>
@@ -161,7 +185,7 @@ namespace Neon.Kube
         /// <remarks>
         /// <para>
         /// At least one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be passed
-        /// for <see cref="GetHostingManager(IHostingManagerFactory, Operation, string)"/> to work.
+        /// for <see cref="GetHostingManager(IHostingManagerFactory, bool, Operation, string)"/> to work.
         /// </para>
         /// <para>
         /// The <paramref name="nodeProxyCreator"/> function will be called for each node in
@@ -174,6 +198,7 @@ namespace Neon.Kube
         public ClusterProxy(
             ClusterDefinition       clusterDefinition,
             IHostingManagerFactory  hostingManagerFactory,
+            bool                    cloudMarketplace,
             Operation               operation         = Operation.LifeCycle,
             string                  nodeImageUri      = null,
             string                  nodeImagePath     = null,
@@ -240,7 +265,7 @@ namespace Neon.Kube
 
             // Create the hosting manager.
 
-            this.HostingManager = GetHostingManager(hostingManagerFactory, operation, KubeHelper.LogFolder);
+            this.HostingManager = GetHostingManager(hostingManagerFactory, cloudMarketplace, operation, KubeHelper.LogFolder);
         }
 
         /// <summary>
@@ -350,6 +375,17 @@ namespace Neon.Kube
         /// as setting the <see cref="HostingManager"/> property.
         /// </summary>
         /// <param name="hostingManagerFactory">Specifies a custom hosting manager factory to override <see cref="HostingManagerFactory"/>.</param>
+        /// <param name="cloudMarketplace">
+        /// <para>
+        /// For cloud environments, this specifies whether the cluster should be provisioned
+        /// using a VM image from the public cloud marketplace when <c>true</c> or from the
+        /// private neonFORGE image gallery for testing when <c>false</c>.  This is ignored
+        /// for on-premise environments.
+        /// </para>
+        /// <note>
+        /// Only neonFORGE maintainers will have permission to use the private image.
+        /// </note>
+        /// </param>
         /// <param name="operation">
         /// Specifies the operation(s) that will be performed using the <see cref="IHostingManager"/> returned.
         /// This is used to ensure that this instance already has the information required to complete the
@@ -370,7 +406,7 @@ namespace Neon.Kube
         /// this to work.
         /// </note>
         /// </remarks>
-        private IHostingManager GetHostingManager(IHostingManagerFactory hostingManagerFactory, Operation operation = Operation.LifeCycle, string logFolder = null)
+        private IHostingManager GetHostingManager(IHostingManagerFactory hostingManagerFactory, bool cloudMarketplace, Operation operation = Operation.LifeCycle, string logFolder = null)
         {
             hostingManagerFactory ??= new HostingManagerFactory();
 
@@ -380,7 +416,7 @@ namespace Neon.Kube
             {
                 if (!string.IsNullOrEmpty(nodeImageUri))
                 {
-                    hostingManager = hostingManagerFactory.GetManagerWithNodeImageUri(this, nodeImageUri, logFolder: logFolder);
+                    hostingManager = hostingManagerFactory.GetManagerWithNodeImageUri(this, cloudMarketplace, nodeImageUri, logFolder: logFolder);
                 }
                 else if (!string.IsNullOrEmpty(nodeImagePath))
                 {
@@ -397,7 +433,7 @@ namespace Neon.Kube
                         case Operation.LifeCycle:
                         case Operation.Setup:
 
-                            hostingManager = hostingManagerFactory.GetManager(this);
+                            hostingManager = hostingManagerFactory.GetManager(this, cloudMarketplace);
                             break;
 
                         default:
@@ -408,7 +444,7 @@ namespace Neon.Kube
             }
             else
             {
-                hostingManager = hostingManagerFactory.GetManager(this, logFolder: logFolder);
+                hostingManager = hostingManagerFactory.GetManager(this, cloudMarketplace, logFolder: logFolder);
             }
 
             if (hostingManager == null)

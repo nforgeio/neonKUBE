@@ -108,7 +108,7 @@ where PURPOSE can be passed as (case insensitive):
                 Program.Exit(1);
             }
 
-            using (var cluster = new ClusterProxy(context, new HostingManagerFactory()))
+            using (var cluster = new ClusterProxy(context, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
             {
                 var purposeArg  = commandLine.Arguments.ElementAtOrDefault(0);
                 var clusterInfo = await cluster.GetClusterInfoAsync();

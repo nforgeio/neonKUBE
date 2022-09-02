@@ -790,6 +790,7 @@ namespace Neon.Kube
         private readonly TimeSpan timeout      = TimeSpan.FromMinutes(30);
         private readonly TimeSpan pollInterval = TimeSpan.FromSeconds(5);
 
+        private bool                                cloudMarketplace;
         private ClusterProxy                        cluster;
         private string                              clusterName;
         private SetupController<NodeDefinition>     controller;
@@ -877,20 +878,30 @@ namespace Neon.Kube
         /// Creates an instance that is capable of provisioning a cluster on AWS.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
-        /// <param name="nodeImageUri">Ignored: must be <c>null</c>.</param>
-        /// <param name="nodeImagePath">Ignored: must be <c>null</c>.</param>
+        /// <param name="cloudMarketplace">
+        /// <para>
+        /// For cloud environments, this specifies whether the cluster should be provisioned
+        /// using a VM image from the public cloud marketplace when <c>true</c> or from the
+        /// private neonFORGE image gallery for testing when <c>false</c>.  This is ignored
+        /// for on-premise environments.
+        /// </para>
+        /// <note>
+        /// Only neonFORGE maintainers will have permission to use the private image.
+        /// </note>
+        /// </param>
+        /// <param name="nodeImageUri">Ignored.</param>
+        /// <param name="nodeImagePath">Ignored.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public AwsHostingManager(ClusterProxy cluster, string nodeImageUri = null, string nodeImagePath = null, string logFolder = null)
+        public AwsHostingManager(ClusterProxy cluster, bool cloudMarketplace, string nodeImageUri = null, string nodeImagePath = null, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
-            Covenant.Requires<ArgumentException>(nodeImageUri == null, nameof(nodeImageUri));
-            Covenant.Requires<ArgumentException>(nodeImagePath == null, nameof(nodeImagePath));
 
             cluster.HostingManager  = this;
 
+            this.cloudMarketplace   = cloudMarketplace;
             this.cluster            = cluster;
             this.clusterName        = cluster.Name;
             this.clusterEnvironment = NeonHelper.EnumToString(cluster.Definition.Purpose);

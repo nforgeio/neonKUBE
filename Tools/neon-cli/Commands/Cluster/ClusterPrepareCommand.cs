@@ -123,6 +123,8 @@ OPTIONS:
 
     --headend-uri               - Set the URI for the headend service.
 
+    --private-image             - Specifies that the private node image should be deployed.
+                                  Only neonFORGE maintainers are permitted to use this.
 ";
 
         /// <inheritdoc/>
@@ -141,7 +143,9 @@ OPTIONS:
             "--debug",
             "--base-image-name",
             "--clusterspace", 
-            "--headend-uri" };
+            "--headend-uri",
+            "--private-image"
+        };
 
         /// <inheritdoc/>
         public override bool NeedsSshCredentials(CommandLine commandLine) => !commandLine.HasOption("--remove-templates");
@@ -189,6 +193,7 @@ OPTIONS:
             var headendUri        = commandLine.GetOption("--headend-uri") ?? KubeConst.NeonCloudHeadendUri;
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
             var disablePending    = commandLine.HasOption("--disable-pending");
+            var privateImage      = commandLine.HasOption("--private-image");
 
             if (!int.TryParse(maxParallelOption, out var maxParallel) || maxParallel <= 0)
             {
@@ -228,7 +233,7 @@ OPTIONS:
             // Do a quick sanity check to ensure that the hosting environment has enough
             // resources (memory and disk) to actually host the cluster.
 
-            using (var cluster = new ClusterProxy(clusterDefinition, new HostingManagerFactory()))
+            using (var cluster = new ClusterProxy(clusterDefinition, new HostingManagerFactory(), !privateImage))
             {
                 var status = await cluster.GetResourceAvailabilityAsync();
 
@@ -289,6 +294,7 @@ OPTIONS:
 
             var controller = KubeSetup.CreateClusterPrepareController(
                 clusterDefinition, 
+                cloudMarketplace:       !privateImage,
                 nodeImageUri:           nodeImageUri,
                 nodeImagePath:          nodeImagePath,
                 maxParallel:            maxParallel,

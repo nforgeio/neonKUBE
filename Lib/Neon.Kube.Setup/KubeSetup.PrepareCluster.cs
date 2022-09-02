@@ -46,6 +46,15 @@ namespace Neon.Kube
         /// Constructs the <see cref="ISetupController"/> to be used for preparing a cluster.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <para>
+        /// For cloud environments, this specifies whether the cluster should be provisioned
+        /// using a VM image from the public cloud marketplace when <c>true</c> or from the
+        /// private neonFORGE image gallery for testing when <c>false</c>.  This is ignored
+        /// for on-premise environments.
+        /// </para>
+        /// <note>
+        /// Only neonFORGE maintainers will have permission to use the private image.
+        /// </note>
         /// <param name="nodeImageUri">
         /// <para>
         /// Optionally specifies the node image URI.
@@ -95,6 +104,7 @@ namespace Neon.Kube
         /// <exception cref="NeonKubeException">Thrown when there's a problem.</exception>
         public static ISetupController CreateClusterPrepareController(
             ClusterDefinition           clusterDefinition,
+            bool                        cloudMarketplace,
             string                      nodeImageUri          = null,
             string                      nodeImagePath         = null,
             int                         maxParallel           = 500,
@@ -145,6 +155,7 @@ namespace Neon.Kube
             var cluster = new ClusterProxy(
                 clusterDefinition:      clusterDefinition,
                 hostingManagerFactory:  new HostingManagerFactory(() => HostingLoader.Initialize()),
+                cloudMarketplace:       cloudMarketplace,
                 operation:              ClusterProxy.Operation.Prepare,
                 nodeImageUri:           nodeImageUri,
                 nodeImagePath:          nodeImagePath,

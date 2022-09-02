@@ -61,6 +61,17 @@ namespace Neon.Kube
         /// the default node image URI for the cluster environment.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="cloudMarketplace">
+        /// <para>
+        /// For cloud environments, this specifies whether the cluster should be provisioned
+        /// using a VM image from the public cloud marketplace when <c>true</c> or from the
+        /// private neonFORGE image gallery for testing when <c>false</c>.  This is ignored
+        /// for on-premise environments.
+        /// </para>
+        /// <note>
+        /// Only neonFORGE maintainers will have permission to use the private image.
+        /// </note>
+        /// </param>
         /// <param name="logFolder">
         /// <para>
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
@@ -75,13 +86,24 @@ namespace Neon.Kube
         /// could be located for the specified cluster environment.
         /// </returns>
         /// <exception cref="NeonKubeException">Thrown if the multiple managers implement support for the same hosting environment.</exception>
-        HostingManager GetManager(ClusterProxy cluster, string logFolder = null);
+        HostingManager GetManager(ClusterProxy cluster, bool cloudMarketplace, string logFolder = null);
 
         /// <summary>
         /// Returns the <see cref="HostingManager"/> for provisioning a cluster using
         /// a node image specified by HTTP/HTTPS URI.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="cloudMarketplace">
+        /// <para>
+        /// For cloud environments, this specifies whether the cluster should be provisioned
+        /// using a VM image from the public cloud marketplace when <c>true</c> or from the
+        /// private neonFORGE image gallery for testing when <c>false</c>.  This is ignored
+        /// for on-premise environments.
+        /// </para>
+        /// <note>
+        /// Only neonFORGE maintainers will have permission to use the private image.
+        /// </note>
+        /// </param>
         /// <param name="nodeImageUri">The node image URI.</param>
         /// <param name="logFolder">
         /// <para>
@@ -97,7 +119,7 @@ namespace Neon.Kube
         /// could be located for the specified cluster environment.
         /// </returns>
         /// <exception cref="NeonKubeException">Thrown if the multiple managers implement support for the same hosting environment.</exception>
-        HostingManager GetManagerWithNodeImageUri(ClusterProxy cluster, string nodeImageUri, string logFolder = null);
+        HostingManager GetManagerWithNodeImageUri(ClusterProxy cluster, bool cloudMarketplace, string nodeImageUri, string logFolder = null);
 
         /// <summary>
         /// Returns the <see cref="HostingManager"/> for provisioning a cluster from
