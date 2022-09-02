@@ -23,7 +23,7 @@
 
 	<ItemGroup>
 	  <PackageReference Include="KubernetesClient" Version="7.2.19" />
-	  <PackageReference Include="Neon.Common" Version="10000.0.2202-dev-master" />
+	  <PackageReference Include="Neon.Common" Version="10000.0.2205-dev-master" />
 	</ItemGroup>
 
 </Project>
