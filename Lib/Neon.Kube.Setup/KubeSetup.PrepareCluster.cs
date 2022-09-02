@@ -46,6 +46,7 @@ namespace Neon.Kube
         /// Constructs the <see cref="ISetupController"/> to be used for preparing a cluster.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="cloudMarketplace">
         /// <para>
         /// For cloud environments, this specifies whether the cluster should be provisioned
         /// using a VM image from the public cloud marketplace when <c>true</c> or from the
@@ -55,6 +56,7 @@ namespace Neon.Kube
         /// <note>
         /// Only neonFORGE maintainers will have permission to use the private image.
         /// </note>
+        /// </param>
         /// <param name="nodeImageUri">
         /// <para>
         /// Optionally specifies the node image URI.
