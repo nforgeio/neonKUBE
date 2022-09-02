@@ -87,9 +87,11 @@ namespace NeonSsoSessionProxy
             services.AddHttpClient();
 
             // Dex config
+
             var dexClient  = new DexClient(new Uri($"http://{KubeService.Dex}:5556"), NeonSsoSessionProxyService.Logger);
             
             // Load in each of the clients from the Dex config into the client.
+
             foreach (var client in NeonSsoSessionProxyService.Config.StaticClients)
             {
                 dexClient.AuthHeaders.Add(client.Id, new BasicAuthenticationHeaderValue(client.Id, client.Secret));
@@ -106,6 +108,7 @@ namespace NeonSsoSessionProxy
                 AutomaticDecompression = DecompressionMethods.None,
                 UseCookies             = false
             });
+
             services.AddSingleton(httpMessageInvoker);
 
             // Cookie encryption cipher.
