@@ -110,7 +110,7 @@ namespace Neon.Kube
 
             foreach (var node in clusterDefinition.Nodes.Where(node => node.Labels.MinioInternal))
             {
-                var osDisk       = ByteUnits.Parse(node.GetDataDiskSize(clusterDefinition));
+                var osDisk       = ByteUnits.Parse(node.GetOsDiskSize(clusterDefinition));
                 var minioVolumes = ByteUnits.Parse(VolumeSize) * VolumesPerNode;
 
                 if (osDisk - minioVolumes < minOsDiskAfterMinio)

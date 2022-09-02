@@ -217,7 +217,7 @@ namespace Neon.Kube
 
             var openEBSDiskSizeGiB = AzureHelper.GetDiskSizeGiB(OpenEBSStorageType, openEbsDiskSizeBytes);
 
-            this.DiskSize = $"{openEBSDiskSizeGiB} GiB";
+            this.OpenEBSDiskSize = $"{openEBSDiskSizeGiB} GiB";
         }
     }
 }
