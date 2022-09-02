@@ -2617,9 +2617,14 @@ subjects:
 
                     var blockDevices = await k8s.ListNamespacedCustomObjectAsync<V1CStorBlockDevice>(KubeNamespace.NeonStorage);
 
-                    foreach (var node in cluster.Definition.Nodes)
+                    foreach (var node in cluster.Definition.Nodes.Where(n => n.OpenEbsStorage))
                     {
-                        if (blockDevices.Items.Any(device => device.Spec.NodeAttributes.GetValueOrDefault("nodeName") == node.Name))
+                        var nodeBlockDevices = blockDevices.Items.Where(
+                            device => device.Spec.NodeAttributes.GetValueOrDefault("nodeName") == node.Name
+                            && device.Spec.FileSystem.FsType == null
+                            && device.Spec.Details.DeviceType == BlockDeviceType.Disk);
+
+                        if (nodeBlockDevices.Count() > 0)
                         {
                             var pool = new V1CStorPoolSpec()
                             {
@@ -2645,7 +2650,7 @@ subjects:
                                 }
                             };
 
-                            foreach (var device in blockDevices.Items.Where(device => device.Spec.NodeAttributes.GetValueOrDefault("nodeName") == node.Name))
+                            foreach (var device in nodeBlockDevices)
                             {
                                 pool.DataRaidGroups.FirstOrDefault().BlockDevices.Add(
                                     new V1CStorBlockDeviceRef()

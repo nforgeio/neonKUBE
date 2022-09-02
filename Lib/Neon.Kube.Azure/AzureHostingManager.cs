@@ -620,14 +620,9 @@ namespace Neon.Kube
         private const int bootDiskLun = 0;
 
         /// <summary>
-        /// Logical unit number for a node's data disk.
-        /// </summary>
-        private const int dataDiskLun = 1;
-
-        /// <summary>
         /// Logical unit number for a node's optional OpenEBS cStor disk.
         /// </summary>
-        private const int openEBSDiskLun = 2;
+        private const int openEBSDiskLun = 1;
 
         /// <summary>
         /// Minimum Azure supported TCP reset idle timeout in minutes.
@@ -1167,7 +1162,7 @@ namespace Neon.Kube
             var operation = $"Provisioning [{cluster.Definition.Name}] on Azure [{region}/{resourceGroupName}]";
 
             controller.AddGlobalStep("AZURE connect", state => ConnectAzureAsync());
-            controller.AddGlobalStep("locate node image", state => LocateNodeImageAsync());
+            //controller.AddGlobalStep("locate node image", state => LocateNodeImageAsync());
             controller.AddGlobalStep("region check", state => VerifyRegionAndVmSizesAsync());
             controller.AddGlobalStep("resource group", state => GetClusterResourceGroup());
 
@@ -1256,13 +1251,13 @@ namespace Neon.Kube
                 controller.AddNodeStep("openebs",
                     async (controller, node) =>
                     {
-                        var azureVm          = nameToVm[node.Name];
+                        var azureVm            = nameToVm[node.Name];
                         var vm                 = azureVm.Vm;
                         var openEBSStorageType = ToAzureStorageType(azureVm.Metadata.Azure.OpenEBSStorageType);
 
                         node.Status = "openebs: checking";
 
-                        if (vm.Data.StorageProfile.DataDisks.Count < 1)     // Note that the OS disk doesn't count as a data disk.
+                        if (node.Metadata.OpenEbsStorage)    
                         {
                             node.Status = "openebs: cStor disk";
 
@@ -1271,16 +1266,18 @@ namespace Neon.Kube
                                 StorageProfile = vm.Data.StorageProfile
                             };
 
+                            var openEbsDiskSize = ByteUnits.Parse(node.Metadata.Azure.OpenEBSDiskSize);
+
                             vmPatch.StorageProfile.DataDisks.Add(
-                                new DataDisk(openEBSDiskLun, DiskCreateOptionTypes.Attach)
+                                new DataDisk(openEBSDiskLun, DiskCreateOptionTypes.Empty)
                                 {
-                                    DiskSizeGB   = (int)(ByteUnits.Parse(node.Metadata.Azure.OpenEBSDiskSize) / ByteUnits.GibiBytes),
+                                    DiskSizeGB   = (int)AzureHelper.GetDiskSizeGiB(azureVm.Node.Metadata.Azure.StorageType, openEbsDiskSize),
                                     Caching      = CachingTypes.None,
                                     ManagedDisk  = new ManagedDiskParameters()
                                     {
                                         StorageAccountType = openEBSStorageType
                                     },
-                                    DeleteOption = DiskDeleteOptionTypes.Delete
+                                    DeleteOption = DiskDeleteOptionTypes.Delete,
                                 });
 
                             azureVm.Vm = (await vm.UpdateAsync(WaitUntil.Completed, vmPatch)).Value;
@@ -2400,8 +2397,7 @@ namespace Neon.Kube
             var azureNodeOptions     = azureVm.Node.Metadata.Azure;
             var azureOSStorageType   = ToAzureStorageType(azureNodeOptions.StorageType, osDisk: true);
             var azureDataStorageType = ToAzureStorageType(azureNodeOptions.StorageType);
-            var diskSize             = (int)(ByteUnits.Parse(node.Metadata.Azure.DiskSize) / ByteUnits.GibiBytes);
-            var dataDiskSize         = (int)(ByteUnits.Parse(node.Metadata.Azure.OpenEBSDiskSize) / ByteUnits.GibiBytes);
+            var diskSize             = ByteUnits.Parse(node.Metadata.Azure.DiskSize);
 
             //-----------------------------------------------------------------
             // We need deploy a script that runs when the VM boots to: 
@@ -2473,7 +2469,17 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
             virtualMachineData.StorageProfile.ImageReference = new ImageReference()
             {
-                Id = nodeImageVersion.Id
+                Publisher = "neonforge",
+                Offer = "neonkube-preview",
+                Sku = "neonkube",
+                Version = "0.8.0",
+            };
+
+            virtualMachineData.Plan = new ComputePlan()
+            {
+                Name = "neonkube",
+                Product = "neonkube-preview",
+                Publisher = "neonforge"
             };
 
             virtualMachineData.StorageProfile.OSDisk = new OSDisk(DiskCreateOptionTypes.FromImage)
@@ -2487,21 +2493,6 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                 DeleteOption = DiskDeleteOptionTypes.Delete,
                 Caching      = CachingTypes.None
             };
-
-            if (dataDiskSize > 0)
-            {
-                virtualMachineData.StorageProfile.DataDisks.Add(
-                    new DataDisk(dataDiskLun, DiskCreateOptionTypes.Empty)
-                    {
-                        ManagedDisk = new ManagedDiskParameters()
-                        {
-                            StorageAccountType = azureDataStorageType,
-                        },
-                        DiskSizeGB   = (int)AzureHelper.GetDiskSizeGiB(azureNodeOptions.StorageType, diskSize),
-                        DeleteOption = DiskDeleteOptionTypes.Delete,
-                        Caching      = CachingTypes.None
-                    });
-            }
 
             var nodeTags = new ResourceTag[]
             {

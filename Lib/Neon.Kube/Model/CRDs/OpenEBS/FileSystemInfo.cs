@@ -40,7 +40,7 @@ namespace Neon.Kube
         /// <summary>
         /// The filesystem type.
         /// </summary>
-        public string FileSystem { get; set; }
+        public string FsType { get; set; }
 
         /// <summary>
         /// The mount point.
