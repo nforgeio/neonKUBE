@@ -115,6 +115,7 @@ namespace Neon.Kube
         /// Creates an instance that is capable of managing and/or provisioning a cluster on the local machine using Hyper-V.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="cloudMarketplace">Ignored</param>
         /// <param name="nodeImageUri">Optionally specifies the node image URI.</param>
         /// <param name="nodeImagePath">Optionally specifies the path to the local node image file.</param>
         /// <param name="logFolder">
@@ -127,7 +128,7 @@ namespace Neon.Kube
         /// to provision a cluster but these can be <c>null</c> when you need to manage a cluster lifecycle.
         /// </note>
         /// </remarks>
-        public HyperVHostingManager(ClusterProxy cluster, string nodeImageUri = null, string nodeImagePath = null, string logFolder = null)
+        public HyperVHostingManager(ClusterProxy cluster, bool cloudMarketplace, string nodeImageUri = null, string nodeImagePath = null, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
 

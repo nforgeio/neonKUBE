@@ -104,6 +104,17 @@ namespace Neon.Kube
         /// Constructs the <see cref="ISetupController"/> to be used for setting up a cluster.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="cloudMarketplace">
+        /// <para>
+        /// For cloud environments, this specifies whether the cluster should be provisioned
+        /// using a VM image from the public cloud marketplace when <c>true</c> or from the
+        /// private neonFORGE image gallery for testing when <c>false</c>.  This is ignored
+        /// for on-premise environments.
+        /// </para>
+        /// <note>
+        /// Only neonFORGE maintainers will have permission to use the private image.
+        /// </note>
+        /// </param>
         /// <param name="maxParallel">
         /// Optionally specifies the maximum number of node operations to be performed in parallel.
         /// This <b>defaults to 500</b> which is effectively infinite.
@@ -131,6 +142,7 @@ namespace Neon.Kube
         /// <exception cref="NeonKubeException">Thrown when there's a problem.</exception>
         public static ISetupController CreateClusterSetupController(
             ClusterDefinition   clusterDefinition,
+            bool                cloudMarketplace,
             int                 maxParallel          = 500,
             bool                unredacted           = false,
             bool                debugMode            = false,
@@ -202,6 +214,7 @@ namespace Neon.Kube
 
             cluster = new ClusterProxy(
                 hostingManagerFactory:  new HostingManagerFactory(() => HostingLoader.Initialize()),
+                cloudMarketplace:       cloudMarketplace,
                 operation:              ClusterProxy.Operation.Setup,
                 clusterDefinition:      clusterDefinition,
                 nodeProxyCreator:       (nodeName, nodeAddress) =>

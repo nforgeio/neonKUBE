@@ -116,7 +116,7 @@ cluster definition or by executing this command on your cluster:
 
             var force = commandLine.HasOption("--force");
 
-            using (var cluster = new ClusterProxy(context, new HostingManagerFactory()))
+            using (var cluster = new ClusterProxy(context, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
             {
                 var capabilities = cluster.Capabilities;
 

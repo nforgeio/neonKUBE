@@ -132,6 +132,7 @@ namespace Neon.Kube
         /// Creates an instance that is capable of provisioning a cluster on XenServer/XCP-ng servers.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="cloudMarketplace">Ignored.</param>
         /// <param name="nodeImageUri">Optionally specifies the node image URI.</param>
         /// <param name="nodeImagePath">Optionally specifies the path to the local node image file.</param>
         /// <param name="logFolder">
@@ -143,7 +144,7 @@ namespace Neon.Kube
         /// One of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be specified.
         /// </note>
         /// </remarks>
-        public XenServerHostingManager(ClusterProxy cluster, string nodeImageUri = null, string nodeImagePath = null, string logFolder = null)
+        public XenServerHostingManager(ClusterProxy cluster, bool cloudMarketplace, string nodeImageUri = null, string nodeImagePath = null, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
 

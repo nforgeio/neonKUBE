@@ -92,7 +92,7 @@ USAGE:
                 Program.Exit(1);
             }
 
-            using (var cluster = new ClusterProxy(context, new HostingManagerFactory()))
+            using (var cluster = new ClusterProxy(context, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
             {
                 var status       = await cluster.GetClusterHealthAsync();
                 var capabilities = cluster.Capabilities;

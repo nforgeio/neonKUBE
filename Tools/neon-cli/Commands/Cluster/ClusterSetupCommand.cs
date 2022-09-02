@@ -104,6 +104,9 @@ OPTIONS:
                           used for automated CI/CD or unit test cluster deployments 
                           while not disrupting the built-in neonDESKTOP or
                           other normal clusters.
+
+    --private-image     - Specifies that the private node image should be deployed.
+                          Only neonFORGE maintainers are permitted to use this.
 ";
 
         private KubeConfigContext   kubeContext;
@@ -122,7 +125,9 @@ OPTIONS:
             "--upload-charts",
             "--debug",
             "--check",
-            "--clusterspace" };
+            "--clusterspace",
+            "--private-image"
+        };
 
         /// <inheritdoc/>
         public override void Help()
@@ -156,6 +161,7 @@ OPTIONS:
             var clusterspace      = commandLine.GetOption("--clusterspace");
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
             var disablePending    = commandLine.HasOption("--disable-pending");
+            var privateImage      = commandLine.HasOption("--private-image");
 
             if (!int.TryParse(maxParallelOption, out var maxParallel) || maxParallel <= 0)
             {
@@ -222,11 +228,12 @@ OPTIONS:
 
             var controller = KubeSetup.CreateClusterSetupController(
                 clusterDefinition,
-                maxParallel:    maxParallel,
-                unredacted:     unredacted,
-                debugMode:      debug,
-                uploadCharts:   uploadCharts,
-                clusterspace:   clusterspace);
+                cloudMarketplace:   !privateImage,
+                maxParallel:        maxParallel,
+                unredacted:         unredacted,
+                debugMode:          debug,
+                uploadCharts:       uploadCharts,
+                clusterspace:       clusterspace);
 
             controller.DisablePendingTasks = disablePending;
 

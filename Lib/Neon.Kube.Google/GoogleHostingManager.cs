@@ -81,6 +81,7 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
+        private bool                                cloudMarketplace;
         private ClusterProxy                        cluster;
         private string                              nodeImageUri;
         private string                              nodeImagePath;
@@ -98,8 +99,19 @@ namespace Neon.Kube
         /// Creates an instance that is capable of provisioning a cluster on Google Cloud.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
-        /// <param name="nodeImageUri">Optionally specifies the node image URI (one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be passed).</param>
-        /// <param name="nodeImagePath">Optionally specifies the path to the local node image file (one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be passed).</param>
+        /// <param name="cloudMarketplace">
+        /// <para>
+        /// For cloud environments, this specifies whether the cluster should be provisioned
+        /// using a VM image from the public cloud marketplace when <c>true</c> or from the
+        /// private neonFORGE image gallery for testing when <c>false</c>.  This is ignored
+        /// for on-premise environments.
+        /// </para>
+        /// <note>
+        /// Only neonFORGE maintainers will have permission to use the private image.
+        /// </note>
+        /// </param>
+        /// <param name="nodeImageUri">Ignored.</param>
+        /// <param name="nodeImagePath">Ignored.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
@@ -109,16 +121,16 @@ namespace Neon.Kube
         /// One of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be specified.
         /// </note>
         /// </remarks>
-        public GoogleHostingManager(ClusterProxy cluster, string nodeImageUri = null, string nodeImagePath = null, string logFolder = null)
+        public GoogleHostingManager(ClusterProxy cluster, bool cloudMarketplace, string nodeImageUri = null, string nodeImagePath = null, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri) || !string.IsNullOrEmpty(nodeImagePath), $"{nameof(nodeImageUri)}/{nodeImagePath}");
 
             cluster.HostingManager = this;
 
-            this.cluster       = cluster;
-            this.nodeImageUri  = nodeImageUri;
-            this.nodeImagePath = nodeImagePath;
+            this.cloudMarketplace = cloudMarketplace;
+            this.cluster          = cluster;
+            this.nodeImageUri     = nodeImageUri;
+            this.nodeImagePath    = nodeImagePath;
         }
 
         /// <inheritdoc/>
