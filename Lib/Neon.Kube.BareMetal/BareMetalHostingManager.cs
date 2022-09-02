@@ -103,6 +103,7 @@ namespace Neon.Kube
         /// servers or virtual machines.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="cloudMarketplace">Ignored</param>
         /// <param name="nodeImageUri">Optionally specifies the node image URI (one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be passed).</param>
         /// <param name="nodeImagePath">Optionally specifies the path to the local node image file (one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be passed).</param>
         /// <param name="logFolder">
@@ -114,10 +115,10 @@ namespace Neon.Kube
         /// One of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be specified.
         /// </note>
         /// </remarks>
-        public BareMetalHostingManager(ClusterProxy cluster, string nodeImageUri = null, string nodeImagePath = null, string logFolder = null)
+        public BareMetalHostingManager(ClusterProxy cluster, bool cloudMarketplace, string nodeImageUri = null, string nodeImagePath = null, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri) || !string.IsNullOrEmpty(nodeImagePath), $"{nameof(nodeImageUri)}/{nodeImagePath}");
+            Covenant.Requires<ArgumentException>(!cloudMarketplace, nameof(cloudMarketplace));
 
             cluster.HostingManager = this;
 

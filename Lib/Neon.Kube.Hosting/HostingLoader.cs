@@ -53,7 +53,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Loads the known cluster hosting manager assemblies so they'll be available
-        /// to <see cref="HostingManagerFactory.GetManagerWithNodeImageUri(ClusterProxy, string, string)"/>, 
+        /// to <see cref="HostingManagerFactory.GetManagerWithNodeImageUri(ClusterProxy, bool, string, string)"/>, 
         /// and <see cref="HostingManager.Validate(ClusterDefinition)"/> when
         /// they are called.
         /// </para>
@@ -164,28 +164,28 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public HostingManager GetManager(ClusterProxy cluster, string logFolder = null)
+        public HostingManager GetManager(ClusterProxy cluster, bool cloudMarketplace, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
             Covenant.Assert(environmentToHostingManager != null, $"[{nameof(HostingLoader)}] is not initialized.  You must call [{nameof(HostingLoader)}.{nameof(HostingLoader.Initialize)}()] first.");
 
             if (environmentToHostingManager.TryGetValue(cluster.Definition.Hosting.Environment, out var managerType))
             {
-                return (HostingManager)Activator.CreateInstance(managerType, cluster, (string)null, (string)null, logFolder);
+                return (HostingManager)Activator.CreateInstance(managerType, cluster, cloudMarketplace, (string)null, (string)null, logFolder);
             }
 
             throw new NotImplementedException($"[{nameof(HostingEnvironment)}={cluster.Definition.Hosting.Environment}]");
         }
 
         /// <inheritdoc/>
-        public HostingManager GetManagerWithNodeImageUri(ClusterProxy cluster, string nodeImageUri, string logFolder = null)
+        public HostingManager GetManagerWithNodeImageUri(ClusterProxy cluster, bool cloudMarketplace, string nodeImageUri, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
             Covenant.Assert(environmentToHostingManager != null, $"[{nameof(HostingLoader)}] is not initialized.  You must call [{nameof(HostingLoader)}.{nameof(HostingLoader.Initialize)}()] first.");
 
             if (environmentToHostingManager.TryGetValue(cluster.Definition.Hosting.Environment, out var managerType))
             {
-                return (HostingManager)Activator.CreateInstance(managerType, cluster, nodeImageUri, (string)null, logFolder);
+                return (HostingManager)Activator.CreateInstance(managerType, cluster, cloudMarketplace, nodeImageUri, (string)null, logFolder);
             }
 
             throw new NotImplementedException($"[{nameof(HostingEnvironment)}={cluster.Definition.Hosting.Environment}]");
@@ -195,12 +195,13 @@ namespace Neon.Kube
         public HostingManager GetManagerWithNodeImageFile(ClusterProxy cluster, string nodeImagePath, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
+            Covenant.Requires<InvalidOperationException>(!IsCloudEnvironment(cluster.Definition.Hosting.Environment), "This method does not support cloud hosting environments.");
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImagePath), nameof(nodeImagePath));
             Covenant.Assert(environmentToHostingManager != null, $"[{nameof(HostingLoader)}] is not initialized.  You must call [{nameof(HostingLoader)}.{nameof(HostingLoader.Initialize)}()] first.");
 
             if (environmentToHostingManager.TryGetValue(cluster.Definition.Hosting.Environment, out var managerType))
             {
-                return (HostingManager)Activator.CreateInstance(managerType, cluster, (string)null, nodeImagePath, logFolder);
+                return (HostingManager)Activator.CreateInstance(managerType, cluster, false, (string)null, nodeImagePath, logFolder);
             }
 
             throw new NotImplementedException($"[{nameof(HostingEnvironment)}={cluster.Definition.Hosting.Environment}]");

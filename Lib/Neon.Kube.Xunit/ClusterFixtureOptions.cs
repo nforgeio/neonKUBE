@@ -60,6 +60,19 @@ namespace Neon.Kube.Xunit
         }
 
         /// <summary>
+        /// <para>
+        /// For cloud environments, this specifies whether the cluster should be provisioned
+        /// using a VM image from the public cloud marketplace when <c>true</c> or from the
+        /// private neonFORGE image gallery for testing when <c>false</c>.  This is ignored
+        /// for on-premise environments.  This defaults to <c>true</c>.
+        /// </para>
+        /// <note>
+        /// You must be a neonKUBE maintainer to use private node images.
+        /// </note>
+        /// </summary>
+        public bool CloudMarketplace { get; set; } = true;
+
+        /// <summary>
         /// Specifies the options that <see cref="ClusterFixture.ResetCluster()"/> will use when
         /// resetting the target cluster.  This defaults to the stock <see cref="ClusterResetOptions"/>
         /// which performs a full cluster reset.
