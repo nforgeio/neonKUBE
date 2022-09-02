@@ -2442,7 +2442,7 @@ namespace Neon.Kube
                 var vpcResponse = await ec2Client.CreateVpcAsync(
                     new CreateVpcRequest()
                     {
-                        CidrBlock         = awsOptions.VpcSubnet,
+                        CidrBlock         = awsOptions.Network.VpcSubnet,
                         TagSpecifications = GetTagSpecifications(vpcName, ResourceType.Vpc)
                     });;
 
@@ -2522,7 +2522,7 @@ namespace Neon.Kube
             if (publicSubnet == null)
             {
                 var subnetResponse = await ec2Client.CreateSubnetAsync(
-                    new CreateSubnetRequest(vpc.VpcId, awsOptions.PublicSubnet)
+                    new CreateSubnetRequest(vpc.VpcId, awsOptions.Network.PublicSubnet)
                     {
                         VpcId             = vpc.VpcId,
                         AvailabilityZone  = awsOptions.AvailabilityZone,
@@ -2535,7 +2535,7 @@ namespace Neon.Kube
             if (nodeSubnet == null)
             {
                 var subnetResponse = await ec2Client.CreateSubnetAsync(
-                    new CreateSubnetRequest(vpc.VpcId, awsOptions.NodeSubnet)
+                    new CreateSubnetRequest(vpc.VpcId, awsOptions.Network.NodeSubnet)
                     {
                         VpcId             = vpc.VpcId,
                         AvailabilityZone  = awsOptions.AvailabilityZone,
@@ -2957,7 +2957,7 @@ namespace Neon.Kube
                 }
 
                 var netInterfacePath = LinuxPath.Combine(KubeNodeFolder.Bin, "net-interface");
-                var privateSubnet    = NetworkCidr.Parse(cluster.Definition.Hosting.Aws.NodeSubnet);
+                var privateSubnet    = NetworkCidr.Parse(cluster.Definition.Hosting.Aws.Network.NodeSubnet);
                 var bootScript       =
 $@"#cloud-boothook
 #!/bin/bash

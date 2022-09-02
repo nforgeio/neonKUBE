@@ -2187,12 +2187,12 @@ namespace Neon.Kube
                 var networkCollection = resourceGroup.GetVirtualNetworks();
                 var networkData       = new VirtualNetworkData() { Location = azureLocation };
 
-                networkData.AddressPrefixes.Add(azureOptions.VnetSubnet);
+                networkData.AddressPrefixes.Add(azureOptions.Network.VnetSubnet);
                 networkData.Subnets.Add(
                     new SubnetData()
                     {
                         Name                 = subnetName,
-                        AddressPrefix        = azureOptions.NodeSubnet,
+                        AddressPrefix        = azureOptions.Network.NodeSubnet,
                         NatGatewayId         = natGateway.Id,
                         NetworkSecurityGroup = new NetworkSecurityGroupData() { Id = subnetNsg.Id }
                     });

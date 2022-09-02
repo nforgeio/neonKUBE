@@ -47,8 +47,6 @@ namespace Neon.Kube
         private const string                defaultDiskSize           = "128 GiB";
         internal const AzureStorageType     defaultOpenEBSStorageType = defaultStorageType;
         private const string                defaultOpenEBSDiskSize    = "128 GiB";
-        private const string                defaultVnetSubnet         = "10.100.0.0/24";
-        private const string                defaultNodeSubnet         = "10.100.0.0/24";
 
         /// <summary>
         /// Constructor.
@@ -384,23 +382,6 @@ namespace Neon.Kube
         public string DefaultOpenEBSDiskSize { get; set; } = defaultOpenEBSDiskSize;
 
         /// <summary>
-        /// Specifies the subnet for the Azure VNET.  This defaults to <b>10.100.0.0/24</b>
-        /// </summary>
-        [JsonProperty(PropertyName = "VnetSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "vnetSubnet", ApplyNamingConventions = false)]
-        [DefaultValue(defaultVnetSubnet)]
-        public string VnetSubnet { get; set; } = defaultVnetSubnet;
-
-        /// <summary>
-        /// specifies the subnet within <see cref="VnetSubnet"/> where the cluster nodes will be provisioned.
-        /// This defaults to <b>10.100.0.0/24</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "NodeSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "nodeSubnet", ApplyNamingConventions = false)]
-        [DefaultValue(defaultNodeSubnet)]
-        public string NodeSubnet { get; set; } = defaultNodeSubnet;
-
-        /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
@@ -536,23 +517,6 @@ namespace Neon.Kube
             if (clusterDefinition.Nodes.Count() > AzureHelper.MaxClusterNodes)
             {
                 throw new ClusterDefinitionException($"cluster node count [{clusterDefinition.Nodes.Count()}] exceeds the [{AzureHelper.MaxClusterNodes}] limit for clusters deployed to Azure.");
-            }
-
-            // Verify subnets
-
-            if (!NetworkCidr.TryParse(VnetSubnet, out var vnetSubnet))
-            {
-                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(VnetSubnet)}={VnetSubnet}] is not a valid subnet.");
-            }
-
-            if (!NetworkCidr.TryParse(NodeSubnet, out var nodeSubnet))
-            {
-                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(NodeSubnet)}={NodeSubnet}] is not a valid subnet.");
-            }
-
-            if (!vnetSubnet.Contains(nodeSubnet))
-            {
-                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(NodeSubnet)}={NodeSubnet}] is contained within [{nameof(VnetSubnet)}={VnetSubnet}].");
             }
         }
 

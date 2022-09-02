@@ -52,9 +52,6 @@ namespace Neon.Kube
         private const string            defaultVolumeSize        = "128 GiB";
         internal const AwsVolumeType    defaultOpenEBSVolumeType = defaultVolumeType;
         private const string            defaultOpenEBSVolumeSize = "128 GiB";
-        private const string            defaultVpcSubnet         = "10.100.0.0/16";
-        private const string            defaultPrivateSubnet     = "10.100.0.0/24";
-        private const string            defaultPublicSubnet      = "10.100.255.0/24";
 
         /// <summary>
         /// Constructor.
@@ -317,35 +314,6 @@ namespace Neon.Kube
         public string DefaultOpenEBSVolumeSize { get; set; } = defaultVolumeSize;
 
         /// <summary>
-        /// Specifies the subnet CIDR to used for AWS VPC (virtual private cloud) provisioned
-        /// for the cluster.  This must surround the <see cref="NodeSubnet"/> and
-        /// <see cref="PublicSubnet"/> subnets.  This defaults to <b>10.100.0.0/16</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "VpcSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "vpcSubnet", ApplyNamingConventions = false)]
-        [DefaultValue(defaultVpcSubnet)]
-        public string VpcSubnet { get; set; } = defaultVpcSubnet;
-
-        /// <summary>
-        /// Specifies the private subnet CIDR within <see cref="VpcSubnet"/> for the private subnet
-        /// where the cluster node instances will be provisioned.  This defaults to <b>10.100.0.0/24</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "PrivateSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "privateSubnet", ApplyNamingConventions = false)]
-        [DefaultValue(defaultPrivateSubnet)]
-        public string NodeSubnet { get; set; } = defaultPrivateSubnet;
-
-        /// <summary>
-        /// Specifies the public subnet CIDR within <see cref="VpcSubnet"/> for the public subnet where
-        /// the AWS network load balancer will be provisioned to manage inbound cluster traffic.
-        /// This defaults to <b>10.100.255.0/16</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "PublicSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "publicSubnet", ApplyNamingConventions = false)]
-        [DefaultValue(defaultPublicSubnet)]
-        public string PublicSubnet { get; set; } = defaultPublicSubnet;
-
-        /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
@@ -478,74 +446,6 @@ namespace Neon.Kube
             if (clusterDefinition.Nodes.Count() > AwsHelper.MaxClusterNodes)
             {
                 throw new ClusterDefinitionException($"cluster node count [{awsHostionOptionsPrefix}.{clusterDefinition.Nodes.Count()}] exceeds the [{AwsHelper.MaxClusterNodes}] limit for clusters deployed to AWS.");
-            }
-
-            //-----------------------------------------------------------------
-            // Network subnets
-
-            VpcSubnet     = VpcSubnet ?? defaultVpcSubnet;
-            NodeSubnet = NodeSubnet ?? defaultPrivateSubnet;
-            PublicSubnet  = PublicSubnet ?? defaultPublicSubnet;
-
-            const int minAwsPrefix = 16;
-            const int maxAwsPrefix = 28;
-
-            // VpcSubnet
-
-            if (!NetworkCidr.TryParse(VpcSubnet, out var vpcSubnet))
-            {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(VpcSubnet)}={VpcSubnet}] is not a valid subnet.");
-            }
-
-            if (vpcSubnet.PrefixLength < minAwsPrefix)
-            {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(VpcSubnet)}={VpcSubnet}] is too large.  The smallest CIDR prefix supported by AWS is [/{minAwsPrefix}].");
-            }
-
-            if (vpcSubnet.PrefixLength > maxAwsPrefix)
-            {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(VpcSubnet)}={VpcSubnet}] is too large.  The largest CIDR prefix supported by AWS is [/{maxAwsPrefix}].");
-            }
-
-            // PrivateSubnet
-
-            if (!NetworkCidr.TryParse(NodeSubnet, out var privateSubnet))
-            {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(NodeSubnet)}={NodeSubnet}] is not a valid subnet.");
-            }
-
-            if (vpcSubnet.PrefixLength < minAwsPrefix)
-            {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(NodeSubnet)}={NodeSubnet}] is too large.  The smallest CIDR prefix supported by AWS is [/{minAwsPrefix}].");
-            }
-
-            if (vpcSubnet.PrefixLength > maxAwsPrefix)
-            {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(NodeSubnet)}={NodeSubnet}] is too large.  The largest CIDR prefix supported by AWS is [/{maxAwsPrefix}].");
-            }
-
-            // PublicSubnet
-
-            if (!NetworkCidr.TryParse(PublicSubnet, out var publicSubnet))
-            {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(PublicSubnet)}={PublicSubnet}] is not a valid subnet.");
-            }
-
-            // Ensure that the subnets fit together.
-
-            if (!vpcSubnet.Contains(privateSubnet))
-            {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(PublicSubnet)}={PublicSubnet}] is not contained within [{nameof(VpcSubnet)}={VpcSubnet}].");
-            }
-
-            if (!vpcSubnet.Contains(publicSubnet))
-            {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(NodeSubnet)}={NodeSubnet}] is not contained within [{nameof(VpcSubnet)}={VpcSubnet}].");
-            }
-
-            if (privateSubnet.Overlaps(publicSubnet))
-            {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(NodeSubnet)}={NodeSubnet}] and [{nameof(PublicSubnet)}={PublicSubnet}] cannot overlap.");
             }
         }
 

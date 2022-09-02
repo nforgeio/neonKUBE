@@ -972,16 +972,16 @@ namespace Neon.Kube
                     case HostingEnvironment.Aws:
 
                         return new NodeSubnetInfo(
-                            Hosting.Aws.NodeSubnet,
-                            $"{nameof(ClusterDefinition)}.{nameof(HostingOptions)}.{nameof(HostingOptions.Aws)}.{nameof(AwsHostingOptions.NodeSubnet)}", 
+                            Hosting.Aws.Network.NodeSubnet,
+                            $"{nameof(ClusterDefinition)}.{nameof(HostingOptions)}.{nameof(HostingOptions.Aws)}.{nameof(AwsHostingOptions.Network.NodeSubnet)}", 
                             KubeConst.CloudSubnetStartReservedIPs, 
                             KubeConst.CloudSubnetEndReservedIPs);
 
                     case HostingEnvironment.Azure:
 
                         return new NodeSubnetInfo(
-                            Hosting.Azure.NodeSubnet, 
-                            $"{nameof(ClusterDefinition)}.{nameof(HostingOptions)}.{nameof(HostingOptions.Azure)}.{nameof(AzureHostingOptions.NodeSubnet)}",
+                            Hosting.Azure.Network.NodeSubnet, 
+                            $"{nameof(ClusterDefinition)}.{nameof(HostingOptions)}.{nameof(HostingOptions.Azure)}.{nameof(AzureHostingOptions.Network.NodeSubnet)}",
                             KubeConst.CloudSubnetStartReservedIPs,
                             KubeConst.CloudSubnetEndReservedIPs);
 
