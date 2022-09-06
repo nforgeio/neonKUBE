@@ -644,7 +644,7 @@ namespace Neon.Kube
         /// <summary>
         /// Identifies the target VM block device for the OpenEBS cStor disk. 
         /// </summary>
-        private const string openEBSDeviceName = "/dev/sdf";
+        private const string openEbsDeviceName = "/dev/sdf";
 
         /// <summary>
         /// Some AWS operations (like creating a NAT gateway or waiting for a load balancer
@@ -1224,7 +1224,7 @@ namespace Neon.Kube
 
                         var volumeName        = GetResourceName($"{node.Name}-openebs");
                         var awsInstance       = nodeNameToAwsInstance[node.Name];
-                        var openEBSVolumeType = ToEc2VolumeType(awsInstance.Metadata.Aws.OpenEBSVolumeType);
+                        var openEbsVolumeType = ToEc2VolumeType(awsInstance.Metadata.Aws.OpenEbsVolumeType);
                         var volumePagenator   = ec2Client.Paginators.DescribeVolumes(new DescribeVolumesRequest() { Filters = clusterFilter });
                         var volume            = (Volume)null;
 
@@ -1252,8 +1252,8 @@ namespace Neon.Kube
                                 new CreateVolumeRequest()
                                 {
                                     AvailabilityZone   = availabilityZone,
-                                    VolumeType         = openEBSVolumeType,
-                                    Size               = (int)(ByteUnits.Parse(node.Metadata.Aws.OpenEBSVolumeSize) / ByteUnits.GibiBytes),
+                                    VolumeType         = openEbsVolumeType,
+                                    Size               = (int)(ByteUnits.Parse(node.Metadata.Aws.OpenEbsVolumeSize) / ByteUnits.GibiBytes),
                                     MultiAttachEnabled = false,
                                     TagSpecifications  = GetTagSpecifications(volumeName, ResourceType.Volume, new ResourceTag(neonNodeNameTagKey, node.Name))
                                 });
@@ -1294,7 +1294,7 @@ namespace Neon.Kube
                                 {
                                     VolumeId   = volume.VolumeId,
                                     InstanceId = awsInstance.InstanceId,
-                                    Device     = openEBSDeviceName,
+                                    Device     = openEbsDeviceName,
                                 });
                         }
 
@@ -1310,7 +1310,7 @@ namespace Neon.Kube
                                 {
                                     new InstanceBlockDeviceMappingSpecification()
                                     {
-                                        DeviceName = openEBSDeviceName,
+                                        DeviceName = openEbsDeviceName,
                                         Ebs        = new EbsInstanceBlockDeviceSpecification()
                                         {
                                             DeleteOnTermination = true,
@@ -3084,8 +3084,8 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                                 DeviceName = dataDeviceName,
                                 Ebs        = new EbsBlockDevice()
                                 {
-                                    VolumeType          = ToEc2VolumeType(awsNodeOptions.OpenEBSVolumeType),
-                                    VolumeSize          = (int)(ByteUnits.Parse(awsNodeOptions.OpenEBSVolumeSize) / ByteUnits.GibiBytes),
+                                    VolumeType          = ToEc2VolumeType(awsNodeOptions.OpenEbsVolumeType),
+                                    VolumeSize          = (int)(ByteUnits.Parse(awsNodeOptions.OpenEbsVolumeSize) / ByteUnits.GibiBytes),
                                     DeleteOnTermination = true
                                 }
                             }

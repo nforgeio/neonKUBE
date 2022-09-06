@@ -1316,9 +1316,9 @@ kubectl apply -f priorityclasses.yaml
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = "coredns",
+                            Name              = "coredns",
                             NamespaceProperty = KubeNamespace.KubeSystem,
-                            Labels = coreDnsDeployment.Metadata.Labels
+                            Labels            = coreDnsDeployment.Metadata.Labels
                         },
                         Spec = NeonHelper.JsonDeserialize<V1DaemonSetSpec>(spec)
                     };

@@ -622,7 +622,7 @@ namespace Neon.Kube
         /// <summary>
         /// Logical unit number for a node's optional OpenEBS cStor disk.
         /// </summary>
-        private const int openEBSDiskLun = 1;
+        private const int openEbsDiskLun = 1;
 
         /// <summary>
         /// Minimum Azure supported TCP reset idle timeout in minutes.
@@ -810,6 +810,10 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
+        private const string MarketplacePublisher = "neonforge";
+        private const string MarketplaceProduct   = "neonkube";
+        private const string MarketplaceOffer     = "neonkube";
+
         private bool                                        cloudMarketplace;
         private ClusterProxy                                cluster;
         private string                                      clusterName;
@@ -824,7 +828,7 @@ namespace Neon.Kube
         private AzureLocation                               azureLocation;
         private ArmClient                                   azure;
         private SubscriptionResource                        subscription;
-        private GalleryImageVersionResource                 nodeImageVersion;
+        private ImageReference                              nodeImageRef;
         private readonly Dictionary<string, AzureVm>        nameToVm;
         private Dictionary<string, VmSku>                   nameToVmSku;
 
@@ -1162,7 +1166,7 @@ namespace Neon.Kube
             var operation = $"Provisioning [{cluster.Definition.Name}] on Azure [{region}/{resourceGroupName}]";
 
             controller.AddGlobalStep("AZURE connect", state => ConnectAzureAsync());
-            //controller.AddGlobalStep("locate node image", state => LocateNodeImageAsync());
+            controller.AddGlobalStep("locate node image", state => LocateNodeImageAsync());
             controller.AddGlobalStep("region check", state => VerifyRegionAndVmSizesAsync());
             controller.AddGlobalStep("resource group", state => GetClusterResourceGroup());
 
@@ -1253,7 +1257,7 @@ namespace Neon.Kube
                     {
                         var azureVm            = nameToVm[node.Name];
                         var vm                 = azureVm.Vm;
-                        var openEBSStorageType = ToAzureStorageType(azureVm.Metadata.Azure.OpenEBSStorageType);
+                        var openEbsStorageType = ToAzureStorageType(azureVm.Metadata.Azure.OpenEbsStorageType);
 
                         node.Status = "openebs: checking";
 
@@ -1266,16 +1270,16 @@ namespace Neon.Kube
                                 StorageProfile = vm.Data.StorageProfile
                             };
 
-                            var openEbsDiskSize = ByteUnits.Parse(node.Metadata.Azure.OpenEBSDiskSize);
+                            var openEbsDiskSize = ByteUnits.Parse(node.Metadata.Azure.OpenEbsDiskSize);
 
                             vmPatch.StorageProfile.DataDisks.Add(
-                                new DataDisk(openEBSDiskLun, DiskCreateOptionTypes.Empty)
+                                new DataDisk(openEbsDiskLun, DiskCreateOptionTypes.Empty)
                                 {
                                     DiskSizeGB   = (int)AzureHelper.GetDiskSizeGiB(azureVm.Node.Metadata.Azure.StorageType, openEbsDiskSize),
                                     Caching      = CachingTypes.None,
                                     ManagedDisk  = new ManagedDiskParameters()
                                     {
-                                        StorageAccountType = openEBSStorageType
+                                        StorageAccountType = openEbsStorageType
                                     },
                                     DeleteOption = DiskDeleteOptionTypes.Delete,
                                 });
@@ -1706,57 +1710,100 @@ namespace Neon.Kube
 
         /// <summary>
         /// Locates the node virtual machine image to be used to provision the cluster.
+        /// The <see cref="nodeImageRef"/> member will be set to the correct reference.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task LocateNodeImageAsync()
         {
             await SyncContext.Clear;
 
-            var neonKubeVersion      = SemanticVersion.Parse(KubeVersions.NeonKube);
-            var nodeImageName        = neonKubeVersion.Prerelease == null ? "neonkube-node-amd64" : $"neonkube-node-amd64-{neonKubeVersion.Prerelease}";
-            var nodeImageVersionName = $"{neonKubeVersion.Major}.{neonKubeVersion.Minor}.{neonKubeVersion.Patch}";
+            var neonKubeVersion = SemanticVersion.Parse(KubeVersions.NeonKube);
 
-            // $todo(jefflill):
-            //
-            // This is currently hardcoded to locate the current node image from our
-            // private development image gallery.  We'll need to modify this to reference
-            // our marketplace image and perhaps optionally the development gallery as well.
-
-            const string galleryResourceGroupName = "neonkube-images";
-            const string galleryName              = "neonkube.images";
-
-            var resourceGroupCollection = subscription.GetResourceGroups();
-
-            if (!await resourceGroupCollection.ExistsAsync(galleryResourceGroupName))
+            if (cloudMarketplace)
             {
-                throw new NeonKubeException($"Resource group [{galleryResourceGroupName}] not found in subscription.");
+                // Search for our Azure Marketplace image.  We're going to look for the
+                // image whose major/minor versions match the release and then select
+                // the one with the greatest patch version.
+                //
+                // The idea here is tro be able to publish a new patch release when necessary
+                // without requiring users update their clients.  This assumes that old client
+                // code is compatible with with these patch versions.
+                
+                // $note(jefflill):
+                //
+                // It appears that Azure appends "-preview" to preview offer names and removes
+                // this when the offer is no longer preview.  We're going to query for both
+                // offers and then choose the non-preview offer when present.  I assume that
+                // we'll only see one or the other, but we'll be defensive and handle both cases.
+
+                // List our markeplace offers, looking for 
+
+                var offers = new List<VirtualMachineImageResource>();
+
+                await foreach (var image in subscription.GetVirtualMachineImagesAsync(cluster.Definition.Hosting.Azure.Region, MarketplacePublisher, MarketplaceOffer, "neonkube"))
+                {
+                }
+
+                await foreach (var image in subscription.GetVirtualMachineImagesAsync(cluster.Definition.Hosting.Azure.Region, MarketplacePublisher, MarketplaceOffer, "neonkube-preview"))
+                {
+                }
+
+                await foreach (var offer in subscription.GetOffersVirtualMachineImagesAsync(cluster.Definition.Hosting.Azure.Region, MarketplacePublisher))
+                {
+                    offers.Add(offer);
+                }
+
+                await foreach (var sku in subscription.GetVirtualMachineImageSkusAsync(cluster.Definition.Hosting.Azure.Region, MarketplacePublisher, MarketplaceOffer))
+                {
+                }
             }
-
-            var galleryResourceGroup = (await resourceGroupCollection.GetAsync(galleryResourceGroupName)).Value;
-            var galleryCollection    = galleryResourceGroup.GetGalleries();
-
-            if (!await galleryCollection.ExistsAsync(galleryName))
+            else
             {
-                throw new NeonKubeException($"Gallery [{galleryName}] not found in resource group: {galleryResourceGroupName}.");
+                // This is currently hardcoded to locate the current node image from our
+                // private development image gallery.
+
+                const string galleryResourceGroupName = "neonkube-images";
+                const string galleryName              = "neonkube.images";
+
+                var nodeImageName        = neonKubeVersion.Prerelease == null ? "neonkube-node-amd64" : $"neonkube-node-amd64-{neonKubeVersion.Prerelease}";
+                var nodeImageVersionName = $"{neonKubeVersion.Major}.{neonKubeVersion.Minor}.{neonKubeVersion.Patch}";
+
+                var resourceGroupCollection = subscription.GetResourceGroups();
+
+                if (!await resourceGroupCollection.ExistsAsync(galleryResourceGroupName))
+                {
+                    throw new NeonKubeException($"Resource group [{galleryResourceGroupName}] not found in subscription.");
+                }
+
+                var galleryResourceGroup = (await resourceGroupCollection.GetAsync(galleryResourceGroupName)).Value;
+                var galleryCollection    = galleryResourceGroup.GetGalleries();
+
+                if (!await galleryCollection.ExistsAsync(galleryName))
+                {
+                    throw new NeonKubeException($"Gallery [{galleryName}] not found in resource group: {galleryResourceGroupName}.");
+                }
+
+                var gallery                = (await galleryCollection.GetAsync(galleryName)).Value;
+                var galleryImageCollection = gallery.GetGalleryImages();
+
+                if (!await galleryImageCollection.ExistsAsync(nodeImageName))
+                {
+                    throw new NeonKubeException($"Node image [{nodeImageName}] not found in resource group: {galleryResourceGroupName}:{galleryName}");
+                }
+
+                var nodeImage                     = (await galleryImageCollection.GetAsync(nodeImageName)).Value;
+                var galleryImageVersionCollection = nodeImage.GetGalleryImageVersions();
+
+                if (!await galleryImageVersionCollection.ExistsAsync(nodeImageVersionName))
+                {
+                    throw new NeonKubeException($"Node image [{nodeImageVersionName}] not found in resource group: {galleryResourceGroupName}:{galleryName}");
+                }
+
+                nodeImageRef = new ImageReference()
+                {
+                    Id = (await galleryImageVersionCollection.GetAsync(nodeImageVersionName)).Value.Id
+                };
             }
-
-            var gallery                = (await galleryCollection.GetAsync(galleryName)).Value;
-            var galleryImageCollection = gallery.GetGalleryImages();
-
-            if (!await galleryImageCollection.ExistsAsync(nodeImageName))
-            {
-                throw new NeonKubeException($"Node image [{nodeImageName}] not found in resource group: {galleryResourceGroupName}:{galleryName}");
-            }
-
-            var nodeImage                     = (await galleryImageCollection.GetAsync(nodeImageName)).Value;
-            var galleryImageVersionCollection = nodeImage.GetGalleryImageVersions();
-
-            if (!await galleryImageVersionCollection.ExistsAsync(nodeImageVersionName))
-            {
-                throw new NeonKubeException($"Node image [{nodeImageVersionName}] not found in resource group: {galleryResourceGroupName}:{galleryName}");
-            }
-
-            nodeImageVersion = (await galleryImageVersionCollection.GetAsync(nodeImageVersionName)).Value;
         }
 
         /// <summary>
@@ -2470,15 +2517,15 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             virtualMachineData.StorageProfile.ImageReference = new ImageReference()
             {
                 Publisher = "neonforge",
-                Offer = "neonkube-preview",
-                Sku = "neonkube",
-                Version = "0.8.0",
+                Offer     = "neonkube-preview",
+                Sku       = "neonkube",
+                Version   = "0.8.1",
             };
 
             virtualMachineData.Plan = new ComputePlan()
             {
-                Name = "neonkube",
-                Product = "neonkube-preview",
+                Name      = "neonkube",
+                Product   = "neonkube-preview",
                 Publisher = "neonforge"
             };
 
