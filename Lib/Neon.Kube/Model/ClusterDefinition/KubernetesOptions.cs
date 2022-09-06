@@ -302,20 +302,20 @@ or decrease [{kubernetesOptionsPrefix}.{nameof(clusterDefinition.Nodes)}] to [{m
                 }
             }
 
-            if (!clusterDefinition.Nodes.Any(node => node.Labels.OpenEBS))
+            if (!clusterDefinition.Nodes.Any(node => node.Labels.OpenEbs))
             {
                 if (AllowPodsOnControlPlane.GetValueOrDefault())
                 {
                     foreach (var node in clusterDefinition.Nodes)
                     {
-                        node.Labels.OpenEBS = true;
+                        node.Labels.OpenEbs = true;
                     };
                 }
                 else
                 {
                     foreach (var worker in clusterDefinition.Nodes.Where(node => node.IsWorker))
                     {
-                        worker.Labels.OpenEBS = true;
+                        worker.Labels.OpenEbs = true;
                     }
                 }
             }

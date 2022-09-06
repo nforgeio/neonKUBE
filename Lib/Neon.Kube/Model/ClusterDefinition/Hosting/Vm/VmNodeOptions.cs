@@ -172,7 +172,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The size in bytes.</returns>
-        public long GetOpenEbsDisk(ClusterDefinition clusterDefinition)
+        public long GetOpenEbsDiskSizeBytes(ClusterDefinition clusterDefinition)
         {
             const string minOpenEbsSize = "32 GiB";
 

@@ -407,7 +407,7 @@ namespace Neon.Kube
                                 var disk = new XenVirtualDisk()
                                 {
                                     Name        = $"{GetVmName(node)}: openebs",
-                                    Size        = node.Metadata.Vm.GetOpenEbsDisk(cluster.Definition),
+                                    Size        = node.Metadata.Vm.GetOpenEbsDiskSizeBytes(cluster.Definition),
                                     Description = "OpenEBS cStor"
                                 };
 
@@ -986,7 +986,7 @@ namespace Neon.Kube
                         case OpenEbsEngine.cStor:
                         case OpenEbsEngine.Mayastor:
 
-                            requiredDiskForNode += node.Vm.GetOpenEbsDisk(cluster.Definition);
+                            requiredDiskForNode += node.Vm.GetOpenEbsDiskSizeBytes(cluster.Definition);
                             break;
 
                         default:

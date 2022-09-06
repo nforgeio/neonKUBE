@@ -50,8 +50,8 @@ namespace Neon.Kube
         private const string            defaultInstanceType      = "c5.2xlarge";
         internal const AwsVolumeType    defaultVolumeType        = AwsVolumeType.Gp2;
         private const string            defaultVolumeSize        = "128 GiB";
-        internal const AwsVolumeType    defaultOpenEBSVolumeType = defaultVolumeType;
-        private const string            defaultOpenEBSVolumeSize = "128 GiB";
+        internal const AwsVolumeType    defaultOpenEbsVolumeType = defaultVolumeType;
+        private const string            defaultOpenEbsVolumeSize = "128 GiB";
 
         /// <summary>
         /// Constructor.
@@ -290,17 +290,17 @@ namespace Neon.Kube
         /// Specifies the default AWS volume type to use for OpenEBS cStor disks.  This defaults
         /// to <see cref="AwsVolumeType.Gp2"/> which is SSD based and offers a reasonable
         /// compromise between performance and cost.  This can be overridden for specific
-        /// cluster nodes via <see cref="AwsNodeOptions.OpenEBSVolumeType"/>.
+        /// cluster nodes via <see cref="AwsNodeOptions.OpenEbsVolumeType"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "DefaultOpenEBSVolumeType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "defaultOpenEBSVolumeType", ApplyNamingConventions = false)]
-        [DefaultValue(defaultOpenEBSVolumeType)]
-        public AwsVolumeType DefaultOpenEBSVolumeType { get; set; } = defaultOpenEBSVolumeType;
+        [JsonProperty(PropertyName = "DefaultOpenEbsVolumeType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultOpenEbsVolumeType", ApplyNamingConventions = false)]
+        [DefaultValue(defaultOpenEbsVolumeType)]
+        public AwsVolumeType DefaultOpenEbsVolumeType { get; set; } = defaultOpenEbsVolumeType;
 
         /// <summary>
         /// Specifies the default AWS volume size to be used when creating 
         /// OpenEBS cStor disks.  This defaults to <b>128 GiB</b> but can
-        /// be overridden for specific cluster nodes via <see cref="AwsNodeOptions.OpenEBSVolumeSize"/>.
+        /// be overridden for specific cluster nodes via <see cref="AwsNodeOptions.OpenEbsVolumeSize"/>.
         /// </summary>
         /// <remarks>
         /// <note>
@@ -308,10 +308,10 @@ namespace Neon.Kube
         /// round up the disk size when necessary.
         /// </note>
         /// </remarks>
-        [JsonProperty(PropertyName = "DefaultOpenEBSVolumeSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "defaultOpenEBSVolumeSize", ApplyNamingConventions = false)]
-        [DefaultValue(defaultOpenEBSVolumeSize)]
-        public string DefaultOpenEBSVolumeSize { get; set; } = defaultVolumeSize;
+        [JsonProperty(PropertyName = "DefaultOpenEbsVolumeSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultOpenEbsVolumeSize", ApplyNamingConventions = false)]
+        [DefaultValue(defaultOpenEbsVolumeSize)]
+        public string DefaultOpenEbsVolumeSize { get; set; } = defaultVolumeSize;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -424,16 +424,16 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"[{awsHostionOptionsPrefix}.{nameof(DefaultVolumeSize)}={DefaultVolumeSize}] is not valid.");
             }
 
-            // Verify [DefaultOpenEBSVolumeSize].
+            // Verify [DefaultOpenEbsVolumeSize].
 
-            if (string.IsNullOrEmpty(DefaultOpenEBSVolumeSize))
+            if (string.IsNullOrEmpty(DefaultOpenEbsVolumeSize))
             {
-                DefaultOpenEBSVolumeSize = defaultOpenEBSVolumeSize;
+                DefaultOpenEbsVolumeSize = defaultOpenEbsVolumeSize;
             }
 
-            if (!ByteUnits.TryParse(DefaultOpenEBSVolumeSize, out var openEbsVolumeSize) || openEbsVolumeSize <= 0)
+            if (!ByteUnits.TryParse(DefaultOpenEbsVolumeSize, out var openEbsVolumeSize) || openEbsVolumeSize <= 0)
             {
-                throw new ClusterDefinitionException($"[{awsHostionOptionsPrefix}.{nameof(DefaultOpenEBSVolumeSize)}={DefaultOpenEBSVolumeSize}] is not valid.");
+                throw new ClusterDefinitionException($"[{awsHostionOptionsPrefix}.{nameof(DefaultOpenEbsVolumeSize)}={DefaultOpenEbsVolumeSize}] is not valid.");
             }
 
             // Check AWS cluster limits.

@@ -325,7 +325,7 @@ namespace Neon.Kube
                     using (var hyperv = new HyperVProxy())
                     {
                         var vmName   = GetVmName(node.Metadata);
-                        var diskSize = node.Metadata.Vm.GetOpenEbsDisk(cluster.Definition);
+                        var diskSize = node.Metadata.Vm.GetOpenEbsDiskSizeBytes(cluster.Definition);
                         var diskPath = Path.Combine(vmDriveFolder, $"{vmName}-openebs.vhdx");
 
                         node.Status = "openebs: checking";
@@ -418,7 +418,7 @@ namespace Neon.Kube
                         case OpenEbsEngine.cStor:
                         case OpenEbsEngine.Mayastor:
 
-                            requiredDisk += node.Vm.GetOpenEbsDisk(cluster.Definition);
+                            requiredDisk += node.Vm.GetOpenEbsDiskSizeBytes(cluster.Definition);
                             break;
 
                         default:

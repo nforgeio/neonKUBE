@@ -129,9 +129,18 @@ namespace Neon.Kube
         public const string LabelIngress = ClusterDefinition.ReservedLabelPrefix + "node.ingress";
 
         /// <summary>
-        /// Reserved label name used to indicate that a node host an OpenEBS cStor block device.
+        /// Reserved label name used to indicate that a node hosts an OpenEBS cStor block device.
         /// </summary>
         public const string LabelOpenEbs = ClusterDefinition.ReservedLabelPrefix + "node.openebs";
+
+        /// <summary>
+        /// <b>neonkube.io/openEbs.enabled</b> [<c>bool</c>]: Indicates that OpenEBS 
+        /// will be deployed to this node.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "OpenEbs", Required = Required.Default)]
+        [YamlMember(Alias = "openEbs", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool OpenEbs { get; set; } = false;
 
         //---------------------------------------------------------------------
         // Azure hosting related labels.
@@ -393,20 +402,6 @@ namespace Neon.Kube
         [YamlMember(Alias = "istio", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool Istio { get; set; } = false;
-
-        /// <summary>
-        /// Reserved label name for <see cref="OpenEBS"/>.
-        /// </summary>
-        public const string LabelOpenEBS = ClusterDefinition.ReservedLabelPrefix + "openEbs";
-
-        /// <summary>
-        /// <b>neonkube.io/openEbs.enabled</b> [<c>bool</c>]: Indicates that OpenEBS 
-        /// will be deployed to this node.  This defaults to <c>false</c>.
-        /// </summary>
-        [JsonProperty(PropertyName = "OpenEbs", Required = Required.Default)]
-        [YamlMember(Alias = "openEbs", ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public bool OpenEBS { get; set; } = false;
 
         //---------------------------------------------------------------------
         // Define the neon-system related labels.

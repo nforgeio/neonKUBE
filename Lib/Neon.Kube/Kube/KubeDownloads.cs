@@ -94,10 +94,10 @@ namespace Neon.Kube
         /// <param name="architecture">The process ro architecture.</param>
         /// <returns>The download URI or <c>null</c>.</returns>
         public static string GetDefaultNodeImageUri(
-            HostingEnvironment hostingEnvironment, 
-            bool setupDebugMode = false, 
-            string baseImageName = null, 
-            string architecture = "amd64")
+            HostingEnvironment  hostingEnvironment, 
+            bool                setupDebugMode = false, 
+            string              baseImageName  = null, 
+            string              architecture   = "amd64")
         {
             var hostingEnvironmentUpper = hostingEnvironment.ToString().ToUpper();
 
@@ -113,6 +113,7 @@ namespace Neon.Kube
                     jsonClient.BaseAddress = new Uri(KubeConst.NeonCloudHeadendUri);
 
                     var args = new ArgDictionary();
+
                     args.Add("hostingEnvironment", hostingEnvironment);
                     args.Add("version", KubeVersions.NeonKube);
                     args.Add("architecture", architecture);

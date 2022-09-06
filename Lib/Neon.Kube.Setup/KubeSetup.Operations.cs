@@ -2461,7 +2461,7 @@ subjects:
 
                             var values = new Dictionary<string, object>();
                             
-                            var jivaReplicas = Math.Min(3, (cluster.Definition.Nodes.Where(node => node.Labels.OpenEBS).Count()));
+                            var jivaReplicas = Math.Min(3, (cluster.Definition.Nodes.Where(node => node.Labels.OpenEbs).Count()));
                             if (jivaReplicas < 1) 
                             {
                                 jivaReplicas = 1;

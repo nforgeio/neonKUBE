@@ -282,7 +282,7 @@ namespace Neon.Kube
                 node.Labels.PhysicalAvailabilitySet = null;
                 node.Labels.PhysicalPower           = null;
                 node.Labels.Istio                   = true;
-                node.Labels.OpenEBS                 = false;
+                node.Labels.OpenEbs                 = false;
                 node.Labels.NeonSystem              = true;
                 node.Labels.NeonSystemDb            = true;
                 node.Labels.NeonSystemRegistry      = true;

@@ -45,8 +45,8 @@ namespace Neon.Kube
         private const string                defaultVmSize             = "Standard_D4as_v4";
         internal const AzureStorageType     defaultStorageType        = AzureStorageType.StandardSSD;
         private const string                defaultDiskSize           = "128 GiB";
-        internal const AzureStorageType     defaultOpenEBSStorageType = defaultStorageType;
-        private const string                defaultOpenEBSDiskSize    = "128 GiB";
+        internal const AzureStorageType     defaultOpenEbsStorageType = defaultStorageType;
+        private const string                defaultOpenEbsDiskSize    = "128 GiB";
 
         /// <summary>
         /// Constructor.
@@ -321,7 +321,7 @@ namespace Neon.Kube
         /// <summary>
         /// Specifies the default Azure disk size to be used when cluster node primary disks.
         /// This defaults to <b>128 GiB</b> but this can be overridden for specific cluster nodes
-        /// via <see cref="AzureNodeOptions.OpenEBSDiskSize"/>.
+        /// via <see cref="AzureNodeOptions.OpenEbsDiskSize"/>.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -359,16 +359,16 @@ namespace Neon.Kube
         /// <summary>
         /// Specifies the default Azure storage type of be used for the cluster node primary disks.  This defaults
         /// to <see cref="AzureStorageType.StandardHDD"/> but this can be overridden for specific cluster
-        /// nodes via <see cref="AzureNodeOptions.OpenEBSStorageType"/>.
+        /// nodes via <see cref="AzureNodeOptions.OpenEbsStorageType"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "OpenEBSStorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "openEBSStorageType", ApplyNamingConventions = false)]
-        [DefaultValue(defaultOpenEBSStorageType)]
-        public AzureStorageType DefaultOpenEBSStorageType { get; set; } = defaultOpenEBSStorageType;
+        [JsonProperty(PropertyName = "OpenEbsStorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "openEbstorageType", ApplyNamingConventions = false)]
+        [DefaultValue(defaultOpenEbsStorageType)]
+        public AzureStorageType DefaultOpenEbsStorageType { get; set; } = defaultOpenEbsStorageType;
 
         /// <summary>
         /// Specifies the default size for cluster node primary disks.  This defaults to <b>128 GiB</b>
-        /// but can be overridden for specific cluster nodes via <see cref="AzureNodeOptions.OpenEBSDiskSize"/>.
+        /// but can be overridden for specific cluster nodes via <see cref="AzureNodeOptions.OpenEbsDiskSize"/>.
         /// </summary>
         /// <remarks>
         /// <note>
@@ -376,10 +376,10 @@ namespace Neon.Kube
         /// round up the disk size when necessary.
         /// </note>
         /// </remarks>
-        [JsonProperty(PropertyName = "DefaultOpenEBSDiskSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "defaultOpenEBSDiskSize", ApplyNamingConventions = false)]
-        [DefaultValue(defaultOpenEBSDiskSize)]
-        public string DefaultOpenEBSDiskSize { get; set; } = defaultOpenEBSDiskSize;
+        [JsonProperty(PropertyName = "DefaultOpenEbsDiskSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultOpenEbsDiskSize", ApplyNamingConventions = false)]
+        [DefaultValue(defaultOpenEbsDiskSize)]
+        public string DefaultOpenEbsDiskSize { get; set; } = defaultOpenEbsDiskSize;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -497,14 +497,14 @@ namespace Neon.Kube
 
             // Verify [DefaultOpenEBSDiskSize].
 
-            if (string.IsNullOrEmpty(DefaultOpenEBSDiskSize))
+            if (string.IsNullOrEmpty(DefaultOpenEbsDiskSize))
             {
-                DefaultOpenEBSDiskSize = defaultOpenEBSDiskSize;
+                DefaultOpenEbsDiskSize = defaultOpenEbsDiskSize;
             }
 
-            if (!ByteUnits.TryParse(DefaultOpenEBSDiskSize, out var openEbsDiskSize) || openEbsDiskSize <= 0)
+            if (!ByteUnits.TryParse(DefaultOpenEbsDiskSize, out var openEbsDiskSize) || openEbsDiskSize <= 0)
             {
-                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(DefaultOpenEBSDiskSize)}={DefaultOpenEBSDiskSize}] is not valid.");
+                throw new ClusterDefinitionException($"[{azureHostingOptionsPrefix}.{nameof(DefaultOpenEbsDiskSize)}={DefaultOpenEbsDiskSize}] is not valid.");
             }
 
             // Check Azure cluster limits.

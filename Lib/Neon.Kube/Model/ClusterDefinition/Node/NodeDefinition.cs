@@ -282,11 +282,11 @@ namespace Neon.Kube
             {
                 case HostingEnvironment.Aws:
 
-                    return Aws.OpenEBSVolumeSize ?? clusterDefinition.Hosting.Aws.DefaultOpenEBSVolumeSize;
+                    return Aws.OpenEbsVolumeSize ?? clusterDefinition.Hosting.Aws.DefaultOpenEbsVolumeSize;
 
                 case HostingEnvironment.Azure:
 
-                    return Azure.OpenEBSDiskSize ?? clusterDefinition.Hosting.Azure.DefaultOpenEBSDiskSize;
+                    return Azure.OpenEbsDiskSize ?? clusterDefinition.Hosting.Azure.DefaultOpenEbsDiskSize;
 
                 case HostingEnvironment.BareMetal:
 

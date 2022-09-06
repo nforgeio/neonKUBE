@@ -165,13 +165,13 @@ namespace Neon.Kube
 
         /// <summary>
         /// Optionally specifies the AWS volume type to be used for the the node's OpenEBS cStor disk (if any).  This defaults
-        /// to <see cref="AwsVolumeType.Default"/> which indicates that <see cref="AwsHostingOptions.DefaultOpenEBSVolumeType"/>
+        /// to <see cref="AwsVolumeType.Default"/> which indicates that <see cref="AwsHostingOptions.DefaultOpenEbsVolumeType"/>
         /// will specify the volume type for the node.
         /// </summary>
-        [JsonProperty(PropertyName = "OpenEBSVolumeType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "openEBSVolumeType", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "OpenEbsVolumeType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "openEbsVolumeType", ApplyNamingConventions = false)]
         [DefaultValue(AwsVolumeType.Default)]
-        public AwsVolumeType OpenEBSVolumeType { get; set; } = AwsVolumeType.Default;
+        public AwsVolumeType OpenEbsVolumeType { get; set; } = AwsVolumeType.Default;
 
         /// <summary>
         /// Optionally specifies the size of the AWS volume to be used for the node's OpenEBS cStor disk (if any).
@@ -184,10 +184,10 @@ namespace Neon.Kube
         /// upgrade the disk size when necessary.
         /// </note>
         /// </remarks>
-        [JsonProperty(PropertyName = "OpenEBSVolumeSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "openEBSVolumeSize", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "OpenEbsVolumeSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "openEbsVolumeSize", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string OpenEBSVolumeSize { get; set; } = null;
+        public string OpenEbsVolumeSize { get; set; } = null;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -216,13 +216,13 @@ namespace Neon.Kube
                 }
             }
 
-            if (OpenEBSVolumeType == AwsVolumeType.Default)
+            if (OpenEbsVolumeType == AwsVolumeType.Default)
             {
-                OpenEBSVolumeType = clusterDefinition.Hosting.Aws.DefaultOpenEBSVolumeType;
+                OpenEbsVolumeType = clusterDefinition.Hosting.Aws.DefaultOpenEbsVolumeType;
 
-                if (OpenEBSVolumeType == AwsVolumeType.Default)
+                if (OpenEbsVolumeType == AwsVolumeType.Default)
                 {
-                    VolumeType = AwsHostingOptions.defaultOpenEBSVolumeType;
+                    VolumeType = AwsHostingOptions.defaultOpenEbsVolumeType;
                 }
             }
 
@@ -297,19 +297,19 @@ namespace Neon.Kube
 
             // Validate the OpenEBS volume size too.
 
-            if (string.IsNullOrEmpty(this.OpenEBSVolumeSize))
+            if (string.IsNullOrEmpty(this.OpenEbsVolumeSize))
             {
-                this.OpenEBSVolumeSize = clusterDefinition.Hosting.Aws.DefaultOpenEBSVolumeSize;
+                this.OpenEbsVolumeSize = clusterDefinition.Hosting.Aws.DefaultOpenEbsVolumeSize;
             }
 
             if (!ByteUnits.TryParse(this.VolumeSize, out var openEbsVolumeSizeBytes) || openEbsVolumeSizeBytes <= 1)
             {
-                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{awsNodeOptionsPrefix}.{nameof(OpenEBSVolumeSize)}={OpenEBSVolumeSize}] which is not valid.");
+                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{awsNodeOptionsPrefix}.{nameof(OpenEbsVolumeSize)}={OpenEbsVolumeSize}] which is not valid.");
             }
 
-            var openEBSVolumeSizeGiB = AwsHelper.GetVolumeSizeGiB(OpenEBSVolumeType, openEbsVolumeSizeBytes);
+            var openEbsVolumeSizeGiB = AwsHelper.GetVolumeSizeGiB(OpenEbsVolumeType, openEbsVolumeSizeBytes);
 
-            this.VolumeSize = $"{openEBSVolumeSizeGiB} GiB";
+            this.VolumeSize = $"{openEbsVolumeSizeGiB} GiB";
         }
     }
 }
