@@ -91,51 +91,6 @@ GeneratedUxTypes.cs
 /Test/**/TestResults/**
 
 ###################
-### Go Projects ###
-###################
-
-*.test
-Go/pkg/**
-Go/**/test/logs/**
-Go/**/__debug_bin
-
-####################
-### Neon.Cadence ###
-####################
-
-# These files are created during the build and will be embedded
-# into the [Neon.Cadence] assembly as resources.
-
-/Lib/Neon.Cadence/Resources/**
-/Test/Test.Neon.Models/GeneratedUxTypes.cs
-/Lib/Neon.Cadence2/Resources/cadence-proxy.win.exe.gz
-/Lib/Neon.Cadence2/Resources/cadence-proxy.osx.gz
-/Lib/Neon.Cadence2/Resources/cadence-proxy.linux.gz
-.vscode/settings.json
-/Go/src/github.com/cadence-proxy/cmd/playground/.vscode/settings.json
-/Go/src/github.com/cadence-proxy/cmd/playground/.vscode/launch.json
-
-#####################
-### Neon.Temporal ###
-#####################
-
-/Lib/Neon.Temporal/Resources/**
-
-# OS/X related files
-.DS_Store
-
-###########################
-### Neon.ModelGenerator ###
-###########################
-
-# This library includes binaries that shouldn't be committed.
-
-/Lib/Neon.ModelGenerator/linux-x64/**
-/Lib/Neon.ModelGenerator/osx-x64/**
-/Lib/Neon.ModelGenerator/win-x64/**
-/Lib/**/*.bak
-
-###################
 # Neon.Kube.Setup #
 ###################
 
@@ -144,12 +99,6 @@ Go/**/__debug_bin
 # Helm chart which will be used to install the CRDs as well as the operator.
 
 /Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/crds/*
-
-################
-# Neon.Service #
-################
-
-/Lib/Neon.Service/Resources/**
 
 #############################
 ### Other generated files ###
