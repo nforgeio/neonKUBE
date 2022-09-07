@@ -81,6 +81,10 @@
 		<PackageReference Include="Neon.Cryptography" Version="10000.0.2220-dev-master" />
 		<PackageReference Include="Neon.Deployment" Version="10000.0.2220-dev-master" />
 		<PackageReference Include="Neon.JsonConverters" Version="10000.0.2220-dev-master" />
+		<PackageReference Include="Neon.ModelGenerator" Version="10000.0.2220-dev-master" GeneratePathProperty="true">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="Neon.Postgres" Version="10000.0.2220-dev-master" />
 		<PackageReference Include="Neon.SSH" Version="10000.0.2220-dev-master" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
@@ -100,7 +104,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Neon.Kube.Models\Neon.Kube.Models.csproj" />
 		<ProjectReference Include="..\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
 	</ItemGroup>
 
@@ -116,6 +119,16 @@
 	<ItemGroup>
 	  <Folder Include="Model\CRDs\Kubernetes\" />
 	</ItemGroup>
+
+	<Target Name="ModelGen" BeforeTargets="CoreCompile">
+		<!--- Generate the model source files -->
+		<Message Importance="high" Text="&quot;$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\win-x64\neon-modelgen&quot; --targets=dns --target-namespace=Neon.Kube &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\net6.0\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
+		<Exec Command="&quot;$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\win-x64\neon-modelgen&quot; --targets=dns --target-namespace=Neon.Kube &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\net6.0\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
+		<ItemGroup>
+			<!--- Ensure that the new files are included in the build -->
+			<Compile Include="**\*.cs" KeepDuplicates="false" />
+		</ItemGroup>
+	</Target>
 
 	<!--
     Generates the [KubernetesWithRetry.cs] file.
