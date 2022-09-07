@@ -105,6 +105,63 @@ try
         $services = $true
     }
 
+    # Verify that the user has the required environment variables.  These will
+    # be available only for maintainers and are intialized by the neonCLOUD
+    # [buildenv.cmd] script.
+
+    if (!(Test-Path env:NC_ROOT))
+    {
+        "*** ERROR: This script is intended for maintainers only:"
+        "           [NC_ROOT] environment variable is not defined."
+        ""
+        "           Maintainers should re-run the neonCLOUD [buildenv.cmd] script."
+
+        return 1
+    }
+
+    # We need to do a solution build to ensure that any tools or other dependencies 
+    # are built before we build and publish the individual container images.
+
+    $config      = "Release"
+    $msbuild     = $env:MSBUILDPATH
+    $nkRoot      = "$env:NK_ROOT"
+    $nkSolution  = "$nkRoot\neonKUBE.sln"
+    $branch      = GitBranch $nkRoot
+
+    Write-Info ""
+    Write-Info "********************************************************************************"
+    Write-Info "***                            CLEAN SOLUTION                                ***"
+    Write-Info "********************************************************************************"
+    Write-Info ""
+
+    & "$msbuild" "$nkSolution" $buildConfig -t:Clean -m -verbosity:quiet
+
+    if (-not $?)
+    {
+        throw "ERROR: CLEAN FAILED"
+    }
+
+    Write-Info ""
+    Write-Info "********************************************************************************"
+    Write-Info "***                           RESTORE PACKAGES                               ***"
+    Write-Info "********************************************************************************"
+    Write-Info ""
+
+    & "$msbuild" "$nkSolution" -t:restore -verbosity:quiet
+
+    Write-Info  ""
+    Write-Info  "*******************************************************************************"
+    Write-Info  "***                           BUILD SOLUTION                                ***"
+    Write-Info  "*******************************************************************************"
+    Write-Info  ""
+
+    & "$msbuild" "$nkSolution" -p:Configuration=$config -restore -m -verbosity:quiet
+
+    if (-not $?)
+    {
+        throw "ERROR: BUILD FAILED"
+    }
+
     # Purge any local Docker images as well as the image build cache.
     # This also purges all other Docker assets as a side effect.  We
     # need to do this to ensure to ensure a clean build.
