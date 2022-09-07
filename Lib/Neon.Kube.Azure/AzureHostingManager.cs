@@ -317,7 +317,7 @@ namespace Neon.Kube
         /// <summary>
         /// Enumerates the known Azure CPU virtual machine architectures.
         /// </summary>
-        private enum CpuArchitecture
+        private enum AzureCpuArchitecture
         {
             /// <summary>
             /// Unknown or unexpected architecture.
@@ -363,9 +363,9 @@ namespace Neon.Kube
                     {
                         case "CpuArchitectureType":
 
-                            if (!NeonHelper.TryParse<CpuArchitecture>(capability.Value, out var cpuArchitecture))
+                            if (!NeonHelper.TryParse<AzureCpuArchitecture>(capability.Value, out var cpuArchitecture))
                             {
-                                cpuArchitecture = CpuArchitecture.Unknown;
+                                cpuArchitecture = AzureCpuArchitecture.Unknown;
                             }
 
                             this.CpuArchitecture = cpuArchitecture;
@@ -493,7 +493,7 @@ namespace Neon.Kube
             /// <summary>
             /// Identifies the CPU architecture.
             /// </summary>
-            public CpuArchitecture CpuArchitecture { get; }
+            public AzureCpuArchitecture CpuArchitecture { get; }
 
             /// <summary>
             /// <para>
@@ -829,6 +829,7 @@ namespace Neon.Kube
         private ArmClient                                   azure;
         private SubscriptionResource                        subscription;
         private ImageReference                              nodeImageRef;
+        private ComputePlan                                 nodeImagePlan;
         private readonly Dictionary<string, AzureVm>        nameToVm;
         private Dictionary<string, VmSku>                   nameToVmSku;
 
@@ -1710,7 +1711,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// Locates the node virtual machine image to be used to provision the cluster.
-        /// The <see cref="nodeImageRef"/> member will be set to the correct reference.
+        /// The <see cref="nodeImageRef"/> and possibly <see cref="nodeImagePlan"/> members
+        /// will be set to the correct image reference and plan.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task LocateNodeImageAsync()
@@ -1718,44 +1720,32 @@ namespace Neon.Kube
             await SyncContext.Clear;
 
             var neonKubeVersion = SemanticVersion.Parse(KubeVersions.NeonKube);
+            var cpuArchitecture = NeonHelper.CpuArchitecture.ToMemberString();
 
             if (cloudMarketplace)
             {
-                // Search for our Azure Marketplace image.  We're going to look for the
-                // image whose major/minor versions match the release and then select
-                // the one with the greatest patch version.
+                // Query the headend to locate the Marketplace offer to use.
+
+                // $todo(marcusbooyah): 
                 //
-                // The idea here is tro be able to publish a new patch release when necessary
-                // without requiring users update their clients.  This assumes that old client
-                // code is compatible with with these patch versions.
-                
-                // $note(jefflill):
+                // You need to query the headend here instead of hardcoding this.
                 //
-                // It appears that Azure appends "-preview" to preview offer names and removes
-                // this when the offer is no longer preview.  We're going to query for both
-                // offers and then choose the non-preview offer when present.  I assume that
-                // we'll only see one or the other, but we'll be defensive and handle both cases.
+                // NOTE: You can now obtain the current CPU architecture via: NeonHelper.CpuArchitecture
 
-                // List our markeplace offers, looking for 
-
-                var offers = new List<VirtualMachineImageResource>();
-
-                await foreach (var image in subscription.GetVirtualMachineImagesAsync(cluster.Definition.Hosting.Azure.Region, MarketplacePublisher, MarketplaceOffer, "neonkube"))
+                nodeImageRef = new ImageReference()
                 {
-                }
+                    Publisher = "neonforge",
+                    Offer     = "neonkube-preview",
+                    Sku       = "neonkube",
+                    Version   = "0.8.1",
+                };
 
-                await foreach (var image in subscription.GetVirtualMachineImagesAsync(cluster.Definition.Hosting.Azure.Region, MarketplacePublisher, MarketplaceOffer, "neonkube-preview"))
+                nodeImagePlan = new ComputePlan()
                 {
-                }
-
-                await foreach (var offer in subscription.GetOffersVirtualMachineImagesAsync(cluster.Definition.Hosting.Azure.Region, MarketplacePublisher))
-                {
-                    offers.Add(offer);
-                }
-
-                await foreach (var sku in subscription.GetVirtualMachineImageSkusAsync(cluster.Definition.Hosting.Azure.Region, MarketplacePublisher, MarketplaceOffer))
-                {
-                }
+                    Name      = "neonkube",
+                    Product   = "neonkube-preview",
+                    Publisher = "neonforge"
+                };
             }
             else
             {
@@ -1765,7 +1755,7 @@ namespace Neon.Kube
                 const string galleryResourceGroupName = "neonkube-images";
                 const string galleryName              = "neonkube.images";
 
-                var nodeImageName        = neonKubeVersion.Prerelease == null ? "neonkube-node-amd64" : $"neonkube-node-amd64-{neonKubeVersion.Prerelease}";
+                var nodeImageName        = neonKubeVersion.Prerelease == null ? $"neonkube-node-{cpuArchitecture}" : $"neonkube-node-{cpuArchitecture}-{neonKubeVersion.Prerelease}";
                 var nodeImageVersionName = $"{neonKubeVersion.Major}.{neonKubeVersion.Minor}.{neonKubeVersion.Patch}";
 
                 var resourceGroupCollection = subscription.GetResourceGroups();
@@ -2514,20 +2504,8 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                 virtualMachineData.ProximityPlacementGroupId = proximityPlacementGroup.Id;
             }
 
-            virtualMachineData.StorageProfile.ImageReference = new ImageReference()
-            {
-                Publisher = "neonforge",
-                Offer     = "neonkube-preview",
-                Sku       = "neonkube",
-                Version   = "0.8.1",
-            };
-
-            virtualMachineData.Plan = new ComputePlan()
-            {
-                Name      = "neonkube",
-                Product   = "neonkube-preview",
-                Publisher = "neonforge"
-            };
+            virtualMachineData.StorageProfile.ImageReference = nodeImageRef;
+            virtualMachineData.Plan                          = nodeImagePlan;
 
             virtualMachineData.StorageProfile.OSDisk = new OSDisk(DiskCreateOptionTypes.FromImage)
             {
@@ -3240,7 +3218,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                     continue;
                 }
 
-                if (vmSku.CpuArchitecture != CpuArchitecture.Amd64)
+                if (vmSku.CpuArchitecture != AzureCpuArchitecture.Amd64)
                 {
                     constraints.Add(
                         new HostingResourceConstraint()
