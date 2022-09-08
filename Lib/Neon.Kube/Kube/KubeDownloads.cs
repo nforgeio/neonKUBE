@@ -49,6 +49,12 @@ namespace Neon.Kube
         public static readonly string HelmWindowsUri = $"https://get.helm.sh/helm-v{KubeVersions.Helm}-windows-amd64.zip";
 
         /// <summary>
+        /// The URI for the public AWS S3 bucket where we persist cluster VM images 
+        /// and other things.
+        /// </summary>
+        public const string NeonPublicBucketUri = "https://neon-public.s3.us-west-2.amazonaws.com";
+
+        /// <summary>
         /// <para>
         /// The URI for the cluster manifest (<see cref="ClusterManifest"/>) JSON file for the current
         /// neonKUBE cluster version.
@@ -93,7 +99,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="architecture">The process ro architecture.</param>
         /// <returns>The download URI or <c>null</c>.</returns>
-        public static string GetDefaultNodeImageUri(
+        public static async Task<string> GetDefaultNodeImageUriAsync(
             HostingEnvironment  hostingEnvironment, 
             bool                setupDebugMode = false, 
             string              baseImageName  = null, 
@@ -119,7 +125,7 @@ namespace Neon.Kube
                     args.Add("architecture", architecture);
                     args.Add("api-version", KubeConst.NeonCloudHeadendVersion);
 
-                    return jsonClient.PostAsync<string>($"/cluster-setup/image/download", args: args).Result;
+                    return await jsonClient.PostAsync<string>($"/cluster-setup/image/download", args: args);
                 }
             }
 
