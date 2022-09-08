@@ -78,9 +78,9 @@ namespace Neon.Kube
         public static Regex PrefixRegex { get; private set; } = new Regex(@"^[a-z0-9.\-_()]+$", RegexOptions.IgnoreCase);
 
         /// <summary>
-        /// The prefix reserved for neonKUBE related daemon, image, and pod labels.
+        /// The prefix reserved for neonKUBE specific annotations and labels.
         /// </summary>
-        public const string ReservedLabelPrefix = "neonkube.io/";
+        public const string ReservedPrefix = "neonkube.io/";
 
         /// <summary>
         /// Parses and validates a YAML cluster definition file.

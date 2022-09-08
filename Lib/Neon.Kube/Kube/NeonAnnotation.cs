@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonLabel.cs
+// FILE:	    NeonAnnotation.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -20,20 +20,23 @@ using System;
 namespace Neon.Kube
 {
     /// <summary>
-    /// <para>
-    /// Defines the non-node cluster definition labels used to tag objects by neonKUBE.
-    /// </para>
-    /// <note>
-    /// Labels specified by the cluster definition and assigned to nodes are defined
-    /// here: <see cref="NodeLabels"/>.
-    /// </note>
+    /// Defines the non-node annotations used to tag objects by neonKUBE.
     /// </summary>
-    public static class NeonLabel
+    public static class NeonAnnotation
     {
         /// <summary>
-        /// Used to label custom neonKUBE resources that should be removed by <b>ClusterFixture</b> or
-        /// <see cref="ClusterProxy"/> when resetting a test cluster.
+        /// <para>
+        /// Used by <b>neon-cluster-operator</b> to identify namespaces where the <b>neon-otel-collector</b>
+        /// service <b>won't be created</b> to forward telemetry traffic to the monitoring services.
+        /// </para>
+        /// <para>
+        /// The idea is that telemetry forwarding will be enabled by default but that users can disable
+        /// this on a namespace basis by adding this annotation.
+        /// </para>
+        /// <note>
+        /// The value of the annotation is ignored; just its presence will disable forwarding.
+        /// </note>
         /// </summary>
-        public const string RemoveOnClusterReset = ClusterDefinition.ReservedPrefix + "remove-on-cluster-reset";
+        public const string RemoveOnClusterReset = ClusterDefinition.ReservedPrefix + "disable-otel-collector";
     }
 }

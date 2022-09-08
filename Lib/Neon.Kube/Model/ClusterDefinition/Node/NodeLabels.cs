@@ -106,32 +106,32 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name that identifies the datacenter.
         /// </summary>
-        public const string LabelDatacenter = ClusterDefinition.ReservedLabelPrefix + "cluster.datacenter";
+        public const string LabelDatacenter = ClusterDefinition.ReservedPrefix + "cluster.datacenter";
 
         /// <summary>
         /// Reserved label name that identifies the cluster environment.
         /// </summary>
-        public const string LabelEnvironment = ClusterDefinition.ReservedLabelPrefix + "cluster.environment";
+        public const string LabelEnvironment = ClusterDefinition.ReservedPrefix + "cluster.environment";
 
         /// <summary>
         /// Reserved label name that identifies the node's private IP address.
         /// </summary>
-        public const string LabelAddress = ClusterDefinition.ReservedLabelPrefix + "node.private_address";
+        public const string LabelAddress = ClusterDefinition.ReservedPrefix + "node.private_address";
 
         /// <summary>
         /// Reserved label name that identifies the node role.
         /// </summary>
-        public const string LabelRole = ClusterDefinition.ReservedLabelPrefix + "node.role";
+        public const string LabelRole = ClusterDefinition.ReservedPrefix + "node.role";
 
         /// <summary>
         /// Reserved label name used to indicate that a node should route external traffic into the cluster.
         /// </summary>
-        public const string LabelIngress = ClusterDefinition.ReservedLabelPrefix + "node.ingress";
+        public const string LabelIngress = ClusterDefinition.ReservedPrefix + "node.ingress";
 
         /// <summary>
         /// Reserved label name used to indicate that a node hosts an OpenEBS cStor block device.
         /// </summary>
-        public const string LabelOpenEbs = ClusterDefinition.ReservedLabelPrefix + "node.openebs";
+        public const string LabelOpenEbs = ClusterDefinition.ReservedPrefix + "node.openebs";
 
         /// <summary>
         /// <b>neonkube.io/openEbs.enabled</b> [<c>bool</c>]: Indicates that OpenEBS 
@@ -148,17 +148,17 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name that identifies the node's Azure VM size.
         /// </summary>
-        public const string LabelAzureVmSize = ClusterDefinition.ReservedLabelPrefix + "azure.vm_size";
+        public const string LabelAzureVmSize = ClusterDefinition.ReservedPrefix + "azure.vm_size";
 
         /// <summary>
         /// Reserved label name that identifies the node's Azure attached storage type.
         /// </summary>
-        public const string LabelAzureStorageType = ClusterDefinition.ReservedLabelPrefix + "azure.storage-type";
+        public const string LabelAzureStorageType = ClusterDefinition.ReservedPrefix + "azure.storage-type";
 
         /// <summary>
         /// Reserved label name that identifies the node's Azure attached drive size.
         /// </summary>
-        public const string LabelAzureDriveSize = ClusterDefinition.ReservedLabelPrefix + "azure.drive-size";
+        public const string LabelAzureDriveSize = ClusterDefinition.ReservedPrefix + "azure.drive-size";
 
         //---------------------------------------------------------------------
         // Define the node storage related labels.
@@ -166,27 +166,27 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name for <see cref="StorageSize"/>.
         /// </summary>
-        public const string LabelStorageSize = ClusterDefinition.ReservedLabelPrefix + "storage.size";
+        public const string LabelStorageSize = ClusterDefinition.ReservedPrefix + "storage.size";
 
         /// <summary>
         /// Reserved label name for <see cref="StorageLocal"/>.
         /// </summary>
-        public const string LabelStorageLocal = ClusterDefinition.ReservedLabelPrefix + "storage.local";
+        public const string LabelStorageLocal = ClusterDefinition.ReservedPrefix + "storage.local";
 
         /// <summary>
         /// Reserved label name for <see cref="StorageHDD"/>.
         /// </summary>
-        public const string LabelStorageHDD = ClusterDefinition.ReservedLabelPrefix + "storage.hdd";
+        public const string LabelStorageHDD = ClusterDefinition.ReservedPrefix + "storage.hdd";
 
         /// <summary>
         /// Reserved label name for <see cref="StorageRedundant"/>.
         /// </summary>
-        public const string LabelStorageRedundant = ClusterDefinition.ReservedLabelPrefix + "storage.redundant";
+        public const string LabelStorageRedundant = ClusterDefinition.ReservedPrefix + "storage.redundant";
 
         /// <summary>
         /// Reserved label name for <see cref="StorageEphemeral"/>.
         /// </summary>
-        public const string LabelStorageEphemeral = ClusterDefinition.ReservedLabelPrefix + "storage.ephemral";
+        public const string LabelStorageEphemeral = ClusterDefinition.ReservedPrefix + "storage.ephemral";
 
         /// <summary>
         /// <b>io.neonkube/storage.size</b> [<c>string</c>]: Specifies the node OS drive 
@@ -243,12 +243,12 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name for <see cref="ComputeCores"/>.
         /// </summary>
-        public const string LabelComputeCores = ClusterDefinition.ReservedLabelPrefix + "compute.cores";
+        public const string LabelComputeCores = ClusterDefinition.ReservedPrefix + "compute.cores";
 
         /// <summary>
         /// Reserved label name for <see cref="ComputeRam"/>.
         /// </summary>
-        public const string LabelComputeRamMiB = ClusterDefinition.ReservedLabelPrefix + "compute.ram-mib";
+        public const string LabelComputeRamMiB = ClusterDefinition.ReservedPrefix + "compute.ram-mib";
 
         /// <summary>
         /// <b>io.neonkube/compute.cores</b> [<c>int</c>]: Specifies the number of CPU cores.
@@ -276,22 +276,22 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name for <see cref="LabelPhysicalMachine"/>.
         /// </summary>
-        public const string LabelPhysicalMachine = ClusterDefinition.ReservedLabelPrefix + "physical.machine";
+        public const string LabelPhysicalMachine = ClusterDefinition.ReservedPrefix + "physical.machine";
 
         /// <summary>
         /// Reserved label name for <see cref="LabelPhysicalPower"/>.
         /// </summary>
-        public const string LabelPhysicalLocation = ClusterDefinition.ReservedLabelPrefix + "physical.location";
+        public const string LabelPhysicalLocation = ClusterDefinition.ReservedPrefix + "physical.location";
 
         /// <summary>
         /// Reserved label name for <see cref="PhysicalAvailabilitySet"/>.
         /// </summary>
-        public const string LabelPhysicalAvailabilitytSet = ClusterDefinition.ReservedLabelPrefix + "physical.availability-set";
+        public const string LabelPhysicalAvailabilitytSet = ClusterDefinition.ReservedPrefix + "physical.availability-set";
 
         /// <summary>
         /// Reserved label name for <see cref="LabelPhysicalPower"/>.
         /// </summary>
-        public const string LabelPhysicalPower = ClusterDefinition.ReservedLabelPrefix + "physical.power";
+        public const string LabelPhysicalPower = ClusterDefinition.ReservedPrefix + "physical.power";
 
         /// <summary>
         /// <b>io.neonkube/physical.location</b> [<c>string</c>]: A free format string describing the
@@ -392,7 +392,7 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name for <see cref="Istio"/>.
         /// </summary>
-        public const string LabelIstio = ClusterDefinition.ReservedLabelPrefix + "istio";
+        public const string LabelIstio = ClusterDefinition.ReservedPrefix + "istio";
 
         /// <summary>
         /// <b>neonkube.io/istio.enabled</b> [<c>bool</c>]: Indicates that Istio 
@@ -409,7 +409,7 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name for core neonKUBE system components.
         /// </summary>
-        public const string LabelNeonSystem = ClusterDefinition.ReservedLabelPrefix + "neon-system";
+        public const string LabelNeonSystem = ClusterDefinition.ReservedPrefix + "neon-system";
 
         /// <summary>
         /// <b>neonkube.io/neon-system</b> [<c>bool</c>]: Indicates that general neon-system 
@@ -423,7 +423,7 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name for <see cref="LabelNeonSystemDb"/>.
         /// </summary>
-        public const string LabelNeonSystemDb = ClusterDefinition.ReservedLabelPrefix + "neon-system.db";
+        public const string LabelNeonSystemDb = ClusterDefinition.ReservedPrefix + "neon-system.db";
 
         /// <summary>
         /// <b>neonkube.io/neon-system.db</b> [<c>bool</c>]: Indicates that the neon-system 
@@ -437,7 +437,7 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name for <see cref="LabelNeonSystemDb"/>.
         /// </summary>
-        public const string LabelNeonSystemRegistry = ClusterDefinition.ReservedLabelPrefix + "neon-system.registry";
+        public const string LabelNeonSystemRegistry = ClusterDefinition.ReservedPrefix + "neon-system.registry";
 
         /// <summary>
         /// <b>neonkube.io/neon-system.registry</b> [<c>bool</c>]: Indicates that the neon-system 
@@ -469,12 +469,12 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name for <see cref="Minio"/>.
         /// </summary>
-        public const string LabelMinio = ClusterDefinition.ReservedLabelPrefix + "system.minio";
+        public const string LabelMinio = ClusterDefinition.ReservedPrefix + "system.minio";
 
         /// <summary>
         /// Reserved label name for <see cref="MinioInternal"/>.
         /// </summary>
-        public const string LabelMinioInternal = ClusterDefinition.ReservedLabelPrefix + "system.minio-internal";
+        public const string LabelMinioInternal = ClusterDefinition.ReservedPrefix + "system.minio-internal";
 
         //---------------------------------------------------------------------
         // Define the logging related labels.
@@ -482,32 +482,32 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name for <see cref="Logs"/>.
         /// </summary>
-        public const string LabelLogs = ClusterDefinition.ReservedLabelPrefix + "monitor.logs";
+        public const string LabelLogs = ClusterDefinition.ReservedPrefix + "monitor.logs";
 
         /// <summary>
         /// Reserved label name for <see cref="LogsInternal"/>.
         /// </summary>
-        public const string LabelLogsInternal = ClusterDefinition.ReservedLabelPrefix + "monitor.logs-internal";
+        public const string LabelLogsInternal = ClusterDefinition.ReservedPrefix + "monitor.logs-internal";
 
         /// <summary>
         /// Reserved label name for <see cref="Metrics"/>.
         /// </summary>
-        public const string LabelMetrics = ClusterDefinition.ReservedLabelPrefix + "monitor.metrics";
+        public const string LabelMetrics = ClusterDefinition.ReservedPrefix + "monitor.metrics";
 
         /// <summary>
         /// Reserved label name for <see cref="MetricsInternal"/>.
         /// </summary>
-        public const string LabelMetricsInternal = ClusterDefinition.ReservedLabelPrefix + "monitor.metrics-internal";
+        public const string LabelMetricsInternal = ClusterDefinition.ReservedPrefix + "monitor.metrics-internal";
 
         /// <summary>
         /// Reserved label name for <see cref="Traces"/>.
         /// </summary>
-        public const string LabelTraces = ClusterDefinition.ReservedLabelPrefix + "monitor.traces";
+        public const string LabelTraces = ClusterDefinition.ReservedPrefix + "monitor.traces";
 
         /// <summary>
         /// Reserved label name for <see cref="TracesInternal"/>.
         /// </summary>
-        public const string LabelTracesInternal = ClusterDefinition.ReservedLabelPrefix + "monitor.traces-internal";
+        public const string LabelTracesInternal = ClusterDefinition.ReservedPrefix + "monitor.traces-internal";
 
         /// <summary>
         /// <b>neonkube.io/monitor.logs</b> [<c>bool</c>]: Indicates the user has 
