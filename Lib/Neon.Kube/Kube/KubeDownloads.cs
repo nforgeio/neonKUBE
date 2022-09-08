@@ -112,14 +112,6 @@ namespace Neon.Kube
                 throw new NotSupportedException($"[{KubeSetupProperty.BaseImageName}] must be passed when [{nameof(setupDebugMode)}=true].");
             }
 
-            // $todo(marcusbooyah):
-            //
-            // I'm temporarily disabling the headend lookup here because the old headend
-            // service is still deployed.  You'll need to use the new modelgen generated
-            // client when you get back from the woods.
-            // 
-            //      https://github.com/nforgeio/neonKUBE/issues/1677
-#if TODO
             if (!setupDebugMode)
             {
                 using (var jsonClient = new JsonClient())
@@ -136,7 +128,7 @@ namespace Neon.Kube
                     return await jsonClient.PostAsync<string>($"/cluster-setup/domain", args: args);
                 }
             }
-#endif
+
             switch (hostingEnvironment)
             {
                 case HostingEnvironment.BareMetal:
