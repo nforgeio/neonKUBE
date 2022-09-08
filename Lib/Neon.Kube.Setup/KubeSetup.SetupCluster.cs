@@ -193,15 +193,15 @@ namespace Neon.Kube
 
             KubeHelper.LoadConfig();
 
-            // Do some quick checks to ensure that component versions look reasonable.
+            // Do a quick check to ensure that component versions look reasonable.
 
-            //var kubernetesVersion = new Version(KubeVersions.Kubernetes);
-            //var crioVersion       = new Version(KubeVersions.Crio);
+            var kubernetesVersion = new Version(KubeVersions.Kubernetes);
+            var crioVersion       = new Version(KubeVersions.Crio);
 
-            //if (crioVersion.Major != kubernetesVersion.Major || crioVersion.Minor != kubernetesVersion.Minor)
-            //{
-            //    throw new NeonKubeException($"[{nameof(KubeConst)}.{nameof(KubeVersions.Crio)}={KubeVersions.Crio}] major and minor versions don't match [{nameof(KubeConst)}.{nameof(KubeVersions.Kubernetes)}={KubeVersions.Kubernetes}].");
-            //}
+            if (crioVersion.Major != kubernetesVersion.Major || crioVersion.Minor != kubernetesVersion.Minor)
+            {
+                throw new NeonKubeException($"[{nameof(KubeConst)}.{nameof(KubeVersions.Crio)}={KubeVersions.Crio}] major and minor versions don't match [{nameof(KubeConst)}.{nameof(KubeVersions.Kubernetes)}={KubeVersions.Kubernetes}].");
+            }
 
             // Initialize the cluster proxy.
 
