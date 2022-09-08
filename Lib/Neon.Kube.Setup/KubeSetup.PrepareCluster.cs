@@ -414,7 +414,7 @@ namespace Neon.Kube
                         args.Add("addresses", string.Join(',', clusterAddresses));
                         args.Add("api-version", KubeConst.NeonCloudHeadendVersion);
 
-                        var result = await jsonClient.PostAsync<Dictionary<string, string>>($"/cluster-setup/domain", args: args);
+                        var result = await jsonClient.PostAsync<Dictionary<string, string>>($"/cluster-setup/create", args: args);
 
                         clusterLogin.ClusterDefinition.Id     = result["Id"];
                         clusterLogin.ClusterDefinition.Domain = result["Domain"];

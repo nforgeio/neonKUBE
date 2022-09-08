@@ -119,7 +119,7 @@ namespace Neon.Kube
                     args.Add("architecture", architecture);
                     args.Add("api-version", KubeConst.NeonCloudHeadendVersion);
 
-                    return jsonClient.PostAsync<string>($"/cluster-setup/domain", args: args).Result;
+                    return jsonClient.PostAsync<string>($"/cluster-setup/image/download", args: args).Result;
                 }
             }
 
