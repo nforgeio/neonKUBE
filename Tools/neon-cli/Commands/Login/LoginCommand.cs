@@ -124,6 +124,7 @@ ARGUMENTS:
                 var login = KubeHelper.GetClusterLogin(KubeHelper.CurrentContextName);
 
                 string userHomeFolder;
+
                 if (NeonHelper.IsWindows)
                 {
                     userHomeFolder = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"));
@@ -137,9 +138,10 @@ ARGUMENTS:
                     throw new NotSupportedException("Operating system not supported.");
                 }
 
-                File.WriteAllText(
-                    Path.Combine(userHomeFolder, ".ssh", KubeHelper.CurrentContextName.ToString()),
-                    login.SshKey.PrivatePEM);
+                var sshKeyPath = Path.Combine(userHomeFolder, ".ssh", KubeHelper.CurrentContextName.ToString());
+
+                Directory.CreateDirectory(Path.GetDirectoryName(sshKeyPath));
+                File.WriteAllText(sshKeyPath, login.SshKey.PrivatePEM);
                
                 if (!string.IsNullOrEmpty(NeonHelper.DockerCli))
                 {
