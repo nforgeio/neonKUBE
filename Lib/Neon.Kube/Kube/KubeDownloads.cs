@@ -49,6 +49,12 @@ namespace Neon.Kube
         public static readonly string HelmWindowsUri = $"https://get.helm.sh/helm-v{KubeVersions.Helm}-windows-amd64.zip";
 
         /// <summary>
+        /// The URI for the public AWS S3 bucket where we persist cluster VM images 
+        /// and other things.
+        /// </summary>
+        public const string NeonPublicBucketUri = "https://neon-public.s3.us-west-2.amazonaws.com";
+
+        /// <summary>
         /// <para>
         /// The URI for the cluster manifest (<see cref="ClusterManifest"/>) JSON file for the current
         /// neonKUBE cluster version.
@@ -93,7 +99,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="architecture">The process ro architecture.</param>
         /// <returns>The download URI or <c>null</c>.</returns>
-        public static string GetDefaultNodeImageUri(
+        public static async Task<string> GetDefaultNodeImageUriAsync(
             HostingEnvironment  hostingEnvironment, 
             bool                setupDebugMode = false, 
             string              baseImageName  = null, 
@@ -113,9 +119,7 @@ namespace Neon.Kube
             // client when you get back from the woods.
             // 
             //      https://github.com/nforgeio/neonKUBE/issues/1677
-
-            setupDebugMode = true;
-
+#if TODO
             if (!setupDebugMode)
             {
                 using (var jsonClient = new JsonClient())
@@ -129,10 +133,10 @@ namespace Neon.Kube
                     args.Add("architecture", architecture);
                     args.Add("api-version", KubeConst.NeonCloudHeadendVersion);
 
-                    return jsonClient.PostAsync<string>($"/cluster-setup/domain", args: args).Result;
+                    return await jsonClient.PostAsync<string>($"/cluster-setup/domain", args: args);
                 }
             }
-
+#endif
             switch (hostingEnvironment)
             {
                 case HostingEnvironment.BareMetal:
@@ -143,19 +147,38 @@ namespace Neon.Kube
                 case HostingEnvironment.Azure:
                 case HostingEnvironment.Google:
 
-                    throw new NotSupportedException("Cluster setup debug mode is not supported for cloud environments.");
+                    if (setupDebugMode)
+                    {
+                        throw new NotSupportedException("Cluster setup debug mode is not supported for cloud environments.");
+                    }
+
+                    throw new NotImplementedException($"Node images are not available for the [{hostingEnvironment}] environment yet.");
 
                 case HostingEnvironment.HyperV:
 
-                    return $"{NeonHelper.NeonPublicBucketUri}/vm-images/hyperv/base/{baseImageName}";
+                    if (setupDebugMode)
+                    {
+                        return $"{NeonPublicBucketUri}/vm-images/hyperv/base/{baseImageName}";
+                    }
+                    else
+                    {
+                        return $"{NeonPublicBucketUri}/vm-images/hyperv/node/neonkube-{KubeVersions.NeonKube}.hyperv.amd64.vhdx.gz.manifest";
+                    }
 
                 case HostingEnvironment.XenServer:
 
-                    return $"{NeonHelper.NeonPublicBucketUri}/vm-images/xenserver/base/{baseImageName}";
+                    if (setupDebugMode)
+                    {
+                        return $"{NeonPublicBucketUri}/vm-images/xenserver/base/{baseImageName}";
+                    }
+                    else
+                    {
+                        return $"{NeonPublicBucketUri}/vm-images/xenserver/node/neonkube-{KubeVersions.NeonKube}.xenserver.amd64.xva.gz.manifest";
+                    }
 
                 default:
 
-                    throw new NotImplementedException($"Node images are not implemented for the [{hostingEnvironmentUpper}] environment.");
+                    throw new NotImplementedException($"Node images are not implemented for the [{hostingEnvironment}] environment.");
             }
         }
     }

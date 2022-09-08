@@ -267,7 +267,7 @@ OPTIONS:
 
                 if (string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath))
                 {
-                    nodeImageUri = KubeDownloads.GetDefaultNodeImageUri(clusterDefinition.Hosting.Environment);
+                    nodeImageUri = await KubeDownloads.GetDefaultNodeImageUriAsync(clusterDefinition.Hosting.Environment);
                 }
             }
 
