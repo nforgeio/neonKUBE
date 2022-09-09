@@ -1,0 +1,13 @@
+<Project>
+
+	<!-- 
+	Remove generated [**/obj/*.cs] files to avoid duplicate symbol compilation 
+	errors when these generated files exist in multiple build configurations.
+	-->
+
+	<Target Name="CleanGeneratedCs" BeforeTargets="Clean" Condition="'$(ProjectDir)' != ''">
+		<Message Importance="high" Text="CLEAN: neon-build clean-generated-cs $(ProjectDir)" />
+		<Exec Command="neon-build clean-generated-cs &quot;$(ProjectDir)&quot;" />
+	</Target>
+
+</Project>

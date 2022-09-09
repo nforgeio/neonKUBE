@@ -255,7 +255,7 @@ try
         # and try to build DEBUG with Visual Studio.  The workaround is to simply remove all of these
         # generated files here.
 
-        & neon-build clean-attr "$nkRoot"
+        & neon-build clean-generated-cs "$nkRoot"
         ThrowOnExitCode
     }
 
