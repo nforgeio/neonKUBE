@@ -159,9 +159,12 @@ USER@CLUSTER[/NAMESPACE is not specified.
                 throw new NotSupportedException("Operating system not supported.");
             }
 
-            var sshKeyPath = Path.Combine(userHomeFolder, ".ssh", KubeHelper.CurrentContextName.ToString());
+            if (KubeHelper.CurrentContextName != null)
+            {
+                var sshKeyPath = Path.Combine(userHomeFolder, ".ssh", KubeHelper.CurrentContextName.ToString());
 
-            NeonHelper.DeleteFile(sshKeyPath);
+                NeonHelper.DeleteFile(sshKeyPath);
+            }
 
             // Remove the login and kubecontext
 
