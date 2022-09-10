@@ -109,7 +109,8 @@ namespace Neon.Kube
         {
             // Initialize the standard home and [.neonkube] folder paths for the current user.
 
-            neonkubeHomeFolder = Path.Combine(NeonHelper.UserHomeFolder, ".neonkube");
+            userHomeFolder     = NeonHelper.UserHomeFolder;
+            neonkubeHomeFolder = Path.Combine(userHomeFolder, ".neonkube");
         }
 
         /// <summary>
