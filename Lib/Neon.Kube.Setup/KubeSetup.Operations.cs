@@ -4411,8 +4411,8 @@ $@"- name: StorageType
                                     return await Task.FromResult(false);
                                 }
                             },
-                            timeout: TimeSpan.FromSeconds(600),
-                            pollInterval: TimeSpan.FromSeconds(1),
+                            timeout:           TimeSpan.FromSeconds(600),
+                            pollInterval:      TimeSpan.FromSeconds(1),
                             cancellationToken: controller.CancellationToken);
                     }
                 });
@@ -4428,7 +4428,7 @@ $@"- name: StorageType
 
                     if (!string.IsNullOrEmpty(NeonHelper.DockerCli))
                     {
-                        Console.WriteLine($"Login: Workstation to Harbor...");
+                        controller.LogProgress(controlNode, verb: "login", message: "workstation to Harbor");
 
                         var login = KubeHelper.GetClusterLogin(KubeHelper.CurrentContextName);
 
