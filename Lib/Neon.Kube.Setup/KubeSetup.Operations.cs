@@ -1205,24 +1205,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     // Make sure that the config cached by [KubeHelper] is up to date.
 
                     KubeHelper.LoadConfig();
-
-                    string userHomeFolder;
-                    if (NeonHelper.IsWindows)
-                    {
-                        userHomeFolder = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"));
-                    }
-                    else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
-                    {
-                        userHomeFolder = Path.Combine(Environment.GetEnvironmentVariable("HOME"));
-                    }
-                    else
-                    {
-                        throw new NotSupportedException("Operating system not supported.");
-                    }
-
-                    File.WriteAllText(
-                        Path.Combine(userHomeFolder, ".ssh", KubeHelper.CurrentContextName.ToString()),
-                        clusterLogin.SshKey.PrivatePEM);
+                    File.WriteAllText(Path.Combine(NeonHelper.UserHomeFolder, ".ssh", KubeHelper.CurrentContextName.ToString()), clusterLogin.SshKey.PrivatePEM);
                 }));
         }
 

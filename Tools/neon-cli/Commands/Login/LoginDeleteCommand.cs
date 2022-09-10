@@ -144,24 +144,9 @@ USER@CLUSTER[/NAMESPACE is not specified.
 
             // Remove the SSH key from the user directory if present.
 
-            string userHomeFolder;
-
-            if (NeonHelper.IsWindows)
-            {
-                userHomeFolder = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"));
-            }
-            else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
-            {
-                userHomeFolder = Path.Combine(Environment.GetEnvironmentVariable("HOME"));
-            }
-            else
-            {
-                throw new NotSupportedException("Operating system not supported.");
-            }
-
             if (KubeHelper.CurrentContextName != null)
             {
-                var sshKeyPath = Path.Combine(userHomeFolder, ".ssh", KubeHelper.CurrentContextName.ToString());
+                var sshKeyPath = Path.Combine(NeonHelper.UserHomeFolder, ".ssh", KubeHelper.CurrentContextName.ToString());
 
                 NeonHelper.DeleteFile(sshKeyPath);
             }

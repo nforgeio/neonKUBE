@@ -109,20 +109,7 @@ namespace Neon.Kube
         {
             // Initialize the standard home and [.neonkube] folder paths for the current user.
 
-            if (NeonHelper.IsWindows)
-            {
-                userHomeFolder = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"));
-            }
-            else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
-            {
-                userHomeFolder = Path.Combine(Environment.GetEnvironmentVariable("HOME"));
-            }
-            else
-            {
-                throw new NotSupportedException("Operating system not supported.");
-            }
-                
-            neonkubeHomeFolder = Path.Combine(userHomeFolder, ".neonkube");
+            neonkubeHomeFolder = Path.Combine(NeonHelper.UserHomeFolder, ".neonkube");
         }
 
         /// <summary>

@@ -121,24 +121,8 @@ ARGUMENTS:
                     await k8s.ListNamespaceAsync();
                 }
 
-                var login = KubeHelper.GetClusterLogin(KubeHelper.CurrentContextName);
-
-                string userHomeFolder;
-
-                if (NeonHelper.IsWindows)
-                {
-                    userHomeFolder = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"));
-                }
-                else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
-                {
-                    userHomeFolder = Path.Combine(Environment.GetEnvironmentVariable("HOME"));
-                }
-                else
-                {
-                    throw new NotSupportedException("Operating system not supported.");
-                }
-
-                var sshKeyPath = Path.Combine(userHomeFolder, ".ssh", KubeHelper.CurrentContextName.ToString());
+                var login      = KubeHelper.GetClusterLogin(KubeHelper.CurrentContextName);
+                var sshKeyPath = Path.Combine(NeonHelper.UserHomeFolder, ".ssh", KubeHelper.CurrentContextName.ToString());
 
                 Directory.CreateDirectory(Path.GetDirectoryName(sshKeyPath));
                 File.WriteAllText(sshKeyPath, login.SshKey.PrivatePEM);
