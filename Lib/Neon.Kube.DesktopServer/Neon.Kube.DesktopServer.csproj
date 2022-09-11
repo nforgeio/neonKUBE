@@ -39,8 +39,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Neon.Common" Version="10000.0.2223-dev-master" />
-		<PackageReference Include="Neon.HyperV" Version="10000.0.2223-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2225-dev-master" />
+		<PackageReference Include="Neon.HyperV" Version="10000.0.2225-dev-master" />
 		<PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.0.152" />
 	</ItemGroup>
 
