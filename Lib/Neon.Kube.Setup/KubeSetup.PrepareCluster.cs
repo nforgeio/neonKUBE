@@ -96,7 +96,7 @@ namespace Neon.Kube
         /// <param name="debugMode">Optionally indicates that the cluster will be prepared in debug mode.</param>
         /// <param name="baseImageName">Optionally specifies the base image name to use for debug mode.</param>
         /// <param name="clusterspace">Optionally specifies the clusterspace for the operation.</param>
-        /// <param name="neonCloudHeadendUri">Optionally overrides the headend service URI.  This defaults to <see cref="KubeConst.NeonCloudHeadendUri"/>.</param>
+        /// <param name="neonCloudHeadendUri">Optionally overrides the headend service URI.  This defaults to <see cref="KubeEnv.HeadendUri"/>.</param>
         /// <param name="removeExisting">Optionally remove any existing cluster with the same name in the target environment.</param>
         /// <param name="disableConsoleOutput">
         /// Optionally disables status output to the console.  This is typically
@@ -129,7 +129,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
             Covenant.Requires<ArgumentNullException>(!debugMode || !string.IsNullOrEmpty(baseImageName), nameof(baseImageName));
 
-            neonCloudHeadendUri ??= KubeConst.NeonCloudHeadendUri;
+            neonCloudHeadendUri ??= KubeEnv.HeadendUri.ToString();
 
             clusterDefinition.Validate();
 
@@ -406,13 +406,16 @@ namespace Neon.Kube
                     var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
                     var clusterAddresses   = cluster.HostingManager.GetClusterAddresses();
 
+                    // $todo(marcusbooyah): Replace this with the real headend client
+
                     using (var jsonClient = new JsonClient())
                     {
-                        jsonClient.BaseAddress = new Uri(controller.Get<string>(KubeSetupProperty.NeonCloudHeadendUri));
+                        jsonClient.BaseAddress = KubeEnv.HeadendUri;
 
                         var args = new ArgDictionary();
+
                         args.Add("addresses", string.Join(',', clusterAddresses));
-                        args.Add("api-version", KubeConst.NeonCloudHeadendVersion);
+                        args.Add("api-version", "0.1");     // $note(jefflill): Hardcoding this temporarily until the real client
 
                         var result = await jsonClient.PostAsync<Dictionary<string, string>>($"/cluster-setup/create", args: args);
 

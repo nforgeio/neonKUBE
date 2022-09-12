@@ -114,16 +114,18 @@ namespace Neon.Kube
 
             if (!setupDebugMode)
             {
+                // $todo(marcusbooyah): Replace this with the real headend client
+
                 using (var jsonClient = new JsonClient())
                 {
-                    jsonClient.BaseAddress = new Uri(KubeConst.NeonCloudHeadendUri);
+                    jsonClient.BaseAddress = KubeEnv.HeadendUri;
 
                     var args = new ArgDictionary();
 
                     args.Add("hostingEnvironment", hostingEnvironment);
                     args.Add("version", KubeVersions.NeonKube);
                     args.Add("architecture", architecture);
-                    args.Add("api-version", KubeConst.NeonCloudHeadendVersion);
+                    args.Add("api-version", "0.1");     // $note(jefflill): Hardcoding this temporarily until the real client
 
                     return await jsonClient.GetAsync<string>($"/cluster-setup/image/download", args: args);
                 }

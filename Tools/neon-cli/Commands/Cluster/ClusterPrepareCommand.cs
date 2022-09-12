@@ -190,7 +190,7 @@ OPTIONS:
             var debug             = commandLine.HasOption("--debug");
             var baseImageName     = commandLine.GetOption("--base-image-name");
             var clusterspace      = commandLine.GetOption("--clusterspace");
-            var headendUri        = commandLine.GetOption("--headend-uri") ?? KubeConst.NeonCloudHeadendUri;
+            var headendUri        = commandLine.GetOption("--headend-uri") ?? KubeEnv.HeadendUri.ToString();
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
             var disablePending    = commandLine.HasOption("--disable-pending");
             var privateImage      = commandLine.HasOption("--private-image");

@@ -133,7 +133,7 @@ namespace Neon.Kube
         /// </note>
         /// </param>
         /// <param name = "clusterspace" > Optionally specifies the clusterspace for the operation.</param>        
-        /// <param name="neonCloudHeadendUri">Optionally overrides the neonCLOUD headend service URI.  This defaults to <see cref="KubeConst.NeonCloudHeadendUri"/>.</param>
+        /// <param name="neonCloudHeadendUri">Optionally overrides the neonCLOUD headend service URI.  This defaults to <see cref="KubeEnv.HeadendUri"/>.</param>
         /// <param name="disableConsoleOutput">
         /// Optionally disables status output to the console.  This is typically
         /// enabled for non-console applications.
@@ -154,7 +154,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
 
-            neonCloudHeadendUri ??= KubeConst.NeonCloudHeadendUri;
+            neonCloudHeadendUri ??= KubeEnv.HeadendUri.ToString();
 
             clusterDefinition.Validate();
 
