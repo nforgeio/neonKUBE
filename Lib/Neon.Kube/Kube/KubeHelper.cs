@@ -15,52 +15,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using System.Dynamic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Sockets;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Security;
-using System.Security.AccessControl;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.Security.Principal;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Microsoft.Extensions.Logging;
-using Microsoft.Win32;
-
-using Newtonsoft.Json;
-using SharpCompress.Readers;
-
 using k8s;
 using k8s.Models;
-
+using Microsoft.Extensions.Logging;
+using Microsoft.Win32;
 using Neon.Common;
 using Neon.Cryptography;
-using Neon.Data;
 using Neon.Deployment;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
-using Neon.SSH;
 using Neon.Tasks;
-using Neon.Windows;
+using Newtonsoft.Json;
+using Renci.SshNet.Common;
+using SharpCompress.Readers;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Sockets;
+using System.Reflection;
+using System.Security.AccessControl;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Security.Principal;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Neon.Kube
 {
@@ -71,6 +57,7 @@ namespace Neon.Kube
     {
         private static ILogger              logger = TelemetryHub.CreateLogger(typeof(KubeHelper).FullName);
         private static string               orgKUBECONFIG;
+        private static Guid                 clientId;
         private static string               userHomeFolder;
         private static string               neonkubeHomeFolder;
         private static string               clusterspaceFolder;
@@ -85,6 +72,7 @@ namespace Neon.Kube
         private static string               cachedLoginsFolder;
         private static string               cachedPasswordsFolder;
         private static string               cachedCacheFolder;
+        private static string               cachedDesktopCommonFolder;
         private static string               cachedDesktopFolder;
         private static string               cachedDesktopHypervFolder;
         private static KubeClientConfig     cachedClientConfig;
@@ -95,7 +83,8 @@ namespace Neon.Kube
         private static IStaticDirectory     cachedResources;
         private static string               cachedNodeImageFolder;
         private static string               cachedDashboardStateFolder;
-        private static string               cachedDesktopCommonFolder;
+
+        private static List<KeyValuePair<string, object>> cachedTelemetryTags;
 
         /// <summary>
         /// CURL command common options.
@@ -129,6 +118,7 @@ namespace Neon.Kube
             cachedCurrentClusterspacePath = null;
             cachedPasswordsFolder         = null;
             cachedCacheFolder             = null;
+            cachedDesktopCommonFolder     = null;
             cachedDesktopFolder           = null;
             cachedDesktopHypervFolder     = null;
             cachedClientConfig            = null;
@@ -139,7 +129,55 @@ namespace Neon.Kube
             cachedResources               = null;
             cachedNodeImageFolder         = null;
             cachedDashboardStateFolder    = null;
-            cachedDesktopCommonFolder     = null;
+        }
+
+        /// <summary>
+        /// <para>
+        /// Returns a unique ID for the client installation.  This used for identifying the
+        /// client for logs and traces so we can correlate problems specific users are seeing.
+        /// </para>
+        /// <note>
+        /// This is persisted to: <b>~/.neonkube/desktop/client-id</b>
+        /// </note>
+        /// </summary>
+        public static Guid ClientId
+        {
+            get
+            {
+                if (clientId != Guid.Empty)
+                {
+                    return clientId;
+                }
+
+                // We'll use this GUID for the session if we're unable to read
+                // the [client-id] file.
+
+                clientId = Guid.NewGuid();
+
+                try
+                {
+                    var clientIdPath = Path.Combine(KubeHelper.DesktopFolder, "client-id");
+
+                    if (File.Exists(clientIdPath))
+                    {
+                        clientId = Guid.ParseExact(File.ReadAllLines(clientIdPath).First(), "d");
+                    }
+                    else
+                    {
+                        File.WriteAllText(clientIdPath, clientId.ToString("d"));
+                    }
+                }
+                catch (IOException)
+                {
+                    // Ignoring this.
+                }
+                catch (FormatException)
+                {
+                    // Ignore this too.
+                }
+
+                return clientId;
+            }
         }
 
         /// <summary>
@@ -856,9 +894,8 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns path to the neonDESKTOP application state folder.
+        /// Returns the path to the neon-desktop information folder.
         /// </summary>
-        /// <returns>The folder path.</returns>
         public static string DesktopFolder
         {
             get
@@ -879,7 +916,6 @@ namespace Neon.Kube
         /// <summary>
         /// Returns path to the neonDESKTOP Hyper-V state folder.
         /// </summary>
-        /// <returns>The folder path.</returns>
         public static string DesktopHypervFolder
         {
             get
@@ -889,7 +925,7 @@ namespace Neon.Kube
                     return cachedDesktopHypervFolder;
                 }
 
-                var path = Path.Combine(NeonKubeUserFolder, "desktop", "hyperv");
+                var path = Path.Combine(DesktopFolder, "hyperv");
 
                 Directory.CreateDirectory(path);
 
@@ -3202,6 +3238,29 @@ TCPKeepAlive yes
             var uuid = NeonHelper.CreateBase36Uuid();
 
             return $"{deployment}-{uuid.Substring(0, 10)}-{uuid.Substring(uuid.Length - 5, 5)}";
+        }
+
+        /// <summary>
+        /// Returns the tags to be included in all logs and root activity traces.
+        /// </summary>
+        public static IEnumerable<KeyValuePair<string, object>> TelemetryTags
+        {
+            get
+            {
+                if (cachedTelemetryTags != null)
+                {
+                    return cachedTelemetryTags;
+                }
+
+                cachedTelemetryTags = new List<KeyValuePair<string, object>>();
+
+                cachedTelemetryTags.Add(new KeyValuePair<string, object>("client-id", ClientId));
+                cachedTelemetryTags.Add(new KeyValuePair<string, object>("os", NeonHelper.OSDescription));
+                cachedTelemetryTags.Add(new KeyValuePair<string, object>("cores", Environment.ProcessorCount));
+                cachedTelemetryTags.Add(new KeyValuePair<string, object>("ram-mib", NeonHelper.MemoryMib));
+
+                return cachedTelemetryTags;
+            }
         }
     }
 }
