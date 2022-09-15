@@ -329,6 +329,8 @@ CLUSTER MANAGEMENT ARGUMENTS:
                 {
                     var validOptions = new HashSet<string>();
 
+                    validOptions.Add("--help"); // All commands support "--help"
+
                     foreach (var optionName in command.ExtendedOptions)
                     {
                         validOptions.Add(optionName);
