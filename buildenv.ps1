@@ -17,6 +17,9 @@
 # limitations under the License.
 
 #------------------------------------------------------------------------------
+# This script handles additional build environment configuration for the solution.
+
+#------------------------------------------------------------------------------
 # Open Windows Firewall ports required for unit testing.
 
 # Remove unnecessary rules.
