@@ -476,5 +476,17 @@ namespace Neon.Kube.DesktopServer
                 return new GrpcGetIPAddressReply(e);
             }
         }
+
+        /// <inheritdoc/>
+        public Task<GrpcTelemetryLogReply> ForwardTelemetryLogs(GrpcTelemetryLogRequest request, CallContext context = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
+        public Task<GrpcTelemetryTraceReply> ForwardTelemetryTraces(GrpcTelemetryTraceRequest request, CallContext context = default)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

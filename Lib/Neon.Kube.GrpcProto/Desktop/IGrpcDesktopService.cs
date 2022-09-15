@@ -257,9 +257,27 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Returns information about a virtual IP address.
         /// </summary>
         /// <param name="request">The request.</param>
-        /// /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
         /// <returns>A <see cref="GrpcGetIPAddressReply"/>.</returns>
         [OperationContract]
         Task<GrpcGetIPAddressReply> GetIPAddress(GrpcGetIPAddressRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Sends a batch of telemetry logs to the NeonDesktopServer which will then forward them on to the headend.
+        /// </summary>
+        /// <param name="request">The request holding the batch of log records.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>The <see cref="GrpcTelemetryLogReply"/>.</returns>
+        [OperationContract]
+        Task<GrpcTelemetryLogReply> ForwardTelemetryLogs(GrpcTelemetryLogRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Sends a batch of telemetry traces to the NeonDesktopServer which will then forward them on to the headend.
+        /// </summary>
+        /// <param name="request">The request holding the batch of traces.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>The <see cref="GrpcTelemetryTraceReply"/>.</returns>
+        [OperationContract]
+        Task<GrpcTelemetryTraceReply> ForwardTelemetryTraces(GrpcTelemetryTraceRequest request, CallContext context = default);
     }
 }
