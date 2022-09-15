@@ -27,12 +27,16 @@ Follow the steps below to configure a development or test workstation:
     * Navigate to the directory holding the cloned repository
     * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
     * Press ENTER to close the CMD window when the script is finished
+
+4. Install Node.js from: [here](https://nodejs.org/dist/v16.17.0/node-v16.17.0-x64.msi)
+
+   NOTE: Install with default options.
   
-4. Confirm that the solution builds:
+5. Confirm that the solution builds:
 
     * Restart **Visual Studio** as **administrator** (to pick up the new environment variables)
     * Open **$/neonKUBE.sln** (where **$** is the repo root directory)
     * Click the **Install** link at the top of the solution explorer panel when there's a warning about a missing SDK.
     * Select **Build/Rebuild** Solution
 
-5: *Optional:* Maintainers authorized to perform releases will need to follow the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
+6: *Optional:* Maintainers authorized to perform releases will need to follow the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
