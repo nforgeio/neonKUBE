@@ -39,7 +39,7 @@ https:
 grpc:
   # -- Enable the gRPC endpoint.
   # Read more in the [documentation](https://dexidp.io/docs/api/).
-  enabled: false
+  enabled: true
 
 configSecret:
   # -- Enable creating a secret from the values passed to `config`.
