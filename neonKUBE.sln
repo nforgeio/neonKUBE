@@ -130,7 +130,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-sso-session-proxy", "S
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.GrpcProto", "Lib\Neon.Kube.GrpcProto\Neon.Kube.GrpcProto.csproj", "{EE73B97C-84AB-478A-ADEA-2808285871DF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.DesktopServer", "Lib\Neon.Kube.DesktopServer\Neon.Kube.DesktopServer.csproj", "{83B7756D-E696-47C1-B89C-F7575364B5FD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.DesktopService", "Lib\Neon.Kube.DesktopService\Neon.Kube.DesktopService.csproj", "{83B7756D-E696-47C1-B89C-F7575364B5FD}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.ResourceDefinitions", "Lib\Neon.Kube.ResourceDefinitions\Neon.Kube.ResourceDefinitions.csproj", "{3A908DF0-E5CE-4F01-AA9C-C133F45C9886}"
 EndProject

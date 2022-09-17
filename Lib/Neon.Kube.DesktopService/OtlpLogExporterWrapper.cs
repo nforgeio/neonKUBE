@@ -38,6 +38,7 @@ namespace OpenTelemetry.Exporter
         /// <returns></returns>
         public static OtlpLogExporterWrapper Create(OtlpExporterOptions options)
         {
+            throw new NotImplementedException();
         }
 
         //---------------------------------------------------------------------
