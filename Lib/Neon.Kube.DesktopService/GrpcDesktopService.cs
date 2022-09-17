@@ -43,7 +43,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using System.Data.OleDb;
 
-namespace Neon.Kube.DesktopServer
+namespace Neon.Kube.DesktopService
 {
     /// <summary>
     /// Implements the <see cref="IGrpcDesktopService"/>.

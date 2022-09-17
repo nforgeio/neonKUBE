@@ -23,7 +23,7 @@
 		<Configurations>Debug;Release</Configurations>
 		<PackageIcon>nuget-icon.png</PackageIcon>
 		<PackageTags>kubernetes</PackageTags>
-		<RootNamespace>Neon.Kube.DesktopServer</RootNamespace>
+		<RootNamespace>Neon.Kube.DesktopService</RootNamespace>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>

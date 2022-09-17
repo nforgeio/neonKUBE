@@ -31,7 +31,7 @@ using ProtoBuf.Grpc.Server;
 using System.IO;
 using Neon.Kube.GrpcProto;
 
-namespace Neon.Kube.DesktopServer
+namespace Neon.Kube.DesktopService
 {
     /// <summary>
     /// Implements a gPRC server that implements Hyper-V and other operations that may
