@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Net;
@@ -35,6 +36,13 @@ using Neon.Kube.GrpcProto.Desktop;
 using Neon.Net;
 using Neon.Tasks;
 
+using OpenTelemetry;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using System.Data.OleDb;
+
 namespace Neon.Kube.DesktopServer
 {
     /// <summary>
@@ -45,9 +53,26 @@ namespace Neon.Kube.DesktopServer
         //---------------------------------------------------------------------
         // Static members
 
-        // We're going to use the same client instance for all requests
+        private static HyperVClient         hyperv = new HyperVClient();
+        //private static OtlpLogExporter      logExporter;
+        private static OtlpTraceExporter    traceExporter;
 
-        private static HyperVClient     hyperv = new HyperVClient();
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        public GrpcDesktopService()
+        {
+            // Configure the log and trace exporters.
+
+            var exporterOptions = new OtlpExporterOptions()
+            {
+                TimeoutMilliseconds = 1000,
+                ExportProcessorType = ExportProcessorType.Simple
+            };
+
+            traceExporter = new OtlpTraceExporter(exporterOptions);
+
+        }
 
         //---------------------------------------------------------------------
         // Instance members
