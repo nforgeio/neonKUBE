@@ -272,7 +272,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         Task<GrpcTelemetryLogReply> ForwardTelemetryLogs(GrpcTelemetryLogRequest request, CallContext context = default);
 
         /// <summary>
-        /// Sends a batch of telemetry traces to the <b>neon-desktop-server</b> which will then forward them on to the headend.
+        /// Sends a batch of telemetry traces to the <b>neon-desktop-service</b> which will then forward them on to the headend.
         /// </summary>
         /// <param name="request">The request holding the batch of traces.</param>
         /// <param name="context">Optionally specifies the gRPC call context.</param>
