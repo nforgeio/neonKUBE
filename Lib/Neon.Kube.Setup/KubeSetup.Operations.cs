@@ -463,7 +463,7 @@ apiServer:
     service-account-key-file: /etc/kubernetes/pki/sa.key
     service-account-signing-key-file: /etc/kubernetes/pki/sa.key
     oidc-issuer-url: https://{ClusterDomain.Sso}.{cluster.Definition.Domain}
-    oidc-client-id: kubernetes
+    oidc-client-id: neon-sso
     oidc-username-claim: email
     oidc-groups-claim: groups
     oidc-username-prefix: ""-""
@@ -2602,48 +2602,43 @@ subjects:
 
                     foreach (var node in cluster.Definition.Nodes.Where(n => n.OpenEbsStorage))
                     {
-                        var nodeBlockDevices = blockDevices.Items.Where(
-                            device => device.Spec.NodeAttributes.GetValueOrDefault("nodeName") == node.Name
-                            && device.Spec.FileSystem.FsType == null
-                            && device.Spec.Details.DeviceType == BlockDeviceType.Disk);
+                        var disk = cluster.HostingManager.GetDataDisk(cluster.Nodes.Where(n => n.Name == node.Name).FirstOrDefault());
 
-                        if (nodeBlockDevices.Count() > 0)
+                        var pool = new V1CStorPoolSpec()
                         {
-                            var pool = new V1CStorPoolSpec()
+                            NodeSelector = new Dictionary<string, string>()
                             {
-                                NodeSelector = new Dictionary<string, string>()
+                                { "kubernetes.io/hostname", node.Name }
+                            },
+                            DataRaidGroups = new List<V1CStorDataRaidGroup>()
+                            {
+                                new V1CStorDataRaidGroup()
                                 {
-                                    { "kubernetes.io/hostname", node.Name }
-                                },
-                                DataRaidGroups = new List<V1CStorDataRaidGroup>()
-                                {
-                                    new V1CStorDataRaidGroup()
-                                    {
-                                        BlockDevices = new List<V1CStorBlockDeviceRef>()
-                                    }
-                                },
-                                PoolConfig = new V1CStorPoolConfig()
-                                {
-                                    DataRaidGroupType = DataRaidGroupType.Stripe,
-                                    Tolerations       = new List<V1Toleration>()
-                                    {
-                                        { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
-                                        { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
-                                    }
+                                    BlockDevices = new List<V1CStorBlockDeviceRef>()
                                 }
-                            };
-
-                            foreach (var device in nodeBlockDevices)
+                            },
+                            PoolConfig = new V1CStorPoolConfig()
                             {
-                                pool.DataRaidGroups.FirstOrDefault().BlockDevices.Add(
-                                    new V1CStorBlockDeviceRef()
-                                    {
-                                        BlockDeviceName = device.Metadata.Name
-                                    });
+                                DataRaidGroupType = DataRaidGroupType.Stripe,
+                                Tolerations       = new List<V1Toleration>()
+                                {
+                                    { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
+                                    { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
+                                }
                             }
+                        };
 
-                            cStorPoolCluster.Spec.Pools.Add(pool);
-                        }
+                        var device = blockDevices.Items.Where(
+                            device => device.Spec.NodeAttributes.GetValueOrDefault("nodeName") == node.Name
+                            && device.Spec.Path == disk).FirstOrDefault();
+
+                        pool.DataRaidGroups.FirstOrDefault().BlockDevices.Add(
+                            new V1CStorBlockDeviceRef()
+                            {
+                                BlockDeviceName = device.Metadata.Name
+                            });
+
+                        cStorPoolCluster.Spec.Pools.Add(pool);
                     }
 
                     await k8s.CreateNamespacedCustomObjectAsync(cStorPoolCluster, cStorPoolCluster.Name(), cStorPoolCluster.Namespace());
@@ -5205,7 +5200,7 @@ $@"- name: StorageType
                     values.Add("cluster.domain", cluster.Definition.Domain);
                     values.Add("config.cookieSecret", NeonHelper.ToBase64(NeonHelper.GetCryptoRandomPassword(24)));
                     values.Add("neonkube.clusterDomain.sso", ClusterDomain.Sso);
-                    values.Add("client.id", "kubernetes");
+                    values.Add("client.id", "neon-sso");
                     values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
