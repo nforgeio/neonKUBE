@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GrpcTelemetryLogRequest.cs
+// FILE:	    GrpcRelayLogBatchReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -32,40 +32,20 @@ namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
     /// <para>
-    /// Used to submit a batch of telemetry logs from <b>neon-desktop</b> and
-    /// <b>neon-cli</b> to the <b>neon-desktop-service</b> which will then forward
-    /// them to the headend.
+    /// Returned as the reply for a <see cref="GrpcRelayLogBatchRequest"/>.
     /// </para>
     /// <note>
-    /// The batch is actually serialized as a JSON string so that we won't have to
-    /// define protobufs for this, keeping things simple.
+    /// <see cref="GrpcRelayLogBatchRequest"/> requests fail silently. 
     /// </note>
     /// </summary>
     [DataContract]
-    public class GrpcTelemetryLogRequest
+    public class GrpcRelayLogBatchReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public GrpcTelemetryLogRequest()
+        public GrpcRelayLogBatchReply()
         {
         }
-
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        /// <param name="batchJson">The batched log records serialized as JSON.</param>
-        public GrpcTelemetryLogRequest(string batchJson)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(batchJson), nameof(batchJson));
-
-            this.BatchJson = batchJson;
-        }
-
-        /// <summary>
-        /// The log record batch serialized as JSON.
-        /// </summary>
-        [DataMember(Order = 1)]
-        public string? BatchJson { get; set; }
     }
 }

@@ -17,6 +17,7 @@
 
 using System;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -28,13 +29,14 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 using ProtoBuf.Grpc.Server;
-using System.IO;
 using Neon.Kube.GrpcProto;
+using OpenTelemetry.Exporter;
+using OpenTelemetry;
 
 namespace Neon.Kube.DesktopService
 {
     /// <summary>
-    /// Implements a gPRC server that implements Hyper-V and other operations that may
+    /// Implements a gPRC service that implements Hyper-V and other operations that may
     /// require elevated permissions.  The idea is to deploy this within a Windows Service
     /// that runs as administrator so that this service can perform these operations on
     /// behalf of the neon-desktop or neon-cli applications that do not have these
@@ -42,6 +44,61 @@ namespace Neon.Kube.DesktopService
     /// </summary>
     public sealed class DesktopService : IDisposable
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Returns the log exporter used to relay logs from <b>neon-cli</b> and
+        /// <b>neon-desktop</b> to the headend.
+        /// </summary>
+        public static OtlpLogExporterWrapper LogExporter { get; private set; }
+
+        /// <summary>
+        /// Returns the trace exporter used to relay traces from <b>neon-cli</b> and
+        /// <b>neon-desktop</b> to the headend.
+        /// </summary>
+        public static OtlpTraceExporter TraceExporter { get; private set; }
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static DesktopService()
+        {
+            // Initialize the log and trace exporters we'll use to relay logs
+            // and traces from neon-desktop and neon-cli to the headend.
+            
+            // $note(jefflill):
+            //
+            // We're not using any batch processors here, so logs and traces will
+            // be forwarded immediately to the headend.  This is probably fine for
+            // this scenario.
+            //
+            // It would be easy to add batch processors for this when configuring
+            // logging and tracing in neon-cli and neon-desktop, but I don't
+            // believe those are the right places for doing batching, especially
+            // for neon-cli which will terminate immediately after executing
+            // commands.
+            //
+            // It would probably be relatively easy to do batching here using the
+            // standard batch processor and emulating standard pipeline behavior.
+            // But frankly, I think that sending logs and traces as soon as we
+            // get them is probably the correct behavior anyway.
+
+            var exporterOptions = 
+                new OtlpExporterOptions()
+                {
+                    Endpoint            = KubeEnv.TelemetryUri,
+                    ExportProcessorType = ExportProcessorType.Simple,
+                    TimeoutMilliseconds = 1000
+                };
+
+            LogExporter   = OtlpLogExporterWrapper.Create(exporterOptions);
+            TraceExporter = new OtlpTraceExporter(exporterOptions);
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         private bool                        isDisposed = false;
         private string                      socketPath;
         private Task                        task;
@@ -82,6 +139,8 @@ namespace Neon.Kube.DesktopService
                 throw new GrpcServiceException($"Cannot start service using Unix socket at: {socketPath}", e);
             }
 
+            // Start the gRPC server.
+
             var builder = WebApplication.CreateBuilder();
 
             builder.Services.AddCodeFirstGrpc();
@@ -115,6 +174,13 @@ namespace Neon.Kube.DesktopService
             cts.Cancel();
             task.WaitWithoutAggregate();
             NeonHelper.DeleteFile(socketPath);
+
+            // Flush any bactched logs and traces to the headend
+            // in parallel on separate threads.
+
+            Task.WaitAll(
+                Task.Run(() => LogExporter.Shutdown(5000)),
+                Task.Run(() => TraceExporter.Shutdown(5000)));
         }
     }
 }
