@@ -3032,6 +3032,8 @@ $@"- name: StorageType
                     values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
 
+                    values.Add("integrations.nodeExporter.enabled", cluster.Definition.Hosting.Environment != HostingEnvironment.Azure);
+
                     values.Add($"resources.agent.requests.memory", ToSiString(agentAdvice.PodMemoryRequest));
                     values.Add($"resources.agent.limits.memory", ToSiString(agentAdvice.PodMemoryLimit));
 

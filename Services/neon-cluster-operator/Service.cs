@@ -42,7 +42,12 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.Service;
 
+using Dex;
+
 using DotnetKubernetesClient;
+
+using Grpc.Net.Client;
+
 using k8s;
 using k8s.Models;
 
@@ -106,6 +111,8 @@ namespace NeonClusterOperator
     /// </remarks>
     public partial class Service : NeonService
     {
+        public Dex.Dex.DexClient DexClient { get; private set; }
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -129,6 +136,9 @@ namespace NeonClusterOperator
             // Start the controllers: these need to be started before starting KubeOps
 
             var k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
+
+            using var channel = GrpcChannel.ForAddress("http://neon-sso-dex.neon-system:5557");
+            DexClient = new Dex.Dex.DexClient(channel);
 
             await NodeTaskController.StartAsync(k8s);
 

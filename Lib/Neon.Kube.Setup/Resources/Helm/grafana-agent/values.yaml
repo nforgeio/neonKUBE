@@ -28,6 +28,10 @@ configReloader:
     tag: v0.47.0
     pullPolicy: IfNotPresent
 
+integrations:
+  nodeExporter:
+    enabled: true
+
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""

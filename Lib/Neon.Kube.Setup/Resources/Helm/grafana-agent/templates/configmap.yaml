@@ -13,7 +13,7 @@ data:
         instance: ${HOSTNAME}
         scrape_integration: false
       node_exporter:
-        enabled: true
+        enabled: {{ .Values.integrations.nodeExporter.enabled }}
         wal_truncate_frequency: 15m
         rootfs_path: /host/root
         sysfs_path: /host/sys

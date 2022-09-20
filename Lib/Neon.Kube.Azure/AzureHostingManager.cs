@@ -1737,7 +1737,7 @@ namespace Neon.Kube
                     Publisher = "neonforge",
                     Offer     = "neonkube-preview",
                     Sku       = "neonkube",
-                    Version   = "0.8.1",
+                    Version   = "0.8.2",
                 };
 
                 nodeImagePlan = new ComputePlan()
