@@ -34,10 +34,10 @@ namespace OpenTelemetry.Exporter
         // Static members
 
         /// <summary>
-        /// 
+        /// Creates a <see cref="OtlpLogExporterWrapper"/> instance.
         /// </summary>
-        /// <param name="options"></param>
-        /// <returns></returns>
+        /// <param name="options">Specifies the exporter options.</param>
+        /// <returns>The created <see cref="OtlpLogExporterWrapper"/>.</returns>
         /// <exception cref="NotSupportedException">
         /// Thrown when the internal [OpenTelemetry.Exporter.OtlpLogExporter] type could not
         /// be located or constructed, probably due to OpenTelemetry changes.
@@ -69,15 +69,15 @@ namespace OpenTelemetry.Exporter
 
                 if (constructorInfo != null)
                 {
-                    var exportMethod = otlpLogExporterType.GetMethod("Export", BindingFlags.Public);
+                    // Locate the exporter's Export() and Shutdown() methods. 
 
-                    if (exportMethod != null)
-                    {
-                        if (exportMethod.GetParameters().Length == 1 || exportMethod.ReturnParameter.ParameterType == typeof(ExportResult))
-                        {
-                            return new OtlpLogExporterWrapper(constructorInfo.Invoke(new object[] { options }), exportMethod);
-                        }
-                    }
+                    var exportMethod   = otlpLogExporterType.GetMethod("Export", BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy, new Type[] { typeof(Batch<LogRecord>) });
+                    var shutdownMethod = otlpLogExporterType.GetMethod("Shutdown", BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy, new Type[] { typeof(int) });
+
+                    Covenant.Assert(exportMethod != null);
+                    Covenant.Assert(shutdownMethod != null);
+
+                    return new OtlpLogExporterWrapper(constructorInfo.Invoke(new object[] { options }), exportMethod, shutdownMethod);
                 }
             }
 
@@ -87,28 +87,54 @@ namespace OpenTelemetry.Exporter
         //---------------------------------------------------------------------
         // Instance members
 
-        private object      logExporter;
-        private MethodInfo  exportMethod;
+        private object          logExporter;
+        private MethodInfo      exportMethod;
+        private MethodInfo      shutdownMethod;
 
         /// <summary>
         /// Private constructor.
         /// </summary>
         /// <param name="logExporter">The [OpenTelemetry.Exporter.OtlpLogExporter] instance obtained above via reflection.</param>
-        /// <param name="exportMethod">The exporter's [Export] method.</param>
-        private OtlpLogExporterWrapper(object logExporter, MethodInfo exportMethod)
+        /// <param name="exportMethod">The exporter's [Export(batch)] method.</param>
+        /// <param name="shutdownMethod">The exporter's [Shutdown(int)] method.</param>
+        private OtlpLogExporterWrapper(object logExporter, MethodInfo exportMethod, MethodInfo shutdownMethod)
         {
-            this.logExporter  = logExporter;
-            this.exportMethod = exportMethod;
+            this.logExporter    = logExporter;
+            this.exportMethod   = exportMethod;
+            this.shutdownMethod = shutdownMethod;
         }
 
         /// <summary>
-        /// Submits the batch of log records passed for delivery via the wrapped exporter.
+        /// Exports a batch of telemetry objects.
         /// </summary>
-        /// <param name="logRecordBatch">The log record batch.</param>
-        /// <returns>The <see cref="ExportResult"/>.</returns>
-        public ExportResult Export(Batch<LogRecord> logRecordBatch)
+        /// <param name="batch">Batch of telemetry objects to export.</param>
+        /// <returns>Result of the export operation.</returns>
+        public ExportResult Export(Batch<LogRecord> batch)
         {
-            return (ExportResult)exportMethod.Invoke(logExporter, new object[] { logRecordBatch });
+            return (ExportResult)exportMethod.Invoke(logExporter, new object[] { batch });
+        }
+
+        /// <summary>
+        /// Attempts to shutdown the exporter, blocks the current thread until
+        /// shutdown has completed or timed out.
+        /// </summary>
+        /// <param name="timeoutMilliseconds">
+        /// The number (non-negative) of milliseconds to wait, or
+        /// <c>Timeout.Infinite</c> to wait indefinitely.
+        /// </param>
+        /// <returns>
+        /// Returns <c>true</c> when shutdown succeeded; otherwise, <c>false</c>.
+        /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when the <c>timeoutMilliseconds</c> is smaller than -1.
+        /// </exception>
+        /// <remarks>
+        /// This function guarantees thread-safety. Only the first call will
+        /// win, subsequent calls will be no-op.
+        /// </remarks>
+        public bool Shutdown(int timeoutMilliseconds)
+        {
+            return (bool)shutdownMethod.Invoke(logExporter, new object[] { timeoutMilliseconds });
         }
     }
 }
