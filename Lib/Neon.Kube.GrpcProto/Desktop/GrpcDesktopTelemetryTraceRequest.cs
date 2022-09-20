@@ -33,7 +33,7 @@ namespace Neon.Kube.GrpcProto.Desktop
     /// <summary>
     /// <para>
     /// Used to submit a batch of telemetry traces from <b>neon-desktop</b> and
-    /// <b>neon-cli</b> to the <b>neon-desktop-server</b> which will then forward
+    /// <b>neon-cli</b> to the <b>neon-desktop-service</b> which will then forward
     /// them to the headend.
     /// </para>
     /// <note>

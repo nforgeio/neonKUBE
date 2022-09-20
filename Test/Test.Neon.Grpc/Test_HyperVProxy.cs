@@ -24,7 +24,7 @@ using Neon.Deployment;
 using Neon.HyperV;
 using Neon.IO;
 using Neon.Kube;
-using Neon.Kube.DesktopServer;
+using Neon.Kube.DesktopService;
 using Neon.Net;
 using Neon.Xunit;
 
