@@ -1983,6 +1983,11 @@ public class ISOFile
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="nodeDefinition">The node definition.</param>
+        /// <param name="nodeMtu">
+        /// Optionally specifies the MTU to be configured for the node's network interface.
+        /// Pass <b>0</b> to configure <see cref="NetConst.DefaultMTU"/> or a value between 
+        /// <b>512-9000</b>.
+        /// </param>
         /// <param name="newPassword">Optionally specifies the new SSH password to be configured on the node.</param>
         /// <returns>A <see cref="TempFile"/> that references the generated ISO file.</returns>
         /// <remarks>
@@ -2002,10 +2007,12 @@ public class ISOFile
         public static TempFile CreateNeonInitIso(
             ClusterDefinition   clusterDefinition,
             NodeDefinition      nodeDefinition,
+            int                 nodeMtu     = 0,
             string              newPassword = null)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentNullException>(nodeDefinition != null, nameof(nodeDefinition));
+            Covenant.Requires<ArgumentNullException>(nodeMtu == 0 || (512 <= nodeMtu && nodeMtu <= 9000), nameof(nodeMtu));
 
             var clusterNetwork = clusterDefinition.Network;
 
@@ -2014,6 +2021,7 @@ public class ISOFile
                 subnet:         clusterNetwork.PremiseSubnet,
                 gateway:        clusterNetwork.Gateway,
                 nameServers:    clusterNetwork.Nameservers,
+                nodeMtu:        nodeMtu,
                 newPassword:    newPassword);
         }
 
@@ -2033,6 +2041,11 @@ public class ISOFile
         /// <param name="subnet">The network subnet to be configured.</param>
         /// <param name="gateway">The network gateway to be configured.</param>
         /// <param name="nameServers">The nameserver addresses to be configured.</param>
+        /// <param name="nodeMtu">
+        /// Optionally specifies the MTU to be configured for the node's network interface.
+        /// Pass <b>0</b> to configure <see cref="NetConst.DefaultMTU"/> or a value between 
+        /// <b>512-9000</b>.
+        /// </param>
         /// <param name="newPassword">Optionally specifies the new SSH password to be configured on the node.</param>
         /// <returns>A <see cref="TempFile"/> that references the generated ISO file.</returns>
         /// <remarks>
@@ -2054,6 +2067,7 @@ public class ISOFile
             string              subnet,
             string              gateway,
             IEnumerable<string> nameServers,
+            int                 nodeMtu     = 0,
             string              newPassword = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(address), nameof(address));
@@ -2061,8 +2075,14 @@ public class ISOFile
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(gateway), nameof(gateway));
             Covenant.Requires<ArgumentNullException>(nameServers != null, nameof(nameServers));
             Covenant.Requires<ArgumentNullException>(nameServers.Count() > 0, nameof(nameServers));
+            Covenant.Requires<ArgumentNullException>(nodeMtu == 0 || (512 <= nodeMtu && nodeMtu <= 9000), nameof(nodeMtu));
 
             var sbNameservers = new StringBuilder();
+
+            if (nodeMtu == 0)
+            {
+                nodeMtu = NetConst.DefaultMTU;
+            }
 
             // Generate the [neon-init.sh] script.
 
@@ -2132,6 +2152,7 @@ network:
     eth0:
      dhcp4: no
      dhcp6: no
+     mtu: {nodeMtu}
      addresses: [{address}/{NetworkCidr.Parse(subnet).PrefixLength}]
      routes:
      - to: default

@@ -786,7 +786,7 @@ namespace Neon.Kube
 
                     node.Status = $"mount: neon-init iso";
 
-                    tempIso    = KubeHelper.CreateNeonInitIso(node.Cluster.Definition, node.Metadata, secureSshPassword);
+                    tempIso    = KubeHelper.CreateNeonInitIso(node.Cluster.Definition, node.Metadata, nodeMtu: NodeMtu, newPassword: secureSshPassword);
                     xenTempIso = xenClient.CreateTempIso(tempIso.Path);
 
                     xenClient.Invoke($"vm-cd-eject", $"uuid={vm.Uuid}");

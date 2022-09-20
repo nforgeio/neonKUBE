@@ -36,6 +36,7 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.Net;
 using Neon.Time;
+using System.Data;
 
 namespace Neon.Kube
 {
@@ -296,12 +297,29 @@ namespace Neon.Kube
         internal int LastExternalSshPort => ReservedIngressEndPort;
 
         /// <summary>
-        /// Specifies the ACME options.
+        /// Specifies the ACME (Let's Encrypt,...) options.
         /// </summary>
         [JsonProperty(PropertyName = "Acme", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "acme", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public AcmeOptions AcmeOptions { get; set; } = new AcmeOptions();
+
+        /// <summary>
+        /// <para>
+        /// Optionally overrides the default MTU (maximum transmission unit) configured for
+        /// cluster node network interfaces.  The default MTU for the hosting environment
+        /// will be used when <see cref="NodeMtu"/><c>=0</c>, otherwise this can be configured
+        /// as a value between <b>512-9000</b>.
+        /// </para>
+        /// <note>
+        /// <b>WARNING:</b> This is an <b>advanced feature</b>.  Only people who really know
+        /// networking and their network environment should modify this.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "NodeMtu", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "nodeMtu", ApplyNamingConventions = false)]
+        [DefaultValue(0)]
+        public int NodeMtu { get; set; } = 0;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -525,6 +543,11 @@ namespace Neon.Kube
 
             AcmeOptions = AcmeOptions ?? new AcmeOptions();
             AcmeOptions.Validate(clusterDefinition);
+
+            if (NodeMtu != 0 && (NodeMtu < 512 || NodeMtu > 9000))
+            {
+                throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(NodeMtu)}={NodeMtu}] is invalid.  Specify [0] or a value between [512-9000].");
+            }
         }
 
         /// <summary>

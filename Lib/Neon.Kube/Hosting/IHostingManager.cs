@@ -91,6 +91,14 @@ namespace Neon.Kube
         double WaitSeconds { get; set; }
 
         /// <summary>
+        /// Returns the MTU (Maximum Transmission Unit) to be configured for network interfaces 
+        /// on node machines created by the hosting manager.  This may return <b>0</b> which
+        /// indicates that the default MTU (typically <see cref="NetConst.DefaultMTU"/> bytes) 
+        /// should be set or a custom value between [512-9000].
+        /// </summary>
+        int NodeMtu { get; }
+
+        /// <summary>
         /// Adds the steps required to the setup controller passed that creates and initializes the
         /// cluster resources such as the virtual machines, networks, load balancers, network security groups, 
         /// public IP addresses.

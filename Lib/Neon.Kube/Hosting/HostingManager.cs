@@ -119,6 +119,9 @@ namespace Neon.Kube
         public double WaitSeconds { get; set; } = 0.0;
 
         /// <inheritdoc/>
+        public virtual int NodeMtu => 0;
+
+        /// <inheritdoc/>
         public abstract HostingEnvironment HostingEnvironment { get; }
 
         /// <inheritdoc/>
