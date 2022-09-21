@@ -70,19 +70,10 @@ namespace Neon.Kube.Models
     [ApiVersion("0.1")]
     public interface IClusterController
     {
-
-    }
-
-    /// <summary>
-    /// Implements ACME methods.
-    /// </summary>
-    [Target("all")]
-    [Target("headend")]
-    [ServiceModel(name: "Headend", group: "Acme")]
-    [Route("acme")]
-    [ApiVersion("0.1")]
-    public interface IAcmeController
-    {
-
+        [HttpPost]
+        [Route("{clusterId}/domain")]
+        string UpdateClusterDomainAsync(
+            [FromRoute] string clusterId,
+            [FromQuery] string addresses);
     }
 }
