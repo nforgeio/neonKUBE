@@ -1,4 +1,12 @@
-issuer: {{ .Values.config.issuer }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "dex.configSecretName" . }}
+  labels:
+    {{- include "dex.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    issuer: {{ .Values.config.issuer }}
     storage:
       type: {{ .Values.config.storage.type }}
       config:
