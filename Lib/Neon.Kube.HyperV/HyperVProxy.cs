@@ -68,7 +68,7 @@ namespace Neon.Kube
         private bool                    isDisposed = false;
         private bool                    isAdmin;
         private HyperVClient            hypervClient;
-        private GrpcChannel             grpcChannel;
+        private GrpcChannel             desktopServiceChannel;
         private IGrpcDesktopService     desktopService;
 
         /// <summary>
@@ -80,7 +80,8 @@ namespace Neon.Kube
         /// </param>
         /// <param name="socketPath">
         /// Optionally overrides the default desktop service unix socket path.  This
-        /// is used for testing purposes.
+        /// is used for testing purposes.  This defaults to <see cref="KubeHelper.WinDesktopServiceSocketPath"/>
+        /// where <b>neon-desktop</b> and <b>neon-cli</b> expect it to be.
         /// </param>
         public HyperVProxy(bool? isAdminOverride = null, string socketPath = null)
         {
@@ -99,8 +100,8 @@ namespace Neon.Kube
             }
             else
             {
-                grpcChannel    = NeonGrpcServices.CreateDesktopServiceChannel(socketPath);
-                desktopService = grpcChannel.CreateGrpcService<IGrpcDesktopService>();
+                desktopServiceChannel = NeonGrpcServices.CreateDesktopServiceChannel(socketPath);
+                desktopService        = desktopServiceChannel.CreateGrpcService<IGrpcDesktopService>();
             }
         }
 
@@ -121,9 +122,9 @@ namespace Neon.Kube
             }
             else
             {
-                grpcChannel.Dispose();
+                desktopServiceChannel.Dispose();
 
-                grpcChannel    = null;
+                desktopServiceChannel    = null;
                 desktopService = null;
             }
         }

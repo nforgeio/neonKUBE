@@ -41,7 +41,6 @@ using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using System.Data.OleDb;
 
 namespace Neon.Kube.DesktopService
 {
@@ -53,25 +52,13 @@ namespace Neon.Kube.DesktopService
         //---------------------------------------------------------------------
         // Static members
 
-        private static HyperVClient         hyperv = new HyperVClient();
-        //private static OtlpLogExporter      logExporter;
-        private static OtlpTraceExporter    traceExporter;
+        private static HyperVClient     hyperv = new HyperVClient();
 
         /// <summary>
         /// Static constructor.
         /// </summary>
         public GrpcDesktopService()
         {
-            // Configure the log and trace exporters.
-
-            var exporterOptions = new OtlpExporterOptions()
-            {
-                TimeoutMilliseconds = 1000,
-                ExportProcessorType = ExportProcessorType.Simple
-            };
-
-            traceExporter = new OtlpTraceExporter(exporterOptions);
-
         }
 
         //---------------------------------------------------------------------
@@ -503,15 +490,23 @@ namespace Neon.Kube.DesktopService
         }
 
         /// <inheritdoc/>
-        public Task<GrpcTelemetryLogReply> ForwardTelemetryLogs(GrpcTelemetryLogRequest request, CallContext context = default)
+        public async Task<GrpcRelayLogBatchReply> RelayLogBatch(GrpcRelayLogBatchRequest request, CallContext context = default)
         {
-            throw new NotImplementedException();
+            var batch = NeonHelper.JsonDeserialize<Batch<LogRecord>>(request.BatchJson);
+
+            DesktopService.LogExporter.Export(batch);
+
+            return await Task.FromResult(new GrpcRelayLogBatchReply());
         }
 
         /// <inheritdoc/>
-        public Task<GrpcTelemetryTraceReply> ForwardTelemetryTraces(GrpcTelemetryTraceRequest request, CallContext context = default)
+        public async Task<GrpcRelayTraceBatchReply> RelayTraceBatch(GrpcRelayTraceBatchRequest request, CallContext context = default)
         {
-            throw new NotImplementedException();
+            var batch = NeonHelper.JsonDeserialize<Batch<Activity>>(request.BatchJson);
+
+            DesktopService.TraceExporter.Export(batch);
+
+            return await Task.FromResult(new GrpcRelayTraceBatchReply());
         }
     }
 }

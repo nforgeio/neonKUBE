@@ -1326,10 +1326,11 @@ kubectl apply -f priorityclasses.yaml
                 {
                     controller.LogProgress(controlNode, verb: "setup", message: "calico");
 
-                    var cluster       = controlNode.Cluster;
-                    var k8s           = GetK8sClient(controller);
-                    var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-                    var calicoAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Calico);
+                    var cluster        = controlNode.Cluster;
+                    var k8s            = GetK8sClient(controller);
+                    var hostingManager = controller.Get<IHostingManager>(KubeSetupProperty.HostingManager);
+                    var clusterAdvice  = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+                    var calicoAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Calico);
 
                     var values = new Dictionary<string, object>();
 
@@ -1338,7 +1339,7 @@ kubectl apply -f priorityclasses.yaml
 
                     if (cluster.Definition.Hosting.Environment == HostingEnvironment.Azure)
                     {
-                        values.Add($"vEthMtu", "1410");
+                        values.Add($"vEthMtu", hostingManager.NodeMtu);
                         values.Add($"ipipMode", "Never");
                         values.Add($"vxlanMode", "Always");
                         values.Add("backend", "vxlan");

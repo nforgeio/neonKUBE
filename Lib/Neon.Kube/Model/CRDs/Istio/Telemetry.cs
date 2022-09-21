@@ -30,7 +30,7 @@ using Newtonsoft.Json;
 namespace Neon.Kube
 {
     /// <summary>
-    /// 
+    /// CRD that controls Istio tracing.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
     public class Telemetry : IKubernetesObject<V1ObjectMeta>, ISpec<TelemetrySpec>, IValidate

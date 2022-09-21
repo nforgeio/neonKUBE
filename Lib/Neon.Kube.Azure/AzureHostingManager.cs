@@ -998,6 +998,9 @@ namespace Neon.Kube
             }
         }
 
+        /// <inheritdoc/>
+        public override int NodeMtu => 1400;    // MTU needs to be smaller than 1500 due to VPC using VXLAN. (https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-tcpip-performance-tuning#azure-and-vm-mtu)
+
         /// <summary>
         /// Enumerates the cluster nodes in no particular order.
         /// </summary>
@@ -2476,8 +2479,7 @@ chmod 600 /etc/neonkube/cloud-init/boot-script-path
 
 echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 ";
-            var encodedBootScript = Convert.ToBase64String(Encoding.UTF8.GetBytes(NeonHelper.ToLinuxLineEndings(bootScript)));
-
+            var encodedBootScript        = Convert.ToBase64String(Encoding.UTF8.GetBytes(NeonHelper.ToLinuxLineEndings(bootScript)));
             var virtualMachineCollection = resourceGroup.GetVirtualMachines();
             var virtualMachineData       = new VirtualMachineData(azureLocation)
             {

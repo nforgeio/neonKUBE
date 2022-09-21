@@ -2967,6 +2967,7 @@ namespace Neon.Kube
                     }
                 }
 
+                var nodeMtu          = NodeMtu == 0 ? NetConst.DefaultMTU : NodeMtu;
                 var netInterfacePath = LinuxPath.Combine(KubeNodeFolder.Bin, "net-interface");
                 var privateSubnet    = NetworkCidr.Parse(cluster.Definition.Hosting.Aws.Network.NodeSubnet);
                 var bootScript       =
@@ -3016,6 +3017,7 @@ network:
   version: 2
   ethernets:
     $interface:
+      mtu: {nodeMtu}
       dhcp4: false
       dhcp6: false
       addresses: [{node.Metadata.Address}/{privateSubnet.PrefixLength}]
