@@ -169,6 +169,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\Neon.Kube.Clients\Neon.Kube.Clients.csproj" />
 		<ProjectReference Include="..\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
 		<ProjectReference Include="..\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
 		<ProjectReference Include="..\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
@@ -177,9 +178,9 @@
 
 	<ItemGroup>
 		<PackageReference Include="Minio" Version="3.1.13" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2240-dev-master" />
-		<PackageReference Include="Neon.Cryptography" Version="10000.0.2240-dev-master" />
-		<PackageReference Include="Neon.Postgres" Version="10000.0.2240-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2244-dev-master" />
+		<PackageReference Include="Neon.Cryptography" Version="10000.0.2244-dev-master" />
+		<PackageReference Include="Neon.Postgres" Version="10000.0.2244-dev-master" />
 		<PackageReference Include="Samboy063.Tomlet" Version="3.1.2" />
 		<PackageReference Include="Tomlyn" Version="0.3.1" />
 		<PackageReference Include="Npgsql" Version="6.0.2" />

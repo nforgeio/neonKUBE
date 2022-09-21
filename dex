@@ -1,0 +1,137 @@
+apiVersion: v1
+data:
+  config.yaml: |
+    issuer: https://neon-sso.dcaa-a34e-d8e1-4543.neoncluster.io
+    storage:
+      type: kubernetes
+      config:
+        inCluster: true
+    web:
+      http: 0.0.0.0:5556
+      tlsCert: /etc/dex/tls/tls.crt
+      tlsKey: /etc/dex/tls/tls.key
+    frontend:
+      dir: /srv/dex/web
+      issuer: SSO Login - sorse-tiny-2
+      theme: dark
+    connectors:
+    - type: ldap
+      # Required field for connector id.
+      id: ldap
+      # Required field for connector name.
+      name: LDAP
+      config:
+        host: neon-sso-glauth.neon-system:3893
+        insecureNoSSL: true
+        insecureSkipVerify: true
+        rootCA: /etc/certs/ca.crt
+        bindDN: cn=serviceuser,ou=admin,dc=dcaa-a34e-d8e1-4543,dc=neoncluster,dc=io
+        bindPW: C0JyvG2pfzRsdYFjLXuX
+        usernamePrompt: SSO Username
+        userSearch:
+          baseDN: cn=users,dc=dcaa-a34e-d8e1-4543,dc=neoncluster,dc=io
+          filter: "(objectClass=posixAccount)"
+          username: uid
+          idAttr: DN
+          emailAttr: mail
+          nameAttr: gecos
+        groupSearch:
+          baseDN: ou=users,dc=dcaa-a34e-d8e1-4543,dc=neoncluster,dc=io
+          filter: "(|(objectClass=posixGroup)(objectClass=group))"
+          userMatchers:
+            - groupAttr: memberUid
+              userAttr: uid
+            - groupAttr: uniqueMember
+              userAttr: DN
+          nameAttr: cn
+    oauth2:
+      skipApprovalScreen: true
+    staticClients:
+    - id: grafana
+      redirectURIs:
+      - 'https://neon-grafana.dcaa-a34e-d8e1-4543.neoncluster.io/login/generic_oauth'
+      name: 'Grafana'
+      secret: "WbzOmJ3J9fPydf4C3T7h"
+      trustedPeers:
+        - neon-sso
+        - harbor
+        - minio
+    - id: neon-sso
+      redirectURIs:
+      - 'https://neon-k8s.dcaa-a34e-d8e1-4543.neoncluster.io/oauth2/callback'
+      - 'https://neon-dashboard.dcaa-a34e-d8e1-4543.neoncluster.io/oauth2/callback'
+      - 'https://neon-kiali.dcaa-a34e-d8e1-4543.neoncluster.io/oauth2/callback'
+      - 'https://dcaa-a34e-d8e1-4543.neoncluster.io/oauth2/callback'
+      name: 'Neon SSO'
+      secret: "WbzOmJ3J9fPydf4C3T7h"
+      trustedPeers:
+      - harbor
+      - grafana
+      - minio
+    - id: harbor
+      redirectURIs:
+      - 'https://neon-registry.dcaa-a34e-d8e1-4543.neoncluster.io/oauth_callback'
+      name: 'Harbor'
+      secret: "pUxrFYb3ONpSLCiFw3Ro"
+      trustedPeers:
+        - grafana
+        - neon-sso
+        - minio
+    - id: minio
+      redirectURIs:
+      - 'https://neon-minio.dcaa-a34e-d8e1-4543.neoncluster.io/oauth_callback'
+      name: 'Minio'
+      secret: "RiMFzxH8bmRr3QyO3Af2"
+      trustedPeers:
+        - grafana
+        - neon-sso
+        - harbor
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"config.yaml":"issuer: https://neon-sso.dcaa-a34e-d8e1-4543.neoncluster.io\nstorage:\n  type: kubernetes\n  config:\n    inCluster: true\nweb:\n  http: 0.0.0.0:5556\n  tlsCert: /etc/dex/tls/tls.crt\n  tlsKey: /etc/dex/tls/tls.key\nfrontend:\n  dir: /srv/dex/web\n  issuer: SSO Login - sorse-tiny-2\n  theme: dark\nconnectors:\n- type: ldap\n  # Required field for connector id.\n  id: ldap\n  # Required field for connector name.\n  name: LDAP\n  config:\n    host: neon-sso-glauth.neon-system:3893\n    insecureNoSSL: true\n    insecureSkipVerify: true\n    rootCA: /etc/certs/ca.crt\n    bindDN: cn=serviceuser,ou=admin,dc=dcaa-a34e-d8e1-4543,dc=neoncluster,dc=io\n    bindPW: C0JyvG2pfzRsdYFjLXuX\n    usernamePrompt: SSO Username\n    userSearch:\n      baseDN: cn=users,dc=dcaa-a34e-d8e1-4543,dc=neoncluster,dc=io\n      filter: \"(objectClass=posixAccount)\"\n      username: uid\n      idAttr: DN\n      emailAttr: mail\n      nameAttr: gecos\n    groupSearch:\n      baseDN: ou=users,dc=dcaa-a34e-d8e1-4543,dc=neoncluster,dc=io\n      filter: \"(|(objectClass=posixGroup)(objectClass=group))\"\n      userMatchers:\n        - groupAttr: memberUid\n          userAttr: uid\n        - groupAttr: uniqueMember\n          userAttr: DN\n      nameAttr: cn\noauth2:\n  skipApprovalScreen: true\nstaticClients:\n- id: grafana\n  redirectURIs:\n  - 'https://neon-grafana.dcaa-a34e-d8e1-4543.neoncluster.io/login/generic_oauth'\n  name: 'Grafana'\n  secret: \"WbzOmJ3J9fPydf4C3T7h\"\n  trustedPeers:\n    - neon-sso\n    - harbor\n    - minio\n- id: neon-sso\n  redirectURIs:\n  - 'https://neon-k8s.dcaa-a34e-d8e1-4543.neoncluster.io/oauth2/callback'\n  - 'https://neon-dashboard.dcaa-a34e-d8e1-4543.neoncluster.io/oauth2/callback'\n  - 'https://neon-kiali.dcaa-a34e-d8e1-4543.neoncluster.io/oauth2/callback'\n  - 'https://dcaa-a34e-d8e1-4543.neoncluster.io/oauth2/callback'\n  name: 'Neon SSO'\n  secret: \"WbzOmJ3J9fPydf4C3T7h\"\n  - harbor\n  - grafana\n  - minio\n- id: harbor\n  redirectURIs:\n  - 'https://neon-registry.dcaa-a34e-d8e1-4543.neoncluster.io/oauth_callback'\n  name: 'Harbor'\n  secret: \"pUxrFYb3ONpSLCiFw3Ro\"\n  trustedPeers:\n    - grafana\n    - neon-sso\n    - minio\n- id: minio\n  redirectURIs:\n  - 'https://neon-minio.dcaa-a34e-d8e1-4543.neoncluster.io/oauth_callback'\n  name: 'Minio'\n  secret: \"RiMFzxH8bmRr3QyO3Af2\"\n  trustedPeers:\n    - grafana\n    - neon-sso\n    - harbor\n"},"kind":"ConfigMap","metadata":{"annotations":{"meta.helm.sh/release-name":"dex","meta.helm.sh/release-namespace":"neon-system"},"creationTimestamp":"2022-09-20T23:15:45Z","labels":{"app.kubernetes.io/instance":"dex","app.kubernetes.io/managed-by":"Helm","app.kubernetes.io/name":"dex","app.kubernetes.io/version":"2.30.0","helm.sh/chart":"dex-0.6.3"},"managedFields":[{"apiVersion":"v1","fieldsType":"FieldsV1","fieldsV1":{"f:data":{},"f:metadata":{"f:annotations":{".":{},"f:meta.helm.sh/release-name":{},"f:meta.helm.sh/release-namespace":{}},"f:labels":{".":{},"f:app.kubernetes.io/instance":{},"f:app.kubernetes.io/managed-by":{},"f:app.kubernetes.io/name":{},"f:app.kubernetes.io/version":{},"f:helm.sh/chart":{}}}},"manager":"helm","operation":"Update","time":"2022-09-20T23:15:45Z"},{"apiVersion":"v1","fieldsType":"FieldsV1","fieldsV1":{"f:data":{"f:config.yaml":{}},"f:metadata":{"f:annotations":{"f:kubectl.kubernetes.io/last-applied-configuration":{}}}},"manager":"kubectl-client-side-apply","operation":"Update","time":"2022-09-20T23:26:23Z"}],"name":"neon-sso-dex","namespace":"neon-system","resourceVersion":"7221","uid":"00df7f79-ae69-436d-b2c9-89aecedcdc65"}}
+    meta.helm.sh/release-name: dex
+    meta.helm.sh/release-namespace: neon-system
+  creationTimestamp: "2022-09-20T23:15:45Z"
+  labels:
+    app.kubernetes.io/instance: dex
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: dex
+    app.kubernetes.io/version: 2.30.0
+    helm.sh/chart: dex-0.6.3
+  managedFields:
+  - apiVersion: v1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:data: {}
+      f:metadata:
+        f:annotations:
+          .: {}
+          f:meta.helm.sh/release-name: {}
+          f:meta.helm.sh/release-namespace: {}
+        f:labels:
+          .: {}
+          f:app.kubernetes.io/instance: {}
+          f:app.kubernetes.io/managed-by: {}
+          f:app.kubernetes.io/name: {}
+          f:app.kubernetes.io/version: {}
+          f:helm.sh/chart: {}
+    manager: helm
+    operation: Update
+    time: "2022-09-20T23:15:45Z"
+  - apiVersion: v1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:data:
+        f:config.yaml: {}
+      f:metadata:
+        f:annotations:
+          f:kubectl.kubernetes.io/last-applied-configuration: {}
+    manager: kubectl-client-side-apply
+    operation: Update
+    time: "2022-09-20T23:26:23Z"
+  name: neon-sso-dex
+  namespace: neon-system
+  resourceVersion: "7769"
+  uid: 00df7f79-ae69-436d-b2c9-89aecedcdc65

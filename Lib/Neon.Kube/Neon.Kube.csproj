@@ -64,8 +64,8 @@
     </ItemGroup>
 
 	<ItemGroup>
-    <PackageReference Include="DNS" Version="7.0.0" />
-    <PackageReference Include="GitInfo" Version="2.2.0">
+		<PackageReference Include="DNS" Version="7.0.0" />
+		<PackageReference Include="GitInfo" Version="2.2.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
@@ -74,19 +74,19 @@
 		<PackageReference Include="Microsoft.AspNetCore.Http.Extensions" Version="2.2.0" />
 		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
-    <PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />
-    <PackageReference Include="Microsoft.OpenApi" Version="1.3.2" />
+		<PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />
+		<PackageReference Include="Microsoft.OpenApi" Version="1.3.2" />
 		<PackageReference Include="Microsoft.Windows.Compatibility" Version="6.0.0" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2240-dev-master" />
-		<PackageReference Include="Neon.Cryptography" Version="10000.0.2240-dev-master" />
-		<PackageReference Include="Neon.Deployment" Version="10000.0.2240-dev-master" />
-		<PackageReference Include="Neon.JsonConverters" Version="10000.0.2240-dev-master" />
-		<PackageReference Include="Neon.ModelGenerator" Version="10000.0.2240-dev-master" GeneratePathProperty="true">
+		<PackageReference Include="Neon.Common" Version="10000.0.2244-dev-master" />
+		<PackageReference Include="Neon.Cryptography" Version="10000.0.2244-dev-master" />
+		<PackageReference Include="Neon.Deployment" Version="10000.0.2244-dev-master" />
+		<PackageReference Include="Neon.JsonConverters" Version="10000.0.2244-dev-master" />
+		<PackageReference Include="Neon.ModelGenerator" Version="10000.0.2244-dev-master" GeneratePathProperty="true">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Neon.Postgres" Version="10000.0.2240-dev-master" />
-		<PackageReference Include="Neon.SSH" Version="10000.0.2240-dev-master" />
+		<PackageReference Include="Neon.Postgres" Version="10000.0.2244-dev-master" />
+		<PackageReference Include="Neon.SSH" Version="10000.0.2244-dev-master" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 		<PackageReference Include="Npgsql" Version="6.0.2" />
 		<PackageReference Include="prometheus-net" Version="6.0.0" />
@@ -119,16 +119,6 @@
 	<ItemGroup>
 	  <Folder Include="Model\CRDs\Kubernetes\" />
 	</ItemGroup>
-
-	<Target Name="ModelGen" BeforeTargets="CoreCompile">
-		<!--- Generate the model source files -->
-		<Message Importance="high" Text="&quot;$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\win-x64\neon-modelgen&quot; --targets=dns --target-namespace=Neon.Kube &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\net6.0\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
-		<Exec Command="&quot;$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\win-x64\neon-modelgen&quot; --targets=dns --target-namespace=Neon.Kube &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\net6.0\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
-		<ItemGroup>
-			<!--- Ensure that the new files are included in the build -->
-			<Compile Include="**\*.cs" KeepDuplicates="false" />
-		</ItemGroup>
-	</Target>
 
 	<!--
     Generates the [KubernetesWithRetry.cs] file.

@@ -1306,9 +1306,10 @@ kubectl apply -f priorityclasses.yaml
                         Spec = NeonHelper.JsonDeserialize<V1DaemonSetSpec>(spec)
                     };
 
-                    coreDnsDaemonset.Spec.Template.Spec.NodeSelector = new Dictionary<string, string>()
+                    coreDnsDaemonset.Spec.Template.Spec.Tolerations = new List<V1Toleration>()
                     {
-                        { "neonkube.io/node.role", "control-plane" }
+                        { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
+                        { new V1Toleration() { Effect = "NoExecute", OperatorProperty = "Exists" } }
                     };
 
                     coreDnsDaemonset.Spec.Template.Spec.Containers.First().Resources.Requests["memory"] = new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryRequest));
@@ -1334,12 +1335,13 @@ kubectl apply -f priorityclasses.yaml
 
                     values.Add("images.organization", KubeConst.LocalClusterRegistry);
                     values.Add($"serviceMonitor.enabled", calicoAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    
+
                     if (cluster.Definition.Hosting.Environment == HostingEnvironment.Azure)
                     {
                         values.Add($"vEthMtu", "1410");
                         values.Add($"ipipMode", "Never");
                         values.Add($"vxlanMode", "Always");
+                        values.Add("backend", "vxlan");
                     }
 
                     controller.ThrowIfCancelled();
@@ -3031,8 +3033,6 @@ $@"- name: StorageType
                     values.Add($"metrics.cadvisor.scrapeInterval", clusterAdvice.MetricsInterval);
                     values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
-
-                    values.Add("integrations.nodeExporter.enabled", cluster.Definition.Hosting.Environment != HostingEnvironment.Azure);
 
                     values.Add($"resources.agent.requests.memory", ToSiString(agentAdvice.PodMemoryRequest));
                     values.Add($"resources.agent.limits.memory", ToSiString(agentAdvice.PodMemoryLimit));
@@ -4918,7 +4918,7 @@ $@"- name: StorageType
 
             values.Add("secrets.grafana", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
             values.Add("secrets.harbor", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
-            values.Add("secrets.kubernetes", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
+            values.Add("secrets.neonSso", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
             values.Add("secrets.minio", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
             values.Add("secrets.ldap", serviceUser.Password);
 

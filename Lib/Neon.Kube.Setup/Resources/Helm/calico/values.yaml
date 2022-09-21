@@ -21,6 +21,7 @@ ipv4PoolCidr: "10.254.0.0/16"
 vEthMtu: "1440"
 ipipMode: Always
 vxlanMode: Never
+backend: bird
 
 kubernetes:
   service:

@@ -47,8 +47,8 @@
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
-        <PackageReference Include="Neon.Common" Version="10000.0.2240-dev-master" />
-        <PackageReference Include="Neon.Service" Version="10000.0.2240-dev-master" />
+        <PackageReference Include="Neon.Common" Version="10000.0.2244-dev-master" />
+        <PackageReference Include="Neon.Service" Version="10000.0.2244-dev-master" />
     </ItemGroup>
 
 	<ItemGroup>

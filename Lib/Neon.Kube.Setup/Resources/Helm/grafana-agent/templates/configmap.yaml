@@ -182,19 +182,6 @@ data:
                 - role: pod
               pipeline_stages:
                 - cri: {}
-                - multiline:
-                    # Identify a zero-width space as first line of a multiline block and
-                    # then have the agent remove that as well as the linefeed.  We'll give
-                    # the agent up to 3 seconds for the remaining part of the log to be
-                    # captured.
-                    firstline: '^\x{200B}'
-                    max_wait_time: 3s
-                - replace:
-                    expression: '^(\x{200B})'
-                    replace: ''
-                - replace:
-                    expression: '([\n])'
-                    replace: ''
                 - metrics:
                     log_lines_total:
                       type: Counter

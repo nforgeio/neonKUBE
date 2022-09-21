@@ -15,7 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM        mcr.microsoft.com/dotnet/aspnet:6.0.6-jammy-amd64
+ARG         ORGANIZATION
+FROM        ${ORGANIZATION}/aspnet:6.0.9-jammy-amd64
 MAINTAINER  marcus@neonforge.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME
