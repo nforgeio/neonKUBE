@@ -36,8 +36,7 @@ namespace Neon.Kube.Models
         [HttpPost]
         [Route("create")]
         Dictionary<string, string> CreateClusterAsync(
-            [FromQuery] string addresses, 
-            [FromQuery] string ipAddress);
+            [FromQuery] string addresses);
 
         [HttpGet]
         [Route("image/download")]
@@ -48,15 +47,14 @@ namespace Neon.Kube.Models
 
         [HttpGet]
         [Route("image/azure")]
-        AzureImageReference GetAzureImageReferenceAsync(
-            [FromQuery] string hostingEnvironment,
+        AzureImageDetails GetAzureImageDetailsAsync(
             [FromQuery] string version,
             [FromQuery] string architecture);
 
         [HttpPost]
         [BodyStream]
         [Route("logs")]
-        AzureImageReference UploadClusterSetupLogAsync(
+        void UploadClusterSetupLogAsync(
             [FromQuery] string clientId,
             [FromQuery] string userId,
             [FromQuery] string details = null);

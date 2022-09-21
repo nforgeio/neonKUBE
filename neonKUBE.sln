@@ -163,7 +163,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Models", "Lib\Neon.Kube.Models\Neon.Kube.Models.csproj", "{987F4891-7FF0-49F7-A6B6-DCCB3F181A5D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Kube.Clients", "Lib\Neon.Kube.Clients\Neon.Kube.Clients.csproj", "{662C2B6D-3FB9-47CE-AC13-9C6F2722D69B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Clients", "Lib\Neon.Kube.Clients\Neon.Kube.Clients.csproj", "{662C2B6D-3FB9-47CE-AC13-9C6F2722D69B}"
 	ProjectSection(ProjectDependencies) = postProject
 		{987F4891-7FF0-49F7-A6B6-DCCB3F181A5D} = {987F4891-7FF0-49F7-A6B6-DCCB3F181A5D}
 	EndProjectSection

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    HeadendClient.cs
+// FILE:	    AzureComputePlan.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -29,22 +29,18 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Models
 {
     [Target("all")]
-    public interface AzureImageReference
+    public interface AzureComputePlan
     {
         [JsonProperty(PropertyName = "Publisher", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         string Publisher { get; set; }
 
-        [JsonProperty(PropertyName = "Offer", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Name", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        string Offer { get; set; }
+        string Name { get; set; }
 
-        [JsonProperty(PropertyName = "Sku", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Product", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        string Sku { get; set; }
-
-        [JsonProperty(PropertyName = "Version", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        string Version { get; set; }
+        string Product { get; set; }
     }
 }

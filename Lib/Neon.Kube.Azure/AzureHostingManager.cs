@@ -1729,25 +1729,23 @@ namespace Neon.Kube
             {
                 // Query the headend to locate the Marketplace offer to use.
 
-                // $todo(marcusbooyah): 
-                //
-                // You need to query the headend here instead of hardcoding this.
-                //
-                // NOTE: You can now obtain the current CPU architecture via: NeonHelper.CpuArchitecture
+                var headendClient = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
+
+                var imageDetails = await headendClient.ClusterSetup.GetAzureImageDetailsAsync(KubeVersions.NeonKube, "x64");
 
                 nodeImageRef = new ImageReference()
                 {
-                    Publisher = "neonforge",
-                    Offer     = "neonkube-preview",
-                    Sku       = "neonkube",
-                    Version   = "0.8.2",
+                    Publisher = imageDetails.ImageReference.Publisher,
+                    Offer     = imageDetails.ImageReference.Offer,
+                    Sku       = imageDetails.ImageReference.Sku,
+                    Version   = imageDetails.ImageReference.Version,
                 };
 
                 nodeImagePlan = new ComputePlan()
                 {
-                    Name      = "neonkube",
-                    Product   = "neonkube-preview",
-                    Publisher = "neonforge"
+                    Name      = imageDetails.ComputePlan.Name,
+                    Product   = imageDetails.ComputePlan.Product,
+                    Publisher = imageDetails.ComputePlan.Publisher
                 };
             }
             else
