@@ -3843,12 +3843,12 @@ $@"- name: StorageType
 
                         controller.ThrowIfCancelled();
 
-                        await k8s.NamespacedPodExecWithRetryAsync(
+                        (await k8s.NamespacedPodExecWithRetryAsync(
                                     retryPolicy:        podExecRetry,
                                     namespaceParameter: pod.Namespace(),
                                     name:               pod.Name(),
                                     container:          "grafana",
-                                    command:            cmd);
+                                    command:            cmd)).EnsureSuccess();
                     });
             }
 
@@ -4061,7 +4061,7 @@ $@"- name: StorageType
 
                             var minioPod = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
 
-                            await k8s.NamespacedPodExecWithRetryAsync(
+                            (await k8s.NamespacedPodExecWithRetryAsync(
                                 retryPolicy:              podExecRetry,
                                 namespaceParameter: minioPod.Namespace(),
                                 name:               minioPod.Name(),
@@ -4070,12 +4070,12 @@ $@"- name: StorageType
                                     "/bin/bash",
                                     "-c",
                                     $@"echo '{{""Version"":""2012-10-17"",""Statement"":[{{""Effect"":""Allow"",""Action"":[""admin:*""]}},{{""Effect"":""Allow"",""Action"":[""s3:*""],""Resource"":[""arn:aws:s3:::*""]}}]}}' > /tmp/superadmin.json"
-                                });
+                                })).EnsureSuccess();
 
                             controller.ThrowIfCancelled();
-                            await cluster.ExecMinioCommandAsync(
+                            (await cluster.ExecMinioCommandAsync(
                                 retryPolicy:    podExecRetry,
-                                mcCommand:      "admin policy add minio superadmin /tmp/superadmin.json");
+                                mcCommand:      "admin policy add minio superadmin /tmp/superadmin.json")).EnsureSuccess();
                         });
                 });
         }
@@ -5285,9 +5285,9 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync($"setup/minio-bucket-{name}",
                 async () =>
                 {
-                    await cluster.ExecMinioCommandAsync(
+                    (await cluster.ExecMinioCommandAsync(
                         retryPolicy: podExecRetry,
-                        mcCommand: $"mb minio/{name}");
+                        mcCommand: $"mb minio/{name}")).EnsureSuccess();
                 });
 
             controller.ThrowIfCancelled();
@@ -5296,9 +5296,9 @@ $@"- name: StorageType
                 await controlNode.InvokeIdempotentAsync($"setup/minio-bucket-{name}-quota",
                     async () =>
                     {
-                        await cluster.ExecMinioCommandAsync(
+                        (await cluster.ExecMinioCommandAsync(
                             retryPolicy: podExecRetry,
-                            mcCommand: $"admin bucket quota minio/{name} --hard {quota}");
+                            mcCommand: $"admin bucket quota minio/{name} --hard {quota}")).EnsureSuccess();
                     });
             }
         }
