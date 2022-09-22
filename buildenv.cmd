@@ -91,7 +91,7 @@ REM Install the KubeOps project templates: https://buehler.github.io/dotnet-oper
 
 dotnet new --install KubeOps.Templates::* > /nul
 
-REM Perform additional implementation in via Powershell.
+REM Perform additional implementation via Powershell.
 
 pwsh -f "%NK_ROOT%\buildenv.ps1"
 
