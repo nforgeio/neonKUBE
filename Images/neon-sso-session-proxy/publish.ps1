@@ -70,8 +70,17 @@ function Build
 
 $noImagePush = $nopush
 
-if ($allVersions)
+try
 {
+	if ($allVersions)
+	{
+	}
+
+	Build $neonKUBE_Tag -latest
+}
+catch
+{
+	Write-Exception $_
+	exit 1
 }
 
-Build $neonKUBE_Tag -latest
