@@ -26,7 +26,7 @@ data:
     metrics:
       global:
         remote_write:
-          - url: http://mimir-distributor:8080/api/v1/push
+          - url: http://mimir-distributor.neon-monitor.svc.cluster.local:8080/api/v1/push
             headers: 
               X-Scope-OrgID: {{ .Values.cluster.name | default "neonkube" }}
             send_exemplars: true
@@ -145,7 +145,7 @@ data:
     logs:
       configs:
         - clients:
-            - url: http://loki-distributor:3100/loki/api/v1/push
+            - url: http://loki-distributor.neon-monitor.svc.cluster.local:3100/loki/api/v1/push
               tenant_id: {{ .Values.cluster.name | default "neonkube" }}
               backoff_config:
                 min_period: 500ms
@@ -289,7 +289,7 @@ data:
             opencensus:
               endpoint: "0.0.0.0:55678"
           remote_write:
-            - endpoint: tempo-distributor:4317
+            - endpoint: tempo-distributor.neon-monitor.svc.cluster.local:4317
               headers: 
                 X-Scope-OrgID: {{ .Values.cluster.name | default "neonkube" }}
               insecure: true

@@ -24,6 +24,7 @@ spec:
       serviceAccountName: neon-node-agent
       hostPID: true
       hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       tolerations:
       - operator: Exists
       volumes:

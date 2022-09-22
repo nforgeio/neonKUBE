@@ -1294,14 +1294,14 @@ kubectl apply -f priorityclasses.yaml
                 {
                     var coreDnsDeployment = await k8s.ReadNamespacedDeploymentAsync("coredns", KubeNamespace.KubeSystem);
 
-                    var spec             = NeonHelper.JsonSerialize(coreDnsDeployment.Spec);
+                    var spec = NeonHelper.JsonSerialize(coreDnsDeployment.Spec);
                     var coreDnsDaemonset = new V1DaemonSet()
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name              = "coredns",
+                            Name = "coredns",
                             NamespaceProperty = KubeNamespace.KubeSystem,
-                            Labels            = coreDnsDeployment.Metadata.Labels
+                            Labels = coreDnsDeployment.Metadata.Labels
                         },
                         Spec = NeonHelper.JsonDeserialize<V1DaemonSetSpec>(spec)
                     };
@@ -1313,13 +1313,24 @@ kubectl apply -f priorityclasses.yaml
                     };
 
                     coreDnsDaemonset.Spec.Template.Spec.Containers.First().Resources.Requests["memory"] = new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryRequest));
-                    coreDnsDaemonset.Spec.Template.Spec.Containers.First().Resources.Limits["memory"]   = new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryLimit));
+                    coreDnsDaemonset.Spec.Template.Spec.Containers.First().Resources.Limits["memory"] = new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryLimit));
 
                     await k8s.CreateNamespacedDaemonSetAsync(coreDnsDaemonset, KubeNamespace.KubeSystem);
                     await k8s.DeleteNamespacedDeploymentAsync(coreDnsDeployment.Name(), coreDnsDeployment.Namespace());
 
                 });
-            
+
+            controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/dns-service",
+                async () =>
+                {
+                    var kubeDns = await k8s.ReadNamespacedServiceAsync("kube-dns", KubeNamespace.KubeSystem);
+
+                    kubeDns.Spec.InternalTrafficPolicy = "Local";
+
+                    await k8s.ReplaceNamespacedServiceAsync(kubeDns, kubeDns.Name(), kubeDns.Namespace());
+                });
+
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/cni",
                 async () =>
