@@ -244,7 +244,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.HostingManager, cluster.HostingManager);
             controller.Add(KubeSetupProperty.HostingEnvironment, cluster.HostingManager.HostingEnvironment);
             controller.Add(KubeSetupProperty.ClusterspaceFolder, clusterspace);
-            controller.Add(KubeSetupProperty.NeonCloudHeadendUri, neonCloudHeadendUri);
+            controller.Add(KubeSetupProperty.NeonCloudHeadendClient, new HeadendClient(new HttpClient() { BaseAddress = new Uri(neonCloudHeadendUri) }));
             controller.Add(KubeSetupProperty.DisableImageDownload, !string.IsNullOrEmpty(nodeImagePath));
             controller.Add(KubeSetupProperty.Redact, !unredacted);
 
@@ -404,24 +404,13 @@ namespace Neon.Kube
                     controller.SetGlobalStepStatus("create: *.neoncluster.io domain (for TLS)");
 
                     var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
-                    var clusterAddresses   = cluster.HostingManager.GetClusterAddresses();
+                    var headendClient      = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
+                    var clusterAddresses   = string.Join(',', cluster.HostingManager.GetClusterAddresses());
 
-                    // $todo(marcusbooyah): Replace this with the real headend client
+                    var result = await headendClient.ClusterSetup.CreateClusterAsync(addresses: clusterAddresses);
 
-                    using (var jsonClient = new JsonClient())
-                    {
-                        jsonClient.BaseAddress = KubeEnv.HeadendUri;
-
-                        var args = new ArgDictionary();
-
-                        args.Add("addresses", string.Join(',', clusterAddresses));
-                        args.Add("api-version", "0.1");     // $note(jefflill): Hardcoding this temporarily until the real client
-
-                        var result = await jsonClient.PostAsync<Dictionary<string, string>>($"/cluster-setup/create", args: args);
-
-                        clusterLogin.ClusterDefinition.Id     = result["Id"];
-                        clusterLogin.ClusterDefinition.Domain = result["Domain"];
-                    }
+                    clusterLogin.ClusterDefinition.Id     = result["Id"];
+                    clusterLogin.ClusterDefinition.Domain = result["Domain"];
                    
                     clusterLogin.Save();
                 });

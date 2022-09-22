@@ -123,10 +123,9 @@ namespace Neon.Kube
         public const string ClusterspaceFolder = "clusterspace-folder";
 
         /// <summary>
-        /// Property name for accessing the neonCLOUD headend service base URI. This can be overridden
-        /// for development purposes.
+        /// Property name for accessing the neonCLOUD headend service client.
         /// </summary>
-        public const string NeonCloudHeadendUri = "neoncloud-headend-uri";
+        public const string NeonCloudHeadendClient = "neoncloud-headend-client";
 
         /// <summary>
         /// Property name for a boolean indicating that the node image has already been downloaded

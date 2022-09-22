@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -114,21 +115,9 @@ namespace Neon.Kube
 
             if (!setupDebugMode)
             {
-                // $todo(marcusbooyah): Replace this with the real headend client
+                var headendClient = new HeadendClient(new HttpClient() { BaseAddress = KubeEnv.HeadendUri });
 
-                using (var jsonClient = new JsonClient())
-                {
-                    jsonClient.BaseAddress = KubeEnv.HeadendUri;
-
-                    var args = new ArgDictionary();
-
-                    args.Add("hostingEnvironment", hostingEnvironment);
-                    args.Add("version", KubeVersions.NeonKube);
-                    args.Add("architecture", architecture);
-                    args.Add("api-version", "0.1");     // $note(jefflill): Hardcoding this temporarily until the real client
-
-                    return await jsonClient.GetAsync<string>($"/cluster-setup/image/download", args: args);
-                }
+                return await headendClient.ClusterSetup.GetNodeImageManifestUriAsync(hostingEnvironment.ToMemberString(), KubeVersions.NeonKube, architecture);
             }
 
             switch (hostingEnvironment)

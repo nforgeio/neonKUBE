@@ -274,7 +274,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.HostingManager, cluster.HostingManager);
             controller.Add(KubeSetupProperty.HostingEnvironment, cluster.HostingManager.HostingEnvironment);
             controller.Add(KubeSetupProperty.ClusterspaceFolder, clusterspace);
-            controller.Add(KubeSetupProperty.NeonCloudHeadendUri, neonCloudHeadendUri);
+            controller.Add(KubeSetupProperty.NeonCloudHeadendClient, new HeadendClient(new HttpClient() { BaseAddress = new Uri(neonCloudHeadendUri) }));
             controller.Add(KubeSetupProperty.Redact, !unredacted);
 
             // Configure the setup steps.
