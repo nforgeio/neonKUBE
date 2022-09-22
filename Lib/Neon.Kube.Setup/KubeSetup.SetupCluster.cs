@@ -117,7 +117,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="maxParallel">
         /// Optionally specifies the maximum number of node operations to be performed in parallel.
-        /// This <b>defaults to 500</b> which is effectively infinite.
+        /// This <b>defaults to 0</b> which means that we'll use <see cref="IHostingManager.MaxParallel"/>.
         /// </param>
         /// <param name="unredacted">
         /// Optionally indicates that sensitive information <b>won't be redacted</b> from the setup logs 
@@ -232,16 +232,6 @@ namespace Neon.Kube
                 cluster.SecureRunOptions = RunOptions.None;
             }
 
-            // Configure the setup controller.
-
-            var controller = new SetupController<NodeDefinition>($"Setup [{cluster.Definition.Name}] cluster", cluster.Nodes, KubeHelper.LogFolder, disableConsoleOutput: disableConsoleOutput)
-            {
-                MaxParallel     = maxParallel,
-                LogBeginMarker  = "# CLUSTER-BEGIN-SETUP #########################################################",
-                LogEndMarker    = "# CLUSTER-END-SETUP-SUCCESS ###################################################",
-                LogFailedMarker = "# CLUSTER-END-SETUP-FAILED ####################################################"
-            };
-
             // Load the cluster login information if it exists and when it indicates that
             // setup is still pending, we'll use that information (especially the generated
             // secure SSH password).
@@ -262,6 +252,16 @@ namespace Neon.Kube
 
                 clusterLogin.Save();
             }
+
+            // Configure the setup controller.
+
+            var controller = new SetupController<NodeDefinition>($"Setup [{cluster.Definition.Name}] cluster", cluster.Nodes, KubeHelper.LogFolder, disableConsoleOutput: disableConsoleOutput)
+            {
+                MaxParallel     = maxParallel > 0 ? maxParallel: cluster.HostingManager.MaxParallel,
+                LogBeginMarker  = "# CLUSTER-BEGIN-SETUP #########################################################",
+                LogEndMarker    = "# CLUSTER-END-SETUP-SUCCESS ###################################################",
+                LogFailedMarker = "# CLUSTER-END-SETUP-FAILED ####################################################"
+            };
 
             // Configure the setup controller state.
 

@@ -90,6 +90,8 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
+        private int? maxParallel = null;
+
         /// <summary>
         /// Finalizer.
         /// </summary>
@@ -113,7 +115,25 @@ namespace Neon.Kube
         public abstract void Dispose(bool disposing);
 
         /// <inheritdoc/>
-        public int MaxParallel { get; set; } = 5;
+        public virtual int MaxParallel
+        {
+            get
+            {
+                if (!maxParallel.HasValue)
+                {
+                    maxParallel = KubeHelper.IsCloudEnvironment(HostingEnvironment) ? 100 : 25;
+                }
+
+                return maxParallel.Value;
+            }
+
+            set
+            {
+                Covenant.Requires<ArgumentException>(value > 0, nameof(MaxParallel));
+
+                maxParallel = value;
+            }
+        }
 
         /// <inheritdoc/>
         public double WaitSeconds { get; set; } = 0.0;

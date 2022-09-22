@@ -77,7 +77,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="maxParallel">
         /// Optionally specifies the maximum number of node operations to be performed in parallel.
-        /// This <b>defaults to 500</b> which is effectively infinite.
+        /// This <b>defaults to 0</b> which means that we'll use <see cref="IHostingManager.MaxParallel"/>.
         /// </param>
         /// <param name="packageCacheEndpoints">
         /// <para>
@@ -109,7 +109,7 @@ namespace Neon.Kube
             bool                        cloudMarketplace,
             string                      nodeImageUri          = null,
             string                      nodeImagePath         = null,
-            int                         maxParallel           = 500,
+            int                         maxParallel           = 0,
             IEnumerable<IPEndPoint>     packageCacheEndpoints = null,
             bool                        unredacted            = false, 
             bool                        debugMode             = false, 
@@ -126,7 +126,7 @@ namespace Neon.Kube
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri) || !string.IsNullOrEmpty(nodeImagePath), $"{nameof(nodeImageUri)}/{nameof(nodeImagePath)}");
             }
 
-            Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
+            Covenant.Requires<ArgumentException>(maxParallel >= 0, nameof(maxParallel));
             Covenant.Requires<ArgumentNullException>(!debugMode || !string.IsNullOrEmpty(baseImageName), nameof(baseImageName));
 
             neonCloudHeadendUri ??= KubeEnv.HeadendUri.ToString();
@@ -199,7 +199,7 @@ namespace Neon.Kube
 
             var controller = new SetupController<NodeDefinition>($"Preparing [{cluster.Definition.Name}] cluster infrastructure", cluster.Nodes, KubeHelper.LogFolder, disableConsoleOutput: disableConsoleOutput)
             {
-                MaxParallel     = maxParallel,
+                MaxParallel     = maxParallel > 0 ? maxParallel: hostingManager.MaxParallel,
                 LogBeginMarker  = "# CLUSTER-BEGIN-PREPARE #######################################################",
                 LogEndMarker    = "# CLUSTER-END-PREPARE-SUCCESS #################################################",
                 LogFailedMarker = "# CLUSTER-END-PREPARE-FAILED ##################################################"
@@ -255,7 +255,7 @@ namespace Neon.Kube
                 {
                     controller.SetGlobalStepStatus("configure: hosting manager");
 
-                    hostingManager.MaxParallel = maxParallel;
+                    hostingManager.MaxParallel = controller.MaxParallel;
                     hostingManager.WaitSeconds = 60;
                 });
 
