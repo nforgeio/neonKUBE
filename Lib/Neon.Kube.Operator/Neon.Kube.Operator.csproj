@@ -51,8 +51,8 @@
 		<PackageReference Include="JsonPatch.Net" Version="1.1.2" />
 		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
 		<PackageReference Include="KubernetesClient" Version="7.2.19" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2244-dev-master" />
-		<PackageReference Include="Neon.Service" Version="10000.0.2244-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2246-dev-master" />
+		<PackageReference Include="Neon.Service" Version="10000.0.2246-dev-master" />
 		<PackageReference Include="prometheus-net" Version="6.0.0" />
 	</ItemGroup>
 

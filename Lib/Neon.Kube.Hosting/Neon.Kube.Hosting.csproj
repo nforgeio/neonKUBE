@@ -63,7 +63,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Neon.Common" Version="10000.0.2244-dev-master" />
+	  <PackageReference Include="Neon.Common" Version="10000.0.2246-dev-master" />
 	</ItemGroup>
 
 </Project>
