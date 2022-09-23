@@ -1320,16 +1320,21 @@ kubectl apply -f priorityclasses.yaml
 
                 });
 
-            controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/dns-service",
-                async () =>
-                {
-                    var kubeDns = await k8s.ReadNamespacedServiceAsync("kube-dns", KubeNamespace.KubeSystem);
+            if (cluster.Definition.Hosting.Environment == HostingEnvironment.Azure)
+            {
+                // In Azure Calico runs in VXLAN mode.
 
-                    kubeDns.Spec.InternalTrafficPolicy = "Local";
+                controller.ThrowIfCancelled();
+                await controlNode.InvokeIdempotentAsync("setup/dns-service",
+                    async () =>
+                    {
+                        var kubeDns = await k8s.ReadNamespacedServiceAsync("kube-dns", KubeNamespace.KubeSystem);
 
-                    await k8s.ReplaceNamespacedServiceAsync(kubeDns, kubeDns.Name(), kubeDns.Namespace());
-                });
+                        kubeDns.Spec.InternalTrafficPolicy = "Local";
+
+                        await k8s.ReplaceNamespacedServiceAsync(kubeDns, kubeDns.Name(), kubeDns.Namespace());
+                    });
+            }
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/cni",
@@ -1348,9 +1353,13 @@ kubectl apply -f priorityclasses.yaml
                     values.Add("images.organization", KubeConst.LocalClusterRegistry);
                     values.Add($"serviceMonitor.enabled", calicoAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
 
-                    if (cluster.Definition.Hosting.Environment == HostingEnvironment.Azure)
+                    if (hostingManager.NodeMtu > 0)
                     {
                         values.Add($"vEthMtu", hostingManager.NodeMtu);
+                    }
+
+                    if (cluster.Definition.Hosting.Environment == HostingEnvironment.Azure)
+                    {
                         values.Add($"ipipMode", "Never");
                         values.Add($"vxlanMode", "Always");
                         values.Add("backend", "vxlan");
