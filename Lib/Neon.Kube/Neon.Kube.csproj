@@ -121,17 +121,21 @@
 	</ItemGroup>
 
 	<!--
-    Generates the [KubernetesWithRetry.cs] file.
+    Generate the [KubernetesWithRetry.cs] file.
     -->
 
 	<Target Name="K8sWithRetry" BeforeTargets="BeforeBuild" Condition="Exists('$(NK_ROOT)\Tools\prebuilder\bin\$(Configuration)\net6.0\prebuilder.exe')">
 		<Exec Command="$(NK_ROOT)\Tools\prebuilder\bin\$(Configuration)\net6.0\prebuilder generate-kubernetes-with-retry &quot;$(ProjectDir)Kubernetes\KubernetesWithRetry.cs&quot; Neon.Kube" />
 	</Target>
+	
+	<!--
+	Generate the data models and service clients.
+	-->
 
     <Target Name="ModelGen" BeforeTargets="CoreCompile">
         <!--- Generate the model source files -->
-        <Message Importance="high" Text="&quot;$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\win-x64\neon-modelgen&quot; --targets=all --target-namespace=Neon.Kube &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\net6.0\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)GeneratedEntities.mg.cs&quot;" />
-        <Exec Command="&quot;$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\win-x64\neon-modelgen&quot; --targets=all --target-namespace=Neon.Kube &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\net6.0\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)GeneratedEntities.mg.cs&quot;" />
+        <Message Importance="high" Text="&quot;$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\win-x64\neon-modelgen&quot; --targets=all --target-namespace=Neon.Kube &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\net6.0\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
+        <Exec Command="&quot;$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\win-x64\neon-modelgen&quot; --targets=all --target-namespace=Neon.Kube &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\net6.0\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)\Model\GeneratedEntities.mg.cs&quot;" />
         <ItemGroup>
             <!--- Ensure that the new files are included in the build -->
             <Compile Include="**\*.cs" KeepDuplicates="false" />
