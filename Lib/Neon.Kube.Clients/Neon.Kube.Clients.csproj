@@ -31,11 +31,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Neon.Common" Version="10000.0.2244-dev-master" />
-        <PackageReference Include="Neon.Cryptography" Version="10000.0.2244-dev-master" />
-        <PackageReference Include="Neon.Deployment" Version="10000.0.2244-dev-master" />
-        <PackageReference Include="Neon.JsonConverters" Version="10000.0.2244-dev-master" />
-        <PackageReference Include="Neon.ModelGenerator" Version="10000.0.2244-dev-master" GeneratePathProperty="true">
+        <PackageReference Include="Neon.Common" Version="10000.0.2245-dev-master" />
+        <PackageReference Include="Neon.Cryptography" Version="10000.0.2245-dev-master" />
+        <PackageReference Include="Neon.Deployment" Version="10000.0.2245-dev-master" />
+        <PackageReference Include="Neon.JsonConverters" Version="10000.0.2245-dev-master" />
+        <PackageReference Include="Neon.ModelGenerator" Version="10000.0.2245-dev-master" GeneratePathProperty="true">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
