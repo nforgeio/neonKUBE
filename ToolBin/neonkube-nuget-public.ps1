@@ -158,7 +158,6 @@ SetVersion Neon.Kube                      $neonkubeVersion
 SetVersion Neon.Kube.Aws                  $neonkubeVersion
 SetVersion Neon.Kube.Azure                $neonkubeVersion
 SetVersion Neon.Kube.BareMetal            $neonkubeVersion
-SetVersion Neon.Kube.Clients              $neonkubeVersion
 SetVersion Neon.Kube.DesktopService       $neonkubeVersion
 SetVersion Neon.Kube.Google               $neonkubeVersion
 SetVersion Neon.Kube.GrpcProto            $neonkubeVersion
@@ -178,7 +177,6 @@ Publish Neon.Kube                         $neonkubeVersion
 Publish Neon.Kube.Aws                     $neonkubeVersion
 Publish Neon.Kube.Azure                   $neonkubeVersion
 Publish Neon.Kube.BareMetal               $neonkubeVersion
-Publish Neon.Kube.Clients                 $neonkubeVersion
 Publish Neon.Kube.DesktopService          $neonkubeVersion
 Publish Neon.Kube.Google                  $neonkubeVersion
 Publish Neon.Kube.GrpcProto               $neonkubeVersion

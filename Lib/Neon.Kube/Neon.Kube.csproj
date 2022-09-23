@@ -104,7 +104,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Neon.Kube.Clients\Neon.Kube.Clients.csproj" />
 		<ProjectReference Include="..\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
 	</ItemGroup>
 

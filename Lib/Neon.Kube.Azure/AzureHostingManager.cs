@@ -1730,8 +1730,7 @@ namespace Neon.Kube
                 // Query the headend to locate the Marketplace offer to use.
 
                 var headendClient = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
-
-                var imageDetails = await headendClient.ClusterSetup.GetAzureImageDetailsAsync(KubeVersions.NeonKube, "x64");
+                var imageDetails  = await headendClient.ClusterSetup.GetAzureImageDetailsAsync(KubeVersions.NeonKube, "x64");
 
                 nodeImageRef = new ImageReference()
                 {

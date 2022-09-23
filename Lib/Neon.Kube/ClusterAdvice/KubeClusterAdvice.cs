@@ -154,7 +154,7 @@ namespace Neon.Kube
         public static string EtcdCluster = "etcd-cluster";
 
         /// <summary>
-        /// Identifies the neonKUBE cluster's <b>Etcd Operatoir</b> service.
+        /// Identifies the neonKUBE cluster's <b>Etcd Operator</b> service.
         /// </summary>
         public static string EtcdOperator = "etcd-operator";
 
