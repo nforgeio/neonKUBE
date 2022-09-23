@@ -80,7 +80,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// The maximum number of nodes that will execute provisioning steps in parallel.  This
-        /// defaults to <b>5</b>.
+        /// defaults to <b>25</b> for on-premise hosting managers and <b>100</b> for the cloud.
+        /// This may also be customized by specific <see cref="IHostingManager"/> implementations.
         /// </summary>
         int MaxParallel { get; set; }
 
