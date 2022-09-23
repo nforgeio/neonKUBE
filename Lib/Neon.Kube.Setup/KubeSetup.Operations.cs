@@ -1447,7 +1447,7 @@ kubectl apply -f priorityclasses.yaml
                                         return false;
                                     }
                                 },
-                                timeout:      TimeSpan.FromSeconds(120),
+                                timeout:      TimeSpan.FromSeconds(300),
                                 pollInterval: TimeSpan.FromMilliseconds(500));
 
                             await k8s.DeleteNamespacedPodAsync("dnsutils", KubeNamespace.NeonSystem);
@@ -2266,7 +2266,7 @@ subjects:
                     var values = new Dictionary<string, object>();
                     var secret = await k8s.ReadNamespacedSecretAsync(KubeConst.DexSecret, KubeNamespace.NeonSystem);
 
-                    values.Add("oidc.secret", Encoding.UTF8.GetString(secret.Data["KUBERNETES_CLIENT_SECRET"]));
+                    values.Add("oidc.secret", Encoding.UTF8.GetString(secret.Data["NEONSSO_CLIENT_SECRET"]));
                     values.Add("image.operator.organization", KubeConst.LocalClusterRegistry);
                     values.Add("image.operator.repository", "kiali-kiali-operator");
                     values.Add("image.kiali.organization", KubeConst.LocalClusterRegistry);

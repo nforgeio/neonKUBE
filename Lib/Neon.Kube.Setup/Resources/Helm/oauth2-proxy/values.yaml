@@ -93,7 +93,7 @@ config:
       TLS: null
     providers:
     - clientID: {{ .Values.client.id }}
-      clientSecret: /etc/oauth2_proxy_oidc/KUBERNETES_CLIENT_SECRET
+      clientSecret: /etc/oauth2_proxy_oidc/NEONSSO_CLIENT_SECRET
       id: oidc={{ .Values.client.id }}
       loginURL: https://{{ .Values.neonkube.clusterDomain.sso }}.{{ .Values.cluster.domain }}
       loginURLParameters:

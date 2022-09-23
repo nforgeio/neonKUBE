@@ -42,7 +42,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name:  neon-sso-dex
-                  key: KUBERNETES_CLIENT_SECRET
+                  key: NEONSSO_CLIENT_SECRET
             - name: COOKIE_CIPHER
               valueFrom:
                 secretKeyRef:

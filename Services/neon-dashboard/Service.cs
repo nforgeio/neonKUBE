@@ -285,7 +285,7 @@ namespace NeonDashboard
             {
                 var secret = await Kubernetes.ReadNamespacedSecretAsync("neon-sso-dex", KubeNamespace.NeonSystem);
 
-                SetEnvironmentVariable("SSO_CLIENT_SECRET", Encoding.UTF8.GetString(secret.Data["KUBERNETES_CLIENT_SECRET"]));
+                SetEnvironmentVariable("SSO_CLIENT_SECRET", Encoding.UTF8.GetString(secret.Data["NEONSSO_CLIENT_SECRET"]));
 
                 // Configure cluster callback url to allow local dev
                 
