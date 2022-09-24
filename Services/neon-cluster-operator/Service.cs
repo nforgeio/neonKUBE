@@ -48,9 +48,17 @@ using k8s;
 using k8s.Models;
 
 using KubeOps.Operator;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
 using Npgsql;
+
+using Prometheus;
+
+using Quartz;
+using Quartz.Impl;
+using Quartz.Logging;
 
 namespace NeonClusterOperator
 {
@@ -106,6 +114,9 @@ namespace NeonClusterOperator
     /// </remarks>
     public partial class Service : NeonService
     {
+        private IKubernetes K8s;
+        private LeaderElector LeaderElector;
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -128,9 +139,11 @@ namespace NeonClusterOperator
             //-----------------------------------------------------------------
             // Start the controllers: these need to be started before starting KubeOps
 
-            var k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
+            K8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
+            LogContext.SetCurrentLogProvider(TelemetryHub.LoggerFactory);
 
-            await NodeTaskController.StartAsync(k8s);
+            await NodeTaskController.StartAsync(K8s);
+            await NeonClusterOperatorController.StartAsync(K8s);
 
             //-----------------------------------------------------------------
             // Start the operator controllers.  Note that we're not going to await
