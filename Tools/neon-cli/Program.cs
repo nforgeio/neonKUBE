@@ -42,7 +42,6 @@ using Neon.Common;
 using Neon.Deployment;
 using Neon.Diagnostics;
 using Neon.Kube;
-using Neon.Kube.Xunit;
 using Neon.IO;
 using Neon.SSH;
 using Neon.Windows;
