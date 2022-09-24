@@ -171,10 +171,10 @@ namespace Neon.Kube.Operator
         where TEntity : CustomKubernetesEntity, new()
         where TController : IOperatorController<TEntity>
     {
-        private bool                            isDisposed           = false;
-        private bool                            stopIdleLoop         = false;
-        private AsyncReentrantMutex             mutex                = new AsyncReentrantMutex();
-        private bool                            started              = false;
+        private bool                            isDisposed   = false;
+        private bool                            stopIdleLoop = false;
+        private AsyncReentrantMutex             mutex        = new AsyncReentrantMutex();
+        private bool                            started      = false;
         private ResourceManagerOptions          options;
         private IKubernetes                     k8s;
         private string                          resourceNamespace;
@@ -351,23 +351,32 @@ namespace Neon.Kube.Operator
 
             IsLeader = true;
 
-            // Start the IDLE reconcile loop.
+            Task.Run(
+                async () =>
+                {
+                    // Start the IDLE reconcile loop.
 
-            stopIdleLoop         = false;
-            nextIdleReconcileUtc = DateTime.UtcNow + options.IdleInterval;
-            idleLoopTask         = IdleLoopAsync();
+                    stopIdleLoop = false;
+                    nextIdleReconcileUtc = DateTime.UtcNow + options.IdleInterval;
+                    idleLoopTask = IdleLoopAsync();
 
-            // Start the watcher.
+                    // Start the watcher.
 
-            watcherTcs  = new CancellationTokenSource();
-            watcherTask = WatchAsync(watcherTcs.Token);
+                    watcherTcs = new CancellationTokenSource();
+                    watcherTask = WatchAsync(watcherTcs.Token);
+
+                    // Inform the controller.
+
+                    await CreateController().OnPromotionAsync();
+
+                }).Wait();
         }
 
         /// <summary>
         /// Called when the instance has a <see cref="LeaderElector"/> this instance has
         /// been demoted.
         /// </summary>
-        private async void OnDemotion()
+        private void OnDemotion()
         {
             logger.LogInformationEx("DEMOTED");
 
@@ -375,15 +384,24 @@ namespace Neon.Kube.Operator
 
             try
             {
-                // Stop the IDLE loop.
+                Task.Run(
+                    async () =>
+                    {
+                        // Stop the IDLE loop.
 
-                stopIdleLoop = true;
-                await idleLoopTask;
+                        stopIdleLoop = true;
+                        await idleLoopTask;
 
-                // Stop the watcher.
+                        // Stop the watcher.
 
-                watcherTcs.Cancel();
-                await watcherTask;
+                        watcherTcs.Cancel();
+                        await watcherTask;
+
+                        // Inform the controller.
+
+                        await CreateController().OnDemotionAsync();
+
+                    }).Wait();
             }
             finally
             {
@@ -404,7 +422,16 @@ namespace Neon.Kube.Operator
         {
             LeaderIdentity = identity;
 
-            logger.LogInformationEx(() => $"LEADER-IS: {identity}");
+            Task.Run(
+                async () =>
+                {
+                    logger.LogInformationEx(() => $"LEADER-IS: {identity}");
+
+                    // Inform the controller.
+
+                    await CreateController().OnNewLeaderAsync(identity);
+
+                }).Wait();
         }
 
         /// <summary>

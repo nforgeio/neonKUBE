@@ -102,5 +102,33 @@ namespace Neon.Kube.Operator
         {
             return Task.CompletedTask;
         }
+
+        /// <summary>
+        /// Called when the instance has a <see cref="LeaderElector"/> and this instance has
+        /// assumed leadership.
+        /// </summary>
+        public async Task OnPromotionAsync()
+        {
+            await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Called when the instance has a <see cref="LeaderElector"/> this instance has
+        /// been demoted.
+        /// </summary>
+        public async Task OnDemotionAsync()
+        {
+            await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Called when the instance has a <see cref="LeaderElector"/> and a new leader has
+        /// been elected.
+        /// </summary>
+        /// <param name="identity">Identifies the new leader.</param>
+        public async Task OnNewLeaderAsync(string identity)
+        {
+            await Task.CompletedTask;
+        }
     }
 }
