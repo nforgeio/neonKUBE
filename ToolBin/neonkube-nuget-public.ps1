@@ -124,6 +124,7 @@ Write-Info "***                            CLEAN SOLUTION                       
 Write-Info "********************************************************************************"
 Write-Info ""
 
+& neon-build clean-generated-cs $nkRoot
 & "$msbuild" "$nkSolution" -p:Configuration=$config -t:Clean -m -verbosity:quiet
 
 if (-not $?)
