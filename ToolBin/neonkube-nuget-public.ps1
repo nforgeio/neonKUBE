@@ -124,7 +124,7 @@ Write-Info "***                            CLEAN SOLUTION                       
 Write-Info "********************************************************************************"
 Write-Info ""
 
-& "$msbuild" "$nkSolution" $buildConfig -t:Clean -m -verbosity:quiet
+& "$msbuild" "$nkSolution" -p:Configuration=$config -t:Clean -m -verbosity:quiet
 
 if (-not $?)
 {
