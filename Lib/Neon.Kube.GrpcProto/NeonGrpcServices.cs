@@ -48,14 +48,14 @@ namespace Neon.Kube.GrpcProto
         /// for testing purposes.  This defaults to <see cref="KubeHelper.WinDesktopServiceSocketPath"/>
         /// where <b>neon-desktop</b> and <b>neon-cli</b> expect it to be.
         /// </param>
-        /// <returns>A <see cref="IGrpcDesktopService"/>.</returns>
-        public static GrpcChannel CreateDesktopServiceChannel(string? socketPath = null)
+        /// <returns>A <see cref="IGrpcDesktopService"/> or <c>null</c> when the <b>neon-desktop-service</b> is running.</returns>
+        public static GrpcChannel? CreateDesktopServiceChannel(string? socketPath = null)
         {
             socketPath ??= KubeHelper.WinDesktopServiceSocketPath;
 
             if (!File.Exists(socketPath))
             {
-                throw new FileNotFoundException($"The Neon Desktop Service is not running: no socket file at: {socketPath}");
+                return null;
             }
 
             // $todo(jefflill):
@@ -90,10 +90,19 @@ namespace Neon.Kube.GrpcProto
                     }
             };
 
-            return GrpcChannel.ForAddress("http://localhost", new GrpcChannelOptions()
+            try
             {
-                HttpHandler = socketsHttpHandler
-            });
+                return GrpcChannel.ForAddress("http://localhost", new GrpcChannelOptions()
+                {
+                    HttpHandler = socketsHttpHandler
+                });
+            }
+            catch
+            {
+                // neon-desktop-service must not be running.
+
+                return null;
+            }
         }
     }
 }
