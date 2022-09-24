@@ -22,11 +22,20 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
+using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Operator;
 
 using k8s;
+
 using KubeOps.Operator;
+
+using OpenTelemetry;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Resources;
+
+using OpenTelemetry.Instrumentation;
+using Quartz.Logging;
 
 namespace NeonClusterOperator
 {

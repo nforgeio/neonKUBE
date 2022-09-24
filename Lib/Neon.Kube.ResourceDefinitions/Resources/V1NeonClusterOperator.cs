@@ -83,6 +83,11 @@ namespace Neon.Kube.Resources
             /// A test string.
             /// </summary>
             public string Message { get; set; }
+
+            /// <summary>
+            /// The cron schedule for updating node certificates.
+            /// </summary>
+            public string CertificateUpdateSchedule { get; set; } = "0 0 * * *";
         }
 
         /// <summary>
