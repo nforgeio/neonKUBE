@@ -142,7 +142,7 @@ rm $0
             var leaderConfig = 
                 new LeaderElectionConfig(
                     k8s,
-                    @namespace: KubeNamespace.NeonSystem,
+                    @namespace:       KubeNamespace.NeonSystem,
                     leaseName:        $"{Program.Service.Name}.nodetask-{Node.Name}",
                     identity:         Pod.Name,
                     promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_promoted", "Leader promotions"),
