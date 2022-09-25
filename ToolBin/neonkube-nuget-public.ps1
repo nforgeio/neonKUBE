@@ -191,6 +191,11 @@ Publish Neon.Kube.Setup                   $neonkubeVersion
 Publish Neon.Kube.XenServer               $neonkubeVersion
 Publish Neon.Kube.Xunit                   $neonkubeVersion
 
+# Remove any generated C# files under project [obj] folders to
+# avoid duplicate symbol compilation errors after publishing.
+
+& neon-build clean-generated-cs $nkRoot
+
 # Remove all of the generated nuget files so these don't accumulate.
 
 Remove-Item "$env:NK_BUILD\nuget\*"
