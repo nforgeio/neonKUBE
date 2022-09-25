@@ -33,9 +33,9 @@
 
 	<ItemGroup>
 		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2260-dev-master" />
-		<PackageReference Include="Neon.Cryptography" Version="10000.0.2260-dev-master" />
-		<PackageReference Include="Neon.Service" Version="10000.0.2260-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2264-dev-jeff" />
+		<PackageReference Include="Neon.Cryptography" Version="10000.0.2264-dev-jeff" />
+		<PackageReference Include="Neon.Service" Version="10000.0.2264-dev-jeff" />
 		<PackageReference Include="Tomlyn" Version="0.3.1" />
 	</ItemGroup>
 
@@ -47,11 +47,6 @@
 
 	<ItemGroup>
 		<Folder Include="config.gitignore\" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<!-- Include the PDB in the nuget so stack traces can include line numbers -->
-		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
 	</ItemGroup>
 
 	<!--  CRD generation settings. -->

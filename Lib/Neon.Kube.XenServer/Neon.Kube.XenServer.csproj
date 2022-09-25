@@ -50,15 +50,11 @@
 	<ItemGroup>
 		<None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
 		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
-
-		<!-- Include the PDB in the nuget so stack traces can include line numbers -->
-
-		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Neon.Common" Version="10000.0.2260-dev-master" />
-	  <PackageReference Include="Neon.SSH" Version="10000.0.2260-dev-master" />
+	  <PackageReference Include="Neon.Common" Version="10000.0.2264-dev-jeff" />
+	  <PackageReference Include="Neon.SSH" Version="10000.0.2264-dev-jeff" />
 	</ItemGroup>
 
 </Project>

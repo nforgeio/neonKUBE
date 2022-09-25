@@ -47,10 +47,10 @@
 
 	<ItemGroup>
 		<PackageReference Include="KubernetesClient" Version="7.2.19" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2260-dev-master" />
-		<PackageReference Include="Neon.Deployment" Version="10000.0.2260-dev-master" />
-		<PackageReference Include="Neon.SSH" Version="10000.0.2260-dev-master" />
-		<PackageReference Include="Neon.Xunit" Version="10000.0.2260-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2264-dev-jeff" />
+		<PackageReference Include="Neon.Deployment" Version="10000.0.2264-dev-jeff" />
+		<PackageReference Include="Neon.SSH" Version="10000.0.2264-dev-jeff" />
+		<PackageReference Include="Neon.Xunit" Version="10000.0.2264-dev-jeff" />
 		<PackageReference Include="xunit.extensibility.core" Version="2.4.1" />
 		<PackageReference Include="xunit.extensibility.execution" Version="2.4.1" />
 		<PackageReference Include="YamlDotNet" Version="11.2.1" />
@@ -65,10 +65,6 @@
 	<ItemGroup>
 		<None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
 		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
-
-		<!-- Include the PDB in the nuget so stack traces can include line numbers -->
-
-		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
 	</ItemGroup>
 
 </Project>
