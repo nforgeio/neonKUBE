@@ -54,6 +54,8 @@ using KubeOps.Operator.Rbac;
 
 using Newtonsoft.Json;
 using Prometheus;
+using OpenTelemetry.Trace;
+using System.Reactive.Concurrency;
 
 namespace NeonClusterOperator
 {
@@ -235,6 +237,93 @@ namespace NeonClusterOperator
                         log.LogErrorEx(e);
                     }
                 }
+            }
+        }
+
+        /// <inheritdoc/>
+        public async Task StatusModifiedAsync(V1NeonNodeTask resource)
+        {
+            using (Tracer.CurrentSpan)
+            {
+                Tracer.CurrentSpan?.AddEvent("status-modified", attributes => attributes.Add("customresource", nameof(V1NeonNodeTask)));
+
+                if (resource.Metadata.Annotations.TryGetValue(NeonAnnotation.NodeTaskType, out var nodeTaskType))
+                {
+                    switch (nodeTaskType) 
+                    {
+                        case NeonNodeTaskType.ControlPlaneCertExpirationCheck:
+
+                            await ProcessControlPlaneCertCheckAsync(resource);
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
+
+        private async Task ProcessControlPlaneCertCheckAsync(V1NeonNodeTask resource)
+        {
+            Dictionary<string, int> expirations = new Dictionary<string, int>();
+
+            var reading = false;
+            foreach (var line in resource.Status.Output.ToLines())
+            {
+                if (line.StartsWith("CERTIFICATE"))
+                {
+                    reading = true;
+                    continue;
+                }
+
+                if (reading && line.StartsWith(" ") || line.IsEmpty())
+                {
+                    reading = false;
+                    continue;
+                }
+
+                if (!reading)
+                {
+                    continue;
+                }
+
+                var parts = line.Split();
+                expirations.Add(parts[0], int.Parse(parts[6].TrimEnd('d')));
+            }
+
+            if (expirations.Any(exp => exp.Value < 90))
+            {
+                var nodeTask = new V1NeonNodeTask()
+                {
+                    Metadata = new V1ObjectMeta()
+                    {
+                        Name = $"control-plane-cert-update-{NeonHelper.CreateBase36Uuid()}",
+                        Annotations = new Dictionary<string, string>
+                            {
+                                { NeonAnnotation.NodeTaskType, NeonNodeTaskType.ControlPlaneCertUpdate }
+                            }
+                    },
+                    Spec = new V1NeonNodeTask.TaskSpec()
+                    {
+                        Node                = resource.Spec.Node,
+                        StartAfterTimestamp = DateTime.UtcNow,
+                        BashScript          = @"
+set -e
+
+kubeadm certs renew all
+
+for pod in `crictl pods | tr -s ' ' | cut -d "" "" -f 1-6 | grep kube | cut -d "" "" -f1`;
+do 
+    crictl stopp $pod;
+    crictl rmp $pod;
+done
+",
+                        CaptureOutput       = true,
+                        RetentionSeconds    = TimeSpan.FromDays(1).Seconds
+                    }
+                };
+
+                await k8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, nodeTask.Name());
             }
         }
     }

@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonAnnotation.cs
-// CONTRIBUTOR: Jeff Lill
+// FILE:	    NeonNodeTaskType.cs
+// CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,25 +20,18 @@ using System;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Defines the non-node annotations used to tag objects by neonKUBE.
+    /// Defines node task types.
     /// </summary>
-    public static class NeonAnnotation
+    public static class NeonNodeTaskType
     {
         /// <summary>
-        /// <para>
-        /// Used by <b>neon-cluster-operator</b> to identify namespaces where the <b>neon-otel-collector</b>
-        /// shoule be created.
-        /// </para>
-        /// <para>
-        /// The idea is that telemetry forwarding will be enabled by default but that users can disable
-        /// this on a namespace basis by adding this label, with the value set to false.
-        /// </para>
+        /// Node task to check the expiration of the cluster control plane certificates.
         /// </summary>
-        public const string OtelCollector = ClusterDefinition.ReservedPrefix + "otel-collector";
+        public const string ControlPlaneCertExpirationCheck = "control-plane-cert-expiration-check";
 
         /// <summary>
-        /// Specifies the type of node task.
+        /// Node task to update control plane certificates.
         /// </summary>
-        public const string NodeTaskType = ClusterDefinition.ReservedPrefix + "nodetask-type";
+        public const string ControlPlaneCertUpdate = "control-plane-cert-update";
     }
 }

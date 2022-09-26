@@ -191,7 +191,7 @@ namespace NeonClusterOperator
                     return null;
                 }
 
-                if (resource.Metadata.Labels.TryGetValue(NeonAnnotation.OtelCollector, out var otel))
+                if (resource.Metadata.Annotations.TryGetValue(NeonAnnotation.OtelCollector, out var otel))
                 {
                     if (otel.ToLower() == "disabled")
                     {
@@ -293,7 +293,7 @@ namespace NeonClusterOperator
                         {
                             Name = "agent-otlp-grpc",
                             Protocol = "TCP",
-                            Port = 4317,
+                            Port = 80,
                             TargetPort = 4317
                         }
                     }

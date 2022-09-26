@@ -87,7 +87,7 @@ namespace Neon.Kube.Resources
             /// <summary>
             /// The cron schedule for updating node certificates.
             /// </summary>
-            public CertificateUpdateSchedule CertificateUpdateSchedule { get; set; }
+            public Updates Updates { get; set; }
         }
 
         /// <summary>
@@ -104,17 +104,38 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// The certificate update schedules.
         /// </summary>
-        public class CertificateUpdateSchedule
+        public class Updates
         {
             /// <summary>
-            /// Control plane certificate update schedule.
+            /// Control plane certificate update spec.
             /// </summary>
-            public string ControlPlane { get; set; } = "0 0 * * 1";
+            public UpdateSpec ControlPlaneCertificates { get; set; }
 
             /// <summary>
-            /// Node CA certificate update schedule.
+            /// Node CA certificate update spec.
             /// </summary>
-            public string NodeCa { get; set; } = "0 0 * * *";
+            public UpdateSpec NodeCaCertificates { get; set; }
+
+            /// <summary>
+            /// Update spec for security spec.
+            /// </summary>
+            public UpdateSpec SecurityPatches { get; set; }
+        }
+
+        /// <summary>
+        /// The certificate update schedules.
+        /// </summary>
+        public class UpdateSpec
+        {
+            /// <summary>
+            /// Specifies whether this update is enabled.
+            /// </summary>
+            public bool Enabled { get; set; } = true;
+
+            /// <summary>
+            /// The update schedule. This must be a valid cron schedule.
+            /// </summary>
+            public string Schedule { get; set; } = "0 0 * * 1";
         }
     }
 }

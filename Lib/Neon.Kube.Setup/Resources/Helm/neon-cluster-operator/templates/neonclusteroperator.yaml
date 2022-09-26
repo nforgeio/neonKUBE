@@ -4,8 +4,9 @@ metadata:
   labels:
     {{- include "neon-cluster-operator.labels" . | nindent 4 }}
   name: neon-cluster-operator
-dspec:
-  certificateUpdateSchedule:
-    controlPlane: '0 0 * * *'
-    nodeCa: '0 0 * * *'
-
+spec:
+  updates:
+    controlPlaneCertificates:
+      schedule: '0 0 * * 1'
+    nodeCaCertificates:
+      schedule: '0 0 * * *'

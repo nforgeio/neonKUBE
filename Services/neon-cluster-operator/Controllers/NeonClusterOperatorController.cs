@@ -182,6 +182,7 @@ namespace NeonClusterOperator
             }
         }
 
+
         /// <inheritdoc/>
         public async Task<ResourceControllerResult> ReconcileAsync(V1NeonClusterOperator resource)
         {
@@ -197,11 +198,17 @@ namespace NeonClusterOperator
                     return null;
                 }
 
-                var nodeCaExpression = resource.Spec.CertificateUpdateSchedule.NodeCa;
+                var nodeCaExpression = resource.Spec.Updates.NodeCaCertificates.Schedule;
                 CronExpression.ValidateExpression(nodeCaExpression);
 
                 await UpdateCaCertificates.DeleteFromSchedulerAsync(Scheduler);
                 await UpdateCaCertificates.AddToSchedulerAsync(Scheduler, k8s, nodeCaExpression);
+
+                var controlPlaneCertExpression = resource.Spec.Updates.ControlPlaneCertificates.Schedule;
+                CronExpression.ValidateExpression(controlPlaneCertExpression);
+
+                await CheckControlPlaneCertificates.DeleteFromSchedulerAsync(Scheduler);
+                await CheckControlPlaneCertificates.AddToSchedulerAsync(Scheduler, k8s, controlPlaneCertExpression);
 
                 log.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
 
@@ -285,10 +292,15 @@ namespace NeonClusterOperator
 
                 var settings = await k8s.ReadClusterCustomObjectAsync<V1NeonClusterOperator>("NeonClusterOperator");
 
-                var nodeCaExpression = settings.Spec.CertificateUpdateSchedule.NodeCa;
+                var nodeCaExpression = settings.Spec.Updates.NodeCaCertificates.Schedule;
                 CronExpression.ValidateExpression(nodeCaExpression);
 
                 await UpdateCaCertificates.AddToSchedulerAsync(Scheduler, k8s, nodeCaExpression);
+
+                var controlPlaneCertExpression = settings.Spec.Updates.ControlPlaneCertificates.Schedule;
+                CronExpression.ValidateExpression(controlPlaneCertExpression);
+
+                await CheckControlPlaneCertificates.AddToSchedulerAsync(Scheduler, k8s, controlPlaneCertExpression);
 
                 Initialized = true;
             }
