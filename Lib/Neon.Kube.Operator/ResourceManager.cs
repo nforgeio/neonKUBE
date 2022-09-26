@@ -168,7 +168,7 @@ namespace Neon.Kube.Operator
     /// </list>
     /// </remarks>
     public sealed class ResourceManager<TEntity, TController> : IDisposable
-        where TEntity : CustomKubernetesEntity, new()
+        where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         where TController : IOperatorController<TEntity>
     {
         private bool                            isDisposed   = false;
@@ -610,7 +610,12 @@ namespace Neon.Kube.Operator
                             {
                                 var resource      = @event.Value;
                                 var resourceName  = resource.Metadata.Name;
-                                var newGeneration = resource.Metadata.Generation.Value;
+                                var newGeneration = 0L;
+
+                                if (resource.Metadata.Generation != null)
+                                {
+                                    newGeneration = resource.Metadata.Generation.Value;
+                                }
 
                                 if (!filter(resource))
                                 {

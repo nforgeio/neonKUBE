@@ -27,16 +27,13 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Used by <b>neon-cluster-operator</b> to identify namespaces where the <b>neon-otel-collector</b>
-        /// service <b>won't be created</b> to forward telemetry traffic to the monitoring services.
+        /// shoule be created.
         /// </para>
         /// <para>
         /// The idea is that telemetry forwarding will be enabled by default but that users can disable
-        /// this on a namespace basis by adding this annotation.
+        /// this on a namespace basis by adding this label, with the value set to false.
         /// </para>
-        /// <note>
-        /// The value of the annotation is ignored; just its presence will disable forwarding.
-        /// </note>
         /// </summary>
-        public const string RemoveOnClusterReset = ClusterDefinition.ReservedPrefix + "disable-otel-collector";
+        public const string OtelCollector = ClusterDefinition.ReservedPrefix + "otel-collector";
     }
 }

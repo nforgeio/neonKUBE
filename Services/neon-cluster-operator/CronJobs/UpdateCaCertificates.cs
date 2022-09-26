@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    UpdateCertificates.cs
+// FILE:	    UpdateCaCertificates.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -41,13 +41,13 @@ using Quartz;
 
 namespace NeonClusterOperator
 {
-    public class UpdateCertificates : CronJob, IJob
+    public class UpdateCaCertificates : CronJob, IJob
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public UpdateCertificates()
-            : base(typeof(UpdateCertificates))
+        public UpdateCaCertificates()
+            : base(typeof(UpdateCaCertificates))
         {
 
         }
@@ -57,7 +57,7 @@ namespace NeonClusterOperator
         {
             using (Tracer.CurrentSpan)
             {
-                Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(UpdateCertificates)));
+                Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(UpdateCaCertificates)));
 
                 var dataMap = context.MergedJobDataMap;
                 var k8s = (IKubernetes)dataMap["Kubernetes"];
@@ -71,7 +71,7 @@ namespace NeonClusterOperator
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = $"certificate-update-{NeonHelper.CreateBase36Uuid()}"
+                            Name = $"ca-certificate-update-{NeonHelper.CreateBase36Uuid()}"
                         },
                         Spec = new V1NeonNodeTask.TaskSpec()
                         {

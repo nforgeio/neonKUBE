@@ -144,6 +144,7 @@ namespace NeonClusterOperator
 
             await NodeTaskController.StartAsync(K8s);
             await NeonClusterOperatorController.StartAsync(K8s);
+            await NamespaceController.StartAsync(K8s);
 
             //-----------------------------------------------------------------
             // Start the operator controllers.  Note that we're not going to await

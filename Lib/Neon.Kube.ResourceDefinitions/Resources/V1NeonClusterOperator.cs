@@ -87,7 +87,7 @@ namespace Neon.Kube.Resources
             /// <summary>
             /// The cron schedule for updating node certificates.
             /// </summary>
-            public CertificateUpdateSchedule CertificateUpdateSchedule { get; set; } = "0 0 * * *";
+            public CertificateUpdateSchedule CertificateUpdateSchedule { get; set; }
         }
 
         /// <summary>
@@ -109,12 +109,12 @@ namespace Neon.Kube.Resources
             /// <summary>
             /// Control plane certificate update schedule.
             /// </summary>
-            public string ControlPlane { get; set; }
+            public string ControlPlane { get; set; } = "0 0 * * 1";
 
             /// <summary>
             /// Node CA certificate update schedule.
             /// </summary>
-            public string NodeCa { get; set; }
+            public string NodeCa { get; set; } = "0 0 * * *";
         }
     }
 }
