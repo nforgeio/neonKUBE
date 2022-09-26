@@ -100,7 +100,7 @@ if (!(Test-Path env:NC_ROOT))
 
 Request-AdminPermissions
 
-# We're going to build the Debug configuration so debugging will be easier.
+# We're going to build the DEBUG configuration for DEV packages so debugging will be easier.
 
 $config = "Debug"
 
@@ -282,7 +282,8 @@ Write-Info "***                            CLEAN SOLUTION                       
 Write-Info "********************************************************************************"
 Write-Info ""
 
-& "$msbuild" "$nkSolution" $buildConfig -t:Clean -m -verbosity:quiet
+& neon-build clean-generated-cs $nkRoot
+& "$msbuild" "$nkSolution" -p:Configuration=$config -t:Clean -m -verbosity:quiet
 
 if (-not $?)
 {
@@ -368,6 +369,11 @@ RestoreVersion Neon.Kube.Resources
 RestoreVersion Neon.Kube.Setup
 RestoreVersion Neon.Kube.XenServer
 RestoreVersion Neon.Kube.Xunit
+
+# Remove any generated C# files under project [obj] folders to
+# avoid duplicate symbol compilation errors after publishing.
+
+& neon-build clean-generated-cs $nkRoot
 
 # Remove all of the generated nuget files so these don't accumulate.
 

@@ -40,16 +40,12 @@
 	<ItemGroup>
 		<PackageReference Include="KubernetesClient" Version="7.2.19" />
 		<PackageReference Include="Macross.Json.Extensions" Version="2.2.0" />
-		<PackageReference Include="Neon.JsonConverters" Version="10000.0.2246-dev-master" />
+		<PackageReference Include="Neon.JsonConverters" Version="10000.0.2265-dev-master" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
 		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
-
-		<!-- Include the PDB in the nuget so stack traces can include line numbers -->
-
-		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
 	</ItemGroup>
 
 </Project>

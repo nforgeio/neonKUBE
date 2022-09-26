@@ -124,7 +124,8 @@ Write-Info "***                            CLEAN SOLUTION                       
 Write-Info "********************************************************************************"
 Write-Info ""
 
-& "$msbuild" "$nkSolution" $buildConfig -t:Clean -m -verbosity:quiet
+& neon-build clean-generated-cs $nkRoot
+& "$msbuild" "$nkSolution" -p:Configuration=$config -t:Clean -m -verbosity:quiet
 
 if (-not $?)
 {
@@ -189,6 +190,11 @@ Publish Neon.Kube.Resources               $neonkubeVersion
 Publish Neon.Kube.Setup                   $neonkubeVersion
 Publish Neon.Kube.XenServer               $neonkubeVersion
 Publish Neon.Kube.Xunit                   $neonkubeVersion
+
+# Remove any generated C# files under project [obj] folders to
+# avoid duplicate symbol compilation errors after publishing.
+
+& neon-build clean-generated-cs $nkRoot
 
 # Remove all of the generated nuget files so these don't accumulate.
 

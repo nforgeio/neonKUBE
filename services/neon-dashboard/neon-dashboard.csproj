@@ -35,22 +35,18 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Neon.Common" Version="10000.0.2246-dev-master" />
-    <PackageReference Include="Neon.Service" Version="10000.0.2246-dev-master" />
-    <PackageReference Include="Neon.Tailwind" Version="10000.0.2246-dev-master" />
-    <PackageReference Include="Neon.Web" Version="10000.0.2246-dev-master" />
+    <PackageReference Include="Neon.Common" Version="10000.0.2265-dev-master" />
+    <PackageReference Include="Neon.Service" Version="10000.0.2265-dev-master" />
+    <PackageReference Include="Neon.Tailwind" Version="10000.0.2265-dev-master" />
+    <PackageReference Include="Neon.Web" Version="10000.0.2265-dev-master" />
     <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.2.0-rc1" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.0.0-rc8" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.0.0-rc8" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.0.0-rc8" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.0.0-rc9.6" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.0.0-rc9.6" />
     <PackageReference Include="prometheus-net" Version="6.0.0" />
     <PackageReference Include="prometheus-net.AspNetCore" Version="6.0.0" />
     <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.2.2" />
     <PackageReference Include="Tailwind.Extensions.AspNetCore" Version="1.0.0-beta3" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -60,8 +56,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Include the PDB in the nuget so stack traces can include line numbers -->
-    <Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
     <Content Include="Shared\Components\LoadingCircle.razor.css" />
   </ItemGroup>
 
@@ -82,6 +76,10 @@
         <Watch Include="**\*.razor.cs" />
         <Watch Include="**\*.cshtml" />
         <Watch Include="**\*.js" Exclude="node_modules\**\*;**\*.js.map;obj\**\*;bin\**\*" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
     </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">

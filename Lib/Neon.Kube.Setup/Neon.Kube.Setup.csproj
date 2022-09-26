@@ -178,9 +178,9 @@
 
 	<ItemGroup>
 		<PackageReference Include="Minio" Version="3.1.13" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2246-dev-master" />
-		<PackageReference Include="Neon.Cryptography" Version="10000.0.2246-dev-master" />
-		<PackageReference Include="Neon.Postgres" Version="10000.0.2246-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2265-dev-master" />
+		<PackageReference Include="Neon.Cryptography" Version="10000.0.2265-dev-master" />
+		<PackageReference Include="Neon.Postgres" Version="10000.0.2265-dev-master" />
 		<PackageReference Include="Samboy063.Tomlet" Version="3.1.2" />
 		<PackageReference Include="Tomlyn" Version="0.3.1" />
 		<PackageReference Include="Npgsql" Version="6.0.2" />
@@ -194,10 +194,6 @@
 	<ItemGroup>
 		<None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
 		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
-
-		<!-- Include the PDB in the nuget so stack traces can include line numbers -->
-
-		<Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="contentFiles\any\$(TargetFramework)\$(AssemblyName).pdb" PackageCopyToOutput="true" Pack="true" />
 	</ItemGroup>
 	
 	<!--
