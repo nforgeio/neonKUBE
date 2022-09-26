@@ -1,0 +1,8 @@
+﻿apiVersion: v1
+kind: NeonClusterOperator
+metadata:
+  labels:
+    {{- include "neon-cluster-operator.labels" . | nindent 4 }}
+  name: neon-cluster-operator
+dspec:
+  certificateUpdateSchedule: '0 0 * * *'
