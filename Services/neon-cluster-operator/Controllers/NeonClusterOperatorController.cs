@@ -197,10 +197,13 @@ namespace NeonClusterOperator
                     return null;
                 }
 
-                log.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
+                var cronExpression = resource.Spec.CertificateUpdateSchedule.NodeCa;
+                CronExpression.ValidateExpression(cronExpression);
 
                 await UpdateCertificates.DeleteFromSchedulerAsync(Scheduler);
-                await UpdateCertificates.AddToSchedulerAsync(Scheduler, k8s, resource.Spec.CertificateUpdateSchedule);
+                await UpdateCertificates.AddToSchedulerAsync(Scheduler, k8s, cronExpression);
+
+                log.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
 
                 return null;
             }
@@ -282,7 +285,10 @@ namespace NeonClusterOperator
 
                 var settings = await k8s.ReadClusterCustomObjectAsync<V1NeonClusterOperator>("NeonClusterOperator");
 
-                await UpdateCertificates.AddToSchedulerAsync(Scheduler, k8s, settings.Spec.CertificateUpdateSchedule);
+                var cronExpression = settings.Spec.CertificateUpdateSchedule.NodeCa;
+                CronExpression.ValidateExpression(cronExpression);
+
+                await UpdateCertificates.AddToSchedulerAsync(Scheduler, k8s, cronExpression);
 
                 Initialized = true;
             }
