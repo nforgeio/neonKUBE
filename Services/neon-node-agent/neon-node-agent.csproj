@@ -12,7 +12,7 @@
 		<AssemblyName>neon-node-agent</AssemblyName>
 		<Configurations>Debug;Release</Configurations>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
 		<AnalysisLevel>5.0</AnalysisLevel>
 	</PropertyGroup>
 
@@ -33,10 +33,10 @@
 
 	<ItemGroup>
 		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2271-dev-master" />
-		<PackageReference Include="Neon.Cryptography" Version="10000.0.2271-dev-master" />
-		<PackageReference Include="Neon.Service" Version="10000.0.2271-dev-master" />
-		<PackageReference Include="Tomlyn" Version="0.3.1" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2276-dev-master" />
+		<PackageReference Include="Neon.Cryptography" Version="10000.0.2276-dev-master" />
+		<PackageReference Include="Neon.Service" Version="10000.0.2276-dev-master" />
+		<PackageReference Include="Tomlyn" Version="0.15.0" />
 	</ItemGroup>
 
 	<ItemGroup>

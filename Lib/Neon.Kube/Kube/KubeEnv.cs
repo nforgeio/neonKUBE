@@ -27,6 +27,7 @@ namespace Neon.Kube
     {
         /// <summary>
         /// Environment variable used to disable telemetry from neonKUBE client applications.
+        /// The supported values are <b>true</b> or <b>false</b>.
         /// </summary>
         public const string DisableTelemetryVariable = "NEONKUBE_DISABLE_TELEMETRY";
 
