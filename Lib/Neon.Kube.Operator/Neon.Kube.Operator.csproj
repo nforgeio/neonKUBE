@@ -21,7 +21,7 @@
 		<AssemblyVersion>0.0.0.0</AssemblyVersion>
 		<FileVersion>0.0.0.0</FileVersion>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<AnalysisLevel>5.0</AnalysisLevel>
 	</PropertyGroup>
@@ -48,11 +48,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="JsonPatch.Net" Version="2.0.4" />
+		<PackageReference Include="JsonPatch.Net" Version="1.1.2" />
 		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
 		<PackageReference Include="KubernetesClient" Version="7.2.19" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2275-dev-jeff" />
-		<PackageReference Include="Neon.Service" Version="10000.0.2273-dev-jeff" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2276-dev-master" />
+		<PackageReference Include="Neon.Service" Version="10000.0.2276-dev-master" />
 		<PackageReference Include="prometheus-net" Version="6.0.0" />
 	</ItemGroup>
 

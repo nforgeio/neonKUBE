@@ -24,7 +24,7 @@
 		<PackageTags>kubernetes</PackageTags>
 		<RootNamespace>Neon.Kube</RootNamespace>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<AnalysisLevel>5.0</AnalysisLevel>
 	</PropertyGroup>
@@ -53,7 +53,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Neon.Common" Version="10000.0.2275-dev-jeff" />
+	  <PackageReference Include="Neon.Common" Version="10000.0.2276-dev-master" />
 	</ItemGroup>
 
 </Project>

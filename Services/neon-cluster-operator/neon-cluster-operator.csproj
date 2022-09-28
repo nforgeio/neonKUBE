@@ -51,8 +51,8 @@
 		<PackageReference Include="Quartz" Version="3.5.0" />
 		<PackageReference Include="Quartz.OpenTelemetry.Instrumentation" Version="3.5.0" />
 
-		<PackageReference Include="Neon.Common" Version="10000.0.2275-dev-jeff" />
-        <PackageReference Include="Neon.Service" Version="10000.0.2275-dev-jeff" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2276-dev-master" />
+        <PackageReference Include="Neon.Service" Version="10000.0.2276-dev-master" />
     </ItemGroup>
 
 	<ItemGroup>

@@ -27,9 +27,9 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="6.0.9" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2275-dev-jeff" />
-		<PackageReference Include="Neon.Service" Version="10000.0.2275-dev-jeff" />
-		<PackageReference Include="Neon.Web" Version="10000.0.2275-dev-jeff" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2276-dev-master" />
+		<PackageReference Include="Neon.Service" Version="10000.0.2276-dev-master" />
+		<PackageReference Include="Neon.Web" Version="10000.0.2276-dev-master" />
 		<PackageReference Include="prometheus-net" Version="6.0.0" />
 		<PackageReference Include="prometheus-net.AspNetCore" Version="6.0.0" />
 		<PackageReference Include="prometheus-net.DotNetRuntime" Version="4.2.4" />
