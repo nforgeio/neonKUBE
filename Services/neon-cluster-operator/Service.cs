@@ -115,7 +115,6 @@ namespace NeonClusterOperator
     public partial class Service : NeonService
     {
         private IKubernetes K8s;
-        private LeaderElector LeaderElector;
 
         /// <summary>
         /// Constructor.
@@ -143,8 +142,8 @@ namespace NeonClusterOperator
             LogContext.SetCurrentLogProvider(TelemetryHub.LoggerFactory);
 
             await NodeTaskController.StartAsync(K8s);
-            //await NeonClusterOperatorController.StartAsync(K8s);
-            //await NamespaceController.StartAsync(K8s);
+            await NeonClusterOperatorController.StartAsync(K8s);
+            await NamespaceController.StartAsync(K8s);
 
             //-----------------------------------------------------------------
             // Start the operator controllers.  Note that we're not going to await
@@ -193,7 +192,6 @@ namespace NeonClusterOperator
             await StartedAsync();
 
             // Handle termination gracefully.
-
             await Terminator.StopEvent.WaitAsync();
             Terminator.ReadyToExit();
 

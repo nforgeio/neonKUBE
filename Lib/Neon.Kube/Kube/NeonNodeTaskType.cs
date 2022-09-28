@@ -33,5 +33,10 @@ namespace Neon.Kube
         /// Node task to update control plane certificates.
         /// </summary>
         public const string ControlPlaneCertUpdate = "control-plane-cert-update";
+
+        /// <summary>
+        /// Node task to update node CA certificates.
+        /// </summary>
+        public const string NodeCaCertUpdate = "node-ca-cert-update";
     }
 }

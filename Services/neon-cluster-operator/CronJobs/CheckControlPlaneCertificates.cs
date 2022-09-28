@@ -72,22 +72,31 @@ namespace NeonClusterOperator
                         Metadata = new V1ObjectMeta()
                         {
                             Name        = $"control-plane-cert-check-{NeonHelper.CreateBase36Uuid()}",
-                            Annotations = new Dictionary<string, string>
+                            Labels = new Dictionary<string, string>
                             {
-                                { NeonAnnotation.NodeTaskType, NeonNodeTaskType.ControlPlaneCertExpirationCheck }
+                                { NeonLabel.ManagedBy, KubeService.NeonClusterOperator },
+                                { NeonLabel.NodeTaskType, NeonNodeTaskType.ControlPlaneCertExpirationCheck }
                             }
                         },
                         Spec = new V1NeonNodeTask.TaskSpec()
                         {
                             Node                = node.Name(),
                             StartAfterTimestamp = startTime,
-                            BashScript          = @"kubeadm certs check-expiration",
+                            BashScript          = @"/usr/bin/kubeadm certs check-expiration",
                             CaptureOutput       = true,
-                            RetentionSeconds    = TimeSpan.FromDays(1).Seconds
+                            RetentionSeconds    = (int)TimeSpan.FromHours(1).TotalSeconds
                         }
                     };
 
-                    await k8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: nodeTask.Name());
+                    var tasks = await k8s.ListClusterCustomObjectAsync<V1NeonNodeTask>(labelSelector: $"{NeonLabel.NodeTaskType}={NeonNodeTaskType.ControlPlaneCertExpirationCheck}");
+
+                    if (!tasks.Items.Any(
+                                task => task.Spec.Node == nodeTask.Spec.Node
+                                        && (task.Status.Phase <= V1NeonNodeTask.Phase.Running
+                                            || task.Status == null)))
+                    {
+                        await k8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: nodeTask.Name());
+                    }
 
                     startTime = startTime.AddHours(1);
                 }

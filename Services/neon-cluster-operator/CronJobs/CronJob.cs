@@ -41,26 +41,26 @@ namespace NeonClusterOperator
         /// <summary>
         /// The name of the cron job.
         /// </summary>
-        public static string Name { get; set; }
+        public string Name { get; set; }
 
         /// <summary>
         /// The group.
         /// </summary>
-        public static string Group { get; set; } = "ClusterSettingsCron";
+        public string Group { get; set; } = "ClusterSettingsCron";
 
         /// <summary>
         /// The Job type.
         /// </summary>
-        public static Type Type { get; set; }   
+        public Type Type { get; set; }   
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="type"></param>
-        protected CronJob(Type type)
+        public CronJob(Type type)
         {
-            Name = nameof(Type);
             Type = type;
+            Name = Type.Name;
         }
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace NeonClusterOperator
         /// <param name="k8s"></param>
         /// <param name="cronSchedule"></param>
         /// <returns></returns>
-        public static Task AddToSchedulerAsync(IScheduler scheduler, IKubernetes k8s, string cronSchedule)
+        public Task AddToSchedulerAsync(IScheduler scheduler, IKubernetes k8s, string cronSchedule)
         {
             using (Tracer.CurrentSpan)
             {
@@ -97,13 +97,20 @@ namespace NeonClusterOperator
         /// </summary>
         /// <param name="scheduler"></param>
         /// <returns></returns>
-        public static Task DeleteFromSchedulerAsync(IScheduler scheduler)
+        public async Task DeleteFromSchedulerAsync(IScheduler scheduler)
         {
             using (Tracer.CurrentSpan)
             {
                 Tracer.CurrentSpan?.AddEvent("delete-from-scheduler");
 
-                return scheduler.DeleteJob(new JobKey(Name, Group));
+                try
+                {
+                    await scheduler.DeleteJob(new JobKey(Name, Group));
+                }
+                catch (Exception e)
+                {
+                    return;
+                }
             }
         }
     }

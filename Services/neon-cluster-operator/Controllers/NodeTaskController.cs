@@ -247,13 +247,16 @@ namespace NeonClusterOperator
             {
                 Tracer.CurrentSpan?.AddEvent("status-modified", attributes => attributes.Add("customresource", nameof(V1NeonNodeTask)));
 
-                if (resource.Metadata.Annotations.TryGetValue(NeonAnnotation.NodeTaskType, out var nodeTaskType))
+                if (resource.Metadata.Labels.TryGetValue(NeonLabel.NodeTaskType, out var nodeTaskType))
                 {
                     switch (nodeTaskType) 
                     {
                         case NeonNodeTaskType.ControlPlaneCertExpirationCheck:
 
-                            await ProcessControlPlaneCertCheckAsync(resource);
+                            if (resource.Status.Phase == V1NeonNodeTask.Phase.Success)
+                            {
+                                await ProcessControlPlaneCertCheckAsync(resource);
+                            }
                             break;
 
                         default:
@@ -270,15 +273,15 @@ namespace NeonClusterOperator
             var reading = false;
             foreach (var line in resource.Status.Output.ToLines())
             {
-                if (line.StartsWith("CERTIFICATE"))
+                if (reading && line.StartsWith("CERTIFICATE AUTHORITY") || line.IsEmpty())
                 {
-                    reading = true;
+                    reading = false;
                     continue;
                 }
 
-                if (reading && line.StartsWith(" ") || line.IsEmpty())
+                if (line.StartsWith("CERTIFICATE"))
                 {
-                    reading = false;
+                    reading = true;
                     continue;
                 }
 
@@ -287,7 +290,7 @@ namespace NeonClusterOperator
                     continue;
                 }
 
-                var parts = line.Split();
+                var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                 expirations.Add(parts[0], int.Parse(parts[6].TrimEnd('d')));
             }
 
@@ -298,10 +301,11 @@ namespace NeonClusterOperator
                     Metadata = new V1ObjectMeta()
                     {
                         Name = $"control-plane-cert-update-{NeonHelper.CreateBase36Uuid()}",
-                        Annotations = new Dictionary<string, string>
-                            {
-                                { NeonAnnotation.NodeTaskType, NeonNodeTaskType.ControlPlaneCertUpdate }
-                            }
+                        Labels = new Dictionary<string, string>
+                        {
+                            { NeonLabel.ManagedBy, KubeService.NeonClusterOperator },
+                            { NeonLabel.NodeTaskType, NeonNodeTaskType.ControlPlaneCertUpdate }
+                        }
                     },
                     Spec = new V1NeonNodeTask.TaskSpec()
                     {
@@ -310,7 +314,7 @@ namespace NeonClusterOperator
                         BashScript          = @"
 set -e
 
-kubeadm certs renew all
+/usr/bin/kubeadm certs renew all
 
 for pod in `crictl pods | tr -s ' ' | cut -d "" "" -f 1-6 | grep kube | cut -d "" "" -f1`;
 do 
@@ -323,7 +327,15 @@ done
                     }
                 };
 
-                await k8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, nodeTask.Name());
+                var tasks = await k8s.ListClusterCustomObjectAsync<V1NeonNodeTask>(labelSelector: $"{NeonLabel.NodeTaskType}={NeonNodeTaskType.ControlPlaneCertUpdate}");
+
+                if (!tasks.Items.Any(
+                                task => task.Spec.Node == nodeTask.Spec.Node
+                                        && (task.Status.Phase <= V1NeonNodeTask.Phase.Running
+                                            || task.Status == null)))
+                {
+                    await k8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: nodeTask.Name());
+                }
             }
         }
     }

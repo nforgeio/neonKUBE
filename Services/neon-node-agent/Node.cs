@@ -130,13 +130,14 @@ namespace NeonNodeAgent
         /// <returns>The command line string.</returns>
         public static string GetBashCommandLine(string path)
         {
-            return NeonHelper.GetExecuteCommandLine($"/bin/bash {path}");
+            return GetExecuteCommandLine($"/bin/bash {path}");
         }
 
         /// <summary>
         /// Executes a Bash script and captures the result.
         /// </summary>
         /// <param name="path">Path to the script.</param>
+        /// <param name="host">Run the command on the host node.</param>
         /// <param name="timeout">
         /// Optional maximum time to wait for the process to complete or <c>null</c> to wait
         /// indefinitely.
@@ -149,14 +150,26 @@ namespace NeonNodeAgent
         /// <returns>The <see cref="ExecuteResponse"/>.</returns>
         public static async Task<ExecuteResponse> BashExecuteCaptureAsync(
             string          path,
+            bool            host            = false,
             TimeSpan?       timeout         = null,
             Action<Process> processCallback = null)
         {
-            return await NeonHelper.ExecuteCaptureAsync(
-                path:            "/bin/bash", 
-                args:            path,
-                timeout:         timeout,
-                processCallback: processCallback);
+            if (host)
+            {
+                return await NeonHelper.ExecuteCaptureAsync(
+                    path:            "chroot",
+                    args:            $"{HostMount} /bin/bash {path}",
+                    timeout:         timeout,
+                    processCallback: processCallback);
+            }
+            else
+            {
+                return await NeonHelper.ExecuteCaptureAsync(
+                    path:            "/bin/bash",
+                    args:            path,
+                    timeout:         timeout,
+                    processCallback: processCallback);
+            }
         }
 
         /// <summary>
@@ -166,9 +179,9 @@ namespace NeonNodeAgent
         /// <param name="path">The command path.</param>
         /// <param name="args">The command arguments.</param>
         /// <returns></returns>
-        public static string GetExecuteCommandLine(string path, object[] args)
+        public static string GetExecuteCommandLine(string path)
         {
-            return $"chroot {HostMount} {NeonHelper.GetExecuteCommandLine(path, args)}";
+            return $"chroot {HostMount} {NeonHelper.GetExecuteCommandLine(path)}";
         }
 
         /// <summary>

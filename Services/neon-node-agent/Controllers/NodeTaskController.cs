@@ -601,8 +601,11 @@ rm $0
             // Generate the execution UUID and determine where the script will be located.
 
             var executionId = Guid.NewGuid().ToString("d");
-            var taskFolder  = LinuxPath.Combine(hostNeonTasksFolder, executionId);
-            var scriptPath  = LinuxPath.Combine(taskFolder, "task.sh");
+
+            var taskFolder     = LinuxPath.Combine(hostNeonTasksFolder, executionId);
+            var hostTaskFolder = LinuxPath.Combine(KubeNodeFolder.NeonRun, "node-tasks", executionId);
+            var scriptPath     = LinuxPath.Combine(taskFolder, "task.sh");
+            var hostScriptPath = LinuxPath.Combine(hostTaskFolder, "task.sh");
 
             // Prepend the script to be deployed with code that sets the special
             // environment variables.
@@ -613,7 +616,7 @@ $@"
 # neon-node-task: Initialze special script variables
 
 export NODE_ROOT={Node.HostMount}
-export SCRIPT_DIR={taskFolder}
+export SCRIPT_DIR={hostTaskFolder}
 
 #------------------------------------------------------------------------------
 
@@ -654,11 +657,12 @@ export SCRIPT_DIR={taskFolder}
                         {
                             processId = newProcess.Id;
 
-                            logger.LogInformationEx(() => $"Starting [nodetask={taskName}]: [command={Node.GetBashCommandLine(scriptPath)}] [processID={processId}]");
+                            logger.LogInformationEx(() => $"Starting [nodetask={taskName}]: [command={Node.GetBashCommandLine(hostScriptPath)}] [processID={processId}]");
                         };
 
                     task = Node.BashExecuteCaptureAsync(
-                        path:            scriptPath,
+                        path:            hostScriptPath,
+                        host:            true,
                         timeout:         TimeSpan.FromSeconds(nodeTask.Spec.TimeoutSeconds),
                         processCallback: processCallback);
                 }
@@ -704,7 +708,7 @@ export SCRIPT_DIR={taskFolder}
             patch.Replace(path => path.Status.StartTimestamp, DateTime.UtcNow);
             patch.Replace(path => path.Status.AgentId, Node.AgentId);
             patch.Replace(path => path.Status.ProcessId, processId);
-            patch.Replace(path => path.Status.CommandLine, Node.GetBashCommandLine(scriptPath).Trim());
+            patch.Replace(path => path.Status.CommandLine, Node.GetBashCommandLine(hostScriptPath).Trim());
             patch.Replace(path => path.Status.RunId, executionId);
 
             nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());

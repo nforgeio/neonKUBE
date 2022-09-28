@@ -22,6 +22,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
@@ -61,8 +62,7 @@ namespace Neon.Kube
         where T : IKubernetesObject<V1ObjectMeta>, new()
     {
         private string                  resourceVersion;
-        private AsyncAutoResetEvent     eventReady;
-        private Queue<WatchEvent<T>>    eventQueue;
+        private Channel<WatchEvent<T>>  eventChannel;
         private IKubernetes             k8s;
         private ILogger                 logger;
 
@@ -73,24 +73,17 @@ namespace Neon.Kube
         /// <param name="logger">Optionally specifies the logger to use.</param>
         public Watcher(IKubernetes k8s, ILogger logger = null)
         {
-            this.k8s    = k8s;
-            this.logger = logger;
-            eventReady  = new AsyncAutoResetEvent();
-            eventQueue  = new Queue<WatchEvent<T>>();
+            this.k8s     = k8s;
+            this.logger  = logger;
+            eventChannel = Channel.CreateUnbounded<WatchEvent<T>>();
         }
 
         /// <inheritdoc/>
         public void Dispose()
         {
-            if (eventQueue != null)
+            if (eventChannel != null)
             {
-                eventQueue = null;
-            }
-
-            if (eventReady != null)
-            {
-                eventReady.Dispose();
-                eventReady = null;
+                eventChannel = null;
             }
         }
 
@@ -173,20 +166,11 @@ namespace Neon.Kube
                             watch:                true);
                         }
 
-                        using (listResponse.Watch(
-                            (WatchEventType type, T item) =>
-                            {
-                                lock (eventQueue)
-                                {
-                                    eventQueue.Enqueue(new WatchEvent<T>() { Type = type, Value = item });
-                                    eventReady.Set();
-                                }
-                            }))
+                        var x = k8s.ListNamespacedServiceWithHttpMessagesAsync("", watch: true);
+
+                        await foreach (var (type, item) in listResponse.WatchAsync<T, object>())
                         {
-                            while (true)
-                            {
-                                await Task.Delay(TimeSpan.FromHours(1));
-                            }
+                            await eventChannel.Writer.WriteAsync(new WatchEvent<T>() { Type = type, Value = item });
                         }
                     }
                     catch (OperationCanceledException)
@@ -227,12 +211,7 @@ namespace Neon.Kube
                 {
                     WatchEvent<T> @event;
 
-                    await eventReady.WaitAsync();
-
-                    lock (eventQueue)
-                    {
-                        @event = eventQueue.Dequeue();
-                    }
+                    @event = await eventChannel.Reader.ReadAsync();
 
                     switch (@event.Type)
                     {

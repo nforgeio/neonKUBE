@@ -90,9 +90,11 @@ namespace NeonClusterOperator
 
         private static ResourceManager<V1NeonClusterOperator, NeonClusterOperatorController> resourceManager;
 
-        private static IScheduler Scheduler;
-        private static StdSchedulerFactory SchedulerFactory;
-        private static bool Initialized;
+        private static IScheduler scheduler;
+        private static StdSchedulerFactory schedulerFactory;
+        private static bool initialized;
+        private static UpdateCaCertificates updateCaCertificates;
+        private static CheckControlPlaneCertificates checkControlPlaneCertificates;
 
         /// <summary>
         /// Static constructor.
@@ -145,7 +147,9 @@ namespace NeonClusterOperator
 
                 await resourceManager.StartAsync();
 
-                SchedulerFactory = new StdSchedulerFactory();
+                schedulerFactory              = new StdSchedulerFactory();
+                updateCaCertificates          = new UpdateCaCertificates();
+                checkControlPlaneCertificates = new CheckControlPlaneCertificates();
             }
         }
 
@@ -175,7 +179,7 @@ namespace NeonClusterOperator
                 Tracer.CurrentSpan?.AddEvent("idle", attributes => attributes.Add("customresource", nameof(V1NeonClusterOperator)));
                 log.LogInformationEx("[IDLE]");
 
-                if (!Initialized)
+                if (!initialized)
                 {
                     await InitializeSchedulerAsync();
                 }
@@ -193,7 +197,7 @@ namespace NeonClusterOperator
                 // Ignore all events when the controller hasn't been started.
 
                 if (resourceManager == null
-                    || resource.Name() != "NeonClusterOperator")
+                    || resource.Name() != KubeService.NeonClusterOperator)
                 {
                     return null;
                 }
@@ -201,14 +205,14 @@ namespace NeonClusterOperator
                 var nodeCaExpression = resource.Spec.Updates.NodeCaCertificates.Schedule;
                 CronExpression.ValidateExpression(nodeCaExpression);
 
-                await UpdateCaCertificates.DeleteFromSchedulerAsync(Scheduler);
-                await UpdateCaCertificates.AddToSchedulerAsync(Scheduler, k8s, nodeCaExpression);
+                await updateCaCertificates.DeleteFromSchedulerAsync(scheduler);
+                await updateCaCertificates.AddToSchedulerAsync(scheduler, k8s, nodeCaExpression);
 
                 var controlPlaneCertExpression = resource.Spec.Updates.ControlPlaneCertificates.Schedule;
                 CronExpression.ValidateExpression(controlPlaneCertExpression);
 
-                await CheckControlPlaneCertificates.DeleteFromSchedulerAsync(Scheduler);
-                await CheckControlPlaneCertificates.AddToSchedulerAsync(Scheduler, k8s, controlPlaneCertExpression);
+                await checkControlPlaneCertificates.DeleteFromSchedulerAsync(scheduler);
+                await checkControlPlaneCertificates.AddToSchedulerAsync(scheduler, k8s, controlPlaneCertExpression);
 
                 log.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
 
@@ -226,7 +230,7 @@ namespace NeonClusterOperator
                 // Ignore all events when the controller hasn't been started.
 
                 if (resourceManager == null
-                || resource.Name() != "NeonClusterOperator")
+                || resource.Name() != KubeService.NeonClusterOperator)
                 {
                     return;
                 }
@@ -286,23 +290,23 @@ namespace NeonClusterOperator
             {
                 Tracer.CurrentSpan?.AddEvent("initialize-scheduler", attributes => attributes.Add("customresource", nameof(V1NeonClusterOperator)));
 
-                Scheduler = await SchedulerFactory.GetScheduler();
+                scheduler = await schedulerFactory.GetScheduler();
 
-                await Scheduler.Start();
+                await scheduler.Start();
 
-                var settings = await k8s.ReadClusterCustomObjectAsync<V1NeonClusterOperator>("NeonClusterOperator");
+                var settings = await k8s.ReadClusterCustomObjectAsync<V1NeonClusterOperator>(KubeService.NeonClusterOperator);
 
                 var nodeCaExpression = settings.Spec.Updates.NodeCaCertificates.Schedule;
                 CronExpression.ValidateExpression(nodeCaExpression);
 
-                await UpdateCaCertificates.AddToSchedulerAsync(Scheduler, k8s, nodeCaExpression);
+                await updateCaCertificates.AddToSchedulerAsync(scheduler, k8s, nodeCaExpression);
 
                 var controlPlaneCertExpression = settings.Spec.Updates.ControlPlaneCertificates.Schedule;
                 CronExpression.ValidateExpression(controlPlaneCertExpression);
 
-                await CheckControlPlaneCertificates.AddToSchedulerAsync(Scheduler, k8s, controlPlaneCertExpression);
+                await checkControlPlaneCertificates.AddToSchedulerAsync(scheduler, k8s, controlPlaneCertExpression);
 
-                Initialized = true;
+                initialized = true;
             }
         }
 
@@ -312,8 +316,8 @@ namespace NeonClusterOperator
             {
                 Tracer.CurrentSpan?.AddEvent("shutdown-scheduler", attributes => attributes.Add("customresource", nameof(V1NeonClusterOperator)));
 
-                await Scheduler.Shutdown(waitForJobsToComplete: true);
-                Initialized = false;
+                await scheduler.Shutdown(waitForJobsToComplete: true);
+                initialized = false;
             }
         }
     }

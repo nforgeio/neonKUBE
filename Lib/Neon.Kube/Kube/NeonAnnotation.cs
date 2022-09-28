@@ -35,10 +35,5 @@ namespace Neon.Kube
         /// </para>
         /// </summary>
         public const string OtelCollector = ClusterDefinition.ReservedPrefix + "otel-collector";
-
-        /// <summary>
-        /// Specifies the type of node task.
-        /// </summary>
-        public const string NodeTaskType = ClusterDefinition.ReservedPrefix + "nodetask-type";
     }
 }

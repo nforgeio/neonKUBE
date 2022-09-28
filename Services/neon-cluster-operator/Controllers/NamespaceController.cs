@@ -90,10 +90,6 @@ namespace NeonClusterOperator
 
         private static ResourceManager<V1Namespace, NamespaceController> resourceManager;
 
-        private static IScheduler Scheduler;
-        private static StdSchedulerFactory SchedulerFactory;
-        private static bool Initialized;
-
         /// <summary>
         /// Static constructor.
         /// </summary>
@@ -144,8 +140,6 @@ namespace NeonClusterOperator
                     leaderConfig: leaderConfig);
 
                 await resourceManager.StartAsync();
-
-                SchedulerFactory = new StdSchedulerFactory();
             }
         }
 
@@ -172,8 +166,11 @@ namespace NeonClusterOperator
         {
             using (Tracer.CurrentSpan)
             {
+                await Task.CompletedTask;
+
                 Tracer.CurrentSpan?.AddEvent("idle", attributes => attributes.Add("resource", nameof(V1Namespace)));
                 log.LogInformationEx("[IDLE]");
+
             }
         }
 
@@ -191,7 +188,8 @@ namespace NeonClusterOperator
                     return null;
                 }
 
-                if (resource.Metadata.Annotations.TryGetValue(NeonAnnotation.OtelCollector, out var otel))
+                if (resource.Metadata.Annotations != null
+                    && resource.Metadata.Annotations.TryGetValue(NeonAnnotation.OtelCollector, out var otel))
                 {
                     if (otel.ToLower() == "disabled")
                     {
@@ -200,11 +198,9 @@ namespace NeonClusterOperator
                     }
                 }
 
-                try
-                {
-                    await k8s.ReadNamespacedServiceAsync(NeonHelper.NeonKubeOtelCollectorName, resource.Name());
-                }
-                catch
+                var operatorServices = await k8s.ListNamespacedServiceAsync(resource.Name(), labelSelector: $"{NeonLabel.ManagedBy}={KubeService.NeonClusterOperator}");
+
+                if (!operatorServices.Items.Any(service => service.Metadata.Name == NeonHelper.NeonKubeOtelCollectorName))
                 {
                     await AddServiceAsync(resource.Name());
                 }
@@ -220,6 +216,8 @@ namespace NeonClusterOperator
         {
             using (Tracer.CurrentSpan)
             {
+                await Task.CompletedTask;
+
                 Tracer.CurrentSpan?.AddEvent("delete", attributes => attributes.Add("resource", nameof(V1Namespace)));
 
                 // Ignore all events when the controller hasn't been started.
@@ -238,6 +236,8 @@ namespace NeonClusterOperator
         {
             using (Tracer.CurrentSpan)
             {
+                await Task.CompletedTask;
+
                 Tracer.CurrentSpan?.AddEvent("promotion", attributes => attributes.Add("resource", nameof(V1Namespace)));
 
                 log.LogInformationEx(() => $"PROMOTED");
@@ -249,6 +249,8 @@ namespace NeonClusterOperator
         {
             using (Tracer.CurrentSpan)
             {
+                await Task.CompletedTask;
+
                 Tracer.CurrentSpan?.AddEvent("promotion", attributes => attributes.Add("resource", nameof(V1Namespace)));
 
                 log.LogInformationEx(() => $"DEMOTED");
@@ -260,6 +262,8 @@ namespace NeonClusterOperator
         {
             using (Tracer.CurrentSpan)
             {
+                await Task.CompletedTask;
+
                 Tracer.CurrentSpan?.AddEvent("promotion", attributes => 
                 {
                     attributes.Add("leader", identity);
@@ -267,8 +271,6 @@ namespace NeonClusterOperator
                 });
 
                 log.LogInformationEx(() => $"NEW LEADER: {identity}");
-
-                await SyncContext.Clear;
             }
         }
 
@@ -282,7 +284,7 @@ namespace NeonClusterOperator
                     NamespaceProperty = @namespace,
                     Labels = new Dictionary<string, string>
                     {
-
+                        { NeonLabel.ManagedBy, KubeService.NeonClusterOperator }
                     }
                 },
                 Spec = new V1ServiceSpec()
@@ -307,7 +309,11 @@ namespace NeonClusterOperator
                 Metadata = new V1ObjectMeta()
                 {
                     Name              = service.Name(),
-                    NamespaceProperty = service.Namespace()
+                    NamespaceProperty = service.Namespace(),
+                    Labels = new Dictionary<string, string>
+                    {
+                        { NeonLabel.ManagedBy, KubeService.NeonClusterOperator }
+                    }
                 },
                 Spec = new VirtualServiceSpec()
                 {

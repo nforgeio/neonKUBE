@@ -35,5 +35,15 @@ namespace Neon.Kube
         /// <see cref="ClusterProxy"/> when resetting a test cluster.
         /// </summary>
         public const string RemoveOnClusterReset = ClusterDefinition.ReservedPrefix + "remove-on-cluster-reset";
+
+        /// <summary>
+        /// Used to identify which service manages the entity.
+        /// </summary>
+        public const string ManagedBy = ClusterDefinition.ReservedPrefix + "managed-by";
+
+        /// <summary>
+        /// Specifies the type of node task.
+        /// </summary>
+        public const string NodeTaskType = ClusterDefinition.ReservedPrefix + "nodetask-type";
     }
 }

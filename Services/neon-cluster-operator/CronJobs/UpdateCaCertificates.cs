@@ -71,17 +71,31 @@ namespace NeonClusterOperator
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = $"ca-certificate-update-{NeonHelper.CreateBase36Uuid()}"
+                            Name = $"ca-certificate-update-{NeonHelper.CreateBase36Uuid()}",
+                            Labels = new Dictionary<string, string>
+                            {
+                                { NeonLabel.ManagedBy, KubeService.NeonClusterOperator },
+                                { NeonLabel.NodeTaskType, NeonNodeTaskType.NodeCaCertUpdate }
+                            }
                         },
                         Spec = new V1NeonNodeTask.TaskSpec()
                         {
-                            Node = node.Name(),
+                            Node                = node.Name(),
                             StartAfterTimestamp = startTime,
-                            BashScript = @"update-ca-certificates",
+                            BashScript          = @"/usr/sbin/update-ca-certificates",
+                            RetentionSeconds    = (int)TimeSpan.FromHours(1).TotalSeconds
                         }
                     };
 
-                    await k8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: nodeTask.Name());
+                    var tasks = await k8s.ListClusterCustomObjectAsync<V1NeonNodeTask>(labelSelector: $"{NeonLabel.NodeTaskType}={NeonNodeTaskType.NodeCaCertUpdate}");
+
+                    if (!tasks.Items.Any(
+                                task => task.Spec.Node == nodeTask.Spec.Node
+                                        && (task.Status.Phase <= V1NeonNodeTask.Phase.Running
+                                            || task.Status == null)))
+                    {
+                        await k8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: nodeTask.Name());
+                    }
 
                     startTime = startTime.AddMinutes(10);
                 }

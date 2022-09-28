@@ -1,4 +1,4 @@
-﻿apiVersion: v1
+﻿apiVersion: neonkube.io/v1alpha1
 kind: NeonClusterOperator
 metadata:
   labels:
@@ -7,6 +7,6 @@ metadata:
 spec:
   updates:
     controlPlaneCertificates:
-      schedule: '0 0 * * 1'
+      schedule: '0 0 0 ? * 1'
     nodeCaCertificates:
-      schedule: '0 0 * * *'
+      schedule: '0 0 0 ? * *'
