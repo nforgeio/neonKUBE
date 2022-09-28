@@ -12,7 +12,7 @@
 		<AssemblyName>neon-sso-session-proxy</AssemblyName>
 		<Configurations>Debug;Release</Configurations>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
 		<AnalysisLevel>5.0</AnalysisLevel>
 		<EnableNETAnalyzers>false</EnableNETAnalyzers>
 	</PropertyGroup>
@@ -26,14 +26,14 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="6.0.1" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2269-dev-master" />
-		<PackageReference Include="Neon.Service" Version="10000.0.2269-dev-master" />
-		<PackageReference Include="Neon.Web" Version="10000.0.2269-dev-master" />
+		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="6.0.9" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2275-dev-jeff" />
+		<PackageReference Include="Neon.Service" Version="10000.0.2275-dev-jeff" />
+		<PackageReference Include="Neon.Web" Version="10000.0.2275-dev-jeff" />
 		<PackageReference Include="prometheus-net" Version="6.0.0" />
 		<PackageReference Include="prometheus-net.AspNetCore" Version="6.0.0" />
-		<PackageReference Include="prometheus-net.DotNetRuntime" Version="4.2.2" />
-		<PackageReference Include="Yarp.ReverseProxy" Version="1.0.1" />
+		<PackageReference Include="prometheus-net.DotNetRuntime" Version="4.2.4" />
+		<PackageReference Include="Yarp.ReverseProxy" Version="1.1.1" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -25,7 +25,7 @@
 		<PackageTags>kubernetes</PackageTags>
 		<RootNamespace>Neon.Kube</RootNamespace>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<Nullable>enable</Nullable>
 		<AnalysisLevel>5.0</AnalysisLevel>
@@ -40,10 +40,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Grpc.Net.Client" Version="2.48.0" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2269-dev-master" />
-		<PackageReference Include="Neon.HyperV" Version="10000.0.2269-dev-master" />
-		<PackageReference Include="protobuf-net.Grpc" Version="1.0.152" />
+		<PackageReference Include="Grpc.Net.Client" Version="2.49.0" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2275-dev-jeff" />
+		<PackageReference Include="Neon.HyperV" Version="10000.0.2274-dev-jeff" />
+		<PackageReference Include="protobuf-net.Grpc" Version="1.0.177" />
 	</ItemGroup>
 
 	<ItemGroup>

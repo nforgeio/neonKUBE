@@ -26,7 +26,7 @@
 		<PackageTags>xunit kubernetes</PackageTags>
 		<Company>neonFORGE LLC</Company>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<AnalysisLevel>5.0</AnalysisLevel>
 	</PropertyGroup>
@@ -47,13 +47,13 @@
 
 	<ItemGroup>
 		<PackageReference Include="KubernetesClient" Version="7.2.19" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2269-dev-master" />
-		<PackageReference Include="Neon.Deployment" Version="10000.0.2269-dev-master" />
-		<PackageReference Include="Neon.SSH" Version="10000.0.2269-dev-master" />
-		<PackageReference Include="Neon.Xunit" Version="10000.0.2269-dev-master" />
-		<PackageReference Include="xunit.extensibility.core" Version="2.4.1" />
-		<PackageReference Include="xunit.extensibility.execution" Version="2.4.1" />
-		<PackageReference Include="YamlDotNet" Version="11.2.1" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2275-dev-jeff" />
+		<PackageReference Include="Neon.Deployment" Version="10000.0.2273-dev-jeff" />
+		<PackageReference Include="Neon.SSH" Version="10000.0.2273-dev-jeff" />
+		<PackageReference Include="Neon.Xunit" Version="10000.0.2275-dev-jeff" />
+		<PackageReference Include="xunit.extensibility.core" Version="2.4.2" />
+		<PackageReference Include="xunit.extensibility.execution" Version="2.4.2" />
+		<PackageReference Include="YamlDotNet" Version="12.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>
