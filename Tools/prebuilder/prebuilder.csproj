@@ -6,7 +6,7 @@
 		<RootNamespace>Prebuilder</RootNamespace>
 		<Configurations>Debug;Release</Configurations>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<AnalysisLevel>5.0</AnalysisLevel>
 	</PropertyGroup>
@@ -23,7 +23,7 @@
 
 	<ItemGroup>
 	  <PackageReference Include="KubernetesClient" Version="7.2.19" />
-	  <PackageReference Include="Neon.Common" Version="10000.0.2271-dev-master" />
+	  <PackageReference Include="Neon.Common" Version="10000.0.2275-dev-jeff" />
 	</ItemGroup>
 
 </Project>

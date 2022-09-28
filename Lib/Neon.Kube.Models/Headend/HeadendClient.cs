@@ -20,11 +20,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
-using Neon.Kube;
 using Neon.ModelGen;
 
-namespace Neon.Kube.Models
+namespace Neon.Kube.Models.Headend
 {
     [Target("all")]
     [Target("headend")]
@@ -55,9 +53,12 @@ namespace Neon.Kube.Models
         [BodyStream]
         [Route("logs")]
         void UploadClusterSetupLogAsync(
+            [FromQuery] string uploadId,
+            [FromQuery] DateTime timestampUtc,
+            [FromQuery] string version,
             [FromQuery] string clientId,
             [FromQuery] string userId,
-            [FromQuery] string details = null);
+            [FromQuery] bool preparing);
     }
 
     /// <summary>

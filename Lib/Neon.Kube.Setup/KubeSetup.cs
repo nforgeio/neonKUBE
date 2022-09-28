@@ -28,7 +28,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-
 using ICSharpCode.SharpZipLib.Zip;
 
 using k8s;
@@ -305,6 +304,123 @@ namespace Neon.Kube
                         timeout:              TimeSpan.FromMinutes(5));
 
                 controller.Add(KubeSetupProperty.K8sClient, k8s);
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Collects the cluster prepare/setup logs into a ZIP archive which is that uploaded to
+        /// the headend for potential analysis.
+        /// </para>
+        /// <note>
+        /// This method does nothing when the <see cref="KubeEnv.DisableTelemetryVariable"/> is set to <b>true</b>.
+        /// </note>
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="e">Passed as the exception thrown for the problem.</param>
+        /// <returns>The tracing <see cref="Task"/>.</returns>
+        private static async Task UploadDeploymentLogs(ISetupController controller, Exception e)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
+
+            if (KubeEnv.IsTelemetryDisabled)
+            {
+                // Don't upload cluster logs when the telemetry is disabled.
+
+                return;
+            }
+
+            var logFolder = KubeHelper.LogFolder;
+
+            if (!Directory.Exists(logFolder) || Directory.GetFiles(logFolder, "*.log", SearchOption.TopDirectoryOnly).Length == 0)
+            {
+                // There don't appear to be any log files so skip this step.
+
+                return;
+            }
+
+            // Tell the user what's going on.
+
+            var preparing = controller.Get<bool>(KubeSetupProperty.Preparing);
+
+            controller.SetGlobalStepStatus($"Cluster {(preparing ? "prepare" : "setup")} failure: uploading redacted logs for analysis");
+
+            var headendClient     = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
+            var clusterProxy      = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterDefinition = clusterProxy?.Definition;
+
+            if (clusterDefinition != null)
+            {
+                clusterDefinition = NeonHelper.JsonClone(clusterDefinition);
+                clusterDefinition.ClearSetupState();
+
+                // $note(jefflill): ClearSetupState() isn't clearing these right now so we're going to force this.
+
+                clusterDefinition.Hosting?.ClearSecrets(clusterDefinition);
+            }
+
+            // We're going to create a ZIP archive including all of the log files plus
+            // additional [metadata.yaml] and [cluster-definition.yaml] files with additional
+            // information about the operation as well as the redacted cluster definition
+            // (we remove things like cloud crendentials).
+
+            var timestampUtc = DateTime.UtcNow;
+            var uploadId     = Guid.NewGuid();
+            var clientId     = KubeHelper.ClientId;
+            var userId       = Guid.Empty;      // $todo(jefflill): Setting this to ZEROs until we implement neonCLOUD users
+
+            using (var tempFile = new TempFile(".zip"))
+            {
+                using (var tempStream = File.Create(tempFile.Path))
+                {
+                    using (var zipStream = tempStream)
+                    {
+                        using (var zip = ZipFile.Create(zipStream))
+                        {
+                            // Generate and add: metadata.yaml
+
+                            var metadata = new ClusterSetupFailureMetadata()
+                            {
+                                TimestampUtc    = timestampUtc,
+                                NeonKubeVersion = KubeVersions.NeonKube,
+                                CliendId        = clientId,
+                                UserId          = userId,
+                                Exception       = e.ToString()
+                            };
+
+                            // Add: metadata.yaml
+
+                            zip.Add(new ICSharpCode.SharpZipLib.Zip.StaticStringDataSource(NeonHelper.YamlSerialize(metadata)), "metadata.yaml");
+
+                            // Add: cluster-definition.yaml
+
+                            zip.Add(new ICSharpCode.SharpZipLib.Zip.StaticStringDataSource(NeonHelper.YamlSerialize(clusterDefinition)), "cluster-definition.yaml");
+
+                            // We're going to upload all the files in the the log folder.
+
+                            zip.AddDirectory(logFolder);
+                        }
+                    }
+
+                    // The temp file now holds the ZIP archive data.  We're going to upload that
+                    // to the headend.
+
+                    tempStream.Position = 0;
+
+                    try
+                    {
+                        await headendClient.ClusterSetup.UploadClusterSetupLogAsync(tempStream, uploadId.ToString("d"), timestampUtc, KubeVersions.NeonKube, clientId.ToString("d"), userId.ToString("d"), preparing);
+
+                        // Tell the user that we're done.
+
+                        controller.SetGlobalStepStatus($"Cluster log upload complete");
+                    }
+                    catch (Exception eUpload)
+                    {
+                        controller.SetGlobalStepStatus($"Cluster log upload failed: {NeonHelper.ExceptionError(eUpload)}");
+                    }
+                }
             }
         }
     }

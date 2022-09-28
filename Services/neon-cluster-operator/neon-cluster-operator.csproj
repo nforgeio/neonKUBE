@@ -12,7 +12,7 @@
 		<AssemblyName>neon-cluster-operator</AssemblyName>
 		<Configurations>Debug;Release</Configurations>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
 		<AnalysisLevel>5.0</AnalysisLevel>
 	</PropertyGroup>
 
@@ -41,8 +41,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="Google.Protobuf" Version="3.21.6" />
-		<PackageReference Include="Grpc.Net.Client" Version="2.48.0" />
-		<PackageReference Include="Grpc.Tools" Version="2.48.1">
+		<PackageReference Include="Grpc.Net.Client" Version="2.49.0" />
+		<PackageReference Include="Grpc.Tools" Version="2.49.1">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
@@ -51,8 +51,8 @@
 		<PackageReference Include="Quartz" Version="3.5.0" />
 		<PackageReference Include="Quartz.OpenTelemetry.Instrumentation" Version="3.5.0" />
 
-		<PackageReference Include="Neon.Common" Version="10000.0.2271-dev-master" />
-        <PackageReference Include="Neon.Service" Version="10000.0.2271-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2275-dev-jeff" />
+        <PackageReference Include="Neon.Service" Version="10000.0.2275-dev-jeff" />
     </ItemGroup>
 
 	<ItemGroup>

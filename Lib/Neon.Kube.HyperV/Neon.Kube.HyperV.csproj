@@ -24,7 +24,7 @@
 		<PackageTags>kubernetes</PackageTags>
 		<RootNamespace>Neon.Kube</RootNamespace>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<AnalysisLevel>5.0</AnalysisLevel>
 	</PropertyGroup>
@@ -44,8 +44,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2271-dev-master" />
-		<PackageReference Include="Neon.HyperV" Version="10000.0.2271-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2275-dev-jeff" />
+		<PackageReference Include="Neon.HyperV" Version="10000.0.2274-dev-jeff" />
 	</ItemGroup>
 
 	<ItemGroup>

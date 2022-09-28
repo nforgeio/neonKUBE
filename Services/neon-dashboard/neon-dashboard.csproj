@@ -12,7 +12,7 @@
     <AssemblyName>neon-dashboard</AssemblyName>
     <Configurations>Debug;Release</Configurations>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <AnalysisLevel>5.0</AnalysisLevel>
   </PropertyGroup>
 
@@ -25,27 +25,27 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Analytics" Version="3.8.0" />
-    <PackageReference Include="Blazor-Analytics" Version="3.10.0" />
-    <PackageReference Include="Blazored.LocalStorage" Version="4.1.5" />
+    <PackageReference Include="Analytics" Version="3.8.1" />
+    <PackageReference Include="Blazor-Analytics" Version="3.11.0" />
+    <PackageReference Include="Blazored.LocalStorage" Version="4.2.0" />
     <PackageReference Include="ChartJs.Blazor.Fork" Version="2.0.2" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="6.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="6.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="6.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="6.0.9" />
     <PackageReference Include="GitInfo" Version="2.2.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Neon.Common" Version="10000.0.2271-dev-master" />
-    <PackageReference Include="Neon.Service" Version="10000.0.2271-dev-master" />
-    <PackageReference Include="Neon.Tailwind" Version="10000.0.2271-dev-master" />
-    <PackageReference Include="Neon.Web" Version="10000.0.2271-dev-master" />
-    <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.2.0-rc1" />
+    <PackageReference Include="Neon.Common" Version="10000.0.2275-dev-jeff" />
+    <PackageReference Include="Neon.Service" Version="10000.0.2275-dev-jeff" />
+    <PackageReference Include="Neon.Tailwind" Version="10000.0.2275-dev-jeff" />
+    <PackageReference Include="Neon.Web" Version="10000.0.2275-dev-jeff" />
+    <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.3.1" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.0.0-rc8" />
     <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.0.0-rc9.6" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.0.0-rc9.6" />
     <PackageReference Include="prometheus-net" Version="6.0.0" />
     <PackageReference Include="prometheus-net.AspNetCore" Version="6.0.0" />
-    <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.2.2" />
+    <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.2.4" />
     <PackageReference Include="Tailwind.Extensions.AspNetCore" Version="1.0.0-beta3" />
   </ItemGroup>
 

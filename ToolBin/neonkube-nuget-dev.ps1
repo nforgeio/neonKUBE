@@ -273,112 +273,125 @@ else
     $neonkubeVersion = "10000.0.$reply-dev-$branch"
 }
 
-# We need to do a solution build to ensure that any tools or other dependencies 
-# are built before we build and publish the individual packages.
-
-Write-Info ""
-Write-Info "********************************************************************************"
-Write-Info "***                            CLEAN SOLUTION                                ***"
-Write-Info "********************************************************************************"
-Write-Info ""
-
-& neon-build clean-generated-cs $nkRoot
-& "$msbuild" "$nkSolution" -p:Configuration=$config -t:Clean -m -verbosity:quiet
-
-if (-not $?)
+try
 {
-    throw "ERROR: CLEAN FAILED"
+    # Disable the [pubcore.exe] tool to avoid file locking conflicts with Visual Studio
+    # and also to speed this up a bit.
+
+    $env:NEON_PUBCORE_DISABLE = "true"
+
+    # We need to do a solution build to ensure that any tools or other dependencies 
+    # are built before we build and publish the individual packages.
+
+    Write-Info ""
+    Write-Info "********************************************************************************"
+    Write-Info "***                            CLEAN SOLUTION                                ***"
+    Write-Info "********************************************************************************"
+    Write-Info ""
+
+    & neon-build clean-generated-cs $nkRoot
+    & "$msbuild" "$nkSolution" -p:Configuration=$config -t:Clean -m -verbosity:quiet
+
+    if (-not $?)
+    {
+        throw "ERROR: CLEAN FAILED"
+    }
+
+    Write-Info ""
+    Write-Info "********************************************************************************"
+    Write-Info "***                           RESTORE PACKAGES                               ***"
+    Write-Info "********************************************************************************"
+    Write-Info ""
+
+    & "$msbuild" "$nkSolution" -t:restore -verbosity:quiet
+
+    Write-Info  ""
+    Write-Info  "*******************************************************************************"
+    Write-Info  "***                           BUILD SOLUTION                                ***"
+    Write-Info  "*******************************************************************************"
+    Write-Info  ""
+
+    & "$msbuild" "$nkSolution" -p:Configuration=$config -restore -m -verbosity:quiet
+
+    if (-not $?)
+    {
+        throw "ERROR: BUILD FAILED"
+    }
+
+    # We need to set the version first in all of the project files so that
+    # implicit package dependencies will work for external projects importing
+    # these packages.
+
+    SetVersion Neon.Kube                        $neonkubeVersion
+    SetVersion Neon.Kube.Aws                    $neonkubeVersion
+    SetVersion Neon.Kube.Azure                  $neonkubeVersion
+    SetVersion Neon.Kube.BareMetal              $neonkubeVersion
+    SetVersion Neon.Kube.DesktopService         $neonkubeVersion
+    SetVersion Neon.Kube.Google                 $neonkubeVersion
+    SetVersion Neon.Kube.GrpcProto              $neonkubeVersion
+    SetVersion Neon.Kube.Hosting                $neonkubeVersion
+    SetVersion Neon.Kube.HyperV                 $neonkubeVersion
+    SetVersion Neon.Kube.Models                 $neonkubeVersion
+    SetVersion Neon.Kube.Operator               $neonkubeVersion
+    SetVersion Neon.Kube.ResourceDefinitions    $neonkubeVersion
+    SetVersion Neon.Kube.Resources              $neonkubeVersion
+    SetVersion Neon.Kube.Setup                  $neonkubeVersion
+    SetVersion Neon.Kube.XenServer              $neonkubeVersion
+    SetVersion Neon.Kube.Xunit                  $neonkubeVersion
+
+    # Build and publish the projects.
+
+    Publish Neon.Kube                           $neonkubeVersion
+    Publish Neon.Kube.Aws                       $neonkubeVersion
+    Publish Neon.Kube.Azure                     $neonkubeVersion
+    Publish Neon.Kube.BareMetal                 $neonkubeVersion
+    Publish Neon.Kube.DesktopService            $neonkubeVersion
+    Publish Neon.Kube.Google                    $neonkubeVersion
+    Publish Neon.Kube.GrpcProto                 $neonkubeVersion
+    Publish Neon.Kube.Hosting                   $neonkubeVersion
+    Publish Neon.Kube.HyperV                    $neonkubeVersion
+    Publish Neon.Kube.Models                    $neonkubeVersion
+    Publish Neon.Kube.Operator                  $neonkubeVersion
+    Publish Neon.Kube.ResourceDefinitions       $neonkubeVersion
+    Publish Neon.Kube.Resources                 $neonkubeVersion
+    Publish Neon.Kube.Setup                     $neonkubeVersion
+    Publish Neon.Kube.XenServer                 $neonkubeVersion
+    Publish Neon.Kube.Xunit                     $neonkubeVersion
+
+    # Restore the project versions
+
+    RestoreVersion Neon.Kube
+    RestoreVersion Neon.Kube.Aws
+    RestoreVersion Neon.Kube.Azure
+    RestoreVersion Neon.Kube.BareMetal
+    RestoreVersion Neon.Kube.DesktopService
+    RestoreVersion Neon.Kube.Google
+    RestoreVersion Neon.Kube.GrpcProto
+    RestoreVersion Neon.Kube.Hosting
+    RestoreVersion Neon.Kube.HyperV
+    RestoreVersion Neon.Kube.Models
+    RestoreVersion Neon.Kube.Operator
+    RestoreVersion Neon.Kube.ResourceDefinitions
+    RestoreVersion Neon.Kube.Resources
+    RestoreVersion Neon.Kube.Setup
+    RestoreVersion Neon.Kube.XenServer
+    RestoreVersion Neon.Kube.Xunit
+
+    # Remove any generated C# files under project [obj] folders to
+    # avoid duplicate symbol compilation errors after publishing.
+
+    & neon-build clean-generated-cs $nkRoot
+
+    # Remove all of the generated nuget files so these don't accumulate.
+
+    Remove-Item "$env:NK_BUILD\nuget\*"
+
+    ""
+    "** Package publication completed"
+    ""
 }
-
-Write-Info ""
-Write-Info "********************************************************************************"
-Write-Info "***                           RESTORE PACKAGES                               ***"
-Write-Info "********************************************************************************"
-Write-Info ""
-
-& "$msbuild" "$nkSolution" -t:restore -verbosity:quiet
-
-Write-Info  ""
-Write-Info  "*******************************************************************************"
-Write-Info  "***                           BUILD SOLUTION                                ***"
-Write-Info  "*******************************************************************************"
-Write-Info  ""
-
-& "$msbuild" "$nkSolution" -p:Configuration=$config -restore -m -verbosity:quiet
-
-if (-not $?)
+catch
 {
-    throw "ERROR: BUILD FAILED"
+    Write-Exception $_
+    exit 1
 }
-
-# We need to set the version first in all of the project files so that
-# implicit package dependencies will work for external projects importing
-# these packages.
-
-SetVersion Neon.Kube                        $neonkubeVersion
-SetVersion Neon.Kube.Aws                    $neonkubeVersion
-SetVersion Neon.Kube.Azure                  $neonkubeVersion
-SetVersion Neon.Kube.BareMetal              $neonkubeVersion
-SetVersion Neon.Kube.DesktopService         $neonkubeVersion
-SetVersion Neon.Kube.Google                 $neonkubeVersion
-SetVersion Neon.Kube.GrpcProto              $neonkubeVersion
-SetVersion Neon.Kube.Hosting                $neonkubeVersion
-SetVersion Neon.Kube.HyperV                 $neonkubeVersion
-SetVersion Neon.Kube.Models                 $neonkubeVersion
-SetVersion Neon.Kube.Operator               $neonkubeVersion
-SetVersion Neon.Kube.ResourceDefinitions    $neonkubeVersion
-SetVersion Neon.Kube.Resources              $neonkubeVersion
-SetVersion Neon.Kube.Setup                  $neonkubeVersion
-SetVersion Neon.Kube.XenServer              $neonkubeVersion
-SetVersion Neon.Kube.Xunit                  $neonkubeVersion
-
-# Build and publish the projects.
-
-Publish Neon.Kube                           $neonkubeVersion
-Publish Neon.Kube.Aws                       $neonkubeVersion
-Publish Neon.Kube.Azure                     $neonkubeVersion
-Publish Neon.Kube.BareMetal                 $neonkubeVersion
-Publish Neon.Kube.DesktopService            $neonkubeVersion
-Publish Neon.Kube.Google                    $neonkubeVersion
-Publish Neon.Kube.GrpcProto                 $neonkubeVersion
-Publish Neon.Kube.Hosting                   $neonkubeVersion
-Publish Neon.Kube.HyperV                    $neonkubeVersion
-Publish Neon.Kube.Models                    $neonkubeVersion
-Publish Neon.Kube.Operator                  $neonkubeVersion
-Publish Neon.Kube.ResourceDefinitions       $neonkubeVersion
-Publish Neon.Kube.Resources                 $neonkubeVersion
-Publish Neon.Kube.Setup                     $neonkubeVersion
-Publish Neon.Kube.XenServer                 $neonkubeVersion
-Publish Neon.Kube.Xunit                     $neonkubeVersion
-
-# Restore the project versions
-
-RestoreVersion Neon.Kube
-RestoreVersion Neon.Kube.Aws
-RestoreVersion Neon.Kube.Azure
-RestoreVersion Neon.Kube.BareMetal
-RestoreVersion Neon.Kube.DesktopService
-RestoreVersion Neon.Kube.Google
-RestoreVersion Neon.Kube.GrpcProto
-RestoreVersion Neon.Kube.Hosting
-RestoreVersion Neon.Kube.HyperV
-RestoreVersion Neon.Kube.Models
-RestoreVersion Neon.Kube.Operator
-RestoreVersion Neon.Kube.ResourceDefinitions
-RestoreVersion Neon.Kube.Resources
-RestoreVersion Neon.Kube.Setup
-RestoreVersion Neon.Kube.XenServer
-RestoreVersion Neon.Kube.Xunit
-
-# Remove any generated C# files under project [obj] folders to
-# avoid duplicate symbol compilation errors after publishing.
-
-& neon-build clean-generated-cs $nkRoot
-
-# Remove all of the generated nuget files so these don't accumulate.
-
-Remove-Item "$env:NK_BUILD\nuget\*"
-
-""
-"** Package publication completed"
-""

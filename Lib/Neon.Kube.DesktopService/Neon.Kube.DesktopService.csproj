@@ -25,7 +25,7 @@
 		<PackageTags>kubernetes</PackageTags>
 		<RootNamespace>Neon.Kube.DesktopService</RootNamespace>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<AnalysisLevel>5.0</AnalysisLevel>
 	</PropertyGroup>
@@ -41,12 +41,12 @@
 
     <ItemGroup>
         <PackageReference Include="FluentdForward.OpenTelemetry.Exporter.Logs" Version="0.2.0" />
-        <PackageReference Include="Neon.Common" Version="10000.0.2271-dev-master" />
-        <PackageReference Include="Neon.HyperV" Version="10000.0.2271-dev-master" />
+        <PackageReference Include="Neon.Common" Version="10000.0.2275-dev-jeff" />
+        <PackageReference Include="Neon.HyperV" Version="10000.0.2274-dev-jeff" />
         <PackageReference Include="OpenTelemetry.Api" Version="1.4.0-alpha.2" />
         <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.4.0-alpha.2" />
         <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol.Logs" Version="1.4.0-alpha.2" />
-        <PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.0.152" />
+        <PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.0.177" />
     </ItemGroup>
 
 	<ItemGroup>

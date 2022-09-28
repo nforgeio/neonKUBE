@@ -119,14 +119,19 @@ try
         return 1
     }
 
+    # Disable the [pubcore.exe] tool to avoid file locking conflicts with Visual Studio
+    # and also to speed this up a bit.
+
+    $env:NEON_PUBCORE_DISABLE = "true"
+
     # We need to do a solution build to ensure that any tools or other dependencies 
     # are built before we build and publish the individual container images.
 
-    $config      = "Release"
-    $msbuild     = $env:MSBUILDPATH
-    $nkRoot      = "$env:NK_ROOT"
-    $nkSolution  = "$nkRoot\neonKUBE.sln"
-    $branch      = GitBranch $nkRoot
+    $config     = "Release"
+    $msbuild    = $env:MSBUILDPATH
+    $nkRoot     = "$env:NK_ROOT"
+    $nkSolution = "$nkRoot\neonKUBE.sln"
+    $branch     = GitBranch $nkRoot
 
     Write-Info ""
     Write-Info "********************************************************************************"
@@ -134,6 +139,7 @@ try
     Write-Info "********************************************************************************"
     Write-Info ""
 
+    "neon-build clean-generated-cs $nkRoot"
     & "$msbuild" "$nkSolution" $buildConfig -t:Clean -m -verbosity:quiet
 
     if (-not $?)
@@ -155,8 +161,7 @@ try
     Write-Info  "*******************************************************************************"
     Write-Info  ""
 
-    & neon-build clean-generated-cs $nkRoot 
-    & "$msbuild" "$nkSolution" -p:Configuration=$config -restore -m -verbosity:quiet
+    & "$msbuild" "$nkSolution" -p:Configuration=$config -m -verbosity:quiet
 
     if (-not $?)
     {
@@ -206,5 +211,10 @@ try
 catch
 {
     Write-Exception $_
-    throw
+
+    # Cleanup
+
+    neon-build clean-generated-cs $nkRoot
+
+    exit 1
 }

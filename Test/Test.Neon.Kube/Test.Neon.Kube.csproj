@@ -8,7 +8,7 @@
 		<LangVersion>latest</LangVersion>
 		<Configurations>Debug;Release</Configurations>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
 		<GenerateDocumentationFile>false</GenerateDocumentationFile>
 		<AnalysisLevel>5.0</AnalysisLevel>
 	</PropertyGroup>
@@ -41,7 +41,7 @@
 
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
-		<PackageReference Include="coverlet.collector" Version="3.1.0">
+		<PackageReference Include="coverlet.collector" Version="3.1.2">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
@@ -50,15 +50,15 @@
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
 		<PackageReference Include="LiquidTestReports.Markdown" Version="1.1.1-beta" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2271-dev-master" />
-		<PackageReference Include="Neon.Deployment" Version="10000.0.2271-dev-master" />
-		<PackageReference Include="Neon.Docker" Version="10000.0.2271-dev-master" />
-		<PackageReference Include="Neon.Nats" Version="10000.0.2271-dev-master" />
-		<PackageReference Include="Neon.Service" Version="10000.0.2271-dev-master" />
-		<PackageReference Include="Neon.Xunit" Version="10000.0.2271-dev-master" />
-		<PackageReference Include="xunit" Version="2.4.1" />
-		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2275-dev-jeff" />
+		<PackageReference Include="Neon.Deployment" Version="10000.0.2275-dev-jeff" />
+		<PackageReference Include="Neon.Docker" Version="10000.0.2275-dev-jeff" />
+		<PackageReference Include="Neon.Nats" Version="10000.0.2275-dev-jeff" />
+		<PackageReference Include="Neon.Service" Version="10000.0.2275-dev-jeff" />
+		<PackageReference Include="Neon.Xunit" Version="10000.0.2275-dev-jeff" />
+		<PackageReference Include="xunit" Version="2.4.2" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
