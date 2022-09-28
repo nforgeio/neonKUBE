@@ -155,6 +155,7 @@ try
     Write-Info  "*******************************************************************************"
     Write-Info  ""
 
+    & neon-build clean-generated-cs $nkRoot 
     & "$msbuild" "$nkSolution" -p:Configuration=$config -restore -m -verbosity:quiet
 
     if (-not $?)

@@ -24,6 +24,7 @@ DeleteFolder bin
 $result = mkdir bin
 ThrowOnExitCode
 
+& neon-build clean-generated-cs "$nkRoot"
 dotnet publish "$nkServices\$appname\$appname.csproj" -c Release -o "$pwd\bin"
 ThrowOnExitCode
 
