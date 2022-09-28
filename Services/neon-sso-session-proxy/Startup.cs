@@ -92,9 +92,9 @@ namespace NeonSsoSessionProxy
             
             // Load in each of the clients from the Dex config into the client.
 
-            foreach (var client in NeonSsoSessionProxyService.Config.StaticClients)
+            foreach (var client in NeonSsoSessionProxyService.Clients)
             {
-                dexClient.AuthHeaders.Add(client.Id, new BasicAuthenticationHeaderValue(client.Id, client.Secret));
+                dexClient.AuthHeaders.Add(client.Spec.Id, new BasicAuthenticationHeaderValue(client.Spec.Id, client.Spec.Secret));
             }
 
             services.AddSingleton(dexClient);

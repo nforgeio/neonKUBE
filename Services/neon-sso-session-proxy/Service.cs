@@ -29,13 +29,18 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
-using Neon.Service;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.Resources;
+using Neon.Service;
+using Neon.Tasks;
 
 using Prometheus;
 using Prometheus.DotNetRuntime;
+
+using k8s;
+
 
 namespace NeonSsoSessionProxy
 {
@@ -46,7 +51,8 @@ namespace NeonSsoSessionProxy
     {
         // class fields
         private IWebHost webHost;
-
+        private IKubernetes k8s;
+        
         /// <summary>
         /// Session cookie name.
         /// </summary>
@@ -56,6 +62,11 @@ namespace NeonSsoSessionProxy
         /// The Dex configuration.
         /// </summary>
         public DexConfig Config { get; private set; }
+
+        /// <summary>
+        /// Clients available.
+        /// </summary>
+        public List<V1NeonSsoClient> Clients;
 
         /// <summary>
         /// Constructor.
@@ -91,6 +102,36 @@ namespace NeonSsoSessionProxy
                 Config = NeonHelper.YamlDeserializeViaJson<DexConfig>(await reader.ReadToEndAsync());
             }
 
+            k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
+
+            _ = k8s.WatchAsync<V1NeonSsoClient>(async (@event) =>
+            {
+                await SyncContext.Clear;
+
+                switch (@event.Type)
+                {
+                    case WatchEventType.Added:
+
+                        await AddClientAsync(@event.Value);
+                        break;
+
+                    case WatchEventType.Deleted:
+
+                        await RemoveClientAsync(@event.Value);
+                        break;
+
+                    case WatchEventType.Modified:
+
+                        await RemoveClientAsync(@event.Value);
+                        await AddClientAsync(@event.Value);
+                        break;
+
+                    default:
+
+                        break;
+                }
+            });
+
             // Start the web service.
 
             webHost = new WebHostBuilder()
@@ -119,6 +160,22 @@ namespace NeonSsoSessionProxy
             Terminator.ReadyToExit();
 
             return 0;
+        }
+
+        private async Task AddClientAsync(V1NeonSsoClient client)
+        {
+            await SyncContext.Clear;
+
+            Clients.Add(client);
+        }
+        private async Task RemoveClientAsync(V1NeonSsoClient client)
+        {
+            await SyncContext.Clear;
+
+            Clients.Remove(
+                Clients.Where(
+                    c => c.Spec.Id == client.Spec.Id
+                    && c.Spec.Secret == client.Spec.Secret).First());
         }
     }
 }

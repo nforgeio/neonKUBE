@@ -114,7 +114,7 @@ namespace NeonClusterOperator
     /// </remarks>
     public partial class Service : NeonService
     {
-        private IKubernetes K8s;
+        private IKubernetes k8s;
 
         /// <summary>
         /// Constructor.
@@ -138,12 +138,12 @@ namespace NeonClusterOperator
             //-----------------------------------------------------------------
             // Start the controllers: these need to be started before starting KubeOps
 
-            K8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
+            k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
             LogContext.SetCurrentLogProvider(TelemetryHub.LoggerFactory);
 
-            await NodeTaskController.StartAsync(K8s);
-            await NeonClusterOperatorController.StartAsync(K8s);
-            await NamespaceController.StartAsync(K8s);
+            await NodeTaskController.StartAsync(k8s);
+            await NeonClusterOperatorController.StartAsync(k8s);
+            await NamespaceController.StartAsync(k8s);
 
             //-----------------------------------------------------------------
             // Start the operator controllers.  Note that we're not going to await

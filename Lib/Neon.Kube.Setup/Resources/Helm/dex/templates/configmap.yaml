@@ -15,6 +15,8 @@ data:
       http: 0.0.0.0:5556
       tlsCert: /etc/dex/tls/tls.crt
       tlsKey: /etc/dex/tls/tls.key
+    grpc:
+      http: 0.0.0.0:5557
     frontend:
       dir: /srv/dex/web
       issuer: SSO Login - {{ .Values.cluster.name }}
@@ -48,43 +50,3 @@ data:
           nameAttr: {{ .Values.config.ldap.groupSearch.nameAttr }}
     oauth2:
       skipApprovalScreen: true
-    staticClients:
-    - id: grafana
-      redirectURIs:
-      - 'https://{{ .Values.neonkube.clusterDomain.grafana }}.{{ .Values.cluster.domain }}/login/generic_oauth'
-      name: 'Grafana'
-      secret: "{{- .Values.secrets.grafana }}"
-      trustedPeers:
-        - neon-sso
-        - harbor
-        - minio
-    - id: neon-sso
-      redirectURIs:
-      - 'https://{{ .Values.neonkube.clusterDomain.kubernetesDashboard }}.{{ .Values.cluster.domain }}/oauth2/callback'
-      - 'https://{{ .Values.neonkube.clusterDomain.neonDashboard }}.{{ .Values.cluster.domain }}/oauth2/callback'
-      - 'https://{{ .Values.neonkube.clusterDomain.kiali }}.{{ .Values.cluster.domain }}/oauth2/callback'
-      - 'https://{{ .Values.cluster.domain }}/oauth2/callback'
-      name: 'Neon SSO'
-      secret: "{{- .Values.secrets.neonSso }}"
-      trustedPeers:
-        - grafana
-        - harbor
-        - minio
-    - id: harbor
-      redirectURIs:
-      - 'https://{{ .Values.neonkube.clusterDomain.harborRegistry }}.{{ .Values.cluster.domain }}/oauth_callback'
-      name: 'Harbor'
-      secret: "{{- .Values.secrets.harbor }}"
-      trustedPeers:
-        - grafana
-        - neon-sso
-        - minio
-    - id: minio
-      redirectURIs:
-      - 'https://{{ .Values.neonkube.clusterDomain.minio }}.{{ .Values.cluster.domain }}/oauth_callback'
-      name: 'Minio'
-      secret: "{{- .Values.secrets.minio }}"
-      trustedPeers:
-        - grafana
-        - neon-sso
-        - harbor

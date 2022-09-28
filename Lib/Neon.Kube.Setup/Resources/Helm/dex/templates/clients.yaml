@@ -1,0 +1,70 @@
+apiVersion: neonkube.io/v1alpha1
+kind: NeonSsoClient
+metadata:
+  name: neon-sso
+  labels:
+    {{- include "dex.labels" . | nindent 4 }}
+spec:
+  id: neon-sso
+  redirectURIs:
+  - 'https://{{ .Values.neonkube.clusterDomain.kubernetesDashboard }}.{{ .Values.cluster.domain }}/oauth2/callback'
+  - 'https://{{ .Values.neonkube.clusterDomain.neonDashboard }}.{{ .Values.cluster.domain }}/oauth2/callback'
+  - 'https://{{ .Values.neonkube.clusterDomain.kiali }}.{{ .Values.cluster.domain }}/oauth2/callback'
+  - 'https://{{ .Values.cluster.domain }}/oauth2/callback'
+  name: 'Neon SSO'
+  secret: "{{- .Values.secrets.neonSso }}"
+  trustedPeers:
+    - grafana
+    - harbor
+    - minio
+---
+apiVersion: neonkube.io/v1alpha1
+kind: NeonSsoClient
+metadata:
+  name: grafana
+  labels:
+    {{- include "dex.labels" . | nindent 4 }}
+spec:
+  id: grafana
+  redirectURIs:
+  - 'https://{{ .Values.neonkube.clusterDomain.grafana }}.{{ .Values.cluster.domain }}/login/generic_oauth'
+  name: 'Grafana'
+  secret: "{{- .Values.secrets.grafana }}"
+  trustedPeers:
+    - neon-sso
+    - harbor
+    - minio
+---
+apiVersion: neonkube.io/v1alpha1
+kind: NeonSsoClient
+metadata:
+  name: harbor
+  labels:
+    {{- include "dex.labels" . | nindent 4 }}
+spec:
+  id: harbor
+  redirectURIs:
+  - 'https://{{ .Values.neonkube.clusterDomain.harborRegistry }}.{{ .Values.cluster.domain }}/oauth_callback'
+  name: 'Harbor'
+  secret: "{{- .Values.secrets.harbor }}"
+  trustedPeers:
+    - grafana
+    - neon-sso
+    - minio
+---
+apiVersion: neonkube.io/v1alpha1
+kind: NeonSsoClient
+metadata:
+  name: minio
+  labels:
+    {{- include "dex.labels" . | nindent 4 }}
+spec:
+  id: minio
+  redirectURIs:
+  - 'https://{{ .Values.neonkube.clusterDomain.minio }}.{{ .Values.cluster.domain }}/oauth_callback'
+  name: 'Minio'
+  secret: "{{- .Values.secrets.minio }}"
+  trustedPeers:
+    - grafana
+    - neon-sso
+    - harbor

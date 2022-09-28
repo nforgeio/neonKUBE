@@ -341,6 +341,9 @@ spec:
             await InstallSsoAsync(controller, controlNode);
 
             controller.ThrowIfCancelled();
+            await InstallClusterOperatorAsync(controller, controlNode);
+
+            controller.ThrowIfCancelled();
             if (cluster.Definition.Features.Kiali)
             {
                 await InstallKialiAsync(controller, controlNode);
@@ -357,14 +360,6 @@ spec:
 
             controller.ThrowIfCancelled();
             await InstallMonitoringAsync(controller);
-
-            // Install the cluster operators and any required custom resources.
-            //
-            // NOTE: The neonKUBE CRDs are installed with [neon-cluster-operator]
-            //       so we need to install that first.
-
-            controller.ThrowIfCancelled();
-            await InstallClusterOperatorAsync(controller, controlNode);
 
             controller.ThrowIfCancelled();
             await InstallNeonDashboardAsync(controller, controlNode);

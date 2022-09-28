@@ -71,6 +71,7 @@
 		<None Remove="Resources\Helm\cert-manager\templates\grafana-dashboard.yaml" />
 		<None Remove="Resources\Helm\crd-cluster\crds\grafanadashboards.yaml" />
 		<None Remove="Resources\Helm\crd-cluster\crds\grafanadatasources.yaml" />
+		<None Remove="Resources\Helm\dex\templates\clients.yaml" />
 		<None Remove="Resources\Helm\grafana-agent\crds\monitoring.grafana.com_integrations.yaml" />
 		<None Remove="Resources\Helm\grafana-agent\templates\grafana-dashboard.yaml" />
 		<None Remove="Resources\Helm\grafana-agent\templates\neon-dashboard.yaml" />
