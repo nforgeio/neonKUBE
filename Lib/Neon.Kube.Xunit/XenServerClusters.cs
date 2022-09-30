@@ -201,7 +201,7 @@ namespace Neon.Kube.Xunit
         /// </summary>
         public const string Tiny = @"
 name: xenserver-tiny
-datacenter: $<<<profile:datacenter>>>
+datacenter: $<profile:datacenter>
 purpose: test
 isLocked: false
 timeSources:
@@ -211,8 +211,8 @@ kubernetes:
 hosting:
   environment: xenserver
   vm:
-    hostUsername: $<<<secret:XENSERVER_LOGIN[username]>>>
-    hostPassword: $<<<secret:XENSERVER_LOGIN[password]>>>
+    hostUsername: $<secret:XENSERVER_LOGIN[username]>
+    hostPassword: $<secret:XENSERVER_LOGIN[password]>
     namePrefix: test-tiny
     cores: 4
     memory: 16 GiB
@@ -220,19 +220,19 @@ hosting:
     openEbsDisk: 32 GiB
     hosts:
     - name: XEN-TEST
-      address: $<<<profile:xen-test.ip>>>
+      address: $<profile:xen-test.ip>
   xenServer:
      snapshot: true
 network:
-  premiseSubnet: $<<<profile:lan.subnet>>>
-  gateway: $<<<profile:lan.gateway>>>
+  premiseSubnet: $<profile:lan.subnet>
+  gateway: $<profile:lan.gateway>
   nameservers:
-  - $<<<profile:lan.dns0>>>
-  - $<<<profile:lan.dns1>>>
+  - $<profile:lan.dns0>
+  - $<profile:lan.dns1>
 nodes:
   control-0:
     role: control-plane
-    address: $<<<profile:xenserver.tiny0.ip>>>
+    address: $<profile:xenserver.tiny0.ip>
     vm:
       host: XEN-TEST
 ";
@@ -242,7 +242,7 @@ nodes:
         /// </summary>
         public const string Small = @"
 name: xenserver-small
-datacenter: $<<<profile:datacenter>>>
+datacenter: $<profile:datacenter>
 purpose: test
 isLocked: false
 timeSources:
@@ -252,8 +252,8 @@ kubernetes:
 hosting:
   environment: xenserver
   vm:
-    hostUsername: $<<<secret:XENSERVER_LOGIN[username]>>>
-    hostPassword: $<<<secret:XENSERVER_LOGIN[password]>>>
+    hostUsername: $<secret:XENSERVER_LOGIN[username]>
+    hostPassword: $<secret:XENSERVER_LOGIN[password]>
     namePrefix: test-small
     cores: 4
     memory: 16 GiB
@@ -261,34 +261,34 @@ hosting:
     openEbsDisk: 32 GiB
     hosts:
     - name: XEN-TEST
-      address: $<<<profile:xen-test.ip>>>
+      address: $<profile:xen-test.ip>
   xenServer:
      snapshot: true
 network:
-  premiseSubnet: $<<<profile:lan.subnet>>>
-  gateway: $<<<profile:lan.gateway>>>
+  premiseSubnet: $<profile:lan.subnet>
+  gateway: $<profile:lan.gateway>
   nameservers:
-  - $<<<profile:lan.dns0>>>
-  - $<<<profile:lan.dns1>>>
+  - $<profile:lan.dns0>
+  - $<profile:lan.dns1>
 nodes:
   control-0:
     role: control-plane
-    address: $<<<profile:xenserver.small0.ip>>>
+    address: $<profile:xenserver.small0.ip>
     vm:
       host: XEN-TEST
   worker-0:
     role: worker
-    address: $<<<profile:xenserver.small1.ip>>>
+    address: $<profile:xenserver.small1.ip>
     vm:
       host: XEN-TEST
   worker-1:
     role: worker
-    address: $<<<profile:xenserver.small2.ip>>>
+    address: $<profile:xenserver.small2.ip>
     vm:
       host: XEN-TEST
   worker-2:
     role: worker
-    address: $<<<profile:xenserver.small3.ip>>>
+    address: $<profile:xenserver.small3.ip>
     vm:
       host: XEN-TEST
 ";
@@ -298,7 +298,7 @@ nodes:
         /// </summary>
         public const string Large = @"
 name: xenserver-large
-datacenter: $<<<profile:datacenter>>>
+datacenter: $<profile:datacenter>
 purpose: test
 isLocked: false
 timeSources:
@@ -308,8 +308,8 @@ kubernetes:
 hosting:
   environment: xenserver
   vm:
-    hostUsername: $<<<secret:XENSERVER_LOGIN[username]>>>
-    hostPassword: $<<<secret:XENSERVER_LOGIN[password]>>>
+    hostUsername: $<secret:XENSERVER_LOGIN[username]>
+    hostPassword: $<secret:XENSERVER_LOGIN[password]>
     namePrefix: test-large
     cores: 4
     memory: 16 GiB
@@ -317,47 +317,47 @@ hosting:
     openEbsDisk: 32 GiB
     hosts:
     - name: XEN-TEST
-      address: $<<<profile:xen-test.ip>>>
+      address: $<profile:xen-test.ip>
   xenServer:
      snapshot: true
 network:
-  premiseSubnet: $<<<profile:lan.subnet>>>
-  gateway: $<<<profile:lan.gateway>>>
+  premiseSubnet: $<profile:lan.subnet>
+  gateway: $<profile:lan.gateway>
   nameservers:
-  - $<<<profile:lan.dns0>>>
-  - $<<<profile:lan.dns1>>>
+  - $<profile:lan.dns0>
+  - $<profile:lan.dns1>
 nodes:
   control-0:
     role: control-plane
-    address: $<<<profile:xenserver.large0.ip>>>
+    address: $<profile:xenserver.large0.ip>
     memory: 4 GiB
     vm:
       host: XEN-TEST
   control-1:
     role: control-plane
-    address: $<<<profile:xenserver.large1.ip>>>
+    address: $<profile:xenserver.large1.ip>
     memory: 4 GiB
     vm:
       host: XEN-TEST
   control-2:
     role: control-plane
-    address: $<<<profile:xenserver.large2.ip>>>
+    address: $<profile:xenserver.large2.ip>
     memory: 4 GiB
     vm:
       host: XEN-TEST
   worker-0:
     role: worker
-    address: $<<<profile:xenserver.large3.ip>>>
+    address: $<profile:xenserver.large3.ip>
      vm:
        host: XEN-TEST
   worker-1:
     role: worker
-    address: $<<<profile:xenserver.large4.ip>>>
+    address: $<profile:xenserver.large4.ip>
     vm:
       host: XEN-TEST
   worker-2:
     role: worker
-    address: $<<<profile:xenserver.large5.ip>>>
+    address: $<profile:xenserver.large5.ip>
     vm:
       host: XEN-TEST
 ";
