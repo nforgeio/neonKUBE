@@ -44,8 +44,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2289-dev-jeff" />
-		<PackageReference Include="Neon.HyperV" Version="10000.0.2289-dev-jeff" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2291-dev-master" />
+		<PackageReference Include="Neon.HyperV" Version="10000.0.2291-dev-master" />
 	</ItemGroup>
 
 	<ItemGroup>
