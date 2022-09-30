@@ -192,7 +192,7 @@ namespace Neon.Kube.Xunit
         /// </summary>
         public const string Tiny = @"
 name: hyperv-tiny
-datacenter: $<<<profile:datacenter>>>
+datacenter: $<profile:datacenter>
 purpose: test
 isLocked: false
 timeSources:
@@ -207,17 +207,17 @@ hosting:
     memory: 16 GiB
     osDisk: 64 GiB
     openEbsDisk: 32 GiB
-    diskLocation: $<<<profile:hyperv.diskfolder>>>
+    diskLocation: $<profile:hyperv.diskfolder>
 network:
-  premiseSubnet: $<<<profile:lan.subnet>>>
-  gateway: $<<<profile:lan.gateway>>>
+  premiseSubnet: $<profile:lan.subnet>
+  gateway: $<profile:lan.gateway>
   nameservers:
-  - $<<<profile:lan.dns0>>>
-  - $<<<profile:lan.dns1>>>
+  - $<profile:lan.dns0>
+  - $<profile:lan.dns1>
 nodes:
   control-0:
     role: control-plane
-    address: $<<<profile:hyperv.tiny0.ip>>>
+    address: $<profile:hyperv.tiny0.ip>
 ";
 
         /// <summary>
@@ -225,7 +225,7 @@ nodes:
         /// </summary>
         public const string Small = @"
 name: hyperv-small
-datacenter: $<<<profile:datacenter>>>
+datacenter: $<profile:datacenter>
 purpose: test
 isLocked: false
 timeSources:
@@ -240,26 +240,26 @@ hosting:
     memory: 16 GiB
     osDisk: 64 GiB
     openEbsDisk: 32 GiB
-    diskLocation: $<<<profile:hyperv.diskfolder>>>
+    diskLocation: $<profile:hyperv.diskfolder>
 network:
-  premiseSubnet: $<<<profile:lan.subnet>>>
-  gateway: $<<<profile:lan.gateway>>>
+  premiseSubnet: $<profile:lan.subnet>
+  gateway: $<profile:lan.gateway>
   nameservers:
-  - $<<<profile:lan.dns0>>>
-  - $<<<profile:lan.dns1>>>
+  - $<profile:lan.dns0>
+  - $<profile:lan.dns1>
 nodes:
   control-0:
     role: control-plane
-    address: $<<<profile:hyperv.small0.ip>>>
+    address: $<profile:hyperv.small0.ip>
   worker-0:
     role: worker
-    address: $<<<profile:hyperv.small1.ip>>>
+    address: $<profile:hyperv.small1.ip>
   worker-1:
     role: worker
-    address: $<<<profile:hyperv.small2.ip>>>
+    address: $<profile:hyperv.small2.ip>
   worker-2:
     role: worker
-    address: $<<<profile:hyperv.small3.ip>>>
+    address: $<profile:hyperv.small3.ip>
 ";
 
         /// <summary>
@@ -267,7 +267,7 @@ nodes:
         /// </summary>
         public const string Large = @"
 name: hyperv-large
-datacenter: $<<<profile:datacenter>>>
+datacenter: $<profile:datacenter>
 purpose: test
 isLocked: false
 timeSources:
@@ -282,35 +282,35 @@ hosting:
     memory: 16 GiB
     osDisk: 64 GiB
     openEbsDisk: 32 GiB
-    diskLocation: $<<<profile:hyperv.diskfolder>>>
+    diskLocation: $<profile:hyperv.diskfolder>
 network:
-  premiseSubnet: $<<<profile:lan.subnet>>>
-  gateway: $<<<profile:lan.gateway>>>
+  premiseSubnet: $<profile:lan.subnet>
+  gateway: $<profile:lan.gateway>
   nameservers:
-  - $<<<profile:lan.dns0>>>
-  - $<<<profile:lan.dns1>>>
+  - $<profile:lan.dns0>
+  - $<profile:lan.dns1>
 nodes:
   control-0:
     role: control-plane
-    address: $<<<profile:hyperv.large0.ip>>>
+    address: $<profile:hyperv.large0.ip>
     memory: 4 GiB
   control-1:
     role: control-plane
-    address: $<<<profile:hyperv.large1.ip>>>
+    address: $<profile:hyperv.large1.ip>
     memory: 4 GiB
   control-2:
     role: control-plane
-    address: $<<<profile:hyperv.large2.ip>>>
+    address: $<profile:hyperv.large2.ip>
     memory: 4 GiB
   worker-0:
     role: worker
-    address: $<<<profile:hyperv.large3.ip>>>
+    address: $<profile:hyperv.large3.ip>
   worker-1:
     role: worker
-    address: $<<<profile:hyperv.large4.ip>>>
+    address: $<profile:hyperv.large4.ip>
   worker-2:
     role: worker
-    address: $<<<profile:hyperv.large5.ip>>>
+    address: $<profile:hyperv.large5.ip>
 ";
     }
 }

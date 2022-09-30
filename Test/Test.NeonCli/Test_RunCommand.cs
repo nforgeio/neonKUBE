@@ -272,10 +272,10 @@ TEST_D=D-VALUE
 
                             File.WriteAllText("file.txt",
 @"
-$<<TEST_A>>
-$<<TEST_B>>
-$<<TEST_C>>
-$<<TEST_D>>
+$<env:TEST_A>
+$<env:TEST_B>
+$<env:TEST_C>
+$<env:TEST_D>
 ");
                             result = await runner.ExecuteAsync(Program.Main, "tool", "run", "--TEST_A=A-VALUE", "--TEST_B=B-VALUE", "--TEST_C=C-VALUE", "--TEST_D=D-VALUE", "--", "test.cmd", "_..file.txt");
                             Assert.Equal(0, result.ExitCode);
@@ -329,10 +329,10 @@ $<<TEST_D>>
 
                             File.WriteAllText("file.txt",
 @"
-$<<TEST_A>>
-$<<TEST_B>>
-$<<TEST_C>>
-$<<TEST_D>>
+$<env:TEST_A>
+$<env:TEST_B>
+$<env:TEST_C>
+$<env:TEST_D>
 ");
                             File.WriteAllBytes("file.txt", vault.Encrypt("file.txt", "test"));
                             Assert.True(NeonVault.IsEncrypted("file.txt"));

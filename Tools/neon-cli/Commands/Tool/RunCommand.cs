@@ -69,7 +69,7 @@ ARGUMENTS:
     _..VAR-FILE     - The "".."" prefix indicates that the VAR-FILE text file
                       should be written (decrypting if necessary) to a secure 
                       temporary file and that any environment references
-                      like $<<VAR>> will be replaced by the variable value.
+                      like $<env:VAR> will be replaced by the variable value.
                       The command line will be updated to reference the
                       temporary file.
 
@@ -118,7 +118,7 @@ Read a VARIABLES file and inject a variable into a sub-command:
 Inject an environment variable into a text file:
 
     [file.txt]:
-    $<<MYVAR>>
+    $<env:MYVAR>
 
     neon neon run --MYVAR=hello -- cat _..file.txt
 
