@@ -40,7 +40,7 @@ using Prometheus;
 using Prometheus.DotNetRuntime;
 
 using k8s;
-
+using k8s.Models;
 
 namespace NeonSsoSessionProxy
 {
@@ -62,6 +62,11 @@ namespace NeonSsoSessionProxy
         /// The Dex configuration.
         /// </summary>
         public DexConfig Config { get; private set; }
+
+        /// <summary>
+        /// The Dex client.
+        /// </summary>
+        public DexClient DexClient { get; private set; }
 
         /// <summary>
         /// Clients available.
@@ -104,6 +109,8 @@ namespace NeonSsoSessionProxy
 
             k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
 
+            Clients = new List<V1NeonSsoClient>();
+
             _ = k8s.WatchAsync<V1NeonSsoClient>(async (@event) =>
             {
                 await SyncContext.Clear;
@@ -131,6 +138,10 @@ namespace NeonSsoSessionProxy
                         break;
                 }
             });
+
+            // Dex config
+
+            DexClient = new DexClient(new Uri($"http://{KubeService.Dex}:5556"), Logger);
 
             // Start the web service.
 
@@ -167,7 +178,12 @@ namespace NeonSsoSessionProxy
             await SyncContext.Clear;
 
             Clients.Add(client);
+            
+            DexClient.AuthHeaders.Add(client.Spec.Id, new BasicAuthenticationHeaderValue(client.Spec.Id, client.Spec.Secret));
+
+            Logger.LogInformationEx(() => $"Added client: {client.Name()}");
         }
+
         private async Task RemoveClientAsync(V1NeonSsoClient client)
         {
             await SyncContext.Clear;
@@ -176,6 +192,10 @@ namespace NeonSsoSessionProxy
                 Clients.Where(
                     c => c.Spec.Id == client.Spec.Id
                     && c.Spec.Secret == client.Spec.Secret).First());
+
+            DexClient.AuthHeaders.Remove(client.Spec.Id);
+
+            Logger.LogInformationEx(() => $"Removed client: {client.Name()}");
         }
     }
 }

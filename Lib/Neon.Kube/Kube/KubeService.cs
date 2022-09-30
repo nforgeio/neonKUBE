@@ -26,6 +26,7 @@ namespace Neon.Kube
         /// Neon Blazor Proxy.
         /// </summary>
         public const string NeonBlazorProxy = "neon-blazor-proxy";
+
         /// <summary>
         /// Dex.
         /// </summary>
@@ -56,6 +57,6 @@ namespace Neon.Kube
         /// <summary>
         /// Neon system database.
         /// </summary>
-        public const string NeonSystemDb = "db-citus-postgresql";
+        public const string NeonSystemDb = "neon-system-db";
     }
 }

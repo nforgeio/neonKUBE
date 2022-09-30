@@ -108,7 +108,7 @@ namespace NeonClusterOperator
                 {
                     await scheduler.DeleteJob(new JobKey(Name, Group));
                 }
-                catch (Exception e)
+                catch (NullReferenceException)
                 {
                     return;
                 }

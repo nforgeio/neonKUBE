@@ -159,6 +159,8 @@
 		<None Remove="Resources\Helm\neon-node-agent\templates\servicemonitor.yaml" />
 		<None Remove="Resources\Helm\neon-node-agent\templates\_helpers.tpl" />
 		<None Remove="Resources\Helm\neon-node-agent\values.yaml" />
+		<None Remove="Resources\Helm\neon-sso-session-proxy\templates\clusterrole.yaml" />
+		<None Remove="Resources\Helm\neon-sso-session-proxy\templates\clusterrolebinding.yaml" />
 		<None Remove="Resources\Helm\oauth2-proxy\templates\_config-render.tpl" />
 		<None Remove="Resources\Helm\postgres-operator\templates\configmap-metric-exporter.yaml" />
 		<None Remove="Resources\Helm\postgres-operator\templates\healthcheck-role.yaml" />
@@ -179,9 +181,9 @@
 
 	<ItemGroup>
 		<PackageReference Include="Minio" Version="3.1.13" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2276-dev-master" />
-		<PackageReference Include="Neon.Cryptography" Version="10000.0.2276-dev-master" />
-		<PackageReference Include="Neon.Postgres" Version="10000.0.2276-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2281-dev-master" />
+		<PackageReference Include="Neon.Cryptography" Version="10000.0.2281-dev-master" />
+		<PackageReference Include="Neon.Postgres" Version="10000.0.2281-dev-master" />
 		<PackageReference Include="Samboy063.Tomlet" Version="3.1.2" />
 		<PackageReference Include="Tomlyn" Version="0.3.1" />
 		<PackageReference Include="Npgsql" Version="6.0.2" />

@@ -6,7 +6,7 @@ metadata:
     {{- include "dex.labels" . | nindent 4 }}
 spec:
   id: neon-sso
-  redirectURIs:
+  redirectUris:
   - 'https://{{ .Values.neonkube.clusterDomain.kubernetesDashboard }}.{{ .Values.cluster.domain }}/oauth2/callback'
   - 'https://{{ .Values.neonkube.clusterDomain.neonDashboard }}.{{ .Values.cluster.domain }}/oauth2/callback'
   - 'https://{{ .Values.neonkube.clusterDomain.kiali }}.{{ .Values.cluster.domain }}/oauth2/callback'
@@ -26,7 +26,7 @@ metadata:
     {{- include "dex.labels" . | nindent 4 }}
 spec:
   id: grafana
-  redirectURIs:
+  redirectUris:
   - 'https://{{ .Values.neonkube.clusterDomain.grafana }}.{{ .Values.cluster.domain }}/login/generic_oauth'
   name: 'Grafana'
   secret: "{{- .Values.secrets.grafana }}"
@@ -43,7 +43,7 @@ metadata:
     {{- include "dex.labels" . | nindent 4 }}
 spec:
   id: harbor
-  redirectURIs:
+  redirectUris:
   - 'https://{{ .Values.neonkube.clusterDomain.harborRegistry }}.{{ .Values.cluster.domain }}/oauth_callback'
   name: 'Harbor'
   secret: "{{- .Values.secrets.harbor }}"
@@ -60,7 +60,7 @@ metadata:
     {{- include "dex.labels" . | nindent 4 }}
 spec:
   id: minio
-  redirectURIs:
+  redirectUris:
   - 'https://{{ .Values.neonkube.clusterDomain.minio }}.{{ .Values.cluster.domain }}/oauth_callback'
   name: 'Minio'
   secret: "{{- .Values.secrets.minio }}"

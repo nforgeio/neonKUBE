@@ -117,7 +117,7 @@ namespace Neon.Kube.Resources
             /// <summary>
             /// Logo used when displaying this client to the end user.
             /// </summary>
-            public string LogoUrl { get; set; }
+            public string LogoUrl { get; set; } 
         }
     }
 }

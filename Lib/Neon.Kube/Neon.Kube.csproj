@@ -77,16 +77,16 @@
 		<PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />
 		<PackageReference Include="Microsoft.OpenApi" Version="1.3.2" />
 		<PackageReference Include="Microsoft.Windows.Compatibility" Version="6.0.0" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2276-dev-master" />
-		<PackageReference Include="Neon.Cryptography" Version="10000.0.2276-dev-master" />
-		<PackageReference Include="Neon.Deployment" Version="10000.0.2276-dev-master" />
-		<PackageReference Include="Neon.JsonConverters" Version="10000.0.2276-dev-master" />
-		<PackageReference Include="Neon.ModelGenerator" Version="10000.0.2276-dev-master" GeneratePathProperty="true">
+		<PackageReference Include="Neon.Common" Version="10000.0.2281-dev-master" />
+		<PackageReference Include="Neon.Cryptography" Version="10000.0.2281-dev-master" />
+		<PackageReference Include="Neon.Deployment" Version="10000.0.2281-dev-master" />
+		<PackageReference Include="Neon.JsonConverters" Version="10000.0.2281-dev-master" />
+		<PackageReference Include="Neon.ModelGenerator" Version="10000.0.2281-dev-master" GeneratePathProperty="true">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Neon.Postgres" Version="10000.0.2276-dev-master" />
-		<PackageReference Include="Neon.SSH" Version="10000.0.2276-dev-master" />
+		<PackageReference Include="Neon.Postgres" Version="10000.0.2281-dev-master" />
+		<PackageReference Include="Neon.SSH" Version="10000.0.2281-dev-master" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 		<PackageReference Include="Npgsql" Version="6.0.2" />
 		<PackageReference Include="prometheus-net" Version="6.0.0" />

@@ -48,7 +48,6 @@ using k8s.Autorest;
 using k8s.Models;
 
 using KubeOps.Operator.Controller;
-using KubeOps.Operator.Controller.Results;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Rbac;
 
@@ -117,7 +116,7 @@ namespace NeonClusterOperator
             {
                 IdleInterval             = Program.Service.Environment.Get("NODETASK_IDLE_INTERVAL", TimeSpan.FromSeconds(1)),
                 ErrorMinRequeueInterval  = Program.Service.Environment.Get("NODETASK_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15)),
-                ErrorMaxRetryInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromSeconds(60)),
+                ErrorMaxRequeueInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromSeconds(60)),
                 IdleCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle", "IDLE events processed."),
                 ReconcileCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle", "RECONCILE events processed."),
                 DeleteCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle", "DELETED events processed."),
@@ -157,6 +156,8 @@ namespace NeonClusterOperator
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task IdleAsync()
         {
+            await SyncContext.Clear;
+
             log.LogInformationEx("[IDLE]");
 
             // We're going to handle this by looking at each node task and checking
@@ -243,6 +244,8 @@ namespace NeonClusterOperator
         /// <inheritdoc/>
         public async Task StatusModifiedAsync(V1NeonNodeTask resource)
         {
+            await SyncContext.Clear;
+
             using (Tracer.CurrentSpan)
             {
                 Tracer.CurrentSpan?.AddEvent("status-modified", attributes => attributes.Add("customresource", nameof(V1NeonNodeTask)));
@@ -268,6 +271,8 @@ namespace NeonClusterOperator
 
         private async Task ProcessControlPlaneCertCheckAsync(V1NeonNodeTask resource)
         {
+            await SyncContext.Clear;
+
             Dictionary<string, int> expirations = new Dictionary<string, int>();
 
             var reading = false;

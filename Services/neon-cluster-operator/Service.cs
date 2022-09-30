@@ -17,17 +17,18 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Net;
 using System.IO.Compression;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Net.Sockets;
+using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
@@ -41,6 +42,7 @@ using Neon.Kube.Operator;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Service;
+using Neon.Tasks;
 
 using DotnetKubernetesClient;
 
@@ -53,6 +55,11 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using Npgsql;
+
+using OpenTelemetry;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Instrumentation.Quartz;
 
 using Prometheus;
 
@@ -114,6 +121,11 @@ namespace NeonClusterOperator
     /// </remarks>
     public partial class Service : NeonService
     {
+        /// <summary>
+        /// Information about the cluster.
+        /// </summary>
+        public ClusterInfo ClusterInfo;
+        
         private IKubernetes k8s;
 
         /// <summary>
@@ -141,9 +153,22 @@ namespace NeonClusterOperator
             k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
             LogContext.SetCurrentLogProvider(TelemetryHub.LoggerFactory);
 
-            await NodeTaskController.StartAsync(k8s);
+            await GlauthController.StartAsync(k8s);
             await NeonClusterOperatorController.StartAsync(k8s);
-            await NamespaceController.StartAsync(k8s);
+            await NeonContainerRegistryController.StartAsync(k8s);
+            await NeonSsoClientController.StartAsync(k8s);
+            await NodeTaskController.StartAsync(k8s);
+
+            _ = k8s.WatchAsync<V1ConfigMap>(async (@event) =>
+            {
+                await SyncContext.Clear;
+
+                ClusterInfo = TypeSafeConfigMap<ClusterInfo>.From(@event.Value).Config;
+
+                Logger.LogInformationEx("Updated cluster info");
+            },
+            KubeNamespace.NeonStatus,
+            fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
 
             //-----------------------------------------------------------------
             // Start the operator controllers.  Note that we're not going to await
@@ -196,6 +221,24 @@ namespace NeonClusterOperator
             Terminator.ReadyToExit();
 
             return 0;
+        }
+
+        /// <inheritdoc/>
+        protected override bool OnTracerConfig(TracerProviderBuilder builder)
+        {
+            builder.AddHttpClientInstrumentation();
+            builder.AddAspNetCoreInstrumentation();
+            builder.AddNpgsql();
+            builder.AddQuartzInstrumentation();
+            builder.AddOtlpExporter(
+                options =>
+                {
+                    options.ExportProcessorType = ExportProcessorType.Batch;
+                    options.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>();
+                    options.Endpoint = new Uri(NeonHelper.NeonKubeOtelCollectorUri);
+                    options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
+                });
+            return true;
         }
 
 #if TODO

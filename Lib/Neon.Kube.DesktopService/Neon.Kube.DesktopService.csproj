@@ -41,8 +41,8 @@
 
     <ItemGroup>
         <PackageReference Include="FluentdForward.OpenTelemetry.Exporter.Logs" Version="0.2.0" />
-        <PackageReference Include="Neon.Common" Version="10000.0.2276-dev-master" />
-        <PackageReference Include="Neon.HyperV" Version="10000.0.2276-dev-master" />
+        <PackageReference Include="Neon.Common" Version="10000.0.2281-dev-master" />
+        <PackageReference Include="Neon.HyperV" Version="10000.0.2281-dev-master" />
         <PackageReference Include="OpenTelemetry.Api" Version="1.4.0-alpha.2" />
         <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.4.0-alpha.2" />
         <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol.Logs" Version="1.4.0-alpha.2" />

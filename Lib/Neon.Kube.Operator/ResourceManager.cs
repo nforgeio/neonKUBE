@@ -41,7 +41,6 @@ using Neon.Tasks;
 using KubeOps.Operator;
 using KubeOps.Operator.Builder;
 using KubeOps.Operator.Controller;
-using KubeOps.Operator.Controller.Results;
 using KubeOps.Operator.Entities;
 
 using k8s;
@@ -49,6 +48,9 @@ using k8s.Autorest;
 using k8s.Models;
 
 using Prometheus;
+using KubeOps.Operator.Events;
+using KubeOps.Operator.Kubernetes;
+using OpenTelemetry.Resources;
 
 // $todo(jefflill):
 //
@@ -168,7 +170,7 @@ namespace Neon.Kube.Operator
     /// </list>
     /// </remarks>
     public sealed class ResourceManager<TEntity, TController> : IDisposable
-        where TEntity : IKubernetesObject<V1ObjectMeta>, new()
+        where TEntity : class, IKubernetesObject<V1ObjectMeta>, new()
         where TController : IOperatorController<TEntity>
     {
         private bool                            isDisposed   = false;
@@ -188,6 +190,7 @@ namespace Neon.Kube.Operator
         private Task                            idleLoopTask;
         private Task                            watcherTask;
         private CancellationTokenSource         watcherTcs;
+        private EventQueue<TEntity>             eventQueue;
 
         /// <summary>
         /// Default constructor.
@@ -606,10 +609,13 @@ namespace Neon.Kube.Operator
                     await mutex.ExecuteActionAsync(
                         async () =>
                         {
+                            ResourceControllerResult result = null;
+
+                            var resource     = @event.Value;
+                            var resourceName = resource.Metadata.Name;
+
                             try
                             {
-                                var resource      = @event.Value;
-                                var resourceName  = resource.Metadata.Name;
                                 var newGeneration = 0L;
 
                                 if (resource.Metadata.Generation != null)
@@ -629,12 +635,19 @@ namespace Neon.Kube.Operator
                                         try
                                         {
                                             options.ReconcileCounter?.Inc();
-                                            await CreateController().ReconcileAsync(resource);
+                                            result = await CreateController().ReconcileAsync(resource);
                                         }
                                         catch (Exception e)
                                         {
                                             options.ReconcileErrorCounter.Inc();
                                             logger.LogErrorEx(e);
+
+                                            if (@event.Attempt < options.ErrorMaxRetryCount)
+                                            {
+                                                @event.Attempt += 1;
+                                                await eventQueue.EnqueueAsync(@event);
+                                                return;
+                                            }
                                         }
 
                                         generationCache[resourceName] = newGeneration;
@@ -676,6 +689,7 @@ namespace Neon.Kube.Operator
                                         {
                                             options.DeleteCounter?.Inc();
                                             await CreateController().DeletedAsync(resource);
+                                            await eventQueue.DequeueAsync(@event);
                                         }
                                         catch (Exception e)
                                         {
@@ -696,17 +710,27 @@ namespace Neon.Kube.Operator
                                             Covenant.Assert(false, $"Resource [{resourceName}] does not known.");
                                         }
 
-                                        if (newGeneration < oldGeneration)
+                                        if (newGeneration < oldGeneration || resource.Metadata.Generation == null)
                                         {
                                             try
                                             {
                                                 options.ReconcileCounter?.Inc();
-                                                await CreateController().ReconcileAsync(resource);
+                                                result = await CreateController().ReconcileAsync(resource);
                                             }
                                             catch (Exception e)
                                             {
                                                 options.ReconcileErrorCounter?.Inc();
                                                 logger.LogErrorEx(e);
+
+                                                if (@event.Attempt < options.ErrorMaxRetryCount)
+                                                {
+                                                    logger.LogErrorEx(() => $"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] " +
+                                                                            $"threw a [{e.GetType()}] error. Retrying... Attempt [{@event.Attempt}]");
+
+                                                    @event.Attempt += 1;
+                                                    await eventQueue.EnqueueAsync(@event);
+                                                    return;
+                                                }
                                             }
                                         }
 
@@ -744,9 +768,37 @@ namespace Neon.Kube.Operator
                                 logger.LogCriticalEx("Cannot recover from exception within watch loop.  Terminating process.");
                                 Environment.Exit(1);
                             }
+
+                            switch (result)
+                            {
+                                case null:
+                                    logger.LogInformationEx(() =>
+                                        $@"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] successfully reconciled. Requeue not requested.");
+                                    return;
+                                case RequeueEventResult requeue:
+                                    var specificQueueTypeRequested = requeue.EventType.HasValue;
+                                    var requestedQueueType = requeue.EventType ?? WatchEventType.Modified;
+
+                                    if (specificQueueTypeRequested)
+                                    {
+                                        logger.LogInformationEx(() =>
+                                                $@"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] successfully reconciled. Requeue requested as type [{requestedQueueType}] with delay [{requeue}].");
+                                    }
+                                    else
+                                    {
+                                        logger.LogInformationEx(() =>
+                                            $@"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] successfully reconciled. Requeue requested with delay [{requeue}].");
+                                    }
+
+                                    await eventQueue.EnqueueAsync(@event, requeue.RequeueDelay, requestedQueueType);
+                                    break;
+                            }
                         });
                 };
-            
+
+
+            this.eventQueue = new EventQueue<TEntity>(k8s, options, actionAsync);
+
             //-----------------------------------------------------------------
             // Start the watcher.
 

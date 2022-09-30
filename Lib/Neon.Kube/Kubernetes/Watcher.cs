@@ -46,12 +46,17 @@ namespace Neon.Kube
         /// <summary>
         /// The <see cref="WatchEventType"/>
         /// </summary>
-        public WatchEventType Type { get; internal set; }
+        public WatchEventType Type { get; set; }
 
         /// <summary>
         /// The watch event value.
         /// </summary>
         public T Value { get; internal set; }
+
+        /// <summary>
+        /// The number of attempts for reconciling the resource.
+        /// </summary>
+        public int Attempt { get; set; } = 0;
     }
 
     /// <summary>

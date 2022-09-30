@@ -51,7 +51,6 @@ using k8s.Autorest;
 using k8s.Models;
 
 using KubeOps.Operator.Controller;
-using KubeOps.Operator.Controller.Results;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Rbac;
 
@@ -62,6 +61,7 @@ using OpenTelemetry.Trace;
 
 using Prometheus;
 using Grpc.Net.Client;
+using Grpc.Core;
 
 namespace NeonClusterOperator
 {
@@ -116,6 +116,9 @@ namespace NeonClusterOperator
 
                 var options = new ResourceManagerOptions()
                 {
+                    ErrorMaxRetryCount = int.MaxValue,
+                    ErrorMaxRequeueInterval = TimeSpan.FromMinutes(10),
+                    ErrorMinRequeueInterval = TimeSpan.FromSeconds(60),
                     IdleCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "IDLE events processed."),
                     ReconcileCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "RECONCILE events processed."),
                     DeleteCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "DELETED events processed."),
@@ -171,14 +174,15 @@ namespace NeonClusterOperator
         /// <inheritdoc/>
         public async Task<ResourceControllerResult> ReconcileAsync(V1NeonSsoClient resource)
         {
+            await SyncContext.Clear;
+
             using (Tracer.CurrentSpan)
             {
                 Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("customresource", nameof(V1NeonSsoClient)));
 
                 // Ignore all events when the controller hasn't been started.
 
-                if (resourceManager == null
-                    || resource.Name() != KubeService.NeonClusterOperator)
+                if (resourceManager == null)
                 {
                     return null;
                 }
@@ -194,14 +198,15 @@ namespace NeonClusterOperator
         /// <inheritdoc/>
         public async Task DeletedAsync(V1NeonSsoClient resource)
         {
+            await SyncContext.Clear;
+
             using (Tracer.CurrentSpan)
             {
                 Tracer.CurrentSpan?.AddEvent("delete", attributes => attributes.Add("customresource", nameof(V1NeonSsoClient)));
 
                 // Ignore all events when the controller hasn't been started.
 
-                if (resourceManager == null
-                || resource.Name() != KubeService.NeonClusterOperator)
+                if (resourceManager == null)
                 {
                     return;
                 }
@@ -261,14 +266,25 @@ namespace NeonClusterOperator
 
         private async Task UpsertClientAsync(V1NeonSsoClient resource)
         {
+            await SyncContext.Clear;
+
             var client = new Dex.Client()
             {
-                Id = resource.Spec.Id,
-                Name = resource.Spec.Name,
-                Secret = resource.Spec.Secret,
-                Public = resource.Spec.Public,
-                LogoUrl = resource.Spec.LogoUrl
+                Id      = resource.Spec.Id,
+                Name    = resource.Spec.Name,
+                Public  = resource.Spec.Public
             };
+
+            if (resource.Spec.Secret != null)
+            {
+                client.Secret = resource.Spec.Secret;
+            }
+
+            if (resource.Spec.LogoUrl != null)
+            {
+                client.LogoUrl = resource.Spec.LogoUrl;
+            }
+
             client.RedirectUris.AddRange(resource.Spec.RedirectUris);
             client.TrustedPeers.AddRange(resource.Spec.TrustedPeers);
             

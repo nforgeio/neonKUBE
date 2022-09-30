@@ -338,10 +338,10 @@ spec:
             await InstallRedisAsync(controller, controlNode);
 
             controller.ThrowIfCancelled();
-            await InstallSsoAsync(controller, controlNode);
+            await InstallClusterOperatorAsync(controller, controlNode);
 
             controller.ThrowIfCancelled();
-            await InstallClusterOperatorAsync(controller, controlNode);
+            await InstallSsoAsync(controller, controlNode);
 
             controller.ThrowIfCancelled();
             if (cluster.Definition.Features.Kiali)
