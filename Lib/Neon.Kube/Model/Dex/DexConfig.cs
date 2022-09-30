@@ -111,15 +111,6 @@ namespace Neon.Kube
         public DexOauth2Config Oauth2 { get; set; }
 
         /// <summary>
-        /// Instead of reading from an external storage, use this list of clients.
-        /// If this option isn't chosen clients may be added through the gRPC API.
-        /// </summary>
-        [JsonProperty(PropertyName = "StaticClients", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "staticClients", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public List<DexClient> StaticClients { get; set; }
-
-        /// <summary>
         /// Let dex keep a list of passwords which can be used to login to dex.
         /// </summary>
         [JsonProperty(PropertyName = "EnablePasswordDb", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

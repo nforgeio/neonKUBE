@@ -85,19 +85,7 @@ namespace NeonSsoSessionProxy
             services.AddHealthChecks();
             services.AddHttpForwarder();
             services.AddHttpClient();
-
-            // Dex config
-
-            var dexClient  = new DexClient(new Uri($"http://{KubeService.Dex}:5556"), NeonSsoSessionProxyService.Logger);
-            
-            // Load in each of the clients from the Dex config into the client.
-
-            foreach (var client in NeonSsoSessionProxyService.Config.StaticClients)
-            {
-                dexClient.AuthHeaders.Add(client.Id, new BasicAuthenticationHeaderValue(client.Id, client.Secret));
-            }
-
-            services.AddSingleton(dexClient);
+            services.AddSingleton(Program.Service.DexClient);
 
             // Http client for Yarp.
 
@@ -126,7 +114,7 @@ namespace NeonSsoSessionProxy
             services.AddSingleton<SessionTransformer>(
                 serviceProvider =>
                 {
-                    return new SessionTransformer(serviceProvider.GetService<IDistributedCache>(), aesCipher, dexClient, NeonSsoSessionProxyService.Logger, cacheOptions);
+                    return new SessionTransformer(serviceProvider.GetService<IDistributedCache>(), aesCipher, Program.Service.DexClient, NeonSsoSessionProxyService.Logger, cacheOptions);
                 });
             
             services.AddControllers()

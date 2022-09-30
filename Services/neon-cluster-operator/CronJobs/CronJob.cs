@@ -22,9 +22,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Neon.Common;
+using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Resources;
-using Neon.Common;
 
 using k8s;
 using k8s.Models;
@@ -107,7 +108,7 @@ namespace NeonClusterOperator
                 {
                     await scheduler.DeleteJob(new JobKey(Name, Group));
                 }
-                catch (Exception e)
+                catch (NullReferenceException)
                 {
                     return;
                 }

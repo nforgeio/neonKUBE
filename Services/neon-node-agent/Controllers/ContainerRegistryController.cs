@@ -42,7 +42,6 @@ using k8s;
 using k8s.Models;
 
 using KubeOps.Operator.Controller;
-using KubeOps.Operator.Controller.Results;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Rbac;
 
@@ -364,7 +363,7 @@ rm $0
             {
                 IdleInterval             = Program.Service.Environment.Get("CONTAINERREGISTRY_IDLE_INTERVAL", TimeSpan.FromMinutes(5)),
                 ErrorMinRequeueInterval  = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15)),
-                ErrorMaxRetryInterval    = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromSeconds(60)),
+                ErrorMaxRequeueInterval    = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromSeconds(60)),
                 IdleCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_idle", "IDLE events processed."),
                 ReconcileCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_reconcile", "RECONCILE events processed."),
                 DeleteCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_delete", "DELETED events processed."),

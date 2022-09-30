@@ -84,7 +84,7 @@ namespace NeonSsoSessionProxy
                         {
                             if (context.Request.Query.TryGetValue("client_id", out var clientId))
                             {
-                                if (!NeonSsoSessionProxyService.Config.StaticClients.Where(client => client.Id == clientId).First().RedirectUris.Contains(redirectUri))
+                                if (!NeonSsoSessionProxyService.Clients.Where(client => client.Spec.Id == clientId).First().Spec.RedirectUris.Contains(redirectUri))
                                 {
                                     logger.LogErrorEx("Invalid redirect URI");
 

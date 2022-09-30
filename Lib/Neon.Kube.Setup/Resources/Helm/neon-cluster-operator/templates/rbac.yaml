@@ -9,6 +9,8 @@ rules:
   - neonclusteroperators
   - neonnodetasks
   - neonnodetasks/status
+  - neoncontainerregistries
+  - neonssoclients
   verbs:
   - create
   - get
@@ -21,6 +23,7 @@ rules:
   - ""
   resources:
   - events
+  - services
   verbs:
   - create
   - get
@@ -32,6 +35,9 @@ rules:
   resources:
   - nodes
   - nodes/status
+  - secrets
+  - configmaps
+  - namespaces
   verbs:
   - get
   - list

@@ -133,8 +133,32 @@ namespace Neon.Kube.Resources
             public bool Enabled { get; set; } = true;
 
             /// <summary>
-            /// The update schedule. This must be a valid cron schedule.
+            /// <para>
+            /// The update schedule. This is a represented as a cron expression. Cron expressions are 
+            /// made up of seven sub-expressions that describe the details of the schedule. The sub expressions
+            /// are:
+            /// </para>
+            /// 
+            /// <list type="bullet">
+            ///     <item>Seconds</item>
+            ///     <item>Minutes</item>
+            ///     <item>Hours</item>
+            ///     <item>Day-of-Month</item>
+            ///     <item>Month</item>
+            ///     <item>Day-of-Week</item>
+            ///     <item>Year (optional)</item>
+            /// </list>
+            /// 
+            /// <para>
+            /// An example of a complete cron expression is <code>0 0 15 ? * MON</code> which means
+            /// every monday at 3pm.
+            /// </para>
+            /// 
             /// </summary>
+            /// <remarks>
+            /// For the full documentation see: 
+            /// https://www.quartz-scheduler.net/documentation/quartz-3.x/tutorial/crontriggers.html#cron-expressions
+            /// </remarks>
             public string Schedule { get; set; } = "0 0 * * 1";
         }
     }

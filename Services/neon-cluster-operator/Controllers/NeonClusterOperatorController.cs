@@ -48,7 +48,6 @@ using k8s.Autorest;
 using k8s.Models;
 
 using KubeOps.Operator.Controller;
-using KubeOps.Operator.Controller.Results;
 using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Rbac;
 
@@ -130,6 +129,9 @@ namespace NeonClusterOperator
 
                 var options = new ResourceManagerOptions()
                 {
+                    ErrorMaxRetryCount = int.MaxValue,
+                    ErrorMaxRequeueInterval = TimeSpan.FromMinutes(10),
+                    ErrorMinRequeueInterval = TimeSpan.FromSeconds(60),
                     IdleCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle", "IDLE events processed."),
                     ReconcileCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle", "RECONCILE events processed."),
                     DeleteCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle", "DELETED events processed."),
@@ -174,6 +176,8 @@ namespace NeonClusterOperator
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task IdleAsync()
         {
+            await SyncContext.Clear;
+
             using (Tracer.CurrentSpan)
             {
                 Tracer.CurrentSpan?.AddEvent("idle", attributes => attributes.Add("customresource", nameof(V1NeonClusterOperator)));
@@ -190,6 +194,8 @@ namespace NeonClusterOperator
         /// <inheritdoc/>
         public async Task<ResourceControllerResult> ReconcileAsync(V1NeonClusterOperator resource)
         {
+            await SyncContext.Clear;
+
             using (Tracer.CurrentSpan)
             {
                 Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("customresource", nameof(V1NeonClusterOperator)));
@@ -200,6 +206,11 @@ namespace NeonClusterOperator
                     || resource.Name() != KubeService.NeonClusterOperator)
                 {
                     return null;
+                }
+
+                if (!initialized)
+                {
+                    await InitializeSchedulerAsync();
                 }
 
                 var nodeCaExpression = resource.Spec.Updates.NodeCaCertificates.Schedule;
@@ -223,6 +234,8 @@ namespace NeonClusterOperator
         /// <inheritdoc/>
         public async Task DeletedAsync(V1NeonClusterOperator resource)
         {
+            await SyncContext.Clear;
+
             using (Tracer.CurrentSpan)
             {
                 Tracer.CurrentSpan?.AddEvent("delete", attributes => attributes.Add("customresource", nameof(V1NeonClusterOperator)));
@@ -244,19 +257,21 @@ namespace NeonClusterOperator
         /// <inheritdoc/>
         public async Task OnPromotionAsync()
         {
+            await SyncContext.Clear;
+
             using (Tracer.CurrentSpan)
             {
                 Tracer.CurrentSpan?.AddEvent("promotion", attributes => attributes.Add("customresource", nameof(V1NeonClusterOperator)));
 
                 log.LogInformationEx(() => $"PROMOTED");
-
-                await InitializeSchedulerAsync();
             }
         }
 
         /// <inheritdoc/>
         public async Task OnDemotionAsync()
         {
+            await SyncContext.Clear;
+
             using (Tracer.CurrentSpan)
             {
                 Tracer.CurrentSpan?.AddEvent("promotion", attributes => attributes.Add("customresource", nameof(V1NeonClusterOperator)));
@@ -270,6 +285,8 @@ namespace NeonClusterOperator
         /// <inheritdoc/>
         public async Task OnNewLeaderAsync(string identity)
         {
+            await SyncContext.Clear;
+
             using (Tracer.CurrentSpan)
             {
                 Tracer.CurrentSpan?.AddEvent("promotion", attributes => 
@@ -279,13 +296,13 @@ namespace NeonClusterOperator
                 });
 
                 log.LogInformationEx(() => $"NEW LEADER: {identity}");
-
-                await SyncContext.Clear;
             }
         }
 
         private async Task InitializeSchedulerAsync()
         {
+            await SyncContext.Clear;
+
             using (Tracer.CurrentSpan)
             {
                 Tracer.CurrentSpan?.AddEvent("initialize-scheduler", attributes => attributes.Add("customresource", nameof(V1NeonClusterOperator)));
@@ -294,24 +311,14 @@ namespace NeonClusterOperator
 
                 await scheduler.Start();
 
-                var settings = await k8s.ReadClusterCustomObjectAsync<V1NeonClusterOperator>(KubeService.NeonClusterOperator);
-
-                var nodeCaExpression = settings.Spec.Updates.NodeCaCertificates.Schedule;
-                CronExpression.ValidateExpression(nodeCaExpression);
-
-                await updateCaCertificates.AddToSchedulerAsync(scheduler, k8s, nodeCaExpression);
-
-                var controlPlaneCertExpression = settings.Spec.Updates.ControlPlaneCertificates.Schedule;
-                CronExpression.ValidateExpression(controlPlaneCertExpression);
-
-                await checkControlPlaneCertificates.AddToSchedulerAsync(scheduler, k8s, controlPlaneCertExpression);
-
                 initialized = true;
             }
         }
 
         private async Task ShutDownAsync()
         {
+            await SyncContext.Clear;
+
             using (Tracer.CurrentSpan)
             {
                 Tracer.CurrentSpan?.AddEvent("shutdown-scheduler", attributes => attributes.Add("customresource", nameof(V1NeonClusterOperator)));

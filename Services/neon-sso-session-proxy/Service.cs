@@ -29,13 +29,18 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
-using Neon.Service;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.Resources;
+using Neon.Service;
+using Neon.Tasks;
 
 using Prometheus;
 using Prometheus.DotNetRuntime;
+
+using k8s;
+using k8s.Models;
 
 namespace NeonSsoSessionProxy
 {
@@ -46,7 +51,8 @@ namespace NeonSsoSessionProxy
     {
         // class fields
         private IWebHost webHost;
-
+        private IKubernetes k8s;
+        
         /// <summary>
         /// Session cookie name.
         /// </summary>
@@ -56,6 +62,16 @@ namespace NeonSsoSessionProxy
         /// The Dex configuration.
         /// </summary>
         public DexConfig Config { get; private set; }
+
+        /// <summary>
+        /// The Dex client.
+        /// </summary>
+        public DexClient DexClient { get; private set; }
+
+        /// <summary>
+        /// Clients available.
+        /// </summary>
+        public List<V1NeonSsoClient> Clients;
 
         /// <summary>
         /// Constructor.
@@ -91,6 +107,42 @@ namespace NeonSsoSessionProxy
                 Config = NeonHelper.YamlDeserializeViaJson<DexConfig>(await reader.ReadToEndAsync());
             }
 
+            k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
+
+            Clients = new List<V1NeonSsoClient>();
+
+            _ = k8s.WatchAsync<V1NeonSsoClient>(async (@event) =>
+            {
+                await SyncContext.Clear;
+
+                switch (@event.Type)
+                {
+                    case WatchEventType.Added:
+
+                        await AddClientAsync(@event.Value);
+                        break;
+
+                    case WatchEventType.Deleted:
+
+                        await RemoveClientAsync(@event.Value);
+                        break;
+
+                    case WatchEventType.Modified:
+
+                        await RemoveClientAsync(@event.Value);
+                        await AddClientAsync(@event.Value);
+                        break;
+
+                    default:
+
+                        break;
+                }
+            });
+
+            // Dex config
+
+            DexClient = new DexClient(new Uri($"http://{KubeService.Dex}:5556"), Logger);
+
             // Start the web service.
 
             webHost = new WebHostBuilder()
@@ -119,6 +171,31 @@ namespace NeonSsoSessionProxy
             Terminator.ReadyToExit();
 
             return 0;
+        }
+
+        private async Task AddClientAsync(V1NeonSsoClient client)
+        {
+            await SyncContext.Clear;
+
+            Clients.Add(client);
+            
+            DexClient.AuthHeaders.Add(client.Spec.Id, new BasicAuthenticationHeaderValue(client.Spec.Id, client.Spec.Secret));
+
+            Logger.LogInformationEx(() => $"Added client: {client.Name()}");
+        }
+
+        private async Task RemoveClientAsync(V1NeonSsoClient client)
+        {
+            await SyncContext.Clear;
+
+            Clients.Remove(
+                Clients.Where(
+                    c => c.Spec.Id == client.Spec.Id
+                    && c.Spec.Secret == client.Spec.Secret).First());
+
+            DexClient.AuthHeaders.Remove(client.Spec.Id);
+
+            Logger.LogInformationEx(() => $"Removed client: {client.Name()}");
         }
     }
 }

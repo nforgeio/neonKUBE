@@ -69,17 +69,23 @@ namespace Neon.Kube.Operator
 
         /// <summary>
         /// Specifies the minimum timeout to before retrying after an error.  Timeouts will start
-        /// at <see cref="ErrorMinRequeueInterval"/> and increase to <see cref="ErrorMaxRetryInterval"/>
+        /// at <see cref="ErrorMinRequeueInterval"/> and increase to <see cref="ErrorMaxRequeueInterval"/>
         /// until the error is resolved.  This defaults to <b>15 seconds</b>.
         /// </summary>
         public TimeSpan ErrorMinRequeueInterval { get; set; } = TimeSpan.FromSeconds(15);
 
         /// <summary>
         /// Specifies the maximum timeout to before retrying after an error.  Timeouts will start
-        /// at <see cref="ErrorMinRequeueInterval"/> and increase to <see cref="ErrorMaxRetryInterval"/>
+        /// at <see cref="ErrorMinRequeueInterval"/> and increase to <see cref="ErrorMaxRequeueInterval"/>
         /// until the error is resolved.  This defaults to <b>10 minutes</b>.
         /// </summary>
-        public TimeSpan ErrorMaxRetryInterval { get; set; } = TimeSpan.FromMinutes(10);
+        public TimeSpan ErrorMaxRequeueInterval { get; set; } = TimeSpan.FromMinutes(10);
+
+        /// <summary>
+        /// Specifies the maximum number of attempts to retry after an error.
+        /// This defaults to <b>10</b>.
+        /// </summary>
+        public int ErrorMaxRetryCount { get; set; } = 10;
 
         /// <summary>
         /// <para>
@@ -211,9 +217,9 @@ namespace Neon.Kube.Operator
                 throw new ValidationException($"[{nameof(ErrorMinRequeueInterval)}={ErrorMinRequeueInterval}] cannot be less than zero.");
             }
 
-            if (ErrorMaxRetryInterval < TimeSpan.Zero)
+            if (ErrorMaxRequeueInterval < TimeSpan.Zero)
             {
-                throw new ValidationException($"[{nameof(ErrorMaxRetryInterval)}={ErrorMaxRetryInterval}] cannot be less than zero.");
+                throw new ValidationException($"[{nameof(ErrorMaxRequeueInterval)}={ErrorMaxRequeueInterval}] cannot be less than zero.");
             }
         }
     }
