@@ -59,7 +59,7 @@ namespace Neon.Kube.Operator
         private readonly IKubernetes k8s;
         private readonly ILogger logger;
         private readonly ResourceManagerOptions options;
-        private readonly Dictionary<string, CancellationTokenSource> queue;
+        private readonly Dictionary<WatchEvent<TEntity>, CancellationTokenSource> queue;
         private readonly Func<WatchEvent<TEntity>, Task> eventHandler;
 
         /// <summary>
@@ -77,7 +77,27 @@ namespace Neon.Kube.Operator
             this.options = options; 
             this.eventHandler = eventHandler;
             this.logger  = TelemetryHub.CreateLogger($"Neon.Kube.Operator.EventQueue({typeof(TEntity).Name})");
-            this.queue   = new Dictionary<string, CancellationTokenSource>();
+            this.queue   = new Dictionary<WatchEvent<TEntity>, CancellationTokenSource>();
+        }
+
+        /// <summary>
+        /// Used to notigfy the queue of a new reconcilliation request. This will make sure that any pending
+        /// requeue requests are cancelled, since they are no longer valid.
+        /// </summary>
+        /// <param name="event"></param>
+        /// <returns></returns>
+        public async Task NotifyAsync(
+            WatchEvent<TEntity> @event)
+        {
+            var queuedEvent = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).FirstOrDefault();
+
+            if (queuedEvent != null) 
+            { 
+                if (@event.Value.Generation() > queuedEvent.Value.Generation())
+                {
+                    await DequeueAsync(@event);
+                }
+            }
         }
 
         /// <summary>
@@ -94,7 +114,7 @@ namespace Neon.Kube.Operator
         {
             await SyncContext.Clear;
 
-            if (queue.ContainsKey(@event.Value.Uid()))
+            if (queue.Keys.Any(key => key.Value.Uid() == @event.Value.Uid()))
             {
                 return;
             }
@@ -108,7 +128,7 @@ namespace Neon.Kube.Operator
 
             var cts = new CancellationTokenSource();
 
-            queue.Add(@event.Value.Uid(), cts);
+            queue.Add(@event, cts);
 
             _ = QueueAsync(@event, delay.Value, cts.Token);
         }
@@ -122,9 +142,11 @@ namespace Neon.Kube.Operator
         {
             await SyncContext.Clear;
 
-            if (queue.TryGetValue(@event.Value.Uid(), out var cts))
+            var queuedEvent = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).FirstOrDefault();
+
+            if (queuedEvent.Value != null)
             {
-                cts.Cancel();
+                queue[queuedEvent].Cancel();
             }
         }
 
@@ -140,9 +162,11 @@ namespace Neon.Kube.Operator
             }
             catch (TaskCanceledException)
             {
-                if (queue.ContainsKey(@event.Value.Uid()))
+                var queuedEvent = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).FirstOrDefault();
+
+                if (queuedEvent != null)
                 {
-                    queue.Remove(@event.Value.Uid());
+                    queue.Remove(queuedEvent);
                 }
             }
         }

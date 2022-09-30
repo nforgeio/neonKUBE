@@ -628,6 +628,8 @@ namespace Neon.Kube.Operator
                                     return;
                                 }
 
+                                await eventQueue.NotifyAsync(@event);
+
                                 switch (@event.Type)
                                 {
                                     case WatchEventType.Added:
@@ -640,8 +642,9 @@ namespace Neon.Kube.Operator
                                         catch (Exception e)
                                         {
                                             options.ReconcileErrorCounter.Inc();
-                                            logger.LogErrorEx(e);
-
+                                            logger.LogErrorEx(() => $"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] " +
+                                                                        $"threw a [{e.GetType()}] error. Retrying... Attempt [{@event.Attempt}]");
+                                            
                                             if (@event.Attempt < options.ErrorMaxRetryCount)
                                             {
                                                 @event.Attempt += 1;
@@ -707,10 +710,19 @@ namespace Neon.Kube.Operator
 
                                         if (!generationCache.TryGetValue(resourceName, out var oldGeneration))
                                         {
-                                            Covenant.Assert(false, $"Resource [{resourceName}] does not known.");
+                                            if (@event.Attempt > 0)
+                                            {
+                                                // this is a retry and has not been seen yet
+                                                generationCache[resourceName] = newGeneration;
+                                                oldGeneration                 = newGeneration;
+                                            }
+                                            else
+                                            {
+                                                Covenant.Assert(false, $"Resource [{resourceName}] does not known.");
+                                            }
                                         }
 
-                                        if (newGeneration < oldGeneration || resource.Metadata.Generation == null)
+                                        if (newGeneration <= oldGeneration || resource.Metadata.Generation == null)
                                         {
                                             try
                                             {
