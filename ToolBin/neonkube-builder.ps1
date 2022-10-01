@@ -55,6 +55,11 @@ if ($codedoc)
 
 . $env:NK_ROOT/Powershell/includes.ps1
 
+# Abort if Visual Studio is running because that can cause [pubcore] to
+# fail due to locked files.
+
+Ensure-VisualStudioNotRunning
+
 # Initialize
 
 if ($all)

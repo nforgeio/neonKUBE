@@ -82,6 +82,11 @@ param
 
 . $env:NK_ROOT/Powershell/includes.ps1
 
+# Abort if Visual Studio is running because that can cause [pubcore] to
+# fail due to locked files.
+
+Ensure-VisualStudioNotRunning
+
 # Verify that the user has the required environment variables.  These will
 # be available only for maintainers and are intialized by the neonCLOUD
 # [buildenv.cmd] script.

@@ -40,20 +40,19 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Google.Protobuf" Version="3.21.6" />
+		<PackageReference Include="Google.Protobuf" Version="3.21.7" />
 		<PackageReference Include="Grpc.Net.Client" Version="2.49.0" />
 		<PackageReference Include="Grpc.Tools" Version="2.49.1">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
-		<PackageReference Include="Npgsql.OpenTelemetry" Version="6.0.7" />
 		<PackageReference Include="OpenTelemetry" Version="1.4.0-alpha.2" />
 		<PackageReference Include="OpenTelemetry.Instrumentation.Quartz" Version="1.0.0-alpha.1" />
+		<PackageReference Include="Npgsql.OpenTelemetry" Version="6.0.7" />
 		<PackageReference Include="Quartz" Version="3.5.0" />
-
-		<PackageReference Include="Neon.Common" Version="10000.0.2288-dev-master" />
-        <PackageReference Include="Neon.Service" Version="10000.0.2288-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2291-dev-master" />
+        <PackageReference Include="Neon.Service" Version="10000.0.2291-dev-master" />
     </ItemGroup>
 
 	<ItemGroup>
