@@ -17,16 +17,6 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<AnalysisLevel>5.0</AnalysisLevel>
 		<SelfContained>true</SelfContained>
-		<!-- 
-        We need to prevent the KubeOps build targets from trying to call the program
-        entry point to generate the CRDs and other installation related files.
-        -->
-
-		<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
-		<KubeOpsSkipCrds>true</KubeOpsSkipCrds>
-		<KubeOpsSkipRbac>true</KubeOpsSkipRbac>
-		<KubeOpsSkipOperator>true</KubeOpsSkipOperator>
-		<KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
 
@@ -84,7 +74,6 @@
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Azure\Neon.Kube.Azure.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.BareMetal\Neon.Kube.BareMetal.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Google\Neon.Kube.Google.csproj" />
-		<ProjectReference Include="..\..\Lib\Neon.Kube.GrpcProto\Neon.Kube.GrpcProto.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.HyperV\Neon.Kube.HyperV.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Setup\Neon.Kube.Setup.csproj" />

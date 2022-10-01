@@ -50,6 +50,7 @@
 		<PackageReference Include="OpenTelemetry" Version="1.4.0-alpha.2" />
 		<PackageReference Include="OpenTelemetry.Instrumentation.Quartz" Version="1.0.0-alpha.1" />
 		<PackageReference Include="Npgsql.OpenTelemetry" Version="6.0.7" />
+		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.9" />
 		<PackageReference Include="Quartz" Version="3.5.0" />
 		<PackageReference Include="Neon.Common" Version="10000.0.2291-dev-master" />
         <PackageReference Include="Neon.Service" Version="10000.0.2291-dev-master" />

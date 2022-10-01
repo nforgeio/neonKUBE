@@ -29,8 +29,6 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Threading;
 
-using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Extensions.Logging;
 
 using Neon.Common;

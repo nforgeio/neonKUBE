@@ -26,9 +26,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Extensions.Logging;
 
 using JsonDiffPatch;
