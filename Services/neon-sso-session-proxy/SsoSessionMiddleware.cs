@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -32,12 +33,22 @@ using Neon.Web;
 
 namespace NeonSsoSessionProxy
 {
+    /// <summary>
+    /// The SSO session middleware.
+    /// </summary>
     public class SsoSessionMiddleware
     {
-        private readonly RequestDelegate _next;
-        public SsoSessionMiddleware(RequestDelegate next)
+        private readonly RequestDelegate nextDelegate;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="nextDelegate">The next delegate.</param>
+        public SsoSessionMiddleware(RequestDelegate nextDelegate)
         {
-            _next = next ?? throw new ArgumentNullException(nameof(next));
+            Covenant.Requires<ArgumentNullException>(nextDelegate != null, nameof(nextDelegate));
+
+            this.nextDelegate = nextDelegate;
         }
 
         /// <summary>
@@ -52,12 +63,12 @@ namespace NeonSsoSessionProxy
         /// </para>
         /// </summary>
         public async Task InvokeAsync(
-                HttpContext                     context,
-                Service                         NeonSsoSessionProxyService,
-                IDistributedCache               cache, 
-                AesCipher                       cipher,
-                DistributedCacheEntryOptions    cacheOptions,
-                ILogger                         logger)
+            HttpContext                     context,
+            Service                         NeonSsoSessionProxyService,
+            IDistributedCache               cache, 
+            AesCipher                       cipher,
+            DistributedCacheEntryOptions    cacheOptions,
+            ILogger                         logger)
         {
             try
             {
@@ -68,6 +79,7 @@ namespace NeonSsoSessionProxy
                     if (requestCookie.TokenResponse != null)
                     {
                         var code = NeonHelper.GetCryptoRandomPassword(10);
+
                         await cache.SetAsync(code, cipher.EncryptToBytes(NeonHelper.JsonSerializeToBytes(requestCookie.TokenResponse)), cacheOptions);
 
                         var query = new Dictionary<string, string>()
@@ -116,7 +128,7 @@ namespace NeonSsoSessionProxy
                 NeonSsoSessionProxyService.Logger.LogErrorEx(e);
             }
 
-            await _next(context);
+            await nextDelegate(context);
         }
     }
 
@@ -125,8 +137,12 @@ namespace NeonSsoSessionProxy
     /// </summary>
     public static class SsoSessionMiddlewareHelper
     {
-        public static IApplicationBuilder UseSsoSessionMiddleware(
-        this IApplicationBuilder builder)
+        /// <summary>
+        /// Adds <see cref="SsoSessionMiddleware"/> to the ASP.NET middleware.
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <returns></returns>
+        public static IApplicationBuilder UseSsoSessionMiddleware(this IApplicationBuilder builder)
         {
             return builder.UseMiddleware<SsoSessionMiddleware>();
         }

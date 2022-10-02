@@ -43,17 +43,20 @@ using Yarp.ReverseProxy.Forwarder;
 
 namespace NeonSsoSessionProxy.Controllers
 {
+    /// <summary>
+    /// IMplements authorization.
+    /// </summary>
     [ApiController]
     public class AuthController : NeonControllerBase
     {
-        private Service   NeonSsoSessionProxyService;
-        private HttpMessageInvoker           httpClient;
-        private IHttpForwarder               forwarder;
-        private SessionTransformer           transformer;
-        private IDistributedCache            cache;
-        private AesCipher                    cipher;
-        private DexClient                    dexClient;
-        private DistributedCacheEntryOptions cacheOptions;
+        private Service                         NeonSsoSessionProxyService;
+        private HttpMessageInvoker              httpClient;
+        private IHttpForwarder                  forwarder;
+        private SessionTransformer              transformer;
+        private IDistributedCache               cache;
+        private AesCipher                       cipher;
+        private DexClient                       dexClient;
+        private DistributedCacheEntryOptions    cacheOptions;
 
         /// <summary>
         /// Constructor.
@@ -64,6 +67,8 @@ namespace NeonSsoSessionProxy.Controllers
         /// <param name="cache"></param>
         /// <param name="aesCipher"></param>
         /// <param name="dexClient"></param>
+        /// <param name="sessionTransformer"></param>
+        /// <param name="cacheOptions"></param>
         public AuthController(
             Service   NeonSsoSessionProxyService,
             HttpMessageInvoker           httpClient,
@@ -107,7 +112,7 @@ namespace NeonSsoSessionProxy.Controllers
         /// Token request endpoint. Returns the token from cache with given code.
         /// </summary>
         /// <param name="code"></param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <returns>The requested <see cref="TokenResponse"/>.</returns>
         [Route("/token")]
         public async Task<ActionResult<TokenResponse>> TokenAsync([FromForm] string code)
         {

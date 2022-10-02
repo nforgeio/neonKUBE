@@ -34,6 +34,9 @@ using Newtonsoft.Json.Serialization;
 
 namespace NeonSsoSessionProxy
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class Cookie
     {
         /// <summary>
@@ -93,7 +96,5 @@ namespace NeonSsoSessionProxy
         [JsonProperty(PropertyName = "TokenResponse", Required = Required.Default)]
         [DefaultValue(null)]
         public TokenResponse TokenResponse { get; set; }
-
-
     }
 }

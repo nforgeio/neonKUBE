@@ -5,10 +5,6 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<RootNamespace>Prebuilder</RootNamespace>
 		<Configurations>Debug;Release</Configurations>
-		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<AnalysisLevel>5.0</AnalysisLevel>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -23,7 +19,7 @@
 
 	<ItemGroup>
 	  <PackageReference Include="KubernetesClient" Version="7.2.19" />
-	  <PackageReference Include="Neon.Common" Version="10000.0.2293-dev-jeff" />
+	  <PackageReference Include="Neon.Common" Version="10000.0.2294-dev-master" />
 	</ItemGroup>
 
 </Project>

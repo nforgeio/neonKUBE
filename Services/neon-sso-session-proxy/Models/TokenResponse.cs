@@ -34,6 +34,9 @@ using Newtonsoft.Json.Serialization;
 
 namespace NeonSsoSessionProxy
 {
+    /// <summary>
+    /// Holds an OAuth2 token.
+    /// </summary>
     public class TokenResponse
     {
         /// <summary>

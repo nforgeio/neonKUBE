@@ -4,17 +4,11 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<OutputType>Exe</OutputType>
 		<IsPackable>false</IsPackable>
-		<LangVersion>latest</LangVersion>
 		<RootNamespace>NeonClusterOperator</RootNamespace>
-		<LangVersion>latest</LangVersion>
 		<ServerGarbageCollection>true</ServerGarbageCollection>
 		<ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
 		<AssemblyName>neon-cluster-operator</AssemblyName>
 		<Configurations>Debug;Release</Configurations>
-		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
-		<AnalysisLevel>5.0</AnalysisLevel>
-		<DebugType>pdbonly</DebugType>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -53,8 +47,8 @@
 		<PackageReference Include="Npgsql.OpenTelemetry" Version="6.0.7" />
 		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.9" />
 		<PackageReference Include="Quartz" Version="3.5.0" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2293-dev-jeff" />
-        <PackageReference Include="Neon.Service" Version="10000.0.2293-dev-jeff" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2294-dev-master" />
+        <PackageReference Include="Neon.Service" Version="10000.0.2294-dev-master" />
     </ItemGroup>
 
 	<ItemGroup>

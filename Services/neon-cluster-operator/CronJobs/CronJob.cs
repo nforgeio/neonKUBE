@@ -37,6 +37,9 @@ using OpenTelemetry.Trace;
 
 namespace NeonClusterOperator
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class CronJob
     {
         /// <summary>
@@ -77,18 +80,21 @@ namespace NeonClusterOperator
             {
                 Tracer.CurrentSpan?.AddEvent("add-to-scheduler");
 
-                IJobDetail job = JobBuilder.Create(Type)
+                var job = JobBuilder.Create(Type)
                     .WithIdentity(Name, Group)
                     .Build();
+
                 job.JobDataMap.Put("Kubernetes", k8s);
 
                 // Trigger the job to run now, and then repeat every 10 seconds
+
                 ITrigger trigger = TriggerBuilder.Create()
                     .WithIdentity(Name, Group)
                     .WithCronSchedule(cronSchedule)
                     .Build();
 
                 // Tell quartz to schedule the job using our trigger
+
                 return scheduler.ScheduleJob(job, trigger);
             }
         }

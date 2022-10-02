@@ -4,13 +4,8 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<Configurations>Debug;Release</Configurations>
-		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<Version>10000.0.2236-dev-master</Version>
-		<Authors>neonFORGE Team</Authors>
-		<Company>neonFORGE LLC</Company>
-		<Product>neonKUBE</Product>
 		<Description>INTERNAL USE ONLY: Core library used by neonKUBE related tooling.</Description>
-		<Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Operator/README.md</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
@@ -18,13 +13,6 @@
 		<RepositoryType>git</RepositoryType>
 		<PackageTags>kubernetes</PackageTags>
 		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
-		<AssemblyVersion>0.0.0.0</AssemblyVersion>
-		<FileVersion>0.0.0.0</FileVersion>
-		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<AnalysisLevel>5.0</AnalysisLevel>
-		<DebugType>pdbonly</DebugType>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -53,8 +41,8 @@
 		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
 		<PackageReference Include="KubernetesClient" Version="7.2.19" />
 		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.9" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2293-dev-jeff" />
-		<PackageReference Include="Neon.Service" Version="10000.0.2293-dev-jeff" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2294-dev-master" />
+		<PackageReference Include="Neon.Service" Version="10000.0.2294-dev-master" />
 		<PackageReference Include="prometheus-net" Version="6.0.0" />
 	</ItemGroup>
 
