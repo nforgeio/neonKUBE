@@ -27,6 +27,7 @@
 		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<AnalysisLevel>5.0</AnalysisLevel>
+		<DebugType>pdbonly</DebugType>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -48,7 +49,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Neon.Common" Version="10000.0.2291-dev-master" />
+	  <PackageReference Include="Neon.Common" Version="10000.0.2293-dev-jeff" />
 	</ItemGroup>
 
 </Project>

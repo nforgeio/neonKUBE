@@ -27,6 +27,7 @@
 		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<AnalysisLevel>5.0</AnalysisLevel>
+		<DebugType>pdbonly</DebugType>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -54,7 +55,7 @@
 	<ItemGroup>
 		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
 		<PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
-		<PackageReference Include="Neon.JsonConverters" Version="10000.0.2291-dev-master" />
+		<PackageReference Include="Neon.JsonConverters" Version="10000.0.2293-dev-jeff" />
 	</ItemGroup>
 
 	<ItemGroup>

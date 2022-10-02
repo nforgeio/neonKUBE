@@ -27,6 +27,7 @@
 		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<AnalysisLevel>5.0</AnalysisLevel>
+		<DebugType>pdbonly</DebugType>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

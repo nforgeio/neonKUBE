@@ -97,7 +97,7 @@ namespace NeonClusterOperator
     ///     <description>
     ///     <b>timespan:</b> Specifies the interval at which IDLE events will be raised
     ///     for <b>NodeTask</b> giving the operator the chance to delete node tasks assigned
-    ///     to nodes that don't exist.  This defaults to <b>60 seconds/b>.
+    ///     to nodes that don't exist.  This defaults to <b>60 seconds</b>.
     ///     </description>
     /// </item>
     /// <item>

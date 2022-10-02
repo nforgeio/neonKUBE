@@ -29,6 +29,7 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<Nullable>enable</Nullable>
 		<AnalysisLevel>5.0</AnalysisLevel>
+		<DebugType>pdbonly</DebugType>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -41,8 +42,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="Grpc.Net.Client" Version="2.49.0" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2291-dev-master" />
-		<PackageReference Include="Neon.HyperV" Version="10000.0.2291-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2293-dev-jeff" />
+		<PackageReference Include="Neon.HyperV" Version="10000.0.2293-dev-jeff" />
 		<PackageReference Include="protobuf-net.Grpc" Version="1.0.177" />
 	</ItemGroup>
 
