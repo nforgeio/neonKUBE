@@ -4,16 +4,11 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<OutputType>Exe</OutputType>
 		<IsPackable>false</IsPackable>
-		<LangVersion>latest</LangVersion>
 		<RootNamespace>NeonNodeAgent</RootNamespace>
-		<LangVersion>latest</LangVersion>
 		<ServerGarbageCollection>true</ServerGarbageCollection>
 		<ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
 		<AssemblyName>neon-node-agent</AssemblyName>
 		<Configurations>Debug;Release</Configurations>
-		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
-		<AnalysisLevel>5.0</AnalysisLevel>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -33,9 +28,10 @@
 
 	<ItemGroup>
 		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2291-dev-master" />
-		<PackageReference Include="Neon.Cryptography" Version="10000.0.2291-dev-master" />
-		<PackageReference Include="Neon.Service" Version="10000.0.2291-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2294-dev-master" />
+		<PackageReference Include="Neon.Cryptography" Version="10000.0.2294-dev-master" />
+		<PackageReference Include="Neon.Service" Version="10000.0.2294-dev-master" />
+		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.9" />
 		<PackageReference Include="Tomlyn" Version="0.15.0" />
 	</ItemGroup>
 

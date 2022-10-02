@@ -16,7 +16,7 @@
 // limitations under the License.
 
 using System.ComponentModel;
-
+using System.Diagnostics.Contracts;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Net;
@@ -27,40 +27,61 @@ using Newtonsoft.Json.Linq;
 
 namespace NeonSsoSessionProxy
 {
-
+    /// <summary>
+    /// Used to manage Dex.
+    /// </summary>
     public class DexClient : IDisposable
     {
-        public Dictionary<string, BasicAuthenticationHeaderValue> AuthHeaders;
-        public Uri BaseAddress => jsonClient.BaseAddress;
-        public ILogger Logger { get; set; }
-
         private readonly    JsonClient jsonClient;
         private bool        isDisposed;
         
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="baseAddress">Specifies the base Dex server address.</param>
+        /// <param name="logger">Optionally specifies a logger.</param>
         public DexClient(Uri baseAddress, ILogger logger = null)
         {
+            Covenant.Requires<ArgumentNullException>(baseAddress != null, nameof(baseAddress));
+
             this.jsonClient = new JsonClient()
             {
                 BaseAddress = baseAddress
             };
+
             this.AuthHeaders = new Dictionary<string, BasicAuthenticationHeaderValue>();
-            this.Logger = logger;
+            this.Logger      = logger;
         }
 
         /// <summary>
-        /// Converts JSON to a application/x-www-form-urlencoded before POSTing to the Postmates API.
+        /// Returns any authentication headers.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="url"></param>
-        /// <param name="_object"></param>
-        /// <param name="cancellationToken"></param>
+        public Dictionary<string, BasicAuthenticationHeaderValue> AuthHeaders { get; private set; }
+
+        /// <summary>
+        /// Returns the base server URI.
+        /// </summary>
+        public Uri BaseAddress => jsonClient.BaseAddress;
+
+        /// <summary>
+        /// Specifies the logger.
+        /// </summary>
+        public ILogger Logger { get; set; }
+
+        /// <summary>
+        /// Converts JSON to a application/x-www-form-urlencoded before POSTing to the Dex server.
+        /// </summary>
+        /// <typeparam name="T">Specifies the type of the entity being posted.</typeparam>
+        /// <param name="url">The target API URI.</param>
+        /// <param name="object">The object being posted.</param>
+        /// <param name="cancellationToken">Optionally specifies a <see cref="CancellationToken"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task<T> PostFormAsync<T>(string url, dynamic _object, CancellationToken cancellationToken = default)
+        private async Task<T> PostFormAsync<T>(string url, dynamic @object, CancellationToken cancellationToken = default)
         {
             var payloadString = "";
             var first         = true;
 
-            dynamic data = JObject.FromObject(_object);
+            dynamic data = JObject.FromObject(@object);
 
             foreach (var descriptor in TypeDescriptor.GetProperties(data))
             {
@@ -74,7 +95,7 @@ namespace NeonSsoSessionProxy
                 else if (!(value is string))
                 {
                     value = (descriptor.GetValue(data) == null) ? null : JsonConvert.SerializeObject(descriptor.GetValue(data), Newtonsoft.Json.Formatting.None);
-                    value = (string)value.Trim('"');
+                    value = value.Trim('"');
                 }
                 if (!string.IsNullOrEmpty(value))
                 {
@@ -103,28 +124,27 @@ namespace NeonSsoSessionProxy
         }
 
         /// <summary>
-        /// Gets a token from Dex.
+        /// Gets an authentication token from Dex.
         /// </summary>
-        /// <param name="url"></param>
-        /// <param name="client"></param>
+        /// <param name="authHeader">Identifies the authentication header.</param>
         /// <param name="code"></param>
-        /// <param name="redirect_uri"></param>
-        /// <param name="grant_type"></param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="redirectUri">The redirect URI.</param>
+        /// <param name="grantType">Specifies the required grant.</param>
+        /// <param name="cancellationToken">Optionally specifies a <see cref="CancellationToken"/>.</param>
         /// <returns>The token response.</returns>
         public async Task<TokenResponse> GetTokenAsync(
-            string              client,
+            string              authHeader,
             string              code, 
-            string              redirect_uri, 
-            string              grant_type, 
+            string              redirectUri, 
+            string              grantType, 
             CancellationToken   cancellationToken = default)
         {
-            jsonClient.DefaultRequestHeaders.Authorization = AuthHeaders[client];
+            jsonClient.DefaultRequestHeaders.Authorization = AuthHeaders[authHeader];
             var args = new
             {
                 code         = code,
-                redirect_uri = redirect_uri,
-                grant_type   = grant_type
+                redirect_uri = redirectUri,
+                grant_type   = grantType
             };
 
             var result = await PostFormAsync<TokenResponse>("/token", args, cancellationToken: cancellationToken);

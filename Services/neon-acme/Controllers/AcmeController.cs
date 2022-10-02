@@ -44,9 +44,9 @@ using System.Text.RegularExpressions;
 
 namespace NeonAcme.Controllers
 {
-/// <summary>
-/// Implements neon-acme service methods.
-/// </summary>
+    /// <summary>
+    /// Implements the neon-acme service.
+    /// </summary>
     [ApiController]
     [Route("apis/acme.neoncloud.io/v1alpha1")]
     public class AcmeController : NeonControllerBase
@@ -58,6 +58,7 @@ namespace NeonAcme.Controllers
         /// <summary>
         /// Constructor
         /// </summary>
+        /// <param name="service">The parent service.</param>
         /// <param name="jsonClient">The JSON client for interacting with the headend.</param>
         public AcmeController(
             Service    service,

@@ -42,9 +42,6 @@ namespace NeonSsoSessionProxy
     /// </summary>
     public class Startup
     {
-        public IConfiguration               Configuration { get; }
-        public Service   NeonSsoSessionProxyService;
-
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -52,8 +49,8 @@ namespace NeonSsoSessionProxy
         /// <param name="service">Specifies the service.</param>
         public Startup(IConfiguration configuration, Service service)
         {
-            Configuration                   = configuration;
-            this.NeonSsoSessionProxyService = service;
+            Configuration              = configuration;
+            NeonSsoSessionProxyService = service;
         }
 
         /// <summary>
@@ -145,5 +142,16 @@ namespace NeonSsoSessionProxy
                 endpoints.MapControllers();
             });
         }
+
+        /// <summary>
+        /// Returns the configuration.
+        /// </summary>
+        public IConfiguration Configuration { get; }
+
+        /// <summary>
+        /// Returns the SSO proxy service.
+        /// </summary>
+        public Service NeonSsoSessionProxyService { get; }
     }
 }
+

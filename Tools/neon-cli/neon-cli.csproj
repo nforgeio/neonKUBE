@@ -5,29 +5,10 @@
 		<OutputType>Exe</OutputType>
 		<RootNamespace>NeonCli</RootNamespace>
 		<AssemblyName>neon</AssemblyName>
-		<LangVersion>latest</LangVersion>
 		<RuntimeIdentifier>win10-x64</RuntimeIdentifier>
 		<Configurations>Debug;Release</Configurations>
-		<Authors>neonFORGE Team</Authors>
-		<Company>neonFORGE LLC</Company>
 		<Description>Manage neonKUBE clusters from the command line</Description>
-		<Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
-		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<AnalysisLevel>5.0</AnalysisLevel>
 		<SelfContained>true</SelfContained>
-		<!-- 
-        We need to prevent the KubeOps build targets from trying to call the program
-        entry point to generate the CRDs and other installation related files.
-        -->
-
-		<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
-		<KubeOpsSkipCrds>true</KubeOpsSkipCrds>
-		<KubeOpsSkipRbac>true</KubeOpsSkipRbac>
-		<KubeOpsSkipOperator>true</KubeOpsSkipOperator>
-		<KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -35,7 +16,6 @@
 		<PublishSingleFile>false</PublishSingleFile>
 		<SelfContained>false</SelfContained>
 		<PublishTrimmed>false</PublishTrimmed>
-		<TrimMode>copyused</TrimMode>
 		<PublishReadyToRun>false</PublishReadyToRun>
 	</PropertyGroup>
 
@@ -67,10 +47,10 @@
 		<PackageReference Include="KubernetesClient" Version="7.2.19" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
 		<PackageReference Include="Microsoft.Windows.Compatibility" Version="6.0.0" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2291-dev-master" />
-		<PackageReference Include="Neon.Deployment" Version="10000.0.2291-dev-master" />
-		<PackageReference Include="Neon.WinTTY" Version="10000.0.2291-dev-master" />
-		<PackageReference Include="Neon.XenServer" Version="10000.0.2291-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2294-dev-master" />
+		<PackageReference Include="Neon.Deployment" Version="10000.0.2294-dev-master" />
+		<PackageReference Include="Neon.WinTTY" Version="10000.0.2294-dev-master" />
+		<PackageReference Include="Neon.XenServer" Version="10000.0.2294-dev-master" />
 		<PackageReference Include="System.Diagnostics.StackTrace" Version="4.3.0" />
 		<PackageReference Include="System.Runtime" Version="4.3.1" />
 		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
@@ -84,7 +64,6 @@
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Azure\Neon.Kube.Azure.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.BareMetal\Neon.Kube.BareMetal.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Google\Neon.Kube.Google.csproj" />
-		<ProjectReference Include="..\..\Lib\Neon.Kube.GrpcProto\Neon.Kube.GrpcProto.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.HyperV\Neon.Kube.HyperV.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Setup\Neon.Kube.Setup.csproj" />

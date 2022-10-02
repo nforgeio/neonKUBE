@@ -3,30 +3,18 @@
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
 		<OutputType>Library</OutputType>
-		<LangVersion>latest</LangVersion>
 		<Version>10000.0.2236-dev-master</Version>
-		<Authors>neonFORGE Team</Authors>
-		<Company>neonFORGE LLC</Company>
-		<Product>neonKUBE</Product>
 		<Description>INTERNAL USE ONLY: neonKUBE hosting manager common classes.</Description>
-		<Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
 		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
 		<RootNamespace>Neon.Kube</RootNamespace>
-		<AssemblyVersion>0.0.0.0</AssemblyVersion>
-		<FileVersion>0.0.0.0</FileVersion>
 		<PackageLicenseUrl></PackageLicenseUrl>
 		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Hosting/README.md</PackageProjectUrl>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
-		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<Configurations>Debug;Release</Configurations>
 		<PackageIcon>nuget-icon.png</PackageIcon>
 		<PackageTags>kubernetes</PackageTags>
-		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<AnalysisLevel>5.0</AnalysisLevel>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -59,7 +47,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Neon.Common" Version="10000.0.2291-dev-master" />
+	  <PackageReference Include="Neon.Common" Version="10000.0.2294-dev-master" />
 	</ItemGroup>
 
 </Project>

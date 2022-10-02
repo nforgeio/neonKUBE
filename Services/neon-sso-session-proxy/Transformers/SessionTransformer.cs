@@ -30,6 +30,9 @@ using Yarp.ReverseProxy.Transforms;
 
 namespace NeonSsoSessionProxy
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class SessionTransformer : HttpTransformer
     {
         private IDistributedCache            cache;
@@ -38,6 +41,7 @@ namespace NeonSsoSessionProxy
         private string                       dexHost;
         private ILogger                      logger;
         private DistributedCacheEntryOptions cacheOptions;
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -45,12 +49,13 @@ namespace NeonSsoSessionProxy
         /// <param name="aesCipher"></param>
         /// <param name="dexClient"></param>
         /// <param name="logger"></param>
+        /// <param name="cacheOptions"></param>
         public SessionTransformer(
-            IDistributedCache cache,
-            AesCipher aesCipher,
-            DexClient dexClient,
-            ILogger logger,
-            DistributedCacheEntryOptions cacheOptions)
+            IDistributedCache               cache,
+            AesCipher                       aesCipher,
+            DexClient                       dexClient,
+            ILogger                         logger,
+            DistributedCacheEntryOptions    cacheOptions)
         { 
             this.cache        = cache;
             this.cipher       = aesCipher;
@@ -181,9 +186,9 @@ namespace NeonSsoSessionProxy
                 cipher.EncryptToBase64(NeonHelper.JsonSerialize(cookie)),
                 new CookieOptions()
                 {
-                    Path = "/",
-                    Expires = DateTime.UtcNow.AddHours(24),
-                    Secure = true,
+                    Path     = "/",
+                    Expires  = DateTime.UtcNow.AddHours(24),
+                    Secure   = true,
                     SameSite = SameSiteMode.Strict
                 });
 

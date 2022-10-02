@@ -176,12 +176,11 @@ namespace NeonNodeAgent
         /// Returns the actual command line used to execute a command under <b>chroot</b> by one of the methods
         /// below.  The result will be prefixed by the the <b>chroot</b> command and parameter.
         /// </summary>
-        /// <param name="path">The command path.</param>
-        /// <param name="args">The command arguments.</param>
-        /// <returns></returns>
-        public static string GetExecuteCommandLine(string path)
+        /// <param name="commandLine">The unprefixed command line.</param>
+        /// <returns>The command line string.</returns>
+        public static string GetExecuteCommandLine(string commandLine)
         {
-            return $"chroot {HostMount} {NeonHelper.GetExecuteCommandLine(path)}";
+            return $"chroot {HostMount} {NeonHelper.GetExecuteCommandLine(commandLine)}";
         }
 
         /// <summary>

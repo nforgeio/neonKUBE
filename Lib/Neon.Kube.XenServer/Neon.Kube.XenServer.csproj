@@ -3,16 +3,9 @@
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
 		<OutputType>Library</OutputType>
-		<LangVersion>latest</LangVersion>
 		<Version>10000.0.2236-dev-master</Version>
-		<Authors>neonFORGE Team</Authors>
-		<Company>neonFORGE LLC</Company>
-		<Product>neonKUBE</Product>
 		<Description>INTERNAL USE ONLY: neonKUBE hosting manager for XenServer/XCP-ng envirojnhments.</Description>
-		<AssemblyVersion>0.0.0.0</AssemblyVersion>
-		<FileVersion>6.0.0.0</FileVersion>
 		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
-		<Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
 		<PackageLicenseUrl></PackageLicenseUrl>
 		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.XenServer/README.md</PackageProjectUrl>
 		<RepositoryType>git</RepositoryType>
@@ -21,12 +14,7 @@
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<Configurations>Debug;Release</Configurations>
 		<PackageIcon>nuget-icon.png</PackageIcon>
-		<PackageTags>l</PackageTags>
 		<RootNamespace>Neon.Kube</RootNamespace>
-		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<AnalysisLevel>5.0</AnalysisLevel>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -53,8 +41,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Neon.Common" Version="10000.0.2291-dev-master" />
-	  <PackageReference Include="Neon.SSH" Version="10000.0.2291-dev-master" />
+	  <PackageReference Include="Neon.Common" Version="10000.0.2294-dev-jeff" />
+	  <PackageReference Include="Neon.SSH" Version="10000.0.2294-dev-jeff" />
 	</ItemGroup>
 
 </Project>

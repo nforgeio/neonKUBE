@@ -1,4 +1,22 @@
 <Project>
+	
+	<!--
+	Default properties:
+	-->
+
+	<PropertyGroup>
+		<Product>neonSDK</Product>
+		<Authors>neonFORGE Team</Authors>
+		<Company>neonFORGE LLC</Company>
+		<Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<LangVersion>latest</LangVersion>
+		<Nullable>disable</Nullable>
+		<AnalysisLevel>5.0</AnalysisLevel>
+		<DebugType>pdbonly</DebugType>
+		<TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+	</PropertyGroup>
 
 	<!--
 	Disable generation of attribute files in the project [obj/CONFIG] folders

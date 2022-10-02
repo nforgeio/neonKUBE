@@ -382,7 +382,7 @@ rm $0
         /// deletion.
         /// </item>
         /// <item>
-        /// Tasks with a finish time that is older than <see cref="V1NeonNodeTask.TaskSpec.RetentionTime"/>
+        /// Tasks with a finish time that is older than <see cref="V1NeonNodeTask.TaskSpec.RetentionSeconds"/>
         /// will be removed.
         /// </item>
         /// <item>
@@ -579,7 +579,6 @@ rm $0
         /// Initiates execution of a node task in the background when the task is still pending.
         /// </summary>
         /// <param name="nodeTask">The node task to be executed.</param>
-        /// <param name="resources">The existing tasks.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ExecuteTaskAsync(V1NeonNodeTask nodeTask)
         {

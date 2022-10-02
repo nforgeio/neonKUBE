@@ -41,6 +41,9 @@ using Quartz;
 
 namespace NeonClusterOperator
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class CheckControlPlaneCertificates : CronJob, IJob
     {
         /// <summary>
@@ -49,7 +52,6 @@ namespace NeonClusterOperator
         public CheckControlPlaneCertificates()
             : base(typeof(CheckControlPlaneCertificates))
         {
-
         }
         
         /// <inheritdoc/>
@@ -60,7 +62,7 @@ namespace NeonClusterOperator
                 Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckControlPlaneCertificates)));
 
                 var dataMap = context.MergedJobDataMap;
-                var k8s = (IKubernetes)dataMap["Kubernetes"];
+                var k8s     = (IKubernetes)dataMap["Kubernetes"];
 
                 var nodes     = await k8s.ListNodeAsync(labelSelector: "neonkube.io/node.role=control-plane");
                 var startTime = DateTime.UtcNow;
@@ -71,7 +73,7 @@ namespace NeonClusterOperator
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name        = $"control-plane-cert-check-{NeonHelper.CreateBase36Uuid()}",
+                            Name   = $"control-plane-cert-check-{NeonHelper.CreateBase36Uuid()}",
                             Labels = new Dictionary<string, string>
                             {
                                 { NeonLabel.ManagedBy, KubeService.NeonClusterOperator },
@@ -90,10 +92,7 @@ namespace NeonClusterOperator
 
                     var tasks = await k8s.ListClusterCustomObjectAsync<V1NeonNodeTask>(labelSelector: $"{NeonLabel.NodeTaskType}={NeonNodeTaskType.ControlPlaneCertExpirationCheck}");
 
-                    if (!tasks.Items.Any(
-                                task => task.Spec.Node == nodeTask.Spec.Node
-                                        && (task.Status.Phase <= V1NeonNodeTask.Phase.Running
-                                            || task.Status == null)))
+                    if (!tasks.Items.Any(task => task.Spec.Node == nodeTask.Spec.Node && (task.Status.Phase <= V1NeonNodeTask.Phase.Running || task.Status == null)))
                     {
                         await k8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: nodeTask.Name());
                     }
