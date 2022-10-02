@@ -70,7 +70,7 @@ namespace NeonNodeAgent
     /// on the host node.
     /// </para>
     /// <note>
-    /// The host node file system is mounted into the container at: <see cref="Program.HostMount"/>.
+    /// The host node file system is mounted into the container at: <see cref="Node.HostMount"/>.
     /// </note>
     /// <para>
     /// This works by monitoring by:
