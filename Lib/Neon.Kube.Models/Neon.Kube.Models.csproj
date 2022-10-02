@@ -6,13 +6,12 @@
 		<RootNamespace>Neon.Kube.Models</RootNamespace>
 		<Version>10000.0.2236-dev-master</Version>
 		<Description>INTERNAL USE ONLY: neonKUBE related data models.</Description>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
 		<IsPackable>true</IsPackable>
-		<PackageLicenseUrl></PackageLicenseUrl>
 		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Models/README.md</PackageProjectUrl>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
-		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<Configurations>Debug;Release</Configurations>
 		<PackageIcon>nuget-icon.png</PackageIcon>
 		<PackageTags></PackageTags>
@@ -37,7 +36,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Neon.Common" Version="10000.0.2294-dev-master" />
+	  <PackageReference Include="Neon.Common" Version="10000.0.2299-dev-jeff" />
 	</ItemGroup>
 
 </Project>

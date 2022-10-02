@@ -7,11 +7,10 @@
 		<Version>10000.0.2236-dev-master</Version>
 		<Description>INTERNAL USE ONLY: Defines internal GRPC protobuf messages and services used by neonKUBE applcations.</Description>
 		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
-		<PackageLicenseUrl></PackageLicenseUrl>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.GrpcProto/README.md</PackageProjectUrl>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
-		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<Configurations>Debug;Release</Configurations>
 		<PackageIcon>nuget-icon.png</PackageIcon>
 		<PackageTags>kubernetes</PackageTags>
@@ -29,8 +28,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="Grpc.Net.Client" Version="2.49.0" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2294-dev-master" />
-		<PackageReference Include="Neon.HyperV" Version="10000.0.2294-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2299-dev-jeff" />
+		<PackageReference Include="Neon.HyperV" Version="10000.0.2299-dev-jeff" />
 		<PackageReference Include="protobuf-net.Grpc" Version="1.0.177" />
 	</ItemGroup>
 

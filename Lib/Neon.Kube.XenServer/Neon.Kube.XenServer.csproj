@@ -5,13 +5,12 @@
 		<OutputType>Library</OutputType>
 		<Version>10000.0.2236-dev-master</Version>
 		<Description>INTERNAL USE ONLY: neonKUBE hosting manager for XenServer/XCP-ng envirojnhments.</Description>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
-		<PackageLicenseUrl></PackageLicenseUrl>
 		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.XenServer/README.md</PackageProjectUrl>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<Configurations>Debug;Release</Configurations>
 		<PackageIcon>nuget-icon.png</PackageIcon>
 		<RootNamespace>Neon.Kube</RootNamespace>
@@ -41,8 +40,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Neon.Common" Version="10000.0.2294-dev-jeff" />
-	  <PackageReference Include="Neon.SSH" Version="10000.0.2294-dev-jeff" />
+	  <PackageReference Include="Neon.Common" Version="10000.0.2299-dev-jeff" />
+	  <PackageReference Include="Neon.SSH" Version="10000.0.2299-dev-jeff" />
 	</ItemGroup>
 
 </Project>
