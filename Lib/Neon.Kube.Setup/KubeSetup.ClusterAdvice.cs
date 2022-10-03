@@ -589,7 +589,7 @@ namespace Neon.Kube
             if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.MetricsEnabled   = false;
-                advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
+                advice.PodMemoryLimit   = ByteUnits.Parse("256Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
                 advice.ReplicaCount     = 1;
             }

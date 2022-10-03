@@ -742,18 +742,7 @@ namespace Neon.Kube
             // We need to add the implict local cluster Harbor registry.
 
             var localRegistries = new List<Registry>();
-            var localRegistry   = new Registry();
             var harborCrioUser  = await KubeHelper.GetClusterLdapUserAsync(K8s, KubeConst.HarborCrioUser);
-
-            localRegistry.Name     =
-            localRegistry.Prefix   =
-            localRegistry.Location = KubeConst.LocalClusterRegistry;
-            localRegistry.Blocked  = false;
-            localRegistry.Insecure = true;
-            localRegistry.Username = harborCrioUser.Name;
-            localRegistry.Password = harborCrioUser.Password;
-
-            localRegistries.Add(localRegistry);
 
             // Add registries from the cluster definition.
 
