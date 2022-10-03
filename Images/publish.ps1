@@ -86,6 +86,11 @@ function Publish
 
 try
 {
+    # Abort if Visual Studio is running because that can cause [pubcore] to
+    # fail due to locked files.
+
+    Ensure-VisualStudioNotRunning
+
     # Handle the command line arguments.
 
     if ($all)

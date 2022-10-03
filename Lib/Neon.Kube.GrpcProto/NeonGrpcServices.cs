@@ -48,7 +48,7 @@ namespace Neon.Kube.GrpcProto
         /// for testing purposes.  This defaults to <see cref="KubeHelper.WinDesktopServiceSocketPath"/>
         /// where <b>neon-desktop</b> and <b>neon-cli</b> expect it to be.
         /// </param>
-        /// <returns>A <see cref="IGrpcDesktopService"/> or <c>null</c> when the <b>neon-desktop-service</b> is running.</returns>
+        /// <returns>A <see cref="IGrpcDesktopService"/> or <c>null</c> when the <b>neon-desktop-service</b> is not running.</returns>
         public static GrpcChannel? CreateDesktopServiceChannel(string? socketPath = null)
         {
             socketPath ??= KubeHelper.WinDesktopServiceSocketPath;
