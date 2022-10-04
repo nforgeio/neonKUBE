@@ -336,6 +336,8 @@ CLUSTER MANAGEMENT ARGUMENTS:
 
             // Process the command line.
 
+            Activity traceActivity = null;
+
             try
             {
                 ICommand command;
@@ -398,7 +400,7 @@ CLUSTER MANAGEMENT ARGUMENTS:
 
                 // Start a trace for the command.
 
-                ActivitySource?.CreateActivity("command", ActivityKind.Internal, parentId: null, 
+                traceActivity = ActivitySource?.CreateActivity("command", ActivityKind.Internal, parentId: null, 
                     tags: new KeyValuePair<string, object>[] { new KeyValuePair<string, object>("cmd", CommandLine.ToString()) });
 
                 // Lookup the command.
@@ -496,7 +498,7 @@ CLUSTER MANAGEMENT ARGUMENTS:
             {
                 Logger.LogErrorEx(exception: e);
                 Logger.LogInformationEx(() => $"done: {Name} with [exitcode={e.ExitCode}]");
-                CloseTraceSpans();
+                FlushTelemetry(traceActivity);
                 return e.ExitCode;
             }
             catch (Exception e)
@@ -506,12 +508,12 @@ CLUSTER MANAGEMENT ARGUMENTS:
                 Console.Error.WriteLine(string.Empty);
                 Logger.LogErrorEx(exception: e);
                 Logger.LogInformationEx(() => $"done: {Name} with [exitcode=1]");
-                CloseTraceSpans();
+                FlushTelemetry(traceActivity);
                 return 1;
             }
 
             Logger.LogInformationEx(() => $"done: {Name} with [exitcode=0]");
-            CloseTraceSpans();
+            FlushTelemetry(traceActivity);
             return 0;
         }
 
@@ -607,14 +609,16 @@ CLUSTER MANAGEMENT ARGUMENTS:
         }
 
         /// <summary>
-        /// Closes any open trace spans.  This is called just before the tool exits.
+        /// Disposes the current trace span if any and flushes any pending logs
+        /// and traces to the <b>neon-desktop-service</b> to they can be uploaded
+        /// to the headend.  This is called just before the tool exits.
         /// </summary>
-        private static void CloseTraceSpans()
+        /// <param name="traceActivity">Pass as the current trace activity, if any.</param>
+        private static void FlushTelemetry(Activity traceActivity)
         {
-            while (Tracer.CurrentSpan != null)
-            {
-                Tracer.CurrentSpan.Dispose();
-            }
+            traceActivity?.Dispose();
+            tracerProvider?.Dispose();
+            loggerFactory?.Dispose();
         }
 
         /// <summary>
