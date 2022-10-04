@@ -31,6 +31,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
+using Grpc.Net.Client;
+
 using k8s;
 using k8s.Models;
 
@@ -42,10 +44,18 @@ using Neon.Common;
 using Neon.Deployment;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.GrpcProto;
+using Neon.Kube.GrpcProto.Desktop;
 using Neon.IO;
 using Neon.SSH;
 using Neon.Windows;
 using Neon.WinTTY;
+
+using OpenTelemetry.Trace;
+using OpenTelemetry.Resources;
+
+using ProtoBuf.Grpc.Client;
+using OpenTelemetry;
 
 namespace NeonCli
 {
@@ -90,6 +100,14 @@ namespace NeonCli
 #endif
 
         /// <summary>
+        /// Returns the application name used for telemetry.
+        /// </summary>
+        public const string TelemetryName = "neon-cli";
+
+        private static ILoggerFactory   loggerFactory;
+        private static TracerProvider   tracerProvider;
+
+        /// <summary>
         /// Returns the folder path where the program binary is located.
         /// </summary>
         private static readonly string BinaryFolder = NeonHelper.GetBaseDirectory();
@@ -113,6 +131,37 @@ namespace NeonCli
         /// Returns the fully qualified path to the <b>helm</b> binary.
         /// </summary>
         public static string HelmPath { get; private set; }
+
+        /// <summary>
+        /// <para>
+        /// The Neon Desktop Service gRPC channel.
+        /// </para>
+        /// <note>
+        /// This will be <c>null</c> when the <b>neon-desktop-service</b> is not running.
+        /// </note>
+        /// </summary>
+        private static GrpcChannel DesktopServiceChannel { get; set; }
+
+        /// <summary>
+        /// <para>
+        /// The Neon Desktop Service gRPC client.
+        /// </para>
+        /// <note>
+        /// This will be <c>null</c> when the <b>neon-desktop-service</b> isn't running.
+        /// </note>
+        /// </summary>
+        public static IGrpcDesktopService DesktopService { get; private set; }
+
+        /// <summary>
+        /// Returns the <see cref="ILogger"/> the application will use for logging.
+        /// </summary>
+        public static ILogger Logger { get; private set; }
+
+        /// <summary>
+        /// Returns the <see cref="System.Diagnostics.ActivitySource"/> used to record traces.
+        /// Note that <see cref="TelemetryHub.ActivitySource"/> is set to the same value.
+        /// </summary>
+        public static ActivitySource ActivitySource { get; private set; }
 
         /// <summary>
         /// Program entry point.
@@ -180,6 +229,83 @@ CLUSTER MANAGEMENT ARGUMENTS:
 
 ===============================================================================
 ";
+            // Configure the neon-desktop-server gRPC client.
+
+            DesktopServiceChannel = NeonGrpcServices.CreateDesktopServiceChannel();
+
+            if (DesktopServiceChannel != null)
+            {
+                DesktopService = DesktopServiceChannel.CreateGrpcService<IGrpcDesktopService>();
+            }
+
+            // Configure the telemtry log and trace pipelines.
+
+            if (!KubeEnv.IsTelemetryDisabled || DesktopService == null)
+            {
+                Logger = new NullLogger();
+            }
+            else
+            {
+                //-------------------------------------------------------------
+                // Logging pipeline:
+                //
+                // We're not configuring the standard [AddOtlpExporter] here.  Instead, we're
+                // using a custom exporter that fowards log batches to the [neon-desktop-service]
+                // via gRPC which will relay them to the headend.
+
+                loggerFactory = LoggerFactory.Create(
+                    builder =>
+                    {
+                        builder.AddOpenTelemetry(
+                            options =>
+                            {
+                                options.ParseStateValues        = true;
+                                options.IncludeFormattedMessage = true;
+                                options.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName: TelemetryName, serviceVersion: Program.Version.ToString()));
+                                options.AddLogAsTraceProcessor(
+                                    options =>
+                                    {
+                                        options.LogLevel = LogLevel.Information;
+                                    });
+
+                                options.AddProcessor(new SimpleLogRecordExportProcessor(new GrpcLogExporter(DesktopService)));
+                            });
+                    });
+
+                var logAttributes = new LogAttributes();
+
+                Logger = loggerFactory.CreateLogger(typeof(Program).Name)
+                    .AddAttributes(
+                        attributes =>
+                        {
+                            foreach (var tag in KubeHelper.TelemetryTags)
+                            {
+                                attributes.Add(tag.Key, tag.Value);
+                                logAttributes.Add(tag.Key, tag.Value);
+                            }
+                        });
+
+                TelemetryHub.LoggerFactory = loggerFactory;
+                TelemetryHub.LogAttributes = logAttributes;
+
+                //-------------------------------------------------------------
+                // Tracing pipeline:
+
+                tracerProvider = Sdk.CreateTracerProviderBuilder()
+                    .AddSource(TelemetryName)
+                    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName: TelemetryName, serviceVersion: Program.Version.ToString()))
+                    .AddProcessor(new SimpleActivityExportProcessor(new GrpcTraceExporter(DesktopService)))
+                    .Build();
+
+                ActivitySource              = new ActivitySource(name: TelemetryName, version: Program.Version.ToString());
+                TelemetryHub.ActivitySource = ActivitySource;
+            }
+
+            // We're going to log when the application starts and exits.
+
+            Logger.LogInformationEx(() => $"starting: {Name}");
+
+            //-----------------------------------------------------------------
             // Use the version of Powershell Core installed with the application,
             // if present.
 
@@ -269,6 +395,11 @@ CLUSTER MANAGEMENT ARGUMENTS:
 
                     Program.Exit(0);
                 }
+
+                // Start a trace for the command.
+
+                ActivitySource?.CreateActivity("command", ActivityKind.Internal, parentId: null, 
+                    tags: new KeyValuePair<string, object>[] { new KeyValuePair<string, object>("cmd", CommandLine.ToString()) });
 
                 // Lookup the command.
 
@@ -363,6 +494,9 @@ CLUSTER MANAGEMENT ARGUMENTS:
             }
             catch (ProgramExitException e)
             {
+                Logger.LogErrorEx(exception: e);
+                Logger.LogInformationEx(() => $"done: {Name} with [exitcode={e.ExitCode}]");
+                CloseTraceSpans();
                 return e.ExitCode;
             }
             catch (Exception e)
@@ -370,9 +504,14 @@ CLUSTER MANAGEMENT ARGUMENTS:
                 Console.Error.WriteLine($"*** ERROR: {NeonHelper.ExceptionError(e)}");
                 Console.Error.WriteLine(e.StackTrace);
                 Console.Error.WriteLine(string.Empty);
+                Logger.LogErrorEx(exception: e);
+                Logger.LogInformationEx(() => $"done: {Name} with [exitcode=1]");
+                CloseTraceSpans();
                 return 1;
             }
 
+            Logger.LogInformationEx(() => $"done: {Name} with [exitcode=0]");
+            CloseTraceSpans();
             return 0;
         }
 
@@ -465,6 +604,17 @@ CLUSTER MANAGEMENT ARGUMENTS:
         public static void Exit(int exitCode)
         {
             throw new ProgramExitException(exitCode);
+        }
+
+        /// <summary>
+        /// Closes any open trace spans.  This is called just before the tool exits.
+        /// </summary>
+        private static void CloseTraceSpans()
+        {
+            while (Tracer.CurrentSpan != null)
+            {
+                Tracer.CurrentSpan.Dispose();
+            }
         }
 
         /// <summary>
