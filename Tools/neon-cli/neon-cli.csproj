@@ -49,6 +49,9 @@
 		<PackageReference Include="Neon.Deployment" Version="10000.0.2308-dev-master" />
 		<PackageReference Include="Neon.WinTTY" Version="10000.0.2308-dev-master" />
 		<PackageReference Include="Neon.XenServer" Version="10000.0.2308-dev-master" />
+		<PackageReference Include="OpenTelemetry.Api" Version="1.4.0-beta.1" />
+		<PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.4.0-beta.1" />
+		<PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol.Logs" Version="1.4.0-beta.1" />
 		<PackageReference Include="System.Diagnostics.StackTrace" Version="4.3.0" />
 		<PackageReference Include="System.Runtime" Version="4.3.1" />
 		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
@@ -62,6 +65,7 @@
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Azure\Neon.Kube.Azure.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.BareMetal\Neon.Kube.BareMetal.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Google\Neon.Kube.Google.csproj" />
+		<ProjectReference Include="..\..\Lib\Neon.Kube.GrpcProto\Neon.Kube.GrpcProto.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.HyperV\Neon.Kube.HyperV.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Setup\Neon.Kube.Setup.csproj" />
