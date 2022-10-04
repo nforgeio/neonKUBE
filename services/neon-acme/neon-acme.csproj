@@ -11,6 +11,13 @@
 		<Configurations>Debug;Release</Configurations>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0|AnyCPU'">
+		<DefineConstants>DEBUG;TRACE</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	</PropertyGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
 	</ItemGroup>

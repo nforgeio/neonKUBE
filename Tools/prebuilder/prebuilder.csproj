@@ -12,9 +12,6 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-		<DefineConstants />
 	</PropertyGroup>
 
 	<ItemGroup>

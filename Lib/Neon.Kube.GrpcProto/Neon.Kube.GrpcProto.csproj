@@ -23,7 +23,6 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-	  <Optimize>False</Optimize>
 	</PropertyGroup>
 
 	<ItemGroup>

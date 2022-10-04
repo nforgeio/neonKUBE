@@ -16,6 +16,9 @@
 		<DebugType>portable</DebugType>
 		<TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<WarningsAsErrors>NU1605</WarningsAsErrors>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+		<Optimize>False</Optimize>
 	</PropertyGroup>
 
 	<!--
