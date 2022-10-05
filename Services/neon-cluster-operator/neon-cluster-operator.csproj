@@ -40,13 +40,13 @@
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
-		<PackageReference Include="OpenTelemetry" Version="1.4.0-alpha.2" />
+		<PackageReference Include="OpenTelemetry" Version="1.4.0-beta.1" />
 		<PackageReference Include="OpenTelemetry.Instrumentation.Quartz" Version="1.0.0-alpha.1" />
 		<PackageReference Include="Npgsql.OpenTelemetry" Version="6.0.7" />
 		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.9" />
 		<PackageReference Include="Quartz" Version="3.5.0" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2308-dev-master" />
-        <PackageReference Include="Neon.Service" Version="10000.0.2308-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2331-dev-jeff" />
+        <PackageReference Include="Neon.Service" Version="10000.0.2331-dev-jeff" />
     </ItemGroup>
 
 	<ItemGroup>

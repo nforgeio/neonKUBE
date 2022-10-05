@@ -102,16 +102,6 @@ function ImageTag
 	$commit = git log -1 --pretty=%h
 	$tag    = "$branch-$date-$commit"
 
-	# Disabling this for now.  The problem is that temporary files are being
-	# created during the image builds which is making the Git repo look dirty
-	# when it's actually not.  One solution will be to make sure that 
-	# [.getignore] actually ignores all of these temp files.
-
-	#if (IsDirty)
-	#{
-	#	$tag += "-dirty"
-	#}
-
 	return $tag
 }
 
@@ -262,7 +252,7 @@ function NeonCloudRegistryOrg
 #
 #	http://remarkablemark.org/blog/2017/10/12/check-git-dirty/
 
-function IsDirty
+function IsGitDirty
 {
 	$check = git status --short
 

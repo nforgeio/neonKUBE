@@ -18,6 +18,17 @@
 
 # Publishes RELEASE builds of the NeonForge Nuget packages to the
 # local file system and public Nuget.org repositories.
+#
+# USAGE: pwsh -f neonsdk-nuget-public.ps1 [OPTIONS]
+#
+# OPTIONS:
+#
+#       -publicSource   - Use GitHub sources for SourceLink even if local repo is dirty
+
+param 
+(
+    [switch]$publicSource = $false      # use GitHub sources for SourceLink even if local repo is dirty
+)
 
 Write-Error "neonKUBE nuget publication is currently disabled."
 exit 1
@@ -121,6 +132,20 @@ try
     $nkToolBin       = "$nkRoot\ToolBin"
     $neonSdkVersion  = $(& "neon-build" read-version "$nkLib/Neon.Common/Build.cs" NeonSdkVersion)
     $neonkubeVersion = $(& "neon-build" read-version "$nkLib/Neon.Kube/KubeVersions.cs" NeonKube)
+
+    # SourceLink configuration:
+	#
+	# We're going to fail this when the current git branch is dirty 
+	# and [-publicSource] wasn't passed.
+
+    $gitDirty = IsGitDirty
+
+    if ($gitDirty -and -not $publicSource)
+    {
+        throw "Cannot publish nugets because the git branch is dirty.  Use the -publicSource option to override."
+    }
+
+    $env:NEON_PUBLIC_SOURCELINK = "true"
 
     # Disable the [pubcore.exe] tool to avoid file locking conflicts with Visual Studio
     # and also to speed this up a bit.

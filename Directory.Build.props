@@ -18,7 +18,22 @@
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<WarningsAsErrors>NU1605</WarningsAsErrors>
 		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+
+		<!-- Debugging related: -->
+
 		<Optimize>False</Optimize>
+		<DebugType>embedded</DebugType>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+		<!-- 
+		Our nuget publication scripts will set the environment variable [NEON_PUBLIC_SOURCELINK=true]
+		when the source code has been or will be commited to GitHub with the expectation that we'll
+		enable sourcelink to reference source code from our GitHub repos.
+		-->
+
+		<ContinuousIntegrationBuild  Condition="'$(NEON_PUBLIC_SOURCELINK)' == 'true'">true</ContinuousIntegrationBuild>
+
 	</PropertyGroup>
 
 	<!--

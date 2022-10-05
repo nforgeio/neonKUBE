@@ -41,6 +41,33 @@ Push-Location $scriptFolder | Out-Null
 Pop-Location | Out-Null
 
 #------------------------------------------------------------------------------
+# Returns $true if the current Git branch is includes uncommited changes or 
+# untracked files.  This was inspired by this article:
+#
+#	http://remarkablemark.org/blog/2017/10/12/check-git-dirty/
+
+function IsGitDirty
+{
+    Push-Location $scriptFolder | Out-Null
+    $check = git status --short
+    Pop-Location | Out-Null
+
+	if (!$check)
+	{
+		return $false
+	}
+
+	if ($check.Trim() -ne "")
+	{
+		return $true
+	}
+	else
+	{
+		return $false
+	}
+}
+
+#------------------------------------------------------------------------------
 # Logs into GitHub using a GITHUB_PAT.
 #
 # ARGUMENTS:
