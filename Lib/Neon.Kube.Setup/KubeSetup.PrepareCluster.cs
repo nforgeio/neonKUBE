@@ -115,7 +115,6 @@ namespace Neon.Kube
             bool                        debugMode             = false, 
             string                      baseImageName         = null,
             string                      clusterspace          = null,
-            string                      neonCloudHeadendUri   = null,
             bool                        removeExisting        = false,
             bool                        disableConsoleOutput  = false)
         {
@@ -128,8 +127,6 @@ namespace Neon.Kube
 
             Covenant.Requires<ArgumentException>(maxParallel >= 0, nameof(maxParallel));
             Covenant.Requires<ArgumentNullException>(!debugMode || !string.IsNullOrEmpty(baseImageName), nameof(baseImageName));
-
-            neonCloudHeadendUri ??= KubeEnv.HeadendUri.ToString();
 
             clusterDefinition.Validate();
 
@@ -244,7 +241,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.HostingManager, cluster.HostingManager);
             controller.Add(KubeSetupProperty.HostingEnvironment, cluster.HostingManager.HostingEnvironment);
             controller.Add(KubeSetupProperty.ClusterspaceFolder, clusterspace);
-            controller.Add(KubeSetupProperty.NeonCloudHeadendClient, new HeadendClient(new HttpClient() { BaseAddress = new Uri(neonCloudHeadendUri) }));
+            controller.Add(KubeSetupProperty.NeonCloudHeadendClient, HeadendClient.Create());
             controller.Add(KubeSetupProperty.DisableImageDownload, !string.IsNullOrEmpty(nodeImagePath));
             controller.Add(KubeSetupProperty.Redact, !unredacted);
 

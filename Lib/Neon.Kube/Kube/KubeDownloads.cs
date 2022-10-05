@@ -115,7 +115,7 @@ namespace Neon.Kube
 
             if (!setupDebugMode)
             {
-                var headendClient = new HeadendClient(new HttpClient() { BaseAddress = KubeEnv.HeadendUri });
+                var headendClient = HeadendClient.Create();
 
                 return await headendClient.ClusterSetup.GetNodeImageManifestUriAsync(hostingEnvironment.ToMemberString(), KubeVersions.NeonKube, architecture);
             }
