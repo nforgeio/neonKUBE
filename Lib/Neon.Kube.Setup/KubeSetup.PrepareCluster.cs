@@ -96,7 +96,6 @@ namespace Neon.Kube
         /// <param name="debugMode">Optionally indicates that the cluster will be prepared in debug mode.</param>
         /// <param name="baseImageName">Optionally specifies the base image name to use for debug mode.</param>
         /// <param name="clusterspace">Optionally specifies the clusterspace for the operation.</param>
-        /// <param name="neonCloudHeadendUri">Optionally overrides the headend service URI.  This defaults to <see cref="KubeEnv.HeadendUri"/>.</param>
         /// <param name="removeExisting">Optionally remove any existing cluster with the same name in the target environment.</param>
         /// <param name="disableConsoleOutput">
         /// Optionally disables status output to the console.  This is typically

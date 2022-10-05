@@ -121,8 +121,6 @@ OPTIONS:
                                   while not disrupting the built-in neonDESKTOP or
                                   other normal clusters.
 
-    --headend-uri               - Set the URI for the headend service.
-
     --private-image             - Specifies that the private node image should be deployed.
                                   Only neonFORGE maintainers are permitted to use this.
 ";
@@ -143,7 +141,6 @@ OPTIONS:
             "--debug",
             "--base-image-name",
             "--clusterspace", 
-            "--headend-uri",
             "--private-image"
         };
 
@@ -190,7 +187,6 @@ OPTIONS:
             var debug             = commandLine.HasOption("--debug");
             var baseImageName     = commandLine.GetOption("--base-image-name");
             var clusterspace      = commandLine.GetOption("--clusterspace");
-            var headendUri        = commandLine.GetOption("--headend-uri") ?? KubeEnv.HeadendUri.ToString();
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
             var disablePending    = commandLine.HasOption("--disable-pending");
             var privateImage      = commandLine.HasOption("--private-image");
@@ -302,8 +298,7 @@ OPTIONS:
                 unredacted:             commandLine.HasOption("--unredacted"),
                 debugMode:              debug,
                 baseImageName:          baseImageName,
-                clusterspace:           clusterspace,
-                neonCloudHeadendUri:    headendUri);
+                clusterspace:           clusterspace);
 
             controller.DisablePendingTasks = disablePending;
 

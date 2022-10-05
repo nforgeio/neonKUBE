@@ -656,6 +656,14 @@ namespace Neon.Kube.Xunit
                 }
             }
 
+            // Set the NEONKUBE_HEADEND_URI environment variable when the fixture options
+            // specify a URI.  Doing this will override the default headend URI.
+
+            if (!string.IsNullOrEmpty(options.NeonCloudHeadendUri))
+            {
+                Environment.SetEnvironmentVariable(KubeEnv.HeadendUriVariable, options.NeonCloudHeadendUri);
+            }
+
             // Provision the new cluster.
 
             WriteTestOutputLine($"PREPARE CLUSTER: {clusterDefinition.Name}");
@@ -668,8 +676,7 @@ namespace Neon.Kube.Xunit
                     nodeImageUri:        imageUri,
                     nodeImagePath:       imagePath,
                     maxParallel:         options.MaxParallel,
-                    unredacted:          options.Unredacted,
-                    neonCloudHeadendUri: options.NeonCloudHeadendUri);
+                    unredacted:          options.Unredacted);
 
                 switch (controller.RunAsync().ResultWithoutAggregate())
                 {
