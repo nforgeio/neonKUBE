@@ -211,19 +211,6 @@ try
 
         Write-Info ""
         Write-Info "*******************************************************************************"
-        Write-Info "***                           CLEAN SOLUTION                                ***"
-        Write-Info "*******************************************************************************"
-        Write-Info ""
-
-        & "$msbuild" "$nkSolution" $buildConfig -t:Clean -m -verbosity:$verbosity
-
-        if (-not $?)
-        {
-            throw "ERROR: CLEAN FAILED"
-        }
-
-        Write-Info ""
-        Write-Info "*******************************************************************************"
         Write-Info "***                           RESTORE PACKAGES                              ***"
         Write-Info "*******************************************************************************"
         Write-Info ""
@@ -235,6 +222,19 @@ try
         if (-not $?)
         {
             throw "ERROR: RESTORE FAILED"
+        }
+
+        Write-Info ""
+        Write-Info "*******************************************************************************"
+        Write-Info "***                           CLEAN SOLUTION                                ***"
+        Write-Info "*******************************************************************************"
+        Write-Info ""
+
+        & "$msbuild" "$nkSolution" $buildConfig -t:Clean -m -verbosity:$verbosity
+
+        if (-not $?)
+        {
+            throw "ERROR: CLEAN FAILED"
         }
 
         Write-Info ""
