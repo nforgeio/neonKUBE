@@ -492,10 +492,12 @@ namespace Neon.Kube.DesktopService
         /// <inheritdoc/>
         public async Task<GrpcRelayLogBatchReply> RelayLogBatchAsync(GrpcRelayLogBatchRequest request, CallContext context = default)
         {
+            // $todo(jefflill): Temporarily disabling this.
+#if TODO
             var batch = NeonHelper.JsonDeserialize<Batch<LogRecord>>(request.BatchJson);
 
             DesktopService.LogExporter.Export(batch);
-
+#endif
             return await Task.FromResult(new GrpcRelayLogBatchReply());
         }
 
@@ -504,8 +506,10 @@ namespace Neon.Kube.DesktopService
         {
             var batch = NeonHelper.JsonDeserialize<Batch<Activity>>(request.BatchJson);
 
+            // $todo(jefflill): Temporarily disabling this.
+#if TODO
             DesktopService.TraceExporter.Export(batch);
-
+#endif
             return await Task.FromResult(new GrpcRelayTraceBatchReply());
         }
     }
