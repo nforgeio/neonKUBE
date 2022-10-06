@@ -17,6 +17,7 @@
 
 using System;
 using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Reflection;
 
 using OpenTelemetry.Logs;
@@ -48,14 +49,14 @@ namespace OpenTelemetry.Exporter
 
             // $hack(jefflill):
             //
-            // Unforunately, the [OpenTelemetry.Exporter.OtlpLogExporter] is internal, so we can't
+            // Unfortunately, the [OpenTelemetry.Exporter.OtlpLogExporter] is internal, so we can't
             // instantiate instances directly, so we're going to use reflection instead.  This is
             // FRAGILE in general and probably especially so here because the .NET OpenTelemetry
-            // logging API is still alpha.
+            // logging API is still in beta.
             //
             // There's a decent chance that this will need to be refactored in the future.
 
-            var assembly            = typeof(OtlpLogExporterHelperExtensions).Assembly;
+            var assembly            = typeof(OtlpExporterOptions).Assembly;
             var otlpLogExporterType = assembly.GetType("OpenTelemetry.Exporter.OtlpLogExporter");
 
             if (otlpLogExporterType != null)
@@ -69,19 +70,20 @@ namespace OpenTelemetry.Exporter
 
                 if (constructorInfo != null)
                 {
-                    // Locate the exporter's Export() and Shutdown() methods. 
+                    // Locate the exporter's Export() and Shutdown() methods.
 
-                    var exportMethod   = otlpLogExporterType.GetMethod("Export", BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy, new Type[] { typeof(Batch<LogRecord>) });
+                    var methods        = otlpLogExporterType.GetMethods();
+                    var exportMethod   = methods.Single(method => method.Name == "Export" && method.IsPublic && !method.IsStatic);
                     var shutdownMethod = otlpLogExporterType.GetMethod("Shutdown", BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy, new Type[] { typeof(int) });
 
-                    Covenant.Assert(exportMethod != null);
-                    Covenant.Assert(shutdownMethod != null);
+                    Covenant.Assert(exportMethod != null, "Cannot locate the [OpenTelemetry.Exporter.OtlpLogExporter.Export(Batch<LogRecord>)] method.  NEONFORGE may need to refactor reflection for internal OpenTelemetry changes.");
+                    Covenant.Assert(shutdownMethod != null, "Cannot locate the [OpenTelemetry.Exporter.OtlpLogExporter.OnShutdown(int)] method.  NEONFORGE may need to refactor reflection for internal OpenTelemetry changes.");
 
                     return new OtlpLogExporterWrapper(constructorInfo.Invoke(new object[] { options }), exportMethod, shutdownMethod);
                 }
             }
 
-            throw new NotSupportedException("Unable to locate the type or constructor for [OpenTelemetry.Exporter.OtlpLogExporter].  You may need to refactor reflection for internal OpenTelemetry changes.");
+            throw new NotSupportedException("Cannot locate the type or constructor for [OpenTelemetry.Exporter.OtlpLogExporter].  NEONFORGE may need to refactor reflection for internal OpenTelemetry changes.");
         }
 
         //---------------------------------------------------------------------

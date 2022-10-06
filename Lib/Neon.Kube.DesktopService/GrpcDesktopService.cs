@@ -154,7 +154,7 @@ namespace Neon.Kube.DesktopService
         }
 
         /// <inheritdoc/>
-        public async Task<GrpcGetNatReply> GetNatByName(GrpcGetNatByNameRequest request, CallContext context = default)
+        public async Task<GrpcGetNatReply> GetNatByNameAsync(GrpcGetNatByNameRequest request, CallContext context = default)
         {
             await SyncContext.Clear;
 
@@ -169,7 +169,7 @@ namespace Neon.Kube.DesktopService
         }
 
         /// <inheritdoc/>
-        public async Task<GrpcGetNatReply> GetNatByNameSubnet(GrpcGetNatBySubnetRequest request, CallContext context = default)
+        public async Task<GrpcGetNatReply> GetNatByNameSubnetAsync(GrpcGetNatBySubnetRequest request, CallContext context = default)
         {
             await SyncContext.Clear;
 
@@ -475,7 +475,7 @@ namespace Neon.Kube.DesktopService
         }
 
         /// <inheritdoc/>
-        public async Task<GrpcGetIPAddressReply> GetIPAddress(GrpcGetIPAddressRequest request, CallContext context = default)
+        public async Task<GrpcGetIPAddressReply> GetIPAddressAsync(GrpcGetIPAddressRequest request, CallContext context = default)
         {
             await SyncContext.Clear;
 
@@ -490,7 +490,7 @@ namespace Neon.Kube.DesktopService
         }
 
         /// <inheritdoc/>
-        public async Task<GrpcRelayLogBatchReply> RelayLogBatch(GrpcRelayLogBatchRequest request, CallContext context = default)
+        public async Task<GrpcRelayLogBatchReply> RelayLogBatchAsync(GrpcRelayLogBatchRequest request, CallContext context = default)
         {
             var batch = NeonHelper.JsonDeserialize<Batch<LogRecord>>(request.BatchJson);
 
@@ -500,7 +500,7 @@ namespace Neon.Kube.DesktopService
         }
 
         /// <inheritdoc/>
-        public async Task<GrpcRelayTraceBatchReply> RelayTraceBatch(GrpcRelayTraceBatchRequest request, CallContext context = default)
+        public async Task<GrpcRelayTraceBatchReply> RelayTraceBatchAsync(GrpcRelayTraceBatchRequest request, CallContext context = default)
         {
             var batch = NeonHelper.JsonDeserialize<Batch<Activity>>(request.BatchJson);
 
