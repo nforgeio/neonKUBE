@@ -58,7 +58,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override ExportResult Export(in Batch<LogRecord> batch)
         {
-            desktopService?.RelayLogBatch(new GrpcRelayLogBatchRequest() { BatchJson = NeonHelper.JsonSerialize(batch) });
+            desktopService?.RelayLogBatchAsync(new GrpcRelayLogBatchRequest() { BatchJson = NeonHelper.JsonSerialize(batch) });
 
             return ExportResult.Success;
         }

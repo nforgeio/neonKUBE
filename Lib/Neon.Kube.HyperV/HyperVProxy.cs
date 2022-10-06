@@ -686,7 +686,7 @@ namespace Neon.Kube
             else
             {
                 var request = new GrpcGetNatByNameRequest(name: name);
-                var reply   = desktopService.GetNatByName(request).Result;
+                var reply   = desktopService.GetNatByNameAsync(request).Result;
 
                 reply.Error.EnsureSuccess();
 
@@ -708,7 +708,7 @@ namespace Neon.Kube
             else
             {
                 var request = new GrpcGetNatBySubnetRequest(subnet: subnet);
-                var reply   = desktopService.GetNatByNameSubnet(request).Result;
+                var reply   = desktopService.GetNatByNameSubnetAsync(request).Result;
 
                 reply.Error.EnsureSuccess();
 
@@ -730,7 +730,7 @@ namespace Neon.Kube
             else
             {
                 var request = new GrpcGetIPAddressRequest(address: address);
-                var reply   = desktopService.GetIPAddress(request).Result;
+                var reply   = desktopService.GetIPAddressAsync(request).Result;
 
                 reply.Error.EnsureSuccess();
 
