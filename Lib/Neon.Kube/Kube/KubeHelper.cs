@@ -83,6 +83,7 @@ namespace Neon.Kube
         private static IStaticDirectory     cachedResources;
         private static string               cachedNodeImageFolder;
         private static string               cachedDashboardStateFolder;
+        private static string               cachedUserSshFolder;
 
         private static List<KeyValuePair<string, object>> cachedTelemetryTags;
 
@@ -129,6 +130,7 @@ namespace Neon.Kube
             cachedResources               = null;
             cachedNodeImageFolder         = null;
             cachedDashboardStateFolder    = null;
+            cachedUserSshFolder           = null;
         }
 
         /// <summary>
@@ -613,6 +615,26 @@ namespace Neon.Kube
         public static string ClusterspacePrefix(string prefix)
         {
             return $"({prefix})";
+        }
+
+        /// <summary>
+        /// Returns the path to the <b>.ssh</b> folder within user's home folder.
+        /// </summary>
+        public static string UserSshFolder
+        {
+            get
+            {
+                if (cachedUserSshFolder != null)
+                {
+                    return cachedUserSshFolder;
+                }
+
+                cachedUserSshFolder = Path.Combine(userHomeFolder, ".ssh");
+
+                Directory.CreateDirectory(cachedUserSshFolder);
+
+                return cachedUserSshFolder;
+            }
         }
 
         /// <summary>
@@ -2235,24 +2257,28 @@ exit 0
 
             // Look for the installed version first.
 
-            var path1 = InstallFolder != null ? Path.Combine(InstallFolder, "SSH", "ssh-keygen.exe") : null;
+            var defaultPath = InstallFolder != null ? Path.Combine(InstallFolder, "ssh", "ssh-keygen.exe") : null;
 
-            if (path1 != null && File.Exists(path1))
+            if (defaultPath != null && File.Exists(defaultPath))
             {
-                return Path.GetFullPath(path1);
+                return Path.GetFullPath(defaultPath);
             }
 
-            // Fall back to the executable from our Git repo.
+            // Fall back to the executable in our git repo (for developers).
 
-            var repoFolder = Environment.GetEnvironmentVariable("NK_ROOT");
-            var path2      = repoFolder != null ? Path.Combine(repoFolder, "External", "SSH", "ssh-keygen.exe") : null;
+            var repoFolder   = Environment.GetEnvironmentVariable("NK_ROOT");
+            var fallbackPath = repoFolder != null ? Path.Combine(repoFolder, "External", "ssh", "ssh-keygen.exe") : null;
 
-            if (path2 != null && File.Exists(path2))
+            if (fallbackPath != null && File.Exists(fallbackPath))
             {
-                return Path.GetFullPath(path2);
+                return Path.GetFullPath(fallbackPath);
             }
 
-            throw new FileNotFoundException($"Cannot locate [ssh-keygen.exe] at [{path1}] or [{path2}].");
+#if DEBUG
+            throw new FileNotFoundException($"Cannot locate [ssh-keygen.exe] at [{defaultPath}] or [{fallbackPath}].");
+#else
+            throw new FileNotFoundException($"Cannot locate [ssh-keygen.exe] at [{defaultPath}].");
+#endif
         }
 
         /// <summary>
@@ -2477,18 +2503,18 @@ exit 0
 # settings below were captured from the OpenSSH version installed with
 # Ubuntu-22.04:
 #
-#		OpenSSH_8.9p1 Ubuntu-3, OpenSSL 3.0.2 15 Mar 2022
+# OpenSSH_8.9p1 Ubuntu-3, OpenSSL 3.0.2 15 Mar 2022
 #
 # The only change we made was to move the include statement from the top
 # to the bottom of this file:
 #
-#		Include /etc/ssh/sshd_config.d/*.conf
+# Include /etc/ssh/sshd_config.d/*.conf
 #
 # This allows the sub-config files to be able to override all of the settings
 # here.  Cluster preparaton works by writing a sub-config file with our custom
 # settings:
 #
-#		/etc/ssh/sshd_config.d/50-neonkube.conf
+#       /etc/ssh/sshd_config.d/50-neonkube.conf
 
 ###############################################################################
 # Default OpenSSH config file                                                 #
@@ -2504,69 +2530,69 @@ exit 0
 # possible, but leave them commented.  Uncommented options override the
 # default value.
 
-#Port 22
-#AddressFamily any
-#ListenAddress 0.0.0.0
-#ListenAddress ::
+# Port 22
+# AddressFamily any
+# ListenAddress 0.0.0.0
+# ListenAddress ::
 
-#HostKey /etc/ssh/ssh_host_rsa_key
-#HostKey /etc/ssh/ssh_host_ecdsa_key
-#HostKey /etc/ssh/ssh_host_ed25519_key
+# HostKey /etc/ssh/ssh_host_rsa_key
+# HostKey /etc/ssh/ssh_host_ecdsa_key
+# HostKey /etc/ssh/ssh_host_ed25519_key
 
 # Ciphers and keying
-#RekeyLimit default none
+# RekeyLimit default none
 
 # Logging
-#SyslogFacility AUTH
-#LogLevel INFO
+# SyslogFacility AUTH
+# LogLevel INFO
 
 # Authentication:
 
-#LoginGraceTime 2m
-#PermitRootLogin prohibit-password
-#StrictModes yes
-#MaxAuthTries 6
-#MaxSessions 10
+# LoginGraceTime 2m
+# PermitRootLogin prohibit-password
+# StrictModes yes
+# MaxAuthTries 6
+# MaxSessions 10
 
 PubkeyAuthentication yes
 PubkeyAcceptedKeyTypes +ssh-rsa
 HostKeyAlgorithms +ssh-rsa
 
 # Expect .ssh/authorized_keys2 to be disregarded by default in future.
-#AuthorizedKeysFile     .ssh/authorized_keys .ssh/authorized_keys2
+# AuthorizedKeysFile     .ssh/authorized_keys .ssh/authorized_keys2
 
-#AuthorizedPrincipalsFile none
+# AuthorizedPrincipalsFile none
 
-#AuthorizedKeysCommand none
-#AuthorizedKeysCommandUser nobody
+# AuthorizedKeysCommand none
+# AuthorizedKeysCommandUser nobody
 
 # For this to work you will also need host keys in /etc/ssh/ssh_known_hosts
-#HostbasedAuthentication no
+# HostbasedAuthentication no
 # Change to yes if you don't trust ~/.ssh/known_hosts for
 # HostbasedAuthentication
-#IgnoreUserKnownHosts no
+# IgnoreUserKnownHosts no
 # Don't read the user's ~/.rhosts and ~/.shosts files
-#IgnoreRhosts yes
+# IgnoreRhosts yes
 
 # To disable tunneled clear text passwords, change to no here!
 PasswordAuthentication yes
-#PermitEmptyPasswords no
+# PermitEmptyPasswords no
 
 # Change to yes to enable challenge-response passwords (beware issues with
 # some PAM modules and threads)
 KbdInteractiveAuthentication no
 
 # Kerberos options
-#KerberosAuthentication no
-#KerberosOrLocalPasswd yes
-#KerberosTicketCleanup yes
-#KerberosGetAFSToken no
+# KerberosAuthentication no
+# KerberosOrLocalPasswd yes
+# KerberosTicketCleanup yes
+# KerberosGetAFSToken no
 
 # GSSAPI options
-#GSSAPIAuthentication no
-#GSSAPICleanupCredentials yes
-#GSSAPIStrictAcceptorCheck yes
-#GSSAPIKeyExchange no
+# GSSAPIAuthentication no
+# GSSAPICleanupCredentials yes
+# GSSAPIStrictAcceptorCheck yes
+# GSSAPIKeyExchange no
 
 # Set this to 'yes' to enable PAM authentication, account processing,
 # and session processing. If this is enabled, PAM authentication will
@@ -2579,29 +2605,29 @@ KbdInteractiveAuthentication no
 # and KbdInteractiveAuthentication to 'no'.
 UsePAM yes
 
-#AllowAgentForwarding yes
-#AllowTcpForwarding yes
-#GatewayPorts no
+# AllowAgentForwarding yes
+# AllowTcpForwarding yes
+# GatewayPorts no
 X11Forwarding yes
-#X11DisplayOffset 10
-#X11UseLocalhost yes
-#PermitTTY yes
+# X11DisplayOffset 10
+# X11UseLocalhost yes
+# PermitTTY yes
 PrintMotd no
-#PrintLastLog yes
-#TCPKeepAlive yes
-#PermitUserEnvironment no
-#Compression delayed
-#ClientAliveInterval 0
-#ClientAliveCountMax 3
-#UseDNS no
-#PidFile /run/sshd.pid
-#MaxStartups 10:30:100
-#PermitTunnel no
-#ChrootDirectory none
-#VersionAddendum none
+# PrintLastLog yes
+# TCPKeepAlive yes
+# PermitUserEnvironment no
+# Compression delayed
+# ClientAliveInterval 0
+# ClientAliveCountMax 3
+# UseDNS no
+# PidFile /run/sshd.pid
+# MaxStartups 10:30:100
+# PermitTunnel no
+# ChrootDirectory none
+# VersionAddendum none
 
 # no default banner path
-#Banner none
+# Banner none
 
 # Allow client to pass locale environment variables
 AcceptEnv LANG LC_*
@@ -2610,11 +2636,11 @@ AcceptEnv LANG LC_*
 Subsystem sftp  /usr/lib/openssh/sftp-server
 
 # Example of overriding settings on a per-user basis
-#Match User anoncvs
-#       X11Forwarding no
-#       AllowTcpForwarding no
-#       PermitTTY no
-#       ForceCommand cvs server
+# Match User anoncvs
+# X11Forwarding no
+# AllowTcpForwarding no
+# PermitTTY no
+# ForceCommand cvs server
 
 ###############################################################################
 # neonKUBE customization: relocated from the top of the original file         #
