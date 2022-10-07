@@ -383,10 +383,10 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
+        public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reservedMemory = 0, long reserveDisk = 0)
         {
             await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(reserveMemory >= 0, nameof(reserveMemory));
+            Covenant.Requires<ArgumentNullException>(reservedMemory >= 0, nameof(reservedMemory));
             Covenant.Requires<ArgumentNullException>(reserveDisk >= 0, nameof(reserveDisk));
 
             var hostMachineName = Environment.MachineName;
@@ -471,7 +471,7 @@ namespace Neon.Kube
             }
 
             //-----------------------------------------------------------------
-            // Check disk capacity:
+            // Check memory capacity:
 
             // Total the physical memory required for all of the cluster nodes.
 
@@ -514,11 +514,12 @@ namespace Neon.Kube
             }
             else
             {
-                // Verify that we have enough memory, taking the reservation into account.
+                // Verify that we have enough memory, taking reserved memory into account.
 
-                var availableMemory = (long)memoryStatus.ullAvailPhys;
+                var physicalMemory  = (long)memoryStatus.ullTotalPhys;
+                var availableMemory = physicalMemory - reservedMemory;
 
-                if (availableMemory - reserveMemory < requiredMemory)
+                if (availableMemory < requiredMemory)
                 {
                     if (!deploymentCheck.Constraints.TryGetValue(hostMachineName, out var hostContraintList))
                     {
@@ -527,16 +528,17 @@ namespace Neon.Kube
                         deploymentCheck.Constraints.Add(hostMachineName, hostContraintList);
                     }
 
+                    var humanPhysicalMemory  = ByteUnits.Humanize(physicalMemory,  powerOfTwo: true);
+                    var humanAvailableMemory = ByteUnits.Humanize(physicalMemory, powerOfTwo: true);
                     var humanRequiredMemory  = ByteUnits.Humanize(requiredMemory, powerOfTwo: true);
-                    var humanReservedMemory  = ByteUnits.Humanize(reserveMemory, powerOfTwo: true);
-                    var humanAvailableMemory = ByteUnits.Humanize(availableMemory, powerOfTwo: true);
+                    var humanReservedMemory  = ByteUnits.Humanize(reservedMemory, powerOfTwo: true);
 
                     hostContraintList.Add(
                         new HostingResourceConstraint()
                         {
                              ResourceType = HostingConstrainedResourceType.Memory,
                              Nodes        = allNodeNames,
-                             Details      = $"[{humanRequiredMemory}] physical memory is required but only [{humanAvailableMemory}] is available after reserving [{humanReservedMemory}]."
+                             Details      = $"[{humanRequiredMemory}] physical memory is required but only [{humanAvailableMemory}] out of [{humanPhysicalMemory}] is available after reserving [{humanReservedMemory}] for the system and other apps."
                         });
                 }
             }
