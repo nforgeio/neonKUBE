@@ -238,7 +238,7 @@ CLUSTER MANAGEMENT ARGUMENTS:
                 DesktopService = DesktopServiceChannel.CreateGrpcService<IGrpcDesktopService>();
             }
 
-            // Configure the telemtry log and trace pipelines.
+            // Configure the telemetry log and trace pipelines.
 
             if (!KubeEnv.IsTelemetryDisabled || DesktopService == null)
             {
