@@ -1197,10 +1197,13 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         KubeHelper.SetConfig(existingConfig);
                     }
 
+                    // Save the cluster node SSH certificate in the users [~/.ssh] folder.
+
+                    File.WriteAllText(Path.Combine(KubeHelper.UserSshFolder, KubeHelper.CurrentContextName.ToString()), clusterLogin.SshKey.PrivatePEM);
+
                     // Make sure that the config cached by [KubeHelper] is up to date.
 
                     KubeHelper.LoadConfig();
-                    File.WriteAllText(Path.Combine(NeonHelper.UserHomeFolder, ".ssh", KubeHelper.CurrentContextName.ToString()), clusterLogin.SshKey.PrivatePEM);
                 }));
         }
 

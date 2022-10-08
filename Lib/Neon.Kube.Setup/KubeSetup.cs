@@ -217,7 +217,14 @@ namespace Neon.Kube
         /// </remarks>
         public static string GetCurrentKubeConfigPath()
         {
-            return Environment.GetEnvironmentVariable("KUBECONFIG").Split(';').Where(variable => variable.Contains("config")).FirstOrDefault();
+            var kubeConfigVar = Environment.GetEnvironmentVariable("KUBECONFIG");
+
+            if (string.IsNullOrEmpty(kubeConfigVar))
+            {
+                return null;
+            }
+
+            return kubeConfigVar.Split(';').Where(variable => variable.Contains("config")).FirstOrDefault();
         }
 
         /// <summary>
@@ -244,67 +251,66 @@ namespace Neon.Kube
             }
 
             var cluster    = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var configFile = GetCurrentKubeConfigPath();
+            var configPath = GetCurrentKubeConfigPath();
 
-            if (!string.IsNullOrEmpty(configFile) && File.Exists(configFile))
-            {
-                // We're using a generated wrapper class to handle transient retries rather than 
-                // modifying the built-in base retry policy.  We're really just trying to handle
-                // the transients that happen during setup when the API server is unavailable for
-                // some reaon (like it's being restarted).
+            Covenant.Assert(!string.IsNullOrEmpty(configPath) && File.Exists(configPath), $"Cannot locate Kubernetes config at [{configPath}].");
 
-                var k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildConfigFromConfigFile(configFile, currentContext: cluster.KubeContext.Name));
+            // We're using a generated wrapper class to handle transient retries rather than 
+            // modifying the built-in base retry policy.  We're really just trying to handle
+            // the transients that happen during setup when the API server is unavailable for
+            // some reaon (like it's being restarted).
 
-                k8s.RetryPolicy =
-                    new ExponentialRetryPolicy(
-                        transientDetector: 
-                            exception =>
+            var k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildConfigFromConfigFile(configPath, currentContext: cluster.KubeContext.Name));
+
+            k8s.RetryPolicy =
+                new ExponentialRetryPolicy(
+                    transientDetector: 
+                        exception =>
+                        {
+                            var exceptionType = exception.GetType();
+
+                            // Exceptions like this happen when a API server connection can't be established
+                            // because the server isn't running or ready.
+
+                            if (exceptionType == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(SocketException))
                             {
-                                var exceptionType = exception.GetType();
+                                return true;
+                            }
 
-                                // Exceptions like this happen when a API server connection can't be established
-                                // because the server isn't running or ready.
+                            var httpOperationException = exception as HttpOperationException;
 
-                                if (exceptionType == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(SocketException))
+                            if (httpOperationException != null)
+                            {
+                                var statusCode = httpOperationException.Response.StatusCode;
+
+                                switch (statusCode)
                                 {
-                                    return true;
+                                    case HttpStatusCode.GatewayTimeout:
+                                    case HttpStatusCode.InternalServerError:
+                                    case HttpStatusCode.RequestTimeout:
+                                    case HttpStatusCode.ServiceUnavailable:
+                                    case (HttpStatusCode)423:   // Locked
+                                    case (HttpStatusCode)429:   // Too many requests
+
+                                        return true;
                                 }
+                            }
 
-                                var httpOperationException = exception as HttpOperationException;
+                            // This might be another variant of the check just above.  This looks like an SSL negotiation problem.
 
-                                if (httpOperationException != null)
-                                {
-                                    var statusCode = httpOperationException.Response.StatusCode;
+                            if (exceptionType == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(IOException))
+                            {
+                                return true;
+                            }
 
-                                    switch (statusCode)
-                                    {
-                                        case HttpStatusCode.GatewayTimeout:
-                                        case HttpStatusCode.InternalServerError:
-                                        case HttpStatusCode.RequestTimeout:
-                                        case HttpStatusCode.ServiceUnavailable:
-                                        case (HttpStatusCode)423:   // Locked
-                                        case (HttpStatusCode)429:   // Too many requests
+                            return false;
+                        },
+                    maxAttempts:          int.MaxValue,
+                    initialRetryInterval: TimeSpan.FromSeconds(1),
+                    maxRetryInterval:     TimeSpan.FromSeconds(5),
+                    timeout:              TimeSpan.FromMinutes(5));
 
-                                            return true;
-                                    }
-                                }
-
-                                // This might be another variant of the check just above.  This looks like an SSL negotiation problem.
-
-                                if (exceptionType == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(IOException))
-                                {
-                                    return true;
-                                }
-
-                                return false;
-                            },
-                        maxAttempts:          int.MaxValue,
-                        initialRetryInterval: TimeSpan.FromSeconds(1),
-                        maxRetryInterval:     TimeSpan.FromSeconds(5),
-                        timeout:              TimeSpan.FromMinutes(5));
-
-                controller.Add(KubeSetupProperty.K8sClient, k8s);
-            }
+            controller.Add(KubeSetupProperty.K8sClient, k8s);
         }
 
         /// <summary>
