@@ -2716,6 +2716,22 @@ TCPKeepAlive yes
         /// <param name="imageUri">The node image multi-part download information URI.</param>
         /// <param name="imagePath">The local path where the image will be written.</param>
         /// <param name="progressAction">Optional progress action that will be called with operation percent complete.</param>
+        /// <param name="strictCheck">
+        /// <para>
+        /// Optionally used to enable a slow but more comprehensive check of any existing file.
+        /// When this is enabled and the download file already exists along with its MD5 hash file,
+        /// the method will assume that the existing file matches when the file size is the same
+        /// as specified in the manifest and manifest overall MD5 matches the local MD5 file.
+        /// </para>
+        /// <para>
+        /// Otherwise, this method will need to compute the MD5 hashes for the existing file parts
+        /// and compare those to the part MD5 hashes in the manifest, which can take quite a while
+        /// for large files.
+        /// </para>
+        /// <para>
+        /// This defaults to <c>false</c>.
+        /// </para>
+        /// </param>
         /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns>The path to the downloaded file.</returns>
         /// <exception cref="SocketException">Thrown for network errors.</exception>
@@ -2733,6 +2749,7 @@ TCPKeepAlive yes
             string                      imageUri, 
             string                      imagePath,
             DownloadProgressDelegate    progressAction    = null,
+            bool                        strictCheck       = false,
             CancellationToken           cancellationToken = default)
         {
             await SyncContext.Clear;
@@ -2763,7 +2780,7 @@ TCPKeepAlive yes
 
                 // Download the multi-part file.
 
-                return await DeploymentHelper.DownloadMultiPartAsync(manifest, imagePath, progressAction, cancellationToken: cancellationToken);
+                return await DeploymentHelper.DownloadMultiPartAsync(manifest, imagePath, progressAction, strictCheck: strictCheck, cancellationToken: cancellationToken);
             }
         }
 
