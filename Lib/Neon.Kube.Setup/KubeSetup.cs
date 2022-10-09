@@ -207,7 +207,8 @@ namespace Neon.Kube
         /// Returns the path of the current kubeconfig file based on the KUBECONFIG environment variable.
         /// </summary>
         /// <returns>
-        /// The kubeconfig file path or <c>null</c> when environment variable doesn't exist or is empty.
+        /// The kubeconfig file path or <c>~\.kube\config</c> (the standard default location) when environment
+        /// variable doesn't exist or is empty.
         /// </returns>
         /// <remarks>
         /// <note>
@@ -221,7 +222,7 @@ namespace Neon.Kube
 
             if (string.IsNullOrEmpty(kubeConfigVar))
             {
-                return null;
+                return Path.Combine(NeonHelper.UserHomeFolder, ".kube", "config");
             }
 
             return kubeConfigVar.Split(';').Where(variable => variable.Contains("config")).FirstOrDefault();
