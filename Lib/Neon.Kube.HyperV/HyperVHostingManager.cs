@@ -728,6 +728,19 @@ namespace Neon.Kube
 
                 using (var input = new FileStream(driveTemplatePath, FileMode.Open, FileAccess.Read))
                 {
+                    // Delete any existing OS VHDX file for the node.  Note that this will fail
+                    // when the file happens to be used by a running VM that doesn't follow our
+                    // VM naming conventions.
+                    //
+                    // We're doing this for robustness to handle the situation where an OS VHDX
+                    // was decompressed during an earlier cluster provisioning operation but that
+                    // operation was interruped before the VM was provisioned or the VHDX wasn't
+                    // removed after the VM was deleted.
+
+                    NeonHelper.DeleteFile(osDrivePath);
+
+                    // Decompress the VHDX.
+
                     using (var output = new FileStream(osDrivePath, FileMode.Create, FileAccess.ReadWrite))
                     {
                         using (var decompressor = new GZipStream(input, CompressionMode.Decompress))
