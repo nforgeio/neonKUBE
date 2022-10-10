@@ -393,6 +393,40 @@ namespace Neon.Kube
             var allNodeNames    = cluster.Definition.NodeDefinitions.Keys.ToList();
             var deploymentCheck = new HostingResourceAvailability();
 
+            // Verify that no VMs are already running that will conflict with VMs
+            // that we'd be creating for the cluster.
+
+            var clusterVmNames = new Dictionary<string, NodeDefinition>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var node in cluster.Definition.Nodes)
+            {
+                clusterVmNames.Add(GetVmName(node), node);
+            }
+
+            using (var hyperv = new HyperVProxy())
+            {
+                foreach (var vm in hyperv.ListVms())
+                {
+                    if (!deploymentCheck.Constraints.TryGetValue(hostMachineName, out var hostContraintList))
+                    {
+                        hostContraintList = new List<HostingResourceConstraint>();
+
+                        deploymentCheck.Constraints.Add(hostMachineName, hostContraintList);
+                    }
+
+                    if (clusterVmNames.TryGetValue(vm.Name, out var conflictNode))
+                    {
+                        hostContraintList.Add(
+                            new HostingResourceConstraint()
+                            {
+                                ResourceType = HostingConstrainedResourceType.VmHost,
+                                Nodes        = new List<string>() { conflictNode.Name },
+                                Details      = $"Cannot deploy the VM [{conflictNode.Name}] cluster node because the [{vm.Name}] virtual machine already exists."
+                            });
+                    }
+                }
+            }
+
             // We're going to allow CPUs to be oversubscribed but not RAM or disk.
             // Hyper-V does have some limits on the number of virtual machines that
             // can be deployed but that number is in the 100s, so we're not going
@@ -542,11 +576,6 @@ namespace Neon.Kube
                         });
                 }
             }
-
-            //-----------------------------------------------------------------
-            // Deployment can't happen when any constraints have been detected.
-
-            deploymentCheck.CanBeDeployed = deploymentCheck.Constraints.Count == 0;
 
             return deploymentCheck;
         }

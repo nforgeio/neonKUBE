@@ -890,7 +890,7 @@ namespace Neon.Kube
             // NOTE: We're going to allow CPUs to be oversubscribed but not RAM or disk.
             //       We will honor the memory and disk reservations for XenServer.
 
-            var availability = new HostingResourceAvailability() { CanBeDeployed = true };
+            var availability = new HostingResourceAvailability();
 
             //-----------------------------------------------------------------
             // Create a dictionary mapping the XenServer host name to a record
@@ -927,8 +927,7 @@ namespace Neon.Kube
 
             if (hostnameToCapacity.Values.Any(capacity => capacity == null))
             {
-                availability.CanBeDeployed = false;
-                availability.Constraints   = new Dictionary<string, List<HostingResourceConstraint>>();
+                availability.Constraints = new Dictionary<string, List<HostingResourceConstraint>>();
 
                 foreach (var offlineHostname in hostnameToCapacity
                     .Where(item => item.Value == null)
@@ -1020,8 +1019,6 @@ namespace Neon.Kube
 
                 if (requiredMemory > availableMemory)
                 {
-                    availability.CanBeDeployed = false;
-
                     if (!availability.Constraints.TryGetValue(hostname, out var constraints))
                     {
                         constraints = new List<HostingResourceConstraint>();
@@ -1048,8 +1045,6 @@ namespace Neon.Kube
 
                 if (requiredDisk > availableDisk)
                 {
-                    availability.CanBeDeployed = false;
-
                     if (!availability.Constraints.TryGetValue(hostname, out var constraints))
                     {
                         constraints = new List<HostingResourceConstraint>();
