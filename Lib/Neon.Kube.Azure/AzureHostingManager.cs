@@ -3163,7 +3163,6 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
                 return new HostingResourceAvailability()
                 {
-                    CanBeDeployed = false,
                     Constraints   = 
                         new Dictionary<string, List<HostingResourceConstraint>>()
                         {
@@ -3234,10 +3233,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
             if (constraints.Count == 0)
             {
-                return new HostingResourceAvailability()
-                {
-                    CanBeDeployed = true
-                };
+                return new HostingResourceAvailability();
             }
             else
             {
@@ -3247,7 +3243,6 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
                 return new HostingResourceAvailability()
                 {
-                    CanBeDeployed = false,
                     Constraints = constraintDictionary
                 };
             }

@@ -3777,7 +3777,6 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
                 return new HostingResourceAvailability()
                 {
-                    CanBeDeployed = false,
                     Constraints   = 
                         new Dictionary<string, List<HostingResourceConstraint>>()
                         {
@@ -3847,10 +3846,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
             if (constraints.Count == 0)
             {
-                return new HostingResourceAvailability()
-                {
-                    CanBeDeployed = true
-                };
+                return new HostingResourceAvailability();
             }
             else
             {
@@ -3860,8 +3856,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
                 return new HostingResourceAvailability()
                 {
-                    CanBeDeployed = false,
-                    Constraints   = constraintDictionary
+                    Constraints = constraintDictionary
                 };
             }
         }
