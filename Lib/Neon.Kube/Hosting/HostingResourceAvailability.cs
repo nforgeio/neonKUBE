@@ -58,7 +58,18 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "CanBeDeployed", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "canBeDeployed", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool CanBeDeployed { get; set; }
+        public bool CanBeDeployed
+        {
+            get
+            {
+                if (Constraints == null)
+                {
+                    return false;
+                }
+
+                return !Constraints.Any(constraint => constraint.Value.Count > 0);
+            }
+        }
 
         /// <summary>
         /// Details the constraints preventing the cluster from being deployed.

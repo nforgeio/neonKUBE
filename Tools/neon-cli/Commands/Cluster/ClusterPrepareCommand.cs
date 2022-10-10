@@ -217,7 +217,7 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            // Obtain the cluster definition.
+            // Load the cluster definition.
 
             var clusterDefPath    = commandLine.Arguments[0];
             var clusterDefinition = (ClusterDefinition)null;            
@@ -226,8 +226,8 @@ OPTIONS:
 
             clusterDefinition = ClusterDefinition.FromFile(clusterDefPath, strict: true);
 
-            // Do a quick sanity check to ensure that the hosting environment has enough
-            // resources (memory and disk) to actually host the cluster.
+            // Do a quick sanity check to ensure that the hosting environment has no conflicts
+            // as well as enough resources (memory, disk,...) to actually host the cluster.
 
             using (var cluster = new ClusterProxy(clusterDefinition, new HostingManagerFactory(), !privateImage))
             {
@@ -236,7 +236,7 @@ OPTIONS:
                 if (!status.CanBeDeployed)
                 {
                     Console.Error.WriteLine();
-                    Console.Error.WriteLine($"*** ERROR: Insufficent resources available to deploy cluster.");
+                    Console.Error.WriteLine($"*** ERROR: Cannot deploy the cluster due to conflicts or resource constraints.");
                     Console.Error.WriteLine();
 
                     foreach (var entity in status.Constraints.Keys
