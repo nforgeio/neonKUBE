@@ -215,9 +215,15 @@ namespace NeonCli
                 {
                     var found = false;
 
+                    // $note(jefflill):
+                    //
+                    // Images pulled from Harbor are considered to by FOUND.  These are
+                    // typically the base Kubernetes cluster images plus HAPROXY, which
+                    // we use to implement etcd high-availability.
+
                     foreach (var name in image.Names)
                     {
-                        if (manifestImages.Contains(name))
+                        if (name.StartsWith("registry.neon.local/") || manifestImages.Contains(name))
                         {
                             found = true;
                             break;
