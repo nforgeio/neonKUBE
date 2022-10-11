@@ -64,7 +64,6 @@ namespace Neon.Kube
         private static string               cachedCurrentClusterspacePath;
         private static KubeConfig           cachedConfig;
         private static KubeConfigContext    cachedContext;
-        private static string               cachedKubeConfigPath;
         private static string               cachedNeonKubeUserFolder;
         private static string               cachedRunFolder;
         private static string               cachedLogFolder;
@@ -110,7 +109,6 @@ namespace Neon.Kube
         {
             cachedConfig                  = null;
             cachedContext                 = null;
-            cachedKubeConfigPath          = null;
             cachedNeonKubeUserFolder      = null;
             cachedRunFolder               = null;
             cachedLogFolder               = null;
@@ -749,38 +747,21 @@ namespace Neon.Kube
         {
             get
             {
-                string kubeFolder;
+                var kubeConfigVar  = Environment.GetEnvironmentVariable("KUBECONFIG");
+                var kubeConfigPath = (string)null;
 
-                if (cachedKubeConfigPath != null)
+                if (string.IsNullOrEmpty(kubeConfigVar))
                 {
-                    return cachedKubeConfigPath;
+                    kubeConfigPath = Path.Combine(NeonHelper.UserHomeFolder, ".kube", "config");
+                }
+                else
+                {
+                    kubeConfigPath = kubeConfigVar.Split(';').Where(variable => variable.Contains("config")).FirstOrDefault();
                 }
 
-                switch (ClusterspaceMode)
-                {
-                    case KubeClusterspaceMode.Disabled:
+                Directory.CreateDirectory(Path.GetDirectoryName(kubeConfigPath));
 
-                        kubeFolder = Path.Combine(userHomeFolder, ".kube");
-
-                        Directory.CreateDirectory(kubeFolder);
-
-                        return cachedKubeConfigPath = Path.Combine(kubeFolder, "config");
-
-                    case KubeClusterspaceMode.Enabled:
-                    case KubeClusterspaceMode.EnabledWithSharedCache:
-
-                        Covenant.Assert(clusterspaceFolder != null);
-                        
-                        kubeFolder = Path.Combine(clusterspaceFolder, ".kube");
-
-                        Directory.CreateDirectory(kubeFolder);
-
-                        return cachedKubeConfigPath = Path.Combine(kubeFolder, "config");
-
-                    default:
-
-                        throw new NotImplementedException();
-                }
+                return kubeConfigPath;
             }
         }
 
@@ -3157,7 +3138,7 @@ TCPKeepAlive yes
             // and return the status from there.  This config map is created initially by
             // cluster setup and then is updated by neon-cluster-operator.
 
-            var configFile = Environment.GetEnvironmentVariable("KUBECONFIG").Split(';').Where(variable => variable.Contains("config")).FirstOrDefault();
+            var configFile = KubeHelper.KubeConfigPath;
             var config     = KubernetesClientConfiguration.BuildConfigFromConfigFile(configFile, currentContext: context.Name);
 
             if (config == null)

@@ -599,7 +599,7 @@ namespace Neon.Kube
                         }
                     }
 
-                    var kubeConfigPath = Environment.GetEnvironmentVariable("KUBECONFIG");
+                    var kubeConfigPath = KubeHelper.KubeConfigPath;
 
                     if (kubeConfigPath == null)
                     {
