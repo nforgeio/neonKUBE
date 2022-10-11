@@ -204,31 +204,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path of the current kubeconfig file based on the KUBECONFIG environment variable.
-        /// </summary>
-        /// <returns>
-        /// The kubeconfig file path or <c>~\.kube\config</c> (the standard default location) when environment
-        /// variable doesn't exist or is empty.
-        /// </returns>
-        /// <remarks>
-        /// <note>
-        /// Only the first file specified in KUBECONFIG is returned when present.  Multiple config
-        /// files are not supported.
-        /// </note>
-        /// </remarks>
-        public static string GetCurrentKubeConfigPath()
-        {
-            var kubeConfigVar = Environment.GetEnvironmentVariable("KUBECONFIG");
-
-            if (string.IsNullOrEmpty(kubeConfigVar))
-            {
-                return Path.Combine(NeonHelper.UserHomeFolder, ".kube", "config");
-            }
-
-            return kubeConfigVar.Split(';').Where(variable => variable.Contains("config")).FirstOrDefault();
-        }
-
-        /// <summary>
         /// <para>
         /// Connects to a Kubernetes cluster if it already exists.  This sets the <see cref="KubeSetupProperty.K8sClient"/>
         /// property in the setup controller state when Kubernetes is running and a connection has not already 
@@ -252,7 +227,7 @@ namespace Neon.Kube
             }
 
             var cluster    = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var configPath = GetCurrentKubeConfigPath();
+            var configPath = KubeHelper.KubeConfigPath;
 
             Covenant.Assert(!string.IsNullOrEmpty(configPath) && File.Exists(configPath), $"Cannot locate Kubernetes config at [{configPath}].");
 

@@ -95,6 +95,21 @@ namespace Neon.Kube
                         clusterDefinition.Deployment.Prefix = deploymentPrefix;
                     }
 
+                    // We allow the built-in cluster to be deployed on machines with only
+                    // 4 processors.  When we see this, we're going to reduce the number
+                    // of processors assigned to the buuilt-in VM to just 3.
+
+                    var processorCount = Environment.ProcessorCount;
+
+                    if (processorCount < 4)
+                    {
+                        throw new NotSupportedException($"neonKUBE built-in clusters require the host to have at least [4] processors.  Only [{processorCount}] processors are present.");
+                    }
+                    else if (processorCount == 4)
+                    {
+                        clusterDefinition.Hosting.Vm.Cores = 3;
+                    }
+
                     return clusterDefinition;
                 }
             }
