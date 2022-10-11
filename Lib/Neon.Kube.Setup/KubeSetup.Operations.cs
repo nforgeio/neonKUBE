@@ -4448,7 +4448,7 @@ $@"- name: StorageType
 
                         var login = KubeHelper.GetClusterLogin(KubeHelper.CurrentContextName);
 
-                        NeonHelper.Execute(NeonHelper.DockerCli,
+                        NeonHelper.ExecuteCapture(NeonHelper.DockerCli,
                             new object[]
                             {
                                 "login",
