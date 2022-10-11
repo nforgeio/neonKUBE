@@ -45,10 +45,10 @@
 		<PackageReference Include="KubernetesClient" Version="7.2.19" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
 		<PackageReference Include="Microsoft.Windows.Compatibility" Version="6.0.0" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2331-dev-jeff" />
-		<PackageReference Include="Neon.Deployment" Version="10000.0.2331-dev-jeff" />
-		<PackageReference Include="Neon.WinTTY" Version="10000.0.2331-dev-jeff" />
-		<PackageReference Include="Neon.XenServer" Version="10000.0.2331-dev-jeff" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2340-dev-jeff" />
+		<PackageReference Include="Neon.Deployment" Version="10000.0.2340-dev-jeff" />
+		<PackageReference Include="Neon.WinTTY" Version="10000.0.2340-dev-jeff" />
+		<PackageReference Include="Neon.XenServer" Version="10000.0.2340-dev-jeff" />
 		<PackageReference Include="OpenTelemetry.Api" Version="1.4.0-beta.1" />
 		<PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.4.0-beta.1" />
 		<PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol.Logs" Version="1.4.0-beta.1" />
