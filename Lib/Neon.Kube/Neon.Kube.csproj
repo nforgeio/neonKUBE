@@ -66,6 +66,10 @@
 		<PackageReference Include="Neon.SSH" Version="10000.0.2340-dev-jeff" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 		<PackageReference Include="Npgsql" Version="6.0.7" />
+		<PackageReference Include="NSwag.MSBuild" Version="13.17.0">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="prometheus-net" Version="6.0.0" />
 		<PackageReference Include="SharpCompress" Version="0.32.2" />
 		<PackageReference Include="SharpZipLib.NETStandard" Version="1.0.7" />
@@ -115,4 +119,13 @@
         </ItemGroup>
     </Target>
 
+
+    <PropertyGroup>
+        <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+    </PropertyGroup>
+
+    <Target Name="NSwag" AfterTargets="PostBuildEvent" Condition=" '$(Configuration)' == 'Debug' ">
+        <Exec WorkingDirectory="$(ProjectDir)" EnvironmentVariables="ASPNETCORE_ENVIRONMENT=Development" Command="$(NSwagExe_Net60) openapi2csclient /input:$(ProjectDir)Harbor\swagger.json /classname:HarborClient /namespace:Neon.Kube  /output:$(ProjectDir)Harbor\HarborClient.cs" />
+    </Target>
+    
 </Project>
