@@ -1224,47 +1224,25 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
             controller.ThrowIfCancelled();
             controlNode.InvokeIdempotent("setup/priorityclass",
-                () =>
+                async () =>
                 {
                     controller.LogProgress(controlNode, verb: "configure", message: "priority classes");
 
-                    // I couldn't figure out how to specify the priority class name when create them
-                    // via the Kubernetes client, so I'll just use [kubectl] to apply them all at
-                    // once on the control-plane node.
-
-                    var sbPriorityClasses = new StringBuilder();
-
                     foreach (var priorityClassDef in PriorityClass.Values.Where(priorityClass => !priorityClass.IsSystem))
                     {
-                        if (sbPriorityClasses.Length > 0)
+                        var priorityClass = new V1PriorityClass()
                         {
-                            sbPriorityClasses.AppendLine("---");
-                        }
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Name = priorityClassDef.Name
+                            },
+                            Value = priorityClassDef.Value,
+                            Description = priorityClassDef.Description,
+                            PreemptionPolicy = "PreemptLowerPriority",
+                            GlobalDefault = priorityClassDef.IsDefault
+                        };
 
-                        var definition =
-$@"apiVersion: scheduling.k8s.io/v1
-kind: PriorityClass
-metadata:
-  name: {priorityClassDef.Name}
-value: {priorityClassDef.Value}
-description: ""{priorityClassDef.Description}""
-preemptionPolicy: PreemptLowerPriority
-globalDefault: {NeonHelper.ToBoolString(priorityClassDef.IsDefault)}
-";
-                        sbPriorityClasses.Append(definition);
-                    }
-
-                    var script =
-@"
-set -euo pipefail
-
-kubectl apply -f priorityclasses.yaml
-";
-                    var bundle = CommandBundle.FromScript(script);
-
-                    bundle.AddFile("priorityclasses.yaml", sbPriorityClasses.ToString());
-
-                    controlNode.SudoCommand(bundle, RunOptions.FaultOnError);
+                        await k8s.CreatePriorityClassAsync(priorityClass);
                 });
         }
 
