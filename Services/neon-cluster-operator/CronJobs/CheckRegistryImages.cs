@@ -63,7 +63,6 @@ namespace NeonClusterOperator
 
                 var dataMap   = context.MergedJobDataMap;
                 var k8s       = (IKubernetes)dataMap["Kubernetes"];
-                var harbor    = (HarborClient)dataMap["HarborClient"];
                 var nodes     = await k8s.ListNodeAsync();
                 var startTime = DateTime.UtcNow.AddSeconds(10);
 

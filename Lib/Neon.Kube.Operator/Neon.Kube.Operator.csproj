@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
@@ -40,8 +40,8 @@
 		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
 		<PackageReference Include="KubernetesClient" Version="7.2.19" />
 		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.9" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2340-dev-jeff" />
-		<PackageReference Include="Neon.Service" Version="10000.0.2340-dev-jeff" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2347-dev-master" />
+		<PackageReference Include="Neon.Service" Version="10000.0.2347-dev-master" />
 		<PackageReference Include="prometheus-net" Version="6.0.0" />
 	</ItemGroup>
 
