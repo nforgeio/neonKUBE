@@ -74,7 +74,11 @@ namespace NeonClusterOperator
         /// <param name="k8s"></param>
         /// <param name="cronSchedule"></param>
         /// <returns></returns>
-        public Task AddToSchedulerAsync(IScheduler scheduler, IKubernetes k8s, string cronSchedule)
+        public Task AddToSchedulerAsync(
+            IScheduler scheduler, 
+            IKubernetes k8s, 
+            string cronSchedule,
+            Dictionary<string, object> data = null)
         {
             using (Tracer.CurrentSpan)
             {
@@ -85,6 +89,14 @@ namespace NeonClusterOperator
                     .Build();
 
                 job.JobDataMap.Put("Kubernetes", k8s);
+
+                if (data != null)
+                {
+                    foreach (var kv in data)
+                    {
+                        job.JobDataMap.Put(kv.Key, kv.Value);
+                    }
+                }
 
                 // Trigger the job to run now, and then repeat every 10 seconds
 
