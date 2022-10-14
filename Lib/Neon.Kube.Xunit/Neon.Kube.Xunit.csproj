@@ -27,10 +27,10 @@
 
 	<ItemGroup>
 		<PackageReference Include="KubernetesClient" Version="7.2.19" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2347-dev-master" />
-		<PackageReference Include="Neon.Deployment" Version="10000.0.2347-dev-master" />
-		<PackageReference Include="Neon.SSH" Version="10000.0.2347-dev-master" />
-		<PackageReference Include="Neon.Xunit" Version="10000.0.2347-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2357-dev-master" />
+		<PackageReference Include="Neon.Deployment" Version="10000.0.2357-dev-master" />
+		<PackageReference Include="Neon.SSH" Version="10000.0.2357-dev-master" />
+		<PackageReference Include="Neon.Xunit" Version="10000.0.2357-dev-master" />
 		<PackageReference Include="xunit.extensibility.core" Version="2.4.2" />
 		<PackageReference Include="xunit.extensibility.execution" Version="2.4.2" />
 		<PackageReference Include="YamlDotNet" Version="12.0.1" />
