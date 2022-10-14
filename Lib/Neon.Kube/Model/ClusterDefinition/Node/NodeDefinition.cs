@@ -35,6 +35,8 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.Net;
 
+using k8s.Models;
+
 namespace Neon.Kube
 {
     /// <summary>
@@ -204,7 +206,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Taints")]
         [YamlMember(Alias = "taints", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public List<string> Taints { get; set; }
+        public List<V1Taint> Taints { get; set; }
 
         /// <summary>
         /// Hypervisor hosting related options for environments like Hyper-V and XenServer.

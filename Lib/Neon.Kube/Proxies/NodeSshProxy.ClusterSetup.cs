@@ -849,8 +849,8 @@ systemctl enable kubelet
 
             // Install the chart when we haven't already done so.
 
-            InvokeIdempotent($"setup/helm-install-{releaseName}",
-                () =>
+            await InvokeIdempotentAsync($"setup/helm-install-{releaseName}",
+                async () =>
                 {
                     controller.LogProgress(this, verb: "install", message: progressMessage ?? releaseName);
 
@@ -909,7 +909,7 @@ fi
 
                     helmChartScript.AppendLineLinux(
 $@"
-helm install {releaseName} --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} ./{chartName}
+helm install {releaseName} --debug --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} ./{chartName}
 
 START=`date +%s`
 DEPLOY_END=$((START+15))
@@ -927,7 +927,25 @@ done
 ");
 
                     var scriptString = helmChartScript.ToString();
-                    SudoCommand(CommandBundle.FromScript(helmChartScript), RunOptions.FaultOnError).EnsureSuccess();
+
+                    await NeonHelper.WaitForAsync(
+                            async () =>
+                            {
+                                try
+                                {
+                                    SudoCommand(CommandBundle.FromScript(helmChartScript), RunOptions.FaultOnError).EnsureSuccess();
+
+                                    return await Task.FromResult(true);
+                                }
+                                catch
+                                {
+                                    return await Task.FromResult(false);
+                                }
+                            },
+                            timeout: TimeSpan.FromSeconds(300),
+                            pollInterval: TimeSpan.FromSeconds(1),
+                            cancellationToken: controller.CancellationToken);
+
                 });
 
             await Task.CompletedTask;

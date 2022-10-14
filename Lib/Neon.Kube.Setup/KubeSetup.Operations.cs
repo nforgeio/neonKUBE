@@ -1224,47 +1224,26 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
             controller.ThrowIfCancelled();
             controlNode.InvokeIdempotent("setup/priorityclass",
-                () =>
+                async () =>
                 {
                     controller.LogProgress(controlNode, verb: "configure", message: "priority classes");
 
-                    // I couldn't figure out how to specify the priority class name when create them
-                    // via the Kubernetes client, so I'll just use [kubectl] to apply them all at
-                    // once on the control-plane node.
-
-                    var sbPriorityClasses = new StringBuilder();
-
                     foreach (var priorityClassDef in PriorityClass.Values.Where(priorityClass => !priorityClass.IsSystem))
                     {
-                        if (sbPriorityClasses.Length > 0)
+                        var priorityClass = new V1PriorityClass()
                         {
-                            sbPriorityClasses.AppendLine("---");
-                        }
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Name = priorityClassDef.Name
+                            },
+                            Value = priorityClassDef.Value,
+                            Description = priorityClassDef.Description,
+                            PreemptionPolicy = "PreemptLowerPriority",
+                            GlobalDefault = priorityClassDef.IsDefault
+                        };
 
-                        var definition =
-$@"apiVersion: scheduling.k8s.io/v1
-kind: PriorityClass
-metadata:
-  name: {priorityClassDef.Name}
-value: {priorityClassDef.Value}
-description: ""{priorityClassDef.Description}""
-preemptionPolicy: PreemptLowerPriority
-globalDefault: {NeonHelper.ToBoolString(priorityClassDef.IsDefault)}
-";
-                        sbPriorityClasses.Append(definition);
+                        await k8s.CreatePriorityClassAsync(priorityClass);
                     }
-
-                    var script =
-@"
-set -euo pipefail
-
-kubectl apply -f priorityclasses.yaml
-";
-                    var bundle = CommandBundle.FromScript(script);
-
-                    bundle.AddFile("priorityclasses.yaml", sbPriorityClasses.ToString());
-
-                    controlNode.SudoCommand(bundle, RunOptions.FaultOnError);
                 });
         }
 
@@ -1394,8 +1373,12 @@ kubectl apply -f priorityclasses.yaml
                                 {
                                     Metadata = new V1ObjectMeta()
                                     {
-                                        Name              = "dnsutils",
-                                        NamespaceProperty = KubeNamespace.NeonSystem
+                                        Name = "dnsutils",
+                                        NamespaceProperty = KubeNamespace.NeonSystem,
+                                        Labels = new Dictionary<string, string>()
+                                        {
+                                            { "neonkube.io/setup-pod", "dnsutils" }
+                                        }
                                     },
                                     Spec = new V1PodSpec()
                                     {
@@ -1433,12 +1416,29 @@ kubectl apply -f priorityclasses.yaml
 
                             // Verify that [coredns] is actually working.
 
+                            var cmd = new string[]
+                            {
+                                "nslookup",
+                                "kubernetes.default"
+                            };
+
+                            var pod = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "neonkube.io/setup-pod=dnsutils");
+
+                            controller.ThrowIfCancelled();
+
                             await NeonHelper.WaitForAsync(
                                 async () =>
                                 {
                                     try
                                     {
-                                        controlNode.SudoCommand($"kubectl exec -n {KubeNamespace.NeonSystem} -t dnsutils -- nslookup kubernetes.default", RunOptions.LogOutput).EnsureSuccess();
+                                        var result = await k8s.NamespacedPodExecWithRetryAsync(
+                                            retryPolicy: podExecRetry,
+                                            namespaceParameter: pod.Namespace(),
+                                            name: pod.Name(),
+                                            container: "dnsutils",
+                                            command: cmd);
+
+                                        result.EnsureSuccess();
 
                                         return true;
                                     }
@@ -1576,9 +1576,6 @@ kubectl apply -f priorityclasses.yaml
                 async () =>
                 {
                     controller.LogProgress(controlNode, verb: "configure", message: "control-plane taints");
-
-                    // The [kubectl taint] command looks like it can return a non-zero exit code.
-                    // We'll ignore this.
 
                     if (cluster.Definition.Kubernetes.AllowPodsOnControlPlane.GetValueOrDefault())
                     {
@@ -2028,39 +2025,55 @@ kubectl apply -f priorityclasses.yaml
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
+            var k8s = GetK8sClient(controller);
+
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/root-user",
                 async () =>
                 {
                     controller.LogProgress(controlNode, verb: "create", message: "root user");
 
-                    var userYaml =
-$@"
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: {KubeConst.RootUser}-user
-  namespace: kube-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: {KubeConst.RootUser}-user
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
-subjects:
-- kind: ServiceAccount
-  name: {KubeConst.RootUser}-user
-  namespace: kube-system
-- kind: Group
-  apiGroup: rbac.authorization.k8s.io
-  name: superadmin
-";
-                    controlNode.KubectlApply(userYaml, RunOptions.FaultOnError);
+                    var serviceAccount = new V1ServiceAccount()
+                    {
+                        Metadata = new V1ObjectMeta()
+                        {
+                            Name = $"{KubeConst.RootUser}-user",
+                            NamespaceProperty = KubeNamespace.KubeSystem
+                        }
+                    };
 
-                    await Task.CompletedTask;
+                    await k8s.CreateNamespacedServiceAccountAsync(serviceAccount, serviceAccount.Namespace());
+
+                    var clusterRoleBinding = new V1ClusterRoleBinding()
+                    {
+                        Metadata = new V1ObjectMeta()
+                        {
+                            Name = $"{KubeConst.RootUser}-user",
+                        },
+                        RoleRef = new V1RoleRef()
+                        {
+                            ApiGroup = "rbac.authorization.k8s.io",
+                            Kind = "ClusterRole",
+                            Name = "cluster-admin"
+                        },
+                        Subjects = new List<V1Subject>()
+                        {
+                            new V1Subject()
+                            {
+                                Name = $"{KubeConst.RootUser}-user",
+                                Kind = "ServiceAccount",
+                                NamespaceProperty = KubeNamespace.KubeSystem
+                            },
+                            new V1Subject()
+                            {
+                                Name = $"superadmin",
+                                Kind = "Group",
+                                ApiGroup = "rbac.authorization.k8s.io"
+                            }
+                        }
+                    };
+
+                    await k8s.CreateClusterRoleBindingAsync(clusterRoleBinding);
                 });
         }
 
@@ -2168,7 +2181,8 @@ subjects:
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var cluster      = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var controlNode = cluster.FirstControlNode;
+            var k8s          = GetK8sClient(controller);
+            var controlNode  = cluster.FirstControlNode;
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/taint-nodes",
@@ -2176,48 +2190,33 @@ subjects:
                 {
                     controller.LogProgress(controlNode, verb: "taint", message: "nodes");
 
-                    try
+                    var nodes = await k8s.ListNodeAsync();
+
+                    foreach (var node in cluster.Nodes)
                     {
-                        // Generate a Bash script we'll submit to the first control-plane
-                        // node that initializes the taints for all nodes.
-
-                        var sbScript = new StringBuilder();
-                        var sbArgs = new StringBuilder();
-
-                        sbScript.AppendLineLinux("#!/bin/bash");
-
-                        foreach (var node in cluster.Nodes)
+                        var patch = new V1Node()
                         {
-                            var taintDefinitions = new List<string>();
-
-                            if (node.Metadata.IsWorker)
+                            Spec = new V1NodeSpec()
                             {
-                                // Kubernetes doesn't set the role for worker nodes so we'll do that here.
-
-                                taintDefinitions.Add("kubernetes.io/role=worker");
+                                Taints = nodes.Items.Where(n => n.Name() == node.Name).FirstOrDefault().Spec.Taints
                             }
+                        };
 
-                            taintDefinitions.Add($"{NodeLabels.LabelDatacenter}={GetLabelValue(cluster.Definition.Datacenter.ToLowerInvariant())}");
-                            taintDefinitions.Add($"{NodeLabels.LabelEnvironment}={GetLabelValue(cluster.Definition.Purpose.ToString().ToLowerInvariant())}");
+                        if (patch.Spec.Taints == null)
+                        {
+                            patch.Spec.Taints = new List<V1Taint>();
+                        }
 
-                            if (node.Metadata.Taints != null)
+                        if (node.Metadata.Taints != null)
+                        {
+                            foreach (var taint in node.Metadata.Taints)
                             {
-                                foreach (var taint in node.Metadata.Taints)
-                                {
-                                    sbScript.AppendLine();
-                                    sbScript.AppendLineLinux($"kubectl taint nodes {node.Name} {taint}");
-                                }
+                                patch.Spec.Taints.Add(taint);
                             }
                         }
 
-                        controlNode.SudoCommand(CommandBundle.FromScript(sbScript), RunOptions.FaultOnError);
+                        await k8s.PatchNodeAsync(new V1Patch(patch, V1Patch.PatchType.StrategicMergePatch), node.Metadata.Name);
                     }
-                    finally
-                    {
-                        controlNode.Status = string.Empty;
-                    }
-
-                    await Task.CompletedTask;
                 });
         }
 
