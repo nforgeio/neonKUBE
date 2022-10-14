@@ -30,7 +30,7 @@
 	<ItemGroup>
 		<PackageReference Include="KubernetesClient" Version="7.2.19" />
 		<PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
-		<PackageReference Include="Neon.JsonConverters" Version="10000.0.2347-dev-master" />
+		<PackageReference Include="Neon.JsonConverters" Version="10000.0.2351-dev-master" />
 	</ItemGroup>
 
 	<ItemGroup>
