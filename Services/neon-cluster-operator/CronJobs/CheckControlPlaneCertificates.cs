@@ -36,13 +36,12 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 using Prometheus;
-
 using Quartz;
 
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// 
+    /// Handles checking for expired 
     /// </summary>
     public class CheckControlPlaneCertificates : CronJob, IJob
     {
