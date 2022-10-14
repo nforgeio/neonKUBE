@@ -108,3 +108,4 @@ cluster-manifest.json
 KubernetesWithRetry.cs
 /**/*.gitignore/**
 /UpgradeLog.htm
+/Lib/Neon.Kube/Harbor/HarborClient.cs
