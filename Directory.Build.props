@@ -39,17 +39,6 @@
  
 	</PropertyGroup>
 
-	<!--
-	Disable generation of attribute files in the project [obj/CONFIG] folders
-	because this can cause C# duplicate symbol errors when switching between
-	DEBUG and RELEASE builds.
-	-->
-
-	<PropertyGroup>
-		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
-	</PropertyGroup>
-
 	<!-- 
 	Remove generated [**/obj/**/*.cs] files to avoid duplicate symbol compilation 
 	errors when these generated files exist in multiple build configurations.
