@@ -94,6 +94,7 @@ namespace NeonClusterOperator
         private static bool                             initialized;
         private static UpdateCaCertificates             updateCaCertificates;
         private static CheckControlPlaneCertificates    checkControlPlaneCertificates;
+        private static CheckRegistryImages              checkRegistryImages;
 
         /// <summary>
         /// Static constructor.
@@ -152,6 +153,7 @@ namespace NeonClusterOperator
                 schedulerFactory              = new StdSchedulerFactory();
                 updateCaCertificates          = new UpdateCaCertificates();
                 checkControlPlaneCertificates = new CheckControlPlaneCertificates();
+                checkRegistryImages           = new CheckRegistryImages();
             }
         }
 
@@ -226,6 +228,13 @@ namespace NeonClusterOperator
 
                 await checkControlPlaneCertificates.DeleteFromSchedulerAsync(scheduler);
                 await checkControlPlaneCertificates.AddToSchedulerAsync(scheduler, k8s, controlPlaneCertExpression);
+
+                var containerImageExpression = resource.Spec.Updates.ContainerImages.Schedule;
+
+                CronExpression.ValidateExpression(containerImageExpression);
+
+                await checkRegistryImages.DeleteFromSchedulerAsync(scheduler);
+                await checkRegistryImages.AddToSchedulerAsync(scheduler, k8s, containerImageExpression);
 
                 log.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
 

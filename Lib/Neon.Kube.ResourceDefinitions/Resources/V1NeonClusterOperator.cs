@@ -120,6 +120,11 @@ namespace Neon.Kube.Resources
             /// Update spec for security spec.
             /// </summary>
             public UpdateSpec SecurityPatches { get; set; }
+
+            /// <summary>
+            /// Update spec for container images.
+            /// </summary>
+            public UpdateSpec ContainerImages { get; set; }
         }
 
         /// <summary>

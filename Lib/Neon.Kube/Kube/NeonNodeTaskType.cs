@@ -38,5 +38,10 @@ namespace Neon.Kube
         /// Node task to update node CA certificates.
         /// </summary>
         public const string NodeCaCertUpdate = "node-ca-cert-update";
+
+        /// <summary>
+        /// Node task to sync container images to the cluster registry.
+        /// </summary>
+        public const string ContainerImageSync = "container-image-sync";
     }
 }

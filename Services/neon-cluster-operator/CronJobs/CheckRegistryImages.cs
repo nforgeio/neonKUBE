@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -57,6 +58,8 @@ namespace NeonClusterOperator
         /// <inheritdoc/>
         public async Task Execute(IJobExecutionContext context)
         {
+            Covenant.Requires<ArgumentNullException>(context != null, nameof(context));
+
             using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckRegistryImages)));
@@ -66,6 +69,48 @@ namespace NeonClusterOperator
                 var nodes     = await k8s.ListNodeAsync();
                 var startTime = DateTime.UtcNow.AddSeconds(10);
 
+                var clusterManifestJson = Program.Resources.GetFile("/cluster-manifest.json").ReadAllText();
+                var clusterManifest = NeonHelper.JsonDeserialize<ClusterManifest>(clusterManifestJson);
+
+                var masters = await k8s.ListNodeAsync(labelSelector: "node-role.kubernetes.io/control-plane=");
+
+                foreach (var image in clusterManifest.ContainerImages)
+                {
+                    var node = masters.Items.SelectRandom(1).First();
+                    var nodeTask = new V1NeonNodeTask()
+                    {
+                        Metadata = new V1ObjectMeta()
+                        {
+                            Name = $"{NeonNodeTaskType.ContainerImageSync}-{NeonHelper.CreateBase36Uuid()}",
+                            Labels = new Dictionary<string, string>
+                            {
+                                { NeonLabel.ManagedBy, KubeService.NeonClusterOperator },
+                                { NeonLabel.NodeTaskType, NeonNodeTaskType.ContainerImageSync }
+                            }
+                        },
+                        Spec = new V1NeonNodeTask.TaskSpec()
+                        {
+                            Node = node.Name(),
+                            StartAfterTimestamp = startTime,
+                            BashScript = @$"
+podman push {image.InternalRef}
+
+retVal=$?
+if [ $retVal -ne 0 ]; then
+    podman pull {image.SourceRef}
+    podman tag {image.SourceRef} {image.InternalRef}
+    podman push {image.InternalRef}
+fi
+",
+                            CaptureOutput = true,
+                            RetentionSeconds = (int)TimeSpan.FromHours(1).TotalSeconds
+                        }
+                    };
+
+                    await k8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, nodeTask.Name());
+
+                    startTime = startTime.AddSeconds(10);
+                }
             }
         }
     }

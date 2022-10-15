@@ -169,3 +169,21 @@ spec:
         claimName: registry-trivy-cache
   {{- end }}
   updateStrategyType: RollingUpdate
+  trace: # Optional
+    # Enable tracing or not
+    enabled: true # Optional, default is false
+    # Set `sampleRate` to 1 if you wanna sampling 100% of trace data; set 0.5 if you wanna sampling 50% of trace data, and so forth.
+    sampleRate: 1 # Optional, default is 1
+    # A key value dict contains user defined attributes used to initialize trace provider.
+    # The tracing provider: 'jaeger' or 'otel'
+    provider: otel # Required
+    # Spec for otel provider if provider is set to otel.
+    otel: # Optional
+      # The endpoint of otel
+      endpoint: grafana-agent-node.neon-monitor.svc.cluster.local:4317 # Required
+      # The URL path of otel
+      urlPath: / # Required
+      # Whether enable compression or not for otel
+      compression: false # Optional
+      # Whether establish insecure connection or not for otel
+      insecure: true # Optional

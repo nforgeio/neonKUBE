@@ -51,6 +51,11 @@ namespace NeonClusterOperator
         public static Service Service { get; private set; }
 
         /// <summary>
+        /// Returns the program resources as a static file system.
+        /// </summary>
+        public static IStaticDirectory Resources { get; private set; }
+
+        /// <summary>
         /// The program entry point.
         /// </summary>
         /// <param name="args">The command line arguments.</param>
@@ -59,6 +64,10 @@ namespace NeonClusterOperator
         {
             try
             {
+                // Initialize the static resource file system.
+
+                Resources = Assembly.GetExecutingAssembly().GetResourceFileSystem("NeonClusterOperator.Resources");
+
                 //-------------------------------------------------------------
                 // Intercept and handle KubeOps [generator] commands executed by the 
                 // KubeOps MSBUILD tasks.
