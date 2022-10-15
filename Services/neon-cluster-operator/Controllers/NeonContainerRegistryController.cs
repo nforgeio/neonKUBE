@@ -95,7 +95,7 @@ namespace NeonClusterOperator
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task StartAsync(IKubernetes k8s)
         {
-            using (Tracer.CurrentSpan)
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("start", attributes => attributes.Add("customresource", nameof(V1NeonContainerRegistry)));
 
@@ -160,7 +160,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (Tracer.CurrentSpan)
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("idle", attributes => attributes.Add("customresource", nameof(V1NeonContainerRegistry)));
                 log.LogInformationEx("[IDLE]");
@@ -182,7 +182,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (Tracer.CurrentSpan)
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("customresource", nameof(V1NeonContainerRegistry)));
 
@@ -204,7 +204,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (Tracer.CurrentSpan)
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("delete", attributes => attributes.Add("customresource", nameof(V1NeonContainerRegistry)));
 
@@ -229,7 +229,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (Tracer.CurrentSpan)
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("promotion", attributes => attributes.Add("customresource", nameof(V1NeonContainerRegistry)));
 
@@ -242,7 +242,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
             
-            using (Tracer.CurrentSpan)
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("promotion", attributes => attributes.Add("customresource", nameof(V1NeonContainerRegistry)));
 
@@ -255,7 +255,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (Tracer.CurrentSpan)
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("promotion", attributes => 
                 {

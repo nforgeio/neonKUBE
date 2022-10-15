@@ -44,6 +44,8 @@ using Neon.Retry;
 using Neon.Service;
 using Neon.Tasks;
 
+using DnsClient;
+
 using DotnetKubernetesClient;
 
 using k8s;
@@ -236,7 +238,7 @@ namespace NeonClusterOperator
                     options.ExportProcessorType = ExportProcessorType.Batch;
                     options.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>();
                     options.Endpoint = new Uri(NeonHelper.NeonKubeOtelCollectorUri);
-                    options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
+                    options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
                 });
             return true;
         }

@@ -244,7 +244,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (Tracer.CurrentSpan)
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("status-modified", attributes => attributes.Add("customresource", nameof(V1NeonNodeTask)));
 

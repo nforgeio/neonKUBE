@@ -33,6 +33,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+        <PackageReference Include="DnsClient" Version="1.6.1" />
 		<PackageReference Include="Google.Protobuf" Version="3.21.7" />
 		<PackageReference Include="Grpc.Net.Client" Version="2.49.0" />
 		<PackageReference Include="Grpc.Tools" Version="2.49.1">
@@ -45,8 +46,8 @@
 		<PackageReference Include="Npgsql.OpenTelemetry" Version="6.0.7" />
 		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.9" />
 		<PackageReference Include="Quartz" Version="3.5.0" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2358-dev-master" />
-        <PackageReference Include="Neon.Service" Version="10000.0.2358-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2371-dev-master" />
+        <PackageReference Include="Neon.Service" Version="10000.0.2371-dev-master" />
     </ItemGroup>
 
 	<ItemGroup>

@@ -99,7 +99,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (Tracer.CurrentSpan)
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("start", attributes => attributes.Add("resource", nameof(V1Secret)));
 
@@ -188,7 +188,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (Tracer.CurrentSpan)
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("idle", attributes => attributes.Add("resource", nameof(V1Secret)));
                 log.LogInformationEx("[IDLE]");
@@ -200,7 +200,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (Tracer.CurrentSpan)
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("resource", nameof(V1Secret)));
 
@@ -239,7 +239,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (Tracer.CurrentSpan)
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("delete", attributes => attributes.Add("resource", nameof(V1Secret)));
 
@@ -259,7 +259,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (Tracer.CurrentSpan)
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("promotion", attributes => attributes.Add("resource", nameof(V1Secret)));
 
@@ -272,7 +272,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (Tracer.CurrentSpan)
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("promotion", attributes => attributes.Add("resource", nameof(V1Secret)));
 
@@ -285,7 +285,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (Tracer.CurrentSpan)
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("promotion", attributes => 
                 {

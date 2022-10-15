@@ -80,7 +80,7 @@ namespace NeonClusterOperator
             string cronSchedule,
             Dictionary<string, object> data = null)
         {
-            using (Tracer.CurrentSpan)
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("add-to-scheduler");
 
@@ -118,7 +118,7 @@ namespace NeonClusterOperator
         /// <returns></returns>
         public async Task DeleteFromSchedulerAsync(IScheduler scheduler)
         {
-            using (Tracer.CurrentSpan)
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("delete-from-scheduler");
 

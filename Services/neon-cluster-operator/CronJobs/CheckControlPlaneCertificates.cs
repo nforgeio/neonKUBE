@@ -57,7 +57,7 @@ namespace NeonClusterOperator
         /// <inheritdoc/>
         public async Task Execute(IJobExecutionContext context)
         {
-            using (Tracer.CurrentSpan)
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckControlPlaneCertificates)));
 
