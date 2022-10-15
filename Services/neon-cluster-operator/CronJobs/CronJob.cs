@@ -30,10 +30,10 @@ using Neon.Kube.Resources;
 using k8s;
 using k8s.Models;
 
-using Prometheus;
-
-using Quartz;
 using OpenTelemetry.Trace;
+using Prometheus;
+using Quartz;
+using System.Diagnostics.Contracts;
 
 namespace NeonClusterOperator
 {
@@ -60,9 +60,11 @@ namespace NeonClusterOperator
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="type"></param>
+        /// <param name="type">The job type.</param>
         public CronJob(Type type)
         {
+            Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
+
             Type = type;
             Name = Type.Name;
         }
@@ -70,16 +72,21 @@ namespace NeonClusterOperator
         /// <summary>
         /// Adds the cron job to a specified scheduler.
         /// </summary>
-        /// <param name="scheduler"></param>
-        /// <param name="k8s"></param>
-        /// <param name="cronSchedule"></param>
-        /// <returns></returns>
+        /// <param name="scheduler">Specifies the scheduler.</param>
+        /// <param name="k8s">Specifies the Kubernetes client.</param>
+        /// <param name="cronSchedule">Specifies the schedule.</param>
+        /// <param name="data">Optionally specifies a dictionary with additional data.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public Task AddToSchedulerAsync(
-            IScheduler scheduler, 
-            IKubernetes k8s, 
-            string cronSchedule,
-            Dictionary<string, object> data = null)
+            IScheduler                  scheduler, 
+            IKubernetes                 k8s, 
+            string                      cronSchedule,
+            Dictionary<string, object>  data = null)
         {
+            Covenant.Requires<ArgumentNullException>(scheduler != null, nameof(scheduler));
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(cronSchedule), nameof(cronSchedule));
+
             using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("add-to-scheduler");
@@ -92,9 +99,9 @@ namespace NeonClusterOperator
 
                 if (data != null)
                 {
-                    foreach (var kv in data)
+                    foreach (var item in data)
                     {
-                        job.JobDataMap.Put(kv.Key, kv.Value);
+                        job.JobDataMap.Put(item.Key, item.Value);
                     }
                 }
 
@@ -115,7 +122,7 @@ namespace NeonClusterOperator
         /// Removes the job from the specified scheduler.
         /// </summary>
         /// <param name="scheduler"></param>
-        /// <returns></returns>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task DeleteFromSchedulerAsync(IScheduler scheduler)
         {
             using (var activity = TelemetryHub.ActivitySource.StartActivity())

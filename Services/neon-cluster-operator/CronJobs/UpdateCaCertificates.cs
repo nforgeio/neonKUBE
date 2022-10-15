@@ -38,6 +38,7 @@ using OpenTelemetry.Trace;
 using Prometheus;
 
 using Quartz;
+using System.Diagnostics.Contracts;
 
 namespace NeonClusterOperator
 {
@@ -57,6 +58,8 @@ namespace NeonClusterOperator
         /// <inheritdoc/>
         public async Task Execute(IJobExecutionContext context)
         {
+            Covenant.Requires<ArgumentNullException>(context != null, nameof(context));
+
             using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(UpdateCaCertificates)));
