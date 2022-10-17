@@ -73,6 +73,7 @@ namespace Neon.Kube
         private static string               cachedCacheFolder;
         private static string               cachedDesktopCommonFolder;
         private static string               cachedDesktopFolder;
+        private static string               cachedDesktopLogFolder;
         private static string               cachedDesktopHypervFolder;
         private static KubeClientConfig     cachedClientConfig;
         private static X509Certificate2     cachedClusterCertificate;
@@ -913,6 +914,26 @@ namespace Neon.Kube
                 Directory.CreateDirectory(path);
 
                 return cachedDesktopFolder = path;
+            }
+        }
+
+        /// <summary>
+        /// Returns path to the neonDESKTOP log folder.
+        /// </summary>
+        public static string DesktopLogFolder
+        {
+            get
+            {
+                if (cachedDesktopLogFolder != null)
+                {
+                    return cachedDesktopLogFolder;
+                }
+
+                var path = Path.Combine(DesktopFolder, "log");
+
+                Directory.CreateDirectory(path);
+
+                return cachedDesktopLogFolder = path;
             }
         }
 
