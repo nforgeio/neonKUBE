@@ -28,8 +28,6 @@ using Neon.Kube.Operator;
 
 using k8s;
 
-using KubeOps.Operator;
-
 using OpenTelemetry;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Resources;
@@ -80,9 +78,10 @@ namespace NeonClusterOperator
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<ILogger>(Program.Service.Logger)
-                .AddSingleton(Service.K8s)
-                .AddScoped<PodWebhook>()
-                .AddRouting();
+                .AddSingleton(Service.K8s);
+
+            services.AddKubernetesOperator()
+                .AddMutationWebhook<PodWebhook, V1Pod>();
         }
 
         /// <summary>
@@ -96,34 +95,7 @@ namespace NeonClusterOperator
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseRouting();
-            app.UseEndpoints(
-            endpoints =>
-            {
-                var k8s = (IKubernetes)app.ApplicationServices.GetRequiredService(typeof(IKubernetes));
-
-                var scope = app.ApplicationServices.CreateScope();
-
-                var mutatorType = typeof(PodWebhook);
-                var entityType = typeof(V1Pod);
-
-                var mutator = (PodWebhook)scope.ServiceProvider.GetRequiredService(mutatorType);
-
-                var registerMethod = typeof(IAdmissionWebhook<,>)
-                    .MakeGenericType(entityType, typeof(MutationResult))
-                    .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
-                    .First(m => m.Name == "Register");
-
-                registerMethod.Invoke(mutator, new object[] { endpoints });
-
-                var createMethod = typeof(IMutationWebhook<>)
-                    .MakeGenericType(entityType)
-                    .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
-                    .First(m => m.Name == "Create");
-
-                createMethod.Invoke(mutator, new object[] { k8s });
-            });
-            
+            app.UseKubernetesOperator();
         }
     }
 }

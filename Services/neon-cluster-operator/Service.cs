@@ -175,11 +175,11 @@ namespace NeonClusterOperator
             K8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
             LogContext.SetCurrentLogProvider(TelemetryHub.LoggerFactory);
 
-            //await GlauthController.StartAsync(K8s);
-            //await NeonClusterOperatorController.StartAsync(K8s);
-            //await NeonContainerRegistryController.StartAsync(K8s);
-            //await NeonSsoClientController.StartAsync(K8s);
-            //await NodeTaskController.StartAsync(K8s);
+            await GlauthController.StartAsync(K8s);
+            await NeonClusterOperatorController.StartAsync(K8s);
+            await NeonContainerRegistryController.StartAsync(K8s);
+            await NeonSsoClientController.StartAsync(K8s);
+            await NodeTaskController.StartAsync(K8s);
 
             _ = K8s.WatchAsync<V1ConfigMap>(async (@event) =>
             {

@@ -101,7 +101,7 @@ namespace NeonClusterOperator
         /// adds these assemblies to the <see cref="KubeOps.Operator.Builder.IOperatorBuilder"/> passed.
         /// </summary>
         /// <param name="operatorBuilder">The target operator builder.</param>
-        internal static void AddResourceAssemblies(IOperatorBuilder operatorBuilder)
+        internal static void AddResourceAssemblies(KubeOps.Operator.Builder.IOperatorBuilder operatorBuilder)
         {
             Covenant.Requires<ArgumentNullException>(operatorBuilder != null, nameof(operatorBuilder));
 

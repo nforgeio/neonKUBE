@@ -107,14 +107,10 @@ namespace Neon.Kube.Operator
             try
             {
                 var webhook = await k8s.ReadMutatingWebhookConfigurationAsync(WebhookConfiguration.Name());
-                if (webhook != null) 
-                {
-                    await k8s.ReplaceMutatingWebhookConfigurationAsync(WebhookConfiguration, WebhookConfiguration.Name());
-                }
             }
             catch (HttpOperationException e) 
             {
-                if (e.Response.StatusCode== System.Net.HttpStatusCode.NotFound) 
+                if (e.Response.StatusCode == System.Net.HttpStatusCode.NotFound) 
                 {
                     await k8s.CreateMutatingWebhookConfigurationAsync(WebhookConfiguration);
                 }
