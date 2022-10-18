@@ -1,5 +1,5 @@
 <Project>
-	
+
 	<!--
 	Default properties:
 	-->
@@ -13,12 +13,13 @@
 		<LangVersion>latest</LangVersion>
 		<Nullable>disable</Nullable>
 		<AnalysisLevel>5.0</AnalysisLevel>
-		<DebugType>portable</DebugType>
 		<TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<WarningsAsErrors>NU1605</WarningsAsErrors>
 		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 		<ImplicitUsings>disable</ImplicitUsings>
+		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
 
 		<!-- Debugging related: -->
 
@@ -37,25 +38,17 @@
 
 	</PropertyGroup>
 
-	<!--
-	Disable generation of attribute files in the project [obj/CONFIG] folders
-	because this can cause C# duplicate symbol errors when switching between
-	DEBUG and RELEASE builds.
-	-->
-
-	<PropertyGroup>
-		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
-	</PropertyGroup>
-
 	<!-- 
-	Remove generated [**/obj/**/*.cs] files to avoid duplicate symbol compilation 
-	errors when these generated files exist in multiple build configurations.
+	Remove generated [**/bin/**/*.cs] and [**/obj/**/*.cs] files to avoid duplicate
+	symbol compilation errors when these generated files exist in multiple build 
+	configurations.
 	-->
 
-	<Target Name="CleanGeneratedCs" BeforeTargets="Clean" Condition="'$(ProjectDir)' != ''">
-		<Message Importance="high" Text="CLEAN: neon-build clean-generated-cs $(ProjectDir)" />
-		<Exec Command="neon-build clean-generated-cs &quot;$(ProjectDir)&quot;" />
-	</Target>
+	<ItemGroup>
+		<Compile Remove="bin/**/*.cs" />
+		<Compile Remove="obj/**/*.cs" />
+		<Compile Include="bin/$(Configuration)/*.cs" />
+		<Compile Include="obj/$(Configuration)/*.cs" />
+	</ItemGroup>
 
 </Project>

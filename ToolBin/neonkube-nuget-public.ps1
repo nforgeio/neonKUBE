@@ -40,7 +40,17 @@ exit 1
 # Abort if Visual Studio is running because that can cause [pubcore] to
 # fail due to locked files.
 
-Ensure-VisualStudioNotRunning
+# $note(jefflill): 
+#
+# We don't currently need this check but I'm leaving it here commented
+# out to make it easier to revive in the future, if necessary.
+
+# $note(jefflill): 
+#
+# We don't currently need this check but I'm leaving it here commented
+# out to make it easier to revive in the future, if necessary.
+
+# Ensure-VisualStudioNotRunning
 
 # Verify that the user has the required environment variables.  These will
 # be available only for maintainers and are intialized by the neonCLOUD

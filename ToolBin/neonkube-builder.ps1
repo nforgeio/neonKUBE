@@ -58,7 +58,12 @@ if ($codedoc)
 # Abort if Visual Studio is running because that can cause [pubcore] to
 # fail due to locked files.
 
-Ensure-VisualStudioNotRunning
+# $note(jefflill): 
+#
+# We don't currently need this check but I'm leaving it here commented
+# out to make it easier to revive in the future, if necessary.
+
+# Ensure-VisualStudioNotRunning
 
 # Initialize
 
@@ -192,10 +197,10 @@ try
         # We see somewhat random build problems when Visual Studio has the solution open,
         # so have the user close Visual Studio instances first.
 
-        # $todo(jefflill): 
+        # $note(jefflill): 
         #
-        # I'm not sure if we still need this.  I believe we were running into trouble
-        # building the neonKUBE CodeDoc using SHFB, which we're no longer using.
+        # We don't currently need this check but I'm leaving it here commented
+        # out to make it easier to revive in the future, if necessary.
 
         # Ensure-VisualStudioNotRunning
 

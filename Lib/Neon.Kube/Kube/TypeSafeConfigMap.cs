@@ -153,7 +153,7 @@ namespace Neon.Kube
 
             set
             {
-                Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
+                Covenant.Requires<ArgumentNullException>(value != null, nameof(Config));
 
                 config = value;
             }

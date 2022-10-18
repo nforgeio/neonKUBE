@@ -366,7 +366,7 @@ namespace Neon.Kube
 
             set
             {
-                Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
+                Covenant.Requires<ArgumentNullException>(value != null, nameof(ClientConfig));
 
                 value.Validate();
                 cachedClientConfig = value;
