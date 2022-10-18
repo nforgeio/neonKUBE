@@ -28,13 +28,16 @@ namespace Neon.Kube.Operator
 {
     public sealed class MutationResult : AdmissionResult
     {
-        internal object? ModifiedObject { get; init; }
+        public object? ModifiedObject { get; init; }
 
         /// <summary>
         /// Utility method that creates a return value that indicates that no changes must be applied.
         /// </summary>
         /// <returns>A <see cref="MutationResult"/> with no changes.</returns>
-        public static MutationResult NoChanges() => new();
+        public static MutationResult NoChanges()
+        {
+            return new MutationResult();
+        }
 
         /// <summary>
         /// Utility method that creates a return value that indicates that changes were made
@@ -48,17 +51,23 @@ namespace Neon.Kube.Operator
         /// This could contain a reason why an object was mutated.
         /// </param>
         /// <returns>A <see cref="MutationResult"/> with a modified object.</returns>
-        public static MutationResult Modified(object modifiedEntity, params string[] warnings) => new()
+        public static MutationResult Modified(object modifiedEntity, params string[] warnings) 
         {
-            ModifiedObject = modifiedEntity,
-            Warnings = warnings,
-        };
+            return new MutationResult()
+            {
+                ModifiedObject = modifiedEntity,
+                Warnings = warnings
+            };
+        }
 
-        internal static MutationResult Fail(int statusCode, string statusMessage) => new()
+        internal static MutationResult Fail(int statusCode, string statusMessage)
         {
-            Valid = false,
-            StatusCode = statusCode,
-            StatusMessage = statusMessage,
-        };
+            return new MutationResult()
+            {
+                Valid = false,
+                StatusCode = statusCode,
+                StatusMessage = statusMessage
+            };
+        }
     }
 }

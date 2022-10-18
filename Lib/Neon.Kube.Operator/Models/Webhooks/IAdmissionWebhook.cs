@@ -87,8 +87,7 @@ namespace Neon.Kube.Operator
 
         internal AdmissionResponse TransformResult(
             TResult result,
-            AdmissionRequest<TEntity> request,
-            JsonSerializerSettings jsonSettings);
+            AdmissionRequest<TEntity> request);
 
         /// <summary>
         /// 
@@ -136,10 +135,10 @@ namespace Neon.Kube.Operator
                                     throw new Exception("Object is not a valid IAdmissionWebhook<TEntity, TResult>");
                                 }
 
-                                var @object = review.Request.Object;
-                                var oldObject = review.Request.OldObject;
-
-                                logger.LogDebugEx(() => @$"Admission with method ""{review.Request.Operation}"".");
+                                var @object = KubernetesJson.Deserialize<TEntity>(KubernetesJson.Serialize(review.Request.Object));
+                                var oldObject = KubernetesJson.Deserialize<TEntity>(KubernetesJson.Serialize(review.Request.OldObject));
+                                
+                                logger.LogInformationEx(() => @$"Admission with method ""{review.Request.Operation}"".");
 
                                 TResult result;
                                 switch (review.Request.Operation)
@@ -147,6 +146,7 @@ namespace Neon.Kube.Operator
                                     case "CREATE":
 
                                         result = await webhook.CreateAsync(@object, review.Request.DryRun);
+
                                         break;
 
                                     case "UPDATE":
@@ -163,7 +163,8 @@ namespace Neon.Kube.Operator
                                         throw new InvalidOperationException();
                                 }
 
-                                response = TransformResult(result, review.Request, OperatorHelper.K8sSerializerSettings);
+                                response = TransformResult(result, review.Request);
+
                             }
                             catch (Exception ex)
                             {

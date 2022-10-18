@@ -1,4 +1,5 @@
-﻿using k8s.Models;
+﻿using k8s;
+using k8s.Models;
 using Microsoft.AspNetCore.Routing;
 using Neon.Kube;
 using System;
@@ -16,7 +17,7 @@ namespace NeonClusterOperator.Webhooks
 {
     public class PodWebhook : IMutationWebhook<V1Pod>
     {
-        public ILogger Logger;
+        public ILogger Logger { get; set; }
         public PodWebhook()
         {
         }
@@ -88,22 +89,32 @@ namespace NeonClusterOperator.Webhooks
                 if (string.IsNullOrEmpty(entity.Spec.PriorityClassName)
                     || entity.Spec.PriorityClassName == PriorityClass.UserMedium.Name)
                 {
-                    if (entity.Metadata.Labels.ContainsKey("core.goharbor.io/name"))
+                    if (entity.Metadata.Labels.ContainsKey("goharbor.io/operator-version"))
                     {
                         Logger?.LogInformationEx(() => $"Setting priority class for harbor pod.");
 
                         entity.Spec.PriorityClassName = PriorityClass.NeonStorage.Name;
+                        entity.Spec.Priority = null;
                     }
                     else
                     {
                         Logger?.LogInformationEx(() => $"Setting default priority class to neon-min.");
 
                         entity.Spec.PriorityClassName = PriorityClass.NeonMin.Name;
+                        entity.Spec.Priority = null;
                     }
-                    return MutationResult.Modified(entity);
+
+                    var result = new MutationResult()
+                    {
+                        ModifiedObject = entity,
+                    };
+
+                    Logger?.LogInformationEx(() => $"result {KubernetesJson.Serialize(result)}.");
+
+                    return await Task.FromResult(result);
                 }
 
-                return Task.FromResult(MutationResult.NoChanges());
+                return await Task.FromResult(MutationResult.NoChanges());
             }
         }
     }

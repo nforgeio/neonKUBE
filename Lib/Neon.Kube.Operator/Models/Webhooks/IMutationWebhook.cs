@@ -1,7 +1,4 @@
-﻿using JsonDiffPatch;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,12 +8,20 @@ using k8s;
 using k8s.KubeConfigModels;
 using Microsoft.AspNetCore.Routing;
 using k8s.Autorest;
+using Neon.Diagnostics;
+using Microsoft.Extensions.Logging;
+using System.IO;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.JsonDiffPatch.Diffs.Formatters;
+using System.Text.Json.JsonDiffPatch;
 
 namespace Neon.Kube.Operator
 {
     public interface IMutationWebhook<TEntity> : IAdmissionWebhook<TEntity, MutationResult>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
     {
+        public ILogger Logger { get; set; }
         public V1MutatingWebhookConfiguration WebhookConfiguration { get; }
 
         /// <inheritdoc />
@@ -47,8 +52,7 @@ namespace Neon.Kube.Operator
 
         AdmissionResponse IAdmissionWebhook<TEntity, MutationResult>.TransformResult(
             MutationResult result,
-            AdmissionRequest<TEntity> request,
-            JsonSerializerSettings jsonSettings)
+            AdmissionRequest<TEntity> request)
         {
             var response = new AdmissionResponse
             {
@@ -61,16 +65,26 @@ namespace Neon.Kube.Operator
 
             if (result.ModifiedObject != null)
             {
-                var serializer = JsonSerializer.Create(jsonSettings);
                 response.PatchType = AdmissionResponse.JsonPatch;
-                var @object = JToken.FromObject(
+
+                var node1 = JsonNode.Parse(KubernetesJson.Serialize(
                     request.Operation == "DELETE"
                         ? request.OldObject
-                        : request.Object,
-                    serializer);
-                var patch = new JsonDiffer().Diff(@object, JToken.FromObject(result.ModifiedObject, serializer), false);
-                response.Patch = Convert.ToBase64String(Encoding.UTF8.GetBytes(patch.ToString()));
+                        : request.Object));
+
+                Logger?.LogInformationEx(() => $"node1: {KubernetesJson.Serialize(node1)}");
+
+                var node2 = JsonNode.Parse(KubernetesJson.Serialize(result.ModifiedObject));
+
+                Logger?.LogInformationEx(() => $"node2: {KubernetesJson.Serialize(node2)}");
+
+                var diff = node1.Diff(node2, new JsonPatchDeltaFormatter());
+
+                Logger?.LogInformationEx(() => $"diff: {KubernetesJson.Serialize(diff)}");
+
+                response.Patch = Convert.ToBase64String(Encoding.UTF8.GetBytes(KubernetesJson.Serialize(diff)));
                 response.PatchType = AdmissionResponse.JsonPatch;
+                
             }
 
             return response;
