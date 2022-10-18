@@ -145,9 +145,7 @@ namespace NeonClusterOperator
 
         // private fields
         private IWebHost webHost;
-
-        private string currentNamespace { get; set; }
-
+        
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -167,31 +165,13 @@ namespace NeonClusterOperator
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
-            currentNamespace = await KubeHelper.GetCurrentNamespaceAsync();
-
             //-----------------------------------------------------------------
             // Start the controllers: these need to be started before starting KubeOps
 
             K8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
             LogContext.SetCurrentLogProvider(TelemetryHub.LoggerFactory);
 
-            await GlauthController.StartAsync(K8s);
-            await NeonClusterOperatorController.StartAsync(K8s);
-            await NeonContainerRegistryController.StartAsync(K8s);
-            await NeonSsoClientController.StartAsync(K8s);
-            await NodeTaskController.StartAsync(K8s);
-
-            _ = K8s.WatchAsync<V1ConfigMap>(async (@event) =>
-            {
-                await SyncContext.Clear;
-
-                ClusterInfo = TypeSafeConfigMap<ClusterInfo>.From(@event.Value).Config;
-
-                Logger.LogInformationEx("Updated cluster info");
-            },
-            KubeNamespace.NeonStatus,
-            fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
-
+            await WatchClusterInfoAsync();
             await CheckCertificateAsync();
 
             // Start the web service.
@@ -213,13 +193,6 @@ namespace NeonClusterOperator
                     options.ConfigureEndpointDefaults(o =>
                     {
                         o.UseHttps(Certificate);
-                    });
-                    options.ConfigureHttpsDefaults(o =>
-                    {
-                        o.ServerCertificateSelector = (context, dnsName) =>
-                        {
-                            return Certificate;
-                        };
                     });
                     options.Listen(IPAddress.Any, port);
                         
@@ -301,12 +274,28 @@ namespace NeonClusterOperator
             return true;
         }
 
+        private async Task WatchClusterInfoAsync()
+        {
+            await SyncContext.Clear;
+
+            _ = K8s.WatchAsync<V1ConfigMap>(async (@event) =>
+            {
+                await SyncContext.Clear;
+
+                ClusterInfo = TypeSafeConfigMap<ClusterInfo>.From(@event.Value).Config;
+
+                Logger.LogInformationEx("Updated cluster info");
+            },
+            KubeNamespace.NeonStatus,
+            fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
+        }
+
         private async Task CheckCertificateAsync()
         {
             Logger.LogInformationEx(() => "Checking webhook certificate.");
 
             var cert = await K8s.ListNamespacedCustomObjectAsync<Certificate>(
-                currentNamespace,
+                KubeNamespace.NeonSystem,
                 labelSelector: $"{NeonLabel.ManagedBy}={Name}");
 
             if (!cert.Items.Any())
@@ -318,11 +307,11 @@ namespace NeonClusterOperator
                     Metadata = new V1ObjectMeta()
                     {
                         Name = Name,
-                        NamespaceProperty = currentNamespace,
+                        NamespaceProperty = KubeNamespace.NeonSystem,
                         Labels = new Dictionary<string, string>()
-                    {
-                        { NeonLabel.ManagedBy, Name }
-                    }
+                        {
+                            { NeonLabel.ManagedBy, Name }
+                        }
                     },
                     Spec = new CertificateSpec()
                     {

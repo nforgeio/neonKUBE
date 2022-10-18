@@ -1,20 +1,42 @@
-﻿using System;
+﻿//-----------------------------------------------------------------------------
+// FILE:	    AdmissionResult.cs
+// CONTRIBUTOR: Marcus Bowyer
+// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using k8s.Models;
-using k8s;
-using k8s.KubeConfigModels;
-using Microsoft.AspNetCore.Routing;
-using k8s.Autorest;
-using Neon.Diagnostics;
-using Microsoft.Extensions.Logging;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.JsonDiffPatch.Diffs.Formatters;
 using System.Text.Json.JsonDiffPatch;
+using System.Reflection;
+
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Logging;
+
+using k8s;
+using k8s.Autorest;
+using k8s.KubeConfigModels;
+using k8s.Models;
+
+using Neon.Common;
+using Neon.Diagnostics;
 
 namespace Neon.Kube.Operator
 {
@@ -31,9 +53,80 @@ namespace Neon.Kube.Operator
         public ILogger Logger { get; set; }
 
         /// <summary>
+        /// The namespace selector.
+        /// </summary>
+        public V1LabelSelector NamespaceSelector => null;
+
+        /// <summary>
+        /// The Object selector.
+        /// </summary>
+        public V1LabelSelector ObjectSelector => null;
+
+        /// <summary>
         /// The webhook configuration.
         /// </summary>
-        public V1MutatingWebhookConfiguration WebhookConfiguration { get; }
+        public V1MutatingWebhookConfiguration WebhookConfiguration
+        { 
+            get
+            {
+                var hook = this.GetType().GetCustomAttribute<WebhookAttribute>();
+
+                var webhookConfig = new V1MutatingWebhookConfiguration()
+                {
+                    Metadata = new V1ObjectMeta()
+                    {
+                        Name = hook.Name,
+                        Annotations = new Dictionary<string, string>()
+                        {
+                            { "cert-manager.io/inject-ca-from", hook.Certificate }
+                        }
+                    },
+                    Webhooks = new List<V1MutatingWebhook>()
+                    {
+                        new V1MutatingWebhook()
+                        {
+                            Name = hook.Name,
+                            Rules = new List<V1RuleWithOperations>(),
+                            ClientConfig = new Admissionregistrationv1WebhookClientConfig()
+                            {
+                                Service = new Admissionregistrationv1ServiceReference()
+                                {
+                                    Name = hook.ServiceName,
+                                    NamespaceProperty = hook.Namespace,
+                                    Path = WebhookHelper.CreateEndpoint<V1Pod>(this.GetType(), WebhookType.Mutate)
+                                }
+                            },
+                            AdmissionReviewVersions = hook.AdmissionReviewVersions,
+                            FailurePolicy = hook.FailurePolicy,
+                            SideEffects = hook.SideEffects,
+                            TimeoutSeconds = hook.TimeoutSeconds,
+                            NamespaceSelector = NamespaceSelector,
+                            MatchPolicy = hook.MatchPolicy,
+                            ObjectSelector = ObjectSelector,
+                            ReinvocationPolicy = hook.ReinvocationPolicy
+                        }
+                    }
+                };
+
+                var rules = this.GetType().GetCustomAttributes<WebhookRuleAttribute>();
+
+                foreach (var rule in rules)
+                {
+                    webhookConfig.Webhooks.FirstOrDefault().Rules.Add(
+                        new V1RuleWithOperations()
+                        {
+                            ApiGroups = rule.ApiGroups,
+                            ApiVersions = rule.ApiVersions,
+                            Operations = rule.Operations.ToList(),
+                            Resources = rule.Resources,
+                            Scope = rule.Scope
+                        }
+                    );
+                }
+
+                return webhookConfig;
+            }
+        }
 
         /// <inheritdoc />
         string IAdmissionWebhook<TEntity, MutationResult>.Endpoint
@@ -84,19 +177,12 @@ namespace Neon.Kube.Operator
                         ? request.OldObject
                         : request.Object));
 
-                Logger?.LogInformationEx(() => $"node1: {KubernetesJson.Serialize(node1)}");
-
                 var node2 = JsonNode.Parse(KubernetesJson.Serialize(result.ModifiedObject));
-
-                Logger?.LogInformationEx(() => $"node2: {KubernetesJson.Serialize(node2)}");
 
                 var diff = node1.Diff(node2, new JsonPatchDeltaFormatter());
 
-                Logger?.LogInformationEx(() => $"diff: {KubernetesJson.Serialize(diff)}");
-
                 response.Patch = Convert.ToBase64String(Encoding.UTF8.GetBytes(KubernetesJson.Serialize(diff)));
                 response.PatchType = AdmissionResponse.JsonPatch;
-                
             }
 
             return response;
@@ -104,21 +190,31 @@ namespace Neon.Kube.Operator
 
         internal async Task Create(IKubernetes k8s)
         {
+            Logger?.LogInformationEx(() => $"Checking for webhook {this.GetType().Name}.");
+
             try
             {
                 var webhook = await k8s.ReadMutatingWebhookConfigurationAsync(WebhookConfiguration.Name());
             }
             catch (HttpOperationException e) 
             {
+                Logger?.LogInformationEx(() => $"Webhook {this.GetType().Name} not found, creating.");
+
                 if (e.Response.StatusCode == System.Net.HttpStatusCode.NotFound) 
                 {
                     await k8s.CreateMutatingWebhookConfigurationAsync(WebhookConfiguration);
+
+                    Logger?.LogInformationEx(() => $"Webhook {this.GetType().Name} created.");
                 }
                 else 
                 {
+                    Logger?.LogErrorEx(e);
+
                     throw e;
                 }
             }
+
+            Logger?.LogInformationEx(() => $"Webhook {this.GetType().Name} already exists.");
         }
     }
 }

@@ -31,7 +31,8 @@ param
     [switch]$services    = $false,      # Rebuild all cluster service images
     [switch]$nopush      = $false,      # Don't push to the registry
     [switch]$noprune     = $false,      # Don't prune the local Docker cache
-    [switch]$allVersions = $false       # Rebuild all image versions
+    [switch]$allVersions = $false,      # Rebuild all image versions
+    [switch]$release     = $false       # Build release mode
 )
 
 #----------------------------------------------------------
@@ -137,7 +138,13 @@ try
     # We need to do a solution build to ensure that any tools or other dependencies 
     # are built before we build and publish the individual container images.
 
-    $config     = "Release"
+    $config     = "Debug"
+
+    if ($release)
+    {
+        $config     = "Release"
+    }
+
     $msbuild    = $env:MSBUILDPATH
     $nkRoot     = "$env:NK_ROOT"
     $nkSolution = "$nkRoot\neonKUBE.sln"

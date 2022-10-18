@@ -45,11 +45,11 @@ service:
     - name: http-web
       port: 80
       protocol: TCP
-      targetPort: 5000
+      targetPort: 80
     - name: https-web
       protocol: TCP
       port: 443
-      targetPort: 5001
+      targetPort: 443
 
 metrics:
   # Enable Prometheus metrics endpoint

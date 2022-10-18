@@ -30,7 +30,7 @@ namespace Neon.Kube.Operator
     /// <summary>
     /// Webhook helper methods.
     /// </summary>
-    public sealed class WebhookHelper
+    public static class WebhookHelper
     {
         /// <summary>
         /// Helper method to create a route for an <see cref="IAdmissionWebhook{TEntity, TResult}"/>
@@ -79,6 +79,38 @@ namespace Neon.Kube.Operator
             }
 
             return builder.ToString().ToLowerInvariant();
+        }
+
+        /// <summary>
+        /// Returns a list of strings representing allowed operations.
+        /// </summary>
+        /// <param name="operations"></param>
+        /// <returns></returns>
+        public static List<string> ToList(this AdmissionOperations operations)
+        {
+            if (operations.HasFlag(AdmissionOperations.All))
+            {
+                return new List<string> { "*" };
+            }
+
+            var result = new List<string>();
+
+            if (operations.HasFlag(AdmissionOperations.Create))
+            {
+                result.Add("CREATE");
+            }
+
+            if (operations.HasFlag(AdmissionOperations.Update))
+            {
+                result.Add("UPDATE");
+            }
+
+            if (operations.HasFlag(AdmissionOperations.Delete))
+            {
+                result.Add("DELETE");
+            }
+
+            return result;
         }
     }
 }

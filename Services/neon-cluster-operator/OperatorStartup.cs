@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    OperatorStartup.cs
-// CONTRIBUTOR: Jeff Lill
+// CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,28 +20,24 @@ using System.Net.Http;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
+using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Operator;
+using Neon.Kube.ResourceDefinitions;
 
 using k8s;
+using k8s.Models;
 
 using OpenTelemetry;
-using OpenTelemetry.Trace;
-using OpenTelemetry.Resources;
-
 using OpenTelemetry.Instrumentation;
-using Quartz.Logging;
-using NeonClusterOperator.Webhooks;
-using k8s.Models;
-using Microsoft.OpenApi.Writers;
-using Microsoft.Extensions.Logging;
-using System.Reflection;
-using System.Linq;
-using Microsoft.Extensions.Configuration;
-using Neon.Common;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+
 
 namespace NeonClusterOperator
 {
@@ -81,6 +77,11 @@ namespace NeonClusterOperator
                 .AddSingleton(Service.K8s);
 
             services.AddKubernetesOperator()
+                .AddController<GlauthController, V1Secret>()
+                .AddController<NeonClusterOperatorController, V1NeonClusterOperator>()
+                .AddController<NeonContainerRegistryController, V1NeonContainerRegistry>()
+                .AddController<NeonSsoClientController, V1NeonSsoClient>()
+                .AddController<NodeTaskController, V1NeonNodeTask>()
                 .AddMutationWebhook<PodWebhook, V1Pod>();
         }
 
