@@ -3307,5 +3307,23 @@ TCPKeepAlive yes
                 return cachedTelemetryTags;
             }
         }
+
+        /// <summary>
+        /// Gets the current namespace fromwithin a pod.
+        /// </summary>
+        /// <returns></returns>
+        public static async Task<string> GetCurrentNamespaceAsync()
+        {
+            if (NeonHelper.IsDevWorkstation)
+            {
+                return KubeNamespace.NeonSystem;
+            }
+
+            using (var reader = File.OpenText("/var/run/secrets/kubernetes.io/serviceaccount/namespace"))
+            {
+                var @namespace = await reader.ReadToEndAsync();
+                return @namespace;
+            }
+        }
     }
 }
