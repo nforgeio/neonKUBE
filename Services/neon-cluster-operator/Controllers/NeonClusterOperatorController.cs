@@ -60,6 +60,7 @@ using Prometheus;
 
 using Quartz.Impl;
 using Quartz;
+using IdentityModel;
 
 namespace NeonClusterOperator
 {
@@ -110,51 +111,46 @@ namespace NeonClusterOperator
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task StartAsync(IKubernetes k8s)
         {
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
-            {
-                Tracer.CurrentSpan?.AddEvent("start", attributes => attributes.Add("customresource", nameof(V1NeonClusterOperator)));
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
-                Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            // Load the configuration settings.
 
-                // Load the configuration settings.
-
-                var leaderConfig =
-                    new LeaderElectionConfig(
-                        k8s,
-                        @namespace:       KubeNamespace.NeonSystem,
-                        leaseName:        $"{Program.Service.Name}.operatorsettings",
-                        identity:         Pod.Name,
-                        promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_promoted", "Leader promotions"),
-                        demotionCounter:  Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_demoted", "Leader demotions"),
-                        newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_newLeader", "Leadership changes"));
-
-                var options = new ResourceManagerOptions()
-                {
-                    ErrorMaxRetryCount       = int.MaxValue,
-                    ErrorMaxRequeueInterval  = TimeSpan.FromMinutes(10),
-                    ErrorMinRequeueInterval  = TimeSpan.FromSeconds(60),
-                    IdleCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle", "IDLE events processed."),
-                    ReconcileCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle", "RECONCILE events processed."),
-                    DeleteCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle", "DELETED events processed."),
-                    StatusModifyCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle", "STATUS-MODIFY events processed."),
-                    IdleErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle_error", "Failed ClusterOperatorSettings IDLE event processing."),
-                    ReconcileErrorCounter    = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_reconcile_error", "Failed ClusterOperatorSettings RECONCILE event processing."),
-                    DeleteErrorCounter       = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_delete_error", "Failed ClusterOperatorSettings DELETE event processing."),
-                    StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_statusmodify_error", "Failed ClusterOperatorSettings STATUS-MODIFY events processing.")
-                };
-
-                resourceManager = new ResourceManager<V1NeonClusterOperator, NeonClusterOperatorController>(
+            var leaderConfig =
+                new LeaderElectionConfig(
                     k8s,
-                    options:      options,
-                    leaderConfig: leaderConfig);
+                    @namespace:       KubeNamespace.NeonSystem,
+                    leaseName:        $"{Program.Service.Name}.operatorsettings",
+                    identity:         Pod.Name,
+                    promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_promoted", "Leader promotions"),
+                    demotionCounter:  Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_demoted", "Leader demotions"),
+                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_newLeader", "Leadership changes"));
 
-                await resourceManager.StartAsync();
+            var options = new ResourceManagerOptions()
+            {
+                ErrorMaxRetryCount       = int.MaxValue,
+                ErrorMaxRequeueInterval  = TimeSpan.FromMinutes(10),
+                ErrorMinRequeueInterval  = TimeSpan.FromSeconds(60),
+                IdleCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle", "IDLE events processed."),
+                ReconcileCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle", "RECONCILE events processed."),
+                DeleteCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle", "DELETED events processed."),
+                StatusModifyCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle", "STATUS-MODIFY events processed."),
+                IdleErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle_error", "Failed ClusterOperatorSettings IDLE event processing."),
+                ReconcileErrorCounter    = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_reconcile_error", "Failed ClusterOperatorSettings RECONCILE event processing."),
+                DeleteErrorCounter       = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_delete_error", "Failed ClusterOperatorSettings DELETE event processing."),
+                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_statusmodify_error", "Failed ClusterOperatorSettings STATUS-MODIFY events processing.")
+            };
 
-                schedulerFactory              = new StdSchedulerFactory();
-                updateCaCertificates          = new UpdateCaCertificates();
-                checkControlPlaneCertificates = new CheckControlPlaneCertificates();
-                checkRegistryImages           = new CheckRegistryImages();
-            }
+            resourceManager = new ResourceManager<V1NeonClusterOperator, NeonClusterOperatorController>(
+                k8s,
+                options:      options,
+                leaderConfig: leaderConfig);
+
+            await resourceManager.StartAsync();
+
+            schedulerFactory              = new StdSchedulerFactory();
+            updateCaCertificates          = new UpdateCaCertificates();
+            checkControlPlaneCertificates = new CheckControlPlaneCertificates();
+            checkRegistryImages           = new CheckRegistryImages();
         }
 
         //---------------------------------------------------------------------
@@ -180,15 +176,11 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
-            {
-                Tracer.CurrentSpan?.AddEvent("idle", attributes => attributes.Add("customresource", nameof(V1NeonClusterOperator)));
-                log.LogInformationEx("[IDLE]");
+            log.LogInformationEx("[IDLE]");
 
-                if (!initialized)
-                {
-                    await InitializeSchedulerAsync();
-                }
+            if (!initialized)
+            {
+                await InitializeSchedulerAsync();
             }
         }
 
@@ -249,7 +241,6 @@ namespace NeonClusterOperator
 
             using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
-                Tracer.CurrentSpan?.AddEvent("delete", attributes => attributes.Add("customresource", nameof(V1NeonClusterOperator)));
 
                 // Ignore all events when the controller hasn't been started.
 
@@ -269,12 +260,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
-            {
-                Tracer.CurrentSpan?.AddEvent("promotion", attributes => attributes.Add("customresource", nameof(V1NeonClusterOperator)));
-
-                log.LogInformationEx(() => $"PROMOTED");
-            }
+            log.LogInformationEx(() => $"PROMOTED");
         }
 
         /// <inheritdoc/>
@@ -282,14 +268,9 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
-            {
-                Tracer.CurrentSpan?.AddEvent("promotion", attributes => attributes.Add("customresource", nameof(V1NeonClusterOperator)));
+            log.LogInformationEx(() => $"DEMOTED");
 
-                log.LogInformationEx(() => $"DEMOTED");
-
-                await ShutDownAsync();
-            }
+            await ShutDownAsync();
         }
 
         /// <inheritdoc/>
@@ -297,16 +278,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
-            {
-                Tracer.CurrentSpan?.AddEvent("promotion", attributes => 
-                {
-                    attributes.Add("leader", identity);
-                    attributes.Add("customresource", nameof(V1NeonClusterOperator));
-                });
-
-                log.LogInformationEx(() => $"NEW LEADER: {identity}");
-            }
+            log.LogInformationEx(() => $"NEW LEADER: {identity}");
         }
 
         private async Task InitializeSchedulerAsync()
@@ -315,7 +287,7 @@ namespace NeonClusterOperator
 
             using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
-                Tracer.CurrentSpan?.AddEvent("initialize-scheduler", attributes => attributes.Add("customresource", nameof(V1NeonClusterOperator)));
+                log.LogInformationEx(() => $"Initialize Scheduler");
 
                 scheduler = await schedulerFactory.GetScheduler();
 
@@ -329,14 +301,11 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
-            {
-                Tracer.CurrentSpan?.AddEvent("shutdown-scheduler", attributes => attributes.Add("customresource", nameof(V1NeonClusterOperator)));
+            log.LogInformationEx(() => $"Shutdown Scheduler");
 
-                await scheduler.Shutdown(waitForJobsToComplete: true);
+            await scheduler.Shutdown(waitForJobsToComplete: true);
 
-                initialized = false;
-            }
+            initialized = false;
         }
     }
 }

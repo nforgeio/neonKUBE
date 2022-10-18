@@ -42,6 +42,7 @@
 		</PackageReference>
 		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
 		<PackageReference Include="OpenTelemetry" Version="1.4.0-beta.1" />
+		<PackageReference Include="OpenTelemetry.Instrumentation.GrpcCore" Version="1.0.0-beta.5" />
 		<PackageReference Include="OpenTelemetry.Instrumentation.Quartz" Version="1.0.0-alpha.1" />
 		<PackageReference Include="Npgsql.OpenTelemetry" Version="6.0.7" />
 		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.9" />
@@ -95,10 +96,10 @@
     files are always regenerated.
     -->
 
-	<Target Name="RemoveConfig" BeforeTargets="BeforeBuild">
+	<!--<Target Name="RemoveConfig" BeforeTargets="BeforeBuild">
 		<Message Importance="high" Text="Purge CRDs from: $(ProjectDir)config.gitignore" />
 		<Exec Command="neon-build rmdir &quot;$(ProjectDir)config.gitignore&quot;" />
-	</Target>
+	</Target>-->
 
 	<!--
     This target publishes all generated CRDs to [$/Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/crds/*].
