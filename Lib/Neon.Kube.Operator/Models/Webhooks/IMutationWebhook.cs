@@ -18,10 +18,21 @@ using System.Text.Json.JsonDiffPatch;
 
 namespace Neon.Kube.Operator
 {
+    /// <summary>
+    /// Represents a mutating webhook.
+    /// </summary>
+    /// <typeparam name="TEntity"></typeparam>
     public interface IMutationWebhook<TEntity> : IAdmissionWebhook<TEntity, MutationResult>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
     {
+        /// <summary>
+        /// Logger.
+        /// </summary>
         public ILogger Logger { get; set; }
+
+        /// <summary>
+        /// The webhook configuration.
+        /// </summary>
         public V1MutatingWebhookConfiguration WebhookConfiguration { get; }
 
         /// <inheritdoc />
@@ -30,6 +41,7 @@ namespace Neon.Kube.Operator
             get => WebhookHelper.CreateEndpoint<TEntity>(this.GetType(), WebhookType);
         }
 
+        /// <inheritdoc/>
         WebhookType IAdmissionWebhook<TEntity, MutationResult>.WebhookType
         {
             get => WebhookType.Mutate;

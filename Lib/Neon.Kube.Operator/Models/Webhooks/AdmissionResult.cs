@@ -25,11 +25,21 @@ using Microsoft.AspNetCore.Http;
 
 namespace Neon.Kube.Operator
 {
+    /// <summary>
+    /// Represents a result from an admission webhook.
+    /// </summary>
     public class AdmissionResult
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         internal AdmissionResult()
         {
         }
+
+        /// <summary>
+        /// Whether the request was valid or not.
+        /// </summary>
         public bool Valid { get; init; } = true;
 
         /// <summary>
@@ -37,8 +47,14 @@ namespace Neon.Kube.Operator
         /// </summary>
         public int? StatusCode { get; init; }
 
+        /// <summary>
+        /// The status message.
+        /// </summary>
         public string StatusMessage { get; init; }
 
+        /// <summary>
+        /// Warnings associated with the result.
+        /// </summary>
         public IList<string> Warnings { get; init; } = new List<string>();
 
         internal static TResult NotImplemented<TResult>()

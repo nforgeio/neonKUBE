@@ -27,8 +27,19 @@ using Microsoft.AspNetCore.Http;
 
 namespace Neon.Kube.Operator
 {
+    /// <summary>
+    /// Webhook helper methods.
+    /// </summary>
     public sealed class WebhookHelper
     {
+        /// <summary>
+        /// Helper method to create a route for an <see cref="IAdmissionWebhook{TEntity, TResult}"/>
+        /// </summary>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <param name="webhook"></param>
+        /// <param name="webhookType"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
         public static string CreateEndpoint<TEntity>(Type webhook, WebhookType webhookType)
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {

@@ -53,7 +53,7 @@ namespace Neon.Kube.Operator
     /// </summary>
     public static class OperatorHelper
     {
-        public static readonly JsonSerializerSettings  K8sSerializerSettings;
+        private static readonly JsonSerializerSettings k8sSerializerSettings;
 
         /// <summary>
         /// Static constructor.
@@ -62,7 +62,7 @@ namespace Neon.Kube.Operator
         {
             // Create a NewtonSoft JSON serializer with settings compatible with Kubernetes.
 
-            K8sSerializerSettings = new JsonSerializerSettings()
+            k8sSerializerSettings = new JsonSerializerSettings()
             { 
                 DateFormatString = "yyyy-MM-ddTHH:mm:ssZ",
                 Converters       = new List<JsonConverter>() { new Newtonsoft.Json.Converters.StringEnumConverter() }
@@ -174,7 +174,7 @@ namespace Neon.Kube.Operator
         {
             Covenant.Requires<ArgumentNullException>(patchDoc != null, nameof(patchDoc));
 
-            var patchJson = JsonConvert.SerializeObject(patchDoc, Formatting.None, K8sSerializerSettings);
+            var patchJson = JsonConvert.SerializeObject(patchDoc, Formatting.None, k8sSerializerSettings);
 
             return new V1Patch(patchJson, V1Patch.PatchType.JsonPatch);
         }

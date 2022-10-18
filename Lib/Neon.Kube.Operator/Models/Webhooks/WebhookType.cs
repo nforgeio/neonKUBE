@@ -27,10 +27,19 @@ using Microsoft.AspNetCore.Http;
 
 namespace Neon.Kube.Operator
 {
+    /// <summary>
+    /// Defines webhook types.
+    /// </summary>
     public enum WebhookType
     {
+        /// <summary>
+        /// Represents a validating webhook.
+        /// </summary>
         Validate,
 
+        /// <summary>
+        /// Represents a mutating webhook.
+        /// </summary>
         Mutate
     }
 }

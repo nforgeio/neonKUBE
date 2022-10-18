@@ -15,19 +15,34 @@ using Microsoft.Extensions.Logging;
 
 namespace NeonClusterOperator.Webhooks
 {
+    /// <summary>
+    /// Webhook to set priority classes on neon pods.
+    /// </summary>
     public class PodWebhook : IMutationWebhook<V1Pod>
     {
+        /// <inheritdoc/>
         public ILogger Logger { get; set; }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public PodWebhook()
         {
         }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="logger"></param>
         public PodWebhook(ILogger logger)
         {
             this.Logger = logger;
         }
 
+        /// <inheritdoc/>
         public AdmissionOperations Operations => AdmissionOperations.Create;
-        
+
+        /// <inheritdoc/>
         public V1MutatingWebhookConfiguration WebhookConfiguration { get =>
                 new V1MutatingWebhookConfiguration()
                 {
@@ -73,8 +88,10 @@ namespace NeonClusterOperator.Webhooks
                 };
         }
 
+        /// <inheritdoc/>
         public async Task<MutationResult> CreateAsync(V1Pod entity, bool dryRun)
         {
+
             using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Logger?.LogInformationEx(() => $"Received request for pod {entity.Namespace()}/{entity.Name()}");

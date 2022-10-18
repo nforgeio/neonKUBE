@@ -20,10 +20,18 @@ using Microsoft.Extensions.Logging;
 
 namespace Neon.Kube.Operator
 {
+    /// <summary>
+    /// Represents an Admission webhook.
+    /// </summary>
+    /// <typeparam name="TEntity"></typeparam>
+    /// <typeparam name="TResult"></typeparam>
     public interface IAdmissionWebhook<TEntity, TResult>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         where TResult : AdmissionResult, new()
     {
+        /// <summary>
+        /// The <see cref="AdmissionOperations"/> supported by the admission controller.
+        /// </summary>
         public AdmissionOperations Operations { get; }
 
         internal string Name =>
@@ -90,7 +98,7 @@ namespace Neon.Kube.Operator
             AdmissionRequest<TEntity> request);
 
         /// <summary>
-        /// 
+        /// Registers the webhook endpoints.
         /// </summary>
         /// <param name="endpoints"></param>
         /// <returns></returns>

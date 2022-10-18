@@ -26,9 +26,15 @@ using Microsoft.AspNetCore.Http;
 
 namespace Neon.Kube.Operator
 {
+    /// <summary>
+    /// Represents the result of a mutating webhook.
+    /// </summary>
     public sealed class MutationResult : AdmissionResult
     {
-        public object? ModifiedObject { get; init; }
+        /// <summary>
+        /// The modified 
+        /// </summary>
+        public object ModifiedObject { get; init; }
 
         /// <summary>
         /// Utility method that creates a return value that indicates that no changes must be applied.

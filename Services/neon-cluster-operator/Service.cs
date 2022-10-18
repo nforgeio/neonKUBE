@@ -133,8 +133,14 @@ namespace NeonClusterOperator
         /// </summary>
         public ClusterInfo ClusterInfo;
 
-        public X509Certificate2 Certificate;
+        /// <summary>
+        /// The TLS certificate.
+        /// </summary>
+        private X509Certificate2 Certificate;
 
+        /// <summary>
+        /// Kubernetes client.
+        /// </summary>
         public IKubernetes K8s;
 
         // private fields
@@ -358,6 +364,8 @@ namespace NeonClusterOperator
             await NeonHelper.WaitForAsync(
                async () =>
                {
+                   await SyncContext.Clear;
+
                    return Certificate != null;
                },
                timeout: TimeSpan.FromSeconds(300),
