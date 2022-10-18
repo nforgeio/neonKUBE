@@ -52,7 +52,7 @@ namespace NeonClusterOperator
         operations: AdmissionOperations.Create | AdmissionOperations.Update, 
         resources: "pods",
         scope: "*")]
-    public class PodWebhook : IMutationWebhook<V1Pod>
+    public class PodWebhook : IMutatingWebhook<V1Pod>
     {
         /// <inheritdoc/>
         public ILogger Logger { get; set; }

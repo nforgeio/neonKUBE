@@ -48,8 +48,20 @@ namespace Neon.Kube.Operator
         /// <typeparam name="TImplementation">The type of the webhook to register.</typeparam>
         /// <typeparam name="TEntity">The type of the entity to associate the webhook with.</typeparam>
         /// <returns>The builder for chaining.</returns>
-        IOperatorBuilder AddMutationWebhook<TImplementation, TEntity>()
-            where TImplementation : class, IMutationWebhook<TEntity>
+        IOperatorBuilder AddMutatingWebhook<TImplementation, TEntity>()
+            where TImplementation : class, IMutatingWebhook<TEntity>
+            where TEntity : IKubernetesObject<V1ObjectMeta>, new();
+
+        /// <summary>
+        /// <para>
+        /// Adds a validating webhook to the operator.
+        /// </para>
+        /// </summary>
+        /// <typeparam name="TImplementation">The type of the webhook to register.</typeparam>
+        /// <typeparam name="TEntity">The type of the entity to associate the webhook with.</typeparam>
+        /// <returns>The builder for chaining.</returns>
+        IOperatorBuilder AddValidatingWebhook<TImplementation, TEntity>()
+            where TImplementation : class, IValidatingWebhook<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>, new();
 
         /// <summary>

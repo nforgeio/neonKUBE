@@ -66,8 +66,8 @@ namespace Neon.Kube.Operator
         }
 
         /// <inheritdoc/>
-        public IOperatorBuilder AddMutationWebhook<TImplementation, TEntity>()
-            where TImplementation : class, IMutationWebhook<TEntity>
+        public IOperatorBuilder AddMutatingWebhook<TImplementation, TEntity>()
+            where TImplementation : class, IMutatingWebhook<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
             Services.TryAddScoped<TImplementation>();

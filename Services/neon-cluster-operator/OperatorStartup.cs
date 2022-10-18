@@ -82,7 +82,7 @@ namespace NeonClusterOperator
                 .AddController<NeonContainerRegistryController, V1NeonContainerRegistry>()
                 .AddController<NeonSsoClientController, V1NeonSsoClient>()
                 .AddController<NodeTaskController, V1NeonNodeTask>()
-                .AddMutationWebhook<PodWebhook, V1Pod>();
+                .AddMutatingWebhook<PodWebhook, V1Pod>();
         }
 
         /// <summary>

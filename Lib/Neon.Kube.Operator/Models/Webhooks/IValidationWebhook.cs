@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IMutatingWebhook.cs
+// FILE:	    IValidatingWebhook.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -41,10 +41,10 @@ using Neon.Diagnostics;
 namespace Neon.Kube.Operator
 {
     /// <summary>
-    /// Represents a mutating webhook.
+    /// Represents a Validating webhook.
     /// </summary>
     /// <typeparam name="TEntity"></typeparam>
-    public interface IMutatingWebhook<TEntity> : IAdmissionWebhook<TEntity, MutationResult>
+    public interface IValidatingWebhook<TEntity> : IAdmissionWebhook<TEntity, ValidationResult>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
     {
         /// <summary>
@@ -65,13 +65,13 @@ namespace Neon.Kube.Operator
         /// <summary>
         /// The webhook configuration.
         /// </summary>
-        public V1MutatingWebhookConfiguration WebhookConfiguration
+        public V1ValidatingWebhookConfiguration WebhookConfiguration
         { 
             get
             {
                 var hook = this.GetType().GetCustomAttribute<WebhookAttribute>();
 
-                var webhookConfig = new V1MutatingWebhookConfiguration()
+                var webhookConfig = new V1ValidatingWebhookConfiguration()
                 {
                     Metadata = new V1ObjectMeta()
                     {
@@ -81,9 +81,9 @@ namespace Neon.Kube.Operator
                             { "cert-manager.io/inject-ca-from", hook.Certificate }
                         }
                     },
-                    Webhooks = new List<V1MutatingWebhook>()
+                    Webhooks = new List<V1ValidatingWebhook>()
                     {
-                        new V1MutatingWebhook()
+                        new V1ValidatingWebhook()
                         {
                             Name = hook.Name,
                             Rules = new List<V1RuleWithOperations>(),
@@ -102,8 +102,7 @@ namespace Neon.Kube.Operator
                             TimeoutSeconds = hook.TimeoutSeconds,
                             NamespaceSelector = NamespaceSelector,
                             MatchPolicy = hook.MatchPolicy,
-                            ObjectSelector = ObjectSelector,
-                            ReinvocationPolicy = hook.ReinvocationPolicy
+                            ObjectSelector = ObjectSelector
                         }
                     }
                 };
@@ -129,34 +128,34 @@ namespace Neon.Kube.Operator
         }
 
         /// <inheritdoc />
-        string IAdmissionWebhook<TEntity, MutationResult>.Endpoint
+        string IAdmissionWebhook<TEntity, ValidationResult>.Endpoint
         {
             get => WebhookHelper.CreateEndpoint<TEntity>(this.GetType(), WebhookType);
         }
 
         /// <inheritdoc/>
-        WebhookType IAdmissionWebhook<TEntity, MutationResult>.WebhookType
+        WebhookType IAdmissionWebhook<TEntity, ValidationResult>.WebhookType
         {
-            get => WebhookType.Mutate;
+            get => WebhookType.Validate;
         }
 
         /// <inheritdoc />
-        MutationResult IAdmissionWebhook<TEntity, MutationResult>.Create(TEntity newEntity, bool dryRun)
-            => AdmissionResult.NotImplemented<MutationResult>();
+        ValidationResult IAdmissionWebhook<TEntity, ValidationResult>.Create(TEntity newEntity, bool dryRun)
+            => AdmissionResult.NotImplemented<ValidationResult>();
 
         /// <inheritdoc />
-        MutationResult IAdmissionWebhook<TEntity, MutationResult>.Update(
+        ValidationResult IAdmissionWebhook<TEntity, ValidationResult>.Update(
             TEntity oldEntity,
             TEntity newEntity,
             bool dryRun)
-            => AdmissionResult.NotImplemented<MutationResult>();
+            => AdmissionResult.NotImplemented<ValidationResult>();
 
         /// <inheritdoc />
-        MutationResult IAdmissionWebhook<TEntity, MutationResult>.Delete(TEntity oldEntity, bool dryRun)
-            => AdmissionResult.NotImplemented<MutationResult>();
+        ValidationResult IAdmissionWebhook<TEntity, ValidationResult>.Delete(TEntity oldEntity, bool dryRun)
+            => AdmissionResult.NotImplemented<ValidationResult>();
 
-        AdmissionResponse IAdmissionWebhook<TEntity, MutationResult>.TransformResult(
-            MutationResult result,
+        AdmissionResponse IAdmissionWebhook<TEntity, ValidationResult>.TransformResult(
+            ValidationResult result,
             AdmissionRequest<TEntity> request)
         {
             var response = new AdmissionResponse
@@ -168,23 +167,6 @@ namespace Neon.Kube.Operator
                 Warnings = result.Warnings.ToArray(),
             };
 
-            if (result.ModifiedObject != null)
-            {
-                response.PatchType = AdmissionResponse.JsonPatch;
-
-                var node1 = JsonNode.Parse(KubernetesJson.Serialize(
-                    request.Operation == "DELETE"
-                        ? request.OldObject
-                        : request.Object));
-
-                var node2 = JsonNode.Parse(KubernetesJson.Serialize(result.ModifiedObject));
-
-                var diff = node1.Diff(node2, new JsonPatchDeltaFormatter());
-
-                response.Patch = Convert.ToBase64String(Encoding.UTF8.GetBytes(KubernetesJson.Serialize(diff)));
-                response.PatchType = AdmissionResponse.JsonPatch;
-            }
-
             return response;
         }
 
@@ -194,7 +176,7 @@ namespace Neon.Kube.Operator
 
             try
             {
-                var webhook = await k8s.ReadMutatingWebhookConfigurationAsync(WebhookConfiguration.Name());
+                var webhook = await k8s.ReadValidatingWebhookConfigurationAsync(WebhookConfiguration.Name());
             }
             catch (HttpOperationException e) 
             {
@@ -202,7 +184,7 @@ namespace Neon.Kube.Operator
 
                 if (e.Response.StatusCode == System.Net.HttpStatusCode.NotFound) 
                 {
-                    await k8s.CreateMutatingWebhookConfigurationAsync(WebhookConfiguration);
+                    await k8s.CreateValidatingWebhookConfigurationAsync(WebhookConfiguration);
 
                     Logger?.LogInformationEx(() => $"Webhook {this.GetType().Name} created.");
                 }

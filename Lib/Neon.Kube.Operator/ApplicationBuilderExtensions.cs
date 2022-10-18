@@ -30,6 +30,7 @@ using Microsoft.Extensions.Logging;
 
 using k8s.Models;
 using k8s;
+using System.Xml;
 
 namespace Neon.Kube.Operator
 {
@@ -85,12 +86,33 @@ namespace Neon.Kube.Operator
 
                         registerMethod.Invoke(mutator, new object[] { endpoints });
 
-                        var createMethod = typeof(IMutationWebhook<>)
+                        var createMethod = typeof(IMutatingWebhook<>)
                             .MakeGenericType(entityType)
                             .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
                             .First(m => m.Name == "Create");
 
                         createMethod.Invoke(mutator, new object[] { k8s });
+                    }
+
+                    foreach (var webhook in componentRegistrar.ValidatingWebhookRegistrations)
+                    {
+                        (Type validatorType, Type entityType) = webhook;
+
+                        var validator = scope.ServiceProvider.GetRequiredService(validatorType);
+
+                        var registerMethod = typeof(IAdmissionWebhook<,>)
+                            .MakeGenericType(entityType, typeof(ValidationResult))
+                            .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
+                            .First(m => m.Name == "Register");
+
+                        registerMethod.Invoke(validator, new object[] { endpoints });
+
+                        var createMethod = typeof(IValidatingWebhook<>)
+                            .MakeGenericType(entityType)
+                            .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
+                            .First(m => m.Name == "Create");
+
+                        createMethod.Invoke(validator, new object[] { k8s });
                     }
                 });
         }

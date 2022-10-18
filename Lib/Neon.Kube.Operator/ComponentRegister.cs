@@ -35,11 +35,13 @@ namespace Neon.Kube.Operator
     {
         public HashSet<ControllerRegistration> ControllerRegistrations { get; set; }
         public HashSet<MutatingWebhookRegistration> MutatingWebhookRegistrations { get; set; }
+        public HashSet<ValidatingWebhookRegistration> ValidatingWebhookRegistrations { get; set; }
 
         public ComponentRegister() 
         {
-            ControllerRegistrations      = new HashSet<ControllerRegistration>();
-            MutatingWebhookRegistrations = new HashSet<MutatingWebhookRegistration>();
+            ControllerRegistrations        = new HashSet<ControllerRegistration>();
+            MutatingWebhookRegistrations   = new HashSet<MutatingWebhookRegistration>();
+            ValidatingWebhookRegistrations = new HashSet<ValidatingWebhookRegistration>();
         }
         public void RegisterController<TController, TEntity>()
             where TController : class, IOperatorController<TEntity>
@@ -50,10 +52,18 @@ namespace Neon.Kube.Operator
             return;
         }
         public void RegisterMutatingWebhook<TMutator, TEntity>()
-            where TMutator : class, IMutationWebhook<TEntity>
+            where TMutator : class, IMutatingWebhook<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
             MutatingWebhookRegistrations.Add(new MutatingWebhookRegistration(typeof(TMutator), typeof(TEntity)));
+
+            return;
+        }
+        public void RegisterValidatingWebhook<TMutator, TEntity>()
+            where TMutator : class, IValidatingWebhook<TEntity>
+            where TEntity : IKubernetesObject<V1ObjectMeta>, new()
+        {
+            ValidatingWebhookRegistrations.Add(new ValidatingWebhookRegistration(typeof(TMutator), typeof(TEntity)));
 
             return;
         }
@@ -61,4 +71,5 @@ namespace Neon.Kube.Operator
 
     internal record ControllerRegistration(Type controllerType, Type EntityType);
     internal record MutatingWebhookRegistration(Type WebhookType, Type EntityType);
+    internal record ValidatingWebhookRegistration(Type WebhookType, Type EntityType);
 }

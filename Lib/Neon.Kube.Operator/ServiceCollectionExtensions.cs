@@ -47,5 +47,4 @@ namespace Neon.Kube.Operator
             return new OperatorBuilder(services).AddOperatorBase();
         }
     }
-
 }
