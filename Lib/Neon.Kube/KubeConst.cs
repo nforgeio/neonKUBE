@@ -369,5 +369,10 @@ namespace Neon.Kube
         /// The CIR-O socket.
         /// </summary>
         public const string CrioSocketPath = "/var/run/crio/crio.sock";
+
+        /// <summary>
+        /// The maximum label length allowed.
+        /// </summary>
+        public const byte MaxLabelLength = 63;
     }
 }

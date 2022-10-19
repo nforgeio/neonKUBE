@@ -77,6 +77,17 @@ namespace Neon.Kube.Operator
         }
 
         /// <inheritdoc/>
+        public IOperatorBuilder AddValidatingWebhook<TImplementation, TEntity>()
+            where TImplementation : class, IValidatingWebhook<TEntity>
+            where TEntity : IKubernetesObject<V1ObjectMeta>, new()
+        {
+            Services.TryAddScoped<TImplementation>();
+            componentRegister.RegisterValidatingWebhook<TImplementation, TEntity>();
+
+            return this;
+        }
+
+        /// <inheritdoc/>
         public IOperatorBuilder AddController<TImplementation, TEntity>()
             where TImplementation : class, IOperatorController<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()

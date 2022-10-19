@@ -109,22 +109,22 @@ namespace Neon.Kube.Resources
             /// <summary>
             /// Control plane certificate update spec.
             /// </summary>
-            public UpdateSpec ControlPlaneCertificates { get; set; }
+            public UpdateSpec ControlPlaneCertificates { get; set; } = new UpdateSpec();
 
             /// <summary>
             /// Node CA certificate update spec.
             /// </summary>
-            public UpdateSpec NodeCaCertificates { get; set; }
+            public UpdateSpec NodeCaCertificates { get; set; } = new UpdateSpec();
 
             /// <summary>
             /// Update spec for security spec.
             /// </summary>
-            public UpdateSpec SecurityPatches { get; set; }
+            public UpdateSpec SecurityPatches { get; set; } = new UpdateSpec();
 
             /// <summary>
             /// Update spec for container images.
             /// </summary>
-            public UpdateSpec ContainerImages { get; set; }
+            public UpdateSpec ContainerImages { get; set; } = new UpdateSpec();
         }
 
         /// <summary>

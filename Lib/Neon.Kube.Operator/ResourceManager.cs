@@ -233,7 +233,7 @@ namespace Neon.Kube.Operator
             this.filter       = filter ?? new Func<TEntity, bool>(resource => true);
             this.logger       = logger ?? TelemetryHub.CreateLogger($"Neon.Kube.Operator.ResourceManager({typeof(TEntity).Name})");
             this.leaderConfig = leaderConfig;
-
+            
             options.Validate();
 
             // $todo(jefflill): https://github.com/nforgeio/neonKUBE/issues/1589
