@@ -164,7 +164,7 @@ namespace Neon.Kube.Resources
             /// For the full documentation see: 
             /// https://www.quartz-scheduler.net/documentation/quartz-3.x/tutorial/crontriggers.html#cron-expressions
             /// </remarks>
-            public string Schedule { get; set; } = "0 0 * * 1";
+            public string Schedule { get; set; } = "0 0 0 ? * 1";
         }
     }
 }
