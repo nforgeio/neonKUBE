@@ -5,14 +5,14 @@
 	-->
 
 	<PropertyGroup>
-		<Product>neonSDK</Product>
+		<Product>neonKUBE</Product>
 		<Authors>neonFORGE Team</Authors>
 		<Company>neonFORGE LLC</Company>
 		<Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<LangVersion>latest</LangVersion>
 		<Nullable>disable</Nullable>
-		<AnalysisLevel>5.0</AnalysisLevel>
+		<EnableNETAnalyzers>true</EnableNETAnalyzers>
 		<TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<WarningsAsErrors>NU1605</WarningsAsErrors>
@@ -20,10 +20,10 @@
 		<ImplicitUsings>disable</ImplicitUsings>
 		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
 		<GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
+		<NoWarn>1701;1702;NETSDK1138;CS8892</NoWarn>
 
-		<!-- Debugging related: -->
+		<!-- Debugging -->
 
-		<Optimize>False</Optimize>
 		<DebugType>embedded</DebugType>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -36,6 +36,14 @@
 
 		<ContinuousIntegrationBuild  Condition="'$(NEON_PUBLIC_SOURCELINK)' == 'true'">true</ContinuousIntegrationBuild>
 
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<Optimize>false</Optimize>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<Optimize>true</Optimize>
 	</PropertyGroup>
 
 	<!-- 
