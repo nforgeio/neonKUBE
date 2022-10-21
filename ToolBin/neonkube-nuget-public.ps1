@@ -37,20 +37,11 @@ exit 1
 
 . $env:NK_ROOT/Powershell/includes.ps1
 
-# Abort if Visual Studio is running because that can cause [pubcore] to
-# fail due to locked files.
+# Abort if Visual Studio is running because that can lead to 
+# build configuration conflicts because this script builds the
+# RELEASE configuration and we normally have VS in DEBUG mode.
 
-# $note(jefflill): 
-#
-# We don't currently need this check but I'm leaving it here commented
-# out to make it easier to revive in the future, if necessary.
-
-# $note(jefflill): 
-#
-# We don't currently need this check but I'm leaving it here commented
-# out to make it easier to revive in the future, if necessary.
-
-# Ensure-VisualStudioNotRunning
+Ensure-VisualStudioNotRunning
 
 # Verify that the user has the required environment variables.  These will
 # be available only for maintainers and are intialized by the neonCLOUD
