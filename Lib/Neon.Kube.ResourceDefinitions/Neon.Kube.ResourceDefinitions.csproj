@@ -41,7 +41,7 @@
 	<ItemGroup>
 		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
 		<PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
-		<PackageReference Include="Neon.JsonConverters" Version="10000.0.2412-dev-jeff" />
+		<PackageReference Include="Neon.JsonConverters" Version="10000.0.2413-dev-jeff" />
 	</ItemGroup>
 
 	<ItemGroup>
