@@ -15,21 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using k8s;
-using k8s.Models;
-using Microsoft.Extensions.Logging;
-using Microsoft.Win32;
-using Neon.Common;
-using Neon.Cryptography;
-using Neon.Deployment;
-using Neon.Diagnostics;
-using Neon.IO;
-using Neon.Net;
-using Neon.Retry;
-using Neon.Tasks;
-using Newtonsoft.Json;
-using Renci.SshNet.Common;
-using SharpCompress.Readers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -47,6 +32,26 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+
+using k8s;
+using k8s.Models;
+
+using Microsoft.Extensions.Logging;
+using Microsoft.Win32;
+
+using Neon.Common;
+using Neon.Cryptography;
+using Neon.Deployment;
+using Neon.Diagnostics;
+using Neon.IO;
+using Neon.Kube.BuildInfo;
+using Neon.Net;
+using Neon.Retry;
+using Neon.Tasks;
+
+using Newtonsoft.Json;
+using Renci.SshNet.Common;
+using SharpCompress.Readers;
 
 namespace Neon.Kube
 {

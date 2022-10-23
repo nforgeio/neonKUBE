@@ -44,6 +44,7 @@ using Neon.Common;
 using Neon.Deployment;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.BuildInfo;
 using Neon.Kube.GrpcProto;
 using Neon.Kube.GrpcProto.Desktop;
 using Neon.IO;

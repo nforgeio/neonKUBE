@@ -13,8 +13,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="$(SolutionDir)\BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
-		<Compile Include="$(SolutionDir)\BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
 	</ItemGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -28,7 +28,6 @@
 		<PublishSingleFile>false</PublishSingleFile>
 		<SelfContained>true</SelfContained>
 		<PublishTrimmed>false</PublishTrimmed>
-		<TrimMode>copyused</TrimMode>
 		<PublishReadyToRun>true</PublishReadyToRun>
 	</PropertyGroup>
 
@@ -46,10 +45,10 @@
 		<PackageReference Include="KubernetesClient" Version="7.2.19" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
 		<PackageReference Include="Microsoft.Windows.Compatibility" Version="6.0.0" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2406-dev-jeff" />
-		<PackageReference Include="Neon.Deployment" Version="10000.0.2406-dev-jeff" />
-		<PackageReference Include="Neon.WinTTY" Version="10000.0.2406-dev-jeff" />
-		<PackageReference Include="Neon.XenServer" Version="10000.0.2406-dev-jeff" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2412-dev-jeff" />
+		<PackageReference Include="Neon.Deployment" Version="10000.0.2412-dev-jeff" />
+		<PackageReference Include="Neon.WinTTY" Version="10000.0.2412-dev-jeff" />
+		<PackageReference Include="Neon.XenServer" Version="10000.0.2412-dev-jeff" />
 		<PackageReference Include="OpenTelemetry.Api" Version="1.4.0-beta.1" />
 		<PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.4.0-beta.1" />
 		<PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol.Logs" Version="1.4.0-beta.1" />
@@ -62,10 +61,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\BuildInfo\BuildInfo.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Aws\Neon.Kube.Aws.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Azure\Neon.Kube.Azure.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.BareMetal\Neon.Kube.BareMetal.csproj" />
+		<ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Google\Neon.Kube.Google.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.GrpcProto\Neon.Kube.GrpcProto.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />

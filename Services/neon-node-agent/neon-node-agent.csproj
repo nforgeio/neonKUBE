@@ -12,8 +12,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="$(SolutionDir)\BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
-		<Compile Include="$(SolutionDir)\BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -24,15 +24,15 @@
 
 	<ItemGroup>
 		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2406-dev-jeff" />
-		<PackageReference Include="Neon.Cryptography" Version="10000.0.2406-dev-jeff" />
-		<PackageReference Include="Neon.Service" Version="10000.0.2406-dev-jeff" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2412-dev-jeff" />
+		<PackageReference Include="Neon.Cryptography" Version="10000.0.2412-dev-jeff" />
+		<PackageReference Include="Neon.Service" Version="10000.0.2412-dev-jeff" />
 		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.9" />
 		<PackageReference Include="Tomlyn" Version="0.15.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\BuildInfo\BuildInfo.csproj" />
+		<ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.ResourceDefinitions\Neon.Kube.ResourceDefinitions.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />

@@ -202,7 +202,7 @@ function Publish
 
     $projectPath = [io.path]::combine($env:NK_ROOT, "Lib", "$project", "$project" + ".csproj")
 
-    dotnet pack $projectPath -c $config -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -o "$env:NK_BUILD\nuget"
+    dotnet pack $projectPath -c $config -o "$env:NK_BUILD\nuget"
     ThrowOnExitCode
 
     if ($local)
@@ -373,6 +373,7 @@ try
     SetVersion Neon.Kube.Aws                    $neonkubeVersion
     SetVersion Neon.Kube.Azure                  $neonkubeVersion
     SetVersion Neon.Kube.BareMetal              $neonkubeVersion
+    SetVersion Neon.Kube.BuildInfo              $neonkubeVersion
     SetVersion Neon.Kube.DesktopService         $neonkubeVersion
     SetVersion Neon.Kube.Google                 $neonkubeVersion
     SetVersion Neon.Kube.GrpcProto              $neonkubeVersion
@@ -392,6 +393,7 @@ try
     Publish Neon.Kube.Aws                       $neonkubeVersion
     Publish Neon.Kube.Azure                     $neonkubeVersion
     Publish Neon.Kube.BareMetal                 $neonkubeVersion
+    Publish Neon.Kube.BuildInfo                 $neonkubeVersion
     Publish Neon.Kube.DesktopService            $neonkubeVersion
     Publish Neon.Kube.Google                    $neonkubeVersion
     Publish Neon.Kube.GrpcProto                 $neonkubeVersion
@@ -411,6 +413,7 @@ try
     RestoreVersion Neon.Kube.Aws
     RestoreVersion Neon.Kube.Azure
     RestoreVersion Neon.Kube.BareMetal
+    RestoreVersion Neon.Kube.BuildInfo
     RestoreVersion Neon.Kube.DesktopService
     RestoreVersion Neon.Kube.Google
     RestoreVersion Neon.Kube.GrpcProto

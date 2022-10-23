@@ -13,15 +13,15 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="$(SolutionDir)\BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
-		<Compile Include="$(SolutionDir)\BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="6.0.9" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2406-dev-jeff" />
-		<PackageReference Include="Neon.Service" Version="10000.0.2406-dev-jeff" />
-		<PackageReference Include="Neon.Web" Version="10000.0.2406-dev-jeff" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2412-dev-jeff" />
+		<PackageReference Include="Neon.Service" Version="10000.0.2412-dev-jeff" />
+		<PackageReference Include="Neon.Web" Version="10000.0.2412-dev-jeff" />
 		<PackageReference Include="prometheus-net" Version="6.0.0" />
 		<PackageReference Include="prometheus-net.AspNetCore" Version="6.0.0" />
 		<PackageReference Include="prometheus-net.DotNetRuntime" Version="4.2.4" />
@@ -29,7 +29,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\BuildInfo\BuildInfo.csproj" />
+		<ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
 	</ItemGroup>
 

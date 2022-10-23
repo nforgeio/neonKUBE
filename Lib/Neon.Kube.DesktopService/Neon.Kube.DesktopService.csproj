@@ -19,14 +19,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="$(SolutionDir)\BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
-		<Compile Include="$(SolutionDir)\BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
         <PackageReference Include="FluentdForward.OpenTelemetry.Exporter.Logs" Version="0.2.0" />
-        <PackageReference Include="Neon.Common" Version="10000.0.2406-dev-jeff" />
-        <PackageReference Include="Neon.HyperV" Version="10000.0.2406-dev-jeff" />
+        <PackageReference Include="Neon.Common" Version="10000.0.2412-dev-jeff" />
+        <PackageReference Include="Neon.HyperV" Version="10000.0.2412-dev-jeff" />
         <PackageReference Include="OpenTelemetry.Api" Version="1.4.0-beta.1" />
         <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.4.0-beta.1" />
         <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol.Logs" Version="1.4.0-beta.1" />
@@ -34,7 +34,7 @@
     </ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\BuildInfo\BuildInfo.csproj" />
+		<ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
 		<ProjectReference Include="..\Neon.Kube.GrpcProto\Neon.Kube.GrpcProto.csproj" />
 		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
 	</ItemGroup>
