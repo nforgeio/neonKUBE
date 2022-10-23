@@ -99,10 +99,10 @@ namespace Neon.Kube.DesktopService
         //---------------------------------------------------------------------
         // Instance members
 
-        private bool                        isDisposed = false;
-        private string                      socketPath;
-        private Task                        task;
-        private CancellationTokenSource     cts;
+        private bool                                isDisposed = false;
+        private readonly string                     socketPath;
+        private readonly Task                       task;
+        private readonly CancellationTokenSource    cts;
 
         /// <summary>
         /// <para>

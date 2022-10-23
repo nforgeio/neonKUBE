@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFrameworks>net6.0; net7.0</TargetFrameworks>
 		<OutputType>Library</OutputType>
 		<RootNamespace>Neon.Kube</RootNamespace>
 		<Version>10000.0.2236-dev-master</Version>
@@ -19,14 +19,12 @@
         <LangVersion>latest</LangVersion>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>TRACE;DEBUG</DefineConstants>
-	</PropertyGroup>
+	<ItemGroup>
+		<Compile Include="$(SolutionDir)\BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+		<Compile Include="$(SolutionDir)\BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+	</ItemGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-	</PropertyGroup>
-
-    <ItemGroup>
+	<ItemGroup>
         <Compile Remove="Model\CRDs\Harbor\**" />
         <Compile Remove="Properties\**" />
         <EmbeddedResource Remove="Model\CRDs\Harbor\**" />
@@ -45,26 +43,22 @@
 
 	<ItemGroup>
 		<PackageReference Include="DNS" Version="7.0.0" />
-		<PackageReference Include="GitInfo" Version="2.2.0">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
 		<PackageReference Include="KubernetesClient" Version="7.2.19" />
 		<PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.2" />
 		<PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />
 		<PackageReference Include="Microsoft.OpenApi" Version="1.4.3" />
 		<PackageReference Include="Microsoft.Windows.Compatibility" Version="6.0.0" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2371-dev-master" />
-		<PackageReference Include="Neon.Cryptography" Version="10000.0.2371-dev-master" />
-		<PackageReference Include="Neon.Deployment" Version="10000.0.2371-dev-master" />
-		<PackageReference Include="Neon.JsonConverters" Version="10000.0.2371-dev-master" />
-		<PackageReference Include="Neon.ModelGenerator" Version="10000.0.2371-dev-master" GeneratePathProperty="true">
+		<PackageReference Include="Neon.Common" Version="10000.0.2406-dev-jeff" />
+		<PackageReference Include="Neon.Cryptography" Version="10000.0.2406-dev-jeff" />
+		<PackageReference Include="Neon.Deployment" Version="10000.0.2406-dev-jeff" />
+		<PackageReference Include="Neon.JsonConverters" Version="10000.0.2406-dev-jeff" />
+		<PackageReference Include="Neon.ModelGenerator" Version="10000.0.2406-dev-jeff" GeneratePathProperty="true">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Neon.Postgres" Version="10000.0.2371-dev-master" />
-		<PackageReference Include="Neon.SSH" Version="10000.0.2371-dev-master" />
+		<PackageReference Include="Neon.Postgres" Version="10000.0.2406-dev-jeff" />
+		<PackageReference Include="Neon.SSH" Version="10000.0.2406-dev-jeff" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 		<PackageReference Include="Npgsql" Version="6.0.7" />
 		<PackageReference Include="NSwag.MSBuild" Version="13.17.0">
@@ -86,6 +80,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\..\BuildInfo\BuildInfo.csproj" />
 		<ProjectReference Include="..\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
 	</ItemGroup>
 
@@ -102,8 +97,8 @@
     Generate the [KubernetesWithRetry.cs] file.
     -->
 
-	<Target Name="K8sWithRetry" BeforeTargets="BeforeBuild" Condition="Exists('$(NK_ROOT)\Tools\prebuilder\bin\$(Configuration)\net6.0\prebuilder.exe')">
-		<Exec Command="$(NK_ROOT)\Tools\prebuilder\bin\$(Configuration)\net6.0\prebuilder generate-kubernetes-with-retry &quot;$(ProjectDir)Kubernetes\KubernetesWithRetry.cs&quot; Neon.Kube" />
+	<Target Name="K8sWithRetry" BeforeTargets="BeforeBuild" Condition="Exists('$(NK_ROOT)\Tools\prebuilder\bin\$(Configuration)\net7.0\prebuilder.exe')">
+		<Exec Command="$(NK_ROOT)\Tools\prebuilder\bin\$(Configuration)\net7.0\prebuilder generate-kubernetes-with-retry &quot;$(ProjectDir)Kubernetes\KubernetesWithRetry.cs&quot; Neon.Kube" />
 	</Target>
 	
 	<!--
@@ -112,21 +107,12 @@
 
     <Target Name="ModelGen" BeforeTargets="CoreCompile">
         <!--- Generate the model source files -->
-        <Message Importance="high" Text="&quot;$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\win-x64\neon-modelgen&quot; --targets=all --target-namespace=Neon.Kube &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\net6.0\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
-        <Exec Command="&quot;$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\win-x64\neon-modelgen&quot; --targets=all --target-namespace=Neon.Kube &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\net6.0\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
+        <Message Importance="high" Text="&quot;$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\win-x64\neon-modelgen&quot; --targets=all --target-namespace=Neon.Kube &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\net7.0\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
+        <Exec Command="&quot;$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\win-x64\neon-modelgen&quot; --targets=all --target-namespace=Neon.Kube &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\net7.0\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
         <ItemGroup>
             <!--- Ensure that the new files are included in the build -->
             <Compile Include="**\*.cs" KeepDuplicates="false" />
         </ItemGroup>
     </Target>
-
-
-    <!--<PropertyGroup>
-        <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
-    </PropertyGroup>
-
-    <Target Name="NSwag" AfterTargets="PostBuildEvent" Condition=" '$(Configuration)' == 'Debug' ">
-        <Exec WorkingDirectory="$(ProjectDir)" EnvironmentVariables="ASPNETCORE_ENVIRONMENT=Development" Command="$(NSwagExe_Net60) openapi2csclient /input:$(ProjectDir)Harbor\swagger.json /classname:HarborClient /namespace:Neon.Kube  /output:$(ProjectDir)Harbor\HarborClient.cs" />
-    </Target>-->
     
 </Project>

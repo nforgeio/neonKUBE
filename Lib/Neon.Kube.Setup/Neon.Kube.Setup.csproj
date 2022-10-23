@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net7.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<RootNamespace>Neon.Kube</RootNamespace>
 		<Version>10000.0.2236-dev-master</Version>
@@ -18,6 +18,11 @@
 		<NoDefaultExcludes>true</NoDefaultExcludes>
 	</PropertyGroup>
 
+	<ItemGroup>
+		<Compile Include="$(SolutionDir)\BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+		<Compile Include="$(SolutionDir)\BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+	</ItemGroup>
+
 	<PropertyGroup>
 		<!-- 
 		We need to prevent the KubeOps build targets from trying to call the non-existent
@@ -29,13 +34,6 @@
 		<KubeOpsSkipRbac>true</KubeOpsSkipRbac>
 		<KubeOpsSkipOperator>true</KubeOpsSkipOperator>
 		<KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0|AnyCPU'">
-		<DefineConstants>DEBUG;TRACE</DefineConstants>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -156,6 +154,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\..\BuildInfo\BuildInfo.csproj" />
 		<ProjectReference Include="..\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
 		<ProjectReference Include="..\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
 		<ProjectReference Include="..\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
@@ -164,9 +163,9 @@
 
 	<ItemGroup>
 		<PackageReference Include="Minio" Version="4.0.5" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2371-dev-master" />
-		<PackageReference Include="Neon.Cryptography" Version="10000.0.2371-dev-master" />
-		<PackageReference Include="Neon.Postgres" Version="10000.0.2371-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2406-dev-jeff" />
+		<PackageReference Include="Neon.Cryptography" Version="10000.0.2406-dev-jeff" />
+		<PackageReference Include="Neon.Postgres" Version="10000.0.2406-dev-jeff" />
 		<PackageReference Include="Samboy063.Tomlet" Version="5.0.0" />
 		<PackageReference Include="Tomlyn" Version="0.15.0" />
 		<PackageReference Include="Npgsql" Version="6.0.7" />
@@ -201,7 +200,7 @@
 	-->
 
 	<Target Name="ClusterManifest" BeforeTargets="CoreCompile">
-		<Exec Command="neon-build download-const-uri &quot;%NK_ROOT%\Lib\Neon.Kube\bin\$(Configuration)\net6.0\Neon.Kube.dll&quot; Neon.Kube.KubeDownloads NeonClusterManifestUri &quot;$(ProjectDir)Resources\cluster-manifest.json" />
+		<Exec Command="neon-build download-const-uri &quot;%NK_ROOT%\Lib\Neon.Kube\bin\$(Configuration)\net7.0\Neon.Kube.dll&quot; Neon.Kube.KubeDownloads NeonClusterManifestUri &quot;$(ProjectDir)Resources\cluster-manifest.json" />
 	</Target>
 
 </Project>
