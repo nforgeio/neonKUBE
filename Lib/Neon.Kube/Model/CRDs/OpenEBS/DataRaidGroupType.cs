@@ -43,12 +43,12 @@ namespace Neon.Kube
         /// Stripe.
         /// </summary>
         [EnumMember(Value = "stripe")]
-        Stripe = 0,
+        stripe = 0,
 
         /// <summary>
         /// Mirror.
         /// </summary>
         [EnumMember(Value = "mirror")]
-        Mirror
+        mirror
     }
 }
