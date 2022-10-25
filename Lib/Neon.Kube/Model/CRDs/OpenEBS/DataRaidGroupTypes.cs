@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DataRaidGroupType.cs
+// FILE:	    DataRaidGroupTypes.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -34,21 +34,19 @@ using Neon.Net;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Enumerates the possible data raid group types.
+    /// Data Raid Group Types.
     /// </summary>
-    [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringEnumMemberConverter))]
-    public enum DataRaidGroupType
+    public static class DataRaidGroupTypes
     {
         /// <summary>
-        /// Stripe.
+        /// stripe
         /// </summary>
-        [EnumMember(Value = "stripe")]
-        stripe = 0,
+        public const string Stripe = "stripe";
 
         /// <summary>
-        /// Mirror.
+        /// mirror
         /// </summary>
-        [EnumMember(Value = "mirror")]
-        mirror
+        public const string Mirror = "mirror";
+
     }
 }

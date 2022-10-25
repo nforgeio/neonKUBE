@@ -2639,7 +2639,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             },
                             PoolConfig = new V1CStorPoolConfig()
                             {
-                                DataRaidGroupType = DataRaidGroupType.stripe,
+                                DataRaidGroupType = DataRaidGroupTypes.Stripe,
                                 Tolerations       = new List<V1Toleration>()
                                 {
                                     { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },

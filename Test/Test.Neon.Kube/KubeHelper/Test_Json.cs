@@ -49,7 +49,7 @@ namespace TestKube
 
             serializerOptions.Converters.Add(new JsonStringEnumMemberConverter());
 
-            var t = DataRaidGroupType.stripe;
+            var t = HostingCapabilities.Pausable;
             var jsonString = JsonSerializer.Serialize(t, serializerOptions);
         }
 
