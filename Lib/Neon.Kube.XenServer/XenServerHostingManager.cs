@@ -866,7 +866,7 @@ namespace Neon.Kube
 
             // This hosting manager doesn't currently provision a separate data disk.
 
-            return "PRIMARY";
+            return "/dev/xvdb1"; //"PRIMARY";
         }
 
         /// <inheritdoc/>
