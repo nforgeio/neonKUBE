@@ -43,17 +43,6 @@ namespace TestKube
     public class Test_Json
     {
         [Fact]
-        public void SerializeEnum()
-        {
-            var serializerOptions = new JsonSerializerOptions();
-
-            serializerOptions.Converters.Add(new JsonStringEnumMemberConverter());
-
-            var t = HostingCapabilities.Pausable;
-            var jsonString = JsonSerializer.Serialize(t, serializerOptions);
-        }
-
-        [Fact]
         public void SerializeCstorPoolCluster()
         {
             var serializerOptions = new JsonSerializerOptions();
