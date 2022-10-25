@@ -100,16 +100,17 @@ namespace NeonClusterOperator
         /// <summary>
         /// Static constructor.
         /// </summary>
-        static NeonClusterOperatorController()
-        {
-        }
+        static NeonClusterOperatorController() { }
 
         /// <summary>
         /// Starts the controller.
         /// </summary>
         /// <param name="k8s">The <see cref="IKubernetes"/> client to use.</param>
+        /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task StartAsync(IKubernetes k8s)
+        public static async Task StartAsync(
+            IKubernetes k8s,
+            IServiceProvider serviceProvider)
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
@@ -143,7 +144,8 @@ namespace NeonClusterOperator
             resourceManager = new ResourceManager<V1NeonClusterOperator, NeonClusterOperatorController>(
                 k8s,
                 options:      options,
-                leaderConfig: leaderConfig);
+                leaderConfig: leaderConfig,
+                serviceProvider: serviceProvider);
 
             await resourceManager.StartAsync();
 
@@ -157,15 +159,20 @@ namespace NeonClusterOperator
         // Instance members
 
         private readonly IKubernetes k8s;
+        private readonly Neon.Kube.Operator.IFinalizerManager<V1NeonClusterOperator> finalizerManager;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public NeonClusterOperatorController(IKubernetes k8s)
+        public NeonClusterOperatorController(
+            IKubernetes k8s,
+            Neon.Kube.Operator.IFinalizerManager<V1NeonClusterOperator> manager)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
+            Covenant.Requires(manager != null, nameof(manager));
 
             this.k8s = k8s;
+            this.finalizerManager = manager;
         }
 
         /// <summary>
@@ -201,6 +208,8 @@ namespace NeonClusterOperator
                 {
                     return null;
                 }
+
+                await finalizerManager.RegisterAllFinalizersAsync(resource);
 
                 if (!initialized)
                 {

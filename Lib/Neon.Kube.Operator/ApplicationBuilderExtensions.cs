@@ -31,6 +31,7 @@ using Microsoft.Extensions.Logging;
 using k8s.Models;
 using k8s;
 using System.Xml;
+using Neon.Diagnostics;
 
 namespace Neon.Kube.Operator
 {
@@ -50,7 +51,7 @@ namespace Neon.Kube.Operator
         {
             app.UseRouting();
             app.UseEndpoints(
-                endpoints =>
+                async endpoints =>
                 {
                     var k8s = (IKubernetes)app.ApplicationServices.GetRequiredService<IKubernetes>();
                     var logger = (ILogger)app.ApplicationServices.GetRequiredService<ILogger>();
@@ -60,59 +61,98 @@ namespace Neon.Kube.Operator
 
                     foreach (var ct in componentRegistrar.ControllerRegistrations)
                     {
-                        (Type controllerType, Type entityType) = ct;
+                        try
+                        {
+                            (Type controllerType, Type entityType) = ct;
+                            
+                            logger.LogInformationEx(() => $"Registering controller [{controllerType.Name}].");
 
-                        var controller = scope.ServiceProvider.GetRequiredService(controllerType);
+                            var controller = scope.ServiceProvider.GetRequiredService(controllerType);
 
-                        var methods = controllerType
-                            .GetMethods(BindingFlags.Static | BindingFlags.Public);
+                            var methods = controllerType
+                                .GetMethods(BindingFlags.Static | BindingFlags.Public);
 
-                        var startMethod = methods
-                            .First(m => m.Name == "StartAsync");
+                            var startMethod = methods
+                                .First(m => m.Name == "StartAsync");
 
-                        startMethod.Invoke(controller, new object[] { k8s });
+                            var task = (Task)startMethod.Invoke(controller, new object[] { k8s, app.ApplicationServices });
+                            await task;
+
+                            logger.LogInformationEx(() => $"Registered controller [{controllerType.Name}]");
+                        }
+                        catch (Exception e) 
+                        {
+                            logger.LogErrorEx(e);
+                        }
+                        
                     }
 
                     foreach (var webhook in componentRegistrar.MutatingWebhookRegistrations)
                     {
-                        (Type mutatorType, Type entityType) = webhook;
+                        try
+                        {
+                            (Type mutatorType, Type entityType) = webhook;
 
-                        var mutator = scope.ServiceProvider.GetRequiredService(mutatorType);
+                            logger.LogInformationEx(() => $"Registering mutating webhook [{mutatorType.Name}].");
 
-                        var registerMethod = typeof(IAdmissionWebhook<,>)
-                            .MakeGenericType(entityType, typeof(MutationResult))
-                            .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
-                            .First(m => m.Name == "Register");
+                            var mutator = scope.ServiceProvider.GetRequiredService(mutatorType);
 
-                        registerMethod.Invoke(mutator, new object[] { endpoints });
+                            var registerMethod = typeof(IAdmissionWebhook<,>)
+                                .MakeGenericType(entityType, typeof(MutationResult))
+                                .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
+                                .First(m => m.Name == "Register");
 
-                        var createMethod = typeof(IMutatingWebhook<>)
-                            .MakeGenericType(entityType)
-                            .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
-                            .First(m => m.Name == "Create");
+                            registerMethod.Invoke(mutator, new object[] { endpoints });
 
-                        createMethod.Invoke(mutator, new object[] { k8s });
+                            var createMethod = typeof(IMutatingWebhook<>)
+                                .MakeGenericType(entityType)
+                                .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
+                                .First(m => m.Name == "Create");
+
+                            createMethod.Invoke(mutator, new object[] { k8s });
+
+                            var endpoint = WebhookHelper.CreateEndpoint(entityType, mutatorType, WebhookType.Mutate);
+
+                            logger.LogInformationEx(() => $"Registered mutating webhook [{mutatorType.Name}] at [{endpoint}]");
+                        }
+                        catch (Exception e)
+                        {
+                            logger.LogErrorEx(e);
+                        }
                     }
 
                     foreach (var webhook in componentRegistrar.ValidatingWebhookRegistrations)
                     {
-                        (Type validatorType, Type entityType) = webhook;
+                        try
+                        {
+                            (Type validatorType, Type entityType) = webhook;
 
-                        var validator = scope.ServiceProvider.GetRequiredService(validatorType);
+                            logger.LogInformationEx(() => $"Registering validating webhook [{validatorType.Name}].");
 
-                        var registerMethod = typeof(IAdmissionWebhook<,>)
-                            .MakeGenericType(entityType, typeof(ValidationResult))
-                            .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
-                            .First(m => m.Name == "Register");
+                            var validator = scope.ServiceProvider.GetRequiredService(validatorType);
 
-                        registerMethod.Invoke(validator, new object[] { endpoints });
+                            var registerMethod = typeof(IAdmissionWebhook<,>)
+                                .MakeGenericType(entityType, typeof(ValidationResult))
+                                .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
+                                .First(m => m.Name == "Register");
 
-                        var createMethod = typeof(IValidatingWebhook<>)
-                            .MakeGenericType(entityType)
-                            .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
-                            .First(m => m.Name == "Create");
+                            registerMethod.Invoke(validator, new object[] { endpoints });
 
-                        createMethod.Invoke(validator, new object[] { k8s });
+                            var createMethod = typeof(IValidatingWebhook<>)
+                                .MakeGenericType(entityType)
+                                .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
+                                .First(m => m.Name == "Create");
+
+                            createMethod.Invoke(validator, new object[] { k8s });
+                            
+                            var endpoint = WebhookHelper.CreateEndpoint(entityType, validatorType, WebhookType.Mutate);
+
+                            logger.LogInformationEx(() => $"Registered validating webhook [{validatorType.Name}] at [{endpoint}]");
+                        }
+                        catch (Exception e)
+                        {
+                            logger.LogErrorEx(e);
+                        }
                     }
                 });
         }

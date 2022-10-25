@@ -43,7 +43,20 @@ namespace Neon.Kube.Operator
         public static string CreateEndpoint<TEntity>(Type webhook, WebhookType webhookType)
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
-            var metadata = typeof(TEntity).GetKubernetesTypeMetadata();
+            return CreateEndpoint(typeof(TEntity), webhook, webhookType);
+        }
+
+        /// <summary>
+        /// Helper method to create a route for an <see cref="IAdmissionWebhook{TEntity, TResult}"/>
+        /// </summary>
+        /// <param name="webhook"></param>
+        /// <param name="webhookType"></param>
+        /// <param name="entityType"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static string CreateEndpoint(Type entityType, Type webhook, WebhookType webhookType)
+        {
+            var metadata = entityType.GetKubernetesTypeMetadata();
 
             var builder = new StringBuilder();
 

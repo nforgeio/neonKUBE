@@ -95,7 +95,7 @@ namespace Neon.Kube.Operator
             { 
                 if (@event.Value.Generation() > queuedEvent.Value.Generation())
                 {
-                    await DequeueAsync(@event);
+                    await DequeueAsync(queuedEvent);
                 }
             }
         }
@@ -144,7 +144,7 @@ namespace Neon.Kube.Operator
 
             var queuedEvent = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).FirstOrDefault();
 
-            if (queuedEvent.Value != null)
+            if (queuedEvent?.Value != null)
             {
                 queue[queuedEvent].Cancel();
             }

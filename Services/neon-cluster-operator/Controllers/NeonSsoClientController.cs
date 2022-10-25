@@ -93,8 +93,11 @@ namespace NeonClusterOperator
         /// Starts the controller.
         /// </summary>
         /// <param name="k8s">The <see cref="IKubernetes"/> client to use.</param>
+        /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task StartAsync(IKubernetes k8s)
+        public static async Task StartAsync(
+            IKubernetes k8s,
+            IServiceProvider serviceProvider)
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
@@ -128,7 +131,8 @@ namespace NeonClusterOperator
             resourceManager = new ResourceManager<V1NeonSsoClient, NeonSsoClientController>(
                 k8s,
                 options: options,
-                leaderConfig: leaderConfig);
+                leaderConfig: leaderConfig,
+                serviceProvider: serviceProvider);
 
             await resourceManager.StartAsync();
 

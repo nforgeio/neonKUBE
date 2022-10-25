@@ -92,8 +92,11 @@ namespace NeonClusterOperator
         /// Starts the controller.
         /// </summary>
         /// <param name="k8s">The <see cref="IKubernetes"/> client to use.</param>
+        /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task StartAsync(IKubernetes k8s)
+        public static async Task StartAsync(
+            IKubernetes k8s,
+            IServiceProvider serviceProvider)
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
@@ -127,7 +130,8 @@ namespace NeonClusterOperator
             resourceManager = new ResourceManager<V1NeonContainerRegistry, NeonContainerRegistryController>(
                 k8s,
                 options: options,
-                leaderConfig: leaderConfig);
+                leaderConfig: leaderConfig,
+                serviceProvider: serviceProvider);
 
             await resourceManager.StartAsync();
         }
@@ -136,15 +140,20 @@ namespace NeonClusterOperator
         // Instance members
 
         private readonly IKubernetes k8s;
+        private readonly Neon.Kube.Operator.IFinalizerManager<V1NeonContainerRegistry> finalizerManager;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public NeonContainerRegistryController(IKubernetes k8s)
+        public NeonContainerRegistryController(
+            IKubernetes k8s,
+            Neon.Kube.Operator.IFinalizerManager<V1NeonContainerRegistry> manager)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
+            Covenant.Requires(manager != null, nameof(manager));
 
             this.k8s = k8s;
+            this.finalizerManager = manager;
         }
 
         /// <summary>
@@ -183,6 +192,8 @@ namespace NeonClusterOperator
                 {
                     return null;
                 }
+
+                await finalizerManager.RegisterAllFinalizersAsync(resource);
 
                 log.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
 

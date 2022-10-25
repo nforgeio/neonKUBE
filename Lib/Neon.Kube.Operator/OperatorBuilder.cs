@@ -59,9 +59,22 @@ namespace Neon.Kube.Operator
                 var k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
                 Services.AddSingleton(k8s);
             }
-            
+
             Services.AddSingleton(componentRegister);
+            Services.AddSingleton<IFinalizerBuilder, FinalizerBuilder>();
+            Services.AddTransient(typeof(IFinalizerManager<>), typeof(FinalizerManager<>));
             Services.AddRouting();
+            return this;
+        }
+
+        /// <inheritdoc/>
+        public IOperatorBuilder AddFinalizer<TImplementation, TEntity>()
+            where TImplementation : class, IResourceFinalizer<TEntity>
+            where TEntity : IKubernetesObject<V1ObjectMeta>, new()
+        {
+            Services.TryAddScoped<TImplementation>();
+            componentRegister.RegisterFinalizer<TImplementation, TEntity>();
+
             return this;
         }
 

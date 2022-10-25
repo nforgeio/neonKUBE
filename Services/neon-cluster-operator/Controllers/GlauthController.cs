@@ -94,8 +94,11 @@ namespace NeonClusterOperator
         /// Starts the controller.
         /// </summary>
         /// <param name="k8s">The <see cref="IKubernetes"/> client to use.</param>
+        /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task StartAsync(IKubernetes k8s)
+        public static async Task StartAsync(
+            IKubernetes k8s,
+            IServiceProvider serviceProvider)
         {
             await SyncContext.Clear;
 
@@ -132,6 +135,7 @@ namespace NeonClusterOperator
                 k8s,
                 options: options,
                 leaderConfig: leaderConfig,
+                serviceProvider: serviceProvider,
                 filter: (secret) =>
                 {
                     try

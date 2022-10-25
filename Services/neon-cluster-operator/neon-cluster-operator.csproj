@@ -59,6 +59,7 @@
 
 	<ItemGroup>
 		<Folder Include="config.gitignore\" />
+		<Folder Include="Finalizers\" />
 	</ItemGroup>
 
 	<!--

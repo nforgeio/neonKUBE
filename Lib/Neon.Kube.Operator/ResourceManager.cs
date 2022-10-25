@@ -51,6 +51,7 @@ using Prometheus;
 using KubeOps.Operator.Events;
 using KubeOps.Operator.Kubernetes;
 using OpenTelemetry.Resources;
+using Microsoft.AspNetCore.Mvc;
 
 // $todo(jefflill):
 //
@@ -179,8 +180,10 @@ namespace Neon.Kube.Operator
         private bool                            started      = false;
         private ResourceManagerOptions          options;
         private IKubernetes                     k8s;
+        private IServiceProvider                serviceProvider;
         private string                          resourceNamespace;
         private ConstructorInfo                 controllerConstructor;
+        private Type                            controllerType;
         private Func<TEntity, bool>             filter;
         private ILogger                         logger;
         private DateTime                        nextIdleReconcileUtc;
@@ -219,20 +222,23 @@ namespace Neon.Kube.Operator
         /// the <b>LEADER ELECTION SECTION</b> in the <see cref="ResourceManager{TResource, TController}"/>
         /// remarks for more information.
         /// </param>
+        /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         public ResourceManager(
             IKubernetes             k8s,
-            ResourceManagerOptions  options      = null,
-            Func<TEntity, bool>     filter       = null,
-            ILogger                 logger       = null,
-            LeaderElectionConfig    leaderConfig = null)
+            ResourceManagerOptions  options         = null,
+            Func<TEntity, bool>     filter          = null,
+            ILogger                 logger          = null,
+            LeaderElectionConfig    leaderConfig    = null,
+            IServiceProvider        serviceProvider = null)
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
-            this.k8s          = k8s;  // $todo(jefflill): Can we obtain this from KubeOps or the [IServiceProvider] somehow?
-            this.options      = options ?? new ResourceManagerOptions();
-            this.filter       = filter ?? new Func<TEntity, bool>(resource => true);
-            this.logger       = logger ?? TelemetryHub.CreateLogger($"Neon.Kube.Operator.ResourceManager({typeof(TEntity).Name})");
-            this.leaderConfig = leaderConfig;
+            this.k8s             = k8s;  // $todo(jefflill): Can we obtain this from KubeOps or the [IServiceProvider] somehow?
+            this.serviceProvider = serviceProvider;
+            this.options         = options ?? new ResourceManagerOptions();
+            this.filter          = filter ?? new Func<TEntity, bool>(resource => true);
+            this.logger          = logger ?? TelemetryHub.CreateLogger($"Neon.Kube.Operator.ResourceManager({typeof(TEntity).Name})");
+            this.leaderConfig    = leaderConfig;
             
             options.Validate();
 
@@ -240,14 +246,20 @@ namespace Neon.Kube.Operator
             //
             // Locate the controller's constructor that has a single [IKubernetes] parameter.
 
-            var controllerType = typeof(TController);
+            this.controllerType = typeof(TController);
+            var entityType      = typeof(TEntity);
 
-            this.controllerConstructor = controllerType.GetConstructor(new Type[] { typeof(IKubernetes) });
+            if (serviceProvider == null) 
+            { 
+                this.controllerConstructor = controllerType.GetConstructor(new Type[] { typeof(IKubernetes) });
 
-            if (this.controllerConstructor == null)
-            {
-                throw new NotSupportedException($"Controller type [{controllerType.FullName}] does not have a constructor accepting a single [{nameof(IKubernetes)}] parameter.  This is currently required.");
+                if (this.controllerConstructor == null)
+                {
+                    throw new NotSupportedException($"Controller type [{controllerType.FullName}] does not have a constructor accepting a single [{nameof(IKubernetes)}] parameter.  This is currently required.");
+                }
+
             }
+            var controller = CreateController();
         }
 
         /// <summary>
@@ -454,7 +466,16 @@ namespace Neon.Kube.Operator
         /// <returns>The controller.</returns>
         private IOperatorController<TEntity> CreateController()
         {
-            return (IOperatorController<TEntity>)controllerConstructor.Invoke(new object[] { k8s });
+            if (this.serviceProvider== null)
+            {
+                return (IOperatorController<TEntity>)controllerConstructor.Invoke(new object[] { k8s });
+            }
+            else
+            {
+                using var scope = serviceProvider.CreateScope();
+
+                return (IOperatorController<TEntity>)ActivatorUtilities.CreateInstance(scope.ServiceProvider, controllerType);
+            }
         }
 
         //---------------------------------------------------------------------
@@ -597,6 +618,7 @@ namespace Neon.Kube.Operator
             var statusGetter    = entityType.GetProperty("Status")?.GetMethod;
             var generationCache = new Dictionary<string, long>(StringComparer.InvariantCultureIgnoreCase);
             var statusJsonCache = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            var finalizerCache  = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
             //-----------------------------------------------------------------
             // Our watcher handler action.
@@ -637,6 +659,7 @@ namespace Neon.Kube.Operator
                                         try
                                         {
                                             options.ReconcileCounter?.Inc();
+
                                             result = await CreateController().ReconcileAsync(resource);
                                         }
                                         catch (Exception e)
@@ -692,6 +715,7 @@ namespace Neon.Kube.Operator
                                         {
                                             options.DeleteCounter?.Inc();
                                             await CreateController().DeletedAsync(resource);
+
                                             await eventQueue.DequeueAsync(@event);
                                         }
                                         catch (Exception e)
@@ -722,12 +746,31 @@ namespace Neon.Kube.Operator
                                             }
                                         }
 
-                                        if (newGeneration <= oldGeneration || resource.Metadata.Generation == null)
+                                        if (newGeneration >= oldGeneration
+                                            || resource.Metadata.Generation == null)
                                         {
                                             try
                                             {
                                                 options.ReconcileCounter?.Inc();
-                                                result = await CreateController().ReconcileAsync(resource);
+
+                                               if (resource.DeletionTimestamp().HasValue)
+                                                {
+                                                    if (!finalizerCache.TryGetValue(resourceName, out var finalizing))
+                                                    {
+                                                        using var scope = serviceProvider.CreateScope();
+
+                                                        finalizerCache.Add(resourceName);
+
+                                                        await scope.ServiceProvider.GetRequiredService<IFinalizerManager<TEntity>>()
+                                                            .FinalizeAsync(resource);
+                                                    }
+
+                                                    finalizerCache.Remove(resourceName);
+                                                }
+                                                else
+                                                {
+                                                    result = await CreateController().ReconcileAsync(resource);
+                                                }
                                             }
                                             catch (Exception e)
                                             {
@@ -745,6 +788,8 @@ namespace Neon.Kube.Operator
                                                 }
                                             }
                                         }
+
+                                        generationCache[resourceName] = newGeneration;
 
                                         // There's no need for STATUS-MODIFIED when the resource has no status.
 

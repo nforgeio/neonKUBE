@@ -42,6 +42,30 @@ namespace Neon.Kube.Operator
 
         /// <summary>
         /// <para>
+        /// Adds a CRD controller to the operator.
+        /// </para>
+        /// </summary>
+        /// <typeparam name="TImplementation">The type of the controller to register.</typeparam>
+        /// <typeparam name="TEntity">The type of the entity to associate the controller with.</typeparam>
+        /// <returns>The builder for chaining.</returns>
+        IOperatorBuilder AddController<TImplementation, TEntity>()
+            where TImplementation : class, IOperatorController<TEntity>
+            where TEntity : IKubernetesObject<V1ObjectMeta>, new();
+
+        /// <summary>
+        /// <para>
+        /// Adds a CRD finalizer to the operator.
+        /// </para>
+        /// </summary>
+        /// <typeparam name="TImplementation">The type of the finalizer to register.</typeparam>
+        /// <typeparam name="TEntity">The type of the entity to associate the finalizer with.</typeparam>
+        /// <returns>The builder for chaining.</returns>
+        IOperatorBuilder AddFinalizer<TImplementation, TEntity>()
+            where TImplementation : class, IResourceFinalizer<TEntity>
+            where TEntity : IKubernetesObject<V1ObjectMeta>, new();
+
+        /// <summary>
+        /// <para>
         /// Adds a mutating webhook to the operator.
         /// </para>
         /// </summary>
@@ -62,18 +86,6 @@ namespace Neon.Kube.Operator
         /// <returns>The builder for chaining.</returns>
         IOperatorBuilder AddValidatingWebhook<TImplementation, TEntity>()
             where TImplementation : class, IValidatingWebhook<TEntity>
-            where TEntity : IKubernetesObject<V1ObjectMeta>, new();
-
-        /// <summary>
-        /// <para>
-        /// Adds a CRD controller to the operator.
-        /// </para>
-        /// </summary>
-        /// <typeparam name="TImplementation">The type of the controller to register.</typeparam>
-        /// <typeparam name="TEntity">The type of the entity to associate the controlle with.</typeparam>
-        /// <returns>The builder for chaining.</returns>
-        IOperatorBuilder AddController<TImplementation, TEntity>()
-            where TImplementation : class, IOperatorController<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>, new();
     }
 }

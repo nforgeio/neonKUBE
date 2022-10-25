@@ -45,6 +45,7 @@ using KubeOps.Operator.Rbac;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Prometheus;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace NeonNodeAgent
 {
