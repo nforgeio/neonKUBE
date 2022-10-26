@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net7.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<Configurations>Debug;Release</Configurations>
 		<Version>10000.0.2236-dev-master</Version>
@@ -14,6 +14,11 @@
 		<PackageTags>kubernetes</PackageTags>
 		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+	</ItemGroup>
 
 	<PropertyGroup>
 		<!-- 
@@ -28,26 +33,20 @@
 		<KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>DEBUG;TRACE</DefineConstants>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-	</PropertyGroup>
-
 	<ItemGroup>
 		<PackageReference Include="CompareNETObjects" Version="4.78.0" />
 		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
 		<PackageReference Include="KubernetesClient" Version="7.2.19" />
 		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.9" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2371-dev-master" />
-		<PackageReference Include="Neon.Service" Version="10000.0.2371-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2417-dev-master" />
+		<PackageReference Include="Neon.Service" Version="10000.0.2417-dev-master" />
 		<PackageReference Include="prometheus-net" Version="6.0.0" />
 		<PackageReference Include="SystemTextJson.JsonDiffPatch" Version="1.3.1" />
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
 		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
 	</ItemGroup>
 

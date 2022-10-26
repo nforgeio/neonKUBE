@@ -25,6 +25,7 @@ using k8s.Models;
 
 using Neon.Collections;
 using Neon.Common;
+using Neon.Kube.BuildInfo;
 using Neon.Net;
 
 namespace Neon.Kube

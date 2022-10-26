@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net7.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<RootNamespace>Neon.Kube.Xunit</RootNamespace>
 		<PackageId>Neon.Kube.Xunit</PackageId>
@@ -18,25 +18,24 @@
 		<PackageTags>xunit kubernetes</PackageTags>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>DEBUG;TRACE</DefineConstants>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-	</PropertyGroup>
+	<ItemGroup>
+		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="KubernetesClient" Version="7.2.19" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2371-dev-master" />
-		<PackageReference Include="Neon.Deployment" Version="10000.0.2371-dev-master" />
-		<PackageReference Include="Neon.SSH" Version="10000.0.2371-dev-master" />
-		<PackageReference Include="Neon.Xunit" Version="10000.0.2371-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2417-dev-master" />
+		<PackageReference Include="Neon.Deployment" Version="10000.0.2417-dev-master" />
+		<PackageReference Include="Neon.SSH" Version="10000.0.2417-dev-master" />
+		<PackageReference Include="Neon.Xunit" Version="10000.0.2417-dev-master" />
 		<PackageReference Include="xunit.extensibility.core" Version="2.4.2" />
 		<PackageReference Include="xunit.extensibility.execution" Version="2.4.2" />
 		<PackageReference Include="YamlDotNet" Version="12.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
 		<ProjectReference Include="..\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
 		<ProjectReference Include="..\Neon.Kube.Setup\Neon.Kube.Setup.csproj" />
 		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />

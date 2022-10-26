@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net7.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<Version>10000.0.2236-dev-master</Version>
 		<Description>INTERNAL USE ONLY: neonKUBE Kubernetes custom resource definitions.</Description>
@@ -16,6 +16,11 @@
 		<RootNamespace>Neon.Kube.ResourceDefinitions</RootNamespace>
 	</PropertyGroup>
 
+	<ItemGroup>
+		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+	</ItemGroup>
+
 	<PropertyGroup>
 		<!-- 
 		We need to prevent the KubeOps build targets from trying to call the non-existent
@@ -29,18 +34,14 @@
 		<KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-	  <DefineConstants>$(DefineConstants);DEBUG;TRACE;KUBEOPS</DefineConstants>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-	  <DefineConstants>$(DefineConstants)TRACE;KUBEOPS</DefineConstants>
+	<PropertyGroup>
+	  <DefineConstants>$(DefineConstants);KUBEOPS</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
 		<PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
-		<PackageReference Include="Neon.JsonConverters" Version="10000.0.2371-dev-master" />
+		<PackageReference Include="Neon.JsonConverters" Version="10000.0.2417-dev-master" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -49,6 +50,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
 	  <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
 	</ItemGroup>
 

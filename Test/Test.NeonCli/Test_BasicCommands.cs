@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 using Neon;
 using Neon.Common;
 using Neon.Kube;
+using Neon.Kube.BuildInfo;
 using Neon.Kube.Xunit;
 using Neon.IO;
 using Neon.Xunit;

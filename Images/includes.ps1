@@ -140,9 +140,16 @@ function TagAsLatest
 
 function GetSdkRegistry($image)
 {
-	$org = SdkRegistryOrg
-	
-	return "$org/$image"
+	# $todo(jefflill):
+	#
+	# For now, we're going to use the neonkube image repo for all images because
+	# the publish scripts in the other repos can't handle multiple image repos yet.
+
+	return GetKubeSetupRegistry $image
+
+	# $org = SdkRegistryOrg
+	#
+	# return "$org/$image"
 }
 
 #------------------------------------------------------------------------------
@@ -150,14 +157,21 @@ function GetSdkRegistry($image)
 
 function SdkRegistryOrg
 {
-	if (IsRelease)
-	{
-		return "ghcr.io/neon-sdk"
-	}
-	else
-	{
-		return "ghcr.io/neon-sdk-dev"
-	}
+	# $todo(jefflill):
+	#
+	# For now, we're going to use the neonkube image repo for all images because
+	# the publish scripts in the other repos can't handle multiple image repos yet.
+
+	return KubeSetupRegistryOrg
+
+	# if (IsRelease)
+	# {
+	#     return "ghcr.io/neon-sdk"
+	# }
+	# else
+	# {
+	# 	return "ghcr.io/neon-sdk-dev"
+	# }
 }
 
 #------------------------------------------------------------------------------

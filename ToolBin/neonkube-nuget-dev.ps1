@@ -29,6 +29,7 @@
 #       -local          - Publishes to C:\nc-nuget-local
 #       -localversion   - Use the local version number
 #       -publicSource   - Use GitHub sources for SourceLink even if local repo is dirty
+#       -release        - Do a RELEASE build instead of DEBUG (the default)
 #
 # Generally, you'll use this script without any options to publish to the private
 # feed in the neonCLOUD headend using the atomic counter there to update VERSION
@@ -77,22 +78,23 @@ param
 (
     [switch]$local        = $false,     # publish to local file system
     [switch]$localVersion = $false,     # use a local version counter (emergency only)
-    [switch]$publicSource = $false      # use GitHub sources for SourceLink even if local repo is dirty
+    [switch]$publicSource = $false,     # use GitHub sources for SourceLink even if local repo is dirty
+    [switch]$release      = $false      # RELEASE build instead of DEBUG (the default)
 )
 
 # Import the global solution include file.
 
 . $env:NK_ROOT/Powershell/includes.ps1
 
-# Abort if Visual Studio is running because that can cause [pubcore] to
-# fail due to locked files.
+# Abort if Visual Studio is running when we're building release
+# nuget packages because that can lead to build configuration 
+# conflicts because this script builds the RELEASE configuration 
+# and we normally have VS in DEBUG mode.
 
-# $note(jefflill): 
-#
-# We don't currently need this check but I'm leaving it here commented
-# out to make it easier to revive in the future, if necessary.
-
-# Ensure-VisualStudioNotRunning
+if ($release)
+{
+    Ensure-VisualStudioNotRunning
+}
 
 # Verify that the user has the required environment variables.  These will
 # be available only for maintainers and are intialized by the neonCLOUD
@@ -112,9 +114,16 @@ if (!(Test-Path env:NC_ROOT))
 
 Request-AdminPermissions
 
-# We're going to build the DEBUG configuration for DEV packages so debugging will be easier.
+# We're going to build the DEBUG configuration by default for DEV packages so debugging will be easier.
 
-$config = "Debug"
+if ($release)
+{
+    $config = "Release"
+}
+else
+{
+    $config = "Debug"
+}
 
 #------------------------------------------------------------------------------
 # Sets the package version in the specified project file and makes a backup
@@ -193,7 +202,7 @@ function Publish
 
     $projectPath = [io.path]::combine($env:NK_ROOT, "Lib", "$project", "$project" + ".csproj")
 
-    dotnet pack $projectPath -c $config -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -o "$env:NK_BUILD\nuget"
+    dotnet pack $projectPath -c $config -o "$env:NK_BUILD\nuget"
     ThrowOnExitCode
 
     if ($local)
@@ -364,6 +373,7 @@ try
     SetVersion Neon.Kube.Aws                    $neonkubeVersion
     SetVersion Neon.Kube.Azure                  $neonkubeVersion
     SetVersion Neon.Kube.BareMetal              $neonkubeVersion
+    SetVersion Neon.Kube.BuildInfo              $neonkubeVersion
     SetVersion Neon.Kube.DesktopService         $neonkubeVersion
     SetVersion Neon.Kube.Google                 $neonkubeVersion
     SetVersion Neon.Kube.GrpcProto              $neonkubeVersion
@@ -383,6 +393,7 @@ try
     Publish Neon.Kube.Aws                       $neonkubeVersion
     Publish Neon.Kube.Azure                     $neonkubeVersion
     Publish Neon.Kube.BareMetal                 $neonkubeVersion
+    Publish Neon.Kube.BuildInfo                 $neonkubeVersion
     Publish Neon.Kube.DesktopService            $neonkubeVersion
     Publish Neon.Kube.Google                    $neonkubeVersion
     Publish Neon.Kube.GrpcProto                 $neonkubeVersion
@@ -402,6 +413,7 @@ try
     RestoreVersion Neon.Kube.Aws
     RestoreVersion Neon.Kube.Azure
     RestoreVersion Neon.Kube.BareMetal
+    RestoreVersion Neon.Kube.BuildInfo
     RestoreVersion Neon.Kube.DesktopService
     RestoreVersion Neon.Kube.Google
     RestoreVersion Neon.Kube.GrpcProto

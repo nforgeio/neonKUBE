@@ -37,20 +37,11 @@ exit 1
 
 . $env:NK_ROOT/Powershell/includes.ps1
 
-# Abort if Visual Studio is running because that can cause [pubcore] to
-# fail due to locked files.
+# Abort if Visual Studio is running because that can lead to 
+# build configuration conflicts because this script builds the
+# RELEASE configuration and we normally have VS in DEBUG mode.
 
-# $note(jefflill): 
-#
-# We don't currently need this check but I'm leaving it here commented
-# out to make it easier to revive in the future, if necessary.
-
-# $note(jefflill): 
-#
-# We don't currently need this check but I'm leaving it here commented
-# out to make it easier to revive in the future, if necessary.
-
-# Ensure-VisualStudioNotRunning
+Ensure-VisualStudioNotRunning
 
 # Verify that the user has the required environment variables.  These will
 # be available only for maintainers and are intialized by the neonCLOUD
@@ -211,6 +202,7 @@ try
     SetVersion Neon.Kube.Aws                  $neonkubeVersion
     SetVersion Neon.Kube.Azure                $neonkubeVersion
     SetVersion Neon.Kube.BareMetal            $neonkubeVersion
+    SetVersion Neon.Kube.BuildInfo            $neonkubeVersion
     SetVersion Neon.Kube.DesktopService       $neonkubeVersion
     SetVersion Neon.Kube.Google               $neonkubeVersion
     SetVersion Neon.Kube.GrpcProto            $neonkubeVersion
@@ -230,6 +222,7 @@ try
     Publish Neon.Kube.Aws                     $neonkubeVersion
     Publish Neon.Kube.Azure                   $neonkubeVersion
     Publish Neon.Kube.BareMetal               $neonkubeVersion
+    Publish Neon.Kube.BuildInfo               $neonkubeVersion
     Publish Neon.Kube.DesktopService          $neonkubeVersion
     Publish Neon.Kube.Google                  $neonkubeVersion
     Publish Neon.Kube.GrpcProto               $neonkubeVersion
