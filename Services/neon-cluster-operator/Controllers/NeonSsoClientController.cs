@@ -122,10 +122,12 @@ namespace NeonClusterOperator
                 ReconcileCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "RECONCILE events processed."),
                 DeleteCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "DELETED events processed."),
                 StatusModifyCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "STATUS-MODIFY events processed."),
+                FinalizeCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_finalize", "FINALIZE events processed."),
                 IdleErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle_error", "Failed Clusterssoclients IDLE event processing."),
                 ReconcileErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_reconcile_error", "Failed Clusterssoclients RECONCILE event processing."),
                 DeleteErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_delete_error", "Failed Clusterssoclients DELETE event processing."),
                 StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_statusmodify_error", "Failed Clusterssoclients STATUS-MODIFY events processing.")
+                FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_finalize_error", "Failed NodeTask FINALIZE events processing.")
             };
 
             resourceManager = new ResourceManager<V1NeonSsoClient, NeonSsoClientController>(

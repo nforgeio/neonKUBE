@@ -38,10 +38,6 @@ using Neon.Time;
 using k8s;
 using k8s.Models;
 
-using KubeOps.Operator.Controller;
-using KubeOps.Operator.Finalizer;
-using KubeOps.Operator.Rbac;
-
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Prometheus;
@@ -66,7 +62,6 @@ namespace NeonNodeAgent
     /// and empty output and error streams.
     /// </note>
     /// </remarks>
-    [EntityRbac(typeof(V1NeonNodeTask), Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Patch | RbacVerb.Watch | RbacVerb.Update)]
     public class NodeTaskController : IOperatorController<V1NeonNodeTask>
     {
         //---------------------------------------------------------------------
@@ -93,8 +88,11 @@ namespace NeonNodeAgent
         /// Starts the controller.
         /// </summary>
         /// <param name="k8s">The <see cref="IKubernetes"/> client to use.</param>
+        /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task StartAsync(IKubernetes k8s)
+        public static async Task StartAsync(
+            IKubernetes k8s,
+            IServiceProvider serviceProvider)
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
@@ -157,17 +155,20 @@ rm $0
                 IdleCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle", "IDLE events processed."),
                 ReconcileCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconcile", "RECONCILE events processed."),
                 DeleteCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_delete", "DELETED events processed."),
+                FinalizeCounter          = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_finalize", "FINALIZE events processed."),
                 IdleErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle_error", "Failed NodeTask IDLE event processing."),
                 ReconcileErrorCounter    = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconcile_error", "Failed NodeTask RECONCILE event processing."),
                 DeleteErrorCounter       = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_delete_error", "Failed NodeTask DELETE event processing."),
-                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodify_error", "Failed NodeTask STATUS-MODIFY events processing.")
+                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodify_error", "Failed NodeTask STATUS-MODIFY events processing."),
+                FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_finalize_error", "Failed NodeTask FINALIZE events processing.")
             };
 
             resourceManager = new ResourceManager<V1NeonNodeTask, NodeTaskController>(
                 k8s,
                 options:      options,
                 filter:       NodeTaskFilter,
-                leaderConfig: leaderConfig);
+                leaderConfig: leaderConfig,
+                serviceProvider: serviceProvider);
 
             await resourceManager.StartAsync();
         }
@@ -204,7 +205,6 @@ rm $0
         public NodeTaskController(IKubernetes k8s)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
-            Covenant.Requires<InvalidOperationException>(resourceManager != null, $"[{nameof(NodeTaskController)}] must be started before KubeOps.");
 
             this.k8s = k8s;
         }

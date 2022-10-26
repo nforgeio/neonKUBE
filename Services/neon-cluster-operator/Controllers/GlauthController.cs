@@ -124,11 +124,13 @@ namespace NeonClusterOperator
                 IdleCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "IDLE events processed."),
                 ReconcileCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "RECONCILE events processed."),
                 DeleteCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "DELETED events processed."),
+                FinalizeCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_finalize", "FINALIZE events processed."),
                 StatusModifyCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "STATUS-MODIFY events processed."),
                 IdleErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle_error", "Failed ClusterOperatorSettings IDLE event processing."),
                 ReconcileErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_reconcile_error", "Failed ClusterOperatorSettings RECONCILE event processing."),
                 DeleteErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_delete_error", "Failed ClusterOperatorSettings DELETE event processing."),
                 StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_statusmodify_error", "Failed ClusterOperatorSettings STATUS-MODIFY events processing.")
+                FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_finalize_error", "Failed NodeTask FINALIZE events processing.")
             };
 
             resourceManager = new ResourceManager<V1Secret, GlauthController>(

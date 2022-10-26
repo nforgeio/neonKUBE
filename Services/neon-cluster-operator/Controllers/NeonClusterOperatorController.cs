@@ -136,10 +136,12 @@ namespace NeonClusterOperator
                 ReconcileCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle", "RECONCILE events processed."),
                 DeleteCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle", "DELETED events processed."),
                 StatusModifyCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle", "STATUS-MODIFY events processed."),
+                FinalizeCounter          = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_finalize", "FINALIZE events processed."),
                 IdleErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle_error", "Failed ClusterOperatorSettings IDLE event processing."),
                 ReconcileErrorCounter    = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_reconcile_error", "Failed ClusterOperatorSettings RECONCILE event processing."),
                 DeleteErrorCounter       = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_delete_error", "Failed ClusterOperatorSettings DELETE event processing."),
-                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_statusmodify_error", "Failed ClusterOperatorSettings STATUS-MODIFY events processing.")
+                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_statusmodify_error", "Failed ClusterOperatorSettings STATUS-MODIFY events processing."),
+                FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_finalize_error", "Failed NodeTask FINALIZE events processing.")
             };
 
             resourceManager = new ResourceManager<V1NeonClusterOperator, NeonClusterOperatorController>(

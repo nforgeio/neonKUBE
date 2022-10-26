@@ -32,6 +32,9 @@ rules:
   resources:
   - nodes
   - nodes/status
+  - secrets
+  - configmaps
+  - namespaces
   verbs:
   - get
   - list
@@ -58,6 +61,19 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - validatingwebhookconfigurations
+  - mutatingwebhookconfigurations
+  verbs:
+  - '*'
+- verbs:
+  - '*'
+  apiGroups:
+  - cert-manager.io
+  resources:
+  - certificates
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

@@ -31,7 +31,9 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
@@ -70,9 +72,6 @@ using Prometheus;
 using Quartz;
 using Quartz.Impl;
 using Quartz.Logging;
-using Microsoft.AspNetCore;
-using System.Web.Services.Description;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 namespace NeonClusterOperator
 {
