@@ -153,6 +153,22 @@ namespace Neon.Kube.Operator
 
         /// <summary>
         /// <para>
+        /// Metrics counter incremented whenever a FINALIZE event is passed to the operator.  This 
+        /// defaults to a counter names <b>operator_finalize</b> which is suitable for operator 
+        /// applications with only a single control loop.  
+        /// </para>
+        /// <para>
+        /// Operators with multiple control loops should consider setting this to a counter specific
+        /// to each loop.
+        /// </para>
+        /// <note>
+        /// This may also be set to <c>null</c> to disable counting.
+        /// </note>
+        /// </summary>
+        public Counter FinalizeCounter { get; set; } = Metrics.CreateCounter("operator_finalize", "FINALIZE events handled by the controller.");
+
+        /// <summary>
+        /// <para>
         /// Metrics counter incremented whenever a IDLE event is passed to the operator.  This 
         /// defaults to a counter names <b>operator_idle</b> which is suitable for operator 
         /// applications with only a single control loop.  
@@ -205,6 +221,19 @@ namespace Neon.Kube.Operator
         /// </para>
         /// </summary>
         public Counter StatusModifyErrorCounter { get; set; } = Metrics.CreateCounter("operator_statusmodified_errors", "Exceptions thrown while handling STATUS-MODIFIED events.");
+
+        /// <summary>
+        /// <para>
+        /// Metrics counter incremented whenever an exception is thrown while handling a resource
+        /// finalize. This defaults to a counter named <b>operator_finalize_errors</b> which
+        /// is suitable for operator applications with only a single control loop.  
+        /// </para>
+        /// <para>
+        /// Operators with multiple control loops should consider setting this to a counter specific
+        /// to each loop.
+        /// </para>
+        /// </summary>
+        public Counter FinalizeErrorCounter { get; set; } = Metrics.CreateCounter("operator_finalize_errors", "Exceptions thrown while handling FINALIZING events.");
 
         /// <summary>
         /// Validates the option properties.

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DataRaidGroupType.cs
+// FILE:	    ILockProvider.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,38 +17,38 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
+using System.Reflection;
 using System.Text;
-using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 
-using Neon.Common;
-using Neon.Net;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-namespace Neon.Kube
+using k8s;
+using k8s.Models;
+
+namespace Neon.Kube.Operator
 {
     /// <summary>
-    /// Enumerates the possible data raid group types.
+    /// Provides resource locks on Custom Resources.
     /// </summary>
-    [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringEnumMemberConverter))]
-    public enum DataRaidGroupType
+    /// <typeparam name="TEntity"></typeparam>
+    public interface ILockProvider<TEntity>
+        where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         /// <summary>
-        /// Stripe.
+        /// Waits for a lock on a specific resource.
         /// </summary>
-        [EnumMember(Value = "stripe")]
-        Stripe = 0,
+        /// <param name="entityId"></param>
+        /// <returns></returns>
+        Task WaitAsync(string entityId);
+
 
         /// <summary>
-        /// Mirror.
+        /// Releases a lock on a specific resource.
         /// </summary>
-        [EnumMember(Value = "mirror")]
-        Mirror
+        /// <param name="entityId"></param>
+        void Release(string entityId);
     }
 }

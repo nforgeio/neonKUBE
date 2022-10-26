@@ -11,7 +11,8 @@
 param 
 (
 	[parameter(Mandatory=$True,Position=1)][string] $registry,
-	[parameter(Mandatory=$True,Position=2)][string] $tag
+	[parameter(Mandatory=$True,Position=2)][string] $tag,
+	[parameter(Mandatory=$True,Position=3)][string] $config = "Release"
 )
 
 $appname      = "neon-node-agent"
@@ -25,7 +26,7 @@ $result = mkdir bin
 ThrowOnExitCode
 
 neon-build clean-generated-cs $nkRoot
-dotnet publish "$nkServices\$appname\$appname.csproj" -c Release -o "$pwd\bin"
+dotnet publish "$nkServices\$appname\$appname.csproj" -c $config -o "$pwd\bin"
 ThrowOnExitCode
 
 # Split the build binaries into [__app] (application) and [__dep] dependency subfolders

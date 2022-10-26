@@ -93,52 +93,51 @@ namespace NeonClusterOperator
         /// Starts the controller.
         /// </summary>
         /// <param name="k8s">The <see cref="IKubernetes"/> client to use.</param>
+        /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task StartAsync(IKubernetes k8s)
+        public static async Task StartAsync(
+            IKubernetes k8s,
+            IServiceProvider serviceProvider)
         {
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
-            {
-                Tracer.CurrentSpan?.AddEvent("start", attributes => attributes.Add("customresource", nameof(V1NeonSsoClient)));
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
-                Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            // Load the configuration settings.
 
-                // Load the configuration settings.
-
-                var leaderConfig =
-                    new LeaderElectionConfig(
-                        k8s,
-                        @namespace: KubeNamespace.NeonSystem,
-                        leaseName: $"{Program.Service.Name}.ssoclients",
-                        identity: Pod.Name,
-                        promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_promoted", "Leader promotions"),
-                        demotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_demoted", "Leader demotions"),
-                        newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_newLeader", "Leadership changes"));
-
-                var options = new ResourceManagerOptions()
-                {
-                    ErrorMaxRetryCount = int.MaxValue,
-                    ErrorMaxRequeueInterval = TimeSpan.FromMinutes(10),
-                    ErrorMinRequeueInterval = TimeSpan.FromSeconds(60),
-                    IdleCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "IDLE events processed."),
-                    ReconcileCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "RECONCILE events processed."),
-                    DeleteCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "DELETED events processed."),
-                    StatusModifyCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "STATUS-MODIFY events processed."),
-                    IdleErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle_error", "Failed Clusterssoclients IDLE event processing."),
-                    ReconcileErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_reconcile_error", "Failed Clusterssoclients RECONCILE event processing."),
-                    DeleteErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_delete_error", "Failed Clusterssoclients DELETE event processing."),
-                    StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_statusmodify_error", "Failed Clusterssoclients STATUS-MODIFY events processing.")
-                };
-
-                resourceManager = new ResourceManager<V1NeonSsoClient, NeonSsoClientController>(
+            var leaderConfig =
+                new LeaderElectionConfig(
                     k8s,
-                    options: options,
-                    leaderConfig: leaderConfig);
+                    @namespace: KubeNamespace.NeonSystem,
+                    leaseName: $"{Program.Service.Name}.ssoclients",
+                    identity: Pod.Name,
+                    promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_promoted", "Leader promotions"),
+                    demotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_demoted", "Leader demotions"),
+                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_newLeader", "Leadership changes"));
 
-                await resourceManager.StartAsync();
+            var options = new ResourceManagerOptions()
+            {
+                ErrorMaxRetryCount = int.MaxValue,
+                ErrorMaxRequeueInterval = TimeSpan.FromMinutes(10),
+                ErrorMinRequeueInterval = TimeSpan.FromSeconds(60),
+                IdleCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "IDLE events processed."),
+                ReconcileCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "RECONCILE events processed."),
+                DeleteCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "DELETED events processed."),
+                StatusModifyCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "STATUS-MODIFY events processed."),
+                IdleErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle_error", "Failed Clusterssoclients IDLE event processing."),
+                ReconcileErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_reconcile_error", "Failed Clusterssoclients RECONCILE event processing."),
+                DeleteErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_delete_error", "Failed Clusterssoclients DELETE event processing."),
+                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_statusmodify_error", "Failed Clusterssoclients STATUS-MODIFY events processing.")
+            };
 
-                var channel = GrpcChannel.ForAddress($"http://{KubeService.Dex}:5557");
-                dexClient = new Dex.Dex.DexClient(channel);
-            }
+            resourceManager = new ResourceManager<V1NeonSsoClient, NeonSsoClientController>(
+                k8s,
+                options: options,
+                leaderConfig: leaderConfig,
+                serviceProvider: serviceProvider);
+
+            await resourceManager.StartAsync();
+
+            var channel = GrpcChannel.ForAddress($"http://{KubeService.Dex}:5557");
+            dexClient = new Dex.Dex.DexClient(channel);
         }
 
         //---------------------------------------------------------------------
@@ -164,11 +163,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
-            {
-                Tracer.CurrentSpan?.AddEvent("idle", attributes => attributes.Add("customresource", nameof(V1NeonSsoClient)));
-                log.LogInformationEx("[IDLE]");
-            }
+            log.LogInformationEx("[IDLE]");
         }
 
         /// <inheritdoc/>
@@ -178,8 +173,6 @@ namespace NeonClusterOperator
 
             using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
-                Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("customresource", nameof(V1NeonSsoClient)));
-
                 // Ignore all events when the controller hasn't been started.
 
                 if (resourceManager == null)
@@ -202,8 +195,6 @@ namespace NeonClusterOperator
 
             using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
-                Tracer.CurrentSpan?.AddEvent("delete", attributes => attributes.Add("customresource", nameof(V1NeonSsoClient)));
-
                 // Ignore all events when the controller hasn't been started.
 
                 if (resourceManager == null)
@@ -225,12 +216,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
-            {
-                Tracer.CurrentSpan?.AddEvent("promotion", attributes => attributes.Add("customresource", nameof(V1NeonSsoClient)));
-
-                log.LogInformationEx(() => $"PROMOTED");
-            }
+            log.LogInformationEx(() => $"PROMOTED");
         }
 
         /// <inheritdoc/>
@@ -238,12 +224,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
             
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
-            {
-                Tracer.CurrentSpan?.AddEvent("promotion", attributes => attributes.Add("customresource", nameof(V1NeonSsoClient)));
-
-                log.LogInformationEx(() => $"DEMOTED");
-            }
+            log.LogInformationEx(() => $"DEMOTED");
         }
 
         /// <inheritdoc/>
@@ -251,60 +232,56 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
-            {
-                Tracer.CurrentSpan?.AddEvent("promotion", attributes => 
-                {
-                    attributes.Add("leader", identity);
-                    attributes.Add("customresource", nameof(V1NeonSsoClient));
-                });
-
-                log.LogInformationEx(() => $"NEW LEADER: {identity}");
-
-            }
+            log.LogInformationEx(() => $"NEW LEADER: {identity}");
         }
 
         private async Task UpsertClientAsync(V1NeonSsoClient resource)
         {
             await SyncContext.Clear;
 
-            var client = new Dex.Client()
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
-                Id      = resource.Spec.Id,
-                Name    = resource.Spec.Name,
-                Public  = resource.Spec.Public
-            };
-
-            if (resource.Spec.Secret != null)
-            {
-                client.Secret = resource.Spec.Secret;
-            }
-
-            if (resource.Spec.LogoUrl != null)
-            {
-                client.LogoUrl = resource.Spec.LogoUrl;
-            }
-
-            client.RedirectUris.AddRange(resource.Spec.RedirectUris);
-            client.TrustedPeers.AddRange(resource.Spec.TrustedPeers);
-            
-            var createClientResp = await dexClient.CreateClientAsync(new CreateClientReq()
-            {
-                Client = client,
-            });
-
-            if (createClientResp.AlreadyExists)
-            {
-                var updateClientRequest = new UpdateClientReq()
+                var client = new Dex.Client()
                 {
-                    Id = client.Id,
-                    Name = client.Name,
-                    LogoUrl = client.LogoUrl
+                    Id = resource.Spec.Id,
+                    Name = resource.Spec.Name,
+                    Public = resource.Spec.Public
                 };
-                updateClientRequest.RedirectUris.AddRange(client.RedirectUris);
-                updateClientRequest.TrustedPeers.AddRange(client.TrustedPeers);
 
-                var updateClientResp = await dexClient.UpdateClientAsync(updateClientRequest);
+                if (resource.Spec.Secret != null)
+                {
+                    client.Secret = resource.Spec.Secret;
+                }
+
+                if (resource.Spec.LogoUrl != null)
+                {
+                    client.LogoUrl = resource.Spec.LogoUrl;
+                }
+
+                client.RedirectUris.AddRange(resource.Spec.RedirectUris);
+                client.TrustedPeers.AddRange(resource.Spec.TrustedPeers);
+
+                var createClientResp = await dexClient.CreateClientAsync(new CreateClientReq()
+                {
+                    Client = client,
+                });
+
+                if (createClientResp.AlreadyExists)
+                {
+                    using (var upsertActivity = TelemetryHub.ActivitySource.StartActivity("UpdateClient"))
+                    {
+                        var updateClientRequest = new UpdateClientReq()
+                        {
+                            Id = client.Id,
+                            Name = client.Name,
+                            LogoUrl = client.LogoUrl
+                        };
+                        updateClientRequest.RedirectUris.AddRange(client.RedirectUris);
+                        updateClientRequest.TrustedPeers.AddRange(client.TrustedPeers);
+
+                        var updateClientResp = await dexClient.UpdateClientAsync(updateClientRequest);
+                    }
+                }
             }
         }
     }

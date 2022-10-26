@@ -85,10 +85,10 @@ namespace NeonNodeAgent
         /// <summary>
         /// Identifies assemblies that may include custom resource types as well adding the
         /// program assembly so the controller endpoints can also be discovered.  This method
-        /// adds these assemblies to the <see cref="IOperatorBuilder"/> passed.
+        /// adds these assemblies to the <see cref="KubeOps.Operator.Builder.IOperatorBuilder"/> passed.
         /// </summary>
         /// <param name="operatorBuilder">The target operator builder.</param>
-        internal static void AddResourceAssemblies(IOperatorBuilder operatorBuilder)
+        internal static void AddResourceAssemblies(KubeOps.Operator.Builder.IOperatorBuilder operatorBuilder)
         {
             Covenant.Requires<ArgumentNullException>(operatorBuilder != null, nameof(operatorBuilder));
 

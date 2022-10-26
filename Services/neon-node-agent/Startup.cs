@@ -25,7 +25,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using Neon.Kube;
-using Neon.Kube.Operator;
 
 using k8s;
 using KubeOps.Operator;
@@ -61,7 +60,7 @@ namespace NeonNodeAgent
 
             var watcherTimeoutSeconds = Math.Max(1, Math.Max(ushort.MaxValue, (int)Math.Ceiling(watcherTimeout.TotalSeconds)));
             var watcherRetrySeconds   = Math.Max(1, (int)Math.Ceiling(watcherTimeout.TotalSeconds));
-            var k8s                   = OperatorHelper.GeneratingCRDs ? KubernetesWithRetry.CreateDisconnected()
+            var k8s                   = Neon.Kube.Operator.OperatorHelper.GeneratingCRDs ? KubernetesWithRetry.CreateDisconnected()
                                                                       : new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
             var operatorBuilder = services
                 .AddSingleton(k8s)

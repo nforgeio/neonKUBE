@@ -93,8 +93,11 @@ namespace NeonClusterOperator
         /// Starts the controller.
         /// </summary>
         /// <param name="k8s">The <see cref="IKubernetes"/> client to use.</param>
+        /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task StartAsync(IKubernetes k8s)
+        public static async Task StartAsync(
+            IKubernetes k8s,
+            IServiceProvider serviceProvider)
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
@@ -128,7 +131,8 @@ namespace NeonClusterOperator
             resourceManager = new ResourceManager<V1NeonNodeTask, NodeTaskController>(
                 k8s,
                 options:      options,
-                leaderConfig: leaderConfig);
+                leaderConfig: leaderConfig,
+                serviceProvider: serviceProvider);
 
             await resourceManager.StartAsync();
         }
@@ -271,50 +275,54 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            Dictionary<string, int> expirations = new Dictionary<string, int>();
-
-            var reading = false;
-            foreach (var line in resource.Status.Output.ToLines())
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
-                if (reading && line.StartsWith("CERTIFICATE AUTHORITY") || line.IsEmpty())
-                {
-                    reading = false;
-                    continue;
-                }
+                Dictionary<string, int> expirations = new Dictionary<string, int>();
 
-                if (line.StartsWith("CERTIFICATE"))
+                var reading = false;
+                foreach (var line in resource.Status.Output.ToLines())
                 {
-                    reading = true;
-                    continue;
-                }
-
-                if (!reading)
-                {
-                    continue;
-                }
-
-                var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                expirations.Add(parts[0], int.Parse(parts[6].TrimEnd('d')));
-            }
-
-            if (expirations.Any(exp => exp.Value < 90))
-            {
-                var nodeTask = new V1NeonNodeTask()
-                {
-                    Metadata = new V1ObjectMeta()
+                    if (reading && line.StartsWith("CERTIFICATE AUTHORITY") || line.IsEmpty())
                     {
-                        Name = $"control-plane-cert-update-{NeonHelper.CreateBase36Uuid()}",
-                        Labels = new Dictionary<string, string>
+                        reading = false;
+                        continue;
+                    }
+
+                    if (line.StartsWith("CERTIFICATE"))
+                    {
+                        reading = true;
+                        continue;
+                    }
+
+                    if (!reading)
+                    {
+                        continue;
+                    }
+
+                    var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    expirations.Add(parts[0], int.Parse(parts[6].TrimEnd('d')));
+                }
+
+                if (expirations.Any(exp => exp.Value < 90))
+                {
+                    using (var nodeTaskActivity = TelemetryHub.ActivitySource.StartActivity("CreateUpdateCertNodeTask"))
+                    {
+                        var nodeTask = new V1NeonNodeTask()
                         {
-                            { NeonLabel.ManagedBy, KubeService.NeonClusterOperator },
-                            { NeonLabel.NodeTaskType, NeonNodeTaskType.ControlPlaneCertUpdate }
-                        }
-                    },
-                    Spec = new V1NeonNodeTask.TaskSpec()
-                    {
-                        Node                = resource.Spec.Node,
-                        StartAfterTimestamp = DateTime.UtcNow,
-                        BashScript          = @"
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Name = $"control-plane-cert-update-{NeonHelper.CreateBase36Uuid()}",
+                                Labels = new Dictionary<string, string>
+                            {
+                                { NeonLabel.ManagedBy, KubeService.NeonClusterOperator },
+                                { NeonLabel.NodeTaskType, NeonNodeTaskType.ControlPlaneCertUpdate }
+                            }
+                            },
+                            Spec = new V1NeonNodeTask.TaskSpec()
+                            {
+                                Node = resource.Spec.Node,
+                                StartAfterTimestamp = DateTime.UtcNow,
+                                BashScript = @"
 set -e
 
 /usr/bin/kubeadm certs renew all
@@ -325,19 +333,21 @@ do
     crictl rmp $pod;
 done
 ",
-                        CaptureOutput       = true,
-                        RetentionSeconds    = TimeSpan.FromDays(1).Seconds
+                                CaptureOutput = true,
+                                RetentionSeconds = TimeSpan.FromDays(1).Seconds
+                            }
+                        };
+
+                        var tasks = await k8s.ListClusterCustomObjectAsync<V1NeonNodeTask>(labelSelector: $"{NeonLabel.NodeTaskType}={NeonNodeTaskType.ControlPlaneCertUpdate}");
+
+                        if (!tasks.Items.Any(
+                                        task => task.Spec.Node == nodeTask.Spec.Node
+                                                && (task.Status.Phase <= V1NeonNodeTask.Phase.Running
+                                                    || task.Status == null)))
+                        {
+                            await k8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: nodeTask.Name());
+                        }
                     }
-                };
-
-                var tasks = await k8s.ListClusterCustomObjectAsync<V1NeonNodeTask>(labelSelector: $"{NeonLabel.NodeTaskType}={NeonNodeTaskType.ControlPlaneCertUpdate}");
-
-                if (!tasks.Items.Any(
-                                task => task.Spec.Node == nodeTask.Spec.Node
-                                        && (task.Status.Phase <= V1NeonNodeTask.Phase.Running
-                                            || task.Status == null)))
-                {
-                    await k8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: nodeTask.Name());
                 }
             }
         }

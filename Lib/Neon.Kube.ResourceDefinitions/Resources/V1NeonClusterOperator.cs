@@ -109,22 +109,22 @@ namespace Neon.Kube.Resources
             /// <summary>
             /// Control plane certificate update spec.
             /// </summary>
-            public UpdateSpec ControlPlaneCertificates { get; set; }
+            public UpdateSpec ControlPlaneCertificates { get; set; } = new UpdateSpec();
 
             /// <summary>
             /// Node CA certificate update spec.
             /// </summary>
-            public UpdateSpec NodeCaCertificates { get; set; }
+            public UpdateSpec NodeCaCertificates { get; set; } = new UpdateSpec();
 
             /// <summary>
             /// Update spec for security spec.
             /// </summary>
-            public UpdateSpec SecurityPatches { get; set; }
+            public UpdateSpec SecurityPatches { get; set; } = new UpdateSpec();
 
             /// <summary>
             /// Update spec for container images.
             /// </summary>
-            public UpdateSpec ContainerImages { get; set; }
+            public UpdateSpec ContainerImages { get; set; } = new UpdateSpec();
         }
 
         /// <summary>
@@ -164,7 +164,7 @@ namespace Neon.Kube.Resources
             /// For the full documentation see: 
             /// https://www.quartz-scheduler.net/documentation/quartz-3.x/tutorial/crontriggers.html#cron-expressions
             /// </remarks>
-            public string Schedule { get; set; } = "0 0 * * 1";
+            public string Schedule { get; set; } = "0 0 0 ? * 1";
         }
     }
 }

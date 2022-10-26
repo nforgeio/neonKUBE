@@ -31,7 +31,8 @@ param
     [switch]$services    = $false,      # Rebuild all cluster service images
     [switch]$nopush      = $false,      # Don't push to the registry
     [switch]$noprune     = $false,      # Don't prune the local Docker cache
-    [switch]$allVersions = $false       # Rebuild all image versions
+    [switch]$allVersions = $false,      # Rebuild all image versions
+    [switch]$release     = $false       # Build release mode
 )
 
 #----------------------------------------------------------
@@ -53,28 +54,35 @@ function Publish
 
     Push-Cwd "$Path" | Out-Null
 
+    $config     = "Debug"
+
+    if ($release)
+    {
+        $config     = "Release"
+    }
+
     try
     {
         if ($allVersions)
         {
             if ($nopush)
             {
-                ./publish.ps1 -all -nopush
+                ./publish.ps1 -config $config -all -nopush
             }
             else
             {
-                ./publish.ps1 -all
+                ./publish.ps1 -config $config -all
             }
         }
         else
         {
             if ($nopush)
             {
-                ./publish.ps1 -nopush
+                ./publish.ps1 -config $config -nopush
             }
             else
             {
-                ./publish.ps1
+                ./publish.ps1 -config $config
             }
         }
     }
@@ -137,7 +145,13 @@ try
     # We need to do a solution build to ensure that any tools or other dependencies 
     # are built before we build and publish the individual container images.
 
-    $config     = "Release"
+    $config     = "Debug"
+
+    if ($release)
+    {
+        $config     = "Release"
+    }
+
     $msbuild    = $env:MSBUILDPATH
     $nkRoot     = "$env:NK_ROOT"
     $nkSolution = "$nkRoot\neonKUBE.sln"
@@ -163,6 +177,7 @@ try
     Write-Info ""
 
     "neon-build clean-generated-cs $nkRoot"
+    "neon-build clean $nkRoot"
     & "$msbuild" "$nkSolution" $buildConfig -t:Clean -m -verbosity:quiet
 
     if (-not $?)

@@ -92,64 +92,68 @@ namespace NeonClusterOperator
         /// Starts the controller.
         /// </summary>
         /// <param name="k8s">The <see cref="IKubernetes"/> client to use.</param>
+        /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task StartAsync(IKubernetes k8s)
+        public static async Task StartAsync(
+            IKubernetes k8s,
+            IServiceProvider serviceProvider)
         {
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
-            {
-                Tracer.CurrentSpan?.AddEvent("start", attributes => attributes.Add("customresource", nameof(V1NeonContainerRegistry)));
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
-                Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            // Load the configuration settings.
 
-                // Load the configuration settings.
-
-                var leaderConfig =
-                    new LeaderElectionConfig(
-                        k8s,
-                        @namespace: KubeNamespace.NeonSystem,
-                        leaseName: $"{Program.Service.Name}.containerregistries",
-                        identity: Pod.Name,
-                        promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_promoted", "Leader promotions"),
-                        demotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_demoted", "Leader demotions"),
-                        newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_newLeader", "Leadership changes"));
-
-                var options = new ResourceManagerOptions()
-                {
-                    ErrorMaxRetryCount = 3,
-                    ErrorMaxRequeueInterval = TimeSpan.FromSeconds(10),
-                    ErrorMinRequeueInterval = TimeSpan.FromSeconds(10),
-                    IdleCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle", "IDLE events processed."),
-                    ReconcileCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle", "RECONCILE events processed."),
-                    DeleteCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle", "DELETED events processed."),
-                    StatusModifyCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle", "STATUS-MODIFY events processed."),
-                    IdleErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle_error", "Failed Clustercontainerregistries IDLE event processing."),
-                    ReconcileErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_reconcile_error", "Failed Clustercontainerregistries RECONCILE event processing."),
-                    DeleteErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_delete_error", "Failed Clustercontainerregistries DELETE event processing."),
-                    StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_statusmodify_error", "Failed Clustercontainerregistries STATUS-MODIFY events processing.")
-                };
-
-                resourceManager = new ResourceManager<V1NeonContainerRegistry, NeonContainerRegistryController>(
+            var leaderConfig =
+                new LeaderElectionConfig(
                     k8s,
-                    options: options,
-                    leaderConfig: leaderConfig);
+                    @namespace: KubeNamespace.NeonSystem,
+                    leaseName: $"{Program.Service.Name}.containerregistries",
+                    identity: Pod.Name,
+                    promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_promoted", "Leader promotions"),
+                    demotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_demoted", "Leader demotions"),
+                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_newLeader", "Leadership changes"));
 
-                await resourceManager.StartAsync();
-            }
+            var options = new ResourceManagerOptions()
+            {
+                ErrorMaxRetryCount = 3,
+                ErrorMaxRequeueInterval = TimeSpan.FromSeconds(10),
+                ErrorMinRequeueInterval = TimeSpan.FromSeconds(10),
+                IdleCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle", "IDLE events processed."),
+                ReconcileCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle", "RECONCILE events processed."),
+                DeleteCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle", "DELETED events processed."),
+                StatusModifyCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle", "STATUS-MODIFY events processed."),
+                IdleErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle_error", "Failed Clustercontainerregistries IDLE event processing."),
+                ReconcileErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_reconcile_error", "Failed Clustercontainerregistries RECONCILE event processing."),
+                DeleteErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_delete_error", "Failed Clustercontainerregistries DELETE event processing."),
+                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_statusmodify_error", "Failed Clustercontainerregistries STATUS-MODIFY events processing.")
+            };
+
+            resourceManager = new ResourceManager<V1NeonContainerRegistry, NeonContainerRegistryController>(
+                k8s,
+                options: options,
+                leaderConfig: leaderConfig,
+                serviceProvider: serviceProvider);
+
+            await resourceManager.StartAsync();
         }
 
         //---------------------------------------------------------------------
         // Instance members
 
         private readonly IKubernetes k8s;
+        private readonly Neon.Kube.Operator.IFinalizerManager<V1NeonContainerRegistry> finalizerManager;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public NeonContainerRegistryController(IKubernetes k8s)
+        public NeonContainerRegistryController(
+            IKubernetes k8s,
+            Neon.Kube.Operator.IFinalizerManager<V1NeonContainerRegistry> manager)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
+            Covenant.Requires(manager != null, nameof(manager));
 
             this.k8s = k8s;
+            this.finalizerManager = manager;
         }
 
         /// <summary>
@@ -160,20 +164,16 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
-            {
-                Tracer.CurrentSpan?.AddEvent("idle", attributes => attributes.Add("customresource", nameof(V1NeonContainerRegistry)));
-                log.LogInformationEx("[IDLE]");
+            log.LogInformationEx("[IDLE]");
 
-                try
-                {
-                    await k8s.ReadClusterCustomObjectAsync<V1NeonContainerRegistry>("registry.neon.local");
-                }
-                catch (Exception e)
-                {
-                    log.LogErrorEx(e);
-                    await CreateNeonLocalRegistryAsync();
-                }
+            try
+            {
+                await k8s.ReadClusterCustomObjectAsync<V1NeonContainerRegistry>("registry.neon.local");
+            }
+            catch (Exception e)
+            {
+                log.LogErrorEx(e);
+                await CreateNeonLocalRegistryAsync();
             }
         }
 
@@ -192,6 +192,8 @@ namespace NeonClusterOperator
                 {
                     return null;
                 }
+
+                await finalizerManager.RegisterAllFinalizersAsync(resource);
 
                 log.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
 
@@ -229,25 +231,15 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
-            {
-                Tracer.CurrentSpan?.AddEvent("promotion", attributes => attributes.Add("customresource", nameof(V1NeonContainerRegistry)));
-
-                log.LogInformationEx(() => $"PROMOTED");
-            }
+            log.LogInformationEx(() => $"PROMOTED");
         }
 
         /// <inheritdoc/>
         public async Task OnDemotionAsync()
         {
             await SyncContext.Clear;
-            
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
-            {
-                Tracer.CurrentSpan?.AddEvent("promotion", attributes => attributes.Add("customresource", nameof(V1NeonContainerRegistry)));
 
-                log.LogInformationEx(() => $"DEMOTED");
-            }
+            log.LogInformationEx(() => $"DEMOTED");
         }
 
         /// <inheritdoc/>
@@ -255,47 +247,40 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
-            {
-                Tracer.CurrentSpan?.AddEvent("promotion", attributes => 
-                {
-                    attributes.Add("leader", identity);
-                    attributes.Add("customresource", nameof(V1NeonContainerRegistry));
-                });
-
-                log.LogInformationEx(() => $"NEW LEADER: {identity}");
-
-            }
+            log.LogInformationEx(() => $"NEW LEADER: {identity}");
         }
 
         private async Task CreateNeonLocalRegistryAsync()
         {
-            log.LogInformationEx(() => $"Upserting registry: [registry.neon.local]");
-
-            // todo(marcusbooyah): make this use robot accounts.
-
-            var secret   = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespace.NeonSystem);
-            var rootUser = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(secret.Data["root"]));
-
-            var registry = new V1NeonContainerRegistry()
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
-                Metadata = new V1ObjectMeta()
-                {
-                    Name = "registry.neon.local"
-                },
-                Spec = new V1NeonContainerRegistry.RegistrySpec()
-                {
-                    Blocked     = false,
-                    Insecure    = true,
-                    Location    = "registry.neon.local",
-                    Password    = rootUser.Password,
-                    Prefix      = "registry.neon.local",
-                    SearchOrder = -1,
-                    Username    = rootUser.Name
-                }
-            };
+                log.LogInformationEx(() => $"Upserting registry: [registry.neon.local]");
 
-            await k8s.UpsertClusterCustomObjectAsync(registry, registry.Name());
+                // todo(marcusbooyah): make this use robot accounts.
+
+                var secret = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespace.NeonSystem);
+                var rootUser = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(secret.Data["root"]));
+
+                var registry = new V1NeonContainerRegistry()
+                {
+                    Metadata = new V1ObjectMeta()
+                    {
+                        Name = "registry.neon.local"
+                    },
+                    Spec = new V1NeonContainerRegistry.RegistrySpec()
+                    {
+                        Blocked = false,
+                        Insecure = true,
+                        Location = "registry.neon.local",
+                        Password = rootUser.Password,
+                        Prefix = "registry.neon.local",
+                        SearchOrder = -1,
+                        Username = rootUser.Name
+                    }
+                };
+
+                await k8s.UpsertClusterCustomObjectAsync(registry, registry.Name());
+            }
         }
     }
 }

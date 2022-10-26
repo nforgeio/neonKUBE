@@ -53,7 +53,7 @@ namespace Neon.Kube.Operator
     /// </summary>
     public static class OperatorHelper
     {
-        private static readonly JsonSerializerSettings  k8sSerializerSettings;
+        private static readonly JsonSerializerSettings k8sSerializerSettings;
 
         /// <summary>
         /// Static constructor.

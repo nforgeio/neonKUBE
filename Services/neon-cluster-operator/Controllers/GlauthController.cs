@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    LdapController.cs
+// FILE:	    GlauthController.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -94,75 +94,74 @@ namespace NeonClusterOperator
         /// Starts the controller.
         /// </summary>
         /// <param name="k8s">The <see cref="IKubernetes"/> client to use.</param>
+        /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task StartAsync(IKubernetes k8s)
+        public static async Task StartAsync(
+            IKubernetes k8s,
+            IServiceProvider serviceProvider)
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
-            {
-                Tracer.CurrentSpan?.AddEvent("start", attributes => attributes.Add("resource", nameof(V1Secret)));
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
-                Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            // Load the configuration settings.
 
-                // Load the configuration settings.
-
-                var leaderConfig =
-                    new LeaderElectionConfig(
-                        k8s,
-                        @namespace: KubeNamespace.NeonSystem,
-                        leaseName: $"{Program.Service.Name}.glauth",
-                        identity: Pod.Name,
-                        promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_promoted", "Leader promotions"),
-                        demotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_demoted", "Leader demotions"),
-                        newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_newLeader", "Leadership changes"));
-
-                var options = new ResourceManagerOptions()
-                {
-                    ErrorMaxRetryCount = int.MaxValue,
-                    ErrorMaxRequeueInterval = TimeSpan.FromMinutes(10),
-                    ErrorMinRequeueInterval = TimeSpan.FromSeconds(60),
-                    IdleCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "IDLE events processed."),
-                    ReconcileCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "RECONCILE events processed."),
-                    DeleteCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "DELETED events processed."),
-                    StatusModifyCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "STATUS-MODIFY events processed."),
-                    IdleErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle_error", "Failed ClusterOperatorSettings IDLE event processing."),
-                    ReconcileErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_reconcile_error", "Failed ClusterOperatorSettings RECONCILE event processing."),
-                    DeleteErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_delete_error", "Failed ClusterOperatorSettings DELETE event processing."),
-                    StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_statusmodify_error", "Failed ClusterOperatorSettings STATUS-MODIFY events processing.")
-                };
-
-                resourceManager = new ResourceManager<V1Secret, GlauthController>(
+            var leaderConfig =
+                new LeaderElectionConfig(
                     k8s,
-                    options: options,
-                    leaderConfig: leaderConfig,
-                    filter: (secret) =>
+                    @namespace: KubeNamespace.NeonSystem,
+                    leaseName: $"{Program.Service.Name}.glauth",
+                    identity: Pod.Name,
+                    promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_promoted", "Leader promotions"),
+                    demotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_demoted", "Leader demotions"),
+                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_newLeader", "Leadership changes"));
+
+            var options = new ResourceManagerOptions()
+            {
+                ErrorMaxRetryCount = int.MaxValue,
+                ErrorMaxRequeueInterval = TimeSpan.FromMinutes(10),
+                ErrorMinRequeueInterval = TimeSpan.FromSeconds(60),
+                IdleCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "IDLE events processed."),
+                ReconcileCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "RECONCILE events processed."),
+                DeleteCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "DELETED events processed."),
+                StatusModifyCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "STATUS-MODIFY events processed."),
+                IdleErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle_error", "Failed ClusterOperatorSettings IDLE event processing."),
+                ReconcileErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_reconcile_error", "Failed ClusterOperatorSettings RECONCILE event processing."),
+                DeleteErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_delete_error", "Failed ClusterOperatorSettings DELETE event processing."),
+                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_statusmodify_error", "Failed ClusterOperatorSettings STATUS-MODIFY events processing.")
+            };
+
+            resourceManager = new ResourceManager<V1Secret, GlauthController>(
+                k8s,
+                options: options,
+                leaderConfig: leaderConfig,
+                serviceProvider: serviceProvider,
+                filter: (secret) =>
+                {
+                    try
                     {
-                        try
+                        if (secret.Metadata.Labels[NeonLabel.ManagedBy] == KubeService.NeonClusterOperator
+                                && secret.Name() == "glauth-users" || secret.Name() == "glauth-groups")
                         {
-                            if (secret.Metadata.Labels[NeonLabel.ManagedBy] == KubeService.NeonClusterOperator
-                                    && secret.Name() == "glauth-users" || secret.Name() == "glauth-groups")
-                            {
-                                return true;
-                            }
-                            return false;
+                            return true;
                         }
-                        catch
-                        {
-                            return false;
-                        }
-                    });
+                        return false;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                });
 
-                await resourceManager.StartAsync();
+            await resourceManager.StartAsync();
 
-                var secret = await k8s.ReadNamespacedSecretAsync("neon-admin.neon-system-db.credentials.postgresql", KubeNamespace.NeonSystem);
+            var secret = await k8s.ReadNamespacedSecretAsync("neon-admin.neon-system-db.credentials.postgresql", KubeNamespace.NeonSystem);
 
-                var password = Encoding.UTF8.GetString(secret.Data["password"]);
+            var password = Encoding.UTF8.GetString(secret.Data["password"]);
 
-                connectionString = $"Host={KubeService.NeonSystemDb}.{KubeNamespace.NeonSystem};Username={KubeConst.NeonSystemDbAdminUser};Password={password};Database=glauth";
+            connectionString = $"Host={KubeService.NeonSystemDb}.{KubeNamespace.NeonSystem};Username={KubeConst.NeonSystemDbAdminUser};Password={password};Database=glauth";
 
-                log.LogInformationEx($"ConnectionString: [{connectionString}]");
-            }
+            log.LogInformationEx($"ConnectionString: [{connectionString}]");
         }
 
         //---------------------------------------------------------------------
@@ -188,11 +187,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
-            {
-                Tracer.CurrentSpan?.AddEvent("idle", attributes => attributes.Add("resource", nameof(V1Secret)));
-                log.LogInformationEx("[IDLE]");
-            }
+            log.LogInformationEx("[IDLE]");
         }
 
         /// <inheritdoc/>
@@ -241,7 +236,6 @@ namespace NeonClusterOperator
 
             using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
-                Tracer.CurrentSpan?.AddEvent("delete", attributes => attributes.Add("resource", nameof(V1Secret)));
 
                 // Ignore all events when the controller hasn't been started.
 
@@ -259,12 +253,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
-            {
-                Tracer.CurrentSpan?.AddEvent("promotion", attributes => attributes.Add("resource", nameof(V1Secret)));
-
-                log.LogInformationEx(() => $"PROMOTED");
-            }
+            log.LogInformationEx(() => $"PROMOTED");
         }
 
         /// <inheritdoc/>
@@ -272,12 +261,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
-            {
-                Tracer.CurrentSpan?.AddEvent("promotion", attributes => attributes.Add("resource", nameof(V1Secret)));
-
-                log.LogInformationEx(() => $"DEMOTED");
-            }
+            log.LogInformationEx(() => $"DEMOTED");
         }
 
         /// <inheritdoc/>
@@ -285,35 +269,30 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
-            {
-                Tracer.CurrentSpan?.AddEvent("promotion", attributes => 
-                {
-                    attributes.Add("leader", identity);
-                    attributes.Add("resource", nameof(V1Secret));
-                });
-
-                log.LogInformationEx(() => $"NEW LEADER: {identity}");
-            }
+            log.LogInformationEx(() => $"NEW LEADER: {identity}");
         }
 
         private async Task UpdateGlauthUsersAsync(V1Secret resource)
         {
-            await using var conn = new NpgsqlConnection(connectionString);
-            await conn.OpenAsync();
-
-            foreach (var user in resource.Data.Keys)
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
-                var userData     = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(resource.Data[user]));
-                var name         = userData.Name;
-                var givenname    = userData.Name;
-                var mail         = userData.Mail ?? $"{userData.Name}@{Program.Service.ClusterInfo.Domain}";
-                var uidnumber    = userData.UidNumber;
-                var primarygroup = userData.PrimaryGroup;
-                var passsha256   = CryptoHelper.ComputeSHA256String(userData.Password);
+                await using var conn = new NpgsqlConnection(connectionString);
+                await conn.OpenAsync();
 
-                await using (var cmd = new NpgsqlCommand(
-                    $@"INSERT INTO users(name, givenname, mail, uidnumber, primarygroup, passsha256)
+                foreach (var user in resource.Data.Keys)
+                {
+                    using (var userActivity = TelemetryHub.ActivitySource.StartActivity("AddUser"))
+                    {
+                        var userData = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(resource.Data[user]));
+                        var name = userData.Name;
+                        var givenname = userData.Name;
+                        var mail = userData.Mail ?? $"{userData.Name}@{Program.Service.ClusterInfo.Domain}";
+                        var uidnumber = userData.UidNumber;
+                        var primarygroup = userData.PrimaryGroup;
+                        var passsha256 = CryptoHelper.ComputeSHA256String(userData.Password);
+
+                        await using (var cmd = new NpgsqlCommand(
+                            $@"INSERT INTO users(name, givenname, mail, uidnumber, primarygroup, passsha256)
                             VALUES('{name}','{givenname}','{mail}','{uidnumber}','{primarygroup}','{passsha256}')
                                 ON CONFLICT (name) DO UPDATE
                                     SET givenname    = '{givenname}',
@@ -321,30 +300,35 @@ namespace NeonClusterOperator
                                         uidnumber    = '{uidnumber}',
                                         primarygroup = '{primarygroup}',
                                         passsha256   = '{passsha256}';", conn))
-                {
-                    await cmd.ExecuteNonQueryAsync();
-                }
-
-                if (userData.Capabilities != null)
-                {
-                    foreach (var capability in userData.Capabilities)
-                    {
-                        long count;
-                        await using (var cmd = new NpgsqlCommand(
-                            $@"SELECT count(*)
-                                FROM capabilities
-                                WHERE userid={uidnumber} and ""action""='{capability.Action}' and ""object""='{capability.Object}';", conn))
                         {
-                            count = (long)await cmd.ExecuteScalarAsync();
+                            await cmd.ExecuteNonQueryAsync();
                         }
 
-                        if (count == 0)
+                        if (userData.Capabilities != null)
                         {
-                            await using (var cmd = new NpgsqlCommand(
-                            $@"INSERT INTO capabilities(userid, action, object)
-                                    VALUES('{uidnumber}','{capability.Action}','{capability.Object}');", conn))
+                            using (var userCapabilityActivity = TelemetryHub.ActivitySource.StartActivity("AddUserCapabilities"))
                             {
-                                await cmd.ExecuteNonQueryAsync();
+                                foreach (var capability in userData.Capabilities)
+                                {
+                                    long count;
+                                    await using (var cmd = new NpgsqlCommand(
+                                        $@"SELECT count(*)
+                                            FROM capabilities
+                                            WHERE userid={uidnumber} and ""action""='{capability.Action}' and ""object""='{capability.Object}';", conn))
+                                    {
+                                        count = (long)await cmd.ExecuteScalarAsync();
+                                    }
+
+                                    if (count == 0)
+                                    {
+                                        await using (var cmd = new NpgsqlCommand(
+                                        $@"INSERT INTO capabilities(userid, action, object)
+                                            VALUES('{uidnumber}','{capability.Action}','{capability.Object}');", conn))
+                                        {
+                                            await cmd.ExecuteNonQueryAsync();
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -354,20 +338,26 @@ namespace NeonClusterOperator
 
         private async Task UpdateGlauthGroupsAsync(V1Secret resource)
         {
-            await using var conn = new NpgsqlConnection(connectionString);
-            await conn.OpenAsync();
-
-            foreach (var key in resource.Data.Keys)
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
-                var group = NeonHelper.YamlDeserialize<GlauthGroup>(Encoding.UTF8.GetString(resource.Data[key]));
+                await using var conn = new NpgsqlConnection(connectionString);
+                await conn.OpenAsync();
 
-                await using (var cmd = new NpgsqlCommand(
-                    $@"INSERT INTO groups(name, gidnumber)
+                foreach (var key in resource.Data.Keys)
+                {
+                    using (var groupActivity = TelemetryHub.ActivitySource.StartActivity("AddGroup"))
+                    {
+                        var group = NeonHelper.YamlDeserialize<GlauthGroup>(Encoding.UTF8.GetString(resource.Data[key]));
+
+                        await using (var cmd = new NpgsqlCommand(
+                            $@"INSERT INTO groups(name, gidnumber)
                             VALUES('{group.Name}','{group.GidNumber}') 
                                 ON CONFLICT (name) DO UPDATE
                                     SET gidnumber = '{group.GidNumber}';", conn))
-                {
-                    await cmd.ExecuteNonQueryAsync();
+                        {
+                            await cmd.ExecuteNonQueryAsync();
+                        }
+                    }
                 }
             }
         }
