@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterTelemetry.cs
+// FILE:	    SendClusterTelemetry.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -40,24 +40,26 @@ using OpenTelemetry.Trace;
 using Prometheus;
 
 using Quartz;
-
+using static IdentityModel.OidcConstants;
+using Grpc.Core;
+using Neon.Net;
 
 namespace NeonClusterOperator
 {
     /// <summary>
     /// Handles checking for expired 
     /// </summary>
-    public class ClusterTelemetry : CronJob, IJob
+    public class SendClusterTelemetry : CronJob, IJob
     {
         private ILogger logger;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ClusterTelemetry()
-            : base(typeof(ClusterTelemetry))
+        public SendClusterTelemetry()
+            : base(typeof(SendClusterTelemetry))
         {
-            logger = TelemetryHub.CreateLogger<ClusterTelemetry>();
+            logger = TelemetryHub.CreateLogger<SendClusterTelemetry>();
         }
 
         /// <inheritdoc/>
@@ -71,6 +73,23 @@ namespace NeonClusterOperator
 
                 var dataMap = context.MergedJobDataMap;
                 var k8s = (IKubernetes)dataMap["Kubernetes"];
+
+                var clusterTelemetry = new ClusterTelemetry();
+
+                var nodes = await k8s.ListNodeAsync();
+                clusterTelemetry.Nodes = nodes.Items.Select(i => i.Status).ToList();
+
+                var configMap = await k8s.ReadNamespacedConfigMapAsync(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus);
+                clusterTelemetry.ClusterInfo = TypeSafeConfigMap<ClusterInfo>.From(configMap).Config;
+
+                using (var jsonClient = new JsonClient()
+                {
+                    BaseAddress = KubeEnv.HeadendUri
+                })
+                {
+                    await jsonClient.PostAsync("/telemetry/cluster", clusterTelemetry);
+                }
+
             }
         }
     }

@@ -96,6 +96,7 @@ namespace NeonClusterOperator
         private static UpdateCaCertificates             updateCaCertificates;
         private static CheckControlPlaneCertificates    checkControlPlaneCertificates;
         private static CheckRegistryImages              checkRegistryImages;
+        private static SendClusterTelemetry             sendClusterTelemetry;
 
         /// <summary>
         /// Static constructor.
@@ -153,6 +154,7 @@ namespace NeonClusterOperator
             updateCaCertificates          = new UpdateCaCertificates();
             checkControlPlaneCertificates = new CheckControlPlaneCertificates();
             checkRegistryImages           = new CheckRegistryImages();
+            sendClusterTelemetry          = new SendClusterTelemetry();
         }
 
         //---------------------------------------------------------------------
@@ -236,6 +238,15 @@ namespace NeonClusterOperator
 
                 await checkRegistryImages.DeleteFromSchedulerAsync(scheduler);
                 await checkRegistryImages.AddToSchedulerAsync(scheduler, k8s, containerImageExpression);
+
+                if (resource.Spec.Updates.Telemetry.Enabled)
+                {
+                    var clusterTelemetryExpression = resource.Spec.Updates.Telemetry.Schedule;
+                    CronExpression.ValidateExpression(clusterTelemetryExpression);
+
+                    await sendClusterTelemetry.DeleteFromSchedulerAsync(scheduler);
+                    await sendClusterTelemetry.AddToSchedulerAsync(scheduler, k8s, clusterTelemetryExpression);
+                }
 
                 log.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
 

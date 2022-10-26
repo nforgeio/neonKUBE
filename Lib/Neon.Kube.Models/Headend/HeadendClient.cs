@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 using Neon.ModelGen;
 
 namespace Neon.Kube.Models.Headend

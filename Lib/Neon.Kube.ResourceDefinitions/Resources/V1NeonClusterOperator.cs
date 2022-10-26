@@ -125,6 +125,11 @@ namespace Neon.Kube.Resources
             /// Update spec for container images.
             /// </summary>
             public UpdateSpec ContainerImages { get; set; } = new UpdateSpec();
+
+            /// <summary>
+            /// Update spec for telemetry.
+            /// </summary>
+            public UpdateSpec Telemetry { get; set; } = new UpdateSpec();
         }
 
         /// <summary>

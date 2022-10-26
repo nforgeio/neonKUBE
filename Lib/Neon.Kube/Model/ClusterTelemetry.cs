@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IResourceFinalizer.cs
+// FILE:	    ClusterTelemetry.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -17,50 +17,52 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
-using Neon.Kube;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
+using Neon.Common;
+using Neon.IO;
 using k8s.Models;
-using k8s;
 
-namespace Neon.Kube.Operator
+namespace Neon.Kube
 {
     /// <summary>
-    /// Finalizer manager.
+    /// Models cluster telemetry.
     /// </summary>
-    /// <typeparam name="TEntity">The type of the k8s entity.</typeparam>
-    public interface IResourceFinalizer<TEntity>
-        where TEntity : IKubernetesObject<V1ObjectMeta>, new()
+    public class ClusterTelemetry
     {
         /// <summary>
-        /// Identifies the resource finalizer
+        /// Constructor
         /// </summary>
-        string Identifier
+        public ClusterTelemetry() 
         {
-            get
-            {
-                var metadata = new TEntity().GetKubernetesTypeMetadata();
 
-                var name = $"{metadata.Group}/{GetType().Name.ToLowerInvariant()}";
-             
-                // trim if longer than max label length.
-                if (name.Length > KubeConst.MaxLabelLength)
-                {
-                    name = name[..KubeConst.MaxLabelLength];
-                };
-
-                return name;
-            }
         }
 
         /// <summary>
-        /// Called when the entity needs to be finalized.
+        /// Cluster information
         /// </summary>
-        /// <param name="entity"></param>
-        /// <returns></returns>
-        Task FinalizeAsync(TEntity entity);
+        [JsonProperty(PropertyName = "ClusterInfo", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.Include)]
+        public ClusterInfo ClusterInfo { get; set; }
+
+        /// <summary>
+        /// Node status information.
+        /// </summary>
+        [JsonProperty(PropertyName = "Nodes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public List<V1NodeStatus> Nodes { get; set; }
     }
 }
