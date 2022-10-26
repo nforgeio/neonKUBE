@@ -109,3 +109,4 @@ KubernetesWithRetry.cs
 /**/*.gitignore/**
 /UpgradeLog.htm
 /Lib/Neon.Kube/Harbor/HarborClient.cs
+/Build.bk/neon
