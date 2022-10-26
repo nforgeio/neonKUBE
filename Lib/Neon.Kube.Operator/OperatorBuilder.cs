@@ -63,6 +63,9 @@ namespace Neon.Kube.Operator
             Services.AddSingleton(componentRegister);
             Services.AddSingleton<IFinalizerBuilder, FinalizerBuilder>();
             Services.AddTransient(typeof(IFinalizerManager<>), typeof(FinalizerManager<>));
+            Services.AddScoped(typeof(IResourceCache<>), typeof(ResourceCache<>));
+            Services.AddScoped(typeof(ILockProvider<>), typeof(LockProvider<>));
+
             Services.AddRouting();
             return this;
         }

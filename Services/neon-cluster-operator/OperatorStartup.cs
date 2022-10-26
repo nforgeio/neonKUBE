@@ -37,7 +37,7 @@ using OpenTelemetry;
 using OpenTelemetry.Instrumentation;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-
+using NeonClusterOperator.Finalizers;
 
 namespace NeonClusterOperator
 {
@@ -82,6 +82,7 @@ namespace NeonClusterOperator
                 .AddController<NeonContainerRegistryController, V1NeonContainerRegistry>()
                 .AddController<NeonSsoClientController, V1NeonSsoClient>()
                 .AddController<NodeTaskController, V1NeonNodeTask>()
+                .AddFinalizer<NeonContainerRegistryFinalizer, V1NeonContainerRegistry>()
                 .AddMutatingWebhook<PodWebhook, V1Pod>();
         }
 

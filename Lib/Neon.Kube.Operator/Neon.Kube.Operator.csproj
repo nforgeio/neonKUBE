@@ -36,6 +36,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="CompareNETObjects" Version="4.78.0" />
 		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
 		<PackageReference Include="KubernetesClient" Version="7.2.19" />
 		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.9" />

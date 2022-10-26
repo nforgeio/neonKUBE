@@ -29,6 +29,7 @@ using Neon.Diagnostics;
 
 using k8s;
 using k8s.Models;
+using Neon.Common;
 
 namespace Neon.Kube.Operator
 {
@@ -87,24 +88,72 @@ namespace Neon.Kube.Operator
 
                 await finalizer.FinalizeAsync(entity);
 
-                if (string.IsNullOrEmpty(entity.Metadata.NamespaceProperty))
-                {
-                    entity = await client.ReadClusterCustomObjectAsync<TEntity>(entity.Name());
-                }
-                else
-                {
-                    entity = await client.ReadNamespacedCustomObjectAsync<TEntity>(entity.Namespace(), entity.Name());
-                }
-
-                if (entity.RemoveFinalizer(finalizer.Identifier))
-                {
-                    await UpdateEntityAsync(entity);
-                }
+                await RemoveFinalizerAsync(entity, finalizer);
+            }
+            catch (Exception e)
+            {
+                logger.LogErrorEx(e);
+                throw;
             }
             finally
             {
                 semaphoreSlim.Release();
             }
+        }
+
+        private async Task RemoveFinalizerAsync(TEntity entity, IResourceFinalizer<TEntity> finalizer)
+        {
+            try
+            {
+                await NeonHelper.WaitForAsync(
+                    async () =>
+                    {
+                        try
+                        {
+                            if (string.IsNullOrEmpty(entity.Metadata.NamespaceProperty))
+                            {
+                                entity = await client.ReadClusterCustomObjectAsync<TEntity>(entity.Name());
+                            }
+                            else
+                            {
+                                entity = await client.ReadNamespacedCustomObjectAsync<TEntity>(entity.Namespace(), entity.Name());
+                            }
+
+                            if (entity.RemoveFinalizer(finalizer.Identifier))
+                            {
+                                await UpdateEntityAsync(entity);
+                            }
+
+                            return true;
+                        }
+                        catch (Exception e)
+                        {
+                            logger.LogErrorEx(e);
+                        }
+
+                        return false;
+                    },
+                    timeout: TimeSpan.FromSeconds(30),
+                    pollInterval: TimeSpan.FromSeconds(1));
+            }
+            catch (Exception e)
+            {
+                string entityName;
+
+                if (string.IsNullOrEmpty(entity.Metadata.NamespaceProperty))
+                {
+                    entityName = entity.Name();
+                }
+                else
+                {
+                    entityName = $"{entity.Namespace()}/{entity.Name()}";
+                }
+
+                logger.LogErrorEx(e);
+
+                throw new Exception($"Timed out while trying to remove finalizer [{finalizer.Identifier}] from entity [{entityName}]");
+            }
+            
         }
 
         /// <inheritdoc/>

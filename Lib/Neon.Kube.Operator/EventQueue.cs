@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Net;
@@ -59,7 +60,7 @@ namespace Neon.Kube.Operator
         private readonly IKubernetes k8s;
         private readonly ILogger logger;
         private readonly ResourceManagerOptions options;
-        private readonly Dictionary<WatchEvent<TEntity>, CancellationTokenSource> queue;
+        private readonly ConcurrentDictionary<WatchEvent<TEntity>, CancellationTokenSource> queue;
         private readonly Func<WatchEvent<TEntity>, Task> eventHandler;
 
         /// <summary>
@@ -77,7 +78,7 @@ namespace Neon.Kube.Operator
             this.options = options; 
             this.eventHandler = eventHandler;
             this.logger  = TelemetryHub.CreateLogger($"Neon.Kube.Operator.EventQueue({typeof(TEntity).Name})");
-            this.queue   = new Dictionary<WatchEvent<TEntity>, CancellationTokenSource>();
+            this.queue   = new ConcurrentDictionary<WatchEvent<TEntity>, CancellationTokenSource>();
         }
 
         /// <summary>
@@ -110,7 +111,7 @@ namespace Neon.Kube.Operator
         public async Task EnqueueAsync(
             WatchEvent<TEntity> @event, 
             TimeSpan? delay = null, 
-            WatchEventType watchEventType = WatchEventType.Modified)
+            WatchEventType? watchEventType = null)
         {
             await SyncContext.Clear;
 
@@ -119,16 +120,21 @@ namespace Neon.Kube.Operator
                 return;
             }
 
+            if (watchEventType == null)
+            {
+                watchEventType = @event.Type;
+            }
+
             if (delay == null)
             {
                 delay = GetDelay(@event.Attempt);
             }
 
-            @event.Type = watchEventType;
+            @event.Type = watchEventType.Value;
 
             var cts = new CancellationTokenSource();
 
-            queue.Add(@event, cts);
+            queue.TryAdd(@event, cts);
 
             _ = QueueAsync(@event, delay.Value, cts.Token);
         }
@@ -147,6 +153,7 @@ namespace Neon.Kube.Operator
             if (queuedEvent?.Value != null)
             {
                 queue[queuedEvent].Cancel();
+                queue.TryRemove(queuedEvent, out _);
             }
         }
 
@@ -166,7 +173,7 @@ namespace Neon.Kube.Operator
 
                 if (queuedEvent != null)
                 {
-                    queue.Remove(queuedEvent);
+                    queue.TryRemove(queuedEvent, out _);
                 }
             }
         }
