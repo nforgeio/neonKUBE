@@ -110,6 +110,7 @@ namespace NeonClusterOperator
                 ITrigger trigger = TriggerBuilder.Create()
                     .WithIdentity(Name, Group)
                     .WithCronSchedule(cronSchedule)
+                    .StartNow()
                     .Build();
 
                 // Tell quartz to schedule the job using our trigger

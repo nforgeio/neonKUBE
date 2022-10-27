@@ -129,7 +129,7 @@ namespace NeonClusterOperator
                 IdleErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle_error", "Failed ClusterOperatorSettings IDLE event processing."),
                 ReconcileErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_reconcile_error", "Failed ClusterOperatorSettings RECONCILE event processing."),
                 DeleteErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_delete_error", "Failed ClusterOperatorSettings DELETE event processing."),
-                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_statusmodify_error", "Failed ClusterOperatorSettings STATUS-MODIFY events processing.")
+                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_statusmodify_error", "Failed ClusterOperatorSettings STATUS-MODIFY events processing."),
                 FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_finalize_error", "Failed NodeTask FINALIZE events processing.")
             };
 
