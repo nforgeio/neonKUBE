@@ -18,7 +18,7 @@
 		<WarningsAsErrors>NU1605</WarningsAsErrors>
 		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 		<ImplicitUsings>disable</ImplicitUsings>
-		<NoWarn>1701;1702;NETSDK1138;CS8892;IDE0063</NoWarn>
+		<NoWarn>1701;1702;NETSDK1138;CS8892;IDE0063;ASP0014</NoWarn>
 
 		<!-- Debugging -->
 
