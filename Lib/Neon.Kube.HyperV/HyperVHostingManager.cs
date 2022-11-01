@@ -1238,6 +1238,11 @@ namespace Neon.Kube
                     Parallel.ForEach(hyperv.ListVms().Where(vm => vm.Name.StartsWith(vmPrefix)), parallelOptions,
                         vm =>
                         {
+                            if (vm.State == VirtualMachineState.Running || vm.State == VirtualMachineState.Starting)
+                            {
+                                hyperv.StopVm(vm.Name, turnOff: true);
+                            }
+
                             hyperv.RemoveVm(vm.Name);
                         });
 
