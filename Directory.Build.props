@@ -90,12 +90,6 @@
 	<PropertyGroup>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
-
-		<DefineConstants Condition="'$(TargetFramework)' == 'netcoreapp3.1'">$(DefineConstants);TARGET_NETCORE_3_1</DefineConstants>
-		<DefineConstants Condition="'$(TargetFramework)' == 'net5.0'">$(DefineConstants);TARGET_NETCORE_5_0</DefineConstants>
-		<DefineConstants Condition="'$(TargetFramework)' == 'net6.0'">$(DefineConstants);TARGET_NETCORE_6_0</DefineConstants>
-		<DefineConstants Condition="'$(TargetFramework)' == 'net7.0'">$(DefineConstants);TARGET_NETCORE_7_0</DefineConstants>
-
 	</PropertyGroup>
-	
+
 </Project>

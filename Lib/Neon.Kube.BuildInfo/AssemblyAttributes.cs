@@ -36,21 +36,14 @@ using System.Reflection;
 
 #if NETSTANDARD2_0
 [assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETStandard,Version=v2.0", FrameworkDisplayName = ".NET Standard 2.0")]
-#elif NETSTANDARD1_2_OR_GREATER
+#elif NETSTANDARD2_1
 [assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETStandard,Version=v2.1", FrameworkDisplayName = ".NET Standard 2.1")]
-#elif TARGET_NETCORE_3_1
-[assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETCoreApp,Version=v3.1", FrameworkDisplayName = ".NET Core 3.1")]
-#elif TARGET_NETCORE_5_0
-[assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETCoreApp,Version=v5.0", FrameworkDisplayName = ".NET 5.0")]
-#elif TARGET_NETCORE_6_0
+#elif NET6_0
 [assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETCoreApp,Version=v6.0", FrameworkDisplayName = ".NET 6.0")]
-#elif TARGET_NETCORE_7_0
+#elif NET7_0
 [assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETCoreApp,Version=v7.0", FrameworkDisplayName = ".NET 7.0")]
-#else
-
-// Fallback to: net48
+#elif NET48
 [assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETFramework,Version=v4.8", FrameworkDisplayName = ".NET Framework 4.8")]
-
+#else
+#error Current framework is not supported.  You'll need to add support here.
 #endif
-
-
