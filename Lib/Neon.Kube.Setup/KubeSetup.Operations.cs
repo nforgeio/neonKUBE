@@ -4520,6 +4520,11 @@ $@"- name: StorageType
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task InstallNodeAgentAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
+            //-----------------------------------------------------
+            // $debug(jefflill): DELETE THIS (temporarily disabled)
+            return;
+            //-----------------------------------------------------
+
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));

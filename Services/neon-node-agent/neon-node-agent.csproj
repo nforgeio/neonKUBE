@@ -24,9 +24,9 @@
 
 	<ItemGroup>
 		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2421-dev-jeff" />
-		<PackageReference Include="Neon.Cryptography" Version="10000.0.2421-dev-jeff" />
-		<PackageReference Include="Neon.Service" Version="10000.0.2421-dev-jeff" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2423-dev-jeff" />
+		<PackageReference Include="Neon.Cryptography" Version="10000.0.2423-dev-jeff" />
+		<PackageReference Include="Neon.Service" Version="10000.0.2423-dev-jeff" />
 		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.9" />
 		<PackageReference Include="Tomlyn" Version="0.15.0" />
 	</ItemGroup>
