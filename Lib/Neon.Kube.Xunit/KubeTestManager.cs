@@ -55,41 +55,9 @@ namespace Neon.Kube.Xunit
 
         private TempFolder tempFolder;
 
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        /// <param name="mode">Optionally specifies the test mode.  This defaults to <see cref="KubeClusterspaceMode.EnabledWithSharedCache"/>.</param>
-        /// <exception cref="InvalidOperationException">Thrown if another test manager instance is active.</exception>
-        public KubeTestManager(KubeClusterspaceMode mode = KubeClusterspaceMode.EnabledWithSharedCache)
-        {
-            lock (syncLock)
-            {
-                if (Current != null)
-                {
-                    throw new InvalidOperationException("Another test manager is already active.");
-                }
-
-                try
-                {
-                    tempFolder = new TempFolder();
-                    Current    = this;
-
-                    KubeHelper.SetClusterSpaceMode(mode, tempFolder.Path);
-                }
-                catch
-                {
-                    KubeHelper.ResetClusterspaceMode();
-                    Current = null;
-                    throw;
-                }
-            }
-        }
-
         /// <inheritdoc/>
         public void Dispose()
         {
-            KubeHelper.ResetClusterspaceMode();
-
             if (tempFolder != null)
             {
                 tempFolder.Dispose();

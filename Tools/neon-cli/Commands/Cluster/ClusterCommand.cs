@@ -56,7 +56,6 @@ USAGE:
     neon cluster pause      [OPTIONS]
     neon cluster reset      [OPTIONS]
     neon cluster setup      [OPTIONS] root@CLUSTER-NAME
-    neon cluster space      [SPACE-NAME] [--reset]
     neon cluster start
     neon cluster stop       [OPTIONS]
     neon cluster unlock

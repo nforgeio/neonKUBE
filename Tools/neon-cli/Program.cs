@@ -198,7 +198,6 @@ NEON CLUSTER LIFE-CYCLE COMMANDS:
     neon cluster delete     [OPTIONS]
     neon cluster reset      [OPTIONS]
     neon cluster setup      [OPTIONS] root@CLUSTER-NAME
-    neon cluster space      [SPACE-NAME] [--reset]
     neon cluster start
     neon cluster stop       [OPTIONS]
     neon cluster unlock
@@ -321,13 +320,6 @@ CLUSTER MANAGEMENT ARGUMENTS:
             // up secrets and profile information from [neon-assistant].
 
             NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new ProfileClient());
-
-            // Set the clusterspace mode when necessary.
-
-            if (KubeHelper.CurrentClusterSpace != null)
-            {
-                KubeHelper.SetClusterSpaceMode(KubeClusterspaceMode.EnabledWithSharedCache, KubeHelper.CurrentClusterSpace);
-            }
 
             // Fetch the paths to the [kubectl] and [helm] binaries.  Note that these
             // will download them when they're not already present.

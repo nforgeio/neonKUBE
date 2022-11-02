@@ -53,10 +53,6 @@ namespace Neon.Kube
         /// in the cluster definition returned.  This can be used by <b>ClusterFixture</b> and custom tools
         /// to help isolated temporary cluster assets from production clusters.
         /// </para>
-        /// <note>
-        /// This parameter has no effect unless <see cref="KubeHelper.ClusterspaceMode"/> is set to something
-        /// other than <see cref="KubeClusterspaceMode.Disabled"/>.
-        /// </note>
         /// </param>
         /// <returns>The cluster definition.</returns>
         public static ClusterDefinition GetBuiltInClusterDefinition(HostingEnvironment hostEnvironment, string deploymentPrefix = null)

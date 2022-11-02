@@ -331,7 +331,6 @@ namespace Neon.Kube.Xunit
 
         private ClusterFixtureOptions   options;
         private bool                    started = false;
-        private string                  clusterspaceFolder;
 
         /// <summary>
         /// Constructor.
@@ -537,14 +536,6 @@ namespace Neon.Kube.Xunit
             {
                 return TestFixtureStatus.AlreadyRunning;
             }
-
-            // Set the clusterspace mode, using any previously downloaded node image unless
-            // the user specifies a custom image.  We're going to host the fixture state
-            // files in this fixed folder:
-            //
-            //      ~/.neonkube/spaces/$fixture/*
-
-            clusterspaceFolder = KubeHelper.SetClusterSpaceMode(string.IsNullOrEmpty(options.ImageUriOrPath) ? KubeClusterspaceMode.EnabledWithSharedCache : KubeClusterspaceMode.Enabled, KubeHelper.ClusterspacePrefix("fixture"));
 
             // Figure out whether the user passed an image URI or file path to override
             // the default node image.
