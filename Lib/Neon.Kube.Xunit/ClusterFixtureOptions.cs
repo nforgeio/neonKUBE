@@ -161,7 +161,28 @@ namespace Neon.Kube.Xunit
         /// <returns>The cloned instance.</returns>
         public ClusterFixtureOptions Clone()
         {
-            return NeonHelper.JsonClone(this);
+            // $hack(jefflill):
+            //
+            // We can't clone the [TestOutputHelper] because it's an interface, so we'll
+            // capture the property, set it to NULL, and then restore it to the source
+            // and set in in the clone.
+
+            var testOutputHelper = this.TestOutputHelper;
+
+            try
+            {
+                this.TestOutputHelper = null;
+
+                var clone = NeonHelper.JsonClone(this);
+
+                clone.TestOutputHelper = testOutputHelper;
+
+                return clone;
+            }
+            finally
+            {
+                this.TestOutputHelper = testOutputHelper;
+            }
         }
     }
 }

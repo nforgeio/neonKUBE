@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_KubeFixture.cs
+// FILE:	    Test_FixtureOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
 //
@@ -23,7 +23,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using Neon.Common;
+using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Xunit;
@@ -32,41 +35,13 @@ using Neon.Xunit;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace TestKube
+namespace TestKubeFixture
 {
     [Trait(TestTrait.Category, TestArea.NeonKube)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
-    public class Test_KubeFixture : IClassFixture<ClusterFixture>
+    public class Test_FixtureOptions
     {
-        private ClusterFixture fixture;
-
-        public Test_KubeFixture(ClusterFixture fixture, ITestOutputHelper testOutputHelper)
-        {
-            this.fixture = fixture;
-
-            var fixtureOptions =
-                new ClusterFixtureOptions()
-                {
-                    RemoveClusterOnStart   = false,
-                    RemoveClusterOnDispose = false,
-                    ResetOptions           = new ClusterResetOptions(),
-                    TestOutputHelper       = testOutputHelper,
-                    Unredacted             = true,
-                };
-
-            var status = fixture.StartCluster(string.Empty);
-
-            if (status == TestFixtureStatus.Disabled)
-            {
-                return;
-            }
-            else if (status == TestFixtureStatus.AlreadyRunning)
-            {
-                fixture.ResetCluster();
-            }
-        }
-
         [ClusterFact]
         public void VerifyDefaultOptions()
         {
@@ -79,10 +54,10 @@ namespace TestKube
             Assert.False(fixtureOptions.Unredacted);
             Assert.False(fixtureOptions.RemoveClusterOnStart);
             Assert.False(fixtureOptions.RemoveClusterOnDispose);
-            Assert.NotNull(fixtureOptions.TestOutputHelper);
-            Assert.NotNull(fixtureOptions.ImageUriOrPath);
-            Assert.NotNull(fixtureOptions.NeonCloudHeadendUri);
-            Assert.False(fixtureOptions.CaptureDeploymentLogs);
+            Assert.Null(fixtureOptions.TestOutputHelper);
+            Assert.Null(fixtureOptions.ImageUriOrPath);
+            Assert.Null(fixtureOptions.NeonCloudHeadendUri);
+            Assert.True(fixtureOptions.CaptureDeploymentLogs);
             Assert.Equal(500, fixtureOptions.MaxParallel);
 
             var resetOptions = fixtureOptions.ResetOptions;

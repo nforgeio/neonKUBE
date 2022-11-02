@@ -78,13 +78,7 @@ namespace TestKube
             this.fixture = fixture;
 
             var options = new ClusterFixtureOptions();
-
-            //################################################################
-            // $debug(jefflill): Restore this after manual testing is complete
-            //var status  = fixture.StartWithNeonAssistant(options: options);
-            //################################################################
-
-            var status = fixture.StartWithCurrentCluster(options: options);
+            var status  = fixture.StartWithCurrentCluster(options: options);
 
             if (status == TestFixtureStatus.Disabled)
             {

@@ -880,7 +880,7 @@ namespace Neon.Kube.Xunit
         /// </remarks>
         public TestFixtureStatus StartCluster(string clusterDefinitionYaml, ClusterFixtureOptions options = null)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinitionYaml != null, nameof(clusterDefinitionYaml));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterDefinitionYaml), nameof(clusterDefinitionYaml));
 
             return StartWithClusterDefinition(ClusterDefinition.FromYaml(clusterDefinitionYaml, strict: true, validate: true), options);
         }
