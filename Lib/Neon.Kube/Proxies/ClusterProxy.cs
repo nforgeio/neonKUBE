@@ -1268,7 +1268,7 @@ namespace Neon.Kube
             var context     = KubeHelper.Config.GetContext(contextName);
             var login       = KubeHelper.GetClusterLogin(contextName);
 
-            await HostingManager.RemoveClusterAsync(deleteOrphans);
+            await HostingManager.DeleteClusterAsync(deleteOrphans);
 
             if (context != null)
             {

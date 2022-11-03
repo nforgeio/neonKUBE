@@ -308,7 +308,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Removes an existing cluster by terminating any nodes and then removing node VMs
+        /// Deletes an existing cluster by terminating any nodes and then removing node VMs
         /// and any related resources as well as the related local cluster login by default.  
         /// The cluster does not need to be running.  This method can optionally remove clusters
         /// or VMs potentially orphaned by interrupted unit tests as identified by a resource 
@@ -331,6 +331,6 @@ namespace Neon.Kube
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        Task RemoveClusterAsync(bool removeOrphans = false);
+        Task DeleteClusterAsync(bool removeOrphans = false);
     }
 }
