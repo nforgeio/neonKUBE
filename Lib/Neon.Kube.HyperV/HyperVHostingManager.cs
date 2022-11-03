@@ -1220,7 +1220,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task RemoveClusterAsync(bool removeOrphans = false)
+        public override async Task DeleteClusterAsync(bool removeOrphans = false)
         {
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
