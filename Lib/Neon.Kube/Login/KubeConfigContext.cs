@@ -41,7 +41,7 @@ namespace Neon.Kube
     /// </summary>
     public class KubeConfigContext
     {
-        private bool            loginsLoadedLoaded;
+        private bool            loginsLoaded;
         private ClusterLogin    cachedLogins;
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public bool IsNeonKube => KubeContextName.Parse(Name).IsNeonKube;
+        public bool IsNeonKube => KubeContextName.Parse(Name).IsNeonKube && Extension != null && Extension.ClusterDefinition != null;
 
         /// <summary>
         /// Indicates whether the Kubernetes context references a neon-desktop built-in cluster.
@@ -106,7 +106,7 @@ namespace Neon.Kube
                     return cachedLogins;
                 }
 
-                if (loginsLoadedLoaded)
+                if (loginsLoaded)
                 {
                     return null;
                 }
@@ -129,14 +129,14 @@ namespace Neon.Kube
                     }
                 }
 
-                loginsLoadedLoaded = true;
+                loginsLoaded = true;
 
                 return cachedLogins;
             }
 
             set
             {
-                loginsLoadedLoaded = true;
+                loginsLoaded = true;
                 cachedLogins       = value;
             }
         }
