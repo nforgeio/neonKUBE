@@ -408,26 +408,47 @@ namespace Neon.Kube
 
             // Prune any non-neonKUBE or invalid contexts.
 
-            var pruneList = new List<KubeConfigContext>();
+            var prunedConfigs = new List<KubeConfigContext>();
+            var clusterRefs    = new HashSet<string>();
 
             foreach (var context in Contexts)
             {
-                if (!string.IsNullOrEmpty(context.Properties.User) && GetUser(context.Properties.User) == null)
+                if (!context.IsNeonKube)
                 {
-                    pruneList.Add(context);
+                    prunedConfigs.Add(context);
                     continue;
                 }
 
                 if (!string.IsNullOrEmpty(context.Properties.Cluster) && GetCluster(context.Properties.Cluster) == null)
                 {
-                    pruneList.Add(context);
+                    prunedConfigs.Add(context);
                     continue;
+                }
+
+                clusterRefs.Add(context.Properties.Cluster);
+            }
+
+            foreach (var context in prunedConfigs)
+            {
+                Contexts.Remove(context);
+            }
+
+            // Prune any non-neonKUBE clusters that are not referenced by a 
+            // neonKUBE context.
+
+            var prunedClusters = new List<KubeConfigCluster>();
+
+            foreach (var cluster in Clusters)
+            {
+                if (!clusterRefs.Contains(cluster.Name))
+                {
+                    prunedClusters.Add(cluster);
                 }
             }
 
-            foreach (var context in pruneList)
+            foreach (var cluster in prunedClusters)
             {
-                Contexts.Remove(context);
+                Clusters.Remove(cluster);
             }
         }
 
