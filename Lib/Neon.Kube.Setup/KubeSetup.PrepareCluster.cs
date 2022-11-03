@@ -262,7 +262,7 @@ namespace Neon.Kube
                 controller.AddGlobalStep("remove existing cluster",
                     async controller =>
                     {
-                        await hostingManager.RemoveClusterAsync(removeOrphans: true);
+                        await hostingManager.DeleteClusterAsync(removeOrphans: true);
                     });
             }
 
