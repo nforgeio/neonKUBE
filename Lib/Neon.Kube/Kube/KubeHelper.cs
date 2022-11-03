@@ -1176,9 +1176,9 @@ namespace Neon.Kube
                     return cachedContext;
                 }
 
-                if (string.IsNullOrEmpty(Config.CurrentContext))
+                if (Config == null || string.IsNullOrEmpty(Config.CurrentContext))
                 {
-                    return null;
+                    return cachedContext = null;
                 }
                 else
                 {

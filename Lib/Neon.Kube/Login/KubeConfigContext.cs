@@ -83,14 +83,14 @@ namespace Neon.Kube
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public bool IsNeonKube => KubeContextName.Parse(Name).IsNeonKube && Extension != null && Extension.ClusterDefinition != null;
+        public bool IsNeonKube => KubeContextName.Parse(Name).IsNeonKube && Extension != null;
 
         /// <summary>
         /// Indicates whether the Kubernetes context references a neon-desktop built-in cluster.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public bool IsDesktopBuiltIn => IsNeonKube && Extension != null && Extension.ClusterDefinition != null && Extension.ClusterDefinition.IsDesktopBuiltIn;
+        public bool IsDesktopBuiltIn => IsNeonKube && Extension != null && Extension.ClusterDefinition.IsDesktopBuiltIn;
 
         /// <summary>
         /// The cluster login information for the context.

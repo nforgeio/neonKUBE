@@ -389,7 +389,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Validates the configuration.
+        /// Validates the configuration and also prunes any non-neonKUBE contexts.
         /// </summary>
         /// <exception cref="NeonKubeException">Thrown when the current config is invalid.</exception>
         public void Validate()
@@ -403,22 +403,31 @@ namespace Neon.Kube
 
             if (!string.IsNullOrEmpty(CurrentContext) && GetContext(CurrentContext) == null)
             {
-                throw new NeonKubeException($"Current context [{CurrentContext}] doesn't exist.");
+                CurrentContext = null;
             }
 
-            // Ensure that referenced users and clusters actually exist.
+            // Prune any non-neonKUBE or invalid contexts.
+
+            var pruneList = new List<KubeConfigContext>();
 
             foreach (var context in Contexts)
             {
                 if (!string.IsNullOrEmpty(context.Properties.User) && GetUser(context.Properties.User) == null)
                 {
-                    throw new NeonKubeException($"Context [{context.Name}] references [User={context.Properties.User}] that doesn't exist.");
+                    pruneList.Add(context);
+                    continue;
                 }
 
                 if (!string.IsNullOrEmpty(context.Properties.Cluster) && GetCluster(context.Properties.Cluster) == null)
                 {
-                    throw new NeonKubeException($"Context [{context.Name}] references cluster [{context.Properties.Cluster}] doesn't exist.");
+                    pruneList.Add(context);
+                    continue;
                 }
+            }
+
+            foreach (var context in pruneList)
+            {
+                Contexts.Remove(context);
             }
         }
 
