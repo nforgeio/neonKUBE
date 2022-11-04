@@ -15,13 +15,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Threading.Tasks;
-using System.Net;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
@@ -46,6 +47,9 @@ using k8s.Models;
 using Prometheus;
 using Prometheus.DotNetRuntime;
 using System.Net.Http;
+
+using OpenTelemetry;
+using OpenTelemetry.Trace;
 
 namespace NeonDashboard
 {
@@ -238,6 +242,30 @@ namespace NeonDashboard
             Terminator.ReadyToExit();
 
             return 0;
+        }
+
+        /// <inheritdoc/>
+        protected override bool OnTracerConfig(TracerProviderBuilder builder)
+        {
+            builder.AddHttpClientInstrumentation(
+                options =>
+                {
+                    options.Filter = (httpcontext) =>
+                    {
+                        Logger.LogDebugEx(() => NeonHelper.JsonSerialize(httpcontext));
+                        return true;
+                    };
+                });
+            builder.AddAspNetCoreInstrumentation();
+            builder.AddOtlpExporter(
+                options =>
+                {
+                    options.ExportProcessorType = ExportProcessorType.Batch;
+                    options.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>();
+                    options.Endpoint = new Uri(NeonHelper.NeonKubeOtelCollectorUri);
+                    options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
+                });
+            return true;
         }
 
         private async Task AddDashboardAsync(V1NeonDashboard dashboard)

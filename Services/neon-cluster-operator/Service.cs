@@ -255,6 +255,7 @@ namespace NeonClusterOperator
                 {
                     options.Filter = (httpcontext) =>
                     {
+                        Logger.LogDebugEx(() => NeonHelper.JsonSerialize(httpcontext));
                         return true;
                     };
                 });

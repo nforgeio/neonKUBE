@@ -72,6 +72,20 @@ namespace Neon.Kube
         public string ClusterId { get; set; } = null;
 
         /// <summary>
+        /// Identifies the client that deployed the cluster.
+        /// </summary>
+        [JsonProperty(PropertyName = "ClientId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string ClientId { get; set; } = null;
+
+        /// <summary>
+        /// Identifies the organization that owns the cluster.
+        /// </summary>
+        [JsonProperty(PropertyName = "OrganizationId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string OrganizationId { get; set; } = null;
+
+        /// <summary>
         /// Timestamp representing the date that the cluster was created.
         /// </summary>
         [JsonProperty(PropertyName = "CreationTimestamp", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

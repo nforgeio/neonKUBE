@@ -63,6 +63,6 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "Nodes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public List<V1NodeStatus> Nodes { get; set; }
+        public List<V1Node> Nodes { get; set; }
     }
 }
