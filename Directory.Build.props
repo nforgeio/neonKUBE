@@ -6,9 +6,9 @@
 
 	<PropertyGroup>
 		<Product>neonKUBE</Product>
-		<Authors>neonFORGE Team</Authors>
-		<Company>neonFORGE LLC</Company>
-		<Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
+		<Authors>NEONFORGE Team</Authors>
+		<Company>NEONFORGE LLC</Company>
+		<Copyright>Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.</Copyright>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<LangVersion>latest</LangVersion>
 		<Nullable>disable</Nullable>

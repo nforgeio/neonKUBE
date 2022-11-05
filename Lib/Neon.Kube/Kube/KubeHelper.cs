@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    KubeHelper.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -439,7 +439,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Determines whether a cluster hosting environment is available only for neonFORGE
+        /// Determines whether a cluster hosting environment is available only for NEONFORGE
         /// premium (closed-source) related projects.
         /// </summary>
         /// <param name="hostingEnvironment">The hosting environment.</param>
@@ -1002,7 +1002,7 @@ namespace Neon.Kube
         /// This folder will be structured like for a <b>neon-cli only</b>installation:
         /// </para>
         /// <code>
-        /// C:\Program Files\neonFORGE\neon-cli\
+        /// C:\Program Files\NEONFORGE\neon-cli\
         ///     neon\               # neon-cli binaries
         ///     powershell\         # Powershell 7.x
         ///     ssh\                # SSH related tools
@@ -1011,7 +1011,7 @@ namespace Neon.Kube
         /// and this for <b>neon-desktop</b> (which includes <b>neon-cli</b>):
         /// </para>
         /// <code>
-        /// C:\Program Files\neonFORGE\neon-desktop\
+        /// C:\Program Files\NEONFORGE\neon-desktop\
         ///     desktop\            # neon-desktop binaries
         ///     neon\               # neon-cli binaries
         ///     powershell\         # Powershell 7.x
@@ -2274,7 +2274,7 @@ exit 0
         public static string OpenSshConfig =>
 @"# FILE:	       sshd_config
 # CONTRIBUTOR: Jeff Lill
-# COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+# COPYRIGHT:   Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the ""License"");
 # you may not use this file except in compliance with the License.
@@ -2451,7 +2451,7 @@ Include /etc/ssh/sshd_config.d/*.conf
             return
 $@"# FILE:	       /etc/ssh/sshd_config.d/50-neonkube.conf
 # CONTRIBUTOR: Jeff Lill
-# COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+# COPYRIGHT:   Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the ""License"");
 # you may not use this file except in compliance with the License.

@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    Program.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -729,7 +729,7 @@ CLUSTER MANAGEMENT ARGUMENTS:
         /// be located in the <b>tools</b> subfolder where <b>neon-cli</b> itself is installed, like:
         /// </para>
         /// <code>
-        /// C:\Program Files\neonFORGE\neonDESKTOP\
+        /// C:\Program Files\NEONFORGE\neonDESKTOP\
         ///     neon-cli.exe
         ///     tools\
         ///         helm.exe
@@ -767,7 +767,7 @@ CLUSTER MANAGEMENT ARGUMENTS:
         /// be located in the <b>tools</b> subfolder where <b>neon-cli</b> itself is installed, like:
         /// </para>
         /// <code>
-        /// C:\Program Files\neonFORGE\neonDESKTOP\
+        /// C:\Program Files\NEONFORGE\neonDESKTOP\
         ///     neon-cli.exe
         ///     tools\
         ///         helm.exe
