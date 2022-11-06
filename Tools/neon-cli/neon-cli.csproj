@@ -26,7 +26,7 @@
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<PublishSingleFile>false</PublishSingleFile>
 		<SelfContained>true</SelfContained>
-		<PublishTrimmed>false</PublishTrimmed>
+		<PublishTrimmed>true</PublishTrimmed>
 		<PublishReadyToRun>true</PublishReadyToRun>
 	</PropertyGroup>
 
@@ -91,10 +91,16 @@
 	    <LastGenOutput>Resources.Designer.cs</LastGenOutput>
 	  </EmbeddedResource>
 	</ItemGroup>
+	
+	<!-- 
+	$debug(jefflill): Temporarily disabling publishing 
+	
+	REMEMBER TO ADD THE SECOND "-" TO THE no-cmd OPTION!
+	-->
 
-	<Target Name="PubCore" AfterTargets="AfterBuild" Condition="true">
+	<!--<Target Name="PubCore" AfterTargets="AfterBuild" Condition="true">
 		<Message Importance="high" Text="Publish: $(ProjectPath)" />
-		<Exec Command="pubcore --no-cmd &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; $(ConfigurationName) &quot;$(NK_BUILD)\neon&quot; win-x64" />
-	</Target>
+		<Exec Command="pubcore -no-cmd &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; $(ConfigurationName) &quot;$(NK_BUILD)\neon&quot; win-x64" />
+	</Target>-->
 
 </Project>
