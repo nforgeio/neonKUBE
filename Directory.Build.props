@@ -6,9 +6,9 @@
 
 	<PropertyGroup>
 		<Product>neonKUBE</Product>
-		<Authors>neonFORGE Team</Authors>
-		<Company>neonFORGE LLC</Company>
-		<Copyright>Copyright © 2005-2022 by neonFORGE LLC.  All rights reserved.</Copyright>
+		<Authors>NEONFORGE Team</Authors>
+		<Company>NEONFORGE LLC</Company>
+		<Copyright>Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.</Copyright>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<LangVersion>latest</LangVersion>
 		<Nullable>disable</Nullable>
@@ -18,7 +18,7 @@
 		<WarningsAsErrors>NU1605</WarningsAsErrors>
 		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 		<ImplicitUsings>disable</ImplicitUsings>
-		<NoWarn>1701;1702;NETSDK1138;CS8892;IDE0063</NoWarn>
+		<NoWarn>1701;1702;NETSDK1138;CS8892;ASP0014;IDE0063;IDE0090;IDE0017;IDE0079;IDE0066</NoWarn>
 
 		<!-- Debugging -->
 
@@ -90,12 +90,6 @@
 	<PropertyGroup>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
-
-		<DefineConstants Condition="'$(TargetFramework)' == 'netcoreapp3.1'">$(DefineConstants);TARGET_NETCORE_3_1</DefineConstants>
-		<DefineConstants Condition="'$(TargetFramework)' == 'net5.0'">$(DefineConstants);TARGET_NETCORE_5_0</DefineConstants>
-		<DefineConstants Condition="'$(TargetFramework)' == 'net6.0'">$(DefineConstants);TARGET_NETCORE_6_0</DefineConstants>
-		<DefineConstants Condition="'$(TargetFramework)' == 'net7.0'">$(DefineConstants);TARGET_NETCORE_7_0</DefineConstants>
-
 	</PropertyGroup>
-	
+
 </Project>

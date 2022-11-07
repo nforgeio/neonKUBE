@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    KubeConfigContext.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ namespace Neon.Kube
     /// </summary>
     public class KubeConfigContext
     {
-        private bool            loginsLoadedLoaded;
+        private bool            loginsLoaded;
         private ClusterLogin    cachedLogins;
 
         /// <summary>
@@ -83,14 +83,14 @@ namespace Neon.Kube
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public bool IsNeonKube => KubeContextName.Parse(Name).IsNeonKube;
+        public bool IsNeonKube => KubeContextName.Parse(Name).IsNeonKube && Extension != null;
 
         /// <summary>
         /// Indicates whether the Kubernetes context references a neon-desktop built-in cluster.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public bool IsDesktopBuiltIn => IsNeonKube && Extension != null && Extension.ClusterDefinition != null && Extension.ClusterDefinition.IsDesktopBuiltIn;
+        public bool IsDesktopBuiltIn => IsNeonKube && Extension != null && Extension.ClusterDefinition.IsDesktopBuiltIn;
 
         /// <summary>
         /// The cluster login information for the context.
@@ -106,7 +106,7 @@ namespace Neon.Kube
                     return cachedLogins;
                 }
 
-                if (loginsLoadedLoaded)
+                if (loginsLoaded)
                 {
                     return null;
                 }
@@ -129,14 +129,14 @@ namespace Neon.Kube
                     }
                 }
 
-                loginsLoadedLoaded = true;
+                loginsLoaded = true;
 
                 return cachedLogins;
             }
 
             set
             {
-                loginsLoadedLoaded = true;
+                loginsLoaded = true;
                 cachedLogins       = value;
             }
         }

@@ -3,7 +3,7 @@
  <#
     FILE: prebuild.ps1
     CONTRIBUTOR: Simon Zhang
-    COPYRIGHT: Copyright (c) 2005-2022 by neonFORGE LLC. All rights reserved.
+    COPYRIGHT: Copyright © 2005-2022 by NEONFORGE LLC. All rights reserved.
 
     this file checks for installed npm package, and installs if not. 
     *notably faster then running "npm install" 

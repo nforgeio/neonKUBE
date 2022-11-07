@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    KubeContainerRegistry.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -69,40 +69,40 @@ namespace Neon.Kube
     public static class KubeContainerRegistry
     {
         /// <summary>
-        /// Identifies the production neonFORGE container image registry.  This is a public
+        /// Identifies the production NEONFORGE container image registry.  This is a public
         /// registry that holds non-cluster setup related images.
         /// </summary>
         public const string MainProdRegistry = "ghcr.io/neonkube";
 
         /// <summary>
-        /// Identifies the development neonFORGE container image registry.  This is a public
+        /// Identifies the development NEONFORGE container image registry.  This is a public
         /// registry that holds non-cluster setup related images during development between
         /// releases.
         /// </summary>
         public const string MainDevRegistry = "ghcr.io/neonkube-dev";
 
         /// <summary>
-        /// Returns the appropriate public container neonFORGE registry to be used for the git 
+        /// Returns the appropriate public container NEONFORGE registry to be used for the git 
         /// branch the assembly was built from.  This returns <see cref="MainProdRegistry"/> for
         /// release branches and <see cref="MainDevRegistry"/> for all other branches.
         /// </summary>
         public static string MainBranchRegistry => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase) ? MainProdRegistry : MainDevRegistry;
 
         /// <summary>
-        /// Identifies the production neonFORGE container image registry.  This is a public
+        /// Identifies the production NEONFORGE container image registry.  This is a public
         /// registry that holds non-cluster setup related images.
         /// </summary>
         public const string BaseProdRegistry = "ghcr.io/neonkube-base";
 
         /// <summary>
-        /// Identifies the development neonFORGE container image registry.  This is a public
+        /// Identifies the development NEONFORGE container image registry.  This is a public
         /// registry that holds non-cluster setup related images during development between
         /// releases.
         /// </summary>
         public const string BaseDevRegistry = "ghcr.io/neonkube-base-dev";
 
         /// <summary>
-        /// Returns the appropriate public container neonFORGE registry to be used for the git 
+        /// Returns the appropriate public container NEONFORGE registry to be used for the git 
         /// branch the assembly was built from.  This returns <see cref="MainProdRegistry"/> for
         /// release branches and <see cref="MainDevRegistry"/> for all other branches.
         /// </summary>

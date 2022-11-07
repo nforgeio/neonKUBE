@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    VmHostingOptions.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -212,11 +212,6 @@ namespace Neon.Kube
             else
             {
                 prefix = $"{NamePrefix}-".ToLowerInvariant();
-            }
-
-            if (KubeHelper.ClusterspaceMode != KubeClusterspaceMode.Disabled && !string.IsNullOrEmpty(clusterDefinition.Deployment.Prefix))
-            {
-                prefix = $"{clusterDefinition.Deployment.Prefix}-{prefix}";
             }
 
             return prefix;

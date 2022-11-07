@@ -27,7 +27,7 @@ goto done
 
 :goodPath 
 
-REM Set NK_REPOS to the parent directory holding the neonFORGE repositories.
+REM Set NK_REPOS to the parent directory holding the NEONFORGE repositories.
 
 pushd "%NK_ROOT%\.."
 set NK_REPOS=%cd%

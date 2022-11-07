@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    ClusterFixture.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -331,7 +331,6 @@ namespace Neon.Kube.Xunit
 
         private ClusterFixtureOptions   options;
         private bool                    started = false;
-        private string                  clusterspaceFolder;
 
         /// <summary>
         /// Constructor.
@@ -537,14 +536,6 @@ namespace Neon.Kube.Xunit
             {
                 return TestFixtureStatus.AlreadyRunning;
             }
-
-            // Set the clusterspace mode, using any previously downloaded node image unless
-            // the user specifies a custom image.  We're going to host the fixture state
-            // files in this fixed folder:
-            //
-            //      ~/.neonkube/spaces/$fixture/*
-
-            clusterspaceFolder = KubeHelper.SetClusterSpaceMode(string.IsNullOrEmpty(options.ImageUriOrPath) ? KubeClusterspaceMode.EnabledWithSharedCache : KubeClusterspaceMode.Enabled, KubeHelper.ClusterspacePrefix("fixture"));
 
             // Figure out whether the user passed an image URI or file path to override
             // the default node image.
@@ -880,7 +871,7 @@ namespace Neon.Kube.Xunit
         /// </remarks>
         public TestFixtureStatus StartCluster(string clusterDefinitionYaml, ClusterFixtureOptions options = null)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinitionYaml != null, nameof(clusterDefinitionYaml));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterDefinitionYaml), nameof(clusterDefinitionYaml));
 
             return StartWithClusterDefinition(ClusterDefinition.FromYaml(clusterDefinitionYaml, strict: true, validate: true), options);
         }

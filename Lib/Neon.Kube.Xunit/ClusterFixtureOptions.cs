@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    ClusterFixtureOptions.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -63,7 +63,7 @@ namespace Neon.Kube.Xunit
         /// <para>
         /// For cloud environments, this specifies whether the cluster should be provisioned
         /// using a VM image from the public cloud marketplace when <c>true</c> or from the
-        /// private neonFORGE image gallery for testing when <c>false</c>.  This is ignored
+        /// private NEONFORGE image gallery for testing when <c>false</c>.  This is ignored
         /// for on-premise environments.  This defaults to <c>true</c>.
         /// </para>
         /// <note>
@@ -161,7 +161,28 @@ namespace Neon.Kube.Xunit
         /// <returns>The cloned instance.</returns>
         public ClusterFixtureOptions Clone()
         {
-            return NeonHelper.JsonClone(this);
+            // $hack(jefflill):
+            //
+            // We can't clone the [TestOutputHelper] because it's an interface, so we'll
+            // capture the property, set it to NULL, and then restore it to the source
+            // and set in in the clone.
+
+            var testOutputHelper = this.TestOutputHelper;
+
+            try
+            {
+                this.TestOutputHelper = null;
+
+                var clone = NeonHelper.JsonClone(this);
+
+                clone.TestOutputHelper = testOutputHelper;
+
+                return clone;
+            }
+            finally
+            {
+                this.TestOutputHelper = testOutputHelper;
+            }
         }
     }
 }

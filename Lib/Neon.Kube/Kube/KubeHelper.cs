@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    KubeHelper.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -65,8 +65,6 @@ namespace Neon.Kube
         private static Guid                 clientId;
         private static string               userHomeFolder;
         private static string               neonkubeHomeFolder;
-        private static string               clusterspaceFolder;
-        private static string               cachedCurrentClusterspacePath;
         private static KubeConfig           cachedConfig;
         private static KubeConfigContext    cachedContext;
         private static string               cachedNeonKubeUserFolder;
@@ -113,28 +111,27 @@ namespace Neon.Kube
         /// </summary>
         private static void ClearCachedItems()
         {
-            cachedConfig                  = null;
-            cachedContext                 = null;
-            cachedNeonKubeUserFolder      = null;
-            cachedRunFolder               = null;
-            cachedLogFolder               = null;
-            cachedTempFolder              = null;
-            cachedLoginsFolder            = null;
-            cachedCurrentClusterspacePath = null;
-            cachedPasswordsFolder         = null;
-            cachedCacheFolder             = null;
-            cachedDesktopCommonFolder     = null;
-            cachedDesktopFolder           = null;
-            cachedDesktopHypervFolder     = null;
-            cachedClientConfig            = null;
-            cachedClusterCertificate      = null;
-            cachedInstallFolder           = null;
-            cachedToolsFolder             = null;
-            cachedPwshPath                = null;
-            cachedResources               = null;
-            cachedNodeImageFolder         = null;
-            cachedDashboardStateFolder    = null;
-            cachedUserSshFolder           = null;
+            cachedConfig               = null;
+            cachedContext              = null;
+            cachedNeonKubeUserFolder   = null;
+            cachedRunFolder            = null;
+            cachedLogFolder            = null;
+            cachedTempFolder           = null;
+            cachedLoginsFolder         = null;
+            cachedPasswordsFolder      = null;
+            cachedCacheFolder          = null;
+            cachedDesktopCommonFolder  = null;
+            cachedDesktopFolder        = null;
+            cachedDesktopHypervFolder  = null;
+            cachedClientConfig         = null;
+            cachedClusterCertificate   = null;
+            cachedInstallFolder        = null;
+            cachedToolsFolder          = null;
+            cachedPwshPath             = null;
+            cachedResources            = null;
+            cachedNodeImageFolder      = null;
+            cachedDashboardStateFolder = null;
+            cachedUserSshFolder        = null;
         }
 
         /// <summary>
@@ -308,9 +305,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path to the current user's <b>.neonkube</b> folder.  This value does not
-        /// change when the clusterspace mode is set to <see cref="KubeClusterspaceMode.Enabled"/> or
-        /// <see cref="KubeClusterspaceMode.EnabledWithSharedCache"/>.
+        /// Returns the path to the current user's <b>.neonkube</b> folder.
         /// </summary>
         public static string StandardNeonKubeFolder
         {
@@ -318,22 +313,6 @@ namespace Neon.Kube
             {
                 Directory.CreateDirectory(neonkubeHomeFolder);
                 return neonkubeHomeFolder;
-            }
-        }
-
-        /// <summary>
-        /// Returns the path to the current user's <b>~/.neonkube/spaces</b> folder.  This value does
-        /// not change when clusterespace mode is set to <see cref="KubeClusterspaceMode.Enabled"/> or
-        /// <see cref="KubeClusterspaceMode.EnabledWithSharedCache"/>.
-        /// </summary>
-        public static string StandardNeonKubeClusterspacesFolder
-        {
-            get
-            {
-                var path = Path.Combine(StandardNeonKubeFolder, "spaces");
-
-                Directory.CreateDirectory(path);
-                return path;
             }
         }
 
@@ -460,7 +439,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Determines whether a cluster hosting environment is available only for neonFORGE
+        /// Determines whether a cluster hosting environment is available only for NEONFORGE
         /// premium (closed-source) related projects.
         /// </summary>
         /// <param name="hostingEnvironment">The hosting environment.</param>
@@ -508,120 +487,6 @@ namespace Neon.Kube
         public static string WinDesktopServiceSocketPath => Path.Combine(DesktopCommonFolder, "desktop-service.sock");
 
         /// <summary>
-        /// Returns the current <see cref="KubeClusterspaceMode"/>.
-        /// </summary>
-        public static KubeClusterspaceMode ClusterspaceMode { get; private set; } = KubeClusterspaceMode.Disabled;
-
-        /// <summary>
-        /// Returns the path to the standard clusterspaces folder within the user's <b>~/.neonkube</b>
-        /// directory.  This doesn't change when a non <see cref="KubeClusterspaceMode.Disabled"/>
-        /// mode is set.
-        /// </summary>
-        public static string StandardClusterspacesFolder => Path.Combine(neonkubeHomeFolder, "spaces");
-
-        /// <summary>
-        /// Sets cluster deployment clusterspaces mode by specifying the folder where 
-        /// cluster related assets such as the KubeConfig file, cluster login, logs,
-        /// etc. are saved.
-        /// </summary>
-        /// <param name="mode">
-        /// Passed as one of <see cref="KubeClusterspaceMode.Enabled"/> or <see cref="KubeClusterspaceMode.EnabledWithSharedCache"/>,
-        /// where <see cref="KubeClusterspaceMode.Enabled"/> relocates all folders from the
-        /// standard <b>~/.neonkube</b> to <paramref name="folder"/> including
-        /// the node image cache.  <see cref="KubeClusterspaceMode.EnabledWithSharedCache"/>
-        /// continues to use the shared neon image cache to avoid downloading multiple
-        /// copies of node images.
-        /// </param>
-        /// <param name="folder">
-        /// <para>
-        /// Specifies the root folder where global cluster-specific files will
-        /// be folders will be located as long as clusterspaces mode is set.  You may
-        /// pass an fully qualified or relative folder path.  Relative paths will be
-        /// rooted at <b>~/.neonkube/spaces/</b>.
-        /// </para>
-        /// </param>
-        /// <param name="clear">Optionally clear any existing clusterspaces folder.  This defaults to <c>false</c>.</param>
-        /// <returns>The path to the clusterspaces folder.</returns>
-        public static string SetClusterSpaceMode(KubeClusterspaceMode mode, string folder, bool clear = false)
-        {
-            Covenant.Requires<ArgumentException>(mode != KubeClusterspaceMode.Disabled, nameof(mode));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
-
-            if (ClusterspaceMode != KubeClusterspaceMode.Disabled)
-            {
-                // Ensure that the clusterspaces folder is the same as that already set.
-
-                Covenant.Assert(Path.GetFileName(clusterspaceFolder) == folder);
-                return clusterspaceFolder;
-            }
-
-            ClearCachedItems();
-
-            if (!Path.IsPathFullyQualified(folder))
-            {
-                folder = Path.Combine(neonkubeHomeFolder, "spaces", folder);
-            }
-
-            ClusterspaceMode   = mode;
-            clusterspaceFolder = folder;
-            orgKUBECONFIG      = Environment.GetEnvironmentVariable("KUBECONFIG");
-
-            var kubeFolder = Path.Combine(clusterspaceFolder, ".kube");
-
-            if (clear && Directory.Exists(folder))
-            {
-                // Remove any existing clusterspaces folder that was potentially left
-                // over from a previous test or other automation run.
-
-                NeonHelper.DeleteFolder(folder);
-            }
-
-            // Create the new clusterspaces folder and set the environment variable
-            // that references where the Kubernetes config file will be located.
-
-            Directory.CreateDirectory(kubeFolder);
-            Environment.SetEnvironmentVariable("KUBECONFIG", Path.Combine(kubeFolder, "config"));
-
-            return folder;
-        }
-
-        /// <summary>
-        /// Resets the clusterspace mode to <see cref="KubeClusterspaceMode.Disabled"/> and deletes
-        /// the current clusterspace folder and its contents.
-        /// </summary>
-        public static void ResetClusterspaceMode()
-        {
-            if (ClusterspaceMode == KubeClusterspaceMode.Disabled)
-            {
-                return;
-            }
-
-            Covenant.Assert(clusterspaceFolder != null);
-            NeonHelper.DeleteFolder(clusterspaceFolder);
-
-            Environment.SetEnvironmentVariable("KUBECONFIG", orgKUBECONFIG);
-
-            ClusterspaceMode   = KubeClusterspaceMode.Disabled;
-            clusterspaceFolder = null;
-            orgKUBECONFIG      = null;
-
-            ClearCachedItems();
-        }
-
-        /// <summary>
-        /// Returns a special prefix based on <paramref name="prefix"/> that can be used to distinguish
-        /// between clusterspace related assets and those belonging to production clusters.  This is used
-        /// by <b>ClusterFixture</b> and custom tools to ensure that clusterspaces related cluster and
-        /// file/folder names don't conflict.
-        /// </summary>
-        /// <param name="prefix">The prefix string.</param>
-        /// <returns>A string like: (PREFIX)</returns>
-        public static string ClusterspacePrefix(string prefix)
-        {
-            return $"({prefix})";
-        }
-
-        /// <summary>
         /// Returns the path to the <b>.ssh</b> folder within user's home folder.
         /// </summary>
         public static string UserSshFolder
@@ -642,7 +507,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path the folder holding the user specific cluster login and other files.
+        /// Returns the path the folder holding the user specific cluster logins and other files.
         /// </summary>
         /// <returns>The folder path.</returns>
         public static string NeonKubeUserFolder
@@ -654,28 +519,9 @@ namespace Neon.Kube
                     return cachedNeonKubeUserFolder;
                 }
 
-                switch (ClusterspaceMode)
-                {
-                    case KubeClusterspaceMode.Disabled:
+                Directory.CreateDirectory(neonkubeHomeFolder);
 
-                        cachedNeonKubeUserFolder = neonkubeHomeFolder;
-                        break;
-
-                    case KubeClusterspaceMode.Enabled:
-                    case KubeClusterspaceMode.EnabledWithSharedCache:
-
-                        Covenant.Assert(clusterspaceFolder != null);
-                        cachedNeonKubeUserFolder = clusterspaceFolder;
-                        break;
-
-                    default:
-
-                        throw new NotImplementedException();
-                }
-
-                Directory.CreateDirectory(cachedNeonKubeUserFolder);
-
-                return cachedNeonKubeUserFolder;
+                return cachedNeonKubeUserFolder = neonkubeHomeFolder;
             }
         }
 
@@ -799,63 +645,6 @@ namespace Neon.Kube
                 Directory.CreateDirectory(path);
 
                 return cachedLoginsFolder = path;
-            }
-        }
-
-        /// <summary>
-        /// Returns the path to the optional <b>current-space</b> file which holds the name
-        /// of the clusterspace folder <b>neon-cli</b> should use for managing clusters
-        /// managed by <b>ClusterFixture</b> or some other automation solution.
-        /// </summary>
-        public static string CurrentClusterspacePath
-        {
-            get
-            {
-                if (cachedCurrentClusterspacePath != null)
-                {
-                    return cachedCurrentClusterspacePath;
-                }
-
-                return cachedCurrentClusterspacePath = Path.Combine(StandardNeonKubeFolder, "current-space");
-            }
-        }
-
-        /// <summary>
-        /// Manages the <b>~/.neonkube/current-space</b> file that <b>neon-cli</b> uses to 
-        /// reference logins and kubeconfigs within the <b>~/.neonkube/spaces</b>
-        /// folder.  The value will be <c>null</c> when <b>neon-cli</b> should just
-        /// reference normal logins or the clusterspace.
-        /// </summary>
-        /// <exception cref="DirectoryNotFoundException">Thrown when the referenced clusterspace folder that doesn't exist.</exception>
-        public static string CurrentClusterSpace
-        {
-            get
-            {
-                if (!File.Exists(CurrentClusterspacePath))
-                {
-                    return null;
-                }
-
-                var folder = File.ReadAllText(CurrentClusterspacePath).Trim();
-
-                if (string.IsNullOrEmpty(folder))
-                {
-                    NeonHelper.DeleteFile(CurrentClusterspacePath); // Clean-up
-                    return null;
-                }
-
-                return folder;
-            }
-
-            set
-            {
-                if (string.IsNullOrWhiteSpace(value))
-                {
-                    NeonHelper.DeleteFile(CurrentClusterspacePath);
-                    return;
-                }
-
-                File.WriteAllText(CurrentClusterspacePath, value);
             }
         }
 
@@ -1160,13 +949,6 @@ namespace Neon.Kube
                     return cachedNodeImageFolder;
                 }
 
-                // $note(jefflill): 
-                //
-                // We need to use the standard image cache folder even while in clusterspace mode,
-                // to avoid re-downloading image files:
-                //
-                //      https://github.com/nforgeio/neonCLOUD/issues/246
-
                 var path = Path.Combine(StandardNeonKubeFolder, "node-images");
 
                 Directory.CreateDirectory(path);
@@ -1220,7 +1002,7 @@ namespace Neon.Kube
         /// This folder will be structured like for a <b>neon-cli only</b>installation:
         /// </para>
         /// <code>
-        /// C:\Program Files\neonFORGE\neon-cli\
+        /// C:\Program Files\NEONFORGE\neon-cli\
         ///     neon\               # neon-cli binaries
         ///     powershell\         # Powershell 7.x
         ///     ssh\                # SSH related tools
@@ -1229,7 +1011,7 @@ namespace Neon.Kube
         /// and this for <b>neon-desktop</b> (which includes <b>neon-cli</b>):
         /// </para>
         /// <code>
-        /// C:\Program Files\neonFORGE\neon-desktop\
+        /// C:\Program Files\NEONFORGE\neon-desktop\
         ///     desktop\            # neon-desktop binaries
         ///     neon\               # neon-cli binaries
         ///     powershell\         # Powershell 7.x
@@ -1394,7 +1176,7 @@ namespace Neon.Kube
                     return cachedContext;
                 }
 
-                if (string.IsNullOrEmpty(Config.CurrentContext))
+                if (Config == null || string.IsNullOrEmpty(Config.CurrentContext))
                 {
                     return null;
                 }
@@ -2492,7 +2274,7 @@ exit 0
         public static string OpenSshConfig =>
 @"# FILE:	       sshd_config
 # CONTRIBUTOR: Jeff Lill
-# COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+# COPYRIGHT:   Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the ""License"");
 # you may not use this file except in compliance with the License.
@@ -2669,7 +2451,7 @@ Include /etc/ssh/sshd_config.d/*.conf
             return
 $@"# FILE:	       /etc/ssh/sshd_config.d/50-neonkube.conf
 # CONTRIBUTOR: Jeff Lill
-# COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+# COPYRIGHT:   Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the ""License"");
 # you may not use this file except in compliance with the License.

@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    IHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -308,7 +308,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Removes an existing cluster by terminating any nodes and then removing node VMs
+        /// Deletes an existing cluster by terminating any nodes and then removing node VMs
         /// and any related resources as well as the related local cluster login by default.  
         /// The cluster does not need to be running.  This method can optionally remove clusters
         /// or VMs potentially orphaned by interrupted unit tests as identified by a resource 
@@ -331,6 +331,6 @@ namespace Neon.Kube
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        Task RemoveClusterAsync(bool removeOrphans = false);
+        Task DeleteClusterAsync(bool removeOrphans = false);
     }
 }

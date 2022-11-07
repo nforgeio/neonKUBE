@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    ClusterDefinition.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
 using Neon.Net;
+using Neon.BuildInfo;
 
 namespace Neon.Kube
 {
@@ -253,10 +254,16 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(definition != null, nameof(definition));
 
-            // The domain amd public addresses aren't important to [ClusterFixture].
+            // The Id, domain, public addresses aren't important to [ClusterFixture].
 
+            definition.Id              = null;
             definition.Domain          = null;
             definition.PublicAddresses = null;
+
+            // The network ACME options change after provisioning so we're going
+            // to ignore that too.
+
+            definition.Network.AcmeOptions = null;
 
             // Ensure that computed peroperties are set.
 
@@ -266,8 +273,8 @@ namespace Neon.Kube
             //
             // We're going to clear a bunch of the node properties that may be
             // customized during cluster setup.  This means that changes to these
-            // properties will not impact [ClusterFixture]'s decision about redeploying
-            // the cluster or not.
+            // properties will not impact [ClusterFixture]'s decision about
+            // redeploying the cluster or not.
             //
             //      https://github.com/nforgeio/neonKUBE/issues/1505
 
@@ -399,8 +406,9 @@ namespace Neon.Kube
         /// <summary>
         /// The unique cluster ID.  This is generated during cluster setup and must not be specified by the user.
         /// </summary>
-        [JsonProperty(PropertyName = "Id", Required = Required.Always)]
+        [JsonProperty(PropertyName = "Id", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "id", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
         public string Id { get; set; }
 
         /// <summary>

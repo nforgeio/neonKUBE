@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    KubeSetup.SetupCluster.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,10 +53,6 @@ namespace Neon.Kube
         /// in the cluster definition returned.  This can be used by <b>ClusterFixture</b> and custom tools
         /// to help isolated temporary cluster assets from production clusters.
         /// </para>
-        /// <note>
-        /// This parameter has no effect unless <see cref="KubeHelper.ClusterspaceMode"/> is set to something
-        /// other than <see cref="KubeClusterspaceMode.Disabled"/>.
-        /// </note>
         /// </param>
         /// <returns>The cluster definition.</returns>
         public static ClusterDefinition GetBuiltInClusterDefinition(HostingEnvironment hostEnvironment, string deploymentPrefix = null)
@@ -123,11 +119,11 @@ namespace Neon.Kube
         /// <para>
         /// For cloud environments, this specifies whether the cluster should be provisioned
         /// using a VM image from the public cloud marketplace when <c>true</c> or from the
-        /// private neonFORGE image gallery for testing when <c>false</c>.  This is ignored
+        /// private NEONFORGE image gallery for testing when <c>false</c>.  This is ignored
         /// for on-premise environments.
         /// </para>
         /// <note>
-        /// Only neonFORGE maintainers will have permission to use the private image.
+        /// Only NEONFORGE maintainers will have permission to use the private image.
         /// </note>
         /// </param>
         /// <param name="maxParallel">

@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    KubeConfig.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -389,7 +389,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Validates the configuration.
+        /// Validates the configuration and also prunes any non-neonKUBE contexts.
         /// </summary>
         /// <exception cref="NeonKubeException">Thrown when the current config is invalid.</exception>
         public void Validate()
@@ -403,22 +403,52 @@ namespace Neon.Kube
 
             if (!string.IsNullOrEmpty(CurrentContext) && GetContext(CurrentContext) == null)
             {
-                throw new NeonKubeException($"Current context [{CurrentContext}] doesn't exist.");
+                CurrentContext = null;
             }
 
-            // Ensure that referenced users and clusters actually exist.
+            // Prune any non-neonKUBE or invalid contexts.
+
+            var prunedConfigs = new List<KubeConfigContext>();
+            var clusterRefs    = new HashSet<string>();
 
             foreach (var context in Contexts)
             {
-                if (!string.IsNullOrEmpty(context.Properties.User) && GetUser(context.Properties.User) == null)
+                if (!context.IsNeonKube)
                 {
-                    throw new NeonKubeException($"Context [{context.Name}] references [User={context.Properties.User}] that doesn't exist.");
+                    prunedConfigs.Add(context);
+                    continue;
                 }
 
                 if (!string.IsNullOrEmpty(context.Properties.Cluster) && GetCluster(context.Properties.Cluster) == null)
                 {
-                    throw new NeonKubeException($"Context [{context.Name}] references cluster [{context.Properties.Cluster}] doesn't exist.");
+                    prunedConfigs.Add(context);
+                    continue;
                 }
+
+                clusterRefs.Add(context.Properties.Cluster);
+            }
+
+            foreach (var context in prunedConfigs)
+            {
+                Contexts.Remove(context);
+            }
+
+            // Prune any non-neonKUBE clusters that are not referenced by a 
+            // neonKUBE context.
+
+            var prunedClusters = new List<KubeConfigCluster>();
+
+            foreach (var cluster in Clusters)
+            {
+                if (!clusterRefs.Contains(cluster.Name))
+                {
+                    prunedClusters.Add(cluster);
+                }
+            }
+
+            foreach (var cluster in prunedClusters)
+            {
+                Clusters.Remove(cluster);
             }
         }
 

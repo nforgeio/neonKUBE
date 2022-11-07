@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    Program.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -198,7 +198,6 @@ NEON CLUSTER LIFE-CYCLE COMMANDS:
     neon cluster delete     [OPTIONS]
     neon cluster reset      [OPTIONS]
     neon cluster setup      [OPTIONS] root@CLUSTER-NAME
-    neon cluster space      [SPACE-NAME] [--reset]
     neon cluster start
     neon cluster stop       [OPTIONS]
     neon cluster unlock
@@ -321,13 +320,6 @@ CLUSTER MANAGEMENT ARGUMENTS:
             // up secrets and profile information from [neon-assistant].
 
             NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new ProfileClient());
-
-            // Set the clusterspace mode when necessary.
-
-            if (KubeHelper.CurrentClusterSpace != null)
-            {
-                KubeHelper.SetClusterSpaceMode(KubeClusterspaceMode.EnabledWithSharedCache, KubeHelper.CurrentClusterSpace);
-            }
 
             // Fetch the paths to the [kubectl] and [helm] binaries.  Note that these
             // will download them when they're not already present.
@@ -737,7 +729,7 @@ CLUSTER MANAGEMENT ARGUMENTS:
         /// be located in the <b>tools</b> subfolder where <b>neon-cli</b> itself is installed, like:
         /// </para>
         /// <code>
-        /// C:\Program Files\neonFORGE\neonDESKTOP\
+        /// C:\Program Files\NEONFORGE\neonDESKTOP\
         ///     neon-cli.exe
         ///     tools\
         ///         helm.exe
@@ -775,7 +767,7 @@ CLUSTER MANAGEMENT ARGUMENTS:
         /// be located in the <b>tools</b> subfolder where <b>neon-cli</b> itself is installed, like:
         /// </para>
         /// <code>
-        /// C:\Program Files\neonFORGE\neonDESKTOP\
+        /// C:\Program Files\NEONFORGE\neonDESKTOP\
         ///     neon-cli.exe
         ///     tools\
         ///         helm.exe
