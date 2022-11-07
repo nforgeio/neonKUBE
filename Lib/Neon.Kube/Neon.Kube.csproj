@@ -60,7 +60,6 @@
 		<PackageReference Include="Neon.Postgres" Version="10000.0.2431-dev-master" />
 		<PackageReference Include="Neon.SSH" Version="10000.0.2431-dev-master" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-		<PackageReference Include="Npgsql" Version="6.0.7" />
 		<PackageReference Include="prometheus-net" Version="6.0.0" />
 		<PackageReference Include="SharpCompress" Version="0.32.2" />
 		<PackageReference Include="SharpZipLib.NETStandard" Version="1.0.7" />
