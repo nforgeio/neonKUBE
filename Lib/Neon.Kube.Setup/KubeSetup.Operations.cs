@@ -4766,7 +4766,7 @@ $@"- name: StorageType
             }
 
             controller.ThrowIfCancelled();
-            await CreateStorageClass(controller, controlNode, "neon-internal-system-db");
+            await CreateHostPathStorageClass(controller, controlNode, "neon-internal-system-db");
 
             if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
             {
@@ -4839,6 +4839,12 @@ $@"- name: StorageType
                     values.Add($"replicas", serviceAdvice.ReplicaCount);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add("healthCheck.image.tag", KubeVersions.NeonKubeContainerImageTag);
+
+                    if (serviceAdvice.ReplicaCount > 1)
+                    {
+                        values.Add($"neonSystemDb.enableMasterLoadBalancer", true);
+                        values.Add($"neonSystemDb.enableReplicaLoadBalancer", true);
+                    }
 
                     int i = 0;
 

@@ -57,7 +57,6 @@ rules:
   - update
   - watch
 # to manage endpoints/configmaps which are also used by Patroni
-{{- if toString .Values.configGeneral.kubernetes_use_configmaps | eq "true" }}
 - apiGroups:
   - ""
   resources:
@@ -84,28 +83,6 @@ rules:
   - patch
   - update
   - watch
-{{- else }}
-# to read configuration from ConfigMaps
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  verbs:
-  - get
-- apiGroups:
-  - ""
-  resources:
-  - endpoints
-  verbs:
-  - create
-  - delete
-  - deletecollection
-  - get
-  - list
-  - patch
-  - update
-  - watch
-{{- end }}
 # to CRUD secrets for database access
 - apiGroups:
   - ""

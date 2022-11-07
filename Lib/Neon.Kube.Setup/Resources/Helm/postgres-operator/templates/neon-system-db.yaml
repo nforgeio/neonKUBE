@@ -18,10 +18,10 @@ spec:
     - createdb
     neon_service:
     - login
-  enableMasterLoadBalancer: false
-  enableReplicaLoadBalancer: false
-  enableConnectionPooler: false # enable/disable connection pooler deployment
-  enableReplicaConnectionPooler: false # set to enable connectionPooler for replica service
+  enableMasterLoadBalancer: {{ .Values.neonSystemDb.enableMasterLoadBalancer }}
+  enableReplicaLoadBalancer: {{ .Values.neonSystemDb.enableReplicaLoadBalancer }}
+  enableConnectionPooler: {{ .Values.neonSystemDb.enableConnectionPooler }}
+  enableReplicaConnectionPooler: {{ .Values.neonSystemDb.enableReplicaConnectionPooler }}
   allowedSourceRanges:  # load balancers' source ranges for both master and replica services
   - 127.0.0.1/32
   databases:
@@ -140,9 +140,9 @@ spec:
 
   initContainers: []
   sidecars:
-  - name: health-check
-    image: "{{ .Values.healthCheck.image.organization }}/{{ .Values.healthCheck.image.repository }}:{{ .Values.healthCheck.image.tag }}"
-    imagePullPolicy: "{{ .Values.imagePullPolicy }}"
+  #- name: health-check
+  #  image: "{{ .Values.healthCheck.image.organization }}/{{ .Values.healthCheck.image.repository }}:{{ .Values.healthCheck.image.tag }}"
+  #  imagePullPolicy: "{{ .Values.imagePullPolicy }}"
   - name: metrics
     image: "{{ .Values.metrics.image.organization }}/{{ .Values.metrics.image.repository }}:{{ .Values.metrics.image.tag }}"
     imagePullPolicy: "{{ .Values.imagePullPolicy }}"
@@ -172,7 +172,7 @@ spec:
 
 # Custom TLS certificate. Disabled unless tls.secretName has a value.
   tls:
-    secretName: ""  # should correspond to a Kubernetes Secret resource to load
+    secretName: "neon-system-db"  # should correspond to a Kubernetes Secret resource to load
     certificateFile: "tls.crt"
     privateKeyFile: "tls.key"
     caFile: ""  # optionally configure Postgres with a CA certificate
