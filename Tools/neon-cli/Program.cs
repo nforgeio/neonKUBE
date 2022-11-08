@@ -314,7 +314,7 @@ CLUSTER MANAGEMENT ARGUMENTS:
             // Ensure that all of the non-premium cluster hosting manager 
             // implementations are loaded.
 
-            new HostingManagerFactory(() => HostingLoader.Initialize());
+            _ = new HostingManagerFactory(() => HostingLoader.Initialize());
 
             // Register a [ProfileClient] so commands will be able to pick
             // up secrets and profile information from [neon-assistant].

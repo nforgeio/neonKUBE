@@ -60,8 +60,6 @@ namespace Neon.Kube
     /// </summary>
     public static class KubeHelper
     {
-        private static ILogger              logger = TelemetryHub.CreateLogger(typeof(KubeHelper).FullName);
-        private static string               orgKUBECONFIG;
         private static Guid                 clientId;
         private static string               userHomeFolder;
         private static string               neonkubeHomeFolder;
@@ -181,18 +179,6 @@ namespace Neon.Kube
 
                 return clientId;
             }
-        }
-
-        /// <summary>
-        /// Explicitly sets the class <see cref="ILogger"/> implementation.  This defaults to
-        /// a reasonable value.
-        /// </summary>
-        /// <param name="logger">The logger.</param>
-        public static void SetLogger(ILogger logger)
-        {
-            Covenant.Requires<ArgumentNullException>(logger != null, nameof(logger));
-
-            KubeHelper.logger = logger;
         }
 
         /// <summary>

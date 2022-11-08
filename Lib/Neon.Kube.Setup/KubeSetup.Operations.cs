@@ -33,7 +33,6 @@ using Neon.Kube.Resources;
 using Neon.Net;
 using Neon.SSH;
 using Neon.Tasks;
-using Neon.Kube.Operator;
 
 using k8s;
 using k8s.Models;

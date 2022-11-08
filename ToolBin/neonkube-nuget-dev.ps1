@@ -317,11 +317,6 @@ try
         $env:NEON_PUBLIC_SOURCELINK = "true"
     }
 
-    # Disable the [pubcore.exe] tool to avoid file locking conflicts with Visual Studio
-    # and also to speed this up a bit.
-
-    $env:NEON_PUBCORE_DISABLE = "true"
-
     # We need to do a solution build to ensure that any tools or other dependencies 
     # are built before we build and publish the individual packages.
 
@@ -344,7 +339,6 @@ try
     Write-Info "********************************************************************************"
     Write-Info ""
 
-    & neon-build clean-generated-cs $nkRoot
     & "$msbuild" "$nkSolution" -p:Configuration=$config -t:Clean -m -verbosity:quiet
 
     if (-not $?)
@@ -426,11 +420,6 @@ try
     RestoreVersion Neon.Kube.Setup
     RestoreVersion Neon.Kube.XenServer
     RestoreVersion Neon.Kube.Xunit
-
-    # Remove any generated C# files under project [obj] folders to
-    # avoid duplicate symbol compilation errors after publishing.
-
-    & neon-build clean-generated-cs $nkRoot
 
     # Remove all of the generated nuget files so these don't accumulate.
 
