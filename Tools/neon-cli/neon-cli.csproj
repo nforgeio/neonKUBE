@@ -5,19 +5,18 @@
 		<OutputType>Exe</OutputType>
 		<RootNamespace>NeonCli</RootNamespace>
 		<AssemblyName>neon</AssemblyName>
-		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+		<RuntimeIdentifier>win10-x64</RuntimeIdentifier>
 		<PlatformTarget>AnyCPU</PlatformTarget>
 		<Configurations>Debug;Release</Configurations>
 		<Description>Manage neonKUBE clusters from the command line</Description>
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<PublishSingleFile>true</PublishSingleFile>
+		<PublishSingleFile>false</PublishSingleFile>
 		<SelfContained>true</SelfContained>
 		<PublishTrimmed>false</PublishTrimmed>
 		<TrimMode>partial</TrimMode>
 		<PublishReadyToRun>true</PublishReadyToRun>
-		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -39,10 +38,10 @@
 		<PackageReference Include="KubernetesClient" Version="7.2.19" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
 		<PackageReference Include="Microsoft.Windows.Compatibility" Version="6.0.0" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2474-dev-jeff" />
-		<PackageReference Include="Neon.Deployment" Version="10000.0.2474-dev-jeff" />
-		<PackageReference Include="Neon.WinTTY" Version="10000.0.2474-dev-jeff" />
-		<PackageReference Include="Neon.XenServer" Version="10000.0.2474-dev-jeff" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2478-dev-jeff" />
+		<PackageReference Include="Neon.Deployment" Version="10000.0.2478-dev-jeff" />
+		<PackageReference Include="Neon.WinTTY" Version="10000.0.2478-dev-jeff" />
+		<PackageReference Include="Neon.XenServer" Version="10000.0.2478-dev-jeff" />
 		<PackageReference Include="System.Diagnostics.StackTrace" Version="4.3.0" />
 		<PackageReference Include="System.Runtime" Version="4.3.1" />
 		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
@@ -83,9 +82,4 @@
 	  </EmbeddedResource>
 	</ItemGroup>
 	
-	<Target Name="PubCore" AfterTargets="AfterBuild" Condition="true">
-		<Message Importance="high" Text="Publish: $(ProjectPath)" />
-		<Exec Command="pubcore &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; $(ConfigurationName) &quot;$(NK_BUILD)\neon&quot; win-x64" />
-	</Target>
-
 </Project>

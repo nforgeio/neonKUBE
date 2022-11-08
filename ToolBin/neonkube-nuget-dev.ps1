@@ -317,11 +317,6 @@ try
         $env:NEON_PUBLIC_SOURCELINK = "true"
     }
 
-    # Disable the [pubcore.exe] tool to avoid file locking conflicts with Visual Studio
-    # and also to speed this up a bit.
-
-    $env:NEON_PUBCORE_DISABLE = "true"
-
     # We need to do a solution build to ensure that any tools or other dependencies 
     # are built before we build and publish the individual packages.
 

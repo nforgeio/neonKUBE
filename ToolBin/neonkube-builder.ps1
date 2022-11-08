@@ -180,6 +180,11 @@ try
         ThrowOnExitCode
     }
 
+    # Publish binaries.
+
+    pubcore "$nkRoot\Tools\neon-cli\neon-cli.csproj" net7.0-windows10.0.17763.0 Release "$nkBuild/neon-image" win10-x64
+    ThrowOnExitCode
+
     # Build the code documentation if requested.
 
     if ($codedoc)
