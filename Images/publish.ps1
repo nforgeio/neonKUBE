@@ -171,7 +171,6 @@ try
     Write-Info "********************************************************************************"
     Write-Info ""
 
-    "neon-build clean-generated-cs $nkRoot"
     "neon-build clean $nkRoot"
     & "$msbuild" "$nkSolution" $buildConfig -t:Clean -m -verbosity:quiet
 
@@ -236,10 +235,5 @@ try
 catch
 {
     Write-Exception $_
-
-    # Cleanup
-
-    neon-build clean-generated-cs $nkRoot
-
     exit 1
 }

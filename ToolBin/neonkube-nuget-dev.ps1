@@ -339,7 +339,6 @@ try
     Write-Info "********************************************************************************"
     Write-Info ""
 
-    & neon-build clean-generated-cs $nkRoot
     & "$msbuild" "$nkSolution" -p:Configuration=$config -t:Clean -m -verbosity:quiet
 
     if (-not $?)
@@ -421,11 +420,6 @@ try
     RestoreVersion Neon.Kube.Setup
     RestoreVersion Neon.Kube.XenServer
     RestoreVersion Neon.Kube.Xunit
-
-    # Remove any generated C# files under project [obj] folders to
-    # avoid duplicate symbol compilation errors after publishing.
-
-    & neon-build clean-generated-cs $nkRoot
 
     # Remove all of the generated nuget files so these don't accumulate.
 

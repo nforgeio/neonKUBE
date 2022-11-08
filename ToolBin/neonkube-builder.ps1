@@ -165,19 +165,6 @@ try
         {
             throw "ERROR: BUILD FAILED"
         }
-
-        # The build generates source files like [.NETCoreApp,Version=v5.0.AssemblyAttributes.cs] within
-        # project [obj] configuration subdirectorties.  This can result in duplicate attribute compiler
-        # errors because Visual Studio seems to be including these files from all of the configuration
-        # subfolders rather than just for the current build configuration.  This isn't reproducable for 
-        # simple solutions, so we haven't reported this to MSFT.
-        #
-        # We mostly run into this issue after performing a script based RELEASE build and then go back 
-        # and try to build DEBUG with Visual Studio.  The workaround is to simply remove all of these
-        # generated files here.
-
-        & neon-build clean-generated-cs "$nkRoot"
-        ThrowOnExitCode
     }
 
     # Publish binaries.
