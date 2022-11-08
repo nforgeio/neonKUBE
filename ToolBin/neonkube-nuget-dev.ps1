@@ -176,6 +176,18 @@ function RestoreVersion
 }
 
 #------------------------------------------------------------------------------
+# Configures the dev feed.
+
+function SetDevFeed
+{
+    if ((dotnet nuget list source | grep $ncNugetFeedName).Length -eq 0) {
+        dotnet nuget add source --name $ncNugetFeedName $devFeedUrl
+    }
+
+    dotnet nuget update source $ncNugetFeedName --source $devFeedUrl --username $env:NEON_GITHUB_USER --password $devFeedApiKey
+}
+
+#------------------------------------------------------------------------------
 # Builds and publishes the project packages.
 
 function Publish
@@ -207,12 +219,12 @@ function Publish
 
     if ($local)
     {
-        nuget add -Source $env:NC_NUGET_LOCAL "$env:NK_BUILD\nuget\$project.$version.nupkg"
+        dotnet nuget add --source $env:NC_NUGET_LOCAL "$env:NK_BUILD\nuget\$project.$version.nupkg"
         ThrowOnExitCode
     }
     else
     {
-        nuget push -Source $env:NC_NUGET_DEVFEED -ApiKey $devFeedApiKey "$env:NK_BUILD\nuget\$project.$version.nupkg" -SkipDuplicate -Timeout 600
+        dotnet nuget push --source $ncNugetFeedName --api-key $devFeedApiKey "$env:NK_BUILD\nuget\$project.$version.nupkg" --skip-duplicate --timeout 600
         ThrowOnExitCode
     }
 }
@@ -280,8 +292,10 @@ else
 
     # Retrieve any necessary credentials.
 
-    $versionerKey  = Get-SecretValue "NUGET_VERSIONER_KEY" "group-devops"
-    $devFeedApiKey = Get-SecretValue "NUGET_DEVFEED_KEY"   "group-devops"
+    $versionerKey    = Get-SecretValue "NUGET_VERSIONER_KEY" "group-devops"
+    $devFeedApiKey   = Get-SecretPassword "GITHUB_PAT" user-$env:NC_USER
+    $devFeedUrl      = "https://nuget.pkg.github.com/nforgeio/index.json"
+    $ncNugetFeedName = "nc-nuget-devfeed"
 
     # Get the nuget versioner API key from the environment and convert it into a base-64 string.
 
