@@ -12,11 +12,12 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<PublishSingleFile>false</PublishSingleFile>
+		<PublishSingleFile>true</PublishSingleFile>
 		<SelfContained>true</SelfContained>
 		<PublishTrimmed>false</PublishTrimmed>
 		<TrimMode>partial</TrimMode>
-		<PublishReadyToRun>false</PublishReadyToRun>
+		<PublishReadyToRun>true</PublishReadyToRun>
+		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -38,10 +39,10 @@
 		<PackageReference Include="KubernetesClient" Version="7.2.19" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
 		<PackageReference Include="Microsoft.Windows.Compatibility" Version="6.0.0" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2431-dev-master" />
-		<PackageReference Include="Neon.Deployment" Version="10000.0.2431-dev-master" />
-		<PackageReference Include="Neon.WinTTY" Version="10000.0.2431-dev-master" />
-		<PackageReference Include="Neon.XenServer" Version="10000.0.2431-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2474-dev-jeff" />
+		<PackageReference Include="Neon.Deployment" Version="10000.0.2474-dev-jeff" />
+		<PackageReference Include="Neon.WinTTY" Version="10000.0.2474-dev-jeff" />
+		<PackageReference Include="Neon.XenServer" Version="10000.0.2474-dev-jeff" />
 		<PackageReference Include="System.Diagnostics.StackTrace" Version="4.3.0" />
 		<PackageReference Include="System.Runtime" Version="4.3.1" />
 		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
@@ -82,15 +83,9 @@
 	  </EmbeddedResource>
 	</ItemGroup>
 	
-	<!-- 
-	$debug(jefflill): Temporarily disabling publishing 
-	
-	REMEMBER TO ADD THE SECOND "-" TO THE no-cmd OPTION!
-	-->
-
-	<!--<Target Name="PubCore" AfterTargets="AfterBuild" Condition="true">
+	<Target Name="PubCore" AfterTargets="AfterBuild" Condition="true">
 		<Message Importance="high" Text="Publish: $(ProjectPath)" />
-		<Exec Command="pubcore -no-cmd &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; $(ConfigurationName) &quot;$(NK_BUILD)\neon&quot; win-x64" />
-	</Target>-->
+		<Exec Command="pubcore &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; $(ConfigurationName) &quot;$(NK_BUILD)\neon&quot; win-x64" />
+	</Target>
 
 </Project>
