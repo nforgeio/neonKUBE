@@ -110,3 +110,4 @@ KubernetesWithRetry.cs
 /UpgradeLog.htm
 /Lib/Neon.Kube/Harbor/HarborClient.cs
 /Build.bk/neon
+/ToolBin/nuget.config
