@@ -176,23 +176,6 @@ function RestoreVersion
 }
 
 #------------------------------------------------------------------------------
-# Configures the dev feed.
-
-function SetDevFeed
-{
-    if (-Not(Test-Path -Path $env:NK_ROOT/ToolBin/nuget.config -PathType Leaf))
-    {
-        "<configuration></configuration>" > $env:NK_ROOT/ToolBin/nuget.config
-    }
-
-    if ((dotnet nuget list source --configfile $env:NK_ROOT/ToolBin/nuget.config | grep $ncNugetFeedName).Length -eq 0) {
-        dotnet nuget add source --configfile $env:NK_ROOT/ToolBin/nuget.config --name $ncNugetFeedName $devFeedUrl
-    }
-
-    dotnet nuget update source $ncNugetFeedName --configfile $env:NK_ROOT/ToolBin/nuget.config --source $devFeedUrl --username $env:NEON_GITHUB_USER --password $devFeedApiKey
-}
-
-#------------------------------------------------------------------------------
 # Builds and publishes the project packages.
 
 function Publish
@@ -222,101 +205,101 @@ function Publish
     dotnet pack $projectPath -c $config -o "$env:NK_BUILD\nuget"
     ThrowOnExitCode
 
+    $nugetPath = "$env:NK_BUILD\nuget\$project.$version.nupkg"
+
     if ($local)
     {
-        dotnet nuget add --source $env:NC_NUGET_LOCAL "$env:NK_BUILD\nuget\$project.$version.nupkg"
+        dotnet nuget add --source $env:NC_NUGET_LOCAL $nugetPath
         ThrowOnExitCode
     }
     else
     {
-        dotnet nuget push --source $ncNugetFeedName --api-key $devFeedApiKey "$env:NK_BUILD\nuget\$project.$version.nupkg" --skip-duplicate --timeout 600
+        dotnet nuget push $nugetPath --source $nugetFeedSource --api-key $nugetFeedApiKey --skip-duplicate --timeout 600
         ThrowOnExitCode
     }
 }
 
-$msbuild     = $env:MSBUILDPATH
-$nkRoot      = "$env:NK_ROOT"
-$nkSolution  = "$nkRoot\neonKUBE.sln"
-$branch      = GitBranch $nkRoot
-
-if ($localVersion)
-{
-    $local = $true
-}
-
-if ($localVersion)
-{
-    # EMERGENCY MODE: Use local counters.
-
-    $nfVersionPath = [System.IO.Path]::Combine($env:NC_NUGET_LOCAL, "neonSDK.version.txt")
-    $nkVersionPath = [System.IO.Path]::Combine($env:NC_NUGET_LOCAL, "neonKUBE.version.txt")
-
-    if (![System.IO.File]::Exists("$nkVersionPath") -or ![System.IO.File]::Exists("$nfVersionPath"))
-    {
-        Write-Error "You'll need to manually initialize the local version files at:" -ErrorAction continue
-        Write-Error ""                   -ErrorAction continue
-        Write-Error "    $nkVersionPath" -ErrorAction continue
-        Write-Error "    $nfVersionPath" -ErrorAction continue
-        Write-Error "" -ErrorAction continue
-        Write-Error "Create these files with the minor version number currently referenced" -ErrorAction continue
-        Write-Error "by your local neonCLOUD solution:" -ErrorAction continue
-        Write-Error "" -ErrorAction continue
-        Write-Error "The easiest way to do this is to open the [neonCLOUD/Tools/neon-cli/neon-cli.csproj]" -ErrorAction continue
-        Write-Error "file extract the minor version for the package references as described below:" -ErrorAction continue
-        Write-Error "" -ErrorAction continue
-        Write-Error "    neonKUBE.version.txt:    from Neon.Kube" -ErrorAction continue
-        Write-Error "    neonSDK.version.txt: from Neon.Common" -ErrorAction continue
-        Write-Error "" -ErrorAction continue
-        Write-Error "NOTE: These two version numbers are currently the same (Jan 2022), but they" -ErrorAction continue
-        Write-Error "      may diverge at any time and will definitely diverge after we separate " -ErrorAction continue
-        Write-Error "      neonSDK and neonKUBE." -ErrorAction continue
-        exit 1
-    }
-
-    $version = [int](Get-Content -TotalCount 1 $nkVersionPath).Trim()
-    $version++
-    [System.IO.File]::WriteAllText($nkVersionPath, $version)
-    $neonSdkVersion = "10000.0.$version-dev-$branch"
-}
-else
-{
-    # We're going to call the neonCLOUD nuget versioner service to atomically increment the 
-    # dev package version counters for the solution and then generate the full version for
-    # the packages we'll be publishing.  We'll use separate counters for the neonSDK and
-    # neonKUBE packages.
-    #
-    # The package versions will also include the current branch appended to the preview tag
-    # so a typical package version will look like:
-    #
-    #       10000.0.VERSION-dev-master
-    #
-    # where we use major version 10000 as a value that will never be exceeded by a real
-    # release, VERSION is automatically incremented for every package published, [master]
-    # in this case is the current branch at the time of publishing and [-dev] indicates
-    # that this is a non-production release.
-
-    # Retrieve any necessary credentials.
-
-    $versionerKey    = Get-SecretValue "NUGET_VERSIONER_KEY" "group-devops"
-    $devFeedApiKey   = Get-SecretPassword "GITHUB_PAT" user-$env:NC_USER
-    $devFeedUrl      = "https://nuget.pkg.github.com/nforgeio/index.json"
-    $ncNugetFeedName = "nc-nuget-devfeed"
-
-    SetDevFeed
-
-    # Get the nuget versioner API key from the environment and convert it into a base-64 string.
-
-    $versionerKeyBase64 = [Convert]::ToBase64String(([System.Text.Encoding]::UTF8.GetBytes($versionerKey)))
-
-    # Submit PUTs request to the versioner service, specifying the counter name.  The service will
-    # atomically increment the counter and return the next value.
-
-    $reply           = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonKUBE-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
-    $neonkubeVersion = "10000.0.$reply-dev-$branch"
-}
-
 try
 {
+    $msbuild     = $env:MSBUILDPATH
+    $nkRoot      = "$env:NK_ROOT"
+    $nkSolution  = "$nkRoot\neonKUBE.sln"
+    $branch      = GitBranch $nkRoot
+
+    if ($localVersion)
+    {
+        $local = $true
+    }
+
+    if ($localVersion)
+    {
+        # EMERGENCY MODE: Use local counters.
+
+        $nfVersionPath = [System.IO.Path]::Combine($env:NC_NUGET_LOCAL, "neonSDK.version.txt")
+        $nkVersionPath = [System.IO.Path]::Combine($env:NC_NUGET_LOCAL, "neonKUBE.version.txt")
+
+        if (![System.IO.File]::Exists("$nkVersionPath") -or ![System.IO.File]::Exists("$nfVersionPath"))
+        {
+            Write-Error "You'll need to manually initialize the local version files at:" -ErrorAction continue
+            Write-Error ""                   -ErrorAction continue
+            Write-Error "    $nkVersionPath" -ErrorAction continue
+            Write-Error "    $nfVersionPath" -ErrorAction continue
+            Write-Error "" -ErrorAction continue
+            Write-Error "Create these files with the minor version number currently referenced" -ErrorAction continue
+            Write-Error "by your local neonCLOUD solution:" -ErrorAction continue
+            Write-Error "" -ErrorAction continue
+            Write-Error "The easiest way to do this is to open the [neonCLOUD/Tools/neon-cli/neon-cli.csproj]" -ErrorAction continue
+            Write-Error "file extract the minor version for the package references as described below:" -ErrorAction continue
+            Write-Error "" -ErrorAction continue
+            Write-Error "    neonKUBE.version.txt:    from Neon.Kube" -ErrorAction continue
+            Write-Error "    neonSDK.version.txt: from Neon.Common" -ErrorAction continue
+            Write-Error "" -ErrorAction continue
+            Write-Error "NOTE: These two version numbers are currently the same (Jan 2022), but they" -ErrorAction continue
+            Write-Error "      may diverge at any time and will definitely diverge after we separate " -ErrorAction continue
+            Write-Error "      neonSDK and neonKUBE." -ErrorAction continue
+            exit 1
+        }
+
+        $version = [int](Get-Content -TotalCount 1 $nkVersionPath).Trim()
+        $version++
+        [System.IO.File]::WriteAllText($nkVersionPath, $version)
+        $neonSdkVersion = "10000.0.$version-dev-$branch"
+    }
+    else
+    {
+        # We're going to call the neonCLOUD nuget versioner service to atomically increment the 
+        # dev package version counters for the solution and then generate the full version for
+        # the packages we'll be publishing.  We'll use separate counters for the neonSDK and
+        # neonKUBE packages.
+        #
+        # The package versions will also include the current branch appended to the preview tag
+        # so a typical package version will look like:
+        #
+        #       10000.0.VERSION-dev-master
+        #
+        # where we use major version 10000 as a value that will never be exceeded by a real
+        # release, VERSION is automatically incremented for every package published, [master]
+        # in this case is the current branch at the time of publishing and [-dev] indicates
+        # that this is a non-production release.
+
+        # Retrieve any necessary credentials.
+
+        $versionerKey    = Get-SecretValue "NUGET_VERSIONER_KEY" "group-devops"
+        $nugetFeedName   = "nc-nuget-devfeed"
+        $nugetFeedSource = "https://nuget.pkg.github.com/nforgeio/index.json"
+        $nugetFeedApiKey = Get-SecretPassword "GITHUB_PAT" user-$env:NC_USER
+
+        # Get the nuget versioner API key from the environment and convert it into a base-64 string.
+
+        $versionerKeyBase64 = [Convert]::ToBase64String(([System.Text.Encoding]::UTF8.GetBytes($versionerKey)))
+
+        # Submit PUTs request to the versioner service, specifying the counter name.  The service will
+        # atomically increment the counter and return the next value.
+
+        $reply           = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonKUBE-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
+        $neonkubeVersion = "10000.0.$reply-dev-$branch"
+    }
+
     # SourceLink configuration: We need to decide whether to set the environment variable 
     # [NEON_PUBLIC_SOURCELINK=true] to enable SourceLink references to our GitHub repos.
 
