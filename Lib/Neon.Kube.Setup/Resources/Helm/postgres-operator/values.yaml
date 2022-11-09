@@ -171,7 +171,7 @@ configKubernetes:
   # are enabled via `enable_cross_namespace_secret` flag in the configuration.
   secret_name_template: "{username}.{cluster}.credentials.{tprkind}"
   # set user and group for the spilo container (required to run Spilo as non-root process)
-  spilo_runasuser: 1000
+  spilo_runasuser: 101
   spilo_runasgroup: 1000
   # group ID with write-access to volumes (required to run Spilo as non-root process)
   spilo_fsgroup: 1000
