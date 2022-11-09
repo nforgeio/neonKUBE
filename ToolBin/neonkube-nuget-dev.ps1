@@ -227,7 +227,7 @@ try
     $branch      = GitBranch $nkRoot
 
     ############################################
-    # $todo(jefflill): Remove this on 12-01-2020
+    # $todo(jefflill): Remove this on 12-01-2022
     #
     # This ensures that any [$/ToolBin/nuget.config] file is removed.
     # This file may include a GITHUB_PAT token and shouldn't ever be 
