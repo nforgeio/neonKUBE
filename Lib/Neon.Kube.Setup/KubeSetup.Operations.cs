@@ -4830,6 +4830,56 @@ $@"- name: StorageType
                 });
 
             controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/system-db-volumes",
+                async () =>
+                {
+                    var nodes = cluster.Definition.SortedControlNodes.ToList();
+
+                    if (nodes.Count > serviceAdvice.ReplicaCount.Value)
+                    {
+                        serviceAdvice.ReplicaCount = nodes.Count;
+                    }
+
+                    var labels = new Dictionary<string, string>()
+                    {
+                        { "app", KubeService.NeonSystemDb },
+                        { "cluster-name", KubeService.NeonSystemDb }
+                    };
+
+                    for (int i=0; i < serviceAdvice.ReplicaCount; i++)
+                    {
+                        var pvc = new V1PersistentVolumeClaim()
+                        {
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Name = $"pgdata-neon-system-db-{i}",
+                                NamespaceProperty = KubeNamespace.NeonSystem,
+                                Annotations = new Dictionary<string, string>()
+                                {
+                                    { "volume.kubernetes.io/selected-node", nodes[i].Name }
+                                },
+                                Labels = labels
+                            },
+                            Spec = new V1PersistentVolumeClaimSpec()
+                            {
+                                AccessModes = new List<string>() { "ReadWriteOnce" },
+                                Resources   = new V1ResourceRequirements()
+                                {
+                                    Requests = new Dictionary<string, ResourceQuantity>()
+                                    {
+                                        { "storage", new ResourceQuantity("1Gi") }
+                                    }
+                                },
+                                StorageClassName = "neon-internal-system-db",
+                                VolumeMode       = "Filesystem"
+                            }
+                        };
+
+                        await k8s.CreateNamespacedPersistentVolumeClaimAsync(pvc, pvc.Namespace());
+                    }
+                });
+
+            controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/system-db",
                 async () =>
                 {
@@ -4842,7 +4892,6 @@ $@"- name: StorageType
                     if (serviceAdvice.ReplicaCount > 1)
                     {
                         values.Add($"neonSystemDb.enableMasterLoadBalancer", true);
-                        values.Add($"neonSystemDb.enableReplicaLoadBalancer", true);
                     }
 
                     int i = 0;
