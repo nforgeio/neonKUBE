@@ -15,8 +15,6 @@ image:
   tag: null
   pullPolicy: IfNotPresent
 
-resources: {}
-
 resources:
   limits:
     memory: 160Mi

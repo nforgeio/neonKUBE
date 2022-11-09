@@ -4608,8 +4608,8 @@ $@"- name: StorageType
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
-                    values.Add("resource.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
-                    values.Add("resource.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
+                    values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
+                    values.Add("resources.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
 
                     await controlNode.InstallHelmChartAsync(controller, "neon-node-agent",
                         releaseName:  "neon-node-agent",
