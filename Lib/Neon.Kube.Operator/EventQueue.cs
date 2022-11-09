@@ -51,6 +51,7 @@ using k8s.Models;
 using Prometheus;
 using System.Reactive.Subjects;
 using KubeOps.Operator.Kubernetes;
+using OpenTelemetry.Resources;
 
 namespace Neon.Kube.Operator
 {
@@ -74,11 +75,11 @@ namespace Neon.Kube.Operator
             ResourceManagerOptions options,
             Func<WatchEvent<TEntity>, Task> eventHandler)
         {
-            this.k8s     = k8s;
-            this.options = options; 
+            this.k8s = k8s;
+            this.options = options;
             this.eventHandler = eventHandler;
-            this.logger  = TelemetryHub.CreateLogger($"Neon.Kube.Operator.EventQueue({typeof(TEntity).Name})");
-            this.queue   = new ConcurrentDictionary<WatchEvent<TEntity>, CancellationTokenSource>();
+            this.logger = TelemetryHub.CreateLogger($"Neon.Kube.Operator.EventQueue({typeof(TEntity).Name})");
+            this.queue = new ConcurrentDictionary<WatchEvent<TEntity>, CancellationTokenSource>();
         }
 
         /// <summary>
@@ -92,8 +93,8 @@ namespace Neon.Kube.Operator
         {
             var queuedEvent = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).FirstOrDefault();
 
-            if (queuedEvent != null) 
-            { 
+            if (queuedEvent != null)
+            {
                 if (@event.Value.Generation() > queuedEvent.Value.Generation())
                 {
                     await DequeueAsync(queuedEvent);
@@ -109,14 +110,19 @@ namespace Neon.Kube.Operator
         /// <param name="watchEventType"></param>
         /// <returns></returns>
         public async Task EnqueueAsync(
-            WatchEvent<TEntity> @event, 
-            TimeSpan? delay = null, 
+            WatchEvent<TEntity> @event,
+            TimeSpan? delay = null,
             WatchEventType? watchEventType = null)
         {
             await SyncContext.Clear;
 
+            var resource = @event.Value;
+
+            logger.LogDebugEx(() => $"Event [{@event.Type}] queued for resource [{resource.Kind}/{resource.Name()}] ");
+
             if (queue.Keys.Any(key => key.Value.Uid() == @event.Value.Uid()))
             {
+                logger.LogInformationEx(() => $"Event [{@event.Type}] already exists for resource [{resource.Kind}/{resource.Name()}], aborting");
                 return;
             }
 
@@ -128,6 +134,8 @@ namespace Neon.Kube.Operator
             if (delay == null)
             {
                 delay = GetDelay(@event.Attempt);
+
+                logger.LogDebugEx(() => $"Event [{@event.Type}] delay for resource [{resource.Kind}/{resource.Name()}]: {delay}");
             }
 
             @event.Type = watchEventType.Value;
@@ -137,6 +145,32 @@ namespace Neon.Kube.Operator
             queue.TryAdd(@event, cts);
 
             _ = QueueAsync(@event, delay.Value, cts.Token);
+        }
+
+        /// <summary>
+        /// Queue an event, but dequeue existing event first.
+        /// </summary>
+        /// <param name="event"></param>
+        /// <param name="delay"></param>
+        /// <param name="watchEventType"></param>
+        /// <returns></returns>
+        public async Task RequeueAsync(
+            WatchEvent<TEntity> @event,
+            TimeSpan? delay = null, 
+            WatchEventType? watchEventType = null)
+        {
+            try
+            {
+                var old = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).Single();
+
+                await DequeueAsync(old);
+            }
+            catch (Exception e)
+            {
+                logger.LogErrorEx(e);
+            }
+
+            await EnqueueAsync(@event, delay, watchEventType);
         }
 
         /// <summary>
@@ -152,7 +186,11 @@ namespace Neon.Kube.Operator
 
             if (queuedEvent?.Value != null)
             {
-                queue[queuedEvent].Cancel();
+                if (!queue[queuedEvent].IsCancellationRequested)
+                {
+                    queue[queuedEvent].Cancel();
+                }
+
                 queue.TryRemove(queuedEvent, out _);
             }
         }
@@ -163,17 +201,33 @@ namespace Neon.Kube.Operator
 
             try
             {
-                await Task.Delay(delay, cancellationToken);
+                if (delay > TimeSpan.Zero)
+                {
+                    logger.LogDebugEx(() => $"Sleeping before executing event [{@event.Type}] for resource [{@event.Value.Kind}/{@event.Value.Name()}]");
+                 
+                    await Task.Delay(delay, cancellationToken);
+                }
+
+                logger.LogDebugEx(() => $"Executing event [{@event.Type}] for resource [{@event.Value.Kind}/{@event.Value.Name()}]");
 
                 await eventHandler?.Invoke(@event);
+
+                logger.LogDebugEx(() => $"Event [{@event.Type}] executed for resource [{@event.Value.Kind}/{@event.Value.Name()}]");
+
+                queue.TryRemove(@event, out _);
             }
-            catch (TaskCanceledException)
+            catch (TaskCanceledException e)
             {
+                logger.LogDebugEx($"Canceling task for [{@event.Type}] event on resource [{@event.Value.Kind}/{@event.Value.Name()}]");
+
                 var queuedEvent = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).FirstOrDefault();
 
                 if (queuedEvent != null)
                 {
-                    queue.TryRemove(queuedEvent, out _);
+                    if (queue.TryRemove(queuedEvent, out _))
+                    {
+                        logger.LogDebugEx($"Sucessfully canceled task for [{@event.Type}] event on resource [{@event.Value.Kind}/{@event.Value.Name()}]");
+                    }
                 }
             }
         }

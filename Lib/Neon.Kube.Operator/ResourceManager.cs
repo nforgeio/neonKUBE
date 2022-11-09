@@ -650,6 +650,7 @@ namespace Neon.Kube.Operator
                                     options.ReconcileCounter?.Inc();
 
                                     result = await CreateController().ReconcileAsync(resource);
+
                                 }
                                 catch (Exception e)
                                 {
@@ -660,7 +661,8 @@ namespace Neon.Kube.Operator
                                     if (@event.Attempt < options.ErrorMaxRetryCount)
                                     {
                                         @event.Attempt += 1;
-                                        await eventQueue.EnqueueAsync(@event, watchEventType: WatchEventType.Modified);
+                                        resourceCache.Remove(resource);
+                                        await eventQueue.RequeueAsync(@event, watchEventType: WatchEventType.Modified);
                                         return;
                                     }
                                 }
@@ -674,7 +676,6 @@ namespace Neon.Kube.Operator
                                     options.DeleteCounter?.Inc();
                                     await CreateController().DeletedAsync(resource);
 
-                                    await eventQueue.DequeueAsync(@event);
                                     resourceCache.Remove(resource);
                                 }
                                 catch (Exception e)
@@ -708,7 +709,8 @@ namespace Neon.Kube.Operator
                                                                         $"threw a [{e.GetType()}] error. Retrying... Attempt [{@event.Attempt}]");
 
                                                 @event.Attempt += 1;
-                                                await eventQueue.EnqueueAsync(@event, watchEventType: WatchEventType.Modified);
+                                                resourceCache.Remove(resource);
+                                                await eventQueue.RequeueAsync(@event, watchEventType: WatchEventType.Modified);
                                                 return;
                                             }
                                         }
@@ -745,7 +747,8 @@ namespace Neon.Kube.Operator
                                                                         $"threw a [{e.GetType()}] error. Retrying... Attempt [{@event.Attempt}]");
 
                                                 @event.Attempt += 1;
-                                                await eventQueue.EnqueueAsync(@event, watchEventType: WatchEventType.Modified);
+                                                resourceCache.Remove(resource);
+                                                await eventQueue.RequeueAsync(@event, watchEventType: WatchEventType.Modified);
                                                 return;
                                             }
                                         }
@@ -782,6 +785,7 @@ namespace Neon.Kube.Operator
 
                                     case ModifiedEventType.FinalizerUpdate:
                                     default:
+                                        
                                         break;
                                 }
 
@@ -790,14 +794,15 @@ namespace Neon.Kube.Operator
                     }
                     catch (Exception e)
                     {
-                        lockProvider.Release(resource.Uid());
-                        
                         logger.LogCriticalEx(e);
                         logger.LogCriticalEx("Cannot recover from exception within watch loop.  Terminating process.");
                         Environment.Exit(1);
                     }
+                    finally
+                    {
+                        lockProvider.Release(resource.Uid());
+                    }
 
-                    lockProvider.Release(resource.Uid());
 
                     switch (result)
                     {
@@ -820,7 +825,8 @@ namespace Neon.Kube.Operator
                                     $@"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] successfully reconciled. Requeue requested with delay [{requeue}].");
                             }
 
-                            await eventQueue.EnqueueAsync(@event, requeue.RequeueDelay, requestedQueueType);
+                            resourceCache.Remove(resource);
+                            await eventQueue.RequeueAsync(@event, requeue.RequeueDelay, requestedQueueType);
                             break;
                     }
                 };

@@ -117,7 +117,7 @@ namespace NeonClusterOperator
             {
                 ErrorMaxRetryCount = int.MaxValue,
                 ErrorMaxRequeueInterval = TimeSpan.FromMinutes(10),
-                ErrorMinRequeueInterval = TimeSpan.FromSeconds(60),
+                ErrorMinRequeueInterval = TimeSpan.FromSeconds(5),
                 IdleCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "IDLE events processed."),
                 ReconcileCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "RECONCILE events processed."),
                 DeleteCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "DELETED events processed."),

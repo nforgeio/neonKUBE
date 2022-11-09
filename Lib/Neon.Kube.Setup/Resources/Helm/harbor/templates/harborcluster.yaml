@@ -49,7 +49,7 @@ spec:
     spec:
       postgresql:
         hosts:
-          - host: neon-system-db-pooler.neon-system
+          - host: neon-system-db.neon-system
             port: 5432
         passwordRef: registry
         prefix: harbor_

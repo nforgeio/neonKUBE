@@ -4526,7 +4526,7 @@ $@"- name: StorageType
             var k8s           = GetK8sClient(controller);
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonDashboard);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonNodeAgent);
             
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/neon-dashboard-resources",
