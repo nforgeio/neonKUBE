@@ -32,15 +32,13 @@ namespace Neon.Kube.Operator
 {
     internal class FinalizerBuilder : IFinalizerBuilder
     {
-        private readonly ComponentRegister componentRegister;
-        private readonly IServiceProvider services;
+        private readonly ComponentRegister  componentRegister;
+        private readonly IServiceProvider   services;
 
-        public FinalizerBuilder(
-            ComponentRegister componentRegister,
-            IServiceProvider services)
+        public FinalizerBuilder(ComponentRegister componentRegister, IServiceProvider services)
         {
             this.componentRegister = componentRegister;
-            this.services = services;
+            this.services          = services;
         }
 
         /// <inheritdoc/>

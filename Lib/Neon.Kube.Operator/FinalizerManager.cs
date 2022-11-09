@@ -36,23 +36,23 @@ namespace Neon.Kube.Operator
     internal class FinalizerManager<TEntity> : IFinalizerManager<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
     {
-        private readonly IKubernetes client;
-        private readonly ILogger logger;
-        private readonly ComponentRegister componentRegister;
-        private readonly IFinalizerBuilder finalizerInstanceBuilder;
-        private readonly SemaphoreSlim semaphoreSlim;
+        private readonly IKubernetes        client;
+        private readonly ILogger            logger;
+        private readonly ComponentRegister  componentRegister;
+        private readonly IFinalizerBuilder  finalizerInstanceBuilder;
+        private readonly SemaphoreSlim      semaphoreSlim;
 
         public FinalizerManager(
-            IKubernetes client,
-            ILogger logger,
-            ComponentRegister componentRegister,
-            IFinalizerBuilder finalizerInstanceBuilder)
+            IKubernetes         client,
+            ILogger             logger,
+            ComponentRegister   componentRegister,
+            IFinalizerBuilder   finalizerInstanceBuilder)
         {
-            this.client = client;
-            this.logger = logger;
-            this.componentRegister = componentRegister;
+            this.client                   = client;
+            this.logger                   = logger;
+            this.componentRegister        = componentRegister;
             this.finalizerInstanceBuilder = finalizerInstanceBuilder;
-            this.semaphoreSlim = new SemaphoreSlim(1);
+            this.semaphoreSlim            = new SemaphoreSlim(1);
         }
 
         /// <inheritdoc/>
@@ -85,9 +85,7 @@ namespace Neon.Kube.Operator
             try
             {
                 await semaphoreSlim.WaitAsync();
-
                 await finalizer.FinalizeAsync(entity);
-
                 await RemoveFinalizerAsync(entity, finalizer);
             }
             catch (Exception e)
@@ -133,7 +131,7 @@ namespace Neon.Kube.Operator
 
                         return false;
                     },
-                    timeout: TimeSpan.FromSeconds(30),
+                    timeout:      TimeSpan.FromSeconds(30),
                     pollInterval: TimeSpan.FromSeconds(1));
             }
             catch (Exception e)

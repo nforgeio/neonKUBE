@@ -40,6 +40,7 @@ namespace Neon.Kube.Operator
     {
         /// <inheritdoc/>
         public IServiceCollection Services { get; }
+
         private ComponentRegister componentRegister { get; }
 
         /// <summary>
@@ -48,7 +49,7 @@ namespace Neon.Kube.Operator
         /// <param name="services"></param>
         public OperatorBuilder(IServiceCollection services)
         {
-            Services = services;
+            Services          = services;
             componentRegister = new ComponentRegister();
         }
 

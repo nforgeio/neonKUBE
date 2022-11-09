@@ -47,6 +47,7 @@ namespace Neon.Kube.Operator
         public void Release(string entityId)
         {
             SemaphoreSlim semaphore;
+
             if (lockDictionary.TryGetValue(entityId, out semaphore))
             {
                 semaphore.Release();
@@ -57,6 +58,7 @@ namespace Neon.Kube.Operator
         public async Task WaitAsync(string entityId)
         {
             var semaphore = lockDictionary.GetOrAdd(entityId, new SemaphoreSlim(1, 1));
+
             await semaphore.WaitAsync();
         }
     }

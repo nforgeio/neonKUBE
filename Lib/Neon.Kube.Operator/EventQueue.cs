@@ -58,11 +58,11 @@ namespace Neon.Kube.Operator
     internal class EventQueue<TEntity>
         where TEntity : class, IKubernetesObject<V1ObjectMeta>
     {
-        private readonly IKubernetes k8s;
-        private readonly ILogger logger;
-        private readonly ResourceManagerOptions options;
-        private readonly ConcurrentDictionary<WatchEvent<TEntity>, CancellationTokenSource> queue;
-        private readonly Func<WatchEvent<TEntity>, Task> eventHandler;
+        private readonly IKubernetes                                                            k8s;
+        private readonly ILogger                                                                logger;
+        private readonly ResourceManagerOptions                                                 options;
+        private readonly ConcurrentDictionary<WatchEvent<TEntity>, CancellationTokenSource>     queue;
+        private readonly Func<WatchEvent<TEntity>, Task>                                        eventHandler;
 
         /// <summary>
         /// Constructor.
@@ -71,9 +71,9 @@ namespace Neon.Kube.Operator
         /// <param name="options"></param>
         /// <param name="eventHandler"></param>
         public EventQueue(
-            IKubernetes k8s,
-            ResourceManagerOptions options,
-            Func<WatchEvent<TEntity>, Task> eventHandler)
+            IKubernetes                         k8s,
+            ResourceManagerOptions              options,
+            Func<WatchEvent<TEntity>, Task>     eventHandler)
         {
             this.k8s = k8s;
             this.options = options;
@@ -88,8 +88,7 @@ namespace Neon.Kube.Operator
         /// </summary>
         /// <param name="event"></param>
         /// <returns></returns>
-        public async Task NotifyAsync(
-            WatchEvent<TEntity> @event)
+        public async Task NotifyAsync(WatchEvent<TEntity> @event)
         {
             var queuedEvent = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).FirstOrDefault();
 
@@ -110,9 +109,9 @@ namespace Neon.Kube.Operator
         /// <param name="watchEventType"></param>
         /// <returns></returns>
         public async Task EnqueueAsync(
-            WatchEvent<TEntity> @event,
-            TimeSpan? delay = null,
-            WatchEventType? watchEventType = null)
+            WatchEvent<TEntity>  @event,
+            TimeSpan?           delay          = null,
+            WatchEventType?     watchEventType = null)
         {
             await SyncContext.Clear;
 
@@ -156,8 +155,8 @@ namespace Neon.Kube.Operator
         /// <returns></returns>
         public async Task RequeueAsync(
             WatchEvent<TEntity> @event,
-            TimeSpan? delay = null, 
-            WatchEventType? watchEventType = null)
+            TimeSpan?           delay          = null, 
+            WatchEventType?     watchEventType = null)
         {
             try
             {
@@ -216,7 +215,7 @@ namespace Neon.Kube.Operator
 
                 queue.TryRemove(@event, out _);
             }
-            catch (TaskCanceledException e)
+            catch (TaskCanceledException)
             {
                 logger.LogDebugEx($"Canceling task for [{@event.Type}] event on resource [{@event.Value.Kind}/{@event.Value.Name()}]");
 
@@ -234,8 +233,7 @@ namespace Neon.Kube.Operator
 
         private TimeSpan GetDelay(int attempts)
         {
-            var delay = Math.Min(options.ErrorMinRequeueInterval.TotalMilliseconds * (attempts),
-                    options.ErrorMaxRequeueInterval.TotalMilliseconds);
+            var delay = Math.Min(options.ErrorMinRequeueInterval.TotalMilliseconds * (attempts), options.ErrorMaxRequeueInterval.TotalMilliseconds);
 
             return TimeSpan.FromMilliseconds(delay);
         }

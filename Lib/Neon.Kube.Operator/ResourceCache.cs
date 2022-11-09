@@ -41,9 +41,9 @@ namespace Neon.Kube.Operator
     internal class ResourceCache<TEntity> : IResourceCache<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
     {
-        private readonly ConcurrentDictionary<string, TEntity> cache;
-        private readonly ConcurrentDictionary<string, TEntity> finalizingCache;
-        private readonly CompareLogic comparelogLogic;
+        private readonly ConcurrentDictionary<string, TEntity>  cache;
+        private readonly ConcurrentDictionary<string, TEntity>  finalizingCache;
+        private readonly CompareLogic                           comparelogLogic;
 
         public ResourceCache() 
         {
