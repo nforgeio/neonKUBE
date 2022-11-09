@@ -126,7 +126,7 @@ spec:
 
 # overwrite custom properties for connection pooler deployments
   connectionPooler:
-    numberOfInstances: 1
+    numberOfInstances: {{ max (div .Values.replicas 3) 1 }}
 #    mode: "transaction"
 #    schema: "pooler"
 #    user: "pooler"

@@ -4888,7 +4888,7 @@ $@"- name: StorageType
                     values.Add($"replicas", serviceAdvice.ReplicaCount);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add("healthCheck.image.tag", KubeVersions.NeonKubeContainerImageTag);
-                    values.Add($"neonSystemDb.enableMasterLoadBalancer", true);
+                    values.Add($"neonSystemDb.enableConnectionPooler", true);
 
                     int i = 0;
 

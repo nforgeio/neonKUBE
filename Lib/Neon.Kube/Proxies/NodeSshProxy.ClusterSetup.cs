@@ -933,7 +933,7 @@ done
                             {
                                 try
                                 {
-                                    SudoCommand(CommandBundle.FromScript(helmChartScript), RunOptions.FaultOnError).EnsureSuccess();
+                                    SudoCommand(CommandBundle.FromScript(scriptString), RunOptions.FaultOnError).EnsureSuccess();
 
                                     return await Task.FromResult(true);
                                 }
