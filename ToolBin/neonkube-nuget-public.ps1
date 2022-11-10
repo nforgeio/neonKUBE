@@ -23,13 +23,13 @@
 #
 # OPTIONS:
 #
-#       -publicSource   - Use GitHub sources for SourceLink even if local repo is dirty
+#       -allowDirty     - Use GitHub sources for SourceLink even if local repo is dirty
 #       -restore        - Just restore the CSPROJ files after cancelling publish
 
 param 
 (
-    [switch]$publicSource = $false,     # use GitHub sources for SourceLink even if local repo is dirty
-    [switch]$restore      = $false      # Just restore the CSPROJ files after cancelling publish
+    [switch]$allowDirty = $false,    # use GitHub sources for SourceLink even if local repo is dirty
+    [switch]$restore    = $false     # Just restore the CSPROJ files after cancelling publish
 )
 
 Write-Error "neonKUBE nuget publication is currently disabled."
@@ -136,19 +136,23 @@ try
     $neonSdkVersion  = $(& "neon-build" read-version "$nkLib/Neon.Common/Build.cs" NeonSdkVersion)
     $neonkubeVersion = $(& "neon-build" read-version "$nkLib/Neon.Kube/KubeVersions.cs" NeonKube)
 
+    #--------------------------------------------------------------------------
     # SourceLink configuration:
 	#
 	# We're going to fail this when the current git branch is dirty 
-	# and [-publicSource] wasn't passed.
+	# and [-allowDirty] wasn't passed.
 
     $gitDirty = IsGitDirty
 
-    if ($gitDirty -and -not $publicSource)
+    if ($gitDirty -and -not $allowDirty)
     {
-        throw "Cannot publish nugets because the git branch is dirty.  Use the -publicSource option to override."
+        throw "Cannot publish nugets because the git branch is dirty.  Use the -allowDirty option to override."
     }
 
     $env:NEON_PUBLIC_SOURCELINK = "true"
+
+    #--------------------------------------------------------------------------
+    # Build the solution.
 
     if (-not $restore)
     {

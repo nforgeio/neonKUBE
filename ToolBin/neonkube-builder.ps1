@@ -25,12 +25,14 @@
 #
 #       -codedoc      - Builds the code documentation
 #       -all          - Builds with all of the options above
+#       -allowDirty   - Use GitHub sources for SourceLink even if local repo is dirty
 
 param 
 (
-    [switch]$codedoc = $false,
-    [switch]$all     = $false,
-    [switch]$debug   = $false   # Optionally specify DEBUG build config
+    [switch]$codedoc    = $false,
+    [switch]$all        = $false,
+    [switch]$allowDirty = $false,  # use GitHub sources for SourceLink even if local repo is dirty
+    [switch]$debug      = $false   # Optionally specify DEBUG build config
 )
 
 #------------------------------------------------------------------------------
@@ -101,6 +103,20 @@ $verbosity = "minimal"
 
 try
 {
+    #--------------------------------------------------------------------------
+    # SourceLink configuration: We need to decide whether to set the environment variable 
+    # [NEON_PUBLIC_SOURCELINK=true] to enable SourceLink references to our GitHub repos.
+
+    $gitDirty = IsGitDirty
+
+    if ($gitDirty -and -not $allowDirty)
+    {
+        throw "Cannot publish nugets because the git branch is dirty.  Use the -allowDirty option to override."
+    }
+
+    $env:NEON_PUBLIC_SOURCELINK = "true"
+
+    #--------------------------------------------------------------------------
     # Build the solution.
 
     if (-not $nobuild)

@@ -28,7 +28,7 @@
 #
 #       -local          - Publishes to C:\nc-nuget-local
 #       -localversion   - Use the local version number
-#       -publicSource   - Use GitHub sources for SourceLink even if local repo is dirty
+#       -allowDirty   - Use GitHub sources for SourceLink even if local repo is dirty
 #       -release        - Do a RELEASE build instead of DEBUG (the default)
 #
 # Generally, you'll use this script without any options to publish to the private
@@ -78,7 +78,7 @@ param
 (
     [switch]$local        = $false,     # publish to local file system
     [switch]$localVersion = $false,     # use a local version counter (emergency only)
-    [switch]$publicSource = $false,     # use GitHub sources for SourceLink even if local repo is dirty
+    [switch]$allowDirty   = $false,     # use GitHub sources for SourceLink even if local repo is dirty
     [switch]$release      = $false      # RELEASE build instead of DEBUG (the default)
 )
 
@@ -318,27 +318,20 @@ try
         $neonkubeVersion = "10000.0.$reply-dev-$branch"
     }
 
+    #--------------------------------------------------------------------------
     # SourceLink configuration: We need to decide whether to set the environment variable 
     # [NEON_PUBLIC_SOURCELINK=true] to enable SourceLink references to our GitHub repos.
 
-    $publicSourceLink = $true
-    $gitDirty         = IsGitDirty
+    $gitDirty = IsGitDirty
 
-    if ($local -or $gitDirty)
+    if ($gitDirty -and -not $allowDirty)
     {
-        $publicSourceLink = $false
+        throw "Cannot publish nugets because the git branch is dirty.  Use the -allowDirty option to override."
     }
 
-    if ($publicSource)
-    {
-        $publicSourceLink = $true
-    }
+    $env:NEON_PUBLIC_SOURCELINK = "true"
 
-    if ($publicSourceLink)
-    {
-        $env:NEON_PUBLIC_SOURCELINK = "true"
-    }
-
+    #--------------------------------------------------------------------------
     # We need to do a solution build to ensure that any tools or other dependencies 
     # are built before we build and publish the individual packages.
 
