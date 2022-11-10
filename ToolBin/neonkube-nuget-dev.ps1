@@ -209,7 +209,7 @@ function Publish
 
     if ($local)
     {
-        dotnet nuget add --source $env:NC_NUGET_LOCAL $nugetPath
+        dotnet nuget push $nugetPath --source $env:NC_NUGET_LOCAL
         ThrowOnExitCode
     }
     else
