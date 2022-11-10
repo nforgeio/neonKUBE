@@ -1116,6 +1116,20 @@ namespace Neon.Kube
             Container.Validate(this);
             Features.Validate(this);
 
+            // Ensure that all of the node names are unique.
+
+            var nodeNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var node in Nodes)
+            {
+                if (nodeNames.Contains(node.Name))
+                {
+                    throw new ClusterDefinitionException($"Cluster definition includes multiple nodes named [{node.Name}].  Node names must be unique.");
+                }
+
+                nodeNames.Add(node.Name);
+            }
+
             // Have the hosting manager perform its own validation.
 
             new HostingManagerFactory().Validate(this);
