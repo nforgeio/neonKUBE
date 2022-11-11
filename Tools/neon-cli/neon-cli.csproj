@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net7.0</TargetFramework>
+		<TargetFramework>net7.0-windows10.0.17763.0</TargetFramework>
+		<RuntimeIdentifier>win10-x64</RuntimeIdentifier>
 		<OutputType>Exe</OutputType>
 		<RootNamespace>NeonCli</RootNamespace>
 		<AssemblyName>neon</AssemblyName>
-		<RuntimeIdentifier>win10-x64</RuntimeIdentifier>
 		<PlatformTarget>AnyCPU</PlatformTarget>
 		<Configurations>Debug;Release</Configurations>
 		<Description>Manage neonKUBE clusters from the command line</Description>
