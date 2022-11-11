@@ -61,6 +61,11 @@ namespace Neon.Kube
         // wanted to get fancy.
 
         /// <summary>
+        /// Maximum number of characters allowed in a cluster name.
+        /// </summary>
+        public const int MaxClusterNameLength = 24;
+
+        /// <summary>
         /// Regex for verifying cluster names for hosts, routes, groups, etc.  This also can
         /// be used to (lightly) validate DNS host names.
         /// </summary>
@@ -394,9 +399,9 @@ namespace Neon.Kube
         /// </para>
         /// <note>
         /// The name may include only letters, numbers, periods, dashes, and underscores and
-        /// may be up to 32 characters long.  Some hosting environments enforce length limits
+        /// may be up to 24 characters long.  Some hosting environments enforce length limits
         /// on resource names that we derive from the cluster name, so please limit your
-        /// cluster name to 32 characters.
+        /// cluster name to 24 characters.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Always)]
@@ -1198,9 +1203,9 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"The [{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
 
-            if (Name.Length > 32)
+            if (Name.Length > MaxClusterNameLength)
             {
-                throw new ClusterDefinitionException($"The [{nameof(Name)}={Name}] property has more than 32 characters.  Some hosting environments enforce name length limits so please trim your cluster name.");
+                throw new ClusterDefinitionException($"The [{nameof(Name)}={Name}] property has more than [{MaxClusterNameLength}] characters.  Some hosting environments enforce name length limits so please trim your cluster name.");
             }
 
             if (Description != null && Description.Length > 256)
