@@ -4067,7 +4067,7 @@ $@"- name: StorageType
                             var minioPod = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
 
                             (await k8s.NamespacedPodExecWithRetryAsync(
-                                retryPolicy:              podExecRetry,
+                                retryPolicy:        podExecRetry,
                                 namespaceParameter: minioPod.Namespace(),
                                 name:               minioPod.Name(),
                                 container:          "minio-operator",
