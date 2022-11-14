@@ -31,6 +31,7 @@ using Neon.Cryptography;
 using Neon.IO;
 using Neon.Kube.Resources;
 using Neon.Net;
+using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
 
@@ -44,6 +45,10 @@ namespace Neon.Kube
 {
     public static partial class KubeSetup
     {
+        // Used for retrying operations within steps when presumably transient errors occur.
+
+        private static IRetryPolicy operationRetryPolicy = new LinearRetryPolicy(e => true, maxAttempts: 10, retryInterval: TimeSpan.FromSeconds(30));
+
         /// <summary>
         /// Configures a local HAProxy container that makes the Kubernetes etcd
         /// cluster highly available.
@@ -4064,23 +4069,27 @@ $@"- name: StorageType
                         {
                             controller.LogProgress(controlNode, verb: "wait for", message: "minio");
 
-                            var minioPod = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
+                            await operationRetryPolicy.InvokeAsync(
+                                async () =>
+                                {
+                                    var minioPod = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
 
-                            (await k8s.NamespacedPodExecWithRetryAsync(
-                                retryPolicy:        podExecRetry,
-                                namespaceParameter: minioPod.Namespace(),
-                                name:               minioPod.Name(),
-                                container:          "minio-operator",
-                                command:            new string[] {
-                                    "/bin/bash",
-                                    "-c",
-                                    $@"echo '{{""Version"":""2012-10-17"",""Statement"":[{{""Effect"":""Allow"",""Action"":[""admin:*""]}},{{""Effect"":""Allow"",""Action"":[""s3:*""],""Resource"":[""arn:aws:s3:::*""]}}]}}' > /tmp/superadmin.json"
-                                })).EnsureSuccess();
+                                    (await k8s.NamespacedPodExecWithRetryAsync(
+                                        retryPolicy:        podExecRetry,
+                                        namespaceParameter: minioPod.Namespace(),
+                                        name:               minioPod.Name(),
+                                        container:          "minio-operator",
+                                        command:            new string[] {
+                                            "/bin/bash",
+                                            "-c",
+                                            $@"echo '{{""Version"":""2012-10-17"",""Statement"":[{{""Effect"":""Allow"",""Action"":[""admin:*""]}},{{""Effect"":""Allow"",""Action"":[""s3:*""],""Resource"":[""arn:aws:s3:::*""]}}]}}' > /tmp/superadmin.json"
+                                        })).EnsureSuccess();
 
-                            controller.ThrowIfCancelled();
-                            (await cluster.ExecMinioCommandAsync(
-                                retryPolicy:    podExecRetry,
-                                mcCommand:      "admin policy add minio superadmin /tmp/superadmin.json")).EnsureSuccess();
+                                    controller.ThrowIfCancelled();
+                                    (await cluster.ExecMinioCommandAsync(
+                                        retryPolicy:    podExecRetry,
+                                        mcCommand:      "admin policy add minio superadmin /tmp/superadmin.json")).EnsureSuccess();
+                                });
                         });
                 });
         }
