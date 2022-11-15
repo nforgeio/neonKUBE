@@ -646,7 +646,7 @@ namespace Neon.Kube
             {
                 "/bin/bash",
                 "-c",
-                $"/mc {mcCommand}"
+                $"/mc --debug {mcCommand}"
             };
 
             if (retryPolicy != null)
