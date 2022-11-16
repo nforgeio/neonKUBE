@@ -1597,7 +1597,7 @@ namespace Neon.Kube
                         tcs.TrySetResult(IsCancelPending ? SetupDisposition.Cancelled : SetupDisposition.Succeeded);
                         return;
                     }
-                    catch (OperationCanceledException e)
+                    catch (OperationCanceledException)
                     {
                         if (StatusChangedEvent != null)
                         {
