@@ -871,5 +871,42 @@ namespace Neon.Kube
                 timeoutSeconds:       timeoutSeconds,
                 cancellationToken:    cancellationToken);
         }
+
+        /// <summary>
+        /// Lists pods from all cluster namespaces.
+        /// </summary>
+        /// <param name="k8s">The <see cref="IKubernetes"/> instance.</param>
+        /// <returns>The <see cref="V1PodList"/>.</returns>
+        public static async Task<V1PodList> ListAllPodsAsync(this IKubernetes k8s)
+        {
+            // Clusters may have hundreds or even thousands of namespaces, so we don't
+            // want to query for pods one namespace at a time because that may take too
+            // long.  But we also don't want to slam the API server with potentially
+            // thousands of pod queries all at once.
+            //
+            // We're going to queries for all of the namespaces and then perform pod
+            // queries in parallel, but limiting that concurrency to something reasonable.
+
+            const int podListConcurency = 100;
+
+            var namespaces = (await k8s.ListNamespaceAsync()).Items;
+            var pods       = new V1PodList() { Items = new List<V1Pod>() };
+
+            await Parallel.ForEachAsync(namespaces, new ParallelOptions() { MaxDegreeOfParallelism = podListConcurency },
+                async (@namespace, cancellationToken) =>
+                {
+                    var namespacedPods = await k8s.ListNamespacedPodAsync(@namespace.Name());
+
+                    lock (pods)
+                    {
+                        foreach (var pod in namespacedPods.Items)
+                        {
+                            pods.Items.Add(pod);
+                        }
+                    }
+                });
+
+            return pods;
+        }
     }
 }

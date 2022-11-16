@@ -117,6 +117,23 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
+        /// Optional event which is raised when the setup operation completes.  The <b>sender</b> argument
+        /// will be passed as the <see cref="ISetupController"/> instance and the <see cref="Exception"/>
+        /// argument will be <c>null</c> when the setup operation completed successfully or an exception
+        /// detailing the failure.
+        /// </para>
+        /// <para>
+        /// This presents a good opportunity for setup controller users to capture additional information 
+        /// about failed operations, etc. in common code.
+        /// </para>
+        /// <note>
+        /// Setup controller implementions are <b>not required</b> to set this.
+        /// </note>
+        /// </summary>
+        event EventHandler<Exception> Finished;
+
+        /// <summary>
+        /// <para>
         /// Raised when individual progress/error messages are logged during
         /// base image setup where where only limited status needs to be
         /// displayed or logged.

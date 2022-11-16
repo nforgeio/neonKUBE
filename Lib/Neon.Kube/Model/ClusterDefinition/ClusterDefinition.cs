@@ -78,12 +78,6 @@ namespace Neon.Kube
         public static Regex NameRegex { get; private set; } = new Regex(@"^[a-z0-9\-_]+$", RegexOptions.IgnoreCase);
 
         /// <summary>
-        /// Regex for verifying cluster prefixes.  This is the similar to <see cref="DnsNameRegex"/> but optionally
-        /// allows a "(" and ")" which we use for clusterspace related deployments.
-        /// </summary>
-        public static Regex PrefixRegex { get; private set; } = new Regex(@"^[a-z0-9.\-_()]+$", RegexOptions.IgnoreCase);
-
-        /// <summary>
         /// The prefix reserved for neonKUBE specific annotations and labels.
         /// </summary>
         public const string ReservedPrefix = "neonkube.io/";
@@ -838,7 +832,8 @@ namespace Neon.Kube
         /// Removes any temporary setup related state including <see cref="SetupState"/>, hosting
         /// related secrets, as well as temporary state used by the hosting managers.
         /// </summary>
-        public void ClearSetupState()
+        /// <returns>The redacted cluster definition.</returns>
+        public ClusterDefinition ClearSetupState()
         {
             lock (syncLock)
             {
@@ -854,6 +849,25 @@ namespace Neon.Kube
 
                 // Hosting?.ClearSecrets(this);
             }
+
+            return this;
+        }
+
+        /// <summary>
+        /// Clones the current cluster definition and then removes any temporary setup related state 
+        /// including <see cref="SetupState"/>, hosting related secrets, as well as temporary state
+        /// used by the hosting managers.
+        /// </summary>
+        /// <returns>The redacted cluster definition.</returns>
+        public ClusterDefinition Redact()
+        {
+            var redacted = NeonHelper.JsonClone(this);
+
+            redacted.SetupState = null;
+
+            redacted.Hosting?.ClearSecrets(this);
+
+            return redacted;
         }
 
         /// <summary>

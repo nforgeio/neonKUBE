@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -30,6 +31,7 @@ using Neon.SSH;
 using Neon.Xunit;
 
 using k8s;
+using k8s.Models;
 
 using Xunit;
 using Xunit.Abstractions;
@@ -331,12 +333,19 @@ namespace Neon.Kube.Xunit
 
         private ClusterFixtureOptions   options;
         private bool                    started = false;
+        private bool                    orgNoTelemetry;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public ClusterFixture()
         {
+            // Disable telemetry uploads for failed cluster deployments.  This is not
+            // necessary for unit tests since we're going to capture that to the test
+            // output.
+
+            orgNoTelemetry              = KubeEnv.IsTelemetryDisabled;
+            KubeEnv.IsTelemetryDisabled = true;
         }
 
         /// <inheritdoc/>
@@ -344,6 +353,8 @@ namespace Neon.Kube.Xunit
         {
             if (disposing)
             {
+                KubeEnv.IsTelemetryDisabled = orgNoTelemetry;   // Restore this
+                
                 if (!base.IsDisposed)
                 {
                     if (options.RemoveClusterOnDispose)
@@ -729,7 +740,7 @@ namespace Neon.Kube.Xunit
             {
                 if (options.CaptureDeploymentLogs)
                 {
-                    CaptureDeploymentLogs();
+                    CaptureDeploymentLogs(captureDetails: true);
                 }
             }
 
@@ -942,53 +953,82 @@ namespace Neon.Kube.Xunit
         /// Reads the deployment log files and writes their content to <see cref="ClusterFixtureOptions.TestOutputHelper"/>
         /// when enabled.
         /// </summary>
-        private void CaptureDeploymentLogs()
+        /// <param name="captureDetails">
+        /// Optionally capture additional cluster details including the redacted cluster definition 
+        /// the cluster pods status and logs for pods in the <b>Failed</b> state.
+        /// </param>
+        private void CaptureDeploymentLogs(bool captureDetails = false)
         {
+            const string separator = "###############################################################################";
+
             if (!options.CaptureDeploymentLogs || options.TestOutputHelper == null)
             {
                 return;
             }
 
-            var logFolder      = KubeHelper.LogFolder;
-            var clusterLogPath = Path.Combine(logFolder, KubeConst.ClusterLogName);
+            var logFolder        = KubeHelper.LogFolder;
+            var logDetailsFolder = KubeHelper.LogDetailsFolder;
+            var clusterLogPath   = Path.Combine(logFolder, KubeConst.ClusterLogName);
 
-            // Capture [cluster.log] first.
+            // Capture: cluster.log
 
             if (File.Exists(clusterLogPath))
             {
-                WriteTestOutputLine($"# FILE: {KubeConst.ClusterLogName}");
-                WriteTestOutputLine();
-
-                using (var reader = new StreamReader(clusterLogPath))
+                using (var reader = new StreamReader(clusterLogPath, Encoding.UTF8))
                 {
+                    WriteTestOutputLine(separator);
+                    WriteTestOutputLine($"# LOG FILE: {Path.GetFileName(clusterLogPath)}");
+                    WriteTestOutputLine();
+
                     foreach (var line in reader.Lines())
                     {
                         WriteTestOutputLine(line);
                     }
                 }
-
-                WriteTestOutputLine();
             }
 
-            // Capture any other log files.
+            var logFilePaths = Directory.GetFiles(logFolder, "*.log", SearchOption.TopDirectoryOnly);
 
-            foreach (var path in Directory.GetFiles(logFolder, "*.log", SearchOption.TopDirectoryOnly)
+            foreach (var logFilePath in logFilePaths
                 .Where(path => path != clusterLogPath)
                 .OrderBy(path => path, StringComparer.InvariantCultureIgnoreCase))
+            {
+                using (var reader = new StreamReader(clusterLogPath, Encoding.UTF8))
                 {
-                    WriteTestOutputLine($"# FILE: {Path.GetFileName(path)}");
+                    WriteTestOutputLine(separator);
+                    WriteTestOutputLine($"# LOG FILE: {Path.GetFileName(logFilePath)}");
                     WriteTestOutputLine();
 
-                    using (var reader = new StreamReader(path))
+                    foreach (var line in reader.Lines())
                     {
+                        WriteTestOutputLine(line);
+                    }
+                }
+            }
+
+            // Capture any additional detail files.
+
+            if (captureDetails)
+            {
+                var detailFilePaths = Directory.GetFiles(logDetailsFolder, "*.*");
+
+                foreach (var detailFilePath in logFilePaths
+                    .Where(path => path != clusterLogPath)
+                    .OrderBy(path => path, StringComparer.InvariantCultureIgnoreCase))
+                {
+                    using (var reader = new StreamReader(clusterLogPath, Encoding.UTF8))
+                    {
+                        WriteTestOutputLine(separator);
+                        WriteTestOutputLine($"# DETAIL FILE: {Path.GetFileName(detailFilePath)}");
+                        WriteTestOutputLine();
+
                         foreach (var line in reader.Lines())
                         {
                             WriteTestOutputLine(line);
                         }
                     }
-
-                    WriteTestOutputLine();
                 }
+            }
         }
 
         /// <summary>

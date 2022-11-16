@@ -28,6 +28,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+
 using ICSharpCode.SharpZipLib.Zip;
 
 using k8s;
@@ -291,34 +292,44 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Collects the cluster prepare/setup logs into a ZIP archive which is that uploaded to
-        /// the headend for potential analysis.
+        /// Collects the cluster prepare/setup logs into a ZIP archive which is then uploaded to
+        /// the headend for potential failure analysis.
         /// </para>
         /// <note>
-        /// This method does nothing when the <see cref="KubeEnv.DisableTelemetryVariable"/> is set to <b>true</b>.
+        /// This method does nothing when <see cref="KubeEnv.DisableTelemetryVariable"/> returns <b>true</b>
+        /// or when the cluster was deployed with unredacted logs.
         /// </note>
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="e">Passed as the exception thrown for the problem.</param>
         /// <returns>The tracing <see cref="Task"/>.</returns>
-        private static async Task UploadDeploymentLogs(ISetupController controller, Exception e)
+        private static void UploadDeploymentLogs(ISetupController controller, Exception e)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
 
+            var logFolder = KubeHelper.LogFolder;
+
+            // Don't upload cluster logs when telemetry is disabled.
+
             if (KubeEnv.IsTelemetryDisabled)
             {
-                // Don't upload cluster logs when the telemetry is disabled.
-
                 return;
             }
 
-            var logFolder = KubeHelper.LogFolder;
+            // Don't upload anything when logs are not redacted.
 
-            if (!Directory.Exists(logFolder) || Directory.GetFiles(logFolder, "*.log", SearchOption.TopDirectoryOnly).Length == 0)
+            var redact = controller.Get<bool>(KubeSetupProperty.Redact);
+
+            if (!redact)
             {
-                // There don't appear to be any log files so skip this step.
+                return;
+            }
 
+            // Don't do anything when there are no log files.
+
+            if (!Directory.Exists(logFolder) || Directory.GetFiles(logFolder, "*.log", SearchOption.AllDirectories).Length == 0)
+            {
                 return;
             }
 
@@ -336,9 +347,6 @@ namespace Neon.Kube
             {
                 clusterDefinition = NeonHelper.JsonClone(clusterDefinition);
                 clusterDefinition.ClearSetupState();
-
-                // $note(jefflill): ClearSetupState() isn't clearing these right now so we're going to force this.
-
                 clusterDefinition.Hosting?.ClearSecrets(clusterDefinition);
             }
 
@@ -352,47 +360,72 @@ namespace Neon.Kube
             var clientId     = KubeHelper.ClientId;
             var userId       = Guid.Empty;      // $todo(jefflill): Setting this to ZEROs until we implement neonCLOUD users
 
-            using (var tempFile = new TempFile(".zip"))
+            using (var tempZipFile = new TempFile(".zip"))
             {
-                using (var tempStream = File.Create(tempFile.Path))
+                using (var tempZipStream = File.Create(tempZipFile.Path))
                 {
-                    using (var zipStream = tempStream)
+                    using (var zipStream = tempZipStream)
                     {
                         using (var zip = ZipFile.Create(zipStream))
                         {
-                            // Generate and add: metadata.yaml
-
-                            var metadata = new ClusterSetupFailureMetadata()
+                            using (var tempFolder = new TempFolder())
                             {
-                                TimestampUtc    = timestampUtc,
-                                NeonKubeVersion = KubeVersions.NeonKube,
-                                CliendId        = clientId,
-                                UserId          = userId,
-                                Exception       = e.ToString()
-                            };
+                                zip.BeginUpdate();
 
-                            // Add: metadata.yaml
+                                // Generate and add: metadata.yaml
 
-                            zip.Add(new ICSharpCode.SharpZipLib.Zip.StaticStringDataSource(NeonHelper.YamlSerialize(metadata)), "metadata.yaml");
+                                var metadata = new ClusterSetupFailureMetadata()
+                                {
+                                    TimestampUtc    = timestampUtc,
+                                    NeonKubeVersion = KubeVersions.NeonKube,
+                                    CliendId        = clientId,
+                                    UserId          = userId,
+                                    Exception       = e.ToString()
+                                };
 
-                            // Add: cluster-definition.yaml
+                                zip.Add(new ICSharpCode.SharpZipLib.Zip.StaticStringDataSource(NeonHelper.YamlSerialize(metadata)), "metadata.yaml");
 
-                            zip.Add(new ICSharpCode.SharpZipLib.Zip.StaticStringDataSource(NeonHelper.YamlSerialize(clusterDefinition)), "cluster-definition.yaml");
+                                // Add: cluster-definition.yaml
 
-                            // We're going to upload all the files in the the log folder.
+                                zip.Add(new ICSharpCode.SharpZipLib.Zip.StaticStringDataSource(NeonHelper.YamlSerialize(clusterDefinition.Redact())), "cluster-definition.yaml");
 
-                            zip.AddDirectory(logFolder);
+                                // We're going to upload all the files in the the log folder.
+
+                                // $note(jefflill):
+                                //
+                                // The cluster log files may still be open at this point for writing, but these
+                                // still allow READ access.  The problem is that [ZipFile] appears to require
+                                // exclusive access.
+                                //
+                                // Rather than trying to close these files so I can add them the ZIP archive, I'm
+                                // going to copy their contents to temp files in a temporary folder and then add those.
+
+                                var fileId = 0;
+
+                                foreach (var path in Directory.EnumerateFiles(KubeHelper.LogFolder, "*.*", SearchOption.AllDirectories))
+                                {
+                                    var tempFile = Path.Combine(tempFolder.Path, $"{fileId++}.dat");
+
+                                    File.Copy(path, tempFile);
+                                    zip.Add(tempFile, path.Substring(KubeHelper.LogFolder.Length));
+                                }
+
+                                // We're done updating the ZIP archive.
+
+                                zip.CommitUpdate();
+                            }
                         }
                     }
+                }
 
-                    // The temp file now holds the ZIP archive data.  We're going to upload that
-                    // to the headend.
+                // The temp file now holds the ZIP archive data.  We're going to upload that
+                // to the headend.
 
-                    tempStream.Position = 0;
-
+                using (var tempZipStream = File.OpenRead(tempZipFile.Path))
+                {
                     try
                     {
-                        await headendClient.ClusterSetup.UploadClusterSetupLogAsync(tempStream, uploadId.ToString("d"), timestampUtc, KubeVersions.NeonKube, clientId.ToString("d"), userId.ToString("d"), preparing);
+                        headendClient.ClusterSetup.UploadClusterSetupLogAsync(tempZipStream, uploadId.ToString("d"), timestampUtc, KubeVersions.NeonKube, clientId.ToString("d"), userId.ToString("d"), preparing).Wait();
 
                         // Tell the user that we're done.
 

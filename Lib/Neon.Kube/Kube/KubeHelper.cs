@@ -68,6 +68,7 @@ namespace Neon.Kube
         private static string               cachedNeonKubeUserFolder;
         private static string               cachedRunFolder;
         private static string               cachedLogFolder;
+        private static string               cachedLogDetailsFolder;
         private static string               cachedTempFolder;
         private static string               cachedLoginsFolder;
         private static string               cachedPasswordsFolder;
@@ -114,6 +115,7 @@ namespace Neon.Kube
             cachedNeonKubeUserFolder   = null;
             cachedRunFolder            = null;
             cachedLogFolder            = null;
+            cachedLogDetailsFolder     = null;
             cachedTempFolder           = null;
             cachedLoginsFolder         = null;
             cachedPasswordsFolder      = null;
@@ -550,6 +552,27 @@ namespace Neon.Kube
                 Directory.CreateDirectory(path);
 
                 return cachedLogFolder = path;
+            }
+        }
+
+        /// <summary>
+        /// Returns the default directory path where neon-cli cluster details will be written.
+        /// </summary>
+        /// <returns>The folder path.</returns>
+        public static string LogDetailsFolder
+        {
+            get
+            {
+                if (cachedLogDetailsFolder != null)
+                {
+                    return cachedLogDetailsFolder;
+                }
+
+                var path = Path.Combine(LogFolder, "details");
+
+                Directory.CreateDirectory(path);
+
+                return cachedLogDetailsFolder = path;
             }
         }
 
