@@ -301,12 +301,11 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="e">Passed as the exception thrown for the problem.</param>
+        /// <param name="e">Optionally passed as the exception thrown for the problem.</param>
         /// <returns>The tracing <see cref="Task"/>.</returns>
-        private static void UploadDeploymentLogs(ISetupController controller, Exception e)
+        private static void UploadDeploymentLogs(ISetupController controller, Exception e = null)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
 
             var logFolder = KubeHelper.LogFolder;
 
@@ -380,7 +379,7 @@ namespace Neon.Kube
                                     NeonKubeVersion = KubeVersions.NeonKube,
                                     CliendId        = clientId,
                                     UserId          = userId,
-                                    Exception       = e.ToString()
+                                    Exception       = e?.ToString()
                                 };
 
                                 zip.Add(new ICSharpCode.SharpZipLib.Zip.StaticStringDataSource(NeonHelper.YamlSerialize(metadata)), "metadata.yaml");
