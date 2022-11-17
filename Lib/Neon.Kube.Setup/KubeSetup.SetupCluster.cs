@@ -499,7 +499,7 @@ namespace Neon.Kube
             {
                 var pods = k8s.ListAllPodsAsync().Result;
 
-                foreach (var failedPod in pods.Items.Where(pod => pod.Status.Phase == "Error" || true)) // $debug(jefflill): remove the [true] part.
+                foreach (var failedPod in pods.Items.Where(pod => pod.Status.Phase == "Error"))
                 {
                     // Write the [pod-NAMESPACE-PODNAME.yaml] file with the pod spec/status.
 
@@ -515,7 +515,7 @@ namespace Neon.Kube
                             writer.WriteLine(header);
                             writer.WriteLine($"# FAILED POD: {failedPod.Namespace()}/{failedPod.Name()}");
 
-                            var failedPodStatuses = failedPod.Status.ContainerStatuses.Where(status => !status.Ready || true).ToList(); // $debug(jefflill): remove true part
+                            var failedPodStatuses = failedPod.Status.ContainerStatuses.Where(status => !status.Ready).ToList();
 
                             if (failedPodStatuses.Count == 0)
                             {
