@@ -2748,10 +2748,10 @@ namespace Neon.Kube
             // $hack(jefflill):
             //
             // This is a bit of a hack; I'm going to rely on the fact that the SSH target group
-            // names end with the "-EXTERNALPORT" for the target node.
+            // names end with the external port number for the target node.
 
             var awsInstance       = nodeNameToAwsInstance[node.Name];
-            var targetGroupSuffix = $"-{awsInstance.ExternalSshPort}";
+            var targetGroupSuffix = $"{awsInstance.ExternalSshPort}";
             var targetGroup       = nameToTargetGroup.Values.Single(targetGroup => targetGroup.Protocol == ProtocolEnum.TCP && 
                                                                                    targetGroup.Port == NetworkPorts.SSH && 
                                                                                    targetGroup.TargetGroupName.EndsWith(targetGroupSuffix));
