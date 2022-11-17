@@ -51,9 +51,9 @@ namespace Neon.Kube.Models.Headend
             [FromQuery] string architecture);
 
         [HttpPost]
-        [BodyStream]
-        [Route("logs")]
-        void UploadClusterSetupLogAsync(
+        [BodyStream(IncludeContentSize = true)]
+        [Route("deployment-log")]
+        void PostDeploymentLogAsync(
             [FromQuery] string uploadId,
             [FromQuery] DateTime timestampUtc,
             [FromQuery] string version,
