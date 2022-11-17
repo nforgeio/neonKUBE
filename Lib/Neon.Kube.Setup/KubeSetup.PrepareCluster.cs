@@ -296,9 +296,9 @@ namespace Neon.Kube
                     clusterLogin.SshPassword  = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
                     clusterLogin.SshPassword += ".Aa0";
 
-                    // We're also going to generate the server's SSH key here and pass that to the hosting
+                    // We're also going to generate the server's SSH keypair here and pass that to the hosting
                     // manager's provisioner.  We need to do this up front because some hosting environments
-                    // like Azure don't allow SSH password authentication by default, so we'll need the SSH key
+                    // like AWS don't allow SSH password authentication by default, so we'll need the SSH key
                     // to initialize the nodes after they've been provisioned for those environments.
 
                     if (clusterLogin.SshKey == null)
@@ -310,8 +310,7 @@ namespace Neon.Kube
                         clusterLogin.SshKey = KubeHelper.GenerateSshKey(cluster.Name, KubeConst.SysAdminUser);
                     }
 
-                    // We also need to generate the root SSO password when necessary and add this
-                    // to the cluster login.
+                    // We also need to generate the cluster's root SSO password.
 
                     controller.SetGlobalStepStatus("generate: SSO password");
                     
