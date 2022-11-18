@@ -345,6 +345,15 @@ NOTE: Command line arguments and options may include references to
             {
                 ICommand command;
 
+                // $hack(jefflill):
+                //
+                // We hardcoding our own profile client for the time being.  Eventually,
+                // we'll need to support custom or retail profile clients somehow.
+                //
+                // This is required by: CommandLine.Preprocess()
+
+                NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new ProfileClient());
+
                 CommandLine = new CommandLine(args);
 
                 if (CommandLine.Items.Length == 0)
