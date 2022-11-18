@@ -28,12 +28,12 @@
 
 	<ItemGroup>
 		<None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
-		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+		<None Include="LICENSE" Pack="true" PackagePath="" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Neon.Common" Version="10000.0.2540-dev-jeff" />
-	  <PackageReference Include="Neon.SSH" Version="10000.0.2540-dev-jeff" />
+	  <PackageReference Include="Neon.Common" Version="10000.0.2546-dev-jeff" />
+	  <PackageReference Include="Neon.SSH" Version="10000.0.2546-dev-jeff" />
 	</ItemGroup>
 
 </Project>
