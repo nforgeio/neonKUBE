@@ -503,8 +503,7 @@ namespace Neon.Kube
                 {
                     // Write the [pod-NAMESPACE-PODNAME.yaml] file with the pod spec/status.
 
-                    File.WriteAllText(Path.Combine(logDetailsFolder, $"pod-{failedPod.Namespace()}-{failedPod.Name()}.yaml"), 
-                        NeonHelper.YamlSerialize(failedPod));
+                    File.WriteAllText(Path.Combine(logDetailsFolder, $"pod-{failedPod.Namespace()}-{failedPod.Name()}.yaml"), NeonHelper.YamlSerialize(failedPod));
 
                     // Write the [pod-NAMESPACE-PODNAME.log] with logs from any failed pod containers.
 

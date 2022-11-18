@@ -11,7 +11,7 @@
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/nforgeio/neonSDK</RepositoryUrl>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
-		<Configurations>Release</Configurations>
+		<Configurations>Debug</Configurations>
 		<PackageIcon>nuget-icon.png</PackageIcon>
 		<PackageTags></PackageTags>
 
