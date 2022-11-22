@@ -90,7 +90,7 @@ namespace NeonAcme.Controllers
         /// Handles challenge presentations from Cert Manager.
         /// </summary>
         /// <param name="challenge"></param>
-        /// <returns></returns>
+        /// <returns>The challenge response.</returns>
         [HttpPost("neoncluster_io")]
         [Produces("application/json")]
         public async Task<ActionResult> PresentNeonclusterChallengeAsync([FromBody] ChallengePayload challenge)

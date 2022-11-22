@@ -100,11 +100,11 @@ namespace Neon.Kube
         /// </param>
         /// <param name="architecture">The process ro architecture.</param>
         /// <returns>The download URI or <c>null</c>.</returns>
-        public static async Task<string> GetDefaultNodeImageUriAsync(
+        public static async Task<string> GetNodeImageUriAsync(
             HostingEnvironment  hostingEnvironment, 
             bool                setupDebugMode = false, 
-            string              baseImageName  = null, 
-            string              architecture   = "amd64")
+            string              baseImageName  = null,
+            CpuArchitecture     architecture   = CpuArchitecture.amd64)
         {
             var hostingEnvironmentUpper = hostingEnvironment.ToString().ToUpper();
 

@@ -21,6 +21,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Neon.Common;
 using Neon.ModelGen;
 
 namespace Neon.Kube.Models.Headend
@@ -38,17 +39,24 @@ namespace Neon.Kube.Models.Headend
             [FromQuery] string addresses);
 
         [HttpGet]
-        [Route("image/download")]
+        [Route("image/node")]
         string GetNodeImageManifestUriAsync(
             [FromQuery] string hostingEnvironment,
             [FromQuery] string version,
-            [FromQuery] string architecture);
+            [FromQuery] CpuArchitecture architecture);
 
         [HttpGet]
-        [Route("image/azure")]
+        [Route("image/desktop")]
+        string GetDesktopImageManifestUriAsync(
+            [FromQuery] string hostingEnvironment,
+            [FromQuery] string version,
+            [FromQuery] CpuArchitecture architecture);
+
+        [HttpGet]
+        [Route("image/node/azure")]
         AzureImageDetails GetAzureImageDetailsAsync(
             [FromQuery] string version,
-            [FromQuery] string architecture);
+            [FromQuery] CpuArchitecture architecture);
 
         [HttpPost]
         [BodyStream(IncludeContentSize = true)]
