@@ -376,13 +376,13 @@ namespace Neon.Kube.Operator
                 {
                     // Start the IDLE reconcile loop.
 
-                    stopIdleLoop = false;
+                    stopIdleLoop         = false;
                     nextIdleReconcileUtc = DateTime.UtcNow + options.IdleInterval;
-                    idleLoopTask = IdleLoopAsync();
+                    idleLoopTask         = IdleLoopAsync();
 
                     // Start the watcher.
 
-                    watcherTcs = new CancellationTokenSource();
+                    watcherTcs  = new CancellationTokenSource();
                     watcherTask = WatchAsync(watcherTcs.Token);
 
                     // Inform the controller.

@@ -51,6 +51,7 @@ namespace Neon.Kube.Operator
             if (lockDictionary.TryGetValue(entityId, out semaphore))
             {
                 semaphore.Release();
+                lockDictionary.TryRemove(entityId, out _);
             }
         }
 

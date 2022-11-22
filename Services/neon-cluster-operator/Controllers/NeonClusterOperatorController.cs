@@ -195,7 +195,6 @@ namespace NeonClusterOperator
             }
         }
 
-
         /// <inheritdoc/>
         public async Task<ResourceControllerResult> ReconcileAsync(V1NeonClusterOperator resource)
         {
@@ -239,7 +238,6 @@ namespace NeonClusterOperator
                 CronExpression.ValidateExpression(containerImageExpression);
 
                 await checkRegistryImages.DeleteFromSchedulerAsync(scheduler);
-                await checkRegistryImages.AddToSchedulerAsync(scheduler, k8s, containerImageExpression);
 
                 if (resource.Spec.Updates.Telemetry.Enabled)
                 {
