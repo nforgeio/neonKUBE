@@ -180,9 +180,9 @@ spec:
     # Spec for otel provider if provider is set to otel.
     otel: # Optional
       # The endpoint of otel
-      endpoint: grafana-agent-node.neon-monitor.svc.cluster.local:4317 # Required
+      endpoint: grafana-agent-node.neon-monitor.svc.cluster.local:4318 # Required
       # The URL path of otel
-      urlPath: / # Required
+      urlPath: /v1/traces # Required
       # Whether enable compression or not for otel
       compression: false # Optional
       # Whether establish insecure connection or not for otel
