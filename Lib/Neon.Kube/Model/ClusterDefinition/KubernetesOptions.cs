@@ -109,6 +109,95 @@ namespace Neon.Kube
         public int MaxPodsPerNode { get; set; } = 250;
 
         /// <summary>
+        /// Specfies the amount of time Kubelet running on the cluster nodes will delay node shutdown 
+        /// while gracefully terminating pods on the node.  This is expressed in seconds and must be
+        /// greater than zero.  This defaults to <b>300 seconds (5 minutes)</b> and cannot be less
+        /// than <b>30 seconds</b>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Here's the Kubernetes documentation for this: https://kubernetes.io/docs/concepts/architecture/nodes/#graceful-node-shutdown
+        /// <list type="bullet">
+        /// <item>https://kubernetes.io/docs/concepts/architecture/nodes/#graceful-node-shutdown</item>
+        /// <item>https://kubernetes.io/blog/2021/04/21/graceful-node-shutdown-beta/</item>
+        /// <item>https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/#kubelet-config-k8s-io-v1beta1-KubeletConfiguration</item>
+        /// <item>https://www.freedesktop.org/wiki/Software/systemd/inhibit/</item>
+        /// </list>
+        /// </para>
+        /// <para>
+        /// It appears that when Kubelet detects that the node is being shutdown it tries to gracefully
+        /// shutdown pods like this:
+        /// </para>
+        /// <list type="number">
+        /// <item>
+        /// Pods are signaled to shutdown in <b>PriorityClass</b> order from lowest priority
+        /// first, up to but not including critical pods.  These pods will be given up to
+        /// <see cref="ShutdownGracePeriodSeconds"/> to stop gracefully before they may be
+        /// forcibly terminated.
+        /// </item>
+        /// <item>
+        /// After <see cref="ShutdownGracePeriodSeconds"/> minus- <see cref="ShutdownGracePeriodCriticalPodsSeconds"/>
+        /// has elapsed since Kubelet detected node shutdown or all non-cr<b>PriorityClass</b> ordeitical pods have been stopped, 
+        /// Kubelet will start shutting down critical pods in <b>PriorityClass</b> order.
+        /// </item>
+        /// <item>
+        /// Kubelet will inhibit the kernel from shutting down the node until all pods have
+        /// been shutdown or <see cref="ShutdownGracePeriodSeconds"/> has elapsed.  Once
+        /// either of these conditions are true, Kubelet will release this lock so that
+        /// the node can continue shutting down.
+        /// </item>
+        /// </list>
+        /// </remarks>
+        [JsonProperty(PropertyName = "ShutdownGracePeriodSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "shutdownGracePeriodSeconds", ApplyNamingConventions = false)]
+        [DefaultValue(300)]
+        public int ShutdownGracePeriodSeconds { get; set; } = 300;
+
+        /// <summary>
+        /// Specifies the amount of time that Kubelet running on the cluster nodes will delay node 
+        /// shutdown for critical nodes.  This defaults to <b>120 seconds (2 minutes)</b> and must
+        /// be less than <see cref="ShutdownGracePeriodSeconds"/> and not less than <b>30 seconds</b>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Here's the Kubernetes documentation for this: https://kubernetes.io/docs/concepts/architecture/nodes/#graceful-node-shutdown
+        /// <list type="bullet">
+        /// <item>https://kubernetes.io/docs/concepts/architecture/nodes/#graceful-node-shutdown</item>
+        /// <item>https://kubernetes.io/blog/2021/04/21/graceful-node-shutdown-beta/</item>
+        /// <item>https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/#kubelet-config-k8s-io-v1beta1-KubeletConfiguration</item>
+        /// <item>https://www.freedesktop.org/wiki/Software/systemd/inhibit/</item>
+        /// </list>
+        /// </para>
+        /// <para>
+        /// It appears that when Kubelet detects that the node is being shutdown it tries to gracefully
+        /// shutdown pods like this:
+        /// </para>
+        /// <list type="number">
+        /// <item>
+        /// Pods are signaled to shutdown in <b>PriorityClass</b> order from lowest priority
+        /// first, up to but not including critical pods.  These pods will be given up to
+        /// <see cref="ShutdownGracePeriodSeconds"/> to stop gracefully before they may be
+        /// forcibly terminated.
+        /// </item>
+        /// <item>
+        /// After <see cref="ShutdownGracePeriodSeconds"/> minus- <see cref="ShutdownGracePeriodCriticalPodsSeconds"/>
+        /// has elapsed since Kubelet detected node shutdown or all non-cr<b>PriorityClass</b> ordeitical pods have been stopped, 
+        /// Kubelet will start shutting down critical pods in <b>PriorityClass</b> order.
+        /// </item>
+        /// <item>
+        /// Kubelet will inhibit the kernel from shutting down the node until all pods have
+        /// been shutdown or <see cref="ShutdownGracePeriodSeconds"/> has elapsed.  Once
+        /// either of these conditions are true, Kubelet will release this lock so that
+        /// the node can continue shutting down.
+        /// </item>
+        /// </list>
+        /// </remarks>
+        [JsonProperty(PropertyName = "ShutdownGracePeriodCriticalPodsSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "shutdownGracePeriodCriticalPodsSeconds", ApplyNamingConventions = false)]
+        [DefaultValue(120)]
+        public int ShutdownGracePeriodCriticalPodsSeconds { get; set; } = 120;
+
+        /// <summary>
         /// A set of ResourceName=ResourceQuantity (e.g. cpu=200m,memory=150G) pairs that describe resources reserved for non-kubernetes components. 
         /// Currently only cpu and memory are supported. See http://kubernetes.io/docs/user-guide/compute-resources for more detail. Default: nil
         /// </summary>
@@ -185,39 +274,36 @@ namespace Neon.Kube
 
             var controlPlaneMemory = (decimal)clusterDefinition.ControlNodes.First().Vm.GetMemory(clusterDefinition);
 
-            if (EvictionHard == null
-                || !EvictionHard.ContainsKey("memory.available"))
+            if (EvictionHard == null || !EvictionHard.ContainsKey("memory.available"))
             {
-                EvictionHard["memory.available"] = 
-                    new ResourceQuantity(
-                        controlPlaneMemory * 0.05m, 
-                        0, 
-                        ResourceQuantity.SuffixFormat.BinarySI)
-                    .CanonicalizeString();
+                EvictionHard["memory.available"] = new ResourceQuantity(controlPlaneMemory * 0.05m, 0, ResourceQuantity.SuffixFormat.BinarySI) .CanonicalizeString();
             }
 
-            if (SystemReserved == null
-                || !SystemReserved.ContainsKey("memory"))
+            if (SystemReserved == null|| !SystemReserved.ContainsKey("memory"))
             {
                 var evictionHard = new ResourceQuantity(EvictionHard["memory.available"]);
 
-                SystemReserved["memory"] =
-                    new ResourceQuantity(
-                        (controlPlaneMemory * 0.05m) + evictionHard.ToDecimal(),
-                        0,
-                        ResourceQuantity.SuffixFormat.BinarySI)
-                    .CanonicalizeString();
+                SystemReserved["memory"] = new ResourceQuantity((controlPlaneMemory * 0.05m) + evictionHard.ToDecimal(), 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
             }
 
-            if (KubeReserved == null
-                || !KubeReserved.ContainsKey("memory"))
+            if (KubeReserved == null|| !KubeReserved.ContainsKey("memory"))
             {
-                KubeReserved["memory"] =
-                    new ResourceQuantity(
-                        controlPlaneMemory * 0.05m,
-                        0,
-                        ResourceQuantity.SuffixFormat.BinarySI)
-                    .CanonicalizeString();
+                KubeReserved["memory"] = new ResourceQuantity(controlPlaneMemory * 0.05m, 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
+            }
+
+            if (ShutdownGracePeriodSeconds < 30)
+            {
+                throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(ShutdownGracePeriodSeconds)}={ShutdownGracePeriodSeconds}] cannot be less than 30 seconds.");
+            }
+
+            if (ShutdownGracePeriodCriticalPodsSeconds < 30)
+            {
+                throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(ShutdownGracePeriodCriticalPodsSeconds)}={ShutdownGracePeriodCriticalPodsSeconds}] cannot be less than 30 seconds.");
+            }
+
+            if (ShutdownGracePeriodCriticalPodsSeconds >= ShutdownGracePeriodSeconds)
+            {
+                throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(ShutdownGracePeriodCriticalPodsSeconds)}={ShutdownGracePeriodCriticalPodsSeconds}] must be less than [{nameof(ShutdownGracePeriodSeconds)}={ShutdownGracePeriodSeconds}].");
             }
 
             var podSubnetCidr = NetworkCidr.Parse(clusterDefinition.Network.PodSubnet);
@@ -230,9 +316,11 @@ namespace Neon.Kube
                 var maxNodes       = maxPods / MaxPodsPerNode;
 
                 throw new ClusterDefinitionException(@$"[{kubernetesOptionsPrefix}.{nameof(MaxPodsPerNode)}={MaxPodsPerNode}] is not valid.
+
 [{kubernetesOptionsPrefix}.{nameof(clusterDefinition.Network.PodSubnet)}={clusterDefinition.Network.PodSubnet}] supports a maximum of {maxPods} pods.
-Either expand [{kubernetesOptionsPrefix}.{nameof(clusterDefinition.Network.PodSubnet)}], decrease [{kubernetesOptionsPrefix}.{nameof(MaxPodsPerNode)}] to [{maxPodsPerNode}], 
-or decrease [{kubernetesOptionsPrefix}.{nameof(clusterDefinition.Nodes)}] to [{maxNodes}].
+
+Either expand: [{kubernetesOptionsPrefix}.{nameof(clusterDefinition.Network.PodSubnet)}], decrease [{kubernetesOptionsPrefix}.{nameof(MaxPodsPerNode)}] to [{maxPodsPerNode}], 
+or decrease:   [{kubernetesOptionsPrefix}.{nameof(clusterDefinition.Nodes)}] to [{maxNodes}].
 ");
             }
 
