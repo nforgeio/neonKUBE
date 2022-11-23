@@ -51,7 +51,7 @@ spec:
             prefix: /v2/
       route:
         - destination:
-            host: registry-harbor-harbor-registry.neon-system.svc.cluster.local
+            host: registry-harbor-harbor-core.neon-system.svc.cluster.local
             port:
               number: 80
     - fault:
@@ -62,7 +62,7 @@ spec:
             prefix: /v1/
       route:
         - destination:
-            host: registry-harbor-harbor-registry.neon-system.svc.cluster.local
+            host: registry-harbor-harbor-core.neon-system.svc.cluster.local
             port:
               number: 80
     - match:
