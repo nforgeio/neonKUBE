@@ -87,6 +87,23 @@ namespace Neon.Kube
         public const string RootUser = "root";
 
         /// <summary>
+        /// <para>
+        /// The fixed password for desktop clusters.
+        /// </para>
+        /// <note>
+        /// This isn't really a security risk because the desktop cluster cannot be
+        /// reached from outside the computer because the cluster IP address is not
+        /// routable.
+        /// </note>
+        /// </summary>
+        public const string RootDesktopPassword = "root";
+
+        /// <summary>
+        /// The fixed hostname for all desktop clusters.
+        /// </summary>
+        public const string DesktopHostname = "desktop.cluster.io";
+
+        /// <summary>
         /// The default host machine sysadmin username.
         /// </summary>
         public const string SysAdminUser = "sysadmin";
