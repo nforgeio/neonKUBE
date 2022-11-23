@@ -109,6 +109,11 @@ namespace Neon.Kube
         event SetupStatusChangedDelegate StatusChangedEvent;
 
         /// <summary>
+        /// Raised when the next setup step is started.
+        /// </summary>
+        event EventHandler<SetupStepDetails> StepStarted;
+
+        /// <summary>
         /// Returns the console updater used internally to write the setup status to the
         /// <see cref="Console"/> without flickering.  This will be <c>null</c> for non-console
         /// applications.

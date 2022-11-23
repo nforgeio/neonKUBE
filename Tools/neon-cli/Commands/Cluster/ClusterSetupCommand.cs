@@ -91,6 +91,9 @@ OPTIONS:
                           NOTE: This mode is not supported for cloud and
                                 bare-metal environments.
 
+    --quiet             - Only print the currently executing step rather than
+                          displaying detailed setup status.
+
     --check             - Performs development related checks against the cluster
                           after it's been setup.  Note that checking is disabled
                           when [--debug] is specified.
@@ -99,7 +102,7 @@ OPTIONS:
                                 option is specified and one or more chechks fail.
 
     --private-image     - Specifies that the private node image should be deployed.
-                          Only NEONFORGE maintainers are permitted to use this.
+                          Only NEONFORGE maintainers should use this.
 
     --no-telemetry      - Disables whether telemetry for failed cluster deployment,
                           overriding the NEONKUBE_DISABLE_TELEMETRY environment variable.
@@ -121,6 +124,7 @@ OPTIONS:
             "--force",
             "--upload-charts",
             "--debug",
+            "--quiet",
             "--check",
             "--private-image",
             "--no-telemetry"
@@ -153,6 +157,7 @@ OPTIONS:
             var kubeCluster       = KubeHelper.Config.GetCluster(contextName.Cluster);
             var unredacted        = commandLine.HasOption("--unredacted");
             var debug             = commandLine.HasOption("--debug");
+            var quiet             = commandLine.HasOption("--quiet");
             var check             = commandLine.HasOption("--check");
             var uploadCharts      = commandLine.HasOption("--upload-charts") || debug;
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
@@ -238,11 +243,25 @@ OPTIONS:
 
             controller.DisablePendingTasks = disablePending;
 
-            controller.StatusChangedEvent +=
-                status =>
-                {
-                    status.WriteToConsole();
-                };
+            if (quiet)
+            {
+                Console.WriteLine($"Configuring: {clusterDefinition.Name}");
+                Console.WriteLine();
+
+                controller.StepStarted +=
+                    (sender, step) =>
+                    {
+                        Console.WriteLine($"{step.Number,5}: {step.Label}");
+                    };
+            }
+            else
+            {
+                controller.StatusChangedEvent +=
+                    status =>
+                    {
+                        status.WriteToConsole();
+                    };
+            }
 
             switch (await controller.RunAsync())
             {
