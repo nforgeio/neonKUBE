@@ -296,11 +296,9 @@ data:
           {{- end }}
       {{- end }}`}}
     auth:
-      token:
-        issuer: harbor-token-issuer
-        realm: https://{{ .Values.neonkube.clusterDomain.harborRegistry }}.{{ .Values.cluster.domain }}/service/token
-        rootcertbundle: /harbor_cust_cert/registry-harbor-harbor-core-tokencert.crt
-        service: harbor-registry
+      htpasswd:
+        realm: harbor-registry-basic-realm
+        path: /etc/registry/passwd
     {{`
     notifications:
       {{- if .Spec.Notifications.Endpoints }}
