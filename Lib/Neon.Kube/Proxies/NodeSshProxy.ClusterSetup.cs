@@ -939,12 +939,26 @@ do
    sleep 1
 done
 ");
-                    SudoCommand(CommandBundle.FromScript(helmChartScript), RunOptions.FaultOnError).EnsureSuccess();
+                    var scriptString = helmChartScript.ToString();
 
-                    await Task.CompletedTask;
+                    await NeonHelper.WaitForAsync(
+                            async () =>
+                            {
+                                try
+                                {
+                                    SudoCommand(CommandBundle.FromScript(scriptString), RunOptions.FaultOnError).EnsureSuccess();
+
+                                    return await Task.FromResult(true);
+                                }
+                                catch
+                                {
+                                    return await Task.FromResult(false);
+                                }
+                            },
+                            timeout: TimeSpan.FromSeconds(300),
+                            pollInterval: TimeSpan.FromSeconds(1),
+                            cancellationToken: controller.CancellationToken);
                 });
-
-            await Task.CompletedTask;
         }
     }
 }
