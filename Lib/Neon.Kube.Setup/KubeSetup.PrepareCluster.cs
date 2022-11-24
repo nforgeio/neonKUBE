@@ -290,11 +290,20 @@ namespace Neon.Kube
 
                     controller.SetGlobalStepStatus("generate: SSH password");
 
-                    // Generate a secure SSH password and append a string that guarantees that
-                    // the generated password meets minimum cloud requirements.
+                    if (cluster.Definition.IsDesktopBuiltIn)
+                    {
+                        // We're going to configure a fixed password for built-in desktop clusters.
 
-                    clusterLogin.SshPassword  = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
-                    clusterLogin.SshPassword += ".Aa0";
+                        clusterLogin.SshPassword = KubeConst.RootDesktopPassword;
+                    }
+                    else
+                    {
+                        // Generate a secure SSH password and append a string that guarantees that
+                        // the generated password meets minimum cloud requirements.
+
+                        clusterLogin.SshPassword = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
+                        clusterLogin.SshPassword += ".Aa0";
+                    }
 
                     // We're also going to generate the server's SSH keypair here and pass that to the hosting
                     // manager's provisioner.  We need to do this up front because some hosting environments
@@ -315,12 +324,22 @@ namespace Neon.Kube
                     controller.SetGlobalStepStatus("generate: SSO password");
                     
                     clusterLogin.SsoUsername = "root";
-                    clusterLogin.SsoPassword = cluster.Definition.RootPassword ?? NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
+
+                    if (cluster.Definition.IsDesktopBuiltIn)
+                    {
+                        // Built-in desktop clusters are configured with a fixed password.
+
+                        clusterLogin.SsoPassword = KubeConst.RootDesktopPassword;
+                    }
+                    else
+                    {
+                        clusterLogin.SsoPassword = cluster.Definition.RootPassword ?? NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
+                    }
 
                     clusterLogin.Save();
                 });
 
-            // Have the hosting manager add any custom proviosioning steps.
+            // Have the hosting manager add any custom provisioning steps.
 
             hostingManager.AddProvisioningSteps(controller);
 
