@@ -103,6 +103,10 @@ config:
       oidcConfig:
         audienceClaims:
         - aud
+        extraAudiences:
+        - grafana
+        - harbor
+        - minio
         emailClaim: email
         groupsClaim: groups
         insecureSkipNonce: true
