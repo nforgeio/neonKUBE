@@ -34,6 +34,7 @@ using Microsoft.Extensions.Logging;
 using JsonDiffPatch;
 
 using Neon.Common;
+using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
@@ -58,14 +59,7 @@ using OpenTelemetry.Trace;
 
 using Prometheus;
 
-using Quartz.Impl;
-using Quartz;
 using Npgsql;
-using k8s.KubeConfigModels;
-using Microsoft.AspNetCore.Mvc;
-using Neon.Cryptography;
-using Octokit;
-using System.Text.RegularExpressions;
 
 namespace NeonClusterOperator
 {
@@ -114,7 +108,7 @@ namespace NeonClusterOperator
                     identity: Pod.Name,
                     promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_promoted", "Leader promotions"),
                     demotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_demoted", "Leader demotions"),
-                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_newLeader", "Leadership changes"));
+                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_new_leader", "Leadership changes"));
 
             var options = new ResourceManagerOptions()
             {
@@ -126,11 +120,11 @@ namespace NeonClusterOperator
                 DeleteCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "DELETED events processed."),
                 FinalizeCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_finalize", "FINALIZE events processed."),
                 StatusModifyCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "STATUS-MODIFY events processed."),
-                IdleErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle_error", "Failed ClusterOperatorSettings IDLE event processing."),
-                ReconcileErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_reconcile_error", "Failed ClusterOperatorSettings RECONCILE event processing."),
-                DeleteErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_delete_error", "Failed ClusterOperatorSettings DELETE event processing."),
-                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_statusmodify_error", "Failed ClusterOperatorSettings STATUS-MODIFY events processing."),
-                FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_finalize_error", "Failed NodeTask FINALIZE events processing.")
+                IdleErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle_error", "Failed IDLE event processing."),
+                ReconcileErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_reconcile_error", "Failed RECONCILE event processing."),
+                DeleteErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_delete_error", "Failed DELETE event processing."),
+                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_statusmodify_error", "Failed STATUS-MODIFY events processing."),
+                FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_finalize_error", "Failed FINALIZE events processing.")
             };
 
             resourceManager = new ResourceManager<V1Secret, GlauthController>(

@@ -33,11 +33,12 @@ using Neon.Kube.ResourceDefinitions;
 using k8s;
 using k8s.Models;
 
+using Minio;
+
 using OpenTelemetry;
 using OpenTelemetry.Instrumentation;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using NeonClusterOperator.Finalizers;
 
 namespace NeonClusterOperator
 {
@@ -73,8 +74,15 @@ namespace NeonClusterOperator
         /// <param name="services">The service collection.</param>
         public void ConfigureServices(IServiceCollection services)
         {
+            var minioClient = new MinioClient()
+                              .WithEndpoint(KubeService.Minio)
+                              .WithCredentials(Service.GetEnvironmentVariable(""), Service.GetEnvironmentVariable(""))
+                              .WithSSL()
+                              .Build();
+
             services.AddSingleton<ILogger>(Program.Service.Logger)
-                .AddSingleton(Service.K8s);
+                .AddSingleton(Service.K8s)
+                .AddSingleton(minioClient);
 
             services.AddKubernetesOperator()
                 .AddController<GlauthController, V1Secret>()

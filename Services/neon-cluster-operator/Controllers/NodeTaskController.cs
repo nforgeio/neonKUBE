@@ -111,7 +111,7 @@ namespace NeonClusterOperator
                     identity:         Pod.Name,
                     promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_promoted", "Leader promotions"),
                     demotionCounter:  Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_demoted", "Leader demotions"),
-                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_newLeader", "Leadership changes"));
+                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_new_leader", "Leadership changes"));
 
             var options = new ResourceManagerOptions()
             {
@@ -123,11 +123,11 @@ namespace NeonClusterOperator
                 DeleteCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle", "DELETED events processed."),
                 StatusModifyCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle", "STATUS-MODIFY events processed."),
                 FinalizeCounter          = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_finalize", "FINALIZE events processed."),
-                IdleErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle_error", "Failed NodeTask IDLE event processing."),
-                ReconcileErrorCounter    = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconcile_error", "Failed NodeTask RECONCILE event processing."),
-                DeleteErrorCounter       = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_delete_error", "Failed NodeTask DELETE event processing."),
-                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodify_error", "Failed NodeTask STATUS-MODIFY events processing."),
-                FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_finalize_error", "Failed NodeTask FINALIZE events processing.")
+                IdleErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle_error", "Failed IDLE event processing."),
+                ReconcileErrorCounter    = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconcile_error", "Failed RECONCILE event processing."),
+                DeleteErrorCounter       = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_delete_error", "Failed DELETE event processing."),
+                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodify_error", "Failed STATUS-MODIFY events processing."),
+                FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_finalize_error", "Failed FINALIZE events processing.")
             };
 
             resourceManager = new ResourceManager<V1NeonNodeTask, NodeTaskController>(

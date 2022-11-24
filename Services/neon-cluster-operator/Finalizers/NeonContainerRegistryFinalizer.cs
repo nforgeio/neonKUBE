@@ -30,7 +30,7 @@ using Neon.Tasks;
 
 using k8s.Models;
 
-namespace NeonClusterOperator.Finalizers
+namespace NeonClusterOperator
 {
     /// <summary>
     /// Finalizes deletion of <see cref="V1NeonContainerRegistry"/> resources.
