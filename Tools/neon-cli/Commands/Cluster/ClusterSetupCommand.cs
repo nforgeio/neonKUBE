@@ -235,11 +235,12 @@ OPTIONS:
 
             var controller = KubeSetup.CreateClusterSetupController(
                 clusterDefinition,
-                cloudMarketplace:   !privateImage,
-                maxParallel:        maxParallel,
-                unredacted:         unredacted,
-                debugMode:          debug,
-                uploadCharts:       uploadCharts);
+                cloudMarketplace:     !privateImage,
+                maxParallel:          maxParallel,
+                unredacted:           unredacted,
+                debugMode:            debug,
+                uploadCharts:         uploadCharts,
+                disableConsoleOutput: quiet);
 
             controller.DisablePendingTasks = disablePending;
 
@@ -271,6 +272,7 @@ OPTIONS:
 
                     if (pendingGroups.Count > 0)
                     {
+                        Console.WriteLine();
                         Console.WriteLine($"*** ERROR: [{pendingGroups.Count}] pending task groups have not been awaited:");
                         Console.WriteLine();
 
@@ -301,6 +303,7 @@ OPTIONS:
 
                 case SetupDisposition.Cancelled:
 
+                    Console.WriteLine();
                     Console.WriteLine(" *** CANCELLED: Cluster setup was cancelled.");
                     Console.WriteLine();
                     Console.WriteLine();

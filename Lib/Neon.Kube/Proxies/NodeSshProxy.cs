@@ -547,26 +547,21 @@ namespace Neon.Kube
         /// logs... and then fills unreferenced file system blocks with zeros so the disk image will or
         /// trims the file system (when possible) so the image will compress better.
         /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        public void Clean(ISetupController controller)
+        /// <param name="trim">Optionally trims the file system.</param>
+        /// <param name="zero">Optionally zeros unreferenced file system blocks.</param>
+        public void Clean(bool trim = false, bool zero = false)
         {
-            Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
-
-            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
-
-            controller.LogProgress(this, verb: "clean", message: "file system");
-
             var fstrim = string.Empty;
             var fsZero = string.Empty;
 
-            if (HostingManager.SupportsFsTrim(hostingEnvironment))
+            if (trim)
             {
                 // Not all hosting enviuronments supports: fstrim
 
                 fstrim = "fstrim /";
             }
 
-            if (HostingManager.SupportsFsZero(hostingEnvironment))
+            if (zero)
             {
                 // Zeroing block devices can actually make things worse for
                 // some environment.
@@ -593,10 +588,28 @@ rm -rf /var/lib/dhcp/*
 
 {fsZero}
 {fstrim}
-
-passwd --delete {KubeConst.SysAdminUser}
 ";
             SudoCommand(CommandBundle.FromScript(cleanScript), RunOptions.FaultOnError);
+        }
+
+        /// <summary>
+        /// Cleans a node by removing unnecessary package manager metadata, cached DHCP information, journald
+        /// logs... and then fills unreferenced file system blocks with zeros so the disk image will or
+        /// trims the file system (when possible) so the image will compress better.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        public void Clean(ISetupController controller)
+        {
+            Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
+
+            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
+
+            controller.LogProgress(this, verb: "clean", message: "file system");
+
+            var trim = HostingManager.SupportsFsTrim(hostingEnvironment);
+            var zero = HostingManager.SupportsFsZero(hostingEnvironment);
+
+            Clean(trim: trim, zero: zero);
         }
 
         /// <summary>

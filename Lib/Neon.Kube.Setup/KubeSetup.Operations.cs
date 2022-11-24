@@ -496,6 +496,9 @@ cgroupDriver: systemd
 runtimeRequestTimeout: 5m
 {kubeletFailSwapOnLine}
 maxPods: {cluster.Definition.Kubernetes.MaxPodsPerNode}
+shutdownGracePeriod: {cluster.Definition.Kubernetes.ShutdownGracePeriodSeconds}s
+shutdownGracePeriodCriticalPods: {cluster.Definition.Kubernetes.ShutdownGracePeriodCriticalPodsSeconds}s
+
 rotateCertificates: true");
 
             clusterConfig.AppendLine($@"
@@ -529,8 +532,6 @@ apiVersion: kubeproxy.config.k8s.io/v1alpha1
 kind: KubeProxyConfiguration
 mode: {kubeProxyMode}");
 
-
-            var s = clusterConfig.ToString();
             return clusterConfig.ToString();
         }
 

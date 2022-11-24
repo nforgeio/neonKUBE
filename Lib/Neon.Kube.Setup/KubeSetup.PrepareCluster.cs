@@ -379,9 +379,14 @@ namespace Neon.Kube
                 {
                     node.ConfigureSshKey(controller);
                     node.SetSshPasswordLogin(false);
+
                     // Update node proxies with the generated SSH credentials.
 
                     node.UpdateCredentials(clusterLogin.SshCredentials);
+
+                    // Remove the [sysadmin] user password; we support only SSH certficate autentication.
+
+                    node.SudoCommand("passwd", "--delete", KubeConst.SysAdminUser).EnsureSuccess();
                 });
 
             controller.AddNodeStep("prepare nodes",

@@ -701,7 +701,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path to the neon-desktop information folder.
+        /// Returns the path to the neon-desktop state folder.
         /// </summary>
         public static string DesktopFolder
         {

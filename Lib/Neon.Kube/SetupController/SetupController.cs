@@ -152,7 +152,7 @@ namespace Neon.Kube
 
             if (!disableConsoleOutput)
             {
-                ConsoleWriter = new SetupConsoleWriter();
+                ConsoleWriter = new SetupConsoleWriter(disableConsoleOutput);
             }
         }
 

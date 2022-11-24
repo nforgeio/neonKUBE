@@ -292,7 +292,8 @@ OPTIONS:
                 packageCacheEndpoints:  packageCacheEndpoints,
                 unredacted:             commandLine.HasOption("--unredacted"),
                 debugMode:              debug,
-                baseImageName:          baseImageName);
+                baseImageName:          baseImageName,
+                disableConsoleOutput:   quiet);
 
             controller.DisablePendingTasks = disablePending;
 
@@ -324,6 +325,7 @@ OPTIONS:
 
                     if (pendingGroups.Count > 0)
                     {
+                        Console.WriteLine();
                         Console.WriteLine($"*** ERROR: [{pendingGroups.Count}] pending task groups have not been awaited:");
                         Console.WriteLine();
 

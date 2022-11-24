@@ -71,6 +71,16 @@ namespace Neon.Kube
         private string          previousText  = null;
         private List<string>    previousLines = new List<string>();
         private bool            stopped       = false;
+        private bool            disabled;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="disabled">Optionally specifies that the console should be disabled.  This defaults to <c>false</c>.</param>
+        public SetupConsoleWriter(bool disabled = false)
+        {
+            this.disabled = disabled;
+        }
 
         /// <summary>
         /// Writes the text passed to the <see cref="Console"/> without flickering.
@@ -78,7 +88,7 @@ namespace Neon.Kube
         /// <param name="text">The text to be written.</param>
         public void Update(string text)
         {
-            if (!HasConsole)
+            if (!HasConsole || disabled)
             {
                 return;
             }
@@ -151,7 +161,7 @@ namespace Neon.Kube
             {
                 stopped = true;
 
-                if (HasConsole)
+                if (HasConsole && !disabled)
                 {
                     // Move the cursor to the beginning of the second line after the last
                     // non-blank line written by Update() and then re-enable the cursor
