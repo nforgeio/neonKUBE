@@ -111,7 +111,7 @@ namespace Neon.Kube
         /// <summary>
         /// Specfies the amount of time Kubelet running on the cluster nodes will delay node shutdown 
         /// while gracefully terminating pods on the node.  This is expressed in seconds and must be
-        /// greater than zero.  This defaults to <b>300 seconds (5 minutes)</b> and cannot be less
+        /// greater than zero.  This defaults to <b>360 seconds (65 minutes)</b> and cannot be less
         /// than <b>30 seconds</b>.
         /// </summary>
         /// <remarks>
@@ -150,8 +150,8 @@ namespace Neon.Kube
         /// </remarks>
         [JsonProperty(PropertyName = "ShutdownGracePeriodSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "shutdownGracePeriodSeconds", ApplyNamingConventions = false)]
-        [DefaultValue(300)]
-        public int ShutdownGracePeriodSeconds { get; set; } = 300;
+        [DefaultValue(360)]
+        public int ShutdownGracePeriodSeconds { get; set; } = 360;
 
         /// <summary>
         /// Specifies the amount of time that Kubelet running on the cluster nodes will delay node 
