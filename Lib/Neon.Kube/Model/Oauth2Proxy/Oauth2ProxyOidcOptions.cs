@@ -67,7 +67,7 @@ namespace Neon.Kube
         /// <summary>
         /// Skips verifying the ID Token's nonce claim that must match
         /// the random nonce sent in the initial OAuth flow.Otherwise, the nonce is checked
-        /// after the initial OAuth redeem & subsequent token refreshes.
+        /// after the initial OAuth redeem and subsequent token refreshes.
         /// </summary>
         [JsonProperty(PropertyName = "InsecureSkipNonce", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "insecureSkipNonce", ApplyNamingConventions = false)]

@@ -140,9 +140,15 @@ namespace Neon.Kube.Resources
     /// </summary>
     public enum RetentionMode
     {
+        /// <summary>
+        /// Compliance
+        /// </summary>
         [EnumMember(Value = "COMPLIANCE")]
         Compliance,
 
+        /// <summary>
+        /// Governance
+        /// </summary>
         [EnumMember(Value = "GOVERNANCE")]
         Governance
     }
@@ -152,13 +158,21 @@ namespace Neon.Kube.Resources
     /// </summary>
     public enum VersioningMode
     {
-
+        /// <summary>
+        /// Off
+        /// </summary>
         [EnumMember(Value = "Off")]
         Off,
 
+        /// <summary>
+        /// Enabled
+        /// </summary>
         [EnumMember(Value = "Enabled")]
         Enabled,
 
+        /// <summary>
+        /// Suspended
+        /// </summary>
         [EnumMember(Value = "Suspended")]
         Suspended
     }

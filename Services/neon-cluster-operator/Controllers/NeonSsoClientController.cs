@@ -222,7 +222,7 @@ namespace NeonClusterOperator
 
                 oauth2ProxyConfig.Data["oauth2_proxy_alpha.cfg"] = NeonHelper.YamlSerialize(alphaConfig);
 
-                await k8s.ReplaceNamespacedConfigMapAsync(oauth2ProxyConfig, KubeNamespace.NeonSystem);
+                await k8s.ReplaceNamespacedConfigMapAsync(oauth2ProxyConfig, oauth2ProxyConfig.Name(), KubeNamespace.NeonSystem);
 
                 log.LogInformationEx(() => $"DELETED: {resource.Name()}");
             }
@@ -313,7 +313,7 @@ namespace NeonClusterOperator
 
                 oauth2ProxyConfig.Data["oauth2_proxy_alpha.cfg"] = NeonHelper.YamlSerialize(alphaConfig);
 
-                await k8s.ReplaceNamespacedConfigMapAsync(oauth2ProxyConfig, KubeNamespace.NeonSystem);
+                await k8s.ReplaceNamespacedConfigMapAsync(oauth2ProxyConfig, oauth2ProxyConfig.Name(), KubeNamespace.NeonSystem);
             }
         }
     }
