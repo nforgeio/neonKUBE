@@ -547,56 +547,6 @@ namespace Neon.Kube
         /// logs... and then fills unreferenced file system blocks with zeros so the disk image will or
         /// trims the file system (when possible) so the image will compress better.
         /// </summary>
-        /// <param name="trim">Optionally trims the file system.</param>
-        /// <param name="zero">Optionally zeros unreferenced file system blocks.</param>
-        public void Clean(bool trim = false, bool zero = false)
-        {
-            var fstrim = string.Empty;
-            var fsZero = string.Empty;
-
-            if (trim)
-            {
-                // Not all hosting enviuronments supports: fstrim
-
-                fstrim = "fstrim /";
-            }
-
-            if (zero)
-            {
-                // Zeroing block devices can actually make things worse for
-                // some environment.
-
-                fsZero = "sfill -fllz /";
-            }
-
-            var cleanScript =
-$@"#!/bin/bash
-
-set -euo pipefail
-
-# Remove all log files (but retain the directories).
-
-find -type f -exec rm {{}} +
-
-# Misc cleaning
-
-safe-apt-get clean
-rm -rf /var/lib/apt/lists
-rm -rf /var/lib/dhcp/*
-
-# Filesystem cleaning
-
-{fsZero}
-{fstrim}
-";
-            SudoCommand(CommandBundle.FromScript(cleanScript), RunOptions.FaultOnError);
-        }
-
-        /// <summary>
-        /// Cleans a node by removing unnecessary package manager metadata, cached DHCP information, journald
-        /// logs... and then fills unreferenced file system blocks with zeros so the disk image will or
-        /// trims the file system (when possible) so the image will compress better.
-        /// </summary>
         /// <param name="controller">The setup controller.</param>
         public void Clean(ISetupController controller)
         {
