@@ -111,3 +111,4 @@ KubernetesWithRetry.cs
 /Lib/Neon.Kube/Harbor/HarborClient.cs
 /Build.bk/neon
 /ToolBin/nuget.config
+/Services/neon-cluster-operator/HarborClient.cs
