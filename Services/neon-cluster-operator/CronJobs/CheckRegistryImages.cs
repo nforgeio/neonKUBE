@@ -76,7 +76,7 @@ namespace NeonClusterOperator
                 k8s           = (IKubernetes)dataMap["Kubernetes"];
                 harborClient  = (HarborClient)dataMap["HarborClient"];
 
-                await CheckProjectAsync();
+                await CheckProjectAsync(KubeConst.LocalClusterRegistryProject);
 
                 var nodes     = await k8s.ListNodeAsync();
                 var startTime = DateTime.UtcNow.AddSeconds(10);
@@ -126,21 +126,29 @@ fi
             }
         }
 
-        private async Task CheckProjectAsync()
+        /// <summary>
+        /// Ensure that the specified Harbor project exists.
+        /// </summary>
+        /// <param name="projectName">Specifies the project name.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task CheckProjectAsync(string projectName)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(projectName), nameof(projectName));
+
             using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckRegistryImages)));
+
                 try
                 {
-                    await harborClient.HeadProjectAsync(x_Request_Id: null, project_name: KubeConst.LocalClusterRegistryProject);
+                    await harborClient.HeadProjectAsync(x_Request_Id: null, project_name: projectName);
                 }
-                catch (Exception e)
+                catch
                 {
                     await harborClient.CreateProjectAsync(null, null, new ProjectReq()
                     {
-                        Project_name = KubeConst.LocalClusterRegistryProject,
-                        Metadata = new ProjectMetadata()
+                        Project_name = projectName,
+                        Metadata     = new ProjectMetadata()
                         {
                             Public = "false",
                         }
