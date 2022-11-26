@@ -44,7 +44,7 @@ namespace Neon.Kube
         /// <summary>
         /// TLS key data to use. Typically this will come from a file.
         /// </summary>
-        [JsonProperty(PropertyName = "Key", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Key", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "Key", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public Oauth2ProxySecretSource Key { get; set; }
@@ -52,7 +52,7 @@ namespace Neon.Kube
         /// <summary>
         /// TLS key data to use. Typically this will come from a file.
         /// </summary>
-        [JsonProperty(PropertyName = "Cert", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Cert", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "Cert", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public Oauth2ProxySecretSource Cert { get; set; }
@@ -61,7 +61,7 @@ namespace Neon.Kube
         /// The minimal TLS version that is acceptable.
         /// E.g. Set to "TLS1.3" to select TLS version 1.3
         /// </summary>
-        [JsonProperty(PropertyName = "MinVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "MinVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "MinVersion", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string MinVersion { get; set; }
@@ -74,7 +74,7 @@ namespace Neon.Kube
         /// If not specified, the default Go safe cipher list is used.
         /// List of valid cipher suites can be found in the crypto/tls documentation.
         /// </summary>
-        [JsonProperty(PropertyName = "TLS", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "TLS", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "TLS", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<string> CipherSuites { get; set; }

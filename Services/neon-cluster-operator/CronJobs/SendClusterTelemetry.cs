@@ -28,6 +28,7 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Resources;
+using Neon.Net;
 using Neon.Tasks;
 
 using k8s;
@@ -40,9 +41,6 @@ using OpenTelemetry.Trace;
 using Prometheus;
 
 using Quartz;
-using static IdentityModel.OidcConstants;
-using Grpc.Core;
-using Neon.Net;
 
 namespace NeonClusterOperator
 {

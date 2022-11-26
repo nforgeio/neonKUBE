@@ -44,32 +44,32 @@ namespace Neon.Kube
         /// <summary>
         /// A base64 encoded string value.
         /// </summary>
-        [JsonProperty(PropertyName = "Value", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "value", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Value", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [YamlMember(Alias = "value", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public string Value { get; set; }
 
         /// <summary>
         /// Expects the name of an environment variable.
         /// </summary>
-        [JsonProperty(PropertyName = "FromEnv", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "fromEnv", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "FromEnv", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [YamlMember(Alias = "fromEnv", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(false)]
         public string FromEnv { get; set; }
 
         /// <summary>
         /// Expects a path to a file containing the secret value.
         /// </summary>
-        [JsonProperty(PropertyName = "FromFile", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "fromFile", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "FromFile", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [YamlMember(Alias = "fromFile", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public string FromFile { get; set; }
 
         /// <summary>
         /// The name of the claim in the session that the value should be loaded from.
         /// </summary>
-        [JsonProperty(PropertyName = "Claim", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "claim", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Claim", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [YamlMember(Alias = "claim", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public string Claim { get; set; }
 
@@ -77,8 +77,8 @@ namespace Neon.Kube
         /// An optional prefix that will be prepended to the value of the
         /// claim if it is non-empty.
         /// </summary>
-        [JsonProperty(PropertyName = "Prefix", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "prefix", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Prefix", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [YamlMember(Alias = "prefix", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public string Prefix { get; set; }
 
@@ -87,8 +87,8 @@ namespace Neon.Kube
         /// Note the value of claim will become the basic auth username and the
         /// basicAuthPassword will be used as the password value.
         /// </summary>
-        [JsonProperty(PropertyName = "BasicAuthPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "basicAuthPassword", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "BasicAuthPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [YamlMember(Alias = "basicAuthPassword", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public Oauth2ProxySecretSource BasicAuthPassword { get; set; }
     }

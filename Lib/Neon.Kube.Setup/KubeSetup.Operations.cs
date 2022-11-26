@@ -3290,6 +3290,7 @@ $@"- name: StorageType
                     values.Add($"serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
                     values.Add($"minio.enabled", true);
+                    values.Add($"minio.bucket.tsdb.quota", clusterAdvice.MetricsQuota);
 
                     if (cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() == 1)
                     {
@@ -3299,9 +3300,6 @@ $@"- name: StorageType
                         values.Add($"compactor.config.deletion_delay", "1h");
                         values.Add($"blocksStorage.bucketStore.ignore_deletion_mark_delay", "15m");
                     }
-
-                    await CreateMinioBucketAsync(controller, controlNode, KubeMinioBucket.Mimir, clusterAdvice.MetricsQuota);
-                    await CreateMinioBucketAsync(controller, controlNode, KubeMinioBucket.MimirRuler);
 
                     controller.ThrowIfCancelled();
                     await controlNode.InvokeIdempotentAsync("setup/monitoring-mimir-secret",
@@ -3449,13 +3447,13 @@ $@"- name: StorageType
                     values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
 
                     values.Add($"minio.enabled", true);
+                    values.Add($"minio.bucket.quota", clusterAdvice.LogsQuota);
 
                     if (cluster.Definition.Nodes.Where(node => node.Labels.LogsInternal).Count() >= 3)
                     {
                         values.Add($"config.replication_factor", 3);
                     }
 
-                    await CreateMinioBucketAsync(controller, controlNode, KubeMinioBucket.Loki, clusterAdvice.LogsQuota);
                     values.Add($"loki.schemaConfig.configs[0].object_store", "aws");
                     values.Add($"loki.storageConfig.boltdb_shipper.shared_store", "s3");
 
@@ -3584,8 +3582,7 @@ $@"- name: StorageType
                     }
 
                     values.Add($"minio.enabled", true);
-
-                    await CreateMinioBucketAsync(controller, controlNode, KubeMinioBucket.Tempo, clusterAdvice.TracesQuota);
+                    values.Add($"minio.bucket.quota", clusterAdvice.TracesQuota);
 
                     int i = 0;
 
@@ -4308,8 +4305,6 @@ $@"- name: StorageType
                     var accessKey   = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
                     var secretKey   = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
                     var serviceUser = await KubeHelper.GetClusterLdapUserAsync(k8s, "serviceuser");
-
-                    await CreateMinioBucketAsync(controller, controlNode, KubeMinioBucket.Harbor);
 
                     // Install the Harbor Helm chart.
 
@@ -5322,51 +5317,6 @@ $@"- name: StorageType
             }
 
             return connString;
-        }
-
-        /// <summary>
-        /// Creates a Minio bucket by using the mc client on one of the minio server pods.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
-        /// <param name="name">The new bucket name.</param>
-        /// <param name="quota">The bucket quota.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task CreateMinioBucketAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode, string name, string quota = null)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
-
-            controlNode.Status = $"create: [{name}] minio bucket";
-
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var minioSecret = await GetK8sClient(controller).ReadNamespacedSecretAsync("minio", KubeNamespace.NeonSystem);
-            var accessKey = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
-            var secretKey = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
-            var k8s = GetK8sClient(controller);
-
-            controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync($"setup/minio-bucket-{name}",
-                async () =>
-                {
-                    (await cluster.ExecMinioCommandAsync(
-                        retryPolicy: podExecRetry,
-                        mcCommand: $"mb minio/{name}")).EnsureSuccess();
-                });
-
-            controller.ThrowIfCancelled();
-            if (!string.IsNullOrEmpty(quota))
-            {
-                await controlNode.InvokeIdempotentAsync($"setup/minio-bucket-{name}-quota",
-                    async () =>
-                    {
-                        (await cluster.ExecMinioCommandAsync(
-                            retryPolicy: podExecRetry,
-                            mcCommand: $"admin bucket quota minio/{name} --hard {quota}")).EnsureSuccess();
-                    });
-            }
         }
 
         /// <summary>

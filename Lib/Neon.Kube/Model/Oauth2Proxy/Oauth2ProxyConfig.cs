@@ -45,7 +45,7 @@ namespace Neon.Kube
         /// Headers may source values from either the authenticated user's session
         /// or from a static secret value.
         /// </summary>
-        [JsonProperty(PropertyName = "InjectRequestHeaders", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "InjectRequestHeaders", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "injectRequestHeaders", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<Oauth2ProxyHeader> InjectRequestHeaders { get; set; }
@@ -58,7 +58,7 @@ namespace Neon.Kube
         /// Headers may source values from either the authenticated user's session
         /// or from a static secret value.
         /// </summary>
-        [JsonProperty(PropertyName = "InjectResponseHeaders", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "InjectResponseHeaders", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "injectResponseHeaders", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<Oauth2ProxyHeader> InjectResponseHeaders { get; set; }
@@ -71,7 +71,7 @@ namespace Neon.Kube
         /// Headers may source values from either the authenticated user's session
         /// or from a static secret value.
         /// </summary>
-        [JsonProperty(PropertyName = "Server", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Server", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "server", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public Oauth2ProxyServer Server { get; set; }
@@ -82,7 +82,7 @@ namespace Neon.Kube
         /// This can be done by setting the BindAddress and the SecureBindAddress simultaneously.
         /// To use the secure server you must configure a TLS certificate and key.
         /// </summary>
-        [JsonProperty(PropertyName = "MetricsServer", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "MetricsServer", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "metricsServer", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public Oauth2ProxyServer MetricsServer { get; set; }
@@ -90,7 +90,7 @@ namespace Neon.Kube
         /// <summary>
         /// Used to configure multiple providers.
         /// </summary>
-        [JsonProperty(PropertyName = "Providers", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Providers", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "providers", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<Oauth2ProxyProvider> Providers { get; set; }
@@ -100,7 +100,7 @@ namespace Neon.Kube
         /// requests to the server will be proxied to
         /// these upstream servers based on the path mappings defined in this list.
         /// </summary>
-        [JsonProperty(PropertyName = "UpstreamConfig", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "UpstreamConfig", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "upstreamConfig", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public Oauth2ProxyUpstreamConfig UpstreamConfig { get; set; }

@@ -50,9 +50,10 @@ using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Rbac;
 
 using Newtonsoft.Json;
-using Prometheus;
+
 using OpenTelemetry.Trace;
-using System.Reactive.Concurrency;
+
+using Prometheus;
 
 namespace NeonClusterOperator
 {

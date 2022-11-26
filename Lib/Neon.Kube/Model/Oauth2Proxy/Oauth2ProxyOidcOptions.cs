@@ -51,7 +51,7 @@ namespace Neon.Kube
         /// <summary>
         /// Prevents failures if an email address in an id_token is not verified.
         /// </summary>
-        [JsonProperty(PropertyName = "InsecureAllowUnverifiedEmail", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "InsecureAllowUnverifiedEmail", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "insecureAllowUnverifiedEmail", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool InsecureAllowUnverifiedEmail { get; set; } = false;
@@ -59,7 +59,7 @@ namespace Neon.Kube
         /// <summary>
         /// Skips verification of ID token issuers. When false, ID Token Issuers must match the OIDC discovery URL.
         /// </summary>
-        [JsonProperty(PropertyName = "InsecureSkipIssuerVerification", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "InsecureSkipIssuerVerification", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "insecureSkipIssuerVerification", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool InsecureSkipIssuerVerification { get; set; } = false;
@@ -69,7 +69,7 @@ namespace Neon.Kube
         /// the random nonce sent in the initial OAuth flow.Otherwise, the nonce is checked
         /// after the initial OAuth redeem and subsequent token refreshes.
         /// </summary>
-        [JsonProperty(PropertyName = "InsecureSkipNonce", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "InsecureSkipNonce", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "insecureSkipNonce", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool InsecureSkipNonce { get; set; } = false;
@@ -77,7 +77,7 @@ namespace Neon.Kube
         /// <summary>
         /// Allows to skip OIDC discovery and use manually supplied Endpoints.
         /// </summary>
-        [JsonProperty(PropertyName = "SkipDiscovery", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "SkipDiscovery", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "skipDiscovery", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool SkipDiscovery { get; set; } = false;
@@ -85,7 +85,7 @@ namespace Neon.Kube
         /// <summary>
         /// JwksURL is the OpenID Connect JWKS URL
         /// </summary>
-        [JsonProperty(PropertyName = "JwksUrl", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "JwksUrl", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "jwksURL", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string JwksUrl { get; set; }
@@ -93,7 +93,7 @@ namespace Neon.Kube
         /// <summary>
         /// Indicates which claim contains the user email.
         /// </summary>
-        [JsonProperty(PropertyName = "EmailClaim", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "EmailClaim", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "emailClaim", ApplyNamingConventions = false)]
         [DefaultValue("email")]
         public string EmailClaim { get; set; } = "email";
@@ -101,7 +101,7 @@ namespace Neon.Kube
         /// <summary>
         /// Indicates which claim contains the user groups.
         /// </summary>
-        [JsonProperty(PropertyName = "GroupsClaim", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "GroupsClaim", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "groupsClaim", ApplyNamingConventions = false)]
         [DefaultValue("groups")]
         public string GroupsClaim { get; set; } = "groups";
@@ -109,7 +109,7 @@ namespace Neon.Kube
         /// <summary>
         /// Indicates which claim contains the user ID.
         /// </summary>
-        [JsonProperty(PropertyName = "UserIdClaim", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "UserIdClaim", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "userIDClaim", ApplyNamingConventions = false)]
         [DefaultValue("email")]
         public string UserIdClaim { get; set; } = "email";
@@ -118,7 +118,7 @@ namespace Neon.Kube
         /// Allows to define any claim that is verified against the client id.
         /// By default aud claim is used for verification.
         /// </summary>
-        [JsonProperty(PropertyName = "AudienceClaims", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "AudienceClaims", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "audienceClaims", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<string> AudienceClaims { get; set; }
@@ -126,7 +126,7 @@ namespace Neon.Kube
         /// <summary>
         /// A list of additional audiences that are allowed to pass verification in addition to the client id.
         /// </summary>
-        [JsonProperty(PropertyName = "ExtraAudiences", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "ExtraAudiences", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "extraAudiences", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<string> ExtraAudiences { get; set; }

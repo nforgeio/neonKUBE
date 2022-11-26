@@ -54,7 +54,7 @@ namespace Neon.Kube
         /// This option only applies to injected request headers.
         /// Defaults to false (headers that match this header will be stripped).
         /// </summary>
-        [JsonProperty(PropertyName = "PreserveRequestValue", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "PreserveRequestValue", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "preserveRequestValue", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool PreserveRequestValue { get; set; } = false;
@@ -62,7 +62,7 @@ namespace Neon.Kube
         /// <summary>
         /// Contains the desired values for this header
         /// </summary>
-        [JsonProperty(PropertyName = "Values", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Values", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "values", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<Oauth2ProxyHeaderValue> Values { get; set; }

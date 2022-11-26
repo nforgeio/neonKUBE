@@ -69,7 +69,7 @@ namespace Neon.Kube
         /// - ^/bar/$: Match any path prefixed with /bar/
         /// - ^/baz/(.*)$: Match any path prefixed with /baz and capture the remaining path for use with RewriteTarget
         /// </summary>
-        [JsonProperty(PropertyName = "Path", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Path", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "path", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Path { get; set; }
@@ -81,7 +81,7 @@ namespace Neon.Kube
         /// the request /baz/abc/123 to /foo/abc/123 before proxying to the
         /// upstream server.
         /// </summary>
-        [JsonProperty(PropertyName = "RewriteTarget", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "RewriteTarget", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "rewriteTarget", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string RewriteTarget { get; set; }
@@ -98,7 +98,7 @@ namespace Neon.Kube
         /// If the URI's path is "/base" and the incoming request was for "/dir",
         /// the upstream request will be for "/base/dir".
         /// </summary>
-        [JsonProperty(PropertyName = "Uri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Uri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "uri", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Uri { get; set; }
@@ -107,7 +107,7 @@ namespace Neon.Kube
         /// Will skip TLS verification of upstream HTTPS hosts. This option is insecure and will allow potential Man-In-The-Middle attacks
         /// betweem OAuth2 Proxy and the usptream server.
         /// </summary>
-        [JsonProperty(PropertyName = "InsecureSkipTlsVerify", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "InsecureSkipTlsVerify", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "insecureSkipTLSVerify", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool InsecureSkipTlsVerify { get; set; } = false;
@@ -118,7 +118,7 @@ namespace Neon.Kube
         /// matching StaticCode.
         /// If StaticCode is not set, the response will return a 200 response.
         /// </summary>
-        [JsonProperty(PropertyName = "Static", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Static", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "static", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool Static { get; set; } = false;
@@ -126,7 +126,7 @@ namespace Neon.Kube
         /// <summary>
         /// Determines the response code for the Static response. This option can only be used with <see cref="Static"/> enabled.
         /// </summary>
-        [JsonProperty(PropertyName = "StaticCode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "StaticCode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "staticCode", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public int? StaticCode { get; set; }
@@ -134,7 +134,7 @@ namespace Neon.Kube
         /// <summary>
         /// The period between flushing the response buffer when streaming response from the upstream.
         /// </summary>
-        [JsonProperty(PropertyName = "FlushInterval", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "FlushInterval", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "flushInterval", ApplyNamingConventions = false)]
         [DefaultValue("1s")]
         public string FlushInterval { get; set; } = "1s";
@@ -142,23 +142,23 @@ namespace Neon.Kube
         /// <summary>
         /// Determines whether the request host header should be proxied to the upstream server.
         /// </summary>
-        [JsonProperty(PropertyName = "PassHostHeader", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "passHostHeader", ApplyNamingConventions = false)]
-        [DefaultValue(true)]
-        public bool PassHostHeader { get; set; } = true;
+        [JsonProperty(PropertyName = "PassHostHeader", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [YamlMember(Alias = "passHostHeader", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
+        [DefaultValue(null)]
+        public bool? PassHostHeader { get; set; }
 
         /// <summary>
         /// Enables proxying of websockets to upstream servers.
         /// </summary>
-        [JsonProperty(PropertyName = "ProxyWebSockets", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "proxyWebSockets", ApplyNamingConventions = false)]
-        [DefaultValue(true)]
-        public bool ProxyWebSockets { get; set; } = true;
+        [JsonProperty(PropertyName = "ProxyWebSockets", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [YamlMember(Alias = "proxyWebSockets", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
+        [DefaultValue(null)]
+        public bool? ProxyWebSockets { get; set; }
 
         /// <summary>
         /// The maximum duration the server will wait for a response from the upstream server.
         /// </summary>
-        [JsonProperty(PropertyName = "Timeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Timeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "timeout", ApplyNamingConventions = false)]
         [DefaultValue("1s")]
         public string Timeout { get; set; } = "30s";

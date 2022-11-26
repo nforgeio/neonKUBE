@@ -641,6 +641,11 @@ namespace Neon.Kube.Operator
                     {
                         var cachedEntity = resourceCache.Upsert(resource, out var modifiedEventType);
 
+                        if (modifiedEventType == ModifiedEventType.Finalizing)
+                        {
+                            @event.Type = WatchEventType.Modified;
+                        }
+
                         switch (@event.Type)
                         {
                             case WatchEventType.Added:

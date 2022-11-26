@@ -60,9 +60,6 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 using Prometheus;
-using Grpc.Net.Client;
-using Renci.SshNet.Common;
-using IdentityModel;
 
 namespace NeonClusterOperator
 {
@@ -170,7 +167,7 @@ namespace NeonClusterOperator
 
             try
             {
-                await k8s.ReadClusterCustomObjectAsync<V1NeonContainerRegistry>("registry.neon.local");
+                await k8s.ReadClusterCustomObjectAsync<V1NeonContainerRegistry>(KubeConst.LocalClusterRegistryProject);
             }
             catch (Exception e)
             {
@@ -219,7 +216,7 @@ namespace NeonClusterOperator
                     return;
                 }
 
-                if (resource.Name() == "registry.neon.local")
+                if (resource.Name() == KubeConst.LocalClusterRegistryProject)
                 {
                     await CreateNeonLocalRegistryAsync();
                 }
@@ -267,15 +264,15 @@ namespace NeonClusterOperator
                 {
                     Metadata = new V1ObjectMeta()
                     {
-                        Name = "registry.neon.local"
+                        Name = KubeConst.LocalClusterRegistryProject
                     },
                     Spec = new V1NeonContainerRegistry.RegistrySpec()
                     {
                         Blocked = false,
                         Insecure = true,
-                        Location = "registry.neon.local",
+                        Location = KubeConst.LocalClusterRegistry,
                         Password = rootUser.Password,
-                        Prefix = "registry.neon.local",
+                        Prefix = KubeConst.LocalClusterRegistry,
                         SearchOrder = -1,
                         Username = rootUser.Name
                     }

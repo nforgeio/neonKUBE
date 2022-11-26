@@ -50,4 +50,13 @@ RUN chmod 700 /*.sh \
     && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/gai.conf
 
+RUN apt update -y \
+    && apt install -y curl \
+    && apt clean \
+    && curl -4fsSL --retry 10 --retry-delay 30 https://dl.min.io/client/mc/release/linux-amd64/mc --output /mc \
+    && chown -R 1000:1000 /mc \
+    && chmod 774 /mc \
+    && mkdir /.mc \
+    && chown -R 1000:1000 /.mc
+
 ENTRYPOINT ["/docker-entrypoint.sh"]

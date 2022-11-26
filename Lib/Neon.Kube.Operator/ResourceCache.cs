@@ -41,12 +41,16 @@ namespace Neon.Kube.Operator
     internal class ResourceCache<TEntity> : IResourceCache<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
     {
+        private readonly ILogger logger;
         private readonly ConcurrentDictionary<string, TEntity>  cache;
         private readonly ConcurrentDictionary<string, TEntity>  finalizingCache;
         private readonly CompareLogic                           comparelogLogic;
 
-        public ResourceCache() 
+        public ResourceCache(
+            ILogger logger) 
         {
+            this.logger = logger;
+
             cache           = new ConcurrentDictionary<string, TEntity>();
             finalizingCache = new ConcurrentDictionary<string, TEntity>();
 
@@ -142,6 +146,14 @@ namespace Neon.Kube.Operator
             
             if (!cache.ContainsKey(id))
             {
+                if (entity.DeletionTimestamp() != null
+                    && entity.Finalizers().Count > 0)
+                {
+                    logger.LogDebugEx(() => "Resource is being finalized.");
+
+                    return ModifiedEventType.Finalizing;
+                }
+
                 return ModifiedEventType.Other;
             }
 
@@ -150,23 +162,33 @@ namespace Neon.Kube.Operator
 
             if (comparison.AreEqual)
             {
+                logger.LogDebugEx(() => "No changes detected.");
                 return ModifiedEventType.NoChanges;
             }
 
             if (comparison.Differences.All(d => d.PropertyName.Split('.')[0] == "Status"))
             {
+                logger.LogDebugEx(() => "Status update detected.");
+
                 return ModifiedEventType.StatusUpdate;
             }
 
             if (comparison.Differences.All(d => d.ParentPropertyName == "Metadata.Finalizers" || d.PropertyName == "Metadata.Finalizers"))
             {
+                logger.LogDebugEx(() => "Finalizer update detected.");
+
                 return ModifiedEventType.FinalizerUpdate;
             }
 
-            if (entity.DeletionTimestamp() != null)
+            if (entity.DeletionTimestamp() != null
+                && entity.Finalizers().Count > 0)
             {
+                logger.LogDebugEx(() => "Resource is being finalized.");
+
                 return ModifiedEventType.Finalizing;
             }
+
+            logger.LogDebugEx(() => "'other' change detected.");
 
             return ModifiedEventType.Other;
         }

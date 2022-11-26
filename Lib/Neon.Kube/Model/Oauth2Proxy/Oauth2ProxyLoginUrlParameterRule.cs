@@ -46,7 +46,7 @@ namespace Neon.Kube
         /// <summary>
         /// A Value rule matches just this specific value.
         /// </summary>
-        [JsonProperty(PropertyName = "Value", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Value", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "value", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Value { get; set; }
@@ -55,7 +55,7 @@ namespace Neon.Kube
         /// A Pattern rule gives a regular expression that must be matched by some substring of the value.The expression is not automatically
         /// anchored to the start and end of the value, if you want to restrict the whole parameter value you must anchor it yourself with ^ and $.
         /// </summary>
-        [JsonProperty(PropertyName = "Pattern", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Pattern", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "pattern", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Pattern { get; set; }

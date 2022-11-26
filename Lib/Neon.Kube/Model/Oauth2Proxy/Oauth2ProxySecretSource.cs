@@ -43,7 +43,7 @@ namespace Neon.Kube
         /// <summary>
         /// A base64 encoded string value.
         /// </summary>
-        [JsonProperty(PropertyName = "Value", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Value", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "value", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Value { get; set; }
@@ -51,7 +51,7 @@ namespace Neon.Kube
         /// <summary>
         /// Expects the name of an environment variable.
         /// </summary>
-        [JsonProperty(PropertyName = "FromEnv", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "FromEnv", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "fromEnv", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public string FromEnv { get; set; }
@@ -59,7 +59,7 @@ namespace Neon.Kube
         /// <summary>
         /// Expects a path to a file containing the secret value.
         /// </summary>
-        [JsonProperty(PropertyName = "FromFile", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "FromFile", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "fromFile", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string FromFile { get; set; }

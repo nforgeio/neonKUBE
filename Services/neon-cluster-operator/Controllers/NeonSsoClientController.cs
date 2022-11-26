@@ -59,9 +59,10 @@ using Newtonsoft.Json;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-using Prometheus;
-using Grpc.Net.Client;
 using Grpc.Core;
+using Grpc.Net.Client;
+
+using Prometheus;
 
 namespace NeonClusterOperator
 {
@@ -107,7 +108,7 @@ namespace NeonClusterOperator
                 new LeaderElectionConfig(
                     k8s,
                     @namespace: KubeNamespace.NeonSystem,
-                    leaseName: $"{Program.Service.Name}.ssoclients",
+                    leaseName: $"{Program.Service.Name}.ssoclient",
                     identity: Pod.Name,
                     promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_promoted", "Leader promotions"),
                     demotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_demoted", "Leader demotions"),

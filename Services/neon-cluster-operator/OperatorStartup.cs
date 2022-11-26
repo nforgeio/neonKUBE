@@ -17,6 +17,7 @@
 
 using System;
 using System.Net.Http;
+using System.Text;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -30,6 +31,8 @@ using Neon.Kube;
 using Neon.Kube.Operator;
 using Neon.Kube.ResourceDefinitions;
 
+using NeonClusterOperator.Harbor;
+
 using k8s;
 using k8s.Models;
 
@@ -39,6 +42,9 @@ using OpenTelemetry;
 using OpenTelemetry.Instrumentation;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+
+using Task = System.Threading.Tasks.Task;
+using Metrics = Prometheus.Metrics;
 
 namespace NeonClusterOperator
 {
@@ -74,23 +80,19 @@ namespace NeonClusterOperator
         /// <param name="services">The service collection.</param>
         public void ConfigureServices(IServiceCollection services)
         {
-            var minioClient = new MinioClient()
-                              .WithEndpoint(KubeService.Minio)
-                              .WithCredentials(Service.GetEnvironmentVariable(""), Service.GetEnvironmentVariable(""))
-                              .WithSSL()
-                              .Build();
-
             services.AddSingleton<ILogger>(Program.Service.Logger)
                 .AddSingleton(Service.K8s)
-                .AddSingleton(minioClient);
+                .AddSingleton(Service.HarborClient);
 
             services.AddKubernetesOperator()
                 .AddController<GlauthController, V1Secret>()
                 .AddController<NeonClusterOperatorController, V1NeonClusterOperator>()
                 .AddController<NeonContainerRegistryController, V1NeonContainerRegistry>()
+                .AddController<MinioBucketController, V1MinioBucket>()
                 .AddController<NeonSsoClientController, V1NeonSsoClient>()
                 .AddController<NodeTaskController, V1NeonNodeTask>()
                 .AddFinalizer<NeonContainerRegistryFinalizer, V1NeonContainerRegistry>()
+                .AddFinalizer<MinioBucketFinalizer, V1MinioBucket>()
                 .AddMutatingWebhook<PodWebhook, V1Pod>();
         }
 

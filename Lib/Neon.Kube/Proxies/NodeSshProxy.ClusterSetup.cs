@@ -476,7 +476,7 @@ service ntp restart
 $@"
 127.0.0.1	    localhost
 127.0.0.1       kubernetes-control-plane neon-desktop
-{nodeAddress}{separator}{Name} {KubeConst.LocalClusterRegistry}
+{nodeAddress}{separator}{Name} {KubeConst.LocalClusterRegistryHostName}
 ::1             localhost ip6-localhost ip6-loopback
 ff02::1         ip6-allnodes
 ff02::2         ip6-allrouters

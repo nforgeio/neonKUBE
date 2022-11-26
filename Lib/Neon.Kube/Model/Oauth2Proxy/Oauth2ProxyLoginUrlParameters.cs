@@ -53,7 +53,7 @@ namespace Neon.Kube
         /// <summary>
         /// Specifies a default value or values that will be passed to the IdP if not overridden.
         /// </summary>
-        [JsonProperty(PropertyName = "Default", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Default", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "default", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<string> Default { get; set; }
@@ -62,7 +62,7 @@ namespace Neon.Kube
         /// Specifies rules about how the default (if any) may be overridden via the query string to /oauth2/start. Only
         /// values that match one or more of the allow rules will be forwarded to the IdP.
         /// </summary>
-        [JsonProperty(PropertyName = "Allow", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Allow", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "allow", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<Oauth2ProxyLoginUrlParameterRule> Allow { get; set; }

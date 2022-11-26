@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -30,7 +31,6 @@ using Neon.Kube.Resources;
 using k8s;
 using k8s.Models;
 
-
 using OpenTelemetry;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -38,7 +38,6 @@ using OpenTelemetry.Trace;
 using Prometheus;
 
 using Quartz;
-using System.Diagnostics.Contracts;
 
 namespace NeonClusterOperator
 {

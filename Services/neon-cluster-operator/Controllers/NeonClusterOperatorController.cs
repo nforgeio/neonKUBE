@@ -43,6 +43,8 @@ using Neon.Retry;
 using Neon.Tasks;
 using Neon.Time;
 
+using NeonClusterOperator.Harbor;
+
 using k8s;
 using k8s.Autorest;
 using k8s.Models;
@@ -58,6 +60,9 @@ using Prometheus;
 
 using Quartz.Impl;
 using Quartz;
+
+using Task = System.Threading.Tasks.Task;
+using Metrics = Prometheus.Metrics;
 
 namespace NeonClusterOperator
 {
@@ -94,6 +99,8 @@ namespace NeonClusterOperator
         private static CheckControlPlaneCertificates    checkControlPlaneCertificates;
         private static CheckRegistryImages              checkRegistryImages;
         private static SendClusterTelemetry             sendClusterTelemetry;
+
+        private HarborClient harborClient;
 
         /// <summary>
         /// Static constructor.
@@ -167,13 +174,16 @@ namespace NeonClusterOperator
         /// </summary>
         public NeonClusterOperatorController(
             IKubernetes k8s,
-            Neon.Kube.Operator.IFinalizerManager<V1NeonClusterOperator> manager)
+            Neon.Kube.Operator.IFinalizerManager<V1NeonClusterOperator> manager,
+            HarborClient harborClient)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
             Covenant.Requires(manager != null, nameof(manager));
+            Covenant.Requires(harborClient != null, nameof(harborClient));
 
             this.k8s = k8s;
             this.finalizerManager = manager;
+            this.harborClient     = harborClient;
         }
 
         /// <summary>
@@ -235,6 +245,14 @@ namespace NeonClusterOperator
                 CronExpression.ValidateExpression(containerImageExpression);
 
                 await checkRegistryImages.DeleteFromSchedulerAsync(scheduler);
+                await checkRegistryImages.AddToSchedulerAsync(
+                    scheduler,
+                    k8s,
+                    containerImageExpression,
+                    new Dictionary<string, object>()
+                    {
+                        { "HarborClient", harborClient }
+                    });
 
                 if (resource.Spec.Updates.Telemetry.Enabled)
                 {

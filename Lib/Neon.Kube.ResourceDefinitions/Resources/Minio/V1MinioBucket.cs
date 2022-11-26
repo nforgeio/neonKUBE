@@ -42,7 +42,7 @@ namespace Neon.Kube.Resources
     [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
 #if KUBEOPS
     [KubernetesEntityShortNames]
-    [EntityScope(EntityScope.Cluster)]
+    [EntityScope(EntityScope.Namespaced)]
     [Description("Defines a Minio bucket.")]
 #endif
     public class V1MinioBucket : CustomKubernetesEntity<V1MinioBucket.V1MinioBucketSpec, V1MinioBucket.V1MinioBucketStatus>
@@ -104,7 +104,7 @@ namespace Neon.Kube.Resources
             /// <summary>
             /// Optionally limits the amount of data in the bucket.
             /// </summary>
-            public ResourceQuantity Quota { get; set; }
+            public BucketQuota Quota { get; set; }
         }
 
         /// <summary>
@@ -117,6 +117,23 @@ namespace Neon.Kube.Resources
             /// </summary>
             public DateTime? Timestamp { get; set; }
         }
+    }
+
+    /// <summary>
+    /// Specifies bucket quota.
+    /// </summary>
+    public class BucketQuota
+    {
+        /// <summary>
+        /// The quota limit.
+        /// </summary>
+        public string Limit { get; set; }
+
+        /// <summary>
+        /// Sets a maximum limit to the bucket storage size. The MinIO server rejects any 
+        /// incoming PUT request whose contents would exceed the bucket’s configured quota.
+        /// </summary>
+        public bool Hard { get; set; }
     }
 
     /// <summary>

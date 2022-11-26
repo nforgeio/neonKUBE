@@ -1,0 +1,20 @@
+apiVersion: neonkube.io/v1alpha1
+kind: MinioBucket
+metadata:
+  name: mimir-tsdb
+  namespace: neon-system
+spec:
+  quota:
+    hard: true
+    limit: {{ .Values.minio.bucket.mimirTsdb.quota }}
+  region: us-west-2
+  tenant: minio
+---
+apiVersion: neonkube.io/v1alpha1
+kind: MinioBucket
+metadata:
+  name: mimir-ruler
+  namespace: neon-system
+spec:
+  region: us-west-2
+  tenant: minio

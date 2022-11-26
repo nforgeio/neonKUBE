@@ -24,6 +24,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Builder;
@@ -58,17 +59,8 @@ using OpenTelemetry.Trace;
 
 using Prometheus;
 
-using Quartz.Impl;
-using Quartz;
-using Npgsql;
-using k8s.KubeConfigModels;
-using Microsoft.AspNetCore.Mvc;
-using Neon.Cryptography;
-using Octokit;
-using System.Text.RegularExpressions;
 using Minio;
 using Minio.Exceptions;
-using Google.Protobuf.WellKnownTypes;
 
 namespace NeonClusterOperator
 {
@@ -81,9 +73,10 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly ILogger log = TelemetryHub.CreateLogger<MinioBucketController>();
 
+        private static readonly ILogger log = TelemetryHub.CreateLogger<MinioBucketController>();
         private static ResourceManager<V1MinioBucket, MinioBucketController> resourceManager;
+        private const string MinioExe = "/mc";
         private MinioClient minioClient;
 
         /// <summary>
@@ -149,19 +142,20 @@ namespace NeonClusterOperator
         // Instance members
 
         private readonly IKubernetes k8s;
+        private readonly Neon.Kube.Operator.IFinalizerManager<V1MinioBucket> finalizerManager;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public MinioBucketController(
             IKubernetes k8s,
-            MinioClient minioClient)
+            Neon.Kube.Operator.IFinalizerManager<V1MinioBucket> manager)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
-            Covenant.Requires(minioClient != null, nameof(minioClient));
+            Covenant.Requires(manager != null, nameof(manager));
 
-            this.k8s         = k8s;
-            this.minioClient = minioClient;
+            this.k8s = k8s;
+            this.finalizerManager = manager;
         }
 
         /// <summary>
@@ -191,8 +185,12 @@ namespace NeonClusterOperator
                     return null;
                 }
 
+                await finalizerManager.RegisterAllFinalizersAsync(resource);
+
                 try
                 {
+                    minioClient = await GetMinioClientAsync(resource);
+
                     // Create bucket if it doesn't exist.
                     bool exists = await minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(resource.Name()));
 
@@ -220,10 +218,15 @@ namespace NeonClusterOperator
                     }
 
                     await SetVersioningAsync(resource);
+                    await SetQuotaAsync(resource);
                 }
-                catch (MinioException e)
+                catch (Exception e)
                 {
-                    Console.WriteLine("Error occurred: " + e);
+                    log.LogErrorEx(e);
+                }
+                finally
+                {
+                    minioClient.Dispose();
                 }
 
                 log.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
@@ -275,6 +278,79 @@ namespace NeonClusterOperator
             log.LogInformationEx(() => $"NEW LEADER: {identity}");
         }
 
+        private async Task<MinioClient> GetMinioClientAsync(V1MinioBucket resource)
+        {
+            var tenant        = await k8s.ReadNamespacedCustomObjectAsync<V1MinioTenant>(resource.Namespace(), resource.Spec.Tenant);
+            var minioEndpoint = $"{tenant.Name()}.{tenant.Namespace()}";
+            var secretName    = ((JsonElement)(tenant.Spec)).GetProperty("credsSecret").GetProperty("name").GetString();
+            var secret        = await k8s.ReadNamespacedSecretAsync(secretName, resource.Namespace());
+            var accessKey     = Encoding.UTF8.GetString(secret.Data["accesskey"]);
+            var secretKey     = Encoding.UTF8.GetString(secret.Data["secretkey"]);
+            var minioClient   = new MinioClient()
+                                  .WithEndpoint(minioEndpoint)
+                                  .WithCredentials(accessKey, secretKey)
+                                  .Build();
+
+            await ExecuteMcCommandAsync(
+                new string[]
+                {
+                    "alias",
+                    "set",
+                    $"{GetTenantAlias(resource)}",
+                    $"http://{minioEndpoint}",
+                    accessKey,
+                    secretKey
+                });
+
+            return minioClient;
+        }
+
+        private async Task SetQuotaAsync(V1MinioBucket resource)
+        {
+            if (resource.Spec.Quota == null)
+            {
+                await ExecuteMcCommandAsync(
+                    new string[]
+                    {
+                        "admin",
+                        "bucket",
+                        "quota",
+                        $"{GetTenantAlias(resource)}/{resource.Name()}",
+                        "--clear"
+                    });
+            }
+            else
+            {
+                await ExecuteMcCommandAsync(
+                    new string[]
+                    {
+                        "admin",
+                        "bucket",
+                        "quota",
+                        $"{GetTenantAlias(resource)}/{resource.Name()}",
+                        resource.Spec.Quota.Hard ? "--hard" : null,
+                        resource.Spec.Quota.Limit
+                    });
+            }
+        }
+
+        private async Task ExecuteMcCommandAsync(string[] args)
+        {
+            try
+            {
+                log.LogDebugEx(() => $"command: {MinioExe} {string.Join(" ", args)}");
+
+                var response = await NeonHelper.ExecuteCaptureAsync(MinioExe,
+                    args);
+
+                response.EnsureSuccess();
+            }
+            catch (Exception e)
+            {
+                log.LogErrorEx(e);
+            }
+        }
+
         private async Task SetVersioningAsync(V1MinioBucket resource)
         {
             var versioning = await minioClient.GetVersioningAsync(new GetVersioningArgs().WithBucket(resource.Name()));
@@ -307,6 +383,11 @@ namespace NeonClusterOperator
 
                 log.LogInformationEx(() => $"BUCKET [{resource.Name()}] versioning configured successfully.");
             }
+        }
+
+        private static string GetTenantAlias(V1MinioBucket resource)
+        {
+            return $"{resource.Spec.Tenant}-{resource.Namespace()}";
         }
     }
 }

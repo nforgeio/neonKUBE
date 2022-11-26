@@ -44,7 +44,7 @@ namespace Neon.Kube
         /// Will pass the raw url path to upstream allowing for url's
         /// like: "/%2F/" which would otherwise be redirected to "/"
         /// </summary>
-        [JsonProperty(PropertyName = "ProxyRawPath", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "ProxyRawPath", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "proxyRawPath", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public bool? ProxyRawPath { get; set; } = null;
@@ -52,7 +52,7 @@ namespace Neon.Kube
         /// <summary>
         /// Represents the configuration for the upstream servers. Requests will be proxied to this upstream if the path matches the request path.
         /// </summary>
-        [JsonProperty(PropertyName = "Upstreams", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Upstreams", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
         [YamlMember(Alias = "upstreams", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<Oauth2ProxyUpstream> Upstreams { get; set; }

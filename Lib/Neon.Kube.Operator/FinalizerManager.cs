@@ -181,15 +181,22 @@ namespace Neon.Kube.Operator
 
         private async Task UpdateEntityAsync(TEntity entity)
         {
-            var metadata = entity.GetKubernetesTypeMetadata();
+            try
+            {
+                var metadata = entity.GetKubernetesTypeMetadata();
 
-            if (string.IsNullOrEmpty(entity.Metadata.NamespaceProperty))
-            {
-                await client.ReplaceClusterCustomObjectAsync<TEntity>(entity, entity.Name());
+                if (string.IsNullOrEmpty(entity.Metadata.NamespaceProperty))
+                {
+                    await client.ReplaceClusterCustomObjectAsync<TEntity>(entity, entity.Name());
+                }
+                else
+                {
+                    await client.ReplaceNamespacedCustomObjectAsync<TEntity>(entity, entity.Namespace(), entity.Name());
+                }
             }
-            else
+            catch (Exception e)
             {
-                await client.ReplaceNamespacedCustomObjectAsync<TEntity>(entity, entity.Namespace(), entity.Name());
+                logger.LogErrorEx(e);
             }
         }
     }

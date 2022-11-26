@@ -667,7 +667,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
 
                 var scheduledLoginUtc = loginFile.UpdatedUtc + reloginInterval + NeonHelper.PseudoRandomTimespan(reloginMaxRandomInterval);
 
-                if (DateTime.UtcNow <= scheduledLoginUtc || loginFile.Location == KubeConst.LocalClusterRegistry)
+                if (DateTime.UtcNow <= scheduledLoginUtc || loginFile.Location == KubeConst.LocalClusterRegistryHostName)
                 {
                     try
                     {
