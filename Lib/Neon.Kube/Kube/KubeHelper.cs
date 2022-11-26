@@ -2242,6 +2242,121 @@ exit 0
         }
 
         /// <summary>
+        /// Generates a unique cluster ID.
+        /// </summary>
+        /// <returns>The generated cluster ID.</returns>
+        public static string GenerateClusterId()
+        {
+            return Guid.NewGuid().ToFoldedHex(dashes: true);
+        }
+
+        /// <summary>
+        /// <para>
+        /// Returns the fixed SSH key shared by all neon-desktop built-in clusters.
+        /// </para>
+        /// <note>
+        /// This isn't really a security issue because built-in clusters are not
+        /// reachable from outside the machine they're deployed on and also because
+        /// the built-in desktop cluster is not intended to host production workloads.
+        /// </note>
+        /// </summary>
+        /// <returns>The <see cref="KubeSshKey"/>.</returns>
+        public static KubeSshKey GetBuiltinDesktopSskKey()
+        {
+            // We simply called [GenerateSshKey(KubeConst.NeonDesktopClusterName)] once
+            // and then serialized the resulting key to the YAML below.
+            //
+            // NOTE: I also needed to take care to escape all double quotes.
+
+            var keyYaml =
+@"
+publicPUB: |
+  ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDMn/0u0xfoXbY5Uvcct/6oz5SzVW7g6wmGR2bN5YA5E6i+ivWMiJNNity47WrGLuAHQYYVawgKGesRrXjpmRVOhg35nreKGISa8eRoferQXaGF+hKfPOaordLyNGTzTiuRhuvth4DsKRNz+g0n4JOgfnIa7MsgNnCnC163yj8itcLCLSN/14OkKQRX7RRsEpnMOHDkXOsDok7YVA9ZmlBwQjCrhERxUOJSsGkByakDk9OGBsVg6nCYQ59xNWGAQL8MLFfCg3/KrvTPtW1y5+BqVI0TKJ8XgyhkjgEmHRh1wK/F1FPJ4ogGcZNj1ZV+7GR+cs9o1lzl7ns2CNberIHr root@neon-desktop
+publicOpenSSH: |+
+  -----BEGIN RSA PUBLIC KEY-----
+  MIIBCgKCAQEAzJ/9LtMX6F22OVL3HLf+qM+Us1Vu4OsJhkdmzeWAOROovor1jIiT
+  TYrcuO1qxi7gB0GGFWsIChnrEa146ZkVToYN+Z63ihiEmvHkaH3q0F2hhfoSnzzm
+  qK3S8jRk804rkYbr7YeA7CkTc/oNJ+CToH5yGuzLIDZwpwtet8o/IrXCwi0jf9eD
+  pCkEV+0UbBKZzDhw5FzrA6JO2FQPWZpQcEIwq4REcVDiUrBpAcmpA5PThgbFYOpw
+  mEOfcTVhgEC/DCxXwoN/yq70z7VtcufgalSNEyifF4MoZI4BJh0YdcCvxdRTyeKI
+  BnGTY9WVfuxkfnLPaNZc5e57NgjW3qyB6wIDAQAB
+  -----END RSA PUBLIC KEY-----
+publicSSH2: |+
+  ---- BEGIN SSH2 PUBLIC KEY ----
+  AAAAB3NzaC1yc2EAAAADAQABAAABAQDMn/0u0xfoXbY5Uvcct/6oz5SzVW7g6wmGR2bN5Y
+  A5E6i+ivWMiJNNity47WrGLuAHQYYVawgKGesRrXjpmRVOhg35nreKGISa8eRoferQXaGF
+  +hKfPOaordLyNGTzTiuRhuvth4DsKRNz+g0n4JOgfnIa7MsgNnCnC163yj8itcLCLSN/14
+  OkKQRX7RRsEpnMOHDkXOsDok7YVA9ZmlBwQjCrhERxUOJSsGkByakDk9OGBsVg6nCYQ59x
+  NWGAQL8MLFfCg3/KrvTPtW1y5+BqVI0TKJ8XgyhkjgEmHRh1wK/F1FPJ4ogGcZNj1ZV+7G
+  R+cs9o1lzl7ns2CNberIHr
+  ---- END SSH2 PUBLIC KEY ----
+privateOpenSSH: |
+  -----BEGIN OPENSSH PRIVATE KEY-----
+  b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABFwAAAAdzc2gtcn
+  NhAAAAAwEAAQAAAQEAzJ/9LtMX6F22OVL3HLf+qM+Us1Vu4OsJhkdmzeWAOROovor1jIiT
+  TYrcuO1qxi7gB0GGFWsIChnrEa146ZkVToYN+Z63ihiEmvHkaH3q0F2hhfoSnzzmqK3S8j
+  Rk804rkYbr7YeA7CkTc/oNJ+CToH5yGuzLIDZwpwtet8o/IrXCwi0jf9eDpCkEV+0UbBKZ
+  zDhw5FzrA6JO2FQPWZpQcEIwq4REcVDiUrBpAcmpA5PThgbFYOpwmEOfcTVhgEC/DCxXwo
+  N/yq70z7VtcufgalSNEyifF4MoZI4BJh0YdcCvxdRTyeKIBnGTY9WVfuxkfnLPaNZc5e57
+  NgjW3qyB6wAAA8guz+ajLs/mowAAAAdzc2gtcnNhAAABAQDMn/0u0xfoXbY5Uvcct/6oz5
+  SzVW7g6wmGR2bN5YA5E6i+ivWMiJNNity47WrGLuAHQYYVawgKGesRrXjpmRVOhg35nreK
+  GISa8eRoferQXaGF+hKfPOaordLyNGTzTiuRhuvth4DsKRNz+g0n4JOgfnIa7MsgNnCnC1
+  63yj8itcLCLSN/14OkKQRX7RRsEpnMOHDkXOsDok7YVA9ZmlBwQjCrhERxUOJSsGkByakD
+  k9OGBsVg6nCYQ59xNWGAQL8MLFfCg3/KrvTPtW1y5+BqVI0TKJ8XgyhkjgEmHRh1wK/F1F
+  PJ4ogGcZNj1ZV+7GR+cs9o1lzl7ns2CNberIHrAAAAAwEAAQAAAQABdUZllgV+l2RcBjZS
+  kxESfOAvYvV2TtZziYC3COKgBX7XVMApLzP1gn7OJorzPJRGGPZuoqOdBtBBAP5yk6+uLp
+  Bc7f+a0U/olr6s6/DHaVNkVALb9aAjJZHyPeNWRIFU+SQnPibyB9zmn6qGVThYFW6UuIk+
+  AoVM+2zCXIOUqLmlj7Jp6llwQnrLe84+SrabMJRmy7Vc5+vgGE/6KkAtXEn1QYMoD7uD/Y
+  CZ/+XBaSrCO0Wx7wrEJQyH/4kzztIwHOLFxI4UQt+bg8vY7lSkFTPYVZu/x1HuMZ3ByiEE
+  5JOdk7c9iPsAi5PX72M0PZnliD+iy/Ou1WnMrkpoLSzRAAAAgQC5YvFRwjBEVv8/4TIWwH
+  w9IxLlCySnndJCldyuGuVsIr+vDXqFteEEX4GVf2KzxQTsihq498ixERrF021E0jZPdxhv
+  m27xL9T3rshI9nqqMogRMbsSFlF1IYvPQKluqpuwzS9N9kwnJt8TsrOE2i9negYOH6VCCs
+  1OQ0DQ3rSPbAAAAIEA8BpOu3gRuLIMkjh2C/NTTRpBx2kVaXi6HQf2pLKjx9HNncsEiH7M
+  SZjs3K8DS+dVhkt3D5E9WBQR2tdEX6ZFnLoqY4ZbJrPX0nCchiZ+AqIf0TDK9K2Czlk4Tn
+  +4gY+0i5H97t0TPaVKVsOUDS9EQsrsous+bCDEvoGNbq0d6QMAAACBANosVwUFtbOWnCRN
+  LtKyVHXcnqENlUK2mwVnAu1nzCLe4pVRtt/QCyHsL8NqErHowcWcHtNMziaqqxfmGgLCZX
+  u1vGXl6fB80+rK3gy5Z1wvWYBi8Ig2+5Peoev8hQl0y7nFeMFuDyIS/nVbDwYMVmCrOMnL
+  HOKikzBRwp9Nvkr5AAAAEXJvb3RAbmVvbi1kZXNrdG9wAQ==
+  -----END OPENSSH PRIVATE KEY-----
+privatePEM: |
+  -----BEGIN RSA PRIVATE KEY-----
+  MIIEpAIBAAKCAQEAzJ/9LtMX6F22OVL3HLf+qM+Us1Vu4OsJhkdmzeWAOROovor1
+  jIiTTYrcuO1qxi7gB0GGFWsIChnrEa146ZkVToYN+Z63ihiEmvHkaH3q0F2hhfoS
+  nzzmqK3S8jRk804rkYbr7YeA7CkTc/oNJ+CToH5yGuzLIDZwpwtet8o/IrXCwi0j
+  f9eDpCkEV+0UbBKZzDhw5FzrA6JO2FQPWZpQcEIwq4REcVDiUrBpAcmpA5PThgbF
+  YOpwmEOfcTVhgEC/DCxXwoN/yq70z7VtcufgalSNEyifF4MoZI4BJh0YdcCvxdRT
+  yeKIBnGTY9WVfuxkfnLPaNZc5e57NgjW3qyB6wIDAQABAoIBAAF1RmWWBX6XZFwG
+  NlKTERJ84C9i9XZO1nOJgLcI4qAFftdUwCkvM/WCfs4mivM8lEYY9m6io50G0EEA
+  /nKTr64ukFzt/5rRT+iWvqzr8MdpU2RUAtv1oCMlkfI941ZEgVT5JCc+JvIH3Oaf
+  qoZVOFgVbpS4iT4ChUz7bMJcg5SouaWPsmnqWXBCest7zj5KtpswlGbLtVzn6+AY
+  T/oqQC1cSfVBgygPu4P9gJn/5cFpKsI7RbHvCsQlDIf/iTPO0jAc4sXEjhRC35uD
+  y9juVKQVM9hVm7/HUe4xncHKIQTkk52Ttz2I+wCLk9fvYzQ9meWIP6LL867Vacyu
+  SmgtLNECgYEA8BpOu3gRuLIMkjh2C/NTTRpBx2kVaXi6HQf2pLKjx9HNncsEiH7M
+  SZjs3K8DS+dVhkt3D5E9WBQR2tdEX6ZFnLoqY4ZbJrPX0nCchiZ+AqIf0TDK9K2C
+  zlk4Tn+4gY+0i5H97t0TPaVKVsOUDS9EQsrsous+bCDEvoGNbq0d6QMCgYEA2ixX
+  BQW1s5acJE0u0rJUddyeoQ2VQrabBWcC7WfMIt7ilVG239ALIewvw2oSsejBxZwe
+  00zOJqqrF+YaAsJle7W8ZeXp8HzT6sreDLlnXC9ZgGLwiDb7k96h6/yFCXTLucV4
+  wW4PIhL+dVsPBgxWYKs4ycsc4qKTMFHCn02+SvkCgYBuHSKOh3pZIg7x4EMDKAzE
+  B46zTVYskNmKBuTuk57ZPTb3buwdTUmTVzcJ3pm8bdOjS2jHEuz3P/0QSDlrRG4Y
+  eqiGDFAxZ7lLIaonO+/+dSvyXFY38HtU90YDej+765P5jnLO4US5uNxm/jsf8NV1
+  bGsqLIjsPfr9A51BbNOS0QKBgQCtp4VMFhNeco6txlFym0bm2UfZ4Tng8//H+Qo3
+  dNrjFo07VOM+mhWCVsBdxlxDB4TUiUNv5D5iQI4WY6xobdrg8PKYGLxwEquKwxaj
+  Ah/nHDkdG6NgiIMOW7J+Z2xs7m4J28gWDkg1UvD+8A+xPLi0ERUOaYEAU27ckvda
+  XUMN4QKBgQC5YvFRwjBEVv8/4TIWwHw9IxLlCySnndJCldyuGuVsIr+vDXqFteEE
+  X4GVf2KzxQTsihq498ixERrF021E0jZPdxhvm27xL9T3rshI9nqqMogRMbsSFlF1
+  IYvPQKluqpuwzS9N9kwnJt8TsrOE2i9negYOH6VCCs1OQ0DQ3rSPbA==
+  -----END RSA PRIVATE KEY-----
+fingerprint-SHA256: |-
+  2048 SHA256:/iqR31hw7aZI4BFWNjBd/Lsf5xZrwkd1+jIq6PafEpc root@neon-desktop (RSA)
+fingerprint-MD5: |-
+  2048 MD5:14:17:80:10:c0:66:1a:b6:34:e8:64:0c:f3:5b:66:21 root@neon-desktop (RSA)
+privatePPK: """"
+passphrase: 
+";
+            return NeonHelper.YamlDeserialize<KubeSshKey>(keyYaml);
+        }
+
+        /// <summary>
         /// <para>
         /// Ensures that at least one cluster node is enabled for cluster ingress
         /// network traffic.

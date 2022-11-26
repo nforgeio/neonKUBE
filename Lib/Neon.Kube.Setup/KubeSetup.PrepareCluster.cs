@@ -100,6 +100,12 @@ namespace Neon.Kube
         /// Optionally disables status output to the console.  This is typically
         /// enabled for non-console applications.
         /// </param>
+        /// <param name="prebuiltDesktop">
+        /// Optionally indicates that we're setting up a neon-desktop built-in cluster
+        /// from a completely prebuilt desktop image.  In this case, the controller
+        /// returned will fully deploy the cluster (so no setup controller needs to
+        /// be created and run afterwards).
+        /// </param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
         /// <exception cref="NeonKubeException">Thrown when there's a problem.</exception>
         public static ISetupController CreateClusterPrepareController(
@@ -113,7 +119,8 @@ namespace Neon.Kube
             bool                        debugMode             = false, 
             string                      baseImageName         = null,
             bool                        removeExisting        = false,
-            bool                        disableConsoleOutput  = false)
+            bool                        disableConsoleOutput  = false,
+            bool                        prebuiltDesktop       = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
@@ -124,6 +131,14 @@ namespace Neon.Kube
 
             Covenant.Requires<ArgumentException>(maxParallel >= 0, nameof(maxParallel));
             Covenant.Requires<ArgumentNullException>(!debugMode || !string.IsNullOrEmpty(baseImageName), nameof(baseImageName));
+
+            if (prebuiltDesktop)
+            {
+                Covenant.Assert(clusterDefinition.IsDesktopBuiltIn, $"Expected [{nameof(clusterDefinition.IsDesktopBuiltIn)}] to be TRUE.");
+                Covenant.Assert(clusterDefinition.Name == KubeConst.NeonDesktopClusterName, $"Expected cluster name [{KubeConst.NeonDesktopClusterName}] not [{clusterDefinition.Name}].");
+
+                debugMode = false;
+            }
 
             clusterDefinition.Validate();
 
@@ -240,6 +255,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.NeonCloudHeadendClient, HeadendClient.Create());
             controller.Add(KubeSetupProperty.DisableImageDownload, !string.IsNullOrEmpty(nodeImagePath));
             controller.Add(KubeSetupProperty.Redact, !unredacted);
+            controller.Add(KubeSetupProperty.PrebuiltDesktop, prebuiltDesktop);
 
             // Configure the cluster preparation steps.
 
@@ -294,7 +310,7 @@ namespace Neon.Kube
                     {
                         // We're going to configure a fixed password for built-in desktop clusters.
 
-                        clusterLogin.SshPassword = KubeConst.RootDesktopPassword;
+                        clusterLogin.SshPassword = KubeConst.SysAdminPassword;
                     }
                     else
                     {
@@ -309,14 +325,27 @@ namespace Neon.Kube
                     // manager's provisioner.  We need to do this up front because some hosting environments
                     // like AWS don't allow SSH password authentication by default, so we'll need the SSH key
                     // to initialize the nodes after they've been provisioned for those environments.
+                    //
+                    // NOTE: All build-in neon-desktop clusters share the same SSH keys.  This isn't really
+                    //       a security issue because these clusters are not reachable from outside the host
+                    //       machine and are also not intended for production workloads.
+                    //
+                    //       The big advantage here is much faster cluster provisioning with fixed credentials.
 
-                    if (clusterLogin.SshKey == null)
+                    if (cluster.Definition.IsDesktopBuiltIn)
                     {
-                        // Generate a 2048 bit SSH key pair.
+                        clusterLogin.SshKey = KubeHelper.GetBuiltinDesktopSskKey();
+                    }
+                    else
+                    {
+                        if (clusterLogin.SshKey == null)
+                        {
+                            // Generate a 2048 bit SSH key pair.
 
-                        controller.SetGlobalStepStatus("generate: SSH client key pair");
+                            controller.SetGlobalStepStatus("generate: SSH client key pair");
 
-                        clusterLogin.SshKey = KubeHelper.GenerateSshKey(cluster.Name, KubeConst.SysAdminUser);
+                            clusterLogin.SshKey = KubeHelper.GenerateSshKey(cluster.Name, KubeConst.SysAdminUser);
+                        }
                     }
 
                     // We also need to generate the cluster's root SSO password.
@@ -327,7 +356,7 @@ namespace Neon.Kube
 
                     if (cluster.Definition.IsDesktopBuiltIn)
                     {
-                        // Built-in desktop clusters are configured with a fixed password.
+                        // Built-in desktop clusters are configured with a fixed SSO password.
 
                         clusterLogin.SsoPassword = KubeConst.RootDesktopPassword;
                     }
@@ -360,7 +389,7 @@ namespace Neon.Kube
                     //
                     //      /etc/neonkube/cloud-init/boot-script-path
                     //
-                    // We're going to read this file if it exists and delete the script.
+                    // We're going to delete this file if it exists.
 
                     var scriptPath = "/etc/neonkube/cloud-init/boot-script-path";
 
@@ -375,7 +404,7 @@ namespace Neon.Kube
                     }
                 });
 
-            controller.AddNodeStep("check image version",
+            controller.AddNodeStep("node check",
                 (controller, node) =>
                 {
                     // Ensure that the node image version matches the current neonKUBE version.
@@ -390,6 +419,11 @@ namespace Neon.Kube
                     if (imageVersion != SemanticVersion.Parse(KubeVersions.NeonKube))
                     {
                         throw new Exception($"Node image version [{imageVersion}] does not match the neonKUBE version [{KubeVersions.NeonKube}] implemented by the current build.");
+                    }
+
+                    if (prebuiltDesktop && !node.IsPrebuiltCluster)
+                    {
+                        throw new Exception($"Node is not a pre-built desktop cluster.");
                     }
                 });
 
@@ -414,27 +448,115 @@ namespace Neon.Kube
                     node.PrepareNode(controller);
                 });
 
+            // Register the cluster domain with the headend, except for built-in desktop clusters.
+            //
+            // Note that we're also going to add this entry to the local [$/etc/hosts] file so clusters
+            // will be recable from this machine even when not connected to the Internet.  We'll do
+            // this for built-in clusters as well.
+
             controller.AddGlobalStep("neoncluster.io domain",
                 async controller =>
                 {
-                    controller.SetGlobalStepStatus("create: *.neoncluster.io domain (for TLS)");
+                    string      hostName;
+                    IPAddress   hostAddress;
 
-                    var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
-                    var headendClient      = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
-                    var clusterAddresses   = string.Join(',', cluster.HostingManager.GetClusterAddresses());
+                    if (clusterDefinition.IsDesktopBuiltIn)
+                    {
+                        clusterLogin.ClusterDefinition.Id     = KubeHelper.GenerateClusterId();
+                        clusterLogin.ClusterDefinition.Domain = KubeConst.DesktopHostname;
 
-                    var result = await headendClient.ClusterSetup.CreateClusterAsync(addresses: clusterAddresses);
+                        hostName    = KubeConst.DesktopHostname;
+                        hostAddress = IPAddress.Parse(cluster.Definition.NodeDefinitions.Values.Single().Address);
+                    }
+                    else
+                    {
+                        controller.SetGlobalStepStatus("create: cluster neoncluster.io domain");
 
-                    clusterLogin.ClusterDefinition.Id     = result["Id"];
-                    clusterLogin.ClusterDefinition.Domain = result["Domain"];
-                   
-                    clusterLogin.Save();
+                        var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
+                        var headendClient      = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
+                        var clusterAddresses   = string.Join(',', cluster.HostingManager.GetClusterAddresses());
+
+                        var result = await headendClient.ClusterSetup.CreateClusterAsync(addresses: clusterAddresses);
+
+                        clusterLogin.ClusterDefinition.Id     = result["Id"];
+                        clusterLogin.ClusterDefinition.Domain = result["Domain"];
+
+                        hostName    = clusterLogin.ClusterDefinition.Id;
+                        hostAddress = IPAddress.Parse(cluster.HostingManager.GetClusterAddresses().First());
+                    }
+
+                    // For the built-in desktop cluster, add the new entry to the local neonKUBE host section,
+                    // creating the section when required.
+
+                    if (clusterDefinition.IsDesktopBuiltIn)
+                    {
+                        controller.SetGlobalStepStatus($"create: cluster local DNS record ({hostName})");
+
+                        var sections    = NetHelper.ListLocalHostsSections();
+                        var neonSection = sections.FirstOrDefault(section => section.Name.Equals(KubeConst.EtcHostsSectionName, StringComparison.InvariantCultureIgnoreCase));
+                        var hostEntries = neonSection != null ? neonSection.HostEntries : new Dictionary<string, IPAddress>();
+
+                        hostEntries[hostName] = hostAddress;
+
+                        NetHelper.ModifyLocalHosts(KubeConst.EtcHostsSectionName, hostEntries);
+
+                        // Wait for the new local cluster DNS record to become active.
+
+                        await NeonHelper.WaitForAsync(
+                            async () =>
+                            {
+                                return (await Dns.GetHostAddressesAsync(hostName)).Count() > 0;
+                            },
+                            timeout: TimeSpan.FromSeconds(120));
+                    }
                 });
 
-            // Some hosting managers may have to some additional work after
-            // the cluster has been otherwise prepared.
+            // Update each node's [/etc/hosts] file as required.
 
-            hostingManager.AddPostProvisioningSteps(controller);
+            // $debug(jefflill): REMOVE THIS???
+
+            //controller.AddNodeStep("/etc/hosts",
+            //    (controller, node) =>
+            //    {
+            //        var hostsFile   = node.DownloadText("/etc/hosts");
+            //        var sbHosts     = new StringBuilder(hostsFile);
+            //        var hostName    = KubeConst.DesktopHostname;
+            //        var hostAddress = IPAddress.Parse(cluster.Definition.NodeDefinitions.Values.Single().Address);
+            //        var modified    = false;
+
+            //        // Host record:
+
+            //        if (!hostsFile.Contains($"{hostAddress} {hostName}"))
+            //        {
+            //            sbHosts.AppendLineLinux($"{hostAddress} {hostName}");
+            //            modified = true;
+            //        }
+
+            //        // Harbor record.
+
+            //        if (!hostsFile.Contains($"{hostAddress} {ClusterHost.HarborRegistry}.{hostName}"))
+            //        {
+            //            sbHosts.AppendLineLinux($"{hostAddress} {ClusterHost.HarborRegistry}.{hostName}");
+            //            modified = true;
+            //        }
+
+            //        if (modified)
+            //        {
+            //            node.UploadText("/etc/hosts", sbHosts.ToString(), permissions: "644");
+            //        }
+            //     });
+
+            clusterLogin.Save();
+
+            // Some hosting managers may have to do some additional work after
+            // the cluster has been otherwise prepared.
+            //
+            // NOTE: This isn't required for pre-built clusters.
+
+            if (!prebuiltDesktop)
+            {
+                hostingManager.AddPostProvisioningSteps(controller);
+            }
 
             // Indicate that cluster prepare succeeded by creating [prepare-ok] file to
             // the log folder.  Cluster setup will verify that this file exists before

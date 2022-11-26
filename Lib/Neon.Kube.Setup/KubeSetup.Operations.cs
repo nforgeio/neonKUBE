@@ -461,7 +461,7 @@ apiServer:
     service-account-issuer: https://kubernetes.default.svc
     service-account-key-file: /etc/kubernetes/pki/sa.key
     service-account-signing-key-file: /etc/kubernetes/pki/sa.key
-    oidc-issuer-url: https://{ClusterDomain.Sso}.{cluster.Definition.Domain}
+    oidc-issuer-url: https://{ClusterHost.Sso}.{cluster.Definition.Domain}
     oidc-client-id: neon-sso
     oidc-username-claim: email
     oidc-groups-claim: groups
@@ -1304,7 +1304,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
             if (cluster.Definition.Hosting.Environment == HostingEnvironment.Azure)
             {
-                // In Azure Calico runs in VXLAN mode.
+                // In Azure Calico needs to run in VXLAN mode.
 
                 controller.ThrowIfCancelled();
                 await controlNode.InvokeIdempotentAsync("setup/dns-service",
@@ -2159,7 +2159,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("settings.clusterName", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
-                    values.Add("neonkube.clusterDomain.kubernetesDashboard", ClusterDomain.KubernetesDashboard);
+                    values.Add("neonkube.clusterDomain.kubernetesDashboard", ClusterHost.KubernetesDashboard);
                     values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
                     values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
@@ -2284,9 +2284,9 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add("image.kiali.repository", "kiali-kiali");
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
-                    values.Add("neonkube.clusterDomain.sso", ClusterDomain.Sso);
-                    values.Add("neonkube.clusterDomain.kiali", ClusterDomain.Kiali);
-                    values.Add($"neonkube.clusterDomain.grafana", ClusterDomain.Grafana);
+                    values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
+                    values.Add("neonkube.clusterDomain.kiali", ClusterHost.Kiali);
+                    values.Add($"neonkube.clusterDomain.grafana", ClusterHost.Grafana);
                     values.Add("grafanaPassword", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
                     values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
@@ -3756,8 +3756,8 @@ $@"- name: StorageType
                     values.Add($"cluster.datacenter", cluster.Definition.Datacenter);
                     values.Add($"cluster.version", cluster.Definition.ClusterVersion);
                     values.Add($"cluster.hostingEnvironment", cluster.Definition.Hosting.Environment);
-                    values.Add("neonkube.clusterDomain.grafana", ClusterDomain.Grafana);
-                    values.Add("neonkube.clusterDomain.sso", ClusterDomain.Sso);
+                    values.Add("neonkube.clusterDomain.grafana", ClusterHost.Grafana);
+                    values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
                     values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
@@ -3955,8 +3955,8 @@ $@"- name: StorageType
 
                             values.Add("cluster.name", cluster.Definition.Name);
                             values.Add("cluster.domain", cluster.Definition.Domain);
-                            values.Add("neonkube.clusterDomain.minio", ClusterDomain.Minio);
-                            values.Add("neonkube.clusterDomain.sso", ClusterDomain.Sso);
+                            values.Add("neonkube.clusterDomain.minio", ClusterHost.Minio);
+                            values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
                             values.Add($"metrics.serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                             values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                             values.Add("image.organization", KubeConst.LocalClusterRegistry);
@@ -4326,8 +4326,8 @@ $@"- name: StorageType
                     values.Add($"components.notary.enabled", cluster.Definition.Features.Harbor.Notary);
                     values.Add($"components.trivy.enabled", cluster.Definition.Features.Harbor.Trivy);
                     
-                    values.Add("neonkube.clusterDomain.harborNotary", ClusterDomain.HarborNotary);
-                    values.Add("neonkube.clusterDomain.harborRegistry", ClusterDomain.HarborRegistry);
+                    values.Add("neonkube.clusterDomain.harborNotary", ClusterHost.HarborNotary);
+                    values.Add("neonkube.clusterDomain.harborRegistry", ClusterHost.HarborRegistry);
 
                     values.Add($"storage.s3.accessKey", Encoding.UTF8.GetString(minioSecret.Data["accesskey"]));
                     values.Add($"storage.s3.secretKeyRef", "registry-minio");
@@ -4460,7 +4460,7 @@ $@"- name: StorageType
                             new object[]
                             {
                                 "login",
-                                $"{ClusterDomain.HarborRegistry}.{login.ClusterDefinition.Domain}",
+                                $"{ClusterHost.HarborRegistry}.{login.ClusterDefinition.Domain}",
                                 "--username",
                                 "root",
                                 "--password-stdin"
@@ -4548,7 +4548,7 @@ $@"- name: StorageType
                             controller,
                             controlNode,
                             name: "kubernetes",
-                            url: $"https://{ClusterDomain.KubernetesDashboard}.{cluster.Definition.Domain}",
+                            url: $"https://{ClusterHost.KubernetesDashboard}.{cluster.Definition.Domain}",
                             displayName: "Kubernetes",
                             enabled: true,
                             displayOrder: 1);
@@ -4559,7 +4559,7 @@ $@"- name: StorageType
                             controller,
                             controlNode,
                             name:         "grafana",
-                            url:          $"https://{ClusterDomain.Grafana}.{cluster.Definition.Domain}",
+                            url:          $"https://{ClusterHost.Grafana}.{cluster.Definition.Domain}",
                             displayName:  "Grafana",
                             enabled:      true,
                             displayOrder: 10);
@@ -4570,7 +4570,7 @@ $@"- name: StorageType
                             controller,
                             controlNode,
                             name:         "minio",
-                            url:          $"https://{ClusterDomain.Minio}.{cluster.Definition.Domain}",
+                            url:          $"https://{ClusterHost.Minio}.{cluster.Definition.Domain}",
                             displayName:  "Minio",
                             enabled:      true,
                             displayOrder: 10);
@@ -4581,7 +4581,7 @@ $@"- name: StorageType
                             controller,
                             controlNode,
                             name:         "harbor",
-                            url:          $"https://{ClusterDomain.HarborRegistry}.{cluster.Definition.Domain}",
+                            url:          $"https://{ClusterHost.HarborRegistry}.{cluster.Definition.Domain}",
                             displayName:  "Harbor",
                             enabled:      true,
                             displayOrder: 10);
@@ -4592,7 +4592,7 @@ $@"- name: StorageType
                             controller,
                             controlNode,
                             name:         "kiali",
-                            url:          $"https://{ClusterDomain.Kiali}.{cluster.Definition.Domain}",
+                            url:          $"https://{ClusterHost.Kiali}.{cluster.Definition.Domain}",
                             displayName:  "Kiali",
                             enabled:      true,
                             displayOrder: 10);
@@ -4614,7 +4614,7 @@ $@"- name: StorageType
                     values.Add($"cluster.datacenter", cluster.Definition.Datacenter);
                     values.Add($"cluster.version", cluster.Definition.ClusterVersion);
                     values.Add($"cluster.hostingEnvironment", cluster.Definition.Hosting.Environment);
-                    values.Add($"neonkube.clusterDomain.neonDashboard", ClusterDomain.NeonDashboard);
+                    values.Add($"neonkube.clusterDomain.neonDashboard", ClusterHost.NeonDashboard);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
@@ -4667,7 +4667,7 @@ $@"- name: StorageType
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
-                    values.Add("neonkube.clusterDomain.neonDashboard", ClusterDomain.NeonDashboard);
+                    values.Add("neonkube.clusterDomain.neonDashboard", ClusterHost.NeonDashboard);
                     values.Add("secrets.cipherKey", AesCipher.GenerateKey(256));
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
@@ -4986,13 +4986,13 @@ $@"- name: StorageType
 
             values.Add("cluster.name", cluster.Definition.Name);
             values.Add("cluster.domain", cluster.Definition.Domain);
-            values.Add("neonkube.clusterDomain.grafana", ClusterDomain.Grafana);
-            values.Add("neonkube.clusterDomain.kiali", ClusterDomain.Kiali);
-            values.Add("neonkube.clusterDomain.minio", ClusterDomain.Minio);
-            values.Add("neonkube.clusterDomain.harborRegistry", ClusterDomain.HarborRegistry);
-            values.Add("neonkube.clusterDomain.neonDashboard", ClusterDomain.NeonDashboard);
-            values.Add("neonkube.clusterDomain.kubernetesDashboard", ClusterDomain.KubernetesDashboard);
-            values.Add("neonkube.clusterDomain.sso", ClusterDomain.Sso);
+            values.Add("neonkube.clusterDomain.grafana", ClusterHost.Grafana);
+            values.Add("neonkube.clusterDomain.kiali", ClusterHost.Kiali);
+            values.Add("neonkube.clusterDomain.minio", ClusterHost.Minio);
+            values.Add("neonkube.clusterDomain.harborRegistry", ClusterHost.HarborRegistry);
+            values.Add("neonkube.clusterDomain.neonDashboard", ClusterHost.NeonDashboard);
+            values.Add("neonkube.clusterDomain.kubernetesDashboard", ClusterHost.KubernetesDashboard);
+            values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
             values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
 
             values.Add("secrets.grafana", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
@@ -5001,7 +5001,7 @@ $@"- name: StorageType
             values.Add("secrets.minio", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
             values.Add("secrets.ldap", serviceUser.Password);
 
-            values.Add("config.issuer", $"https://{ClusterDomain.Sso}.{cluster.Definition.Domain}");
+            values.Add("config.issuer", $"https://{ClusterHost.Sso}.{cluster.Definition.Domain}");
 
             // LDAP
 
@@ -5061,7 +5061,7 @@ $@"- name: StorageType
             values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
             values.Add("cluster.name", cluster.Definition.Name);
             values.Add("cluster.domain", cluster.Definition.Domain);
-            values.Add("neonkube.clusterDomain.sso", ClusterDomain.Sso);
+            values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
             values.Add("secrets.cipherKey", AesCipher.GenerateKey(256));
             values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
             values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
@@ -5280,7 +5280,7 @@ $@"- name: StorageType
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
                     values.Add("config.cookieSecret", NeonHelper.ToBase64(NeonHelper.GetCryptoRandomPassword(24)));
-                    values.Add("neonkube.clusterDomain.sso", ClusterDomain.Sso);
+                    values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
                     values.Add("client.id", "neon-sso");
                     values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);

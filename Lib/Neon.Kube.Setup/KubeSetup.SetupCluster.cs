@@ -288,6 +288,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.HostingEnvironment, cluster.HostingManager.HostingEnvironment);
             controller.Add(KubeSetupProperty.NeonCloudHeadendClient, HeadendClient.Create());
             controller.Add(KubeSetupProperty.Redact, !unredacted);
+            controller.Add(KubeSetupProperty.PrebuiltDesktop, false);   // This is always FALSE for the setup controller.
 
             // Configure the setup steps.
 

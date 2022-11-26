@@ -88,7 +88,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// The fixed password for desktop clusters.
+        /// The fixed SSO password for desktop clusters.
         /// </para>
         /// <note>
         /// This isn't really a security risk because the desktop cluster cannot be
@@ -99,9 +99,14 @@ namespace Neon.Kube
         public const string RootDesktopPassword = "root";
 
         /// <summary>
+        /// The neonKUBE domain used to host cluster DNS records.
+        /// </summary>
+        public const string NeonClusterDomain = "neoncluster.io";
+
+        /// <summary>
         /// The fixed hostname for all desktop clusters.
         /// </summary>
-        public const string DesktopHostname = "desktop.cluster.io";
+        public const string DesktopHostname = $"desktop.{NeonClusterDomain}";
 
         /// <summary>
         /// The default host machine sysadmin username.
@@ -125,10 +130,16 @@ namespace Neon.Kube
 
         /// <summary>
         /// The default <b>sysadmin</b> account password baked into neonKUBE
-        /// base images.  This will be set to a secure password during cluster
-        /// provisioning.
+        /// base images.  This will generally be changed to a secure password 
+        /// during cluster provisioning.
         /// </summary>
         public const string SysAdminPassword = "sysadmin0000";
+
+        /// <summary>
+        /// <b>$/etc/hosts</b> section name used by neonKUBE applications for persisting
+        /// DNS host entries via <see cref="NetHelper.ModifyLocalHosts(string, Dictionary{string, System.Net.IPAddress})"/>.
+        /// </summary>
+        public const string EtcHostsSectionName = "Added by NEONKUBE";
 
         /// <summary>
         /// <para>
@@ -154,9 +165,15 @@ namespace Neon.Kube
         public const string ImageTypePath = "/etc/neonkube/image-type";
 
         /// <summary>
-        /// Path to the node image file holding the neonKUBE version.
+        /// Path to the node file holding the neonKUBE version.
         /// </summary>
         public const string ImageVersionPath = "/etc/neonkube/image-version";
+
+        /// <summary>
+        /// Path to the node file indicating whether the node hosts a pre-built 
+        /// desktop cluster.
+        /// </summary>
+        public const string ImagePrebuiltDesktopPath = "/etc/neonkube/prebuilt-desktop";
 
         /// <summary>
         /// The minimum supported XenServer/XCP-ng hypervisor host version.
@@ -217,7 +234,7 @@ namespace Neon.Kube
         public const string KubeHelpUrl = "https://github.com/nforgeio/neonKUBE";
 
         /// <summary>
-        /// Returns the domain used to configure cluster DNS name that can
+        /// Returns the domain used to configure cluster DNS names that can
         /// be resolved on the cluster nodes to access internal Kubernetes
         /// services like the Harbor registry etc.
         /// </summary>
@@ -226,7 +243,7 @@ namespace Neon.Kube
         /// <summary>
         /// Hostname used to reference the local Harbor registry within the cluster.
         /// </summary>
-        public const string LocalClusterRegistry = "registry.neon.local";
+        public const string LocalClusterRegistry = $"registry.{ClusterNodeDomain}";
 
         /// <summary>
         /// User name used to log CRI-O on the cluster nodes into the local
@@ -354,9 +371,14 @@ namespace Neon.Kube
         public const string HyperVInternalSwitchName = "neon-internal";
 
         /// <summary>
+        /// The built-in neon-desktop cluster name.
+        /// </summary>
+        public const string NeonDesktopClusterName = "neon-desktop";
+
+        /// <summary>
         /// Identifies the Kubernetes context name for the neon-desktop built-in cluster.
         /// </summary>
-        public const string NeonDesktopContextName = $"{RootUser}@neon-desktop";
+        public const string NeonDesktopContextName = $"{RootUser}@{NeonDesktopClusterName}";
 
         /// <summary>
         /// Identifies the Hyper-V virtual machine used to host the neonDESKTOP built-in cluster.

@@ -438,7 +438,7 @@ service ntp restart
         }
 
         /// <summary>
-        /// Updates the node hostname and related configuration.
+        /// Updates the node hostname and local DNS configuration.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         private void UpdateHostname(ISetupController controller)
@@ -469,19 +469,16 @@ service ntp restart
                 nodeAddress = nodeDefinition.Address;
             }
 
-            var separator = new string(' ', Math.Max(16 - nodeAddress.Length, 1));
-            var sbHosts   = new StringBuilder();
+            var hostsFile = DownloadText("/etc/hosts");
+            var hostEntry = $"{nodeAddress} {Name}";
 
-            sbHosts.Append(
-$@"
-127.0.0.1	    localhost
-127.0.0.1       kubernetes-control-plane neon-desktop
-{nodeAddress}{separator}{Name} {KubeConst.LocalClusterRegistry}
-::1             localhost ip6-localhost ip6-loopback
-ff02::1         ip6-allnodes
-ff02::2         ip6-allrouters
-");
-            UploadText("/etc/hosts", sbHosts, tabStop: 4, outputEncoding: Encoding.UTF8);
+            if (!hostsFile.Contains(hostEntry))
+            {
+                var sbHosts = new StringBuilder(hostsFile);
+
+                sbHosts.AppendLineLinux(hostEntry);
+                UploadText("/etc/hosts", sbHosts, permissions: "644");
+            }
         }
 
         /// <summary>

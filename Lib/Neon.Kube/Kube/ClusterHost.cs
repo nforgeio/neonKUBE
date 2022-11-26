@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterDomain.cs
+// FILE:	    ClusterHost.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -30,9 +30,9 @@ using Neon.Net;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Important cluster domains.
+    /// Important cluster host names.
     /// </summary>
-    public static class ClusterDomain
+    public static class ClusterHost
     {
         /// <summary>
         /// Alertmanager service.

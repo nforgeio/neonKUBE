@@ -113,7 +113,7 @@ namespace Neon.Kube
         public const string DisableImageDownload = "image-download-disabled";
 
         /// <summary>
-        /// Property name for a boolean indicating whether secrets should be redacted when logging
+        /// Property name for a <c>bool</c> indicating whether secrets should be redacted when logging
         /// during cluster setup.  This should be generally set to <c>true</c> for production
         /// deployments.
         /// </summary>
@@ -130,5 +130,11 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         public const string HarborCredentials = "harbor-credentials";
+
+        /// <summary>
+        /// Property name for a <c>bool</c> value indicating whether cluster using a prebuilt desktop
+        /// image is being deployed.
+        /// </summary>
+        public const string PrebuiltDesktop = "prebuilt-desktop";
     }
 }

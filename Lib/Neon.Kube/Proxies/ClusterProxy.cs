@@ -38,7 +38,6 @@ using Neon.Kube.Resources;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
-using Neon.Time;
 using Neon.Tasks;
 
 namespace Neon.Kube
