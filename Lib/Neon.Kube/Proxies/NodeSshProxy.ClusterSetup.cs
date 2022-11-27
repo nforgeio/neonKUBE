@@ -1159,8 +1159,8 @@ ff02::2         ip6-allrouters
 # Configured for NEONKUBE:
 
 127.0.0.1       kubernetes-control-plane
-127.0.0.1       {Name}
-127.0.0.1       {KubeConst.LocalClusterRegistry}
+{nodeAddress}{separator}{Name}
+{nodeAddress}{separator}{KubeConst.LocalClusterRegistry}
 ");
             UploadText("/etc/hosts", sbHosts, tabStop: 4, outputEncoding: Encoding.UTF8);
         }
