@@ -243,6 +243,16 @@ namespace Neon.Kube
         /// <summary>
         /// Hostname used to reference the local Harbor registry within the cluster.
         /// </summary>
+        public const string LocalClusterRegistryHostName = "registry.neon.local";
+
+        /// <summary>
+        /// The local cluster registry project.
+        /// </summary>
+        public const string LocalClusterRegistryProject = "neonkube";
+
+        /// <summary>
+        /// Hostname used to reference the local Harbor registry within the cluster.
+        /// </summary>
         public const string LocalClusterRegistry = $"registry.{ClusterNodeDomain}";
 
         /// <summary>

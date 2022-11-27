@@ -1,0 +1,8 @@
+apiVersion: neonkube.io/v1alpha1
+kind: MinioBucket
+metadata:
+  name: harbor
+  namespace: neon-system
+spec:
+  region: us-west-2
+  tenant: minio

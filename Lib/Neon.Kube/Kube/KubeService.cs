@@ -23,6 +23,11 @@ namespace Neon.Kube
     public static class KubeService
     {
         /// <summary>
+        /// Minio.
+        /// </summary>
+        public const string Minio = "minio";
+
+        /// <summary>
         /// Neon Blazor Proxy.
         /// </summary>
         public const string NeonBlazorProxy = "neon-blazor-proxy";

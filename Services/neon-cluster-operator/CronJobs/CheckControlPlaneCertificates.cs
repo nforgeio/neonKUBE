@@ -36,6 +36,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 using Prometheus;
+
 using Quartz;
 
 namespace NeonClusterOperator

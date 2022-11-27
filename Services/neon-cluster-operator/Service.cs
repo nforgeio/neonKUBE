@@ -27,6 +27,8 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -47,6 +49,8 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.Service;
 using Neon.Tasks;
+
+using NeonClusterOperator.Harbor;
 
 using DnsClient;
 
@@ -72,6 +76,10 @@ using Prometheus;
 using Quartz;
 using Quartz.Impl;
 using Quartz.Logging;
+using System.Net.Http;
+
+using Task = System.Threading.Tasks.Task;
+using Metrics = Prometheus.Metrics;
 
 namespace NeonClusterOperator
 {
@@ -142,9 +150,16 @@ namespace NeonClusterOperator
         /// </summary>
         public IKubernetes K8s;
 
+        /// <summary>
+        /// Harbor client.
+        /// </summary>
+        public HarborClient HarborClient;
+
         // private fields
         private IWebHost webHost;
-        
+        private HttpClient harborHttpClient;
+        private readonly JsonSerializerOptions serializeOptions;
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -153,6 +168,12 @@ namespace NeonClusterOperator
         public Service(string name, ServiceMap serviceMap = null)
             : base(name, version: KubeVersions.NeonKube, new NeonServiceOptions() { MetricsPrefix = "neonclusteroperator" })
         {
+            serializeOptions = new JsonSerializerOptions()
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
+
+            serializeOptions.Converters.Add(new JsonStringEnumMemberConverter());
         }
 
         /// <inheritdoc/>
@@ -167,11 +188,16 @@ namespace NeonClusterOperator
             //-----------------------------------------------------------------
             // Start the controllers: these need to be started before starting KubeOps
 
-            K8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
+            K8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
             LogContext.SetCurrentLogProvider(TelemetryHub.LoggerFactory);
+
+            harborHttpClient = new HttpClient(new HttpClientHandler() { UseCookies = false });
+            HarborClient = new HarborClient(harborHttpClient);
+            HarborClient.BaseUrl = "http://registry-harbor-harbor-core.neon-system/api/v2.0";
 
             await WatchClusterInfoAsync();
             await CheckCertificateAsync();
+            await WatchRootUserAsync();
 
             // Start the web service.
             var port = 443;
@@ -288,6 +314,25 @@ namespace NeonClusterOperator
             },
             KubeNamespace.NeonStatus,
             fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
+        }
+
+        private async Task WatchRootUserAsync()
+        {
+            await SyncContext.Clear;
+
+            _ = K8s.WatchAsync<V1Secret>(async (@event) =>
+            {
+                await SyncContext.Clear;
+
+                var rootUser = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(@event.Value.Data["root"]));
+
+                var authString = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{rootUser.Name}:{rootUser.Password}"));
+                harborHttpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", authString);
+
+                Logger.LogInformationEx("Updated Harbor Client");
+            },
+            KubeNamespace.NeonSystem,
+            fieldSelector: $"metadata.name=glauth-users");
         }
 
         private async Task CheckCertificateAsync()

@@ -61,6 +61,7 @@
 		<None Remove="Resources\Helm\grafana\templates\datasource-loki.yaml" />
 		<None Remove="Resources\Helm\grafana\templates\datasource-mimir.yaml" />
 		<None Remove="Resources\Helm\harbor\assets\registry-config.yaml" />
+		<None Remove="Resources\Helm\harbor\templates\buckets.yaml" />
 		<None Remove="Resources\Helm\harbor\templates\core.yaml" />
 		<None Remove="Resources\Helm\harbor\templates\harbor.yaml" />
 		<None Remove="Resources\Helm\harbor\templates\jobservice.yaml" />
@@ -74,6 +75,7 @@
 		<None Remove="Resources\Helm\kiali\templates\servicemonitor-operator.yaml" />
 		<None Remove="Resources\Helm\kiali\templates\servicemonitor.yaml" />
 		<None Remove="Resources\Helm\kube-state-metrics\templates\grafana-dashboard.yaml" />
+		<None Remove="Resources\Helm\loki\templates\buckets.yaml" />
 		<None Remove="Resources\Helm\loki\templates\service.yaml" />
 		<None Remove="Resources\Helm\loki\templates\virtualservice.yaml" />
 		<None Remove="Resources\Helm\memcached\templates\dashboard.yaml" />
@@ -93,6 +95,7 @@
 		<None Remove="Resources\Helm\metrics-server\_helpers.tpl" />
 		<None Remove="Resources\Helm\mimir\templates\alertmanager\alertmanager-dashboard-resources.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\alertmanager\alertmanager-dashboard.yaml" />
+		<None Remove="Resources\Helm\mimir\templates\buckets.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\compactor\compactor-dashboard-resources.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\compactor\compactor-dashboard.yaml" />
 		<None Remove="Resources\Helm\mimir\templates\config-dashboard.yaml" />
@@ -150,6 +153,7 @@
 		<None Remove="Resources\Helm\postgres-operator\templates\neon-system-db.yaml" />
 		<None Remove="Resources\Helm\postgres-operator\templates\servicemonitor.yaml" />
 		<None Remove="Resources\Helm\redis-ha\templates\grafana-dashboard.yaml" />
+		<None Remove="Resources\Helm\tempo\templates\buckets.yaml" />
 		<None Remove="Resources\Helm\tempo\templates\service.yaml" />
 		<None Remove="Resources\Helm\tempo\templates\virtualservice.yaml" />
 	</ItemGroup>

@@ -93,6 +93,12 @@ spec:
       - host      all             all          all                md5
       - local     replication     standby                         trust
       - host      replication     standby      all                md5
+      - local     replication     postgres                        trust
+      - hostssl   replication     postgres     all                md5
+      - local     replication     standby                         trust
+      - hostssl   replication     standby      all                md5
+      - hostssl   all             +zalandos    all                pam
+      - hostssl   all             all          all                md5
 #    slots:
 #      permanent_physical_1:
 #        type: physical

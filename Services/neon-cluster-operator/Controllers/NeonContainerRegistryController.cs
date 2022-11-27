@@ -60,9 +60,6 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 using Prometheus;
-using Grpc.Net.Client;
-using Renci.SshNet.Common;
-using IdentityModel;
 
 namespace NeonClusterOperator
 {
@@ -110,7 +107,7 @@ namespace NeonClusterOperator
                     identity: Pod.Name,
                     promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_promoted", "Leader promotions"),
                     demotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_demoted", "Leader demotions"),
-                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_newLeader", "Leadership changes"));
+                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_new_leader", "Leadership changes"));
 
             var options = new ResourceManagerOptions()
             {
@@ -122,11 +119,11 @@ namespace NeonClusterOperator
                 DeleteCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle", "DELETED events processed."),
                 StatusModifyCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle", "STATUS-MODIFY events processed."),
                 FinalizeCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_finalize", "FINALIZE events processed."),
-                IdleErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle_error", "Failed Clustercontainerregistries IDLE event processing."),
-                ReconcileErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_reconcile_error", "Failed Clustercontainerregistries RECONCILE event processing."),
-                DeleteErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_delete_error", "Failed Clustercontainerregistries DELETE event processing."),
-                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_statusmodify_error", "Failed Clustercontainerregistries STATUS-MODIFY events processing."),
-                FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_finalize_error", "Failed NodeTask FINALIZE events processing.")
+                IdleErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle_error", "Failed IDLE event processing."),
+                ReconcileErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_reconcile_error", "Failed RECONCILE event processing."),
+                DeleteErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_delete_error", "Failed DELETE event processing."),
+                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_statusmodify_error", "Failed STATUS-MODIFY events processing."),
+                FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_finalize_error", "Failed FINALIZE events processing.")
             };
 
             resourceManager = new ResourceManager<V1NeonContainerRegistry, NeonContainerRegistryController>(
@@ -170,7 +167,7 @@ namespace NeonClusterOperator
 
             try
             {
-                await k8s.ReadClusterCustomObjectAsync<V1NeonContainerRegistry>("registry.neon.local");
+                await k8s.ReadClusterCustomObjectAsync<V1NeonContainerRegistry>(KubeConst.LocalClusterRegistryProject);
             }
             catch (Exception e)
             {
@@ -219,7 +216,7 @@ namespace NeonClusterOperator
                     return;
                 }
 
-                if (resource.Name() == "registry.neon.local")
+                if (resource.Name() == KubeConst.LocalClusterRegistryProject)
                 {
                     await CreateNeonLocalRegistryAsync();
                 }
@@ -267,15 +264,15 @@ namespace NeonClusterOperator
                 {
                     Metadata = new V1ObjectMeta()
                     {
-                        Name = "registry.neon.local"
+                        Name = KubeConst.LocalClusterRegistryProject
                     },
                     Spec = new V1NeonContainerRegistry.RegistrySpec()
                     {
                         Blocked = false,
                         Insecure = true,
-                        Location = "registry.neon.local",
+                        Location = KubeConst.LocalClusterRegistry,
                         Password = rootUser.Password,
-                        Prefix = "registry.neon.local",
+                        Prefix = KubeConst.LocalClusterRegistry,
                         SearchOrder = -1,
                         Username = rootUser.Name
                     }

@@ -43,12 +43,12 @@ using Neon.Retry;
 using Neon.Tasks;
 using Neon.Time;
 
+using NeonClusterOperator.Harbor;
+
 using k8s;
 using k8s.Autorest;
 using k8s.Models;
 
-using KubeOps.Operator.Controller;
-using KubeOps.Operator.Finalizer;
 using KubeOps.Operator.Rbac;
 
 using Newtonsoft.Json;
@@ -60,7 +60,9 @@ using Prometheus;
 
 using Quartz.Impl;
 using Quartz;
-using IdentityModel;
+
+using Task = System.Threading.Tasks.Task;
+using Metrics = Prometheus.Metrics;
 
 namespace NeonClusterOperator
 {
@@ -98,6 +100,8 @@ namespace NeonClusterOperator
         private static CheckRegistryImages              checkRegistryImages;
         private static SendClusterTelemetry             sendClusterTelemetry;
 
+        private HarborClient harborClient;
+
         /// <summary>
         /// Static constructor.
         /// </summary>
@@ -125,7 +129,7 @@ namespace NeonClusterOperator
                     identity:         Pod.Name,
                     promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_promoted", "Leader promotions"),
                     demotionCounter:  Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_demoted", "Leader demotions"),
-                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_newLeader", "Leadership changes"));
+                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_new_leader", "Leadership changes"));
 
             var options = new ResourceManagerOptions()
             {
@@ -137,11 +141,11 @@ namespace NeonClusterOperator
                 DeleteCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle", "DELETED events processed."),
                 StatusModifyCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle", "STATUS-MODIFY events processed."),
                 FinalizeCounter          = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_finalize", "FINALIZE events processed."),
-                IdleErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle_error", "Failed ClusterOperatorSettings IDLE event processing."),
-                ReconcileErrorCounter    = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_reconcile_error", "Failed ClusterOperatorSettings RECONCILE event processing."),
-                DeleteErrorCounter       = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_delete_error", "Failed ClusterOperatorSettings DELETE event processing."),
-                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_statusmodify_error", "Failed ClusterOperatorSettings STATUS-MODIFY events processing."),
-                FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_finalize_error", "Failed NodeTask FINALIZE events processing.")
+                IdleErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle_error", "Failed IDLE event processing."),
+                ReconcileErrorCounter    = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_reconcile_error", "Failed RECONCILE event processing."),
+                DeleteErrorCounter       = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_delete_error", "Failed DELETE event processing."),
+                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_statusmodify_error", "Failed STATUS-MODIFY events processing."),
+                FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_finalize_error", "Failed FINALIZE events processing.")
             };
 
             resourceManager = new ResourceManager<V1NeonClusterOperator, NeonClusterOperatorController>(
@@ -170,13 +174,16 @@ namespace NeonClusterOperator
         /// </summary>
         public NeonClusterOperatorController(
             IKubernetes k8s,
-            Neon.Kube.Operator.IFinalizerManager<V1NeonClusterOperator> manager)
+            Neon.Kube.Operator.IFinalizerManager<V1NeonClusterOperator> manager,
+            HarborClient harborClient)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
             Covenant.Requires(manager != null, nameof(manager));
+            Covenant.Requires(harborClient != null, nameof(harborClient));
 
             this.k8s = k8s;
             this.finalizerManager = manager;
+            this.harborClient     = harborClient;
         }
 
         /// <summary>
@@ -238,6 +245,14 @@ namespace NeonClusterOperator
                 CronExpression.ValidateExpression(containerImageExpression);
 
                 await checkRegistryImages.DeleteFromSchedulerAsync(scheduler);
+                await checkRegistryImages.AddToSchedulerAsync(
+                    scheduler,
+                    k8s,
+                    containerImageExpression,
+                    new Dictionary<string, object>()
+                    {
+                        { "HarborClient", harborClient }
+                    });
 
                 if (resource.Spec.Updates.Telemetry.Enabled)
                 {
