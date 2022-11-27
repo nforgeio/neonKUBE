@@ -486,7 +486,7 @@ namespace Neon.Kube
                     }
 
                     // For the built-in desktop cluster, add these records to both the
-                    // node's local [/etc/hosts] file as well as the host file fot the
+                    // node's local [/etc/hosts] file as well as the host file for the
                     // local workstation:
                     //
                     //      ADDRESS     desktop.neoncluster.io
