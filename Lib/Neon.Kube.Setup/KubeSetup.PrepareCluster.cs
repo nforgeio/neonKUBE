@@ -460,6 +460,8 @@ namespace Neon.Kube
                     string      hostName;
                     IPAddress   hostAddress;
 
+                    controller.SetGlobalStepStatus("create: cluster neoncluster.io domain");
+
                     if (clusterDefinition.IsDesktopBuiltIn)
                     {
                         clusterLogin.ClusterDefinition.Id     = KubeHelper.GenerateClusterId();
@@ -470,8 +472,6 @@ namespace Neon.Kube
                     }
                     else
                     {
-                        controller.SetGlobalStepStatus("create: cluster neoncluster.io domain");
-
                         var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
                         var headendClient      = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
                         var clusterAddresses   = string.Join(',', cluster.HostingManager.GetClusterAddresses());
@@ -485,18 +485,33 @@ namespace Neon.Kube
                         hostAddress = IPAddress.Parse(cluster.HostingManager.GetClusterAddresses().First());
                     }
 
-                    // For the built-in desktop cluster, add the new entry to the local neonKUBE host section,
-                    // creating the section when required.
+                    // For the built-in desktop cluster, add these records to both the
+                    // node's local [/etc/hosts] file as well as the host file fot the
+                    // local workstation:
+                    //
+                    //      ADDRESS     desktop.neoncluster.io
+                    //      ADDRESS     *.desktop.neoncluster.io
 
                     if (clusterDefinition.IsDesktopBuiltIn)
                     {
-                        controller.SetGlobalStepStatus($"create: cluster local DNS record ({hostName})");
+                        controller.SetGlobalStepStatus($"configure: node local DNS");
+
+                        var node    = cluster.Nodes.Single();
+                        var sbHosts = new StringBuilder(node.DownloadText("/etc/hosts"));
+
+                        sbHosts.AppendLineLinux($"{hostAddress} {hostName}");
+                        sbHosts.AppendLineLinux($"{hostAddress} *.{hostName}");
+
+                        node.UploadText("/etc/hosts", sbHosts, permissions: "644");
+
+                        controller.SetGlobalStepStatus($"configure: workstation local DNS");
 
                         var sections    = NetHelper.ListLocalHostsSections();
                         var neonSection = sections.FirstOrDefault(section => section.Name.Equals(KubeConst.EtcHostsSectionName, StringComparison.InvariantCultureIgnoreCase));
                         var hostEntries = neonSection != null ? neonSection.HostEntries : new Dictionary<string, IPAddress>();
 
-                        hostEntries[hostName] = hostAddress;
+                        hostEntries[hostName]        = hostAddress;
+                        hostEntries[$"*.{hostName}"] = hostAddress;
 
                         NetHelper.ModifyLocalHosts(KubeConst.EtcHostsSectionName, hostEntries);
 
@@ -509,44 +524,9 @@ namespace Neon.Kube
                             },
                             timeout: TimeSpan.FromSeconds(120));
                     }
+
+                    clusterLogin.Save();
                 });
-
-            // Update each node's [/etc/hosts] file as required.
-
-            // $debug(jefflill): REMOVE THIS???
-
-            //controller.AddNodeStep("/etc/hosts",
-            //    (controller, node) =>
-            //    {
-            //        var hostsFile   = node.DownloadText("/etc/hosts");
-            //        var sbHosts     = new StringBuilder(hostsFile);
-            //        var hostName    = KubeConst.DesktopHostname;
-            //        var hostAddress = IPAddress.Parse(cluster.Definition.NodeDefinitions.Values.Single().Address);
-            //        var modified    = false;
-
-            //        // Host record:
-
-            //        if (!hostsFile.Contains($"{hostAddress} {hostName}"))
-            //        {
-            //            sbHosts.AppendLineLinux($"{hostAddress} {hostName}");
-            //            modified = true;
-            //        }
-
-            //        // Harbor record.
-
-            //        if (!hostsFile.Contains($"{hostAddress} {ClusterHost.HarborRegistry}.{hostName}"))
-            //        {
-            //            sbHosts.AppendLineLinux($"{hostAddress} {ClusterHost.HarborRegistry}.{hostName}");
-            //            modified = true;
-            //        }
-
-            //        if (modified)
-            //        {
-            //            node.UploadText("/etc/hosts", sbHosts.ToString(), permissions: "644");
-            //        }
-            //     });
-
-            clusterLogin.Save();
 
             // Some hosting managers may have to do some additional work after
             // the cluster has been otherwise prepared.
