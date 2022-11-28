@@ -78,7 +78,6 @@ namespace Neon.Kube
         private static string               cachedDesktopLogFolder;
         private static string               cachedDesktopHypervFolder;
         private static KubeClientConfig     cachedClientConfig;
-        private static X509Certificate2     cachedClusterCertificate;
         private static string               cachedInstallFolder;
         private static string               cachedToolsFolder;
         private static string               cachedPwshPath;
@@ -124,7 +123,6 @@ namespace Neon.Kube
             cachedDesktopFolder        = null;
             cachedDesktopHypervFolder  = null;
             cachedClientConfig         = null;
-            cachedClusterCertificate   = null;
             cachedInstallFolder        = null;
             cachedToolsFolder          = null;
             cachedPwshPath             = null;
@@ -1157,8 +1155,6 @@ namespace Neon.Kube
                 Config.CurrentContext = (string)contextName;
             }
 
-            cachedClusterCertificate = null;
-
             Config.Save();
         }
 
@@ -1208,60 +1204,6 @@ namespace Neon.Kube
         public static bool IsBuiltinCluster => CurrentContext != null && CurrentContext.IsNeonKube && CurrentContext.Name == KubeConst.NeonDesktopContextName;
 
         /// <summary>
-        /// Returns the Kuberneties API service certificate for the current
-        /// cluster context or <c>null</c> if we're not connected to a cluster.
-        /// </summary>
-        public static X509Certificate2 ClusterCertificate
-        {
-            get
-            {
-                if (cachedClusterCertificate != null)
-                {
-                    return cachedClusterCertificate;
-                }
-
-                if (CurrentContext == null)
-                {
-                    return null;
-                }
-
-                var cluster = KubeHelper.Config.GetCluster(KubeHelper.CurrentContext.Properties.Cluster);
-                var certPem = Encoding.UTF8.GetString(Convert.FromBase64String(cluster.Properties.CertificateAuthorityData));
-                var tlsCert = TlsCertificate.FromPemParts(certPem);
-
-                return cachedClusterCertificate = tlsCert.ToX509();
-            }
-        }
-
-        /// <summary>
-        /// Returns the Kuberneties API client certificate for the current
-        /// cluster context or <c>null</c> if we're not connected to a cluster.
-        /// </summary>
-        public static X509Certificate2 ClientCertificate
-        {
-            get
-            {
-                if (cachedClusterCertificate != null)
-                {
-                    return cachedClusterCertificate;
-                }
-
-                if (CurrentContext == null)
-                {
-                    return null;
-                }
-
-                var userContext = KubeHelper.Config.GetUser(KubeHelper.CurrentContext.Properties.User);
-                var certPem     = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientCertificateData));
-                var keyPem      = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientKeyData));
-                var tlsCert     = TlsCertificate.FromPemParts(certPem, keyPem);
-                var clientCert  = tlsCert.ToX509();
-
-                return null;
-            }
-        }
-
-        /// <summary>
         /// Generates a self-signed certificate for arbitrary hostnames, possibly including 
         /// hostnames with wildcards.
         /// </summary>
@@ -1288,7 +1230,7 @@ namespace Neon.Kube
         /// <param name="issuedBy">Optionally specifies the issuer.</param>
         /// <param name="issuedTo">Optionally specifies who/what the certificate is issued for.</param>
         /// <param name="friendlyName">Optionally specifies the certificate's friendly name.</param>
-        /// <returns>The new <see cref="TlsCertificate"/>.</returns>
+        /// <returns>The new <see cref="X509Certificate2"/>.</returns>
         public static X509Certificate2 CreateSelfSigned(
             string      hostname,
             int         bitCount     = 2048,

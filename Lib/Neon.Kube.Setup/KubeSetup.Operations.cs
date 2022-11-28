@@ -2128,54 +2128,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         }
 
         /// <summary>
-        /// Generates a dashboard certificate.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <returns>The generated certificate.</returns>
-        public static TlsCertificate GenerateDashboardCert(ISetupController controller)
-        {
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-
-            // We're going to tie the custom certificate to the private IP
-            // addresses of the control-plane nodes as well as the cluster domain
-            // plus the public ingress address for cloud deployments.
-            //
-            // This means that only these nodes can accept the traffic and also
-            // that we'd need to regenerate the certificate if we add/remove a
-            // control-plane node.
-            //
-            // Here's the tracking task:
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/441
-
-            var certHostnames = new List<string>();
-
-            foreach (var controlNode in cluster.ControlNodes)
-            {
-                certHostnames.Add(controlNode.Metadata.Address);
-            }
-
-            certHostnames.Add(cluster.Definition.Domain);
-
-            var clusterAddresses = cluster.HostingManager.GetClusterAddresses();
-
-            foreach (var clusterAddress in clusterAddresses)
-            {
-                certHostnames.Add(clusterAddress);
-            }
-
-            var utcNow     = DateTime.UtcNow;
-            var utc10Years = utcNow.AddYears(10);
-
-            var certificate = TlsCertificate.CreateSelfSigned(
-                hostnames: certHostnames,
-                validDays: (int)(utc10Years - utcNow).TotalDays,
-                issuedBy:  "kubernetes-dashboard");
-
-            return certificate;
-        }
-
-        /// <summary>
         /// Configures the root Kubernetes user.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
