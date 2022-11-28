@@ -133,7 +133,7 @@ namespace NeonDashboard
             {
                 options.ClientId                      = "kubernetes";
                 options.ClientSecret                  = NeonDashboardService.SsoClientSecret;
-                options.Authority                     = $"https://{ClusterDomain.Sso}.{NeonDashboardService.ClusterInfo.Domain}";
+                options.Authority                     = $"https://{ClusterHost.Sso}.{NeonDashboardService.ClusterInfo.Domain}";
                 options.ResponseType                  = OpenIdConnectResponseType.Code;
                 options.SignInScheme                  = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.SaveTokens                    = true;

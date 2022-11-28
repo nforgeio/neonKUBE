@@ -106,6 +106,22 @@ namespace Neon.Kube
             string              baseImageName  = null,
             CpuArchitecture     architecture   = CpuArchitecture.amd64)
         {
+            //##############################################################
+            // $debug(jefflill): DELETE THIS AFTER MARCUS REDEPLOYS HEADEND!
+
+            switch (hostingEnvironment)
+            {
+                case HostingEnvironment.HyperV:
+
+                    return $"https://neon-public.s3.us-west-2.amazonaws.com/vm-images/hyperv/node/neonkube-{KubeVersions.NeonKube}.hyperv.amd64.vhdx.gz.manifest";
+
+                case HostingEnvironment.XenServer:
+
+                    return $"https://neon-public.s3.us-west-2.amazonaws.com/vm-images/hyperv/node/neonkube-{KubeVersions.NeonKube}.hyperv.amd64.vhdx.gz.manifest";
+            }
+
+            //##############################################################
+
             var hostingEnvironmentUpper = hostingEnvironment.ToString().ToUpper();
 
             if (setupDebugMode && string.IsNullOrEmpty(baseImageName))

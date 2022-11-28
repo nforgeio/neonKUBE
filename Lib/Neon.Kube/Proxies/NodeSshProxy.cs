@@ -223,6 +223,31 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Indicates that the node is a pre-built neon-desktop cluster.  This uses
+        /// the existence of the <b>/etc/neonkube/prebuilt-desktop</b> file on the
+        /// node to indicate this condition.
+        /// </summary>
+        public bool IsPrebuiltCluster
+        {
+            get => FileExists(KubeConst.ImagePrebuiltDesktopPath);
+
+            set
+            {
+                if (value)
+                {
+                    if (FileExists(KubeConst.ImagePrebuiltDesktopPath))
+                    {
+                        RemoveFile(KubeConst.ImagePrebuiltDesktopPath);
+                    }
+                }
+                else
+                {
+                    SudoCommand("touch", KubeConst.ImagePrebuiltDesktopPath).EnsureSuccess();
+                }
+            }
+        }
+
+        /// <summary>
         /// Returns the NTP time sources to be used by the node.
         /// </summary>
         /// <returns>The quoted and space separated list of IP address or DNS hostnames for the node's NTP time sources in priority order.</returns>
@@ -556,47 +581,10 @@ namespace Neon.Kube
 
             controller.LogProgress(this, verb: "clean", message: "file system");
 
-            var fstrim = string.Empty;
-            var fsZero = string.Empty;
+            var trim = HostingManager.SupportsFsTrim(hostingEnvironment);
+            var zero = HostingManager.SupportsFsZero(hostingEnvironment);
 
-            if (HostingManager.SupportsFsTrim(hostingEnvironment))
-            {
-                // Not all hosting enviuronments supports: fstrim
-
-                fstrim = "fstrim /";
-            }
-
-            if (HostingManager.SupportsFsZero(hostingEnvironment))
-            {
-                // Zeroing block devices can actually make things worse for
-                // some environment.
-
-                fsZero = "sfill -fllz /";
-            }
-
-            var cleanScript =
-$@"#!/bin/bash
-
-set -euo pipefail
-
-# Remove all log files (but retain the directories).
-
-find -type f -exec rm {{}} +
-
-# Misc cleaning
-
-safe-apt-get clean
-rm -rf /var/lib/apt/lists
-rm -rf /var/lib/dhcp/*
-
-# Filesystem cleaning
-
-{fsZero}
-{fstrim}
-
-passwd --delete {KubeConst.SysAdminUser}
-";
-            SudoCommand(CommandBundle.FromScript(cleanScript), RunOptions.FaultOnError);
+            Clean(trim: trim, zero: zero);
         }
 
         /// <summary>

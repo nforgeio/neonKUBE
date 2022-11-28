@@ -152,7 +152,7 @@ namespace Neon.Kube
 
             if (!disableConsoleOutput)
             {
-                ConsoleWriter = new SetupConsoleWriter();
+                ConsoleWriter = new SetupConsoleWriter(disableConsoleOutput);
             }
         }
 
@@ -816,6 +816,8 @@ namespace Neon.Kube
                             Verb          = $"step {step.Number}",
                             Text          = step.Label
                         });
+
+                    StepStarted?.Invoke(this, new SetupStepDetails(step.Number, step.Label));
                 }
 
                 LogGlobal($"");
@@ -1158,6 +1160,9 @@ namespace Neon.Kube
 
         /// <inheritdoc/>
         public event SetupStatusChangedDelegate StatusChangedEvent;
+
+        /// <inheritdoc/>
+        public event EventHandler<SetupStepDetails> StepStarted;
 
         /// <inheritdoc/>
         public SetupConsoleWriter ConsoleWriter { get; private set; }

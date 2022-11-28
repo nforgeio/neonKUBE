@@ -66,7 +66,6 @@ OPTIONS:
     --node-image-uri            - Overrides the default node image URI.
 
                                   NOTE: This is ignored for [--debug] mode.
-
                                   NOTE: This is ignored when [--node-image-path] is present.
 
     --node-image-path=PATH      - Uses the node image at the PATH specified rather than
@@ -104,6 +103,9 @@ OPTIONS:
                                   NOTE: This mode is not supported for cloud and
                                         bare-metal environments.
 
+    --quiet                     - Only print the currently executing step rather than
+                                  displaying detailed setup status.
+
     --base-image-name           - Specifies the base image name to use when operating
                                   in [--debug] mode.  This will be the name of the base
                                   image file as published to our public S3 bucket for
@@ -115,7 +117,7 @@ OPTIONS:
                                   NOTE: This is required for [--debug]
 
     --private-image             - Specifies that the private node image should be deployed.
-                                  Only NEONFORGE maintainers are permitted to use this.
+                                  Only NEONFORGE maintainers should use this.
 ";
 
         /// <inheritdoc/>
@@ -132,6 +134,7 @@ OPTIONS:
             "--disable-pending", 
             "--remove-templates", 
             "--debug",
+            "--quiet",
             "--base-image-name",
             "--private-image"
         };
@@ -177,6 +180,7 @@ OPTIONS:
             var nodeImageUri      = commandLine.GetOption("--node-image-uri");
             var nodeImagePath     = commandLine.GetOption("--node-image-path");
             var debug             = commandLine.HasOption("--debug");
+            var quiet             = commandLine.HasOption("--quiet");
             var baseImageName     = commandLine.GetOption("--base-image-name");
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
             var disablePending    = commandLine.HasOption("--disable-pending");
@@ -288,15 +292,30 @@ OPTIONS:
                 packageCacheEndpoints:  packageCacheEndpoints,
                 unredacted:             commandLine.HasOption("--unredacted"),
                 debugMode:              debug,
-                baseImageName:          baseImageName);
+                baseImageName:          baseImageName,
+                disableConsoleOutput:   quiet);
 
             controller.DisablePendingTasks = disablePending;
 
-            controller.StatusChangedEvent +=
-                status =>
-                {
-                    status.WriteToConsole();
-                };
+            if (quiet)
+            {
+                Console.WriteLine($"Preparing: {clusterDefinition.Name}");
+                Console.WriteLine();
+
+                controller.StepStarted +=
+                    (sender, step) =>
+                    {
+                        Console.WriteLine($"{step.Number,5}: {step.Label}");
+                    };
+            }
+            else
+            {
+                controller.StatusChangedEvent +=
+                    status =>
+                    {
+                        status.WriteToConsole();
+                    };
+            }
 
             switch (await controller.RunAsync())
             {
@@ -306,6 +325,7 @@ OPTIONS:
 
                     if (pendingGroups.Count > 0)
                     {
+                        Console.WriteLine();
                         Console.WriteLine($"*** ERROR: [{pendingGroups.Count}] pending task groups have not been awaited:");
                         Console.WriteLine();
 

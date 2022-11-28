@@ -38,7 +38,6 @@ using Neon.Kube.Resources;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
-using Neon.Time;
 using Neon.Tasks;
 
 namespace Neon.Kube
@@ -141,14 +140,14 @@ namespace Neon.Kube
             RunOptions              defaultRunOptions = RunOptions.None)
             
             : this(
-                  clusterDefinition:        context.Extension.ClusterDefinition,
-                  hostingManagerFactory:    hostingManagerFactory, 
-                  cloudMarketplace:         cloudMarketplace,
-                  operation:                operation, 
-                  nodeImageUri:             nodeImageUri, 
-                  nodeImagePath:            nodeImagePath, 
-                  nodeProxyCreator:         nodeProxyCreator, 
-                  defaultRunOptions:        defaultRunOptions)
+                clusterDefinition:        context.Extension.ClusterDefinition,
+                hostingManagerFactory:    hostingManagerFactory, 
+                cloudMarketplace:         cloudMarketplace,
+                operation:                operation, 
+                nodeImageUri:             nodeImageUri, 
+                nodeImagePath:            nodeImagePath, 
+                nodeProxyCreator:         nodeProxyCreator, 
+                defaultRunOptions:        defaultRunOptions)
         {
             this.context = context;
         }
