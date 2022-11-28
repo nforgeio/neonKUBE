@@ -17,7 +17,7 @@ release:
 
 image:
   pullPolicy: IfNotPresent
-  repository: neonkube/""
+  repository: ""
 
 defaultStorageConfig:
   enabled: "true"

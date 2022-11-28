@@ -135,9 +135,9 @@ cluster:
   name: neonkube
 image:
   registry: registry.neon.local
-  repository: neonkube/"oauth2-proxy-oauth2-proxy"
-  tag: "v7.4.0"
-  pullPolicy: "IfNotPresent"
+  repository: neonkube/oauth2-proxy-oauth2-proxy
+  tag: v7.4.0
+  pullPolicy: IfNotPresent
 
 # Optionally specify an array of imagePullSecrets.
 # Secrets must be manually created in the namespace.
