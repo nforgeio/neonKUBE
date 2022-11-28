@@ -1,19 +1,19 @@
-organization: registry.neon.local
+registry: registry.neon.local
 tag: 1.14.1-distroless
 
 
 images:
-  organization: registry.neon.local
+  registry: registry.neon.local
   operator: 
-    repository: operator
+    repository: neonkube/operator
     tag: 1.14.1-distroless
   istio:
     tag: 1.14.1-distroless
   coredns:
-    repository: coredns-coredns
+    repository: neonkube/coredns-coredns
     tag: 1.6.2
   coreDNSPlugin:
-    repository: coredns-plugin
+    repository: neonkube/coredns-plugin
     tag: 0.2-istio-1.1
 # ImagePullSecrets for operator ServiceAccount, list of secrets in the same namespace
 # used to pull operator image. Must be set for any cluster configured with private docker registry.

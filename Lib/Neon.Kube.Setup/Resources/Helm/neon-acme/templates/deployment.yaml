@@ -21,7 +21,7 @@ spec:
       priorityClassName: {{ .Values.priorityClassName }}
       containers:
         - name: neon-acme
-          image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: IfNotPresent
           args:
             - --tls-cert-file=/tls/tls.crt

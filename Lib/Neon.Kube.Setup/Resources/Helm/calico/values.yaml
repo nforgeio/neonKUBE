@@ -3,18 +3,18 @@
 # network, vxlan and ipam according to your deployment. 
 
 images:
-  organization: registry.neon.local
+  registry: registry.neon.local
   node:
-    repository: calico-node
+    repository: neonkube/calico-node
     tag: v3.22.2
   cni:
-    repository: calico-cni
+    repository: neonkube/calico-cni
     tag: v3.22.2
   kubeControllers:
-    repository: calico-kube-controllers
+    repository: neonkube/calico-kube-controllers
     tag: v3.22.2
   pod2Daemon:
-    repository: calico-pod2daemon-flexvol
+    repository: neonkube/calico-pod2daemon-flexvol
     tag: v3.22.2
 
 ipv4PoolCidr: "10.254.0.0/16"

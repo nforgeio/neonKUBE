@@ -130,9 +130,9 @@ cluster:
   domain: keycloak.cluster.neoncluster.io
   name: neonkube
 image:
-  organization: registry.neon.local
-  repository: "oauth2-proxy-oauth2-proxy"
-  tag: "v7.3.0"
+  registry: registry.neon.local
+  repository: neonkube/"oauth2-proxy-oauth2-proxy"
+  tag: "v7.4.0"
   pullPolicy: "IfNotPresent"
 
 # Optionally specify an array of imagePullSecrets.

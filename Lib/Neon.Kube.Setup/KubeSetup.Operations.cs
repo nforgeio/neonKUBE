@@ -444,7 +444,7 @@ apiVersion: kubeadm.k8s.io/v1beta3
 kind: ClusterConfiguration
 clusterName: {cluster.Name}
 kubernetesVersion: ""v{KubeVersions.Kubernetes}""
-imageRepository: ""{KubeConst.LocalClusterRegistry}""
+imagerepository: ""{KubeConst.LocalClusterRegistry}""
 apiServer:
   extraArgs:
     bind-address: 0.0.0.0

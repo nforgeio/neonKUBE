@@ -36,7 +36,7 @@ nfsProvisioner:
     # Make sure that registry name end with a '/'.
     # For example : quay.io/ is a correct value here and quay.io is incorrect
     registry: registry.neon.local
-    repository: openebs-provisioner-nfs
+    repository: neonkube/openebs-provisioner-nfs
     tag: 0.9.0
     pullPolicy: IfNotPresent
   enableLeaderElection: "true"
@@ -45,7 +45,7 @@ nfsProvisioner:
   # the tag will be the same as a provisioner-nfs image tag
   nfsServerAlpineImage:
     registry: registry.neon.local
-    repository: openebs-nfs-server-alpine
+    repository: neonkube/openebs-nfs-server-alpine
     tag: 0.9.0
   resources:
   # We usually recommend not to specify default resources and to leave this as a conscious

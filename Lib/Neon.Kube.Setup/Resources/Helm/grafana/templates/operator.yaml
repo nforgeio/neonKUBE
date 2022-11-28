@@ -34,7 +34,7 @@ spec:
           command:
             - /manager
           args:
-            - --grafana-image={{ .Values.image.organization }}/{{ .Values.image.repository }}
+            - --grafana-image={{ .Values.image.registry }}/{{ .Values.image.repository }}
             - --grafana-image-tag={{ .Values.image.tag }}
             - --grafana-plugins-init-container-image={{ .Values.pluginsInit.image.organization }}/{{ .Values.pluginsInit.image.repository }}
             - --grafana-plugins-init-container-tag={{ .Values.pluginsInit.image.tag }}

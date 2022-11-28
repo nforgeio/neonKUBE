@@ -55,7 +55,7 @@ featureGates: ""
 
 image:
   registry: registry.neon.local
-  repository: jetstack-cert-manager-controller
+  repository: neonkube/jetstack-cert-manager-controller
 
   # Override the image tag to deploy by setting this variable.
   # If no value is set, the chart's appVersion will be used.
@@ -269,7 +269,7 @@ webhook:
 
   image:
     registry: registry.neon.local
-    repository: jetstack-cert-manager-webhook
+    repository: neonkube/jetstack-cert-manager-webhook
 
     # Override the image tag to deploy by setting this variable.
     # If no value is set, the chart's appVersion will be used.
@@ -370,7 +370,7 @@ cainjector:
 
   image:
     registry: registry.neon.local
-    repository: jetstack-cert-manager-cainjector
+    repository: neonkube/jetstack-cert-manager-cainjector
 
     # Override the image tag to deploy by setting this variable.
     # If no value is set, the chart's appVersion will be used.

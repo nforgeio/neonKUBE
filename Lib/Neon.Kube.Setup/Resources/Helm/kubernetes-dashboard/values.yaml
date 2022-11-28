@@ -21,8 +21,8 @@ fullnameOverride: kubernetes-dashboard
 
 image:
   ## Repository for container
-  organization: registry.neon.local
-  repository: kubernetesui-dashboard
+  registry: registry.neon.local
+  repository: neonkube/kubernetesui-dashboard
   tag: v2.6.0
   pullPolicy: IfNotPresent
   pullSecrets: []
@@ -213,8 +213,8 @@ metricsScraper:
   enabled: true
   interval: 60s
   image:
-    organization: registry.neon.local
-    repository: kubernetesui-metrics-scraper
+    registry: registry.neon.local
+    repository: neonkube/kubernetesui-metrics-scraper
     tag: v1.0.7
   resources: {}
   ## SecurityContext for the kubernetes dashboard metrics scraper container

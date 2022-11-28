@@ -25,7 +25,7 @@ tempo:
     # -- The Docker registry
     registry: registry.neon.local
     # -- Docker image repository
-    repository: grafana-tempo
+    repository: neonkube/grafana-tempo
     # -- Overrides the image tag whose default is the chart's appVersion
     tag: 1.4.1
     pullPolicy: IfNotPresent
@@ -77,7 +77,7 @@ ingester:
     # -- The Docker registry for the ingester image. Overrides `tempo.image.registry`
     registry: null
     # -- Docker image repository for the ingester image. Overrides `tempo.image.repository`
-    repository: null
+    repository: neonkube/null
     # -- Docker image tag for the ingester image. Overrides `tempo.image.tag`
     tag: null
   # -- The name of the PriorityClass for ingester pods
@@ -174,7 +174,7 @@ distributor:
     # -- The Docker registry for the ingester image. Overrides `tempo.image.registry`
     registry: null
     # -- Docker image repository for the ingester image. Overrides `tempo.image.repository`
-    repository: null
+    repository: neonkube/null
     # -- Docker image tag for the ingester image. Overrides `tempo.image.tag`
     tag: null
   service:
@@ -252,7 +252,7 @@ compactor:
     # -- The Docker registry for the compactor image. Overrides `tempo.image.registry`
     registry: null
     # -- Docker image repository for the compactor image. Overrides `tempo.image.repository`
-    repository: null
+    repository: neonkube/null
     # -- Docker image tag for the compactor image. Overrides `tempo.image.tag`
     tag: null
   # -- The name of the PriorityClass for compactor pods
@@ -308,7 +308,7 @@ querier:
     # -- The Docker registry for the querier image. Overrides `tempo.image.registry`
     registry: null
     # -- Docker image repository for the querier image. Overrides `tempo.image.repository`
-    repository: null
+    repository: neonkube/null
     # -- Docker image tag for the querier image. Overrides `tempo.image.tag`
     tag: null
   # -- The name of the PriorityClass for querier pods
@@ -385,7 +385,7 @@ queryFrontend:
       # -- The Docker registry for the query-frontend image. Overrides `tempo.image.registry`
       registry: null
       # -- Docker image repository for the query-frontend image. Overrides `tempo.image.repository`
-      repository: grafana-tempo-query
+      repository: neonkube/grafana-tempo-query
       # -- Docker image tag for the query-frontend image. Overrides `tempo.image.tag`
       tag: null
     # -- Resource requests and limits for the query
@@ -420,7 +420,7 @@ queryFrontend:
     # -- The Docker registry for the query-frontend image. Overrides `tempo.image.registry`
     registry: null
     # -- Docker image repository for the query-frontend image. Overrides `tempo.image.repository`
-    repository: null
+    repository: neonkube/null
     # -- Docker image tag for the query-frontend image. Overrides `tempo.image.tag`
     tag: null
   service:

@@ -19,7 +19,7 @@ spec:
   {{- if .Values.components.chartMuseum.enabled }}
   chartmuseum:
     absoluteUrl: false
-    image: {{ .Values.image.organization }}/harbor-chartmuseum-photon:v{{ .Values.harbor.version }}
+    image: {{ .Values.image.registry }}/harbor-chartmuseum-photon:v{{ .Values.harbor.version }}
     nodeSelector:
     {{- toYaml .Values.nodeSelector | nindent 8 }}
     {{- if .Values.tolerations }}
@@ -31,7 +31,7 @@ spec:
     resources: {}
   {{- end }}
   core:
-    image: {{ .Values.image.organization }}/harbor-core:v{{ .Values.harbor.version }}
+    image: {{ .Values.image.registry }}/harbor-core:v{{ .Values.harbor.version }}
     resources: {}
     nodeSelector:
     {{- toYaml .Values.nodeSelector | nindent 8 }}
@@ -86,11 +86,11 @@ spec:
         v4auth: true
   imageSource:
     imagePullPolicy: {{ .Values.image.pullPolicy }}
-    repository: {{ .Values.image.organization }}
+    repository: {{ .Values.image.registry }}
   internalTLS:
     enabled: false
   jobservice:
-    image: {{ .Values.image.organization }}/harbor-jobservice:v{{ .Values.harbor.version }}
+    image: {{ .Values.image.registry }}/harbor-jobservice:v{{ .Values.harbor.version }}
     nodeSelector:
     {{- toYaml .Values.nodeSelector | nindent 6 }}
     {{- if .Values.tolerations }}
@@ -106,7 +106,7 @@ spec:
   notary:
     migrationEnabled: true
     server:
-      image: {{ .Values.image.organization }}/harbor-notary-server-photon:v{{ .Values.harbor.version }}
+      image: {{ .Values.image.registry }}/harbor-notary-server-photon:v{{ .Values.harbor.version }}
       nodeSelector:
       {{- toYaml .Values.nodeSelector | nindent 8 }}
       {{- if .Values.tolerations }}
@@ -116,7 +116,7 @@ spec:
       {{- end }}
       {{- end }}
     signer:
-      image: {{ .Values.image.organization }}/harbor-notary-signer-photon:v{{ .Values.harbor.version }}
+      image: {{ .Values.image.registry }}/harbor-notary-signer-photon:v{{ .Values.harbor.version }}
       nodeSelector:
       {{- toYaml .Values.nodeSelector | nindent 8 }}
       {{- if .Values.tolerations }}
@@ -136,7 +136,7 @@ spec:
         port: 26379
         sentinelMasterSet: master
   registry:
-    image: {{ .Values.image.organization }}/harbor-registry-photon:v{{ .Values.harbor.version }}
+    image: {{ .Values.image.registry }}/harbor-registry-photon:v{{ .Values.harbor.version }}
     nodeSelector:
     {{- toYaml .Values.nodeSelector | nindent 6 }}
     {{- if .Values.tolerations }}
@@ -153,7 +153,7 @@ spec:
       enabled: {{ .Values.metrics.enabled }}
   {{- if .Values.components.trivy.enabled }}
   trivy:
-    image: {{ .Values.image.organization }}/harbor-trivy-adapter-photon:v{{ .Values.harbor.version }}
+    image: {{ .Values.image.registry }}/harbor-trivy-adapter-photon:v{{ .Values.harbor.version }}
     nodeSelector:
     {{- toYaml .Values.nodeSelector | nindent 6 }}
     {{- if .Values.tolerations }}
