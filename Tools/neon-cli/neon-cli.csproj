@@ -1,31 +1,28 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
 		<OutputType>Exe</OutputType>
+		<TargetFramework>net7.0</TargetFramework>
+		<RuntimeIdentifier>win10-x64</RuntimeIdentifier>
 		<RootNamespace>NeonCli</RootNamespace>
 		<AssemblyName>neon</AssemblyName>
-		<RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+		<PlatformTarget>AnyCPU</PlatformTarget>
 		<Configurations>Debug;Release</Configurations>
 		<Description>Manage neonKUBE clusters from the command line</Description>
-		<SelfContained>true</SelfContained>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>DEBUG;TRACE</DefineConstants>
-		<PublishSingleFile>false</PublishSingleFile>
-		<SelfContained>false</SelfContained>
-		<PublishTrimmed>false</PublishTrimmed>
-		<PublishReadyToRun>false</PublishReadyToRun>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	<PropertyGroup>
 		<PublishSingleFile>false</PublishSingleFile>
 		<SelfContained>true</SelfContained>
 		<PublishTrimmed>false</PublishTrimmed>
-		<TrimMode>copyused</TrimMode>
+		<TrimMode>partial</TrimMode>
 		<PublishReadyToRun>true</PublishReadyToRun>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<None Remove="app.ico" />
@@ -38,20 +35,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="GitInfo" Version="2.2.0">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
 		<PackageReference Include="KubernetesClient" Version="7.2.19" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
 		<PackageReference Include="Microsoft.Windows.Compatibility" Version="6.0.0" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2371-dev-master" />
-		<PackageReference Include="Neon.Deployment" Version="10000.0.2371-dev-master" />
-		<PackageReference Include="Neon.WinTTY" Version="10000.0.2371-dev-master" />
-		<PackageReference Include="Neon.XenServer" Version="10000.0.2371-dev-master" />
-		<PackageReference Include="OpenTelemetry.Api" Version="1.4.0-beta.1" />
-		<PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.4.0-beta.1" />
-		<PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol.Logs" Version="1.4.0-beta.1" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2579-dev-master" />
+		<PackageReference Include="Neon.Deployment" Version="10000.0.2579-dev-master" />
+		<PackageReference Include="Neon.WinTTY" Version="10000.0.2579-dev-master" />
 		<PackageReference Include="System.Diagnostics.StackTrace" Version="4.3.0" />
 		<PackageReference Include="System.Runtime" Version="4.3.1" />
 		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
@@ -64,8 +53,8 @@
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Aws\Neon.Kube.Aws.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Azure\Neon.Kube.Azure.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.BareMetal\Neon.Kube.BareMetal.csproj" />
+		<ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Google\Neon.Kube.Google.csproj" />
-		<ProjectReference Include="..\..\Lib\Neon.Kube.GrpcProto\Neon.Kube.GrpcProto.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.HyperV\Neon.Kube.HyperV.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Setup\Neon.Kube.Setup.csproj" />
@@ -91,10 +80,5 @@
 	    <LastGenOutput>Resources.Designer.cs</LastGenOutput>
 	  </EmbeddedResource>
 	</ItemGroup>
-
-	<Target Name="PubCore" AfterTargets="AfterBuild" Condition="true">
-		<Message Importance="high" Text="Publish: $(ProjectPath)" />
-		<Exec Command="pubcore --no-cmd &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; $(ConfigurationName) &quot;$(NK_BUILD)\neon&quot; win10-x64" />
-	</Target>
-
+	
 </Project>

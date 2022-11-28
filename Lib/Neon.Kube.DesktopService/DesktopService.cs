@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    DesktopService.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -99,10 +99,10 @@ namespace Neon.Kube.DesktopService
         //---------------------------------------------------------------------
         // Instance members
 
-        private bool                        isDisposed = false;
-        private string                      socketPath;
-        private Task                        task;
-        private CancellationTokenSource     cts;
+        private bool                                isDisposed = false;
+        private readonly string                     socketPath;
+        private readonly Task                       task;
+        private readonly CancellationTokenSource    cts;
 
         /// <summary>
         /// <para>

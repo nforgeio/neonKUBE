@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    KubeConst.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ using k8s.Models;
 
 using Neon.Collections;
 using Neon.Common;
+using Neon.Kube.BuildInfo;
 using Neon.Net;
 
 namespace Neon.Kube
@@ -208,7 +209,17 @@ namespace Neon.Kube
         /// <summary>
         /// Hostname used to reference the local Harbor registry within the cluster.
         /// </summary>
-        public const string LocalClusterRegistry = "registry.neon.local";
+        public const string LocalClusterRegistryHostName = "registry.neon.local";
+
+        /// <summary>
+        /// The local cluster registry project.
+        /// </summary>
+        public const string LocalClusterRegistryProject = "neonkube";
+
+        /// <summary>
+        /// The local cluster build in registry.
+        /// </summary>
+        public const string LocalClusterRegistry = $"{LocalClusterRegistryHostName}/{LocalClusterRegistryProject}";
 
         /// <summary>
         /// User name used to log CRI-O on the cluster nodes into the local

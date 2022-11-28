@@ -11,6 +11,7 @@ rules:
   - neonnodetasks/status
   - neoncontainerregistries
   - neonssoclients
+  - miniobuckets
   verbs:
   - create
   - get
@@ -77,6 +78,12 @@ rules:
   - cert-manager.io
   resources:
   - certificates
+- verbs:
+  - '*'
+  apiGroups:
+  - minio.min.io
+  resources:
+  - tenants
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

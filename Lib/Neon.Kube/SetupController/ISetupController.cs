@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    ISetupController.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -114,6 +114,23 @@ namespace Neon.Kube
         /// applications.
         /// </summary>
         SetupConsoleWriter ConsoleWriter { get; }
+
+        /// <summary>
+        /// <para>
+        /// Optional event which is raised when the setup operation completes.  The <b>sender</b> argument
+        /// will be passed as the <see cref="ISetupController"/> instance and the <see cref="Exception"/>
+        /// argument will be <c>null</c> when the setup operation completed successfully or an exception
+        /// detailing the failure.
+        /// </para>
+        /// <para>
+        /// This presents a good opportunity for setup controller users to capture additional information 
+        /// about failed operations, etc. in common code.
+        /// </para>
+        /// <note>
+        /// Setup controller implementions are <b>not required</b> to set this.
+        /// </note>
+        /// </summary>
+        event EventHandler<Exception> Finished;
 
         /// <summary>
         /// <para>

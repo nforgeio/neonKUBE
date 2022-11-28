@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    NodeSshProxy.ClusterSetup.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -476,7 +476,7 @@ service ntp restart
 $@"
 127.0.0.1	    localhost
 127.0.0.1       kubernetes-control-plane neon-desktop
-{nodeAddress}{separator}{Name} {KubeConst.LocalClusterRegistry}
+{nodeAddress}{separator}{Name} {KubeConst.LocalClusterRegistryHostName}
 ::1             localhost ip6-localhost ip6-loopback
 ff02::1         ip6-allnodes
 ff02::2         ip6-allrouters
@@ -777,6 +777,7 @@ systemctl enable kubelet
         /// </param>
         /// <param name="values">Optionally specifies Helm chart values.</param>
         /// <param name="progressMessage">Optionally specifies progress message.  This defaults to <paramref name="releaseName"/>.</param>
+        /// <param name="timeout">Optionally specifies the timeout.  This defaults to <b>300 seconds</b>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if the priority class specified by <paramref name="prioritySpec"/> is not defined by <see cref="PriorityClass"/>.</exception>
         /// <remarks>
@@ -792,11 +793,17 @@ systemctl enable kubelet
             string                              @namespace      = "default",
             string                              prioritySpec    = null,
             Dictionary<string, object>          values          = null,
-            string                              progressMessage = null)
+            string                              progressMessage = null,
+            TimeSpan                            timeout         = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(chartName), nameof(chartName));
+
+            if (timeout <= TimeSpan.Zero)
+            {
+                timeout = TimeSpan.FromSeconds(300);
+            }
 
             chartName = chartName.Replace('-', '_');
 
@@ -876,11 +883,15 @@ systemctl enable kubelet
                             switch (value.Value)
                             {
                                 case string s:
+
                                     valueOverrides.AppendWithSeparator($"--set-string {value.Key}=\"{value.Value}\"");
                                     break;
+
                                 case Boolean b:
+
                                     valueOverrides.AppendWithSeparator($"--set {value.Key}=\"{value.Value.ToString().ToLower()}\"");
                                     break;
+
                                 default:
                                     valueOverrides.AppendWithSeparator($"--set {value.Key}={value.Value}");
                                     break;
@@ -889,8 +900,9 @@ systemctl enable kubelet
                     }
 
                     var helmChartScript = new StringBuilder();
+                    var timeoutSeconds  = (int)Math.Ceiling(timeout.TotalSeconds);
 
-                helmChartScript.AppendLineLinux(
+                    helmChartScript.AppendLineLinux(
 $@"
 set -euo pipefail
 
@@ -900,7 +912,7 @@ cd {KubeNodeFolder.Helm}
                     if (controller.Get<bool>(KubeSetupProperty.MaintainerMode))
                     {
                         helmChartScript.AppendLineLinux(
-        $@"
+$@"
 if `helm list --namespace {@namespace} | awk '{{print $1}}' | grep -q ""^{releaseName}$""`; then
     helm uninstall {releaseName} --namespace {@namespace}
 fi
@@ -912,20 +924,21 @@ $@"
 helm install {releaseName} --debug --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} ./{chartName}
 
 START=`date +%s`
-DEPLOY_END=$((START+15))
+DEPLOY_END=$((START+{timeoutSeconds}))
 
 set +e
 
 until [ `helm status {releaseName} --namespace {@namespace} | grep ""STATUS: deployed"" | wc -l` -eq 1  ];
 do
-  if [ $((`date +%s`)) -gt $DEPLOY_END ]; then
-    helm uninstall {releaseName} --namespace {@namespace} || true
-    exit 1
-  fi
+    if [ $((`date +%s`)) -gt $DEPLOY_END ]; then
+        echo 'ERROR: Helm chart for [{@namespace}/{releaseName}] failed to deploy after [{timeoutSeconds}] seconds.' >&2
+        helm uninstall {releaseName} --namespace {@namespace} || true
+        exit 1
+   fi
+
    sleep 1
 done
 ");
-
                     var scriptString = helmChartScript.ToString();
 
                     await NeonHelper.WaitForAsync(
@@ -933,7 +946,7 @@ done
                             {
                                 try
                                 {
-                                    SudoCommand(CommandBundle.FromScript(helmChartScript), RunOptions.FaultOnError).EnsureSuccess();
+                                    SudoCommand(CommandBundle.FromScript(scriptString), RunOptions.FaultOnError).EnsureSuccess();
 
                                     return await Task.FromResult(true);
                                 }
@@ -945,10 +958,7 @@ done
                             timeout: TimeSpan.FromSeconds(300),
                             pollInterval: TimeSpan.FromSeconds(1),
                             cancellationToken: controller.CancellationToken);
-
                 });
-
-            await Task.CompletedTask;
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    HeadendClient.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+using Neon.Common;
 using Neon.ModelGen;
 
 namespace Neon.Kube.Models.Headend
@@ -37,22 +39,29 @@ namespace Neon.Kube.Models.Headend
             [FromQuery] string addresses);
 
         [HttpGet]
-        [Route("image/download")]
+        [Route("image/node")]
         string GetNodeImageManifestUriAsync(
             [FromQuery] string hostingEnvironment,
             [FromQuery] string version,
-            [FromQuery] string architecture);
+            [FromQuery] CpuArchitecture architecture);
 
         [HttpGet]
-        [Route("image/azure")]
+        [Route("image/desktop")]
+        string GetDesktopImageManifestUriAsync(
+            [FromQuery] string hostingEnvironment,
+            [FromQuery] string version,
+            [FromQuery] CpuArchitecture architecture);
+
+        [HttpGet]
+        [Route("image/node/azure")]
         AzureImageDetails GetAzureImageDetailsAsync(
             [FromQuery] string version,
-            [FromQuery] string architecture);
+            [FromQuery] CpuArchitecture architecture);
 
         [HttpPost]
-        [BodyStream]
-        [Route("logs")]
-        void UploadClusterSetupLogAsync(
+        [BodyStream(IncludeContentSize = true)]
+        [Route("deployment-log")]
+        void PostDeploymentLogAsync(
             [FromQuery] string uploadId,
             [FromQuery] DateTime timestampUtc,
             [FromQuery] string version,

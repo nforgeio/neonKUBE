@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    KubeSetup.Operations.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,9 +31,9 @@ using Neon.Cryptography;
 using Neon.IO;
 using Neon.Kube.Resources;
 using Neon.Net;
+using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
-using Neon.Kube.Operator;
 
 using k8s;
 using k8s.Models;
@@ -45,6 +45,10 @@ namespace Neon.Kube
 {
     public static partial class KubeSetup
     {
+        // Used for retrying operations within steps when presumably transient errors occur.
+
+        private static IRetryPolicy operationRetryPolicy = new LinearRetryPolicy(e => true, maxAttempts: 10, retryInterval: TimeSpan.FromSeconds(30));
+
         /// <summary>
         /// Configures a local HAProxy container that makes the Kubernetes etcd
         /// cluster highly available.
@@ -2639,7 +2643,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             },
                             PoolConfig = new V1CStorPoolConfig()
                             {
-                                DataRaidGroupType = DataRaidGroupType.Stripe,
+                                DataRaidGroupType = DataRaidGroupTypes.Stripe,
                                 Tolerations       = new List<V1Toleration>()
                                 {
                                     { new V1Toleration() { Effect = "NoSchedule", OperatorProperty = "Exists" } },
@@ -3286,6 +3290,7 @@ $@"- name: StorageType
                     values.Add($"serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
                     values.Add($"minio.enabled", true);
+                    values.Add($"minio.bucket.tsdb.quota", clusterAdvice.MetricsQuota);
 
                     if (cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() == 1)
                     {
@@ -3295,9 +3300,6 @@ $@"- name: StorageType
                         values.Add($"compactor.config.deletion_delay", "1h");
                         values.Add($"blocksStorage.bucketStore.ignore_deletion_mark_delay", "15m");
                     }
-
-                    await CreateMinioBucketAsync(controller, controlNode, KubeMinioBucket.Mimir, clusterAdvice.MetricsQuota);
-                    await CreateMinioBucketAsync(controller, controlNode, KubeMinioBucket.MimirRuler);
 
                     controller.ThrowIfCancelled();
                     await controlNode.InvokeIdempotentAsync("setup/monitoring-mimir-secret",
@@ -3445,13 +3447,13 @@ $@"- name: StorageType
                     values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
 
                     values.Add($"minio.enabled", true);
+                    values.Add($"minio.bucket.quota", clusterAdvice.LogsQuota);
 
                     if (cluster.Definition.Nodes.Where(node => node.Labels.LogsInternal).Count() >= 3)
                     {
                         values.Add($"config.replication_factor", 3);
                     }
 
-                    await CreateMinioBucketAsync(controller, controlNode, KubeMinioBucket.Loki, clusterAdvice.LogsQuota);
                     values.Add($"loki.schemaConfig.configs[0].object_store", "aws");
                     values.Add($"loki.storageConfig.boltdb_shipper.shared_store", "s3");
 
@@ -3580,8 +3582,7 @@ $@"- name: StorageType
                     }
 
                     values.Add($"minio.enabled", true);
-
-                    await CreateMinioBucketAsync(controller, controlNode, KubeMinioBucket.Tempo, clusterAdvice.TracesQuota);
+                    values.Add($"minio.bucket.quota", clusterAdvice.TracesQuota);
 
                     int i = 0;
 
@@ -4065,23 +4066,27 @@ $@"- name: StorageType
                         {
                             controller.LogProgress(controlNode, verb: "wait for", message: "minio");
 
-                            var minioPod = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
+                            await operationRetryPolicy.InvokeAsync(
+                                async () =>
+                                {
+                                    var minioPod = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
 
-                            (await k8s.NamespacedPodExecWithRetryAsync(
-                                retryPolicy:              podExecRetry,
-                                namespaceParameter: minioPod.Namespace(),
-                                name:               minioPod.Name(),
-                                container:          "minio-operator",
-                                command:            new string[] {
-                                    "/bin/bash",
-                                    "-c",
-                                    $@"echo '{{""Version"":""2012-10-17"",""Statement"":[{{""Effect"":""Allow"",""Action"":[""admin:*""]}},{{""Effect"":""Allow"",""Action"":[""s3:*""],""Resource"":[""arn:aws:s3:::*""]}}]}}' > /tmp/superadmin.json"
-                                })).EnsureSuccess();
+                                    (await k8s.NamespacedPodExecWithRetryAsync(
+                                        retryPolicy:        podExecRetry,
+                                        namespaceParameter: minioPod.Namespace(),
+                                        name:               minioPod.Name(),
+                                        container:          "minio-operator",
+                                        command:            new string[] {
+                                            "/bin/bash",
+                                            "-c",
+                                            $@"echo '{{""Version"":""2012-10-17"",""Statement"":[{{""Effect"":""Allow"",""Action"":[""admin:*""]}},{{""Effect"":""Allow"",""Action"":[""s3:*""],""Resource"":[""arn:aws:s3:::*""]}}]}}' > /tmp/superadmin.json"
+                                        })).EnsureSuccess();
 
-                            controller.ThrowIfCancelled();
-                            (await cluster.ExecMinioCommandAsync(
-                                retryPolicy:    podExecRetry,
-                                mcCommand:      "admin policy add minio superadmin /tmp/superadmin.json")).EnsureSuccess();
+                                    controller.ThrowIfCancelled();
+                                    (await cluster.ExecMinioCommandAsync(
+                                        retryPolicy:    podExecRetry,
+                                        mcCommand:      "admin policy add minio superadmin /tmp/superadmin.json")).EnsureSuccess();
+                                });
                         });
                 });
         }
@@ -4300,8 +4305,6 @@ $@"- name: StorageType
                     var accessKey   = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
                     var secretKey   = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
                     var serviceUser = await KubeHelper.GetClusterLdapUserAsync(k8s, "serviceuser");
-
-                    await CreateMinioBucketAsync(controller, controlNode, KubeMinioBucket.Harbor);
 
                     // Install the Harbor Helm chart.
 
@@ -4527,7 +4530,7 @@ $@"- name: StorageType
             var k8s           = GetK8sClient(controller);
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonDashboard);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonNodeAgent);
             
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/neon-dashboard-resources",
@@ -4609,8 +4612,8 @@ $@"- name: StorageType
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
-                    values.Add("resource.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
-                    values.Add("resource.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
+                    values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
+                    values.Add("resources.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
 
                     await controlNode.InstallHelmChartAsync(controller, "neon-node-agent",
                         releaseName:  "neon-node-agent",
@@ -4766,7 +4769,7 @@ $@"- name: StorageType
             }
 
             controller.ThrowIfCancelled();
-            await CreateStorageClass(controller, controlNode, "neon-internal-system-db");
+            await CreateHostPathStorageClass(controller, controlNode, "neon-internal-system-db");
 
             if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
             {
@@ -4831,6 +4834,56 @@ $@"- name: StorageType
                 });
 
             controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/system-db-volumes",
+                async () =>
+                {
+                    var nodes = cluster.Definition.SortedControlNodes.ToList();
+
+                    if (nodes.Count > serviceAdvice.ReplicaCount.Value)
+                    {
+                        serviceAdvice.ReplicaCount = nodes.Count;
+                    }
+
+                    var labels = new Dictionary<string, string>()
+                    {
+                        { "app", KubeService.NeonSystemDb },
+                        { "cluster-name", KubeService.NeonSystemDb }
+                    };
+
+                    for (int i=0; i < serviceAdvice.ReplicaCount; i++)
+                    {
+                        var pvc = new V1PersistentVolumeClaim()
+                        {
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Name = $"pgdata-neon-system-db-{i}",
+                                NamespaceProperty = KubeNamespace.NeonSystem,
+                                Annotations = new Dictionary<string, string>()
+                                {
+                                    { "volume.kubernetes.io/selected-node", nodes[i].Name }
+                                },
+                                Labels = labels
+                            },
+                            Spec = new V1PersistentVolumeClaimSpec()
+                            {
+                                AccessModes = new List<string>() { "ReadWriteOnce" },
+                                Resources   = new V1ResourceRequirements()
+                                {
+                                    Requests = new Dictionary<string, ResourceQuantity>()
+                                    {
+                                        { "storage", new ResourceQuantity("1Gi") }
+                                    }
+                                },
+                                StorageClassName = "neon-internal-system-db",
+                                VolumeMode       = "Filesystem"
+                            }
+                        };
+
+                        await k8s.CreateNamespacedPersistentVolumeClaimAsync(pvc, pvc.Namespace());
+                    }
+                });
+
+            controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/system-db",
                 async () =>
                 {
@@ -4839,6 +4892,7 @@ $@"- name: StorageType
                     values.Add($"replicas", serviceAdvice.ReplicaCount);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add("healthCheck.image.tag", KubeVersions.NeonKubeContainerImageTag);
+                    values.Add($"neonSystemDb.enableConnectionPooler", true);
 
                     int i = 0;
 
@@ -4873,6 +4927,7 @@ $@"- name: StorageType
                         new List<Task>()
                         {
                             k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-system-db-postgres-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
+                            k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-system-db-pooler", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                             k8s.WaitForStatefulSetAsync(KubeNamespace.NeonSystem, "neon-system-db", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                         });
                 });
@@ -5262,51 +5317,6 @@ $@"- name: StorageType
             }
 
             return connString;
-        }
-
-        /// <summary>
-        /// Creates a Minio bucket by using the mc client on one of the minio server pods.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
-        /// <param name="name">The new bucket name.</param>
-        /// <param name="quota">The bucket quota.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task CreateMinioBucketAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode, string name, string quota = null)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
-
-            controlNode.Status = $"create: [{name}] minio bucket";
-
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var minioSecret = await GetK8sClient(controller).ReadNamespacedSecretAsync("minio", KubeNamespace.NeonSystem);
-            var accessKey = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
-            var secretKey = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
-            var k8s = GetK8sClient(controller);
-
-            controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync($"setup/minio-bucket-{name}",
-                async () =>
-                {
-                    (await cluster.ExecMinioCommandAsync(
-                        retryPolicy: podExecRetry,
-                        mcCommand: $"mb minio/{name}")).EnsureSuccess();
-                });
-
-            controller.ThrowIfCancelled();
-            if (!string.IsNullOrEmpty(quota))
-            {
-                await controlNode.InvokeIdempotentAsync($"setup/minio-bucket-{name}-quota",
-                    async () =>
-                    {
-                        (await cluster.ExecMinioCommandAsync(
-                            retryPolicy: podExecRetry,
-                            mcCommand: $"admin bucket quota minio/{name} --hard {quota}")).EnsureSuccess();
-                    });
-            }
         }
 
         /// <summary>

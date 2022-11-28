@@ -421,7 +421,7 @@ dashboardsConfigMaps: {}
 grafana.ini:
   database:
     type: postgres
-    host: neon-system-db.neon-system.svc.cluster.local
+    host: neon-system-db-pooler.neon-system.svc.cluster.local
     name: grafana
     user: neon_service
     password: $__env{DATABASE_PASSWORD}

@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    NeonSsoClientController.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,9 +59,10 @@ using Newtonsoft.Json;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-using Prometheus;
-using Grpc.Net.Client;
 using Grpc.Core;
+using Grpc.Net.Client;
+
+using Prometheus;
 
 namespace NeonClusterOperator
 {
@@ -107,25 +108,27 @@ namespace NeonClusterOperator
                 new LeaderElectionConfig(
                     k8s,
                     @namespace: KubeNamespace.NeonSystem,
-                    leaseName: $"{Program.Service.Name}.ssoclients",
+                    leaseName: $"{Program.Service.Name}.ssoclient",
                     identity: Pod.Name,
                     promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_promoted", "Leader promotions"),
                     demotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_demoted", "Leader demotions"),
-                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_newLeader", "Leadership changes"));
+                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_new_leader", "Leadership changes"));
 
             var options = new ResourceManagerOptions()
             {
                 ErrorMaxRetryCount = int.MaxValue,
                 ErrorMaxRequeueInterval = TimeSpan.FromMinutes(10),
-                ErrorMinRequeueInterval = TimeSpan.FromSeconds(60),
+                ErrorMinRequeueInterval = TimeSpan.FromSeconds(5),
                 IdleCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "IDLE events processed."),
                 ReconcileCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "RECONCILE events processed."),
                 DeleteCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "DELETED events processed."),
                 StatusModifyCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "STATUS-MODIFY events processed."),
-                IdleErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle_error", "Failed Clusterssoclients IDLE event processing."),
-                ReconcileErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_reconcile_error", "Failed Clusterssoclients RECONCILE event processing."),
-                DeleteErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_delete_error", "Failed Clusterssoclients DELETE event processing."),
-                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_statusmodify_error", "Failed Clusterssoclients STATUS-MODIFY events processing.")
+                FinalizeCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_finalize", "FINALIZE events processed."),
+                IdleErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle_error", "Failed IDLE event processing."),
+                ReconcileErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_reconcile_error", "Failed RECONCILE event processing."),
+                DeleteErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_delete_error", "Failed DELETE event processing."),
+                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_statusmodify_error", "Failed STATUS-MODIFY events processing."),
+                FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_finalize_error", "Failed FINALIZE events processing.")
             };
 
             resourceManager = new ResourceManager<V1NeonSsoClient, NeonSsoClientController>(
@@ -207,6 +210,21 @@ namespace NeonClusterOperator
                     Id = resource.Spec.Id
                 });
 
+                var oauth2ProxyConfig = await k8s.ReadNamespacedConfigMapAsync("neon-sso-oauth2-proxy", KubeNamespace.NeonSystem);
+
+                var alphaConfig = NeonHelper.YamlDeserialize<Oauth2ProxyConfig>(oauth2ProxyConfig.Data["oauth2_proxy_alpha.cfg"]);
+
+                var provider = alphaConfig.Providers.Where(p => p.ClientId == "neon-sso").Single();
+
+                if (provider.OidcConfig.ExtraAudiences.Contains(resource.Spec.Id))
+                {
+                    provider.OidcConfig.ExtraAudiences.Remove(resource.Spec.Id);
+                }
+
+                oauth2ProxyConfig.Data["oauth2_proxy_alpha.cfg"] = NeonHelper.YamlSerialize(alphaConfig);
+
+                await k8s.ReplaceNamespacedConfigMapAsync(oauth2ProxyConfig, oauth2ProxyConfig.Name(), KubeNamespace.NeonSystem);
+
                 log.LogInformationEx(() => $"DELETED: {resource.Name()}");
             }
         }
@@ -282,6 +300,21 @@ namespace NeonClusterOperator
                         var updateClientResp = await dexClient.UpdateClientAsync(updateClientRequest);
                     }
                 }
+
+                var oauth2ProxyConfig = await k8s.ReadNamespacedConfigMapAsync("neon-sso-oauth2-proxy", KubeNamespace.NeonSystem);
+
+                var alphaConfig = NeonHelper.YamlDeserialize<Oauth2ProxyConfig>(oauth2ProxyConfig.Data["oauth2_proxy_alpha.cfg"]);
+
+                var provider = alphaConfig.Providers.Where(p => p.ClientId == "neon-sso").Single();
+                
+                if (!provider.OidcConfig.ExtraAudiences.Contains(resource.Spec.Id))
+                {
+                    provider.OidcConfig.ExtraAudiences.Add(resource.Spec.Id);
+                }
+
+                oauth2ProxyConfig.Data["oauth2_proxy_alpha.cfg"] = NeonHelper.YamlSerialize(alphaConfig);
+
+                await k8s.ReplaceNamespacedConfigMapAsync(oauth2ProxyConfig, oauth2ProxyConfig.Name(), KubeNamespace.NeonSystem);
             }
         }
     }

@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # FILE:         Dockerfile
 # CONTRIBUTOR:  Marcus Bowyer
-# COPYRIGHT:    Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 # limitations under the License.
 
 ARG         ORGANIZATION
-FROM        ${ORGANIZATION}/aspnet:latest
+FROM        mcr.microsoft.com/dotnet/aspnet:7.0.0-jammy-amd64
 MAINTAINER  marcus@neonforge.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME
@@ -49,5 +49,14 @@ RUN chmod 700 /*.sh \
     && chmod 770 /usr/bin/$APPNAME \
     && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/gai.conf
+
+RUN apt update -y \
+    && apt install -y curl \
+    && apt clean \
+    && curl -4fsSL --retry 10 --retry-delay 30 https://dl.min.io/client/mc/release/linux-amd64/mc --output /mc \
+    && chown -R 1000:1000 /mc \
+    && chmod 774 /mc \
+    && mkdir /.mc \
+    && chown -R 1000:1000 /.mc
 
 ENTRYPOINT ["/docker-entrypoint.sh"]

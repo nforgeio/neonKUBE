@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    ClusterSetupCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -98,15 +98,12 @@ OPTIONS:
                           NOTE: A non-zero exit code will be returned when this
                                 option is specified and one or more chechks fail.
 
-    --clusterspace      - Indicates that the command must not impact normal clusters
-                          by changing the current login, Kubernetes config or
-                          other files like cluster deployment logs.  This is
-                          used for automated CI/CD or unit test cluster deployments 
-                          while not disrupting the built-in neonDESKTOP or
-                          other normal clusters.
-
     --private-image     - Specifies that the private node image should be deployed.
-                          Only neonFORGE maintainers are permitted to use this.
+                          Only NEONFORGE maintainers are permitted to use this.
+
+    --no-telemetry      - Disables whether telemetry for failed cluster deployment,
+                          overriding the NEONKUBE_DISABLE_TELEMETRY environment variable.
+                          
 ";
 
         private KubeConfigContext   kubeContext;
@@ -125,8 +122,8 @@ OPTIONS:
             "--upload-charts",
             "--debug",
             "--check",
-            "--clusterspace",
-            "--private-image"
+            "--private-image",
+            "--no-telemetry"
         };
 
         /// <inheritdoc/>
@@ -158,10 +155,15 @@ OPTIONS:
             var debug             = commandLine.HasOption("--debug");
             var check             = commandLine.HasOption("--check");
             var uploadCharts      = commandLine.HasOption("--upload-charts") || debug;
-            var clusterspace      = commandLine.GetOption("--clusterspace");
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
             var disablePending    = commandLine.HasOption("--disable-pending");
             var privateImage      = commandLine.HasOption("--private-image");
+            var noTelemetry       = commandLine.HasOption("--no-telemetry");
+
+            if (noTelemetry)
+            {
+                KubeEnv.IsTelemetryDisabled = true;
+            }
 
             if (!int.TryParse(maxParallelOption, out var maxParallel) || maxParallel <= 0)
             {
@@ -232,8 +234,7 @@ OPTIONS:
                 maxParallel:        maxParallel,
                 unredacted:         unredacted,
                 debugMode:          debug,
-                uploadCharts:       uploadCharts,
-                clusterspace:       clusterspace);
+                uploadCharts:       uploadCharts);
 
             controller.DisablePendingTasks = disablePending;
 

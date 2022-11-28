@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    ClusterPrepareCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -114,15 +114,8 @@ OPTIONS:
 
                                   NOTE: This is required for [--debug]
 
-    --clusterspace              - Indicates that the command must not impact normal clusters
-                                  by changing the current login, Kubernetes config or
-                                  other files like cluster deployment logs.  This is
-                                  used for automated CI/CD or unit test cluster deployments 
-                                  while not disrupting the built-in neonDESKTOP or
-                                  other normal clusters.
-
     --private-image             - Specifies that the private node image should be deployed.
-                                  Only neonFORGE maintainers are permitted to use this.
+                                  Only NEONFORGE maintainers are permitted to use this.
 ";
 
         /// <inheritdoc/>
@@ -140,7 +133,6 @@ OPTIONS:
             "--remove-templates", 
             "--debug",
             "--base-image-name",
-            "--clusterspace", 
             "--private-image"
         };
 
@@ -186,7 +178,6 @@ OPTIONS:
             var nodeImagePath     = commandLine.GetOption("--node-image-path");
             var debug             = commandLine.HasOption("--debug");
             var baseImageName     = commandLine.GetOption("--base-image-name");
-            var clusterspace      = commandLine.GetOption("--clusterspace");
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
             var disablePending    = commandLine.HasOption("--disable-pending");
             var privateImage      = commandLine.HasOption("--private-image");
@@ -263,7 +254,7 @@ OPTIONS:
 
                 if (string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath))
                 {
-                    nodeImageUri = await KubeDownloads.GetDefaultNodeImageUriAsync(clusterDefinition.Hosting.Environment);
+                    nodeImageUri = await KubeDownloads.GetNodeImageUriAsync(clusterDefinition.Hosting.Environment);
                 }
             }
 
@@ -297,8 +288,7 @@ OPTIONS:
                 packageCacheEndpoints:  packageCacheEndpoints,
                 unredacted:             commandLine.HasOption("--unredacted"),
                 debugMode:              debug,
-                baseImageName:          baseImageName,
-                clusterspace:           clusterspace);
+                baseImageName:          baseImageName);
 
             controller.DisablePendingTasks = disablePending;
 

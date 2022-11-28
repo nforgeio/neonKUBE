@@ -63,7 +63,7 @@ spec:
             properties:
               docker_image:
                 type: string
-                default: "registry.opensource.zalan.do/acid/spilo-14:2.1-p3"
+                default: "registry.opensource.zalan.do/acid/spilo-14:2.1-p6"
               enable_crd_validation:
                 type: boolean
                 default: true

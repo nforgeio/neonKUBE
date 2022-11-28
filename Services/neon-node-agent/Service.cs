@@ -1,7 +1,7 @@
 ﻿//------------------------------------------------------------------------------
 // FILE:        Service.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -24,14 +25,18 @@ using System.Threading.Tasks;
 using System.Net;
 using System.IO.Compression;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Net.Sockets;
 
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Common;
 using Neon.Data;
@@ -41,13 +46,22 @@ using Neon.Kube.Operator;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Service;
+using Neon.Tasks;
 
 using k8s;
 using k8s.Models;
+
 using KubeOps.Operator;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
 using Npgsql;
+
+using OpenTelemetry;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+
 using YamlDotNet.RepresentationModel;
 
 namespace NeonNodeAgent
@@ -155,7 +169,23 @@ namespace NeonNodeAgent
     /// </remarks>
     public partial class Service : NeonService
     {
-        private const string StateTable = "state";
+        /// <summary>
+        /// Information about the cluster.
+        /// </summary>
+        public ClusterInfo ClusterInfo;
+
+        /// <summary>
+        /// The TLS certificate.
+        /// </summary>
+        private X509Certificate2 Certificate;
+
+        /// <summary>
+        /// Kubernetes client.
+        /// </summary>
+        public IKubernetes K8s;
+
+        // private fields
+        private IWebHost webHost;
 
         /// <summary>
         /// Constructor.
@@ -178,10 +208,39 @@ namespace NeonNodeAgent
             //-----------------------------------------------------------------
             // Start the controllers: these need to be started before starting KubeOps
 
-            var k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
+            K8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
 
-            await NodeTaskController.StartAsync(k8s);
-            await ContainerRegistryController.StartAsync(k8s);
+            await WatchClusterInfoAsync();
+            await CheckCertificateAsync();
+
+            // Start the web service.
+            var port = 443;
+
+            if (NeonHelper.IsDevWorkstation)
+            {
+                port = 11006;
+            }
+
+            webHost = new WebHostBuilder()
+                .ConfigureAppConfiguration(
+                    (hostingcontext, config) =>
+                    {
+                        config.Sources.Clear();
+                    })
+                .UseStartup<OperatorStartup>()
+                .UseKestrel(options => {
+                    options.ConfigureEndpointDefaults(o =>
+                    {
+                        o.UseHttps(Certificate);
+                    });
+                    options.Listen(IPAddress.Any, port);
+
+                })
+                .ConfigureServices(services => services.AddSingleton(typeof(Service), this))
+                .UseStaticWebAssets()
+            .Build();
+
+            _ = webHost.RunAsync();
 
             //-----------------------------------------------------------------
             // Start KubeOps.
@@ -234,6 +293,116 @@ namespace NeonNodeAgent
             Terminator.ReadyToExit();
 
             return 0;
+        }
+
+        /// <inheritdoc/>
+        protected override bool OnTracerConfig(TracerProviderBuilder builder)
+        {
+            builder.AddHttpClientInstrumentation(
+                options =>
+                {
+                    options.Filter = (httpcontext) =>
+                    {
+                        return true;
+                    };
+                });
+            builder.AddAspNetCoreInstrumentation();
+            builder.AddOtlpExporter(
+                options =>
+                {
+                    options.ExportProcessorType = ExportProcessorType.Batch;
+                    options.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>();
+                    options.Endpoint = new Uri(NeonHelper.NeonKubeOtelCollectorUri);
+                    options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
+                });
+            return true;
+        }
+
+        private async Task WatchClusterInfoAsync()
+        {
+            await SyncContext.Clear;
+
+            _ = K8s.WatchAsync<V1ConfigMap>(async (@event) =>
+            {
+                await SyncContext.Clear;
+
+                ClusterInfo = TypeSafeConfigMap<ClusterInfo>.From(@event.Value).Config;
+
+                Logger.LogInformationEx("Updated cluster info");
+            },
+            KubeNamespace.NeonStatus,
+            fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
+        }
+
+        private async Task CheckCertificateAsync()
+        {
+            Logger.LogInformationEx(() => "Checking webhook certificate.");
+
+            var cert = await K8s.ListNamespacedCustomObjectAsync<Certificate>(
+                KubeNamespace.NeonSystem,
+                labelSelector: $"{NeonLabel.ManagedBy}={Name}");
+
+            if (!cert.Items.Any())
+            {
+                Logger.LogInformationEx(() => "Webhook certificate does not exist, creating...");
+
+                var certificate = new Certificate()
+                {
+                    Metadata = new V1ObjectMeta()
+                    {
+                        Name = Name,
+                        NamespaceProperty = KubeNamespace.NeonSystem,
+                        Labels = new Dictionary<string, string>()
+                        {
+                            { NeonLabel.ManagedBy, Name }
+                        }
+                    },
+                    Spec = new CertificateSpec()
+                    {
+                        DnsNames = new List<string>()
+                    {
+                        "neon-node-agent",
+                        "neon-node-agent.neon-system",
+                        "neon-node-agent.neon-system.svc",
+                        "neon-node-agent.neon-system.svc.cluster.local",
+                    },
+                        Duration = "2160h0m0s",
+                        IssuerRef = new IssuerRef()
+                        {
+                            Name = "neon-system-selfsigned-issuer",
+                        },
+                        SecretName = $"{Name}-webhook-tls"
+                    }
+                };
+
+                await K8s.UpsertNamespacedCustomObjectAsync(certificate, certificate.Namespace(), certificate.Name());
+
+                Logger.LogInformationEx(() => "Webhook certificate created.");
+            }
+
+            _ = K8s.WatchAsync<V1Secret>(
+                async (@event) =>
+                {
+                    await SyncContext.Clear;
+
+                    Certificate = X509Certificate2.CreateFromPem(
+                        Encoding.UTF8.GetString(@event.Value.Data["tls.crt"]),
+                        Encoding.UTF8.GetString(@event.Value.Data["tls.key"]));
+
+                    Logger.LogInformationEx("Updated webhook certificate");
+                },
+                KubeNamespace.NeonSystem,
+                fieldSelector: $"metadata.name={Name}-webhook-tls");
+
+            await NeonHelper.WaitForAsync(
+               async () =>
+               {
+                   await SyncContext.Clear;
+
+                   return Certificate != null;
+               },
+               timeout: TimeSpan.FromSeconds(300),
+               pollInterval: TimeSpan.FromMilliseconds(500));
         }
     }
 }

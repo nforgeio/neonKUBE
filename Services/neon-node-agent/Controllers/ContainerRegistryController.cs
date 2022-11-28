@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    ContainerRegistryController.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -300,8 +300,11 @@ namespace NeonNodeAgent
         /// Starts the controller.
         /// </summary>
         /// <param name="k8s">The <see cref="IKubernetes"/> client to use.</param>
+        /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task StartAsync(IKubernetes k8s)
+        public static async Task StartAsync(
+            IKubernetes k8s,
+            IServiceProvider serviceProvider)
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
@@ -367,16 +370,19 @@ rm $0
                 IdleCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_idle", "IDLE events processed."),
                 ReconcileCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_reconcile", "RECONCILE events processed."),
                 DeleteCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_delete", "DELETED events processed."),
+                FinalizeCounter          = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_finalize", "FINALIZE events processed."),
                 IdleErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_idle_error", "Failed NodeTask IDLE event processing."),
                 ReconcileErrorCounter    = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_reconcile_error", "Failed NodeTask RECONCILE event processing."),
                 DeleteErrorCounter       = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_delete_error", "Failed NodeTask DELETE event processing."),
-                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_statusmodify_error", "Failed NodeTask STATUS-MODIFY events processing.")
+                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_statusmodify_error", "Failed NodeTask STATUS-MODIFY events processing."),
+                FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_finalize_error", "Failed NodeTask FINALIZE events processing.")
             };
 
             resourceManager = new ResourceManager<V1NeonContainerRegistry, ContainerRegistryController>(
                 k8s,
                 options:      options,
-                leaderConfig: leaderConfig);
+                leaderConfig: leaderConfig,
+                serviceProvider: serviceProvider);
 
             await resourceManager.StartAsync();
         }
@@ -661,7 +667,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
 
                 var scheduledLoginUtc = loginFile.UpdatedUtc + reloginInterval + NeonHelper.PseudoRandomTimespan(reloginMaxRandomInterval);
 
-                if (DateTime.UtcNow <= scheduledLoginUtc || loginFile.Location == KubeConst.LocalClusterRegistry)
+                if (DateTime.UtcNow <= scheduledLoginUtc || loginFile.Location == KubeConst.LocalClusterRegistryHostName)
                 {
                     try
                     {

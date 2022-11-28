@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    KubeSetup.PrepareCluster.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,11 +50,11 @@ namespace Neon.Kube
         /// <para>
         /// For cloud environments, this specifies whether the cluster should be provisioned
         /// using a VM image from the public cloud marketplace when <c>true</c> or from the
-        /// private neonFORGE image gallery for testing when <c>false</c>.  This is ignored
+        /// private NEONFORGE image gallery for testing when <c>false</c>.  This is ignored
         /// for on-premise environments.
         /// </para>
         /// <note>
-        /// Only neonFORGE maintainers will have permission to use the private image.
+        /// Only NEONFORGE maintainers will have permission to use the private image.
         /// </note>
         /// </param>
         /// <param name="nodeImageUri">
@@ -95,7 +95,6 @@ namespace Neon.Kube
         /// </param>
         /// <param name="debugMode">Optionally indicates that the cluster will be prepared in debug mode.</param>
         /// <param name="baseImageName">Optionally specifies the base image name to use for debug mode.</param>
-        /// <param name="clusterspace">Optionally specifies the clusterspace for the operation.</param>
         /// <param name="removeExisting">Optionally remove any existing cluster with the same name in the target environment.</param>
         /// <param name="disableConsoleOutput">
         /// Optionally disables status output to the console.  This is typically
@@ -113,7 +112,6 @@ namespace Neon.Kube
             bool                        unredacted            = false, 
             bool                        debugMode             = false, 
             string                      baseImageName         = null,
-            string                      clusterspace          = null,
             bool                        removeExisting        = false,
             bool                        disableConsoleOutput  = false)
         {
@@ -239,7 +237,6 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.ClusterLogin, clusterLogin);
             controller.Add(KubeSetupProperty.HostingManager, cluster.HostingManager);
             controller.Add(KubeSetupProperty.HostingEnvironment, cluster.HostingManager.HostingEnvironment);
-            controller.Add(KubeSetupProperty.ClusterspaceFolder, clusterspace);
             controller.Add(KubeSetupProperty.NeonCloudHeadendClient, HeadendClient.Create());
             controller.Add(KubeSetupProperty.DisableImageDownload, !string.IsNullOrEmpty(nodeImagePath));
             controller.Add(KubeSetupProperty.Redact, !unredacted);
@@ -262,7 +259,7 @@ namespace Neon.Kube
                 controller.AddGlobalStep("remove existing cluster",
                     async controller =>
                     {
-                        await hostingManager.RemoveClusterAsync(removeOrphans: true);
+                        await hostingManager.DeleteClusterAsync(removeOrphans: true);
                     });
             }
 
@@ -299,9 +296,9 @@ namespace Neon.Kube
                     clusterLogin.SshPassword  = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
                     clusterLogin.SshPassword += ".Aa0";
 
-                    // We're also going to generate the server's SSH key here and pass that to the hosting
+                    // We're also going to generate the server's SSH keypair here and pass that to the hosting
                     // manager's provisioner.  We need to do this up front because some hosting environments
-                    // like Azure don't allow SSH password authentication by default, so we'll need the SSH key
+                    // like AWS don't allow SSH password authentication by default, so we'll need the SSH key
                     // to initialize the nodes after they've been provisioned for those environments.
 
                     if (clusterLogin.SshKey == null)
@@ -313,8 +310,7 @@ namespace Neon.Kube
                         clusterLogin.SshKey = KubeHelper.GenerateSshKey(cluster.Name, KubeConst.SysAdminUser);
                     }
 
-                    // We also need to generate the root SSO password when necessary and add this
-                    // to the cluster login.
+                    // We also need to generate the cluster's root SSO password.
 
                     controller.SetGlobalStepStatus("generate: SSO password");
                     

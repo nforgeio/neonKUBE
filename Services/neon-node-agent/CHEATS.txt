@@ -3,7 +3,7 @@
 set DEBUG_LOGLEVEL=debug
 set DEBUG_ORG=ghcr.io/neonkube-dev
 set DEBUG_REPO=neon-node-agent
-set DEBUG_TAG=neonkube-%NEON_GITHUB_USER%
+set DEBUG_TAG=neonkube-%GITHUB_USER%
 
 cd %NK_ROOT%\Images\neon-node-agent
 pwsh -f publish.ps1 %DEBUG_TAG%

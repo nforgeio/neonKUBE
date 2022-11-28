@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    CheckRegistryImages.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,8 @@ using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Resources;
 
+using NeonClusterOperator.Harbor;
+
 using k8s;
 using k8s.Models;
 
@@ -40,6 +42,9 @@ using Prometheus;
 
 using Quartz;
 
+using Task = System.Threading.Tasks.Task;
+using Metrics = Prometheus.Metrics;
+
 namespace NeonClusterOperator
 {
     /// <summary>
@@ -47,6 +52,9 @@ namespace NeonClusterOperator
     /// </summary>
     public class CheckRegistryImages : CronJob, IJob
     {
+        private HarborClient harborClient;
+        private IKubernetes k8s;
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -65,7 +73,11 @@ namespace NeonClusterOperator
                 Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckRegistryImages)));
 
                 var dataMap   = context.MergedJobDataMap;
-                var k8s       = (IKubernetes)dataMap["Kubernetes"];
+                k8s           = (IKubernetes)dataMap["Kubernetes"];
+                harborClient  = (HarborClient)dataMap["HarborClient"];
+
+                await CheckProjectAsync();
+
                 var nodes     = await k8s.ListNodeAsync();
                 var startTime = DateTime.UtcNow.AddSeconds(10);
 
@@ -110,6 +122,29 @@ fi
                     await k8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, nodeTask.Name());
 
                     startTime = startTime.AddSeconds(10);
+                }
+            }
+        }
+
+        private async Task CheckProjectAsync()
+        {
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            {
+                Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckRegistryImages)));
+                try
+                {
+                    await harborClient.HeadProjectAsync(x_Request_Id: null, project_name: KubeConst.LocalClusterRegistryProject);
+                }
+                catch (Exception e)
+                {
+                    await harborClient.CreateProjectAsync(null, null, new ProjectReq()
+                    {
+                        Project_name = KubeConst.LocalClusterRegistryProject,
+                        Metadata = new ProjectMetadata()
+                        {
+                            Public = "false",
+                        }
+                    });
                 }
             }
         }

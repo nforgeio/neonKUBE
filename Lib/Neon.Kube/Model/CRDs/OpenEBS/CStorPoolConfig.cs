@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    V1CStorPoolConfig.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
-
+using System.Text.Json.Serialization;
 using k8s;
 using k8s.Models;
 
@@ -41,7 +41,9 @@ namespace Neon.Kube
         /// <summary>
         /// The raid type.
         /// </summary>
-        public DataRaidGroupType? DataRaidGroupType { get; set; }
+        [DefaultValue(DataRaidGroupTypes.Stripe)]
+        [JsonPropertyName("dataRaidGroupType")]
+        public string DataRaidGroupType { get; set; }
 
         /// <summary>
         /// Tolerations to be applied to the CStor Pool pods.

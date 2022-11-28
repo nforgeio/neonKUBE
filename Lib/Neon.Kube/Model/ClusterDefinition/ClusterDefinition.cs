@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    ClusterDefinition.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
 using Neon.Net;
+using Neon.BuildInfo;
 
 namespace Neon.Kube
 {
@@ -60,6 +61,11 @@ namespace Neon.Kube
         // wanted to get fancy.
 
         /// <summary>
+        /// Maximum number of characters allowed in a cluster name.
+        /// </summary>
+        public const int MaxClusterNameLength = 24;
+
+        /// <summary>
         /// Regex for verifying cluster names for hosts, routes, groups, etc.  This also can
         /// be used to (lightly) validate DNS host names.
         /// </summary>
@@ -70,12 +76,6 @@ namespace Neon.Kube
         /// may also include dashes.
         /// </summary>
         public static Regex NameRegex { get; private set; } = new Regex(@"^[a-z0-9\-_]+$", RegexOptions.IgnoreCase);
-
-        /// <summary>
-        /// Regex for verifying cluster prefixes.  This is the similar to <see cref="DnsNameRegex"/> but optionally
-        /// allows a "(" and ")" which we use for clusterspace related deployments.
-        /// </summary>
-        public static Regex PrefixRegex { get; private set; } = new Regex(@"^[a-z0-9.\-_()]+$", RegexOptions.IgnoreCase);
 
         /// <summary>
         /// The prefix reserved for neonKUBE specific annotations and labels.
@@ -253,10 +253,16 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(definition != null, nameof(definition));
 
-            // The domain amd public addresses aren't important to [ClusterFixture].
+            // The Id, domain, public addresses aren't important to [ClusterFixture].
 
+            definition.Id              = null;
             definition.Domain          = null;
             definition.PublicAddresses = null;
+
+            // The network ACME options change after provisioning so we're going
+            // to ignore that too.
+
+            definition.Network.AcmeOptions = null;
 
             // Ensure that computed peroperties are set.
 
@@ -266,8 +272,8 @@ namespace Neon.Kube
             //
             // We're going to clear a bunch of the node properties that may be
             // customized during cluster setup.  This means that changes to these
-            // properties will not impact [ClusterFixture]'s decision about redeploying
-            // the cluster or not.
+            // properties will not impact [ClusterFixture]'s decision about
+            // redeploying the cluster or not.
             //
             //      https://github.com/nforgeio/neonKUBE/issues/1505
 
@@ -387,9 +393,9 @@ namespace Neon.Kube
         /// </para>
         /// <note>
         /// The name may include only letters, numbers, periods, dashes, and underscores and
-        /// may be up to 32 characters long.  Some hosting environments enforce length limits
+        /// may be up to 24 characters long.  Some hosting environments enforce length limits
         /// on resource names that we derive from the cluster name, so please limit your
-        /// cluster name to 32 characters.
+        /// cluster name to 24 characters.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Always)]
@@ -399,8 +405,9 @@ namespace Neon.Kube
         /// <summary>
         /// The unique cluster ID.  This is generated during cluster setup and must not be specified by the user.
         /// </summary>
-        [JsonProperty(PropertyName = "Id", Required = Required.Always)]
+        [JsonProperty(PropertyName = "Id", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "id", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
         public string Id { get; set; }
 
         /// <summary>
@@ -825,7 +832,8 @@ namespace Neon.Kube
         /// Removes any temporary setup related state including <see cref="SetupState"/>, hosting
         /// related secrets, as well as temporary state used by the hosting managers.
         /// </summary>
-        public void ClearSetupState()
+        /// <returns>The redacted cluster definition.</returns>
+        public ClusterDefinition ClearSetupState()
         {
             lock (syncLock)
             {
@@ -841,6 +849,25 @@ namespace Neon.Kube
 
                 // Hosting?.ClearSecrets(this);
             }
+
+            return this;
+        }
+
+        /// <summary>
+        /// Clones the current cluster definition and then removes any temporary setup related state 
+        /// including <see cref="SetupState"/>, hosting related secrets, as well as temporary state
+        /// used by the hosting managers.
+        /// </summary>
+        /// <returns>The redacted cluster definition.</returns>
+        public ClusterDefinition Redact()
+        {
+            var redacted = NeonHelper.JsonClone(this);
+
+            redacted.SetupState = null;
+
+            redacted.Hosting?.ClearSecrets(this);
+
+            return redacted;
         }
 
         /// <summary>
@@ -1108,6 +1135,20 @@ namespace Neon.Kube
             Container.Validate(this);
             Features.Validate(this);
 
+            // Ensure that all of the node names are unique.
+
+            var nodeNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var node in Nodes)
+            {
+                if (nodeNames.Contains(node.Name))
+                {
+                    throw new ClusterDefinitionException($"Cluster definition includes multiple nodes named [{node.Name}].  Node names must be unique.");
+                }
+
+                nodeNames.Add(node.Name);
+            }
+
             // Have the hosting manager perform its own validation.
 
             new HostingManagerFactory().Validate(this);
@@ -1176,9 +1217,9 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"The [{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
 
-            if (Name.Length > 32)
+            if (Name.Length > MaxClusterNameLength)
             {
-                throw new ClusterDefinitionException($"The [{nameof(Name)}={Name}] property has more than 32 characters.  Some hosting environments enforce name length limits so please trim your cluster name.");
+                throw new ClusterDefinitionException($"The [{nameof(Name)}={Name}] property has more than [{MaxClusterNameLength}] characters.  Some hosting environments enforce name length limits so please trim your cluster name.");
             }
 
             if (Description != null && Description.Length > 256)

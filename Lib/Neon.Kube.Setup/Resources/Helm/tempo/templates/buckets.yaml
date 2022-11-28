@@ -1,0 +1,11 @@
+apiVersion: neonkube.io/v1alpha1
+kind: MinioBucket
+metadata:
+  name: tempo
+  namespace: neon-system
+spec:
+  quota:
+    hard: true
+    limit: {{ .Values.minio.bucket.quota }}
+  region: us-west-2
+  tenant: minio

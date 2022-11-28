@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    KubeSetup.Operations.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -219,14 +219,13 @@ namespace Neon.Kube
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.NeonSystemDb);
 
-            advice.ReplicaCount = 1;
+            advice.ReplicaCount = cluster.Definition.ControlNodes.Count();
 
             if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
             {
-                advice.PodMemoryLimit   = ByteUnits.Parse("256Mi");
+                advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
                 advice.MetricsEnabled = false;
-
             }
 
             return advice;
@@ -913,8 +912,8 @@ namespace Neon.Kube
                 advice.MetricsEnabled = true;
             }
 
-            advice.PodMemoryLimit = ByteUnits.Parse("110Mi");
-            advice.PodMemoryRequest = ByteUnits.Parse("50Mi");
+            advice.PodMemoryLimit = ByteUnits.Parse("256Mi");
+            advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
 
             return advice;
         }

@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    OperatorBuilder.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,6 +40,7 @@ namespace Neon.Kube.Operator
     {
         /// <inheritdoc/>
         public IServiceCollection Services { get; }
+
         private ComponentRegister componentRegister { get; }
 
         /// <summary>
@@ -48,7 +49,7 @@ namespace Neon.Kube.Operator
         /// <param name="services"></param>
         public OperatorBuilder(IServiceCollection services)
         {
-            Services = services;
+            Services          = services;
             componentRegister = new ComponentRegister();
         }
 
@@ -63,6 +64,9 @@ namespace Neon.Kube.Operator
             Services.AddSingleton(componentRegister);
             Services.AddSingleton<IFinalizerBuilder, FinalizerBuilder>();
             Services.AddTransient(typeof(IFinalizerManager<>), typeof(FinalizerManager<>));
+            Services.AddScoped(typeof(IResourceCache<>), typeof(ResourceCache<>));
+            Services.AddScoped(typeof(ILockProvider<>), typeof(LockProvider<>));
+
             Services.AddRouting();
             return this;
         }

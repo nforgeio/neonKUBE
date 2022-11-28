@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    KubeEnv.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 // limitations under the License.
 
 using System;
+
+using Neon.Common;
 
 namespace Neon.Kube
 {
@@ -35,7 +37,11 @@ namespace Neon.Kube
         /// Determines whether the user has disabled Neon telemetry by the presence
         /// of the <c>NEONKUBE_DISABLE_TELEMETRY=true</c> environment variable.
         /// </summary>
-        public static bool IsTelemetryDisabled => "true".Equals(Environment.GetEnvironmentVariable(DisableTelemetryVariable), StringComparison.InvariantCultureIgnoreCase);
+        public static bool IsTelemetryDisabled
+        {
+            get => "true".Equals(Environment.GetEnvironmentVariable(DisableTelemetryVariable), StringComparison.InvariantCultureIgnoreCase);
+            set => Environment.SetEnvironmentVariable(DisableTelemetryVariable, NeonHelper.ToBoolString(value));
+        }
 
         /// <summary>
         /// Environment variable used by developers to redirect client application telemetry

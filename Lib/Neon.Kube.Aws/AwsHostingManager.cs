@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    AwsHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -154,7 +154,7 @@ namespace Neon.Kube
         //
         // This hosting manager requires that the node image AMI be present in
         // target region.  Project maintainers can deploy alpha node image releases
-        // from the US-WEST-2 (Oregon) region using the neonFORGE AWS account.
+        // from the US-WEST-2 (Oregon) region using the NEONFORGE AWS account.
         // Preview and Release node images can be used from the AWS Marketplace
         // by normal users.
         //
@@ -882,11 +882,11 @@ namespace Neon.Kube
         /// <para>
         /// For cloud environments, this specifies whether the cluster should be provisioned
         /// using a VM image from the public cloud marketplace when <c>true</c> or from the
-        /// private neonFORGE image gallery for testing when <c>false</c>.  This is ignored
+        /// private NEONFORGE image gallery for testing when <c>false</c>.  This is ignored
         /// for on-premise environments.
         /// </para>
         /// <note>
-        /// Only neonFORGE maintainers will have permission to use the private image.
+        /// Only NEONFORGE maintainers will have permission to use the private image.
         /// </note>
         /// </param>
         /// <param name="nodeImageUri">Ignored.</param>
@@ -2001,7 +2001,7 @@ namespace Neon.Kube
             // 
             // ALPHA RELEASES
             // --------------
-            // We'll use the local AMI from the current neonFORGE AWS account, 
+            // We'll use the local AMI from the current NEONFORGE AWS account, 
             // matching the tags applied by the [neon-image} tool.
             //
             // PRODUCTION RELEASES
@@ -2748,10 +2748,10 @@ namespace Neon.Kube
             // $hack(jefflill):
             //
             // This is a bit of a hack; I'm going to rely on the fact that the SSH target group
-            // names end with the "-EXTERNALPORT" for the target node.
+            // names end with the external port number for the target node.
 
             var awsInstance       = nodeNameToAwsInstance[node.Name];
-            var targetGroupSuffix = $"-{awsInstance.ExternalSshPort}";
+            var targetGroupSuffix = $"{awsInstance.ExternalSshPort}";
             var targetGroup       = nameToTargetGroup.Values.Single(targetGroup => targetGroup.Protocol == ProtocolEnum.TCP && 
                                                                                    targetGroup.Port == NetworkPorts.SSH && 
                                                                                    targetGroup.TargetGroupName.EndsWith(targetGroupSuffix));
@@ -3245,6 +3245,27 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
         }
 
         /// <summary>
+        /// AWS limits target group names to 32 characters so we're going to
+        /// abbreviate <see cref="IngressRuleTarget.ControlPlane"/> targets
+        /// with this string in the generated name.
+        /// </summary>
+        private const char IngressControlPlaneTargetAbbreviation = 'c';
+
+        /// <summary>
+        /// AWS limits target group names to 32 characters so we're going to
+        /// abbreviate <see cref="IngressRuleTarget.Ingress"/> targets
+        /// with this string in the generated name.
+        /// </summary>
+        private const char IngressIngressTargetAbbreviation = 'i';
+
+        /// <summary>
+        /// AWS limits target group names to 32 characters so we're going to
+        /// abbreviate <see cref="IngressRuleTarget.Ssh"/> targets
+        /// with this string in the generated name.
+        /// </summary>
+        private const char IngressSshTargetAbbreviation = 's';
+
+        /// <summary>
         /// Constructs a target group name by appending the protocol, port and target group type 
         /// to the base cluster name passed.
         /// </summary>
@@ -3253,6 +3274,12 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
         /// <param name="protocol">The ingress protocol.</param>
         /// <param name="port">The ingress port.</param>
         /// <returns>The fully qualified target group name.</returns>
+        /// <remarks>
+        /// <note>
+        /// AWS limits target group names to 32 characters, so we're going to try to reduce
+        /// the size of these names by using abbrievations so help avoid exceeding this limit.
+        /// </note>
+        /// </remarks>
         private string GetTargetGroupName(string clusterName, IngressRuleTarget ingressTarget, IngressProtocol protocol, int port)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName), nameof(clusterName));
@@ -3260,13 +3287,13 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             // $hack(jefflill):
             //
             // AWS doesn't tolerate target group names with periods and dashes so
-            // convert both of these to dashes.  This is a bit fragile because it
+            // convert both of these to underscores.  This is a bit fragile because it
             // assumes that users will never name two different clusters such that
             // the only difference is due to a period or underscore in place of a
             // dash.
 
-            clusterName = clusterName.Replace('.', '-');
-            clusterName = clusterName.Replace('_', '-');
+            clusterName = clusterName.Replace('.', '_');
+            clusterName = clusterName.Replace('-', '_');
 
             if (protocol == IngressProtocol.Http || protocol == IngressProtocol.Https)
             {
@@ -3275,18 +3302,68 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 protocol = IngressProtocol.Tcp;
             }
 
-            var protocolString = NeonHelper.EnumToString(protocol);
-            var typeString     = NeonHelper.EnumToString(ingressTarget);
+            string  protocolString;
+            char    targetCh;
 
-            Covenant.Assert(!typeString.Contains('-'), $"Serialized [{nameof(IngressRuleTarget)}.{ingressTarget}={typeString}] must not include a dash.");
+            switch (ingressTarget)
+            {
+                case IngressRuleTarget.ControlPlane:
 
-            // Note that we need to replace any periods added by [GetResourceName()] with dashes.
+                    targetCh = IngressControlPlaneTargetAbbreviation;
+                    break;
 
-            return $"{clusterName}-{typeString}-{protocolString}-{port}";
+                case IngressRuleTarget.Ingress:
+
+                    targetCh = IngressIngressTargetAbbreviation;
+                    break;
+
+                case IngressRuleTarget.Ssh:
+
+                    targetCh = IngressSshTargetAbbreviation;
+                    break;
+
+                default:
+
+                    throw new NotImplementedException();
+            }
+
+            switch (protocol)
+            {
+                case IngressProtocol.Http:
+
+                    protocolString = "h";
+                    break;
+
+                case IngressProtocol.Https:
+
+                    protocolString = "s";
+                    break;
+
+                case IngressProtocol.Tcp:
+
+                    protocolString = "t";
+                    break;
+
+                case IngressProtocol.Udp:
+
+                    protocolString = "u";
+                    break;
+
+                default:
+
+                    throw new NotImplementedException();
+            }
+
+            // NOTE: AWS does like underscores or periods in this name so we'll
+            //       convert any of those to dashes.
+
+            return $"{clusterName}-{targetCh}{protocolString}{port}"
+                .Replace('_', '-')
+                .Replace('.', '-');
         }
 
         /// <summary>
-        /// Parses the target group name to determine the target group type.
+        /// Parses the target group name to determine the ingress target group type.
         /// </summary>
         /// <param name="targetGroup">The target group.</param>
         /// <returns>The target group's <see cref="IngressRuleTarget"/>.</returns>
@@ -3294,10 +3371,31 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
         {
             Covenant.Requires<ArgumentNullException>(targetGroup != null, nameof(targetGroup));
 
-            var dashPos    = targetGroup.TargetGroupName.IndexOf('-');
-            var typeString = targetGroup.TargetGroupName.Substring(0, dashPos);
+            // The first character after the last dash in the name is the
+            // abbreviation identifying the ingress group type.
 
-            return NeonHelper.ParseEnum<IngressRuleTarget>(typeString);
+            var lastDashPos = targetGroup.TargetGroupName.LastIndexOf('-');
+
+            Covenant.Assert(lastDashPos > 0);
+
+            switch (targetGroup.TargetGroupName[lastDashPos + 1])
+            {
+                case IngressControlPlaneTargetAbbreviation:
+
+                    return IngressRuleTarget.ControlPlane;
+
+                case IngressIngressTargetAbbreviation:
+
+                    return IngressRuleTarget.Ingress;
+
+                case IngressSshTargetAbbreviation:
+
+                    return IngressRuleTarget.Ssh;
+
+                default:
+
+                    throw new NotImplementedException();
+            }
         }
 
         /// <summary>
@@ -4114,7 +4212,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
         }
 
         /// <inheritdoc/>
-        public override async Task RemoveClusterAsync(bool removeOrphans = false)
+        public override async Task DeleteClusterAsync(bool removeOrphans = false)
         {
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");

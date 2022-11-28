@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    KubeSetup.SetupCluster.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
@@ -29,6 +30,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+
+using k8s;
+using k8s.Models;
 
 using Neon.Collections;
 using Neon.Common;
@@ -53,10 +57,6 @@ namespace Neon.Kube
         /// in the cluster definition returned.  This can be used by <b>ClusterFixture</b> and custom tools
         /// to help isolated temporary cluster assets from production clusters.
         /// </para>
-        /// <note>
-        /// This parameter has no effect unless <see cref="KubeHelper.ClusterspaceMode"/> is set to something
-        /// other than <see cref="KubeClusterspaceMode.Disabled"/>.
-        /// </note>
         /// </param>
         /// <returns>The cluster definition.</returns>
         public static ClusterDefinition GetBuiltInClusterDefinition(HostingEnvironment hostEnvironment, string deploymentPrefix = null)
@@ -123,11 +123,11 @@ namespace Neon.Kube
         /// <para>
         /// For cloud environments, this specifies whether the cluster should be provisioned
         /// using a VM image from the public cloud marketplace when <c>true</c> or from the
-        /// private neonFORGE image gallery for testing when <c>false</c>.  This is ignored
+        /// private NEONFORGE image gallery for testing when <c>false</c>.  This is ignored
         /// for on-premise environments.
         /// </para>
         /// <note>
-        /// Only neonFORGE maintainers will have permission to use the private image.
+        /// Only NEONFORGE maintainers will have permission to use the private image.
         /// </note>
         /// </param>
         /// <param name="maxParallel">
@@ -147,7 +147,6 @@ namespace Neon.Kube
         /// This will be treated as <c>true</c> when <paramref name="debugMode"/> is passed as <c>true</c>.
         /// </note>
         /// </param>
-        /// <param name = "clusterspace" > Optionally specifies the clusterspace for the operation.</param>        
         /// <param name="neonCloudHeadendUri">Optionally overrides the neonCLOUD headend service URI.  This defaults to <see cref="KubeEnv.HeadendUri"/>.</param>
         /// <param name="disableConsoleOutput">
         /// Optionally disables status output to the console.  This is typically
@@ -162,7 +161,6 @@ namespace Neon.Kube
             bool                unredacted           = false,
             bool                debugMode            = false,
             bool                uploadCharts         = false,
-            string              clusterspace         = null,
             string              neonCloudHeadendUri  = null,
             bool                disableConsoleOutput = false)
         {
@@ -288,7 +286,6 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.ClusterLogin, clusterLogin);
             controller.Add(KubeSetupProperty.HostingManager, cluster.HostingManager);
             controller.Add(KubeSetupProperty.HostingEnvironment, cluster.HostingManager.HostingEnvironment);
-            controller.Add(KubeSetupProperty.ClusterspaceFolder, clusterspace);
             controller.Add(KubeSetupProperty.NeonCloudHeadendClient, HeadendClient.Create());
             controller.Add(KubeSetupProperty.Redact, !unredacted);
 
@@ -424,7 +421,132 @@ namespace Neon.Kube
 
             controller.AddDisposable(cluster);
 
+            // Add a [Finished] event handler to the setup controller that captures additional
+            // information about the cluster including things like cluster pod status and logs
+            // from failed cluster pod containers.
+
+            controller.Finished += CaptureClusterState;
+
+            // Add another [Finished] event handler that uploads cluster deployment logs and
+            // details to the headend for manalysis.  Note that we don't do this when telemetry
+            // is disabled or when the cluster was deployed without redaction.
+
+            controller.Finished += (s, a) => UploadDeploymentLogs((ISetupController)s, a);
+
             return controller;
+        }
+
+        /// <summary>
+        /// Handles the <see cref="ISetupController.Finished"/> event from a cluster setup controller 
+        /// by capturing additional information about the cluster including things like cluster pod
+        /// status and logs from failed cluster pod containers and persisting that to the logs folder.
+        /// </summary>
+        /// <param name="sender">Passed as the sending <see cref="ISetupController"/>.</param>
+        /// <param name="e">Specifies an exception when setup failed or was cancelled, otherwise <c>null</c>.</param>
+        private static void CaptureClusterState(object sender, Exception e)
+        {
+            const string header = "===============================================================================";
+
+            var controller                = (SetupController<NodeDefinition>)sender;
+            var clusterProxy              = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var redactedClusterDefinition = clusterProxy.Definition.Redact();
+            var logFolder                 = KubeHelper.LogFolder;
+            var logDetailsFolder          = KubeHelper.LogDetailsFolder;
+
+            Directory.CreateDirectory(logDetailsFolder);
+
+            //-----------------------------------------------------------------
+            // FILE: pods.txt (output from: kubectl get pods -A
+
+            var result = clusterProxy.FirstControlNode.SudoCommand("kubectl", "get", "pods", "-A");
+
+            using (var stream = File.Create(Path.Combine(logDetailsFolder, "all-pods.txt")))
+            {
+                using (var writer = new StreamWriter(stream, Encoding.UTF8))
+                {
+                    writer.WriteLine(header);
+                    writer.WriteLine($"# kubectl get pods -A");
+                    writer.WriteLine($"# EXITCODE: {result.ExitCode}");
+                    writer.WriteLine();
+
+                    using (var reader = new StringReader(result.AllText))
+                    {
+                        foreach (var line in reader.Lines())
+                        {
+                            writer.WriteLine(line);
+                        }
+                    }
+                }
+            }
+
+            if (!result.Success)
+            {
+                // Don't bother with capturing any additional status if the [kubectl] command failed.
+
+                return;
+            }
+
+            //-----------------------------------------------------------------
+            // Query the pod status and write files detailing information about
+            // failed pods and their pod and containers.
+            //
+            //      pod-NAMESPACE-PODNAME.yaml  - pod spec and status
+            //      pod-NAMESPACE-PODNAME.log   -lists the failed pod containers and their logs
+            //
+            // The log files will include logs from any failed pod containers.
+
+            using (var k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig()))
+            {
+                var pods = k8s.ListAllPodsAsync().Result;
+
+                foreach (var failedPod in pods.Items.Where(pod => pod.Status.Phase == "Error"))
+                {
+                    // Write the [pod-NAMESPACE-PODNAME.yaml] file with the pod spec/status.
+
+                    File.WriteAllText(Path.Combine(logDetailsFolder, $"pod-{failedPod.Namespace()}-{failedPod.Name()}.yaml"), NeonHelper.YamlSerialize(failedPod));
+
+                    // Write the [pod-NAMESPACE-PODNAME.log] with logs from any failed pod containers.
+
+                    using (var stream = File.Create(Path.Combine(logDetailsFolder, $"pod-{failedPod.Namespace()}-{failedPod.Name()}.log")))
+                    {
+                        using (var writer = new StreamWriter(stream, Encoding.UTF8))
+                        {
+                            writer.WriteLine(header);
+                            writer.WriteLine($"# FAILED POD: {failedPod.Namespace()}/{failedPod.Name()}");
+
+                            var failedPodStatuses = failedPod.Status.ContainerStatuses.Where(status => !status.Ready).ToList();
+
+                            if (failedPodStatuses.Count == 0)
+                            {
+                                writer.WriteLine("# All pod containers are READY.");
+                            }
+                            else
+                            {
+                                writer.WriteLine($"# [{failedPodStatuses.Count}] containers are NOT READY.");
+
+                                foreach (var failedContainerStatus in failedPodStatuses)
+                                {
+                                    writer.WriteLine();
+                                    writer.WriteLine(header);
+                                    writer.WriteLine($"# FAILED CONTAINER: name={failedContainerStatus.Name} image={failedContainerStatus.Image}");
+                                    writer.WriteLine();
+
+                                    using (var logStream = k8s.ReadNamespacedPodLog(failedPod.Name(), failedPod.Namespace(), failedContainerStatus.Name))
+                                    {
+                                        using (var reader = new StreamReader(logStream, Encoding.UTF8))
+                                        {
+                                            foreach (var line in reader.Lines())
+                                            {
+                                                writer.WriteLine(line);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

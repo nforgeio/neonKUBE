@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    IResourceFinalizer.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ namespace Neon.Kube.Operator
         }
 
         /// <summary>
-        /// Called when <see cref="TEntity"/> needs to be finalized.
+        /// Called when the entity needs to be finalized.
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>

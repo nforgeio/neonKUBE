@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    OperatorStartup.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:   Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 
 using System;
 using System.Net.Http;
+using System.Text;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -30,14 +31,20 @@ using Neon.Kube;
 using Neon.Kube.Operator;
 using Neon.Kube.ResourceDefinitions;
 
+using NeonClusterOperator.Harbor;
+
 using k8s;
 using k8s.Models;
+
+using Minio;
 
 using OpenTelemetry;
 using OpenTelemetry.Instrumentation;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
+using Task = System.Threading.Tasks.Task;
+using Metrics = Prometheus.Metrics;
 
 namespace NeonClusterOperator
 {
@@ -74,14 +81,18 @@ namespace NeonClusterOperator
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<ILogger>(Program.Service.Logger)
-                .AddSingleton(Service.K8s);
+                .AddSingleton(Service.K8s)
+                .AddSingleton(Service.HarborClient);
 
             services.AddKubernetesOperator()
                 .AddController<GlauthController, V1Secret>()
                 .AddController<NeonClusterOperatorController, V1NeonClusterOperator>()
                 .AddController<NeonContainerRegistryController, V1NeonContainerRegistry>()
+                .AddController<MinioBucketController, V1MinioBucket>()
                 .AddController<NeonSsoClientController, V1NeonSsoClient>()
                 .AddController<NodeTaskController, V1NeonNodeTask>()
+                .AddFinalizer<NeonContainerRegistryFinalizer, V1NeonContainerRegistry>()
+                .AddFinalizer<MinioBucketFinalizer, V1MinioBucket>()
                 .AddMutatingWebhook<PodWebhook, V1Pod>();
         }
 

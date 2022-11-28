@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    SetupController.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -84,12 +84,13 @@ namespace Neon.Kube
 
         private const int UnlimitedParallel = 500;  // Treat this as "unlimited"
 
-        private object                                  syncLock      = new object();
-        private List<IDisposable>                       disposables   = new List<IDisposable>();
-        private ISetupController                        parent        = null;
-        private bool                                    isRunning     = false;
-        private Dictionary<string, SetupPendingTasks>   pendingGroups = new Dictionary<string, SetupPendingTasks>(StringComparer.InvariantCultureIgnoreCase);
-        private CancellationTokenSource                 cts           = new CancellationTokenSource();
+        private object                                  syncLock       = new object();
+        private List<IDisposable>                       disposables    = new List<IDisposable>();
+        private ISetupController                        parent         = null;
+        private bool                                    isRunning      = false;
+        private Dictionary<string, SetupPendingTasks>   pendingGroups  = new Dictionary<string, SetupPendingTasks>(StringComparer.InvariantCultureIgnoreCase);
+        private CancellationTokenSource                 cts            = new CancellationTokenSource();
+        private bool                                    finishedRaised = false;
         private int                                     maxStackSize;
         private string                                  globalStatus;
         private List<NodeSshProxy<NodeMetadata>>        nodes;
@@ -152,6 +153,31 @@ namespace Neon.Kube
             if (!disableConsoleOutput)
             {
                 ConsoleWriter = new SetupConsoleWriter();
+            }
+        }
+
+        /// <inheritdoc/>
+        public event EventHandler<Exception> Finished;
+
+        /// <summary>
+        /// Raises the <see cref="Finished"/> event.  Note that this event is raised only once
+        /// per setup controller instance.
+        /// </summary>
+        /// <param name="e">Optionally specifies the <see cref="Exception"/> when the setup operation was cancelled or failed.</param>
+        private void RaiseFinished(Exception e = null)
+        {
+            if (finishedRaised)
+            {
+                return;
+            }
+
+            try
+            {
+                Finished?.Invoke(this, e);
+            }
+            finally
+            {
+                finishedRaised = true;
             }
         }
 
@@ -1389,7 +1415,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentException>(maxStackSize >= 0, nameof(maxStackSize));
 
-            // Set this so we can ensure that the step list can no longer be modifie
+            // Set this so we can ensure that the step list can no longer be modified
             // after execution has started.
 
             this.isRunning    = true;
@@ -1446,10 +1472,21 @@ namespace Neon.Kube
                             {
                                 step.State = SetupStepState.Cancelled;
 
-                                LogGlobal();
-                                LogGlobal(LogFailedMarker);
+                                // Close out the global log.
+
+                                CloseClusterLog(LogFailedMarker);
                                 cluster?.LogLine(LogFailedMarker);
                                 ConsoleWriter?.Stop();
+
+                                // We need to close the cluster log first so the [Finished] event handles
+                                // will be able to open and read the log files to capture telemetry.
+
+                                CloseClusterLog(LogFailedMarker);
+
+                                // Give any [Finished] handlers a chance to do their thing
+                                // before stopping the controller.
+
+                                RaiseFinished(new OperationCanceledException());
 
                                 Cleanup();
                                 tcs.TrySetResult(SetupDisposition.Cancelled);
@@ -1507,11 +1544,18 @@ namespace Neon.Kube
                                 }
                             }
 
+                            // We need to close the cluster log first so the [Finished] event handles
+                            // will be able to open and read the log files to capture telemetry.
+
+                            CloseClusterLog(LogFailedMarker);
+
+                            // Give any [Finished] handlers a chance to do their thing
+                            // before stopping the controller.
+
+                            RaiseFinished(new NeonKubeException("One or more nodes are faulted."));
+
                             // Close out the global log.
 
-                            LogGlobal();
-                            LogGlobal(LogFailedMarker);
-                            cluster?.LogLine(LogFailedMarker);
                             ConsoleWriter?.Stop();
 
                             Cleanup();
@@ -1535,13 +1579,19 @@ namespace Neon.Kube
                             }
                         }
 
+                        // We need to close the cluster log first so the [Finished] event handles
+                        // will be able to open and read the log files to capture telemetry.
+
+                        CloseClusterLog(LogFailedMarker);
+
+                        // Give any [Finished] handlers a chance to do their thing
+                        // before stopping the controller.
+
+                        RaiseFinished();
+
                         // Close out the global log.
 
-                        LogGlobal();
-                        LogGlobal(LogEndMarker);
-                        cluster?.LogLine(LogEndMarker);
                         ConsoleWriter?.Stop();
-
                         Cleanup();
 
                         tcs.TrySetResult(IsCancelPending ? SetupDisposition.Cancelled : SetupDisposition.Succeeded);
@@ -1557,8 +1607,12 @@ namespace Neon.Kube
                             }
                         }
 
+                        // Close out the global log.
+
+                        CloseClusterLog(LogFailedMarker);
                         ConsoleWriter?.Stop();
                         Cleanup();
+
                         tcs.TrySetResult(SetupDisposition.Cancelled);
                     }
                     catch (AggregateException e)
@@ -1573,8 +1627,18 @@ namespace Neon.Kube
                                 }
                             }
 
+                            CloseClusterLog(LogFailedMarker);
+
+                            // Give any [Finished] handlers a chance to do their thing
+                            // before stopping the controller.
+
+                            RaiseFinished(e);
+
+                            // Close out the global log.
+
                             ConsoleWriter?.Stop();
                             Cleanup();
+
                             tcs.TrySetResult(SetupDisposition.Cancelled);
                         }
                         else
@@ -1586,6 +1650,15 @@ namespace Neon.Kube
                                     StatusChangedEvent?.Invoke(new SetupClusterStatus(this));
                                 }
                             }
+
+                            CloseClusterLog(LogFailedMarker);
+
+                            // Give any [Finished] handlers a chance to do their thing
+                            // before stopping the controller.
+
+                            RaiseFinished(e);
+
+                            // Close out the global log.
 
                             ConsoleWriter?.Stop();
                             Cleanup();
@@ -1602,6 +1675,18 @@ namespace Neon.Kube
                             }
                         }
 
+                        // We need to close the cluster log first so the [Finished] event handles
+                        // will be able to open and read the log files to capture telemetry.
+
+                        CloseClusterLog(LogFailedMarker);
+
+                        // Give any [Finished] handlers a chance to do their thing
+                        // before stopping the controller.
+
+                        RaiseFinished(e);
+
+                        // Close out the global log.
+
                         ConsoleWriter?.Stop();
                         Cleanup();
                         tcs.TrySetException(e);
@@ -1614,6 +1699,25 @@ namespace Neon.Kube
                 maxStackSize: maxStackSize);
 
             return tcs.Task;
+        }
+
+        /// <summary>
+        /// Closes the cluster log file if it's open.
+        /// </summary>
+        /// <param name="logEndMarker">Specifies the marker line to be used to end the log.</param>
+        private void CloseClusterLog(string logEndMarker)
+        {
+            if (clusterLogWriter == null)
+            {
+                return;
+            }
+
+            LogGlobal();
+            LogGlobal(logEndMarker);
+
+            clusterLogWriter?.Flush();
+            clusterLogWriter?.Dispose();
+            clusterLogWriter = null;
         }
 
         /// <summary>
@@ -1635,9 +1739,7 @@ namespace Neon.Kube
 
             // Close the global log.
 
-            clusterLogWriter?.Flush();
-            clusterLogWriter?.Dispose();
-            clusterLogWriter = null;
+            CloseClusterLog(LogEndMarker);
         }
 
         /// <inheritdoc/>

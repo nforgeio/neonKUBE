@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    KubeSetupProperty.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -98,29 +98,6 @@ namespace Neon.Kube
         /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <see cref="KubeClusterAdvice"/> client property.
         /// </summary>
         public const string ClusterAdvice = "setup-advice";
-
-        /// <summary>
-        /// Property name for accessing the fully qualified path to the local folder for the current
-        /// clusterspace where cluster deployment operation state will be persisted, such as the Kubernetes 
-        /// config file, neonKUBE cluster login and operation logs.
-        /// </summary>
-        /// <remarks>
-        /// <note>
-        /// <para>
-        /// Clusterspaces are used by the <b>neon cluster prepare/setup</b> commands using the
-        /// <b>--clusterspace</b> option as well as clusters provisioned for unit testing via <b>ClusterFixture</b>.
-        /// This will be set to <c>null</c> for normal cluster deployments performed by neonKUBE or <b>neon-cli</b>
-        /// without the <b>--clusterspace</b> option.
-        /// </para>
-        /// <para>
-        /// Clusterspaces are used to workaround the restriction that allow only a single cluster to
-        /// be logged in at any time and also that there be no logged-in cluster before a new cluster
-        /// may be provisioned.  This allows cluster related CI/CD operations or unit tests to be able
-        /// to execute without impacting normal user clusters.
-        /// </para>
-        /// </note>
-        /// </remarks>
-        public const string ClusterspaceFolder = "clusterspace-folder";
 
         /// <summary>
         /// Property name for accessing the neonCLOUD headend service client.

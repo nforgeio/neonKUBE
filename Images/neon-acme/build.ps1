@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         build.ps1
 # CONTRIBUTOR:  Marcus Bowyer
-# COPYRIGHT:    Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 #
 # Builds the Neon [neon-acme] image.
 #
@@ -25,7 +25,6 @@ DeleteFolder bin
 $result = mkdir bin
 ThrowOnExitCode
 
-neon-build clean-generated-cs $nkRoot
 dotnet publish "$nkServices\$appname\$appname.csproj" -c $config -o "$pwd\bin"
 ThrowOnExitCode
 
@@ -42,4 +41,3 @@ $result = Invoke-CaptureStreams "docker build -t ${registry}:${tag} --build-arg 
 # Clean up
 
 DeleteFolder bin
-neon-build clean-generated-cs $nkRoot

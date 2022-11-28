@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    FinalizerManager.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,29 +29,30 @@ using Neon.Diagnostics;
 
 using k8s;
 using k8s.Models;
+using Neon.Common;
 
 namespace Neon.Kube.Operator
 {
     internal class FinalizerManager<TEntity> : IFinalizerManager<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
     {
-        private readonly IKubernetes client;
-        private readonly ILogger logger;
-        private readonly ComponentRegister componentRegister;
-        private readonly IFinalizerBuilder finalizerInstanceBuilder;
-        private readonly SemaphoreSlim semaphoreSlim;
+        private readonly IKubernetes        client;
+        private readonly ILogger            logger;
+        private readonly ComponentRegister  componentRegister;
+        private readonly IFinalizerBuilder  finalizerInstanceBuilder;
+        private readonly SemaphoreSlim      semaphoreSlim;
 
         public FinalizerManager(
-            IKubernetes client,
-            ILogger logger,
-            ComponentRegister componentRegister,
-            IFinalizerBuilder finalizerInstanceBuilder)
+            IKubernetes         client,
+            ILogger             logger,
+            ComponentRegister   componentRegister,
+            IFinalizerBuilder   finalizerInstanceBuilder)
         {
-            this.client = client;
-            this.logger = logger;
-            this.componentRegister = componentRegister;
+            this.client                   = client;
+            this.logger                   = logger;
+            this.componentRegister        = componentRegister;
             this.finalizerInstanceBuilder = finalizerInstanceBuilder;
-            this.semaphoreSlim = new SemaphoreSlim(1);
+            this.semaphoreSlim            = new SemaphoreSlim(1);
         }
 
         /// <inheritdoc/>
@@ -84,27 +85,73 @@ namespace Neon.Kube.Operator
             try
             {
                 await semaphoreSlim.WaitAsync();
-
                 await finalizer.FinalizeAsync(entity);
-
-                if (string.IsNullOrEmpty(entity.Metadata.NamespaceProperty))
-                {
-                    entity = await client.ReadClusterCustomObjectAsync<TEntity>(entity.Name());
-                }
-                else
-                {
-                    entity = await client.ReadNamespacedCustomObjectAsync<TEntity>(entity.Namespace(), entity.Name());
-                }
-
-                if (entity.RemoveFinalizer(finalizer.Identifier))
-                {
-                    await UpdateEntityAsync(entity);
-                }
+                await RemoveFinalizerAsync(entity, finalizer);
+            }
+            catch (Exception e)
+            {
+                logger.LogErrorEx(e);
+                throw;
             }
             finally
             {
                 semaphoreSlim.Release();
             }
+        }
+
+        private async Task RemoveFinalizerAsync(TEntity entity, IResourceFinalizer<TEntity> finalizer)
+        {
+            try
+            {
+                await NeonHelper.WaitForAsync(
+                    async () =>
+                    {
+                        try
+                        {
+                            if (string.IsNullOrEmpty(entity.Metadata.NamespaceProperty))
+                            {
+                                entity = await client.ReadClusterCustomObjectAsync<TEntity>(entity.Name());
+                            }
+                            else
+                            {
+                                entity = await client.ReadNamespacedCustomObjectAsync<TEntity>(entity.Namespace(), entity.Name());
+                            }
+
+                            if (entity.RemoveFinalizer(finalizer.Identifier))
+                            {
+                                await UpdateEntityAsync(entity);
+                            }
+
+                            return true;
+                        }
+                        catch (Exception e)
+                        {
+                            logger.LogErrorEx(e);
+                        }
+
+                        return false;
+                    },
+                    timeout:      TimeSpan.FromSeconds(30),
+                    pollInterval: TimeSpan.FromSeconds(1));
+            }
+            catch (Exception e)
+            {
+                string entityName;
+
+                if (string.IsNullOrEmpty(entity.Metadata.NamespaceProperty))
+                {
+                    entityName = entity.Name();
+                }
+                else
+                {
+                    entityName = $"{entity.Namespace()}/{entity.Name()}";
+                }
+
+                logger.LogErrorEx(e);
+
+                throw new Exception($"Timed out while trying to remove finalizer [{finalizer.Identifier}] from entity [{entityName}]");
+            }
+            
         }
 
         /// <inheritdoc/>
@@ -134,15 +181,22 @@ namespace Neon.Kube.Operator
 
         private async Task UpdateEntityAsync(TEntity entity)
         {
-            var metadata = entity.GetKubernetesTypeMetadata();
+            try
+            {
+                var metadata = entity.GetKubernetesTypeMetadata();
 
-            if (string.IsNullOrEmpty(entity.Metadata.NamespaceProperty))
-            {
-                await client.ReplaceClusterCustomObjectAsync<TEntity>(entity, entity.Name());
+                if (string.IsNullOrEmpty(entity.Metadata.NamespaceProperty))
+                {
+                    await client.ReplaceClusterCustomObjectAsync<TEntity>(entity, entity.Name());
+                }
+                else
+                {
+                    await client.ReplaceNamespacedCustomObjectAsync<TEntity>(entity, entity.Namespace(), entity.Name());
+                }
             }
-            else
+            catch (Exception e)
             {
-                await client.ReplaceNamespacedCustomObjectAsync<TEntity>(entity, entity.Namespace(), entity.Name());
+                logger.LogErrorEx(e);
             }
         }
     }

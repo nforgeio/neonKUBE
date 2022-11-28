@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    Program.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2005-2022 by neonFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,6 +44,7 @@ using Neon.Common;
 using Neon.Deployment;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.BuildInfo;
 using Neon.Kube.GrpcProto;
 using Neon.Kube.GrpcProto.Desktop;
 using Neon.IO;
@@ -197,7 +198,6 @@ NEON CLUSTER LIFE-CYCLE COMMANDS:
     neon cluster delete     [OPTIONS]
     neon cluster reset      [OPTIONS]
     neon cluster setup      [OPTIONS] root@CLUSTER-NAME
-    neon cluster space      [SPACE-NAME] [--reset]
     neon cluster start
     neon cluster stop       [OPTIONS]
     neon cluster unlock
@@ -226,6 +226,16 @@ CLUSTER MANAGEMENT ARGUMENTS:
                           optional for some commands when logged in
 
     COMMAND             - Subcommand and arguments
+
+NOTE: Command line arguments and options may include references to 
+      profile values, secrets and environment variables, like:
+
+      $<profile:NAME>                   - profile value
+      $<secret:NAME>                    - ""password"" property value of NAME secret
+      $<secret:NAME:SOURCE>             - ""password""  property value of NAME secret at SOURCE
+      $<secret:NAME[PROPERTY]           - PROPERTY value from NAME secret
+      $<secret:NAME[PROPERTY]:SOURCE>   - PROPERTY value from NAME secret at SOURCE
+      $<env:NAME>                       - environment variable
 
 ===============================================================================
 ";
@@ -314,19 +324,12 @@ CLUSTER MANAGEMENT ARGUMENTS:
             // Ensure that all of the non-premium cluster hosting manager 
             // implementations are loaded.
 
-            new HostingManagerFactory(() => HostingLoader.Initialize());
+            _ = new HostingManagerFactory(() => HostingLoader.Initialize());
 
             // Register a [ProfileClient] so commands will be able to pick
             // up secrets and profile information from [neon-assistant].
 
             NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new ProfileClient());
-
-            // Set the clusterspace mode when necessary.
-
-            if (KubeHelper.CurrentClusterSpace != null)
-            {
-                KubeHelper.SetClusterSpaceMode(KubeClusterspaceMode.EnabledWithSharedCache, KubeHelper.CurrentClusterSpace);
-            }
 
             // Fetch the paths to the [kubectl] and [helm] binaries.  Note that these
             // will download them when they're not already present.
@@ -341,6 +344,15 @@ CLUSTER MANAGEMENT ARGUMENTS:
             try
             {
                 ICommand command;
+
+                // $hack(jefflill):
+                //
+                // We hardcoding our own profile client for the time being.  Eventually,
+                // we'll need to support custom or retail profile clients somehow.
+                //
+                // This is required by: CommandLine.Preprocess()
+
+                NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new ProfileClient());
 
                 CommandLine = new CommandLine(args);
 
@@ -736,7 +748,7 @@ CLUSTER MANAGEMENT ARGUMENTS:
         /// be located in the <b>tools</b> subfolder where <b>neon-cli</b> itself is installed, like:
         /// </para>
         /// <code>
-        /// C:\Program Files\neonFORGE\neonDESKTOP\
+        /// C:\Program Files\NEONFORGE\neonDESKTOP\
         ///     neon-cli.exe
         ///     tools\
         ///         helm.exe
@@ -774,7 +786,7 @@ CLUSTER MANAGEMENT ARGUMENTS:
         /// be located in the <b>tools</b> subfolder where <b>neon-cli</b> itself is installed, like:
         /// </para>
         /// <code>
-        /// C:\Program Files\neonFORGE\neonDESKTOP\
+        /// C:\Program Files\NEONFORGE\neonDESKTOP\
         ///     neon-cli.exe
         ///     tools\
         ///         helm.exe
