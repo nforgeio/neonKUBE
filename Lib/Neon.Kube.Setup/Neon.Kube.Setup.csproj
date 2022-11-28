@@ -166,7 +166,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Minio" Version="4.0.5" />
+		<PackageReference Include="Minio" Version="4.0.6" />
 		<PackageReference Include="Neon.Common" Version="10000.0.2592-dev-master" />
 		<PackageReference Include="Neon.Cryptography" Version="10000.0.2592-dev-master" />
 		<PackageReference Include="Neon.Postgres" Version="10000.0.2592-dev-master" />
