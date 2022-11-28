@@ -56,13 +56,8 @@ namespace Neon.Kube
         public const string NeonPublicBucketUri = "https://neon-public.s3.us-west-2.amazonaws.com";
 
         /// <summary>
-        /// <para>
         /// The URI for the cluster manifest (<see cref="ClusterManifest"/>) JSON file for the current
         /// neonKUBE cluster version.
-        /// </para>
-        /// <note>
-        /// This does not include a trailing <b>"/"</b>.
-        /// </note>
         /// </summary>
         public const string NeonClusterManifestUri = NeonHelper.NeonPublicBucketUri + "/cluster-manifests/neonkube-" + KubeVersions.NeonKube + ".json";
 
