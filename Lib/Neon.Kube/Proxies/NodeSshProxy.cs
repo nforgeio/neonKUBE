@@ -543,9 +543,9 @@ namespace Neon.Kube
         /// <param name="controller">The setup controller.</param>
         /// <param name="fullUpgrade">
         /// Pass <c>true</c> to perform a full distribution upgrade or <c>false</c> to just 
-        /// upgrade packages.
+        /// apply security patches.
         /// </param>
-        public void UpgradeNode(ISetupController controller, bool fullUpgrade)
+        public void UpdateLinux(ISetupController controller, bool fullUpgrade)
         {
             Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
 
@@ -561,12 +561,14 @@ namespace Neon.Kube
                     if (fullUpgrade)
                     {
                         Status = "upgrade: full";
-                        SudoCommand($"{KubeNodeFolder.Bin}/safe-apt-get dist-upgrade -yq");
+
+                        UpdateLinux();
                     }
                     else
                     {
                         Status = "upgrade: partial";
-                        SudoCommand($"{KubeNodeFolder.Bin}/safe-apt-get upgrade -yq");
+
+                        UpgradeLinuxDistribution();
                     }
 
                     // Check to see whether the upgrade requires a reboot and
