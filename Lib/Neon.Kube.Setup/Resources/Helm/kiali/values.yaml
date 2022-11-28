@@ -3,14 +3,14 @@ fullnameOverride: ""
 
 image:
   operator:
-    registry: registry.neon.local
-    repository: neonkube/kiali-kiali-operator
+    registry: registry.neon.local/neonkube
+    repository: kiali-kiali-operator
     tag: v1.44.0
     pullPolicy: IfNotPresent
     pullSecrets: []
   kiali:
-    registry: registry.neon.local
-    repository: neonkube/kiali-kiali
+    registry: registry.neon.local/neonkube
+    repository: kiali-kiali
     tag: v1.44.0
     pullPolicy: IfNotPresent
     pullSecrets: []

@@ -6,8 +6,8 @@ global:
   imagePullSecrets: []
 
 image:
-  registry: registry.neon.local
-  repository: neonkube/stakater-reloader
+  registry: registry.neon.local/neonkube
+  repository: stakater-reloader
   tag: v0.0.95
   pullPolicy: IfNotPresent
 

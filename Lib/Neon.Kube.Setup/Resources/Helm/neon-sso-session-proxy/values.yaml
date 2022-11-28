@@ -5,8 +5,8 @@
 replicaCount: 1
 
 image:
-  registry: registry.neon.local
-  repository: neonkube/neon-sso-session-proxy
+  registry: registry.neon.local/neonkube
+  repository: neon-sso-session-proxy
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: null

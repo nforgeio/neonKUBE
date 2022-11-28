@@ -3,8 +3,8 @@
 # Declare variables to be passed into your templates.
 
 image:
-  registry: registry.neon.local
-  repository: neonkube/metrics-server
+  registry: registry.neon.local/neonkube
+  repository: metrics-server
   tag: v0.6.1
   pullPolicy: IfNotPresent
 

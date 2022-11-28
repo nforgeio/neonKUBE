@@ -23,24 +23,24 @@ jivaOperator:
   componentName: "jiva-operator"
   controller:
     image:
-      registry: registry.neon.local
-      repository: neonkube/openebs-jiva
+      registry: registry.neon.local/neonkube
+      repository: openebs-jiva
       tag: 3.2.0
   replica:
     image:
-      registry: registry.neon.local
-      repository: neonkube/openebs-jiva
+      registry: registry.neon.local/neonkube
+      repository: openebs-jiva
       tag: 3.2.0
   exporter:
     image:
-      registry: registry.neon.local
-      repository: neonkube/openebs-m-exporter
+      registry: registry.neon.local/neonkube
+      repository: openebs-m-exporter
       tag: 3.2.0
   image:
     # Make sure that registry name end with a '/'.
     # For example : quay.io/ is a correct value here and quay.io is incorrect
-    registry: registry.neon.local
-    repository: neonkube/openebs-jiva-operator
+    registry: registry.neon.local/neonkube
+    repository: openebs-jiva-operator
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
     tag: 3.2.0
@@ -66,8 +66,8 @@ csiController:
     image:
       # Make sure that registry name end with a '/'.
       # For example : quay.io/ is a correct value here and quay.io is incorrect
-      registry: registry.neon.local
-      repository: neonkube/k8scsi-csi-attacher
+      registry: registry.neon.local/neonkube
+      repository: k8scsi-csi-attacher
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
       tag: v3.1.0
@@ -76,8 +76,8 @@ csiController:
     image:
       # Make sure that registry name end with a '/'.
       # For example : quay.io/ is a correct value here and quay.io is incorrect
-      registry: registry.neon.local
-      repository: neonkube/k8scsi-livenessprobe
+      registry: registry.neon.local/neonkube
+      repository: k8scsi-livenessprobe
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
       tag: v2.3.0
@@ -86,8 +86,8 @@ csiController:
     image:
       # Make sure that registry name end with a '/'.
       # For example : quay.io/ is a correct value here and quay.io is incorrect
-      registry: registry.neon.local
-      repository: neonkube/k8scsi-csi-provisioner
+      registry: registry.neon.local/neonkube
+      repository: k8scsi-csi-provisioner
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
       tag: v3.0.0
@@ -96,8 +96,8 @@ csiController:
     image:
       # Make sure that registry name end with a '/'.
       # For example : quay.io/ is a correct value here and quay.io is incorrect
-      registry: registry.neon.local
-      repository: neonkube/k8scsi-csi-resizer
+      registry: registry.neon.local/neonkube
+      repository: k8scsi-csi-resizer
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
       tag: v1.2.0
@@ -114,8 +114,8 @@ jivaCSIPlugin:
   image:
     # Make sure that registry name end with a '/'.
     # For example : quay.io/ is a correct value here and quay.io is incorrect
-    registry: registry.neon.local
-    repository: neonkube/openebs-jiva-csi
+    registry: registry.neon.local/neonkube
+    repository: openebs-jiva-csi
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
     tag: 3.2.0
@@ -131,8 +131,8 @@ csiNode:
   driverRegistrar:
     name: "csi-node-driver-registrar"
     image:
-      registry: registry.neon.local
-      repository: neonkube/k8scsi-csi-node-driver-registrar
+      registry: registry.neon.local/neonkube
+      repository: k8scsi-csi-node-driver-registrar
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
       tag: v2.3.0
@@ -141,8 +141,8 @@ csiNode:
     image:
       # Make sure that registry name end with a '/'.
       # For example : quay.io/ is a correct value here and quay.io is incorrect
-      registry: registry.neon.local
-      repository: neonkube/k8scsi-livenessprobe
+      registry: registry.neon.local/neonkube
+      repository: k8scsi-livenessprobe
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
       tag: v2.3.0

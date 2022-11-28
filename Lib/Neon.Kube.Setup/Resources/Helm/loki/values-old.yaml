@@ -1,6 +1,6 @@
 image:
-  registry: registry.neon.local
-  repository: neonkube/grafana-loki
+  registry: registry.neon.local/neonkube
+  repository: grafana-loki
   tag: 2.4.2
   pullPolicy: IfNotPresent
 

@@ -14,8 +14,8 @@ operator:
   #   - name: WATCHED_NAMESPACE
   #     value: ""
   image:
-    registry: registry.neon.local
-    repository: neonkube/minio-operator
+    registry: registry.neon.local/neonkube
+    repository: minio-operator
     tag: v4.4.25
     pullPolicy: IfNotPresent
   imagePullSecrets: []
@@ -37,8 +37,8 @@ operator:
 
 console:
   image:
-    registry: registry.neon.local
-    repository: neonkube/minio-console
+    registry: registry.neon.local/neonkube
+    repository: minio-console
     tag: v0.19.0
     pullPolicy: IfNotPresent
   imagePullSecrets: []
@@ -66,8 +66,8 @@ tenants:
   - name: minio
     ## Registry location and Tag to download MinIO Server image
     image:
-      registry: registry.neon.local
-      repository: neonkube/minio-minio
+      registry: registry.neon.local/neonkube
+      repository: minio-minio
       tag: RELEASE.2022-07-04T21-02-54Z
       pullPolicy: IfNotPresent
     ## Customize namespace for tenant deployment

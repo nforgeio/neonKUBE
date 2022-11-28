@@ -67,8 +67,8 @@ diagnosticMode:
 ## @param image.debug Specify if debug values should be set
 ##
 image:
-  registry: registry.neon.local
-  repository: neonkube/memcached
+  registry: registry.neon.local/neonkube
+  repository: memcached
   tag: 1.6.15-alpine3.15
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
@@ -515,7 +515,7 @@ volumePermissions:
   ##
   image:
     registry: docker.io
-    repository: neonkube/bitnami/bitnami-shell
+    repository: bitnami/bitnami-shell
     tag: 10-debian-10-r386
     pullPolicy: IfNotPresent
     ## Optionally specify an array of imagePullSecrets.
@@ -560,8 +560,8 @@ metrics:
   ## @param metrics.image.pullSecrets Specify docker-registry secret names as an array
   ##
   image:
-    registry: registry.neon.local
-    repository: neonkube/bitnami-memcached-exporter
+    registry: registry.neon.local/neonkube
+    repository: bitnami-memcached-exporter
     tag: 0.9.0-debian-10-r348
     pullPolicy: IfNotPresent
     ## Optionally specify an array of imagePullSecrets.

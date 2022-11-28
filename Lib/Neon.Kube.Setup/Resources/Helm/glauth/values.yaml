@@ -5,8 +5,8 @@
 replicaCount: 1
 
 image:
-  registry: registry.neon.local
-  repository: neonkube/glauth-glauth
+  registry: registry.neon.local/neonkube
+  repository: glauth-glauth
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: "v2.1.0-rc1"

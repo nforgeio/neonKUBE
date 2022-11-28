@@ -44,9 +44,9 @@ loki:
     timeoutSeconds: 1
   image:
     # -- The Docker registry
-    registry: registry.neon.local
+    registry: registry.neon.local/neonkube
     # -- Docker image repository
-    repository: neonkube/grafana-loki
+    repository: grafana-loki
     # -- Overrides the image tag whose default is the chart's appVersion
     tag: 2.6.1
     # -- Docker image pull policy
@@ -313,7 +313,7 @@ ingester:
     # -- The Docker registry for the ingester image. Overrides `loki.image.registry`
     registry: null
     # -- Docker image repository for the ingester image. Overrides `loki.image.repository`
-    repository: neonkube/null
+    repository: null
     # -- Docker image tag for the ingester image. Overrides `loki.image.tag`
     tag: null
   # -- The name of the PriorityClass for ingester pods
@@ -410,7 +410,7 @@ distributor:
     # -- The Docker registry for the distributor image. Overrides `loki.image.registry`
     registry: null
     # -- Docker image repository for the distributor image. Overrides `loki.image.repository`
-    repository: neonkube/null
+    repository: null
     # -- Docker image tag for the distributor image. Overrides `loki.image.tag`
     tag: null
   # -- The name of the PriorityClass for distributor pods
@@ -494,7 +494,7 @@ querier:
     # -- The Docker registry for the querier image. Overrides `loki.image.registry`
     registry: null
     # -- Docker image repository for the querier image. Overrides `loki.image.repository`
-    repository: neonkube/null
+    repository: null
     # -- Docker image tag for the querier image. Overrides `loki.image.tag`
     tag: null
   # -- The name of the PriorityClass for querier pods
@@ -589,7 +589,7 @@ queryFrontend:
     # -- The Docker registry for the query-frontend image. Overrides `loki.image.registry`
     registry: null
     # -- Docker image repository for the query-frontend image. Overrides `loki.image.repository`
-    repository: neonkube/null
+    repository: null
     # -- Docker image tag for the query-frontend image. Overrides `loki.image.tag`
     tag: null
   # -- The name of the PriorityClass for query-frontend pods
@@ -662,7 +662,7 @@ tableManager:
     # -- The Docker registry for the table-manager image. Overrides `loki.image.registry`
     registry: null
     # -- Docker image repository for the table-manager image. Overrides `loki.image.repository`
-    repository: neonkube/null
+    repository: null
     # -- Docker image tag for the table-manager image. Overrides `loki.image.tag`
     tag: null
   # -- The name of the PriorityClass for table-manager pods
@@ -751,7 +751,7 @@ compactor:
     # -- The Docker registry for the compactor image. Overrides `loki.image.registry`
     registry: null
     # -- Docker image repository for the compactor image. Overrides `loki.image.repository`
-    repository: neonkube/null
+    repository: null
     # -- Docker image tag for the compactor image. Overrides `loki.image.tag`
     tag: null
   # -- The name of the PriorityClass for compactor pods
@@ -849,7 +849,7 @@ ruler:
     # -- The Docker registry for the ruler image. Overrides `loki.image.registry`
     registry: null
     # -- Docker image repository for the ruler image. Overrides `loki.image.repository`
-    repository: neonkube/null
+    repository: null
     # -- Docker image tag for the ruler image. Overrides `loki.image.tag`
     tag: null
   # -- The name of the PriorityClass for ruler pods
@@ -1001,7 +1001,7 @@ indexGateway:
     # -- The Docker registry for the index-gateway image. Overrides `loki.image.registry`
     registry: null
     # -- Docker image repository for the index-gateway image. Overrides `loki.image.repository`
-    repository: neonkube/null
+    repository: null
     # -- Docker image tag for the index-gateway image. Overrides `loki.image.tag`
     tag: null
   # -- The name of the PriorityClass for index-gateway pods

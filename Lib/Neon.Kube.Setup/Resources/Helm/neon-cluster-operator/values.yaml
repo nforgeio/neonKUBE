@@ -17,8 +17,8 @@ replicaCount: 1
 # Container image details.
 
 image:
-  registry: registry.neon.local
-  repository: neonkube/neon-cluster-operator
+  registry: registry.neon.local/neonkube
+  repository: neon-cluster-operator
   tag: null
   pullPolicy: IfNotPresent
 

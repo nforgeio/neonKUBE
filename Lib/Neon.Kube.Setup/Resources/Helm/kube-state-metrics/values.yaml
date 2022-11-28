@@ -2,8 +2,8 @@
 prometheusScrape: true
 
 image:
-  registry: registry.neon.local
-  repository: neonkube/kube-state-metrics
+  registry: registry.neon.local/neonkube
+  repository: kube-state-metrics
   tag: v2.5.0
   pullPolicy: IfNotPresent
   pullSecrets: []

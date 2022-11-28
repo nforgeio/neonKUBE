@@ -9,22 +9,22 @@ shards: 1
 
 agent:
   image:
-    registry: registry.neon.local
-    repository: neonkube/grafana-agent
+    registry: registry.neon.local/neonkube
+    repository: grafana-agent
     tag: v0.26.1
     pullPolicy: IfNotPresent
 
 operator:
   image:
-    registry: registry.neon.local
-    repository: neonkube/grafana-agent-operator
+    registry: registry.neon.local/neonkube
+    repository: grafana-agent-operator
     tag: v0.26.1
     pullPolicy: IfNotPresent
 
 configReloader:
   image:
-    registry: registry.neon.local
-    repository: neonkube/prometheus-operator-prometheus-config-reloader
+    registry: registry.neon.local/neonkube
+    repository: prometheus-operator-prometheus-config-reloader
     tag: v0.47.0
     pullPolicy: IfNotPresent
 

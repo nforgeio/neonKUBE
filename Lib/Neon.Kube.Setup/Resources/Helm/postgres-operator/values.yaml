@@ -1,6 +1,6 @@
 image:
-  registry: registry.neon.local
-  repository: neonkube/zalan-postgres-operator
+  registry: registry.neon.local/neonkube
+  repository: zalan-postgres-operator
   tag: v1.8.2
   pullPolicy: "IfNotPresent"
 
@@ -452,15 +452,15 @@ controllerID:
 healthCheck:
   enabled: true
   image: 
-    registry: registry.neon.local
-    repository: neonkube/zalan-postgres-health-check
+    registry: registry.neon.local/neonkube
+    repository: zalan-postgres-health-check
     tag: neonkube-0.5.0-alpha
 
 metrics:
   enabled: true
   image: 
-    registry: registry.neon.local
-    repository: neonkube/prometheuscommunity-postgres-exporter
+    registry: registry.neon.local/neonkube
+    repository: prometheuscommunity-postgres-exporter
     tag: v0.10.0
   port: 9187
   interval: 60s

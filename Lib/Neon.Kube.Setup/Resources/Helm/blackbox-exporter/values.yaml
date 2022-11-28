@@ -71,8 +71,8 @@ strategy:
   type: RollingUpdate
 
 image:
-  registry: registry.neon.local
-  repository: neonkube/prom-blackbox-exporter
+  registry: registry.neon.local/neonkube
+  repository: prom-blackbox-exporter
   tag: v0.21.1
   pullPolicy: IfNotPresent
 
