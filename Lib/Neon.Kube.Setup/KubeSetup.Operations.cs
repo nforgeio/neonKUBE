@@ -270,116 +270,161 @@ spec:
             var controlNode = cluster.FirstControlNode;
             var debugMode   = controller.Get<bool>(KubeSetupProperty.DebugMode);
 
-            cluster.ClearNodeStatus();
-
-            controller.ThrowIfCancelled();
-            ConfigureKubernetes(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            ConfigureKubelet(controller, cluster.ControlNodes);
-
-            controller.ThrowIfCancelled();
-            ConfigureWorkstation(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            ConnectCluster(controller);
-
-            controller.ThrowIfCancelled();
-            await ConfigureControlPlaneTaintsAsync(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            await TaintNodesAsync(controller);
-
-            controller.ThrowIfCancelled();
-            await LabelNodesAsync(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            await CreateNamespacesAsync(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            await InstallCrdsAsync(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            await CreateRootUserAsync(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            await ConfigurePriorityClassesAsync(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            await InstallCalicoCniAsync(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            await InstallMetricsServerAsync(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            await InstallIstioAsync(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            await InstallPrometheusAsync(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            await InstallCertManagerAsync(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            await InstallKubeDashboardAsync(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            if (cluster.Definition.Features.NodeProblemDetector) 
-            { 
-                await InstallNodeProblemDetectorAsync(controller, controlNode);
-            }
-
-            controller.ThrowIfCancelled();
-            await InstallOpenEbsAsync(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            await InstallReloaderAsync(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            await InstallSystemDbAsync(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            await InstallRedisAsync(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            await InstallClusterOperatorAsync(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            await InstallSsoAsync(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            if (cluster.Definition.Features.Kiali)
-            {
-                await InstallKialiAsync(controller, controlNode);
-            }
-
-            controller.ThrowIfCancelled();
-            await InstallMinioAsync(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            await InstallHarborAsync(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            await WriteClusterInfoAsync(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            await InstallMonitoringAsync(controller);
-
-            controller.ThrowIfCancelled();
-            await InstallNeonDashboardAsync(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            await InstallNodeAgentAsync(controller, controlNode);
-
-            controller.ThrowIfCancelled();
-            await InstallContainerRegistryResourcesAsync(controller, controlNode);
-
-            // IMPORTANT!
+            // We're still seeing occasional transient failures here so we're going to
+            // wait for a while and then retry a few times after failures.  Hopefully,
+            // doing this will make cluster setup reliable for end users.
             //
-            // This must be the last cluster setup steps.
+            // Note that this is possible because the setup operations are all idempotent.
+            //
+            // Note also that we're going to catch and log any exceptions for analysis.
 
-            controller.ThrowIfCancelled();
-            await WriteClusterConfigMapsAsync(controller, controlNode);
+            const int maxRetries = 3;
+
+            var retryCount    = 0;
+            var retryInterval = TimeSpan.FromSeconds(60);
+
+            var retry = new LinearRetryPolicy(
+                e =>
+                {
+                    if (++retryCount < maxRetries)
+                    {
+                        var error = $"TRANSIENT ERROR: Pausing for [{retryInterval.TotalSeconds}] seconds; retry [{retryCount} of {maxRetries}]: {NeonHelper.ExceptionError(e)}";
+
+                        controller.LogGlobalError(error);
+                        controller.LogGlobalException(e);
+
+                        cluster.ClearNodeStatus();
+                        controller.SetGlobalStepStatus(error);
+                    }
+
+                    return true;
+                }, 
+                maxAttempts:   maxRetries,
+                retryInterval: TimeSpan.FromSeconds(60));
+
+            await retry.InvokeAsync(
+                async () =>
+                {
+                    cluster.ClearNodeStatus();
+                    controller.SetGlobalStepStatus();
+
+                    controller.ThrowIfCancelled();
+                    ConfigureKubernetes(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    ConfigureKubelet(controller, cluster.ControlNodes);
+
+                    //###############################
+                    // $debug(jefflill): DELETE THIS!
+                    if (retryCount == 0)
+                    {
+                        throw new Exception("Testing setup retry");
+                    }
+                    //###############################
+
+                    controller.ThrowIfCancelled();
+                    ConfigureWorkstation(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    ConnectCluster(controller);
+
+                    controller.ThrowIfCancelled();
+                    await ConfigureControlPlaneTaintsAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await TaintNodesAsync(controller);
+
+                    controller.ThrowIfCancelled();
+                    await LabelNodesAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await CreateNamespacesAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await InstallCrdsAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await CreateRootUserAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await ConfigurePriorityClassesAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await InstallCalicoCniAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await InstallMetricsServerAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await InstallIstioAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await InstallPrometheusAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await InstallCertManagerAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await InstallKubeDashboardAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    if (cluster.Definition.Features.NodeProblemDetector)
+                    {
+                        await InstallNodeProblemDetectorAsync(controller, controlNode);
+                    }
+
+                    controller.ThrowIfCancelled();
+                    await InstallOpenEbsAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await InstallReloaderAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await InstallSystemDbAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await InstallRedisAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await InstallClusterOperatorAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await InstallSsoAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    if (cluster.Definition.Features.Kiali)
+                    {
+                        await InstallKialiAsync(controller, controlNode);
+                    }
+
+                    controller.ThrowIfCancelled();
+                    await InstallMinioAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await InstallHarborAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await WriteClusterInfoAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await InstallMonitoringAsync(controller);
+
+                    controller.ThrowIfCancelled();
+                    await InstallNeonDashboardAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await InstallNodeAgentAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await InstallContainerRegistryResourcesAsync(controller, controlNode);
+
+                    // IMPORTANT!
+                    //
+                    // This must be the last cluster setup steps.
+
+                    controller.ThrowIfCancelled();
+                    await WriteClusterConfigMapsAsync(controller, controlNode);
+                });
         }
 
         /// <summary>
