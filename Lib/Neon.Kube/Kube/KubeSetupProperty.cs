@@ -136,5 +136,11 @@ namespace Neon.Kube
         /// image is being deployed.
         /// </summary>
         public const string PrebuiltDesktop = "prebuilt-desktop";
+
+        /// <summary>
+        /// Property name for a <see cref="DesktopServiceProxy"/> instance that can be used to perform
+        /// specific privileged operations from a non-privileged process.
+        /// </summary>
+        public const string DesktopServiceProxy = "desktop-service-proxy";
     }
 }

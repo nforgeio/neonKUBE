@@ -268,7 +268,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
                 () =>
                 {
                     controller.LogProgress(this, verb: "patch", message: "linux");
-                    UpdateLinux();
+                    PatchLinux();
                 });
         }
 

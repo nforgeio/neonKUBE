@@ -492,6 +492,8 @@ namespace Neon.Kube.DesktopService
         /// <inheritdoc/>
         public async Task<GrpcRelayLogBatchReply> RelayLogBatchAsync(GrpcRelayLogBatchRequest request, CallContext context = default)
         {
+            await SyncContext.Clear;
+
             // $todo(jefflill): Temporarily disabling this.
 #if TODO
             var batch = NeonHelper.JsonDeserialize<Batch<LogRecord>>(request.BatchJson);
@@ -504,6 +506,8 @@ namespace Neon.Kube.DesktopService
         /// <inheritdoc/>
         public async Task<GrpcRelayTraceBatchReply> RelayTraceBatchAsync(GrpcRelayTraceBatchRequest request, CallContext context = default)
         {
+            await SyncContext.Clear;
+
             var batch = NeonHelper.JsonDeserialize<Batch<Activity>>(request.BatchJson);
 
             // $todo(jefflill): Temporarily disabling this.
@@ -511,6 +515,38 @@ namespace Neon.Kube.DesktopService
             DesktopService.TraceExporter.Export(batch);
 #endif
             return await Task.FromResult(new GrpcRelayTraceBatchReply());
+        }
+
+        /// <inheritdoc/>
+        public async Task<GrpcBaseReply> ModifyLocalHosts(GrpcModifyLocalHostsRequest request, CallContext context = default)
+        {
+            await SyncContext.Clear;
+
+            try
+            {
+                NetHelper.ModifyLocalHosts(request.Section, request.HostEntries);
+
+                return await Task.FromResult(new GrpcBaseReply());
+            }
+            catch (Exception e)
+            {
+                return new GrpcBaseReply(e);
+            }
+        }
+
+        /// <inheritdoc/>
+        public async Task<GrpcListLocalHostsSectionsReply> ListLocalHostSections(GrpcListLocalHostsSectionsRequest request, CallContext context = default)
+        {
+            await SyncContext.Clear;
+
+            try
+            {
+                return await Task.FromResult(new GrpcListLocalHostsSectionsReply(NetHelper.ListLocalHostsSections()));
+            }
+            catch
+            {
+                return new GrpcListLocalHostsSectionsReply();
+            }
         }
     }
 }

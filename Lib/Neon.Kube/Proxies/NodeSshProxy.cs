@@ -558,23 +558,23 @@ namespace Neon.Kube
 
                     // Upgrade Linux packages if requested.
 
+                    bool rebootRequired;
+
                     if (fullUpgrade)
                     {
-                        Status = "upgrade: full";
-
-                        UpdateLinux();
+                        Status         = "upgrade: full";
+                        rebootRequired = PatchLinux();
                     }
                     else
                     {
-                        Status = "upgrade: partial";
-
-                        UpgradeLinuxDistribution();
+                        Status         = "upgrade: partial";
+                        rebootRequired = UpgradeLinuxDistribution();
                     }
 
                     // Check to see whether the upgrade requires a reboot and
                     // do that now if necessary.
 
-                    if (FileExists("/var/run/reboot-required"))
+                    if (rebootRequired)
                     {
                         Status = "restarting...";
                         Reboot();

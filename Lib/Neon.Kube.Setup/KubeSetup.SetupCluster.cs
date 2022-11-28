@@ -276,6 +276,11 @@ namespace Neon.Kube
                 LogFailedMarker = "# CLUSTER-END-SETUP-FAILED ####################################################"
             };
 
+            // Create a [DesktopService] proxy so setup can perform some privileged operations 
+            // from a non-privileged process.
+
+            var desktopServiceProxy = new DesktopServiceProxy();
+
             // Configure the setup controller state.
 
             controller.Add(KubeSetupProperty.Preparing, false);
@@ -289,6 +294,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.NeonCloudHeadendClient, HeadendClient.Create());
             controller.Add(KubeSetupProperty.Redact, !unredacted);
             controller.Add(KubeSetupProperty.PrebuiltDesktop, false);   // This is always FALSE for the setup controller.
+            controller.Add(KubeSetupProperty.DesktopServiceProxy, desktopServiceProxy);
 
             // Configure the setup steps.
 
@@ -418,9 +424,10 @@ namespace Neon.Kube
 
             cluster.HostingManager.AddPostSetupSteps(controller);
 
-            // We need to dispose this after the setup controller runs.
+            // We need to dispose these after the setup controller runs.
 
             controller.AddDisposable(cluster);
+            controller.AddDisposable(desktopServiceProxy);
 
             // Add a [Finished] event handler to the setup controller that captures additional
             // information about the cluster including things like cluster pod status and logs

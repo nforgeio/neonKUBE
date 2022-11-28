@@ -279,5 +279,23 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// <returns>The <see cref="GrpcRelayTraceBatchReply"/>.</returns>
         [OperationContract]
         Task<GrpcRelayTraceBatchReply> RelayTraceBatchAsync(GrpcRelayTraceBatchRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Modifies the local <b>$/etc/hosts</b> file which usually required elevated rights to access.
+        /// </summary>
+        /// <param name="request">The request specifying how to modify the local hosts.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>The <see cref="GrpcBaseReply"/>.</returns>
+        [OperationContract]
+        Task<GrpcBaseReply> ModifyLocalHosts(GrpcModifyLocalHostsRequest request, CallContext context = default);
+
+        /// <summary>
+        /// Lists the sections from the local <b>$/etc/hosts</b> file.
+        /// </summary>
+        /// <param name="request">The request specifying how to modify the local hosts.</param>
+        /// <param name="context">Optionally specifies the gRPC call context.</param>
+        /// <returns>The <see cref="GrpcListLocalHostsSectionsReply"/>.</returns>
+        [OperationContract]
+        Task<GrpcListLocalHostsSectionsReply> ListLocalHostSections(GrpcListLocalHostsSectionsRequest request, CallContext context = default);
     }
 }

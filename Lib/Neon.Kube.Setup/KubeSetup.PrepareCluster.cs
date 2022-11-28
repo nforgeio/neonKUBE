@@ -241,6 +241,11 @@ namespace Neon.Kube
                 throw new InvalidOperationException($"Cannot overwrite existing cluster login [{KubeConst.RootUser}@{clusterDefinition.Name}].  Remove the login first when you're VERY SURE IT'S NOT IMPORTANT!");
             }
 
+            // Create a [DesktopService] proxy so setup can perform some privileged operations 
+            // from a non-privileged process.
+
+            var desktopServiceProxy = new DesktopServiceProxy();
+
             // Configure the setup controller state.
 
             controller.Add(KubeSetupProperty.Preparing, true);
@@ -256,6 +261,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.DisableImageDownload, !string.IsNullOrEmpty(nodeImagePath));
             controller.Add(KubeSetupProperty.Redact, !unredacted);
             controller.Add(KubeSetupProperty.PrebuiltDesktop, prebuiltDesktop);
+            controller.Add(KubeSetupProperty.DesktopServiceProxy, desktopServiceProxy);
 
             // Configure the cluster preparation steps.
 
@@ -496,8 +502,9 @@ namespace Neon.Kube
                     {
                         controller.SetGlobalStepStatus($"configure: node local DNS");
 
-                        var node    = cluster.Nodes.Single();
-                        var sbHosts = new StringBuilder(node.DownloadText("/etc/hosts"));
+                        var node                = cluster.Nodes.Single();
+                        var sbHosts             = new StringBuilder(node.DownloadText("/etc/hosts"));
+                        var desktopServiceProxy = controller.Get<DesktopServiceProxy>(KubeSetupProperty.DesktopServiceProxy);
 
                         sbHosts.AppendLineLinux($"{hostAddress} {hostName}");
                         sbHosts.AppendLineLinux($"{hostAddress} *.{hostName}");
@@ -506,14 +513,14 @@ namespace Neon.Kube
 
                         controller.SetGlobalStepStatus($"configure: workstation local DNS");
 
-                        var sections    = NetHelper.ListLocalHostsSections();
+                        var sections    = desktopServiceProxy.ListLocalHostsSections();
                         var neonSection = sections.FirstOrDefault(section => section.Name.Equals(KubeConst.EtcHostsSectionName, StringComparison.InvariantCultureIgnoreCase));
                         var hostEntries = neonSection != null ? neonSection.HostEntries : new Dictionary<string, IPAddress>();
 
                         hostEntries[hostName]        = hostAddress;
                         hostEntries[$"*.{hostName}"] = hostAddress;
 
-                        NetHelper.ModifyLocalHosts(KubeConst.EtcHostsSectionName, hostEntries);
+                        desktopServiceProxy.ModifyLocalHosts(KubeConst.EtcHostsSectionName, hostEntries);
 
                         // Wait for the new local cluster DNS record to become active.
 
@@ -549,9 +556,10 @@ namespace Neon.Kube
                 },
                 quiet: true);
 
-            // We need to dispose this after the setup controller runs.
+            // We need to dispose these after the setup controller runs.
 
             controller.AddDisposable(cluster);
+            controller.AddDisposable(desktopServiceProxy);
 
             return controller;
         }
