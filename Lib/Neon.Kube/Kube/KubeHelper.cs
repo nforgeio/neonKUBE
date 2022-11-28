@@ -2350,7 +2350,6 @@ fingerprint-SHA256: |-
   2048 SHA256:/iqR31hw7aZI4BFWNjBd/Lsf5xZrwkd1+jIq6PafEpc root@neon-desktop (RSA)
 fingerprint-MD5: |-
   2048 MD5:14:17:80:10:c0:66:1a:b6:34:e8:64:0c:f3:5b:66:21 root@neon-desktop (RSA)
-privatePPK: """"
 passphrase: 
 ";
             return NeonHelper.YamlDeserialize<KubeSshKey>(keyYaml);

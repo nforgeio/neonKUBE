@@ -323,7 +323,7 @@ namespace Neon.Kube
                         // Generate a secure SSH password and append a string that guarantees that
                         // the generated password meets minimum cloud requirements.
 
-                        clusterLogin.SshPassword = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
+                        clusterLogin.SshPassword  = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
                         clusterLogin.SshPassword += ".Aa0";
                     }
 
@@ -532,6 +532,7 @@ namespace Neon.Kube
                             timeout: TimeSpan.FromSeconds(120));
                     }
 
+                    clusterLogin.SshPassword = null;    // We're no longer allowing SSH password authentication so we can clear this.
                     clusterLogin.Save();
                 });
 

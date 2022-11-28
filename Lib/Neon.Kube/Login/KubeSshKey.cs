@@ -54,14 +54,7 @@ namespace Neon.Kube
     /// <para>
     /// The <see cref="PublicPUB"/> property holds the public key.  This key has a 
     /// standard format can can be appended directly to the <b>authorized_keys</b>
-    /// file on a Linux machine.
-    /// </para>
-    /// <para>
-    /// <see cref="PrivateOpenSSH"/> and <see cref="PrivatePPK"/> hold the private key
-    /// using two different formats.  <see cref="PrivateOpenSSH"/> uses the <b>OpenSSH</b>
-    /// format and is suitable for deployment on Linux client workstations.  <see cref="PrivatePPK"/> 
-    /// uses the <b>PuTTY Private Key (PPK)</b> format and is suitable for deploying
-    /// on Windows client workstations that use PuTTY and WinSCP.
+    /// file on a Linux machine.  <see cref="PrivateOpenSSH"/> holds the private key.
     /// </para>
     /// <para>
     /// <see cref="Passphrase"/> is not currently used but eventually, this will
@@ -128,14 +121,6 @@ namespace Neon.Kube
         [YamlMember(Alias = "fingerprint-MD5", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string FingerprintMd5 { get; set; }
-
-        /// <summary>
-        /// The private key formatted as <b>PuTTY Private Key (PPK)</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "PrivatePPK", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "privatePPK", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string PrivatePPK { get; set; }
 
         /// <summary>
         /// <b>Not Implemented Yet:</b> The optional passphrase used for additional security.
