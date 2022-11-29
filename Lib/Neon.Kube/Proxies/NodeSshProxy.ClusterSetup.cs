@@ -1160,7 +1160,7 @@ ff02::2         ip6-allrouters
 
 127.0.0.1       kubernetes-control-plane
 {nodeAddress}{separator}{Name}
-{nodeAddress}{separator}{KubeConst.LocalClusterRegistry}
+{nodeAddress}{separator}{KubeConst.LocalClusterRegistryHostName}
 ");
             UploadText("/etc/hosts", sbHosts, tabStop: 4, outputEncoding: Encoding.UTF8);
         }
