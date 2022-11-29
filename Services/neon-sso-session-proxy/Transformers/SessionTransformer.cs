@@ -75,6 +75,8 @@ namespace NeonSsoSessionProxy
         public override async ValueTask TransformRequestAsync(HttpContext httpContext,
                 HttpRequestMessage proxyRequest, string destinationPrefix)
         {
+            logger.LogDebugEx(() => $"Transform request");
+
             await base.TransformRequestAsync(httpContext, proxyRequest, destinationPrefix);
         }
 
@@ -93,6 +95,8 @@ namespace NeonSsoSessionProxy
         public override async ValueTask<bool> TransformResponseAsync(HttpContext httpContext,
                 HttpResponseMessage proxyResponse)
         {
+            logger.LogDebugEx(() => $"Transform response");
+
             await base.TransformResponseAsync(httpContext, proxyResponse);
 
             Cookie cookie = null;

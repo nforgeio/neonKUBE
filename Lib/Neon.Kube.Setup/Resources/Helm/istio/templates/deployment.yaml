@@ -20,7 +20,7 @@ spec:
       priorityClassName: {{ .Values.priorityClassName }}
       containers:
         - name: istio-operator
-          image: {{.Values.images.organization}}/{{.Values.images.operator.repository}}:{{.Values.images.operator.tag}}
+          image: {{ .Values.images.registry }}/{{.Values.images.operator.repository}}:{{.Values.images.operator.tag}}
           command:
           - operator
           - server

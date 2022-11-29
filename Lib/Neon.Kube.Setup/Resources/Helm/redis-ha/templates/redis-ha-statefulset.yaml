@@ -352,7 +352,7 @@ spec:
 {{ toYaml .Values.sentinel.lifecycle | indent 10 }}
 {{- if .Values.exporter.enabled }}
       - name: redis-exporter
-        image: "{{ .Values.exporter.image.organization }}/{{ .Values.exporter.image.repository }}:{{ .Values.exporter.image.tag }}"
+        image: "{{ .Values.exporter.image.registry }}/{{ .Values.exporter.image.repository }}:{{ .Values.exporter.image.tag }}"
         imagePullPolicy: {{ .Values.exporter.pullPolicy }}
         args:
         {{- range $key, $value := .Values.exporter.extraArgs }}

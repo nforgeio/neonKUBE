@@ -38,7 +38,7 @@ spec:
       {{- end }}
       containers:
       - name: operator
-        image: "{{ .Values.image.operator.organization }}/{{ .Values.image.operator.repository }}:{{ .Values.image.operator.tag }}"
+        image: "{{ .Values.image.operator.registry }}/{{ .Values.image.operator.repository }}:{{ .Values.image.operator.tag }}"
         imagePullPolicy: {{ .Values.image.operator.pullPolicy | default "IfNotPresent" }}
         args:
           - --zap-log-level=info

@@ -448,7 +448,7 @@ apiVersion: kubeadm.k8s.io/v1beta3
 kind: ClusterConfiguration
 clusterName: {cluster.Name}
 kubernetesVersion: ""v{KubeVersions.Kubernetes}""
-imagerepository: ""{KubeConst.LocalClusterRegistry}""
+imageRepository: ""{KubeConst.LocalClusterRegistry}""
 apiServer:
   extraArgs:
     bind-address: 0.0.0.0
@@ -1014,7 +1014,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             //      - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
             //      - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
             //      - --feature-gates=EphemeralContainers=true,...                              <--- WE'RE INSERTING SOMETHING LIKE THIS!
-            //      image: registry.neon.local/kube-apiserver:v1.21.4
+            //      image: registry.neon.local/neonkube/kube-apiserver:v1.21.4
             //      imagePullPolicy: IfNotPresent
             //      livenessProbe:
             //        failureThreshold: 8
@@ -1332,7 +1332,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     var values = new Dictionary<string, object>();
 
-                    values.Add("images.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("images.registry", KubeConst.LocalClusterRegistry);
                     values.Add($"serviceMonitor.enabled", calicoAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
 
                     if (hostingManager.NodeMtu > 0)
@@ -1648,7 +1648,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     var values = new Dictionary<string, object>();
 
-                    values.Add("image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("image.registry", KubeConst.LocalClusterRegistry);
                     values.Add("serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add("serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
@@ -1864,7 +1864,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     var values = new Dictionary<string, object>();
 
-                    values.Add("image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("image.registry", KubeConst.LocalClusterRegistry);
                     values.Add($"prometheus.servicemonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"prometheus.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
@@ -1992,7 +1992,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     await k8s.UpsertClusterCustomObjectAsync<ClusterIssuer>(issuer, issuer.Name());
 
-                    values.Add("image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("image.registry", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
@@ -2278,9 +2278,9 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     var secret = await k8s.ReadNamespacedSecretAsync(KubeConst.DexSecret, KubeNamespace.NeonSystem);
 
                     values.Add("oidc.secret", Encoding.UTF8.GetString(secret.Data["NEONSSO_CLIENT_SECRET"]));
-                    values.Add("image.operator.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("image.operator.registry", KubeConst.LocalClusterRegistry);
                     values.Add("image.operator.repository", "kiali-kiali-operator");
-                    values.Add("image.kiali.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("image.kiali.registry", KubeConst.LocalClusterRegistry);
                     values.Add("image.kiali.repository", "kiali-kiali");
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
@@ -2427,17 +2427,17 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                             var values = new Dictionary<string, object>();
 
-                            values.Add("apiserver.image.organization", KubeConst.LocalClusterRegistry);
-                            values.Add("helper.image.organization", KubeConst.LocalClusterRegistry);
-                            values.Add("localprovisioner.image.organization", KubeConst.LocalClusterRegistry);
-                            values.Add("policies.monitoring.image.organization", KubeConst.LocalClusterRegistry);
-                            values.Add("snapshotOperator.controller.image.organization", KubeConst.LocalClusterRegistry);
-                            values.Add("snapshotOperator.provisioner.image.organization", KubeConst.LocalClusterRegistry);
-                            values.Add("provisioner.image.organization", KubeConst.LocalClusterRegistry);
-                            values.Add("ndm.image.organization", KubeConst.LocalClusterRegistry);
-                            values.Add("ndmOperator.image.organization", KubeConst.LocalClusterRegistry);
-                            values.Add("webhook.image.organization", KubeConst.LocalClusterRegistry);
-                            values.Add("jiva.image.organization", KubeConst.LocalClusterRegistry);
+                            values.Add("apiserver.image.registry", KubeConst.LocalClusterRegistry);
+                            values.Add("helper.image.registry", KubeConst.LocalClusterRegistry);
+                            values.Add("localprovisioner.image.registry", KubeConst.LocalClusterRegistry);
+                            values.Add("policies.monitoring.image.registry", KubeConst.LocalClusterRegistry);
+                            values.Add("snapshotOperator.controller.image.registry", KubeConst.LocalClusterRegistry);
+                            values.Add("snapshotOperator.provisioner.image.registry", KubeConst.LocalClusterRegistry);
+                            values.Add("provisioner.image.registry", KubeConst.LocalClusterRegistry);
+                            values.Add("ndm.image.registry", KubeConst.LocalClusterRegistry);
+                            values.Add("ndmOperator.image.registry", KubeConst.LocalClusterRegistry);
+                            values.Add("webhook.image.registry", KubeConst.LocalClusterRegistry);
+                            values.Add("jiva.image.registry", KubeConst.LocalClusterRegistry);
 
                             values.Add($"apiserver.replicas", apiServerAdvice.ReplicaCount);
                             values.Add($"provisioner.replicas", provisionerAdvice.ReplicaCount);
@@ -2568,28 +2568,28 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     var values = new Dictionary<string, object>();
 
-                    values.Add("cspcOperator.image.organization", KubeConst.LocalClusterRegistry);
-                    values.Add("cspcOperator.poolManager.image.organization", KubeConst.LocalClusterRegistry);
-                    values.Add("cspcOperator.cstorPool.image.organization", KubeConst.LocalClusterRegistry);
-                    values.Add("cspcOperator.cstorPoolExporter.image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("cspcOperator.image.registry", KubeConst.LocalClusterRegistry);
+                    values.Add("cspcOperator.poolManager.image.registry", KubeConst.LocalClusterRegistry);
+                    values.Add("cspcOperator.cstorPool.image.registry", KubeConst.LocalClusterRegistry);
+                    values.Add("cspcOperator.cstorPoolExporter.image.registry", KubeConst.LocalClusterRegistry);
 
-                    values.Add("cvcOperator.image.organization", KubeConst.LocalClusterRegistry);
-                    values.Add("cvcOperator.target.image.organization", KubeConst.LocalClusterRegistry);
-                    values.Add("cvcOperator.volumeMgmt.image.organization", KubeConst.LocalClusterRegistry);
-                    values.Add("cvcOperator.volumeExporter.image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("cvcOperator.image.registry", KubeConst.LocalClusterRegistry);
+                    values.Add("cvcOperator.target.image.registry", KubeConst.LocalClusterRegistry);
+                    values.Add("cvcOperator.volumeMgmt.image.registry", KubeConst.LocalClusterRegistry);
+                    values.Add("cvcOperator.volumeExporter.image.registry", KubeConst.LocalClusterRegistry);
 
-                    values.Add("csiController.resizer.image.organization", KubeConst.LocalClusterRegistry);
-                    values.Add("csiController.snapshotter.image.organization", KubeConst.LocalClusterRegistry);
-                    values.Add("csiController.snapshotController.image.organization", KubeConst.LocalClusterRegistry);
-                    values.Add("csiController.attacher.image.organization", KubeConst.LocalClusterRegistry);
-                    values.Add("csiController.provisioner.image.organization", KubeConst.LocalClusterRegistry);
-                    values.Add("csiController.driverRegistrar.image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("csiController.resizer.image.registry", KubeConst.LocalClusterRegistry);
+                    values.Add("csiController.snapshotter.image.registry", KubeConst.LocalClusterRegistry);
+                    values.Add("csiController.snapshotController.image.registry", KubeConst.LocalClusterRegistry);
+                    values.Add("csiController.attacher.image.registry", KubeConst.LocalClusterRegistry);
+                    values.Add("csiController.provisioner.image.registry", KubeConst.LocalClusterRegistry);
+                    values.Add("csiController.driverRegistrar.image.registry", KubeConst.LocalClusterRegistry);
 
-                    values.Add("cstorCSIPlugin.image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("cstorCSIPlugin.image.registry", KubeConst.LocalClusterRegistry);
 
-                    values.Add("csiNode.driverRegistrar.image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("csiNode.driverRegistrar.image.registry", KubeConst.LocalClusterRegistry);
 
-                    values.Add("admissionServer.image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("admissionServer.image.registry", KubeConst.LocalClusterRegistry);
 
                     await controlNode.InstallHelmChartAsync(controller, "openebs-cstor-operator", releaseName: "openebs-cstor", values: values, @namespace: KubeNamespace.NeonStorage);
                 });
@@ -3185,7 +3185,7 @@ $@"- name: StorageType
                         i++;
                     }
 
-                    values.Add("image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("image.registry", KubeConst.LocalClusterRegistry);
 
                     await controlNode.InstallHelmChartAsync(controller, "memcached",
                         releaseName: "neon-memcached",
@@ -3291,7 +3291,7 @@ $@"- name: StorageType
                     values.Add($"serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
                     values.Add($"minio.enabled", true);
-                    values.Add($"minio.bucket.tsdb.quota", clusterAdvice.MetricsQuota);
+                    values.Add($"minio.bucket.mimirTsdb.quota", clusterAdvice.MetricsQuota);
 
                     if (cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() == 1)
                     {
@@ -3343,7 +3343,7 @@ $@"- name: StorageType
                         i++;
                     }
 
-                    values.Add("image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("image.registry", KubeConst.LocalClusterRegistry);
 
                     await controlNode.InstallHelmChartAsync(controller, "mimir",
                         releaseName: "mimir",
@@ -3956,9 +3956,9 @@ $@"- name: StorageType
                             values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
                             values.Add($"metrics.serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                             values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
-                            values.Add("image.organization", KubeConst.LocalClusterRegistry);
-                            values.Add("mcImage.organization", KubeConst.LocalClusterRegistry);
-                            values.Add("helmKubectlJqImage.organization", KubeConst.LocalClusterRegistry);
+                            values.Add("image.registry", KubeConst.LocalClusterRegistry);
+                            values.Add("mcImage.registry", KubeConst.LocalClusterRegistry);
+                            values.Add("helmKubectlJqImage.registry", KubeConst.LocalClusterRegistry);
                             values.Add($"tenants[0].pools[0].servers", serviceAdvice.ReplicaCount);
                             values.Add($"tenants[0].pools[0].volumesPerServer", cluster.Definition.Storage.Minio.VolumesPerNode);
 
@@ -4155,7 +4155,7 @@ $@"- name: StorageType
 
                     var values = new Dictionary<string, object>();
 
-                    values.Add("image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("image.registry", KubeConst.LocalClusterRegistry);
                     values.Add($"replicas", serviceAdvice.ReplicaCount);
                     values.Add($"haproxy.metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"exporter.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
@@ -4491,7 +4491,7 @@ $@"- name: StorageType
 
                     var values = new Dictionary<string, object>();
 
-                    values.Add("image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("image.registry", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add("resource.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
@@ -4602,7 +4602,7 @@ $@"- name: StorageType
 
                     var values = new Dictionary<string, object>();
 
-                    values.Add("image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("image.registry", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
@@ -4658,7 +4658,7 @@ $@"- name: StorageType
 
                     var values = new Dictionary<string, object>();
 
-                    values.Add("image.organization", KubeConst.LocalClusterRegistry);
+                    values.Add("image.registry", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
@@ -5052,7 +5052,7 @@ $@"- name: StorageType
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonSsoSessionProxy);
             var values        = new Dictionary<string, object>();
 
-            values.Add("image.organization", KubeConst.LocalClusterRegistry);
+            values.Add("image.registry", KubeConst.LocalClusterRegistry);
             values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
             values.Add("cluster.name", cluster.Definition.Name);
             values.Add("cluster.domain", cluster.Definition.Domain);

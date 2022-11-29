@@ -26,7 +26,7 @@ spec:
       containers:
         - name: {{ template "cstor.fullname" . }}-cvc-operator
           imagePullPolicy: {{ .Values.cvcOperator.image.pullPolicy }}
-          image: "{{ .Values.cvcOperator.image.organization }}/{{ .Values.cvcOperator.image.repository }}:{{ .Values.cvcOperator.image.tag }}"
+          image: "{{ .Values.cvcOperator.image.registry }}/{{ .Values.cvcOperator.image.repository }}:{{ .Values.cvcOperator.image.tag }}"
           args:
             - "--v=2"
             - "--leader-election=false"
@@ -56,11 +56,11 @@ spec:
                 fieldRef:
                   fieldPath: status.podIP
             - name: OPENEBS_IO_CSTOR_TARGET_IMAGE
-              value: "{{ .Values.cvcOperator.target.image.organization }}/{{ .Values.cvcOperator.target.image.repository }}:{{ .Values.cvcOperator.target.image.tag }}"
+              value: "{{ .Values.cvcOperator.target.image.registry }}/{{ .Values.cvcOperator.target.image.repository }}:{{ .Values.cvcOperator.target.image.tag }}"
             - name:  OPENEBS_IO_CSTOR_VOLUME_MGMT_IMAGE
-              value: "{{ .Values.cvcOperator.volumeMgmt.image.organization }}/{{ .Values.cvcOperator.volumeMgmt.image.repository }}:{{ .Values.cvcOperator.volumeMgmt.image.tag }}"
+              value: "{{ .Values.cvcOperator.volumeMgmt.image.registry }}/{{ .Values.cvcOperator.volumeMgmt.image.repository }}:{{ .Values.cvcOperator.volumeMgmt.image.tag }}"
             - name:  OPENEBS_IO_VOLUME_MONITOR_IMAGE
-              value: "{{ .Values.cvcOperator.volumeExporter.image.organization }}/{{ .Values.cvcOperator.volumeExporter.image.repository }}:{{ .Values.cvcOperator.volumeExporter.image.tag }}"
+              value: "{{ .Values.cvcOperator.volumeExporter.image.registry }}/{{ .Values.cvcOperator.volumeExporter.image.repository }}:{{ .Values.cvcOperator.volumeExporter.image.tag }}"
 {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
 {{ toYaml .Values.imagePullSecrets | indent 2 }}

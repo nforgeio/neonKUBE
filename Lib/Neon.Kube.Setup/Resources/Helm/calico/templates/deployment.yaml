@@ -36,7 +36,7 @@ spec:
       priorityClassName: system-cluster-critical
       containers:
         - name: calico-kube-controllers
-          image: "{{ .Values.images.organization }}/{{ .Values.images.kubeControllers.repository }}:{{ .Values.images.kubeControllers.tag }}"
+          image: "{{ .Values.images.registry }}/{{ .Values.images.kubeControllers.repository }}:{{ .Values.images.kubeControllers.tag }}"
           env:
             # Choose which controllers to run.
             - name: ENABLED_CONTROLLERS

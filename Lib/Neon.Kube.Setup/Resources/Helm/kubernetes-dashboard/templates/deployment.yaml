@@ -124,7 +124,7 @@ spec:
 {{- end }}
 {{- if .Values.metricsScraper.enabled }}
       - name: dashboard-metrics-scraper
-        image: "{{ .Values.metricsScraper.image.organization }}/{{ .Values.metricsScraper.image.repository }}:{{ .Values.metricsScraper.image.tag }}"
+        image: "{{ .Values.metricsScraper.image.registry }}/{{ .Values.metricsScraper.image.repository }}:{{ .Values.metricsScraper.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
 {{- with .Values.metricsScraper.args }}
         args:

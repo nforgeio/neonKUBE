@@ -14,7 +14,7 @@ metadata:
     name: {{ .scheduler.name }}
   {{ end }}
 spec:
-  image: "{{ .image.organization}}/{{ .image.repository }}:{{ .image.tag }}"
+  image: "{{ .image.registry}}/{{ .image.repository }}:{{ .image.tag }}"
   imagePullPolicy: {{ .image.pullPolicy }}
   {{ if .imagePullSecret.name }}
   imagePullSecret:
