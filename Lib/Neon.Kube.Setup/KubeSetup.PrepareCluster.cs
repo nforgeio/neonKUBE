@@ -354,22 +354,13 @@ namespace Neon.Kube
                         }
                     }
 
-                    // We also need to generate the cluster's root SSO password.
+                    // We also need to generate the cluster's root SSO password, unless this was
+                    // specified in the cluster definition (typically for built-in clusters).
 
                     controller.SetGlobalStepStatus("generate: SSO password");
                     
-                    clusterLogin.SsoUsername = "root";
-
-                    if (cluster.Definition.IsDesktopBuiltIn)
-                    {
-                        // Built-in desktop clusters are configured with a fixed SSO password.
-
-                        clusterLogin.SsoPassword = KubeConst.RootDesktopPassword;
-                    }
-                    else
-                    {
-                        clusterLogin.SsoPassword = cluster.Definition.RootPassword ?? NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
-                    }
+                    clusterLogin.SsoUsername = KubeConst.RootUser;
+                    clusterLogin.SsoPassword = cluster.Definition.RootPassword ?? NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
 
                     clusterLogin.Save();
                 });
