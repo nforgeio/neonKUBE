@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -304,11 +305,13 @@ namespace Neon.Kube.Resources
             /// <summary>
             /// Identifies the target node where the command will be executed.
             /// </summary>
+            [Required]
             public string Node { get; set; }
 
             /// <summary>
             /// Specifies the Bash script to be executed on the target node.
             /// </summary>
+            [Required]
             public string BashScript { get; set; }
 
             /// <summary>
@@ -339,6 +342,7 @@ namespace Neon.Kube.Resources
             /// Specifies the maximum time the command will be allowed to execute
             /// in seconds.  Defaults to <b>5 minutes</b>.
             /// </summary>
+            [Required]
             public int TimeoutSeconds { get; set; } = 300;
 
             /// <summary>
@@ -347,6 +351,7 @@ namespace Neon.Kube.Resources
             /// this to <see cref="TaskStatus.FinishTimestamp"/> to determine
             /// when it should delete the task.  This defaults to <b>10 minutes</b>.
             /// </summary>
+            [Required]
             public int RetentionSeconds { get; set; } = 600;
 
             /// <summary>
@@ -360,6 +365,7 @@ namespace Neon.Kube.Resources
             /// when the command output may include secrets.
             /// </note>
             /// </summary>
+            [Required]
             public bool CaptureOutput { get; set; } = true;
 
             /// <summary>
