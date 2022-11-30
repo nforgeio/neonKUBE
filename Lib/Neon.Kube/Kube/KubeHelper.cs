@@ -2572,18 +2572,18 @@ TCPKeepAlive yes
         /// <param name="progressAction">Optional progress action that will be called with operation percent complete.</param>
         /// <param name="strictCheck">
         /// <para>
-        /// Optionally used to enable a slow but more comprehensive check of any existing file.
-        /// When this is enabled and the download file already exists along with its MD5 hash file,
+        /// Optionally used to disable a slow but more comprehensive check of any existing file.
+        /// When this is disabled and the download file already exists along with its MD5 hash file,
         /// the method will assume that the existing file matches when the file size is the same
         /// as specified in the manifest and manifest overall MD5 matches the local MD5 file.
         /// </para>
         /// <para>
-        /// Otherwise, this method will need to compute the MD5 hashes for the existing file parts
-        /// and compare those to the part MD5 hashes in the manifest, which can take quite a while
-        /// for large files.
+        /// Otherwise when <paramref name="strictCheck"/> is <c>true</c>, this method will need to 
+        /// compute the MD5 hashes for the existing file parts and compare those to the part MD5
+        /// hashes in the manifest, which can take quite a while for large files.
         /// </para>
         /// <para>
-        /// This defaults to <c>false</c>.
+        /// This defaults to <c>true</c>.
         /// </para>
         /// </param>
         /// <param name="cancellationToken">Optional cancellation token.</param>
@@ -2603,7 +2603,7 @@ TCPKeepAlive yes
             string                      imageUri, 
             string                      imagePath,
             DownloadProgressDelegate    progressAction    = null,
-            bool                        strictCheck       = false,
+            bool                        strictCheck       = true,
             CancellationToken           cancellationToken = default)
         {
             await SyncContext.Clear;
