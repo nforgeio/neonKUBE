@@ -107,19 +107,19 @@ namespace NeonClusterOperator
             var options = new ResourceManagerOptions()
             {
                 ManageCustomResourceDefinitions = false,
-                ErrorMaxRetryCount = int.MaxValue,
-                ErrorMaxRequeueInterval = TimeSpan.FromMinutes(10),
-                ErrorMinRequeueInterval = TimeSpan.FromSeconds(60),
-                IdleCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "IDLE events processed."),
-                ReconcileCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "RECONCILE events processed."),
-                DeleteCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "DELETED events processed."),
-                FinalizeCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_finalize", "FINALIZE events processed."),
-                StatusModifyCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "STATUS-MODIFY events processed."),
-                IdleErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle_error", "Failed IDLE event processing."),
-                ReconcileErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_reconcile_error", "Failed RECONCILE event processing."),
-                DeleteErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_delete_error", "Failed DELETE event processing."),
-                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_statusmodify_error", "Failed STATUS-MODIFY events processing."),
-                FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_finalize_error", "Failed FINALIZE events processing.")
+                ErrorMaxRetryCount              = int.MaxValue,
+                ErrorMaxRequeueInterval         = TimeSpan.FromMinutes(10),
+                ErrorMinRequeueInterval         = TimeSpan.FromSeconds(60),
+                IdleCounter                     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "IDLE events processed."),
+                ReconcileCounter                = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "RECONCILE events processed."),
+                DeleteCounter                   = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "DELETED events processed."),
+                FinalizeCounter                 = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_finalize", "FINALIZE events processed."),
+                StatusModifyCounter             = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "STATUS-MODIFY events processed."),
+                IdleErrorCounter                = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle_error", "Failed IDLE event processing."),
+                ReconcileErrorCounter           = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_reconcile_error", "Failed RECONCILE event processing."),
+                DeleteErrorCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_delete_error", "Failed DELETE event processing."),
+                StatusModifyErrorCounter        = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_statusmodify_error", "Failed STATUS-MODIFY events processing."),
+                FinalizeErrorCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_finalize_error", "Failed FINALIZE events processing.")
             };
 
             resourceManager = new ResourceManager<V1Secret, GlauthController>(

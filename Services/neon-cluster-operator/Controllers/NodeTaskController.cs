@@ -113,7 +113,7 @@ namespace NeonClusterOperator
             {
                 IdleInterval             = Program.Service.Environment.Get("NODETASK_IDLE_INTERVAL", TimeSpan.FromSeconds(1)),
                 ErrorMinRequeueInterval  = Program.Service.Environment.Get("NODETASK_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15)),
-                ErrorMaxRequeueInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromSeconds(60)),
+                ErrorMaxRequeueInterval  = Program.Service.Environment.Get("NODETASK_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromSeconds(60)),
                 IdleCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle", "IDLE events processed."),
                 ReconcileCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle", "RECONCILE events processed."),
                 DeleteCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle", "DELETED events processed."),

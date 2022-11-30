@@ -109,17 +109,17 @@ namespace NeonClusterOperator
 
             var options = new ResourceManagerOptions()
             {
-                ErrorMaxRetryCount = int.MaxValue,
-                ErrorMaxRequeueInterval = TimeSpan.FromMinutes(10),
-                ErrorMinRequeueInterval = TimeSpan.FromSeconds(60),
-                IdleCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_idle", "IDLE events processed."),
-                ReconcileCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_idle", "RECONCILE events processed."),
-                DeleteCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_idle", "DELETED events processed."),
-                FinalizeCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_finalize", "FINALIZE events processed."),
-                StatusModifyCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_idle", "STATUS-MODIFY events processed."),
-                IdleErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_idle_error", "Failed IDLE event processing."),
-                ReconcileErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_reconcile_error", "Failed RECONCILE event processing."),
-                DeleteErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_delete_error", "Failed DELETE event processing."),
+                ErrorMaxRetryCount       = int.MaxValue,
+                ErrorMaxRequeueInterval  = TimeSpan.FromMinutes(10),
+                ErrorMinRequeueInterval  = TimeSpan.FromSeconds(60),
+                IdleCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_idle", "IDLE events processed."),
+                ReconcileCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_idle", "RECONCILE events processed."),
+                DeleteCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_idle", "DELETED events processed."),
+                FinalizeCounter          = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_finalize", "FINALIZE events processed."),
+                StatusModifyCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_idle", "STATUS-MODIFY events processed."),
+                IdleErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_idle_error", "Failed IDLE event processing."),
+                ReconcileErrorCounter    = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_reconcile_error", "Failed RECONCILE event processing."),
+                DeleteErrorCounter       = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_delete_error", "Failed DELETE event processing."),
                 StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_statusmodify_error", "Failed STATUS-MODIFY events processing."),
                 FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_finalize_error", "Failed FINALIZE events processing.")
             };

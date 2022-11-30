@@ -106,17 +106,17 @@ namespace NeonClusterOperator
 
             var options = new ResourceManagerOptions()
             {
-                ErrorMaxRetryCount = 3,
-                ErrorMaxRequeueInterval = TimeSpan.FromSeconds(10),
-                ErrorMinRequeueInterval = TimeSpan.FromSeconds(10),
-                IdleCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle", "IDLE events processed."),
-                ReconcileCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle", "RECONCILE events processed."),
-                DeleteCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle", "DELETED events processed."),
-                StatusModifyCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle", "STATUS-MODIFY events processed."),
-                FinalizeCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_finalize", "FINALIZE events processed."),
-                IdleErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle_error", "Failed IDLE event processing."),
-                ReconcileErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_reconcile_error", "Failed RECONCILE event processing."),
-                DeleteErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_delete_error", "Failed DELETE event processing."),
+                ErrorMaxRetryCount       = 3,
+                ErrorMaxRequeueInterval  = TimeSpan.FromSeconds(10),
+                ErrorMinRequeueInterval  = TimeSpan.FromSeconds(10),
+                IdleCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle", "IDLE events processed."),
+                ReconcileCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle", "RECONCILE events processed."),
+                DeleteCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle", "DELETED events processed."),
+                StatusModifyCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle", "STATUS-MODIFY events processed."),
+                FinalizeCounter          = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_finalize", "FINALIZE events processed."),
+                IdleErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle_error", "Failed IDLE event processing."),
+                ReconcileErrorCounter    = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_reconcile_error", "Failed RECONCILE event processing."),
+                DeleteErrorCounter       = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_delete_error", "Failed DELETE event processing."),
                 StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_statusmodify_error", "Failed STATUS-MODIFY events processing."),
                 FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_finalize_error", "Failed FINALIZE events processing.")
             };

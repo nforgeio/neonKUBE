@@ -148,18 +148,19 @@ rm $0
 
             var options = new ResourceManagerOptions()
             {
-                IdleInterval             = Program.Service.Environment.Get("NODETASK_IDLE_INTERVAL", TimeSpan.FromSeconds(60)),
-                ErrorMinRequeueInterval  = Program.Service.Environment.Get("NODETASK_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15)),
-                ErrorMaxRequeueInterval    = Program.Service.Environment.Get("NODETASK_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromSeconds(60)),
-                IdleCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle", "IDLE events processed."),
-                ReconcileCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconcile", "RECONCILE events processed."),
-                DeleteCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_delete", "DELETED events processed."),
-                FinalizeCounter          = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_finalize", "FINALIZE events processed."),
-                IdleErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle_error", "Failed NodeTask IDLE event processing."),
-                ReconcileErrorCounter    = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconcile_error", "Failed NodeTask RECONCILE event processing."),
-                DeleteErrorCounter       = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_delete_error", "Failed NodeTask DELETE event processing."),
-                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodify_error", "Failed NodeTask STATUS-MODIFY events processing."),
-                FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_finalize_error", "Failed NodeTask FINALIZE events processing.")
+                ManageCustomResourceDefinitions = false,
+                IdleInterval                    = Program.Service.Environment.Get("NODETASK_IDLE_INTERVAL", TimeSpan.FromSeconds(60)),
+                ErrorMinRequeueInterval         = Program.Service.Environment.Get("NODETASK_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15)),
+                ErrorMaxRequeueInterval         = Program.Service.Environment.Get("NODETASK_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromSeconds(60)),
+                IdleCounter                     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle", "IDLE events processed."),
+                ReconcileCounter                = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconcile", "RECONCILE events processed."),
+                DeleteCounter                   = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_delete", "DELETED events processed."),
+                FinalizeCounter                 = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_finalize", "FINALIZE events processed."),
+                IdleErrorCounter                = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle_error", "Failed NodeTask IDLE event processing."),
+                ReconcileErrorCounter           = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconcile_error", "Failed NodeTask RECONCILE event processing."),
+                DeleteErrorCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_delete_error", "Failed NodeTask DELETE event processing."),
+                StatusModifyErrorCounter        = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodify_error", "Failed NodeTask STATUS-MODIFY events processing."),
+                FinalizeErrorCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_finalize_error", "Failed NodeTask FINALIZE events processing.")
             };
 
             resourceManager = new ResourceManager<V1NeonNodeTask, NodeTaskController>(
