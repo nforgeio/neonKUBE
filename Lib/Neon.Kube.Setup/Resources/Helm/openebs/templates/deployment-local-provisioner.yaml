@@ -40,7 +40,7 @@ spec:
       priorityClassName: {{ .Values.priorityClassName }}
       containers:
       - name: {{ template "openebs.name" . }}-localpv-provisioner
-        image: "{{ .Values.localprovisioner.image.organization }}/{{ .Values.localprovisioner.image.repository }}:{{ .Values.localprovisioner.image.tag }}"
+        image: "{{ .Values.localprovisioner.image.registry }}/{{ .Values.localprovisioner.image.repository }}:{{ .Values.localprovisioner.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
 {{- if .Values.localprovisioner.resources }}
         resources:
@@ -86,7 +86,7 @@ spec:
         - name: OPENEBS_IO_BASE_PATH
           value: "{{ .Values.localprovisioner.basePath }}"
         - name: OPENEBS_IO_HELPER_IMAGE
-          value: "{{ .Values.helper.image.organization }}/{{ .Values.helper.image.repository }}:{{ .Values.helper.image.tag }}"
+          value: "{{ .Values.helper.image.registry }}/{{ .Values.helper.image.repository }}:{{ .Values.helper.image.tag }}"
         - name: OPENEBS_IO_INSTALLER_TYPE
           value: "charts-helm"
         # LEADER_ELECTION_ENABLED is used to enable/disable leader election. By default

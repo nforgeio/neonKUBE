@@ -45,7 +45,7 @@ spec:
         # It can be deleted if this is a fresh installation, or if you have already
         # upgraded to use calico-ipam.
         - name: upgrade-ipam
-          image: "{{ .Values.images.organization }}/{{ .Values.images.cni.repository }}:{{ .Values.images.cni.tag }}"
+          image: "{{ .Values.images.registry }}/{{ .Values.images.cni.repository }}:{{ .Values.images.cni.tag }}"
           command: ["/opt/cni/bin/calico-ipam", "-upgrade"]
           envFrom:
           - configMapRef:
@@ -72,7 +72,7 @@ spec:
         # This container installs the CNI binaries
         # and CNI network config file on each node.
         - name: install-cni
-          image: "{{ .Values.images.organization }}/{{ .Values.images.cni.repository }}:{{ .Values.images.cni.tag }}"
+          image: "{{ .Values.images.registry }}/{{ .Values.images.cni.repository }}:{{ .Values.images.cni.tag }}"
           command: ["/opt/cni/bin/install"]
           envFrom:
           - configMapRef:
@@ -113,7 +113,7 @@ spec:
         # Adds a Flex Volume Driver that creates a per-pod Unix Domain Socket to allow Dikastes
         # to communicate with Felix over the Policy Sync API.
         - name: flexvol-driver
-          image: "{{ .Values.images.organization }}/{{ .Values.images.pod2Daemon.repository }}:{{ .Values.images.pod2Daemon.tag }}"
+          image: "{{ .Values.images.registry }}/{{ .Values.images.pod2Daemon.repository }}:{{ .Values.images.pod2Daemon.tag }}"
           volumeMounts:
           - name: flexvol-driver-host
             mountPath: /host/driver
@@ -124,7 +124,7 @@ spec:
         # container programs network policy and routes on each
         # host.
         - name: calico-node
-          image: "{{ .Values.images.organization }}/{{ .Values.images.node.repository }}:{{ .Values.images.node.tag }}"
+          image: "{{ .Values.images.registry }}/{{ .Values.images.node.repository }}:{{ .Values.images.node.tag }}"
           envFrom:
           - configMapRef:
               # Allow KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT to be overridden for eBPF mode.

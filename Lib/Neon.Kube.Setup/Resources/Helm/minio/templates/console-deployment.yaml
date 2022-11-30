@@ -47,7 +47,7 @@ spec:
       priorityClassName: {{ .Values.priorityClassName }}
       containers:
         - name: {{ .Chart.Name }}
-          image: "{{ .Values.console.image.organization }}/{{ .Values.console.image.repository }}:{{ .Values.console.image.tag }}"
+          image: "{{ .Values.console.image.registry }}/{{ .Values.console.image.repository }}:{{ .Values.console.image.tag }}"
           imagePullPolicy: {{ .Values.console.image.pullPolicy }}
           ports:
           - containerPort: 9090

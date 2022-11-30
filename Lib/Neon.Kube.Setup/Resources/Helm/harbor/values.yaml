@@ -1,5 +1,5 @@
 image:
-  organization: registry.neon.local
+  registry: registry.neon.local/neonkube
   repository: goharbor-harbor-operator
   # image.pullPolicy -- The image pull policy for the controller.
   pullPolicy: IfNotPresent

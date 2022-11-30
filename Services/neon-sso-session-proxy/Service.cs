@@ -101,13 +101,33 @@ namespace NeonSsoSessionProxy
         {
             await SetStatusAsync(NeonServiceStatus.Starting);
 
-            var configFile = GetConfigFilePath("/etc/neonkube/neon-sso-session-proxy/config.yaml");
-            using (StreamReader reader = new StreamReader(new FileStream(configFile, FileMode.Open, FileAccess.Read)))
+            k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
+
+            if (NeonHelper.IsDevWorkstation)
             {
-                Config = NeonHelper.YamlDeserializeViaJson<DexConfig>(await reader.ReadToEndAsync());
+                var configFile = await k8s.ReadNamespacedConfigMapAsync("neon-sso-dex", KubeNamespace.NeonSystem);
+
+                Config = NeonHelper.YamlDeserializeViaJson<DexConfig>(configFile.Data["config.yaml"]);
+            }
+            else
+            {
+                var configFile = GetConfigFilePath("/etc/neonkube/neon-sso-session-proxy/config.yaml");
+                using (StreamReader reader = new StreamReader(new FileStream(configFile, FileMode.Open, FileAccess.Read)))
+                {
+                    Config = NeonHelper.YamlDeserializeViaJson<DexConfig>(await reader.ReadToEndAsync());
+                }
             }
 
-            k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
+            // Dex config
+            if (NeonHelper.IsDevWorkstation)
+            {
+                DexClient = new DexClient(new Uri($"http://localhost:5556"), Logger);
+
+            }
+            else
+            {
+                DexClient = new DexClient(new Uri($"http://{KubeService.Dex}:5556"), Logger);
+            }
 
             Clients = new List<V1NeonSsoClient>();
 
@@ -139,9 +159,12 @@ namespace NeonSsoSessionProxy
                 }
             });
 
-            // Dex config
+            int port = 80;
 
-            DexClient = new DexClient(new Uri($"http://{KubeService.Dex}:5556"), Logger);
+            if (NeonHelper.IsDevWorkstation)
+            {
+                port = 11055;
+            }
 
             // Start the web service.
 
@@ -152,14 +175,14 @@ namespace NeonSsoSessionProxy
                         config.Sources.Clear();
                     })
                 .UseStartup<Startup>()
-                .UseKestrel(options => options.Listen(IPAddress.Any, 80))
+                .UseKestrel(options => options.Listen(IPAddress.Any, port))
                 .ConfigureServices(services => services.AddSingleton(typeof(Service), this))
                 .UseStaticWebAssets()
                 .Build();
 
             _ = webHost.RunAsync();
 
-            Logger.LogInformationEx(() => $"Listening on {IPAddress.Any}:80");
+            Logger.LogInformationEx(() => $"Listening on {IPAddress.Any}:{port}");
 
             // Indicate that the service is ready for business.
 
@@ -181,7 +204,7 @@ namespace NeonSsoSessionProxy
             
             DexClient.AuthHeaders.Add(client.Spec.Id, new BasicAuthenticationHeaderValue(client.Spec.Id, client.Spec.Secret));
 
-            Logger.LogInformationEx(() => $"Added client: {client.Name()}");
+            Logger.LogDebugEx(() => $"Added client: {client.Name()}");
         }
 
         private async Task RemoveClientAsync(V1NeonSsoClient client)
@@ -195,7 +218,7 @@ namespace NeonSsoSessionProxy
 
             DexClient.AuthHeaders.Remove(client.Spec.Id);
 
-            Logger.LogInformationEx(() => $"Removed client: {client.Name()}");
+            Logger.LogDebugEx(() => $"Removed client: {client.Name()}");
         }
     }
 }

@@ -29,7 +29,7 @@ spec:
       {{- end }}
       containers:
       - name: operator
-        image: "{{ .Values.operator.image.organization }}/{{ .Values.operator.image.repository }}:{{ .Values.operator.image.tag }}"
+        image: "{{ .Values.operator.image.registry }}/{{ .Values.operator.image.repository }}:{{ .Values.operator.image.tag }}"
         imagePullPolicy: {{ .Values.operator.image.pullPolicy | default "IfNotPresent" }}
         {{- if .Values.resources.agent }}
         resources:

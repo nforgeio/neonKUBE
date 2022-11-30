@@ -270,9 +270,9 @@ namespace NeonClusterOperator
                     {
                         Blocked = false,
                         Insecure = true,
-                        Location = KubeConst.LocalClusterRegistry,
+                        Location = KubeConst.LocalClusterRegistryHostName,
                         Password = rootUser.Password,
-                        Prefix = KubeConst.LocalClusterRegistry,
+                        Prefix = KubeConst.LocalClusterRegistryHostName,
                         SearchOrder = -1,
                         Username = rootUser.Name
                     }

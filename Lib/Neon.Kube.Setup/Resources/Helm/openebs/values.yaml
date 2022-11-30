@@ -30,7 +30,7 @@ varDirectoryPath:
 localprovisioner:
   enabled: true
   image:
-    organization: registry.neon.local
+    registry: registry.neon.local/neonkube
     repository: openebs-provisioner-localpv
     tag: 3.2.0
   replicas: 1
@@ -51,7 +51,7 @@ localprovisioner:
 ndm:
   enabled: true
   image:
-    organization: registry.neon.local
+    registry: registry.neon.local/neonkube
     repository: openebs-node-disk-manager
     tag: 1.9.0
   sparse:
@@ -80,7 +80,7 @@ ndm:
 ndmOperator:
   enabled: true
   image:
-    organization: registry.neon.local
+    registry: registry.neon.local/neonkube
     repository: openebs-node-disk-operator
     tag: 1.9.0
   replicas: 1
@@ -102,7 +102,7 @@ ndmOperator:
 ndmExporter:
   enabled: true
   image:
-    organization: registry.neon.local
+    registry: registry.neon.local/neonkube
     repository: openebs-node-disk-exporter
     tag: 1.9.0
     pullPolicy: IfNotPresent
@@ -126,28 +126,28 @@ ndmExporter:
 cstor:
   pool:
     image:
-      organization: registry.neon.local
+      registry: registry.neon.local/neonkube
       repository: openebs-cstor-pool
       tag: 3.2.0
   poolMgmt:
     image:
-      organization: registry.neon.local
+      registry: registry.neon.local/neonkube
       repository: openebs-cstor-pool-manager
       tag: 3.2.0
   target:
     image:
-      organization: registry.neon.local
+      registry: registry.neon.local/neonkube
       repository: openebs-cstor-istgt
       tag: 3.2.0
   webhook:
     image:
-      organization: registry.neon.local
+      registry: registry.neon.local/neonkube
       repository: openebs-cstor-webhook
       tag: 3.2.0
 
 helper:
   image:
-    organization: registry.neon.local
+    registry: registry.neon.local/neonkube
     repository: openebs-linux-utils
     tag: 3.2.0
 
@@ -177,7 +177,7 @@ policies:
   monitoring:
     enabled: true
     image:
-      organization: registry.neon.local
+      registry: registry.neon.local/neonkube
       repository: openebs-m-exporter
       tag: 3.2.0
 

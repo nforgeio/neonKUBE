@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  organization: registry.neon.local
+  registry: registry.neon.local/neonkube
   repository: neon-acme
   pullPolicy: IfNotPresent
 

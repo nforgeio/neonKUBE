@@ -27,16 +27,16 @@ spec:
       {{- end }}
       containers:
         - name: grafana-operator
-          image: {{ .Values.operator.image.organization }}/{{ .Values.operator.image.repository }}:{{ .Values.operator.image.tag }}
+          image: {{ .Values.operator.image.registry }}/{{ .Values.operator.image.repository }}:{{ .Values.operator.image.tag }}
           ports:
             - containerPort: 60000
               name: metrics
           command:
             - /manager
           args:
-            - --grafana-image={{ .Values.image.organization }}/{{ .Values.image.repository }}
+            - --grafana-image={{ .Values.image.registry }}/{{ .Values.image.repository }}
             - --grafana-image-tag={{ .Values.image.tag }}
-            - --grafana-plugins-init-container-image={{ .Values.pluginsInit.image.organization }}/{{ .Values.pluginsInit.image.repository }}
+            - --grafana-plugins-init-container-image={{ .Values.pluginsInit.image.registry }}/{{ .Values.pluginsInit.image.repository }}
             - --grafana-plugins-init-container-tag={{ .Values.pluginsInit.image.tag }}
             - --scan-all
             - --zap-log-level=error

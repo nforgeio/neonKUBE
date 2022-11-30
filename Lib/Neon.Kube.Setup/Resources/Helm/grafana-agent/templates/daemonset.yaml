@@ -47,7 +47,7 @@ spec:
               fieldPath: status.hostIP
         - name: GOGC
           value: "10"
-        image: "{{ .Values.agent.image.organization }}/{{ .Values.agent.image.repository }}:{{ .Values.agent.image.tag }}"
+        image: "{{ .Values.agent.image.registry }}/{{ .Values.agent.image.repository }}:{{ .Values.agent.image.tag }}"
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 12345

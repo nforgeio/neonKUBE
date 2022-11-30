@@ -97,6 +97,8 @@ namespace NeonSsoSessionProxy.Controllers
         [Route("{**catchAll}")]
         public async Task CatchAllAsync()
         {
+            Logger.LogDebugEx(() => $"Processing catch-all request");
+
             var error = await forwarder.SendAsync(HttpContext, $"http://{KubeService.Dex}:5556", httpClient, new ForwarderRequestConfig(), transformer);
 
             if (error != ForwarderError.None)

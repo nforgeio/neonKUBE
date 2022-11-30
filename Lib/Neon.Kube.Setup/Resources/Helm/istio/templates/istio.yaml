@@ -5,7 +5,7 @@ metadata:
   name: neon-ingress-istio
 spec:
   namespace: {{ .Release.Namespace }}
-  hub: {{ .Values.images.organization }}
+  hub: {{ .Values.images.registry }}
   tag: {{ .Values.images.istio.tag }}
   meshConfig:
     rootNamespace: {{ .Release.Namespace }}

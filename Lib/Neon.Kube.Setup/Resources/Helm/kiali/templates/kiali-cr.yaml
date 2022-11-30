@@ -31,7 +31,7 @@ spec:
         - profile
         - groups
   deployment:
-    image_name: {{ .Values.image.kiali.organization }}/{{ .Values.image.kiali.repository }}
+    image_name: {{ .Values.image.kiali.registry }}/{{ .Values.image.kiali.repository }}
     image_version: {{ .Values.image.kiali.tag }}
     image_pull_policy: {{ .Values.image.kiali.pullPolicy }}
     image_pull_secrets: {{ .Values.image.kiali.pullSecrets }}

@@ -57,7 +57,7 @@ spec:
         envFrom:
         - configMapRef:
             name: neon-cluster-operator-webhook
-        image: {{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}
+        image: {{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         startupProbe:
           exec:

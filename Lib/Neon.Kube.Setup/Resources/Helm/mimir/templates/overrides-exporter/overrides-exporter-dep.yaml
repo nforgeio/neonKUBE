@@ -51,7 +51,7 @@ spec:
         {{- toYaml .Values.overrides_exporter.initContainers | nindent 8 }}
       containers:
         - name: overrides-exporter
-          image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - "-target=overrides-exporter"

@@ -65,7 +65,7 @@ spec:
         envFrom:
         - configMapRef:
             name: neon-node-agent-webhook
-        image: {{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}
+        image: {{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         securityContext: 
           privileged: true

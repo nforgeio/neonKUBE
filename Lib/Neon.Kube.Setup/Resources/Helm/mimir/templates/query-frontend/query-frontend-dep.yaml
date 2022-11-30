@@ -51,7 +51,7 @@ spec:
       {{- end }}
       containers:
         - name: query-frontend
-          image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - -activity-tracker.filepath=/active-query-tracker/activity.log

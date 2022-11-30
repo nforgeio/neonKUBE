@@ -25,7 +25,7 @@ spec:
       priorityClassName: {{ .Values.priorityClassName }}
       containers:
         - name: {{ template "openebs.ndm-node-exporter.fullname" . }}
-          image: "{{ .Values.ndmExporter.image.organization }}/{{ .Values.ndmExporter.image.repository }}:{{ .Values.ndmExporter.image.tag }}"
+          image: "{{ .Values.ndmExporter.image.registry }}/{{ .Values.ndmExporter.image.repository }}:{{ .Values.ndmExporter.image.tag }}"
           command:
             - /usr/local/bin/exporter
           args:

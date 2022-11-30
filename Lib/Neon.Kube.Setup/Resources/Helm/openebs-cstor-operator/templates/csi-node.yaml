@@ -24,7 +24,7 @@ spec:
       hostNetwork: true
       containers:
         - name: {{ .Values.csiNode.driverRegistrar.name }}
-          image: "{{ .Values.csiNode.driverRegistrar.image.organization }}/{{ .Values.csiNode.driverRegistrar.image.repository }}:{{ .Values.csiNode.driverRegistrar.image.tag }}"
+          image: "{{ .Values.csiNode.driverRegistrar.image.registry }}/{{ .Values.csiNode.driverRegistrar.image.repository }}:{{ .Values.csiNode.driverRegistrar.image.tag }}"
           imagePullPolicy: {{ .Values.csiNode.driverRegistrar.image.pullPolicy }}
           resources:
 {{ toYaml .Values.csiNode.resources | indent 12 }}
@@ -58,7 +58,7 @@ spec:
             capabilities:
               add: ["CAP_MKNOD", "CAP_SYS_ADMIN", "SYS_ADMIN"]
             allowPrivilegeEscalation: true
-          image: "{{ .Values.cstorCSIPlugin.image.organization }}/{{ .Values.cstorCSIPlugin.image.repository }}:{{ .Values.cstorCSIPlugin.image.tag }}"
+          image: "{{ .Values.cstorCSIPlugin.image.registry }}/{{ .Values.cstorCSIPlugin.image.repository }}:{{ .Values.cstorCSIPlugin.image.tag }}"
           imagePullPolicy: {{ .Values.cstorCSIPlugin.image.pullPolicy }}
           args:
             - "--nodeid=$(OPENEBS_NODE_ID)"

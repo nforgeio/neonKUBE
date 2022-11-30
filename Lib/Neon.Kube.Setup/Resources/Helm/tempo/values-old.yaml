@@ -10,7 +10,7 @@ serviceMesh:
   enabled: true
 
 tempo:
-  organization: registry.neon.local
+  registry: registry.neon.local/neonkube
   repository: grafana-tempo
   tag: 1.3.2
   pullPolicy: IfNotPresent
@@ -89,7 +89,7 @@ tempo:
   #   existingClaim: volume-claim
 
 tempoQuery:
-  organization: registry.neon.local
+  registry: registry.neon.local/neonkube
   repository: grafana-tempo-query
   tag: 1.3.2
   pullPolicy: IfNotPresent
