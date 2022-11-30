@@ -314,14 +314,6 @@ spec:
                     controller.ThrowIfCancelled();
                     ConfigureKubelet(controller, cluster.ControlNodes);
 
-                    //###############################
-                    // $debug(jefflill): DELETE THIS!
-                    if (retryCount == 0)
-                    {
-                        throw new Exception("Testing setup retry");
-                    }
-                    //###############################
-
                     controller.ThrowIfCancelled();
                     ConfigureWorkstation(controller, controlNode);
 
