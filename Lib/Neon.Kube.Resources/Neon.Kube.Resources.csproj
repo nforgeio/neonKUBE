@@ -23,6 +23,7 @@
         <PackageReference Include="Neon.JsonConverters" Version="10000.0.2603-dev-master" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
         <PackageReference Include="NJsonSchema" Version="10.8.0" />
+        <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
         <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
         <PackageReference Include="System.IO.Compression" Version="4.3.0" />
         <PackageReference Include="System.Net.Http" Version="4.3.4" />
