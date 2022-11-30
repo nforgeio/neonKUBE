@@ -35,7 +35,7 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// Object API group.
         /// </summary>
-        public const string KubeGroup = ResourceHelper.NeonKubeResourceGroup;
+        public const string KubeGroup = $"minio.{ResourceHelper.NeonKubeResourceGroup}";
 
         /// <summary>
         /// Object API version.
