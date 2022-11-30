@@ -22,11 +22,7 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
-#if KUBEOPS
 namespace Neon.Kube.ResourceDefinitions
-#else
-namespace Neon.Kube.Resources
-#endif
 {
     /// <summary>
     /// Internal helpers.

@@ -24,8 +24,9 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 using Neon.Diagnostics;
+using Neon.Kube;
 using Neon.Kube.Operator;
-using Neon.Kube.ResourceDefinitions;
+using Neon.Kube.Resources;
 using Neon.Tasks;
 
 using k8s.Models;

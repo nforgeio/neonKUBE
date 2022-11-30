@@ -39,7 +39,6 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Operator;
-using Neon.Kube.ResourceDefinitions;
 using Neon.Retry;
 using Neon.Tasks;
 using Neon.Time;
@@ -47,10 +46,6 @@ using Neon.Time;
 using k8s;
 using k8s.Autorest;
 using k8s.Models;
-
-using KubeOps.Operator.Controller;
-using KubeOps.Operator.Finalizer;
-using KubeOps.Operator.Rbac;
 
 using Newtonsoft.Json;
 
@@ -66,7 +61,6 @@ namespace NeonClusterOperator
     /// <summary>
     /// Manages Glauth LDAP database.
     /// </summary>
-    [EntityRbac(typeof(V1Secret), Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Patch | RbacVerb.Watch | RbacVerb.Update)]
     public class GlauthController : IOperatorController<V1Secret>
     {
         //---------------------------------------------------------------------
@@ -112,6 +106,7 @@ namespace NeonClusterOperator
 
             var options = new ResourceManagerOptions()
             {
+                ManageCustomResourceDefinitions = false,
                 ErrorMaxRetryCount = int.MaxValue,
                 ErrorMaxRequeueInterval = TimeSpan.FromMinutes(10),
                 ErrorMinRequeueInterval = TimeSpan.FromSeconds(60),

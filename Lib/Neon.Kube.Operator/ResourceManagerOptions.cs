@@ -35,12 +35,6 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Tasks;
 
-using KubeOps.Operator;
-using KubeOps.Operator.Builder;
-using KubeOps.Operator.Controller;
-using KubeOps.Operator.Controller.Results;
-using KubeOps.Operator.Entities;
-
 using k8s;
 using Prometheus;
 using k8s.Models;
@@ -66,6 +60,11 @@ namespace Neon.Kube.Operator
         /// of resources.  This defaults to <b>1 minutes</b>.
         /// </summary>
         public TimeSpan IdleInterval { get; set; } = TimeSpan.FromMinutes(1);
+
+        /// <summary>
+        /// Specifies whether Kubernetes custom resources should be created.
+        /// </summary>
+        public bool ManageCustomResourceDefinitions { get; set; } = true;
 
         /// <summary>
         /// Specifies the minimum timeout to before retrying after an error.  Timeouts will start

@@ -39,7 +39,7 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Operator;
-using Neon.Kube.ResourceDefinitions;
+using Neon.Kube.Resources;
 using Neon.Retry;
 using Neon.Tasks;
 using Neon.Time;
@@ -47,10 +47,6 @@ using Neon.Time;
 using k8s;
 using k8s.Autorest;
 using k8s.Models;
-
-using KubeOps.Operator.Controller;
-using KubeOps.Operator.Finalizer;
-using KubeOps.Operator.Rbac;
 
 using Newtonsoft.Json;
 
@@ -67,7 +63,6 @@ namespace NeonClusterOperator
     /// <summary>
     /// Manages MinioBucket LDAP database.
     /// </summary>
-    [EntityRbac(typeof(V1MinioBucket), Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Patch | RbacVerb.Watch | RbacVerb.Update)]
     public class MinioBucketController : IOperatorController<V1MinioBucket>
     {
         //---------------------------------------------------------------------

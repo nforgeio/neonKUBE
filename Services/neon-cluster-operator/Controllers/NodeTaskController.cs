@@ -36,7 +36,7 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Operator;
-using Neon.Kube.ResourceDefinitions;
+using Neon.Kube.Resources;
 using Neon.Retry;
 using Neon.Tasks;
 using Neon.Time;
@@ -44,10 +44,6 @@ using Neon.Time;
 using k8s;
 using k8s.Autorest;
 using k8s.Models;
-
-using KubeOps.Operator.Controller;
-using KubeOps.Operator.Finalizer;
-using KubeOps.Operator.Rbac;
 
 using Newtonsoft.Json;
 
@@ -73,7 +69,6 @@ namespace NeonClusterOperator
     /// removing tasks that don't belong to an existing node.
     /// </para>
     /// </remarks>
-    [EntityRbac(typeof(V1NeonNodeTask), Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Patch | RbacVerb.Watch | RbacVerb.Update)]
     public class NodeTaskController : IOperatorController<V1NeonNodeTask>
     {
         //---------------------------------------------------------------------

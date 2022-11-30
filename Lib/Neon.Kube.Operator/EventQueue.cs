@@ -39,18 +39,11 @@ using Neon.IO;
 using Neon.Kube;
 using Neon.Tasks;
 
-using KubeOps.Operator;
-using KubeOps.Operator.Builder;
-using KubeOps.Operator.Controller;
-using KubeOps.Operator.Entities;
-
 using k8s;
 using k8s.Autorest;
 using k8s.Models;
 
 using Prometheus;
-using System.Reactive.Subjects;
-using KubeOps.Operator.Kubernetes;
 using OpenTelemetry.Resources;
 
 namespace Neon.Kube.Operator

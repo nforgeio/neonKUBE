@@ -34,16 +34,12 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Operator;
-using Neon.Kube.ResourceDefinitions;
+using Neon.Kube.Resources;
 using Neon.Retry;
 using Neon.Tasks;
 
 using k8s;
 using k8s.Models;
-
-using KubeOps.Operator.Controller;
-using KubeOps.Operator.Finalizer;
-using KubeOps.Operator.Rbac;
 
 using Newtonsoft.Json;
 using Prometheus;
@@ -96,7 +92,6 @@ namespace NeonNodeAgent
     /// Node tasks on the host node will be simulated in this case by simply doing nothing.
     /// </note>
     /// </remarks>
-    [EntityRbac(typeof(V1NeonContainerRegistry), Verbs = RbacVerb.Get | RbacVerb.Patch | RbacVerb.List | RbacVerb.Watch | RbacVerb.Update)]
     public class ContainerRegistryController : IOperatorController<V1NeonContainerRegistry>
     {
         //---------------------------------------------------------------------

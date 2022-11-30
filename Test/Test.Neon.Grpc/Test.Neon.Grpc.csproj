@@ -5,7 +5,6 @@
 		<IsPackable>false</IsPackable>
 		<RootNamespace>TestDeployment</RootNamespace>
 		<AssemblyName>Test.Neon.Grpc</AssemblyName>
-		<IsPackable>false</IsPackable>
 		<Configurations>Debug;Release</Configurations>
 		<GenerateDocumentationFile>false</GenerateDocumentationFile>
 	</PropertyGroup>

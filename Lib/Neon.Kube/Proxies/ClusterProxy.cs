@@ -34,6 +34,7 @@ using k8s.Util.Common;
 
 using Neon.Common;
 using Neon.IO;
+using Neon.Kube;
 using Neon.Kube.Resources;
 using Neon.Net;
 using Neon.Retry;

@@ -19,8 +19,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-using Neon.Kube;
-
 namespace Neon.Kube.ResourceDefinitions
 {
     /// <summary>

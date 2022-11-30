@@ -38,21 +38,17 @@ using Neon.IO;
 using Neon.Kube;
 using Neon.Tasks;
 
-using KubeOps.Operator;
-using KubeOps.Operator.Builder;
-using KubeOps.Operator.Controller;
-using KubeOps.Operator.Entities;
-
 using k8s;
 using k8s.Autorest;
+using k8s.LeaderElection;
 using k8s.Models;
 
 using Prometheus;
-using KubeOps.Operator.Events;
-using KubeOps.Operator.Kubernetes;
 using OpenTelemetry.Resources;
 using Microsoft.AspNetCore.Mvc;
 using KellermanSoftware.CompareNetObjects;
+using System.Security.AccessControl;
+using Neon.Kube.Resources;
 
 // $todo(jefflill):
 //
@@ -374,6 +370,11 @@ namespace Neon.Kube.Operator
             Task.Run(
                 async () =>
                 {
+                    if (options.ManageCustomResourceDefinitions)
+                    {
+                        await CreateOrReplaceCustomResourceDefinitionAsync();
+                    }
+
                     // Start the IDLE reconcile loop.
 
                     stopIdleLoop         = false;
@@ -452,6 +453,28 @@ namespace Neon.Kube.Operator
                     await CreateController().OnNewLeaderAsync(identity);
 
                 }).Wait();
+        }
+
+        private async Task CreateOrReplaceCustomResourceDefinitionAsync()
+        {
+            var generator = new CustomResourceGenerator();
+
+            var crd = await generator.GenerateCustomResourceDefinitionAsync(typeof(TEntity));
+
+            var existingList = await k8s.ListCustomResourceDefinitionAsync(
+               fieldSelector: $"metadata.name={crd.Name()}");
+
+            var existingCustomResourceDefinition = existingList?.Items?.SingleOrDefault();
+
+            if (existingCustomResourceDefinition != null)
+            {
+                crd.Metadata.ResourceVersion = existingCustomResourceDefinition.ResourceVersion();
+                await k8s.ReplaceCustomResourceDefinitionAsync(crd, crd.Name());
+            }
+            else
+            {
+                await k8s.CreateCustomResourceDefinitionAsync(crd);
+            }
         }
 
         /// <summary>

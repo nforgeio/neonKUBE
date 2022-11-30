@@ -36,6 +36,7 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.Net;
 using Neon.Time;
+using Neon.Kube.Resources;
 
 namespace Neon.Kube
 {
@@ -98,7 +99,7 @@ namespace Neon.Kube
             var acmeOptionsPrefix = $"{nameof(ClusterDefinition.Network.AcmeOptions)}";
 
             Issuer = Issuer ?? new AcmeIssuer();
-            Issuer.Validate(clusterDefinition);
+            Issuer.Validate();
 
             // Validate the certificate durations.
 

@@ -36,9 +36,6 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Tasks;
 
-using KubeOps.Operator;
-using KubeOps.Operator.Builder;
-
 using k8s;
 using k8s.Models;
 
@@ -67,81 +64,6 @@ namespace Neon.Kube.Operator
                 DateFormatString = "yyyy-MM-ddTHH:mm:ssZ",
                 Converters       = new List<JsonConverter>() { new Newtonsoft.Json.Converters.StringEnumConverter() }
             };
-        }
-
-        /// <summary>
-        /// Returns <c>true</c> when <see cref="HandleGeneratorCommand{TStartup}(string[])"/> has been
-        /// called to generate CRDs and other configuration related files.  This means that the operator
-        /// won't be starting normally.
-        /// </summary>
-        public static bool GeneratingCRDs { get; private set; } = false;
-
-        /// <summary>
-        /// Handles <b>generator</b> commands invoked on an operator application
-        /// during build by the built-in KubeOps build targets.
-        /// </summary>
-        /// <typeparam name="TStartup">Specifies the operator's ASP.NET startup type.</typeparam>
-        /// <param name="args">The command line arguments.</param>
-        /// <returns>
-        /// <c>true</c> when the command was handled or <c>false</c> for other commands 
-        /// that should be handled by the operator application itself.
-        /// </returns>
-        /// <remarks>
-        /// <para>
-        /// The KubeOps operator SDK includes MSBUILD tasks that generate CRDs as well
-        /// as deployment related manifest files.  These work by executing the operator
-        /// application after it's built, passing one or more <b>generator</b> commands
-        /// on the command line.
-        /// </para>
-        /// <para>
-        /// You should call this early within your operator's <b>Main(string[] args)</b>
-        /// method, passing your controller's <b>Startup</b> type as the generic type parameter.
-        /// Your main method should exit immediately when this method returns <c>true</c>.
-        /// Otherwise, your <b>Main()</b> method should continue with normal application startup.
-        /// </para>
-        /// <para>
-        /// Your operator <b>Main()</b> entry point should look something like:
-        /// </para>
-        /// <code language="C#">
-        /// public static async Task Main(string[] args)
-        /// {
-        ///     if (await OperatorHelper.HandleGeneratorCommand&lt;Startup&gt;(args))
-        ///     {
-        ///         return;
-        ///     }
-        ///         
-        ///     // Continue with normal operator startup here.
-        /// }
-        /// </code>
-        /// </remarks>
-        public static async Task<bool> HandleGeneratorCommand<TStartup>(string[] args)
-            where TStartup: class, new()
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
-
-            try
-            {
-                if (args.FirstOrDefault() != "generator")
-                {
-                    return false;
-                }
-
-                GeneratingCRDs = true;
-
-                await Host.CreateDefaultBuilder(args)
-                    .ConfigureWebHostDefaults(builder => { builder.UseStartup<TStartup>(); })
-                    .Build()
-                    .RunOperatorAsync(args);
-
-                return true;
-            }
-            catch (Exception e)
-            {
-                Console.Error.WriteLine($"*** ERROR: {NeonHelper.ExceptionError(e)}");
-                Environment.Exit(1);
-                return true;
-            }
         }
 
         /// <summary>

@@ -38,6 +38,7 @@
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+        <PackageReference Include="JsonDiffPatch" Version="2.0.55" />
 		<PackageReference Include="Minio" Version="4.0.6" />
 		<PackageReference Include="NSwag.MSBuild" Version="13.18.0">
 		  <PrivateAssets>all</PrivateAssets>
@@ -55,8 +56,8 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
-		<ProjectReference Include="..\..\Lib\Neon.Kube.ResourceDefinitions\Neon.Kube.ResourceDefinitions.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
+		<ProjectReference Include="..\..\Lib\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
 	</ItemGroup>
 

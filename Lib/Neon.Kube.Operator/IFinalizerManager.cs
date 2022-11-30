@@ -17,7 +17,6 @@
 
 using k8s.Models;
 using k8s;
-using KubeOps.Operator.Finalizer;
 using System;
 using System.Collections.Generic;
 using System.Linq;

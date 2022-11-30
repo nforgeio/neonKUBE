@@ -35,9 +35,6 @@ using Neon.Service;
 using k8s;
 using k8s.Models;
 
-using KubeOps.Operator;
-using KubeOps.Operator.Builder;
-
 namespace NeonClusterOperator
 {
     /// <summary>
@@ -69,15 +66,6 @@ namespace NeonClusterOperator
                 Resources = Assembly.GetExecutingAssembly().GetResourceFileSystem("NeonClusterOperator.Resources");
 
                 //-------------------------------------------------------------
-                // Intercept and handle KubeOps [generator] commands executed by the 
-                // KubeOps MSBUILD tasks.
-
-                if (await OperatorHelper.HandleGeneratorCommand<Startup>(args))
-                {
-                    return;
-                }
-
-                //-------------------------------------------------------------
                 // Start the operator service.
 
                 Service = new Service(KubeService.NeonClusterOperator);
@@ -93,20 +81,6 @@ namespace NeonClusterOperator
                 Console.Error.WriteLine(NeonHelper.ExceptionError(e));
                 Environment.Exit(-1);
             }
-        }
-
-        /// <summary>
-        /// Identifies assemblies that may include custom resource types as well adding the
-        /// program assembly so the controller endpoints can also be discovered.  This method
-        /// adds these assemblies to the <see cref="KubeOps.Operator.Builder.IOperatorBuilder"/> passed.
-        /// </summary>
-        /// <param name="operatorBuilder">The target operator builder.</param>
-        internal static void AddResourceAssemblies(KubeOps.Operator.Builder.IOperatorBuilder operatorBuilder)
-        {
-            Covenant.Requires<ArgumentNullException>(operatorBuilder != null, nameof(operatorBuilder));
-
-            operatorBuilder.AddResourceAssembly(Assembly.GetExecutingAssembly());
-            operatorBuilder.AddResourceAssembly(typeof(Neon.Kube.ResourceDefinitions.Stub).Assembly);
         }
     }
 }

@@ -23,29 +23,16 @@ using k8s;
 using k8s.Models;
 using System.Runtime.Serialization;
 
-#if KUBEOPS
-using DotnetKubernetesClient.Entities;
-using KubeOps.Operator.Entities;
-using KubeOps.Operator.Entities.Annotations;
-using Neon.Kube;
-#endif
+using Neon.Kube.Operator;
 
-#if KUBEOPS
 namespace Neon.Kube.ResourceDefinitions
-#else
-namespace Neon.Kube.Resources
-#endif
 {
     /// <summary>
     /// Used for unit testing Kubernetes clients.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
-#if KUBEOPS
-    [KubernetesEntityShortNames]
     [EntityScope(EntityScope.Namespaced)]
-    [Description("Defines a Minio bucket.")]
-#endif
-    public class V1MinioBucket : CustomKubernetesEntity<V1MinioBucket.V1MinioBucketSpec, V1MinioBucket.V1MinioBucketStatus>
+    public class V1MinioBucket : IKubernetesObject<V1ObjectMeta>, ISpec<V1MinioBucket.V1MinioBucketSpec>
     {
         /// <summary>
         /// Object API group.
@@ -74,6 +61,34 @@ namespace Neon.Kube.Resources
         {
             this.SetMetadata();
         }
+
+        /// <summary>
+        /// Gets or sets APIVersion defines the versioned schema of this
+        /// representation of an object. Servers should convert recognized
+        /// schemas to the latest internal value, and may reject unrecognized
+        /// values. More info:
+        /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+        /// </summary>
+        public string ApiVersion { get; set; }
+
+        /// <summary>
+        /// Gets or sets kind is a string value representing the REST resource
+        /// this object represents. Servers may infer this from the endpoint
+        /// the client submits requests to. Cannot be updated. In CamelCase.
+        /// More info:
+        /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+        /// </summary>
+        public string Kind { get; set; }
+
+        /// <summary>
+        /// Gets or sets standard object metadata.
+        /// </summary>
+        public V1ObjectMeta Metadata { get; set; }
+
+        /// <summary>
+        /// The spec.
+        /// </summary>
+        public V1MinioBucketSpec Spec { get; set; }
 
         /// <summary>
         /// The node execute task specification.

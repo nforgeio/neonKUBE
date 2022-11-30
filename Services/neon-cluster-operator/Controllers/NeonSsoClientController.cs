@@ -39,7 +39,7 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Operator;
-using Neon.Kube.ResourceDefinitions;
+using Neon.Kube.Resources;
 using Neon.Retry;
 using Neon.Tasks;
 using Neon.Time;
@@ -49,10 +49,6 @@ using Dex;
 using k8s;
 using k8s.Autorest;
 using k8s.Models;
-
-using KubeOps.Operator.Controller;
-using KubeOps.Operator.Finalizer;
-using KubeOps.Operator.Rbac;
 
 using Newtonsoft.Json;
 
@@ -71,7 +67,6 @@ namespace NeonClusterOperator
     /// Configures Neon SSO using <see cref="V1NeonSsoClient"/>.
     /// </para>
     /// </summary>
-    [EntityRbac(typeof(V1NeonSsoClient), Verbs = RbacVerb.Get | RbacVerb.List | RbacVerb.Patch | RbacVerb.Watch | RbacVerb.Update)]
     public class NeonSsoClientController : IOperatorController<V1NeonSsoClient>
     {
         //---------------------------------------------------------------------

@@ -43,6 +43,7 @@ using Neon.Data;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Operator;
+using Neon.Kube.Resources;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Service;
@@ -50,8 +51,6 @@ using Neon.Tasks;
 
 using k8s;
 using k8s.Models;
-
-using KubeOps.Operator;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

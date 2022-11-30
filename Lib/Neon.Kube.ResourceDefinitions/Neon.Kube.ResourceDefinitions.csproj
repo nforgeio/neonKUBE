@@ -51,7 +51,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
-	  <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
+	  <ProjectReference Include="..\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
 	</ItemGroup>
 
 </Project>

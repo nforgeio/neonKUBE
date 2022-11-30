@@ -86,6 +86,7 @@
 
 	<ItemGroup>
 	  <Folder Include="Model\CRDs\Kubernetes\" />
+	  <Folder Include="Model\CRDs\Minio\" />
 	</ItemGroup>
 
 	<!--
