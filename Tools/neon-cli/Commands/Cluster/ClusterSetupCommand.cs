@@ -184,12 +184,6 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            if (string.IsNullOrEmpty(clusterLogin.SshPassword))
-            {
-                Console.Error.WriteLine($"*** ERROR: No cluster node SSH password found.");
-                Program.Exit(1);
-            }
-
             if (kubeCluster != null && !clusterLogin.SetupDetails.SetupPending)
             {
                 if (commandLine.GetOption("--force") == null && !Program.PromptYesNo($"One or more logins reference [{kubeCluster.Name}].  Do you wish to delete these?"))
