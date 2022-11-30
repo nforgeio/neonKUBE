@@ -38,7 +38,6 @@
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="KubeOps" Version="7.0.0-prerelease.2" />
 		<PackageReference Include="Minio" Version="4.0.6" />
 		<PackageReference Include="NSwag.MSBuild" Version="13.18.0">
 		  <PrivateAssets>all</PrivateAssets>
@@ -50,8 +49,8 @@
 		<PackageReference Include="Npgsql.OpenTelemetry" Version="6.0.7" />
 		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.9" />
 		<PackageReference Include="Quartz" Version="3.5.0" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2597-dev-jeff-cert" />
-        <PackageReference Include="Neon.Service" Version="10000.0.2597-dev-jeff-cert" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2598-dev-master" />
+        <PackageReference Include="Neon.Service" Version="10000.0.2598-dev-master" />
     </ItemGroup>
 
 	<ItemGroup>
@@ -122,7 +121,7 @@
 	</Target>
     
     <Target Name="NSwag" AfterTargets="BeforeBuild">
-        <Exec Command="$(NSwagExe) openapi2csclient /classname:HarborClient /namespace:NeonClusterOperator.Harbor /input:../../Lib/Neon.Kube/Harbor/swagger.json /output:HarborClient.cs" />
+        <Exec Command="$(NSwagExe) openapi2csclient /classname:HarborClient /namespace:NeonClusterOperator.Harbor /input:../../Lib/Neon.Kube/Harbor/swagger.json /output:HarborClient.mg.cs" />
     </Target>
 
 </Project>

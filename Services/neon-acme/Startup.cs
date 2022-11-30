@@ -104,7 +104,8 @@ namespace NeonAcme
         /// <param name="env">Specifies the web hosting environment.</param>
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (NeonHelper.IsDevWorkstation)
+            if (NeonHelper.IsDevWorkstation
+                || !string.IsNullOrEmpty(NeonAcmeService.GetEnvironmentVariable("DEBUG")))
             {
                 app.UseDeveloperExceptionPage();
             }

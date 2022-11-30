@@ -147,10 +147,10 @@ spec:
   initContainers: []
   sidecars:
   #- name: health-check
-  #  image: "{{ .Values.healthCheck.image.organization }}/{{ .Values.healthCheck.image.repository }}:{{ .Values.healthCheck.image.tag }}"
+  #  image: "{{ .Values.healthCheck.image.registry }}/{{ .Values.healthCheck.image.repository }}:{{ .Values.healthCheck.image.tag }}"
   #  imagePullPolicy: "{{ .Values.imagePullPolicy }}"
   - name: metrics
-    image: "{{ .Values.metrics.image.organization }}/{{ .Values.metrics.image.repository }}:{{ .Values.metrics.image.tag }}"
+    image: "{{ .Values.metrics.image.registry }}/{{ .Values.metrics.image.repository }}:{{ .Values.metrics.image.tag }}"
     imagePullPolicy: "{{ .Values.imagePullPolicy }}"
     ports:
     - name: http-metrics

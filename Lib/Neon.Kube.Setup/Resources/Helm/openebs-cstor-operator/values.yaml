@@ -22,23 +22,23 @@ cspcOperator:
   componentName: cspc-operator
   poolManager:
     image:
-      organization: registry.neon.local
+      registry: registry.neon.local/neonkube
       repository: openebs-cstor-pool-manager
       tag: 3.2.0
   cstorPool:
     image:
-      organization: registry.neon.local
+      registry: registry.neon.local/neonkube
       repository: openebs-cstor-pool
       tag: 3.2.0
   cstorPoolExporter:
     image:
-      organization: registry.neon.local
+      registry: registry.neon.local/neonkube
       repository: openebs-m-exporter
       tag: 3.2.0
   image:
     # Make sure that registry name end with a '/'.
     # For example : quay.io/ is a correct value here and quay.io is incorrect
-    organization: registry.neon.local
+    registry: registry.neon.local/neonkube
     repository: openebs-cspc-operator
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
@@ -56,23 +56,23 @@ cvcOperator:
   componentName: cvc-operator
   target:
     image:
-      organization: registry.neon.local
+      registry: registry.neon.local/neonkube
       repository: openebs-cstor-istgt
       tag: 3.2.0
   volumeMgmt:
     image:
-      organization: registry.neon.local
+      registry: registry.neon.local/neonkube
       repository: openebs-cstor-volume-manager
       tag: 3.2.0
   volumeExporter:
     image:
-      organization: registry.neon.local
+      registry: registry.neon.local/neonkube
       repository: openebs-m-exporter
       tag: 3.2.0
   image:
     # Make sure that registry name end with a '/'.
     # For example : quay.io/ is a correct value here and quay.io is incorrect
-    organization: registry.neon.local
+    registry: registry.neon.local/neonkube
     repository: openebs-cvc-operator
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
@@ -93,7 +93,7 @@ csiController:
     image:
       # Make sure that registry name end with a '/'.
       # For example : quay.io/ is a correct value here and quay.io is incorrect
-      organization: registry.neon.local
+      registry: registry.neon.local/neonkube
       repository: k8scsi-csi-resizer
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
@@ -103,7 +103,7 @@ csiController:
     image:
       # Make sure that registry name end with a '/'.
       # For example : quay.io/ is a correct value here and quay.io is incorrect
-      organization: registry.neon.local
+      registry: registry.neon.local/neonkube
       repository: k8scsi-csi-snapshotter
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
@@ -113,7 +113,7 @@ csiController:
     image:
       # Make sure that registry name end with a '/'.
       # For example : quay.io/ is a correct value here and quay.io is incorrect
-      organization: registry.neon.local
+      registry: registry.neon.local/neonkube
       repository: k8scsi-snapshot-controller
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
@@ -123,7 +123,7 @@ csiController:
     image:
       # Make sure that registry name end with a '/'.
       # For example : quay.io/ is a correct value here and quay.io is incorrect
-      organization: registry.neon.local
+      registry: registry.neon.local/neonkube
       repository: k8scsi-csi-attacher
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
@@ -133,7 +133,7 @@ csiController:
     image:
       # Make sure that registry name end with a '/'.
       # For example : quay.io/ is a correct value here and quay.io is incorrect
-      organization: registry.neon.local
+      registry: registry.neon.local/neonkube
       repository: k8scsi-csi-provisioner
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
@@ -151,7 +151,7 @@ cstorCSIPlugin:
   image:
     # Make sure that registry name end with a '/'.
     # For example : quay.io/ is a correct value here and quay.io is incorrect
-    organization: registry.neon.local
+    registry: registry.neon.local/neonkube
     repository: openebs-cstor-csi-driver
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
@@ -163,7 +163,7 @@ csiNode:
   driverRegistrar:
     name: "csi-node-driver-registrar"
     image:
-      organization: registry.neon.local
+      registry: registry.neon.local/neonkube
       repository: k8scsi-csi-node-driver-registrar
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
@@ -203,7 +203,7 @@ admissionServer:
   image:
     # Make sure that registry name end with a '/'.
     # For example : quay.io/ is a correct value here and quay.io is incorrect
-    organization: registry.neon.local
+    registry: registry.neon.local/neonkube
     repository: openebs-cstor-webhook
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
@@ -239,6 +239,6 @@ analytics:
 
 cleanup:
   image:
-    registry: registry.neon.local
+    registry: registry.neon.local/neonkube
     repository: bitnami-kubectl
     tag: 1.21.4

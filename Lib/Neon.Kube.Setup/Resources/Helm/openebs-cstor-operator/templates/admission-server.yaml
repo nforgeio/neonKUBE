@@ -26,7 +26,7 @@ spec:
       serviceAccountName: {{ .Values.serviceAccount.cstorOperator.name }}
       containers:
         - name: {{ template "cstor.fullname" . }}-admission-webhook
-          image: "{{ .Values.admissionServer.image.organization }}/{{ .Values.admissionServer.image.repository }}:{{ .Values.admissionServer.image.tag }}"
+          image: "{{ .Values.admissionServer.image.registry }}/{{ .Values.admissionServer.image.repository }}:{{ .Values.admissionServer.image.tag }}"
           imagePullPolicy: {{ .Values.admissionServer.image.pullPolicy }}
           resources:
 {{ toYaml .Values.admissionServer.resources | indent 12 }}

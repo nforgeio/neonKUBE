@@ -445,10 +445,10 @@ $@"
 unqualified-search-registries = []
 
 [[registry]]
-prefix   = ""{KubeConst.LocalClusterRegistry}""
+prefix   = ""{KubeConst.LocalClusterRegistryHostName}""
 insecure = true
 blocked  = false
-location = ""{KubeConst.LocalClusterRegistry}""
+location = ""{KubeConst.LocalClusterRegistryHostName}""
 ");
 
             //-----------------------------------------------------------------

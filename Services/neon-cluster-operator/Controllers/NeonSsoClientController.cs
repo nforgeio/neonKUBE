@@ -307,7 +307,8 @@ namespace NeonClusterOperator
 
                 var provider = alphaConfig.Providers.Where(p => p.ClientId == "neon-sso").Single();
                 
-                if (!provider.OidcConfig.ExtraAudiences.Contains(resource.Spec.Id))
+                if (resource.Spec.Id != "neon-sso"
+                    && !provider.OidcConfig.ExtraAudiences.Contains(resource.Spec.Id))
                 {
                     provider.OidcConfig.ExtraAudiences.Add(resource.Spec.Id);
                 }

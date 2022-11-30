@@ -47,7 +47,7 @@ spec:
       priorityClassName: {{ .Values.priorityClassName }}
       containers:
       - name: {{ template "openebs.name" . }}-ndm
-        image: "{{ .Values.ndm.image.organization }}/{{ .Values.ndm.image.repository }}:{{ .Values.ndm.image.tag }}"
+        image: "{{ .Values.ndm.image.registry }}/{{ .Values.ndm.image.repository }}:{{ .Values.ndm.image.tag }}"
         args:
           - -v=4
 {{- if .Values.featureGates.enabled }}

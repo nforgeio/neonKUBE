@@ -62,7 +62,7 @@ namespace Neon.Kube
         /// This value is required for all providers.
         /// </summary>
         [JsonProperty(PropertyName = "ClientSecretFile", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
-        [YamlMember(Alias = "clientSecretFile", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "clientSecretFile", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public string ClientSecretFile { get; set; }
 
@@ -97,7 +97,7 @@ namespace Neon.Kube
         /// If not specified, the default Go trust sources are used instead
         /// </remarks>
         [JsonProperty(PropertyName = "CaFiles", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
-        [YamlMember(Alias = "caFiles", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "caFiles", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(false)]
         public List<string> CaFiles { get; set; }
 
@@ -113,7 +113,7 @@ namespace Neon.Kube
         /// Defines the parameters that can be passed from the start URL to the IdP login URL
         /// </summary>
         [JsonProperty(PropertyName = "LoginUrlParameters", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
-        [YamlMember(Alias = "loginURLParameters", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "loginURLParameters", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public List<Oauth2ProxyLoginUrlParameters> LoginUrlParameters { get; set; }
 
@@ -121,7 +121,7 @@ namespace Neon.Kube
         /// The token redemption endpoint.
         /// </summary>
         [JsonProperty(PropertyName = "RedeemUrl", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
-        [YamlMember(Alias = "redeemURL", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "redeemURL", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public string RedeemUrl { get; set; }
 
@@ -129,7 +129,7 @@ namespace Neon.Kube
         /// The profile access endpoint.
         /// </summary>
         [JsonProperty(PropertyName = "ProfileUrl", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
-        [YamlMember(Alias = "profileURL", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "profileURL", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public string ProfileUrl { get; set; }
 
@@ -137,7 +137,7 @@ namespace Neon.Kube
         /// The profile access endpoint.
         /// </summary>
         [JsonProperty(PropertyName = "Resource", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
-        [YamlMember(Alias = "resource", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "resource", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public string Resource { get; set; }
 
@@ -145,7 +145,7 @@ namespace Neon.Kube
         /// The access token validation endpoint.
         /// </summary>
         [JsonProperty(PropertyName = "ValidateUrl", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
-        [YamlMember(Alias = "validateURL", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "validateURL", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public string ValidateUrl { get; set; }
 
@@ -153,7 +153,7 @@ namespace Neon.Kube
         /// The access token validation endpoint.
         /// </summary>
         [JsonProperty(PropertyName = "Scope", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
-        [YamlMember(Alias = "scope", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "scope", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public string Scope { get; set; }
 
@@ -161,7 +161,7 @@ namespace Neon.Kube
         /// A list of restrict logins to members of this group.
         /// </summary>
         [JsonProperty(PropertyName = "AllowedGroups", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
-        [YamlMember(Alias = "allowedGroups", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "allowedGroups", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public List<string> AllowedGroups { get; set; }
 
@@ -169,7 +169,7 @@ namespace Neon.Kube
         /// The access token validation endpoint.
         /// </summary>
         [JsonProperty(PropertyName = "CodeChallengeMethod", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
-        [YamlMember(Alias = "code_challenge_method", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "code_challenge_method", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public string CodeChallengeMethod { get; set; }
 

@@ -29,7 +29,7 @@ spec:
       containers:
         - name: {{ template "cstor.fullname" . }}-cspc-operator
           imagePullPolicy: {{ .Values.cspcOperator.image.pullPolicy }}
-          image: "{{ .Values.cspcOperator.image.organization }}/{{ .Values.cspcOperator.image.repository }}:{{ .Values.cspcOperator.image.tag }}"
+          image: "{{ .Values.cspcOperator.image.registry }}/{{ .Values.cspcOperator.image.repository }}:{{ .Values.cspcOperator.image.tag }}"
           resources:
 {{ toYaml .Values.cspcOperator.resources | indent 12 }}
           env:
@@ -57,11 +57,11 @@ spec:
             #- name: OPENEBS_IO_CSTOR_POOL_SPARSE_DIR
             #  value: "/var/openebs/sparse"
             - name: OPENEBS_IO_CSPI_MGMT_IMAGE
-              value: "{{ .Values.cspcOperator.poolManager.image.organization }}/{{ .Values.cspcOperator.poolManager.image.repository }}:{{ .Values.cspcOperator.poolManager.image.tag }}"
+              value: "{{ .Values.cspcOperator.poolManager.image.registry }}/{{ .Values.cspcOperator.poolManager.image.repository }}:{{ .Values.cspcOperator.poolManager.image.tag }}"
             - name: OPENEBS_IO_CSTOR_POOL_IMAGE
-              value: "{{ .Values.cspcOperator.cstorPool.image.organization }}/{{ .Values.cspcOperator.cstorPool.image.repository }}:{{ .Values.cspcOperator.cstorPool.image.tag }}"
+              value: "{{ .Values.cspcOperator.cstorPool.image.registry }}/{{ .Values.cspcOperator.cstorPool.image.repository }}:{{ .Values.cspcOperator.cstorPool.image.tag }}"
             - name:  OPENEBS_IO_CSTOR_POOL_EXPORTER_IMAGE
-              value: "{{ .Values.cspcOperator.cstorPoolExporter.image.organization }}/{{ .Values.cspcOperator.cstorPoolExporter.image.repository }}:{{ .Values.cspcOperator.cstorPoolExporter.image.tag }}"
+              value: "{{ .Values.cspcOperator.cstorPoolExporter.image.registry }}/{{ .Values.cspcOperator.cstorPoolExporter.image.repository }}:{{ .Values.cspcOperator.cstorPoolExporter.image.tag }}"
             - name: RESYNC_INTERVAL
               value: "{{ .Values.cspcOperator.resyncInterval }}"
 {{- if .Values.imagePullSecrets }}

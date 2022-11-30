@@ -43,7 +43,7 @@ spec:
       serviceAccountName: {{ template "oauth2-proxy.serviceAccountName" . }}
       containers:
       - name: {{ .Chart.Name }}
-        image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         args:
           - --config=/etc/oauth2_proxy/oauth2_proxy.cfg

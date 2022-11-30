@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  organization: registry.neon.local
+  registry: registry.neon.local/neonkube
   repository: neon-dashboard
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.

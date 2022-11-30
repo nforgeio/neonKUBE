@@ -6,7 +6,7 @@ metadata:
   labels:
     app: grafana-agent
 spec:
-  image: "{{ .Values.agent.image.organization }}/{{ .Values.agent.image.repository }}:{{ .Values.agent.image.tag }}"
+  image: "{{ .Values.agent.image.registry }}/{{ .Values.agent.image.repository }}:{{ .Values.agent.image.tag }}"
   priorityClassName: {{ .Values.priorityClassName }}
   podMetadata:
     annotations:
@@ -17,7 +17,7 @@ spec:
       - name: GOGC
         value: "10"
   - name: config-reloader 
-    image: "{{ .Values.configReloader.image.organization }}/{{ .Values.configReloader.image.repository }}:{{ .Values.configReloader.image.tag }}"
+    image: "{{ .Values.configReloader.image.registry }}/{{ .Values.configReloader.image.repository }}:{{ .Values.configReloader.image.tag }}"
   logLevel: info
   logFormat: json
   serviceAccountName: grafana-agent

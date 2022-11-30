@@ -41,7 +41,7 @@ spec:
       priorityClassName: {{ .Values.priorityClassName }}
       containers:
       - name: {{ template "openebs.fullname" . }}-ndm-operator
-        image: "{{ .Values.ndmOperator.image.organization }}/{{ .Values.ndmOperator.image.repository }}:{{ .Values.ndmOperator.image.tag }}"
+        image: "{{ .Values.ndmOperator.image.registry }}/{{ .Values.ndmOperator.image.repository }}:{{ .Values.ndmOperator.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
 {{- if .Values.ndmOperator.resources }}
         resources:
@@ -75,7 +75,7 @@ spec:
         - name: OPERATOR_NAME
           value: "node-disk-operator"
         - name: CLEANUP_JOB_IMAGE
-          value: "{{ .Values.helper.image.organization }}/{{ .Values.helper.image.repository }}:{{ .Values.helper.image.tag }}"
+          value: "{{ .Values.helper.image.registry }}/{{ .Values.helper.image.repository }}:{{ .Values.helper.image.tag }}"
 {{- if .Values.imagePullSecrets }}
         - name: OPENEBS_IO_IMAGE_PULL_SECRETS
           value: "{{- range $index, $secret := .Values.imagePullSecrets}}{{if $index}},{{end}}{{ $secret.name }}{{- end}}"

@@ -1,9 +1,9 @@
-organization: registry.neon.local
+registry: registry.neon.local/neonkube
 tag: 1.14.1-distroless
 
 
 images:
-  organization: registry.neon.local
+  registry: registry.neon.local/neonkube
   operator: 
     repository: operator
     tag: 1.14.1-distroless

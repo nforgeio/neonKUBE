@@ -43,14 +43,24 @@ namespace NeonSsoSessionProxy
     public class Startup
     {
         /// <summary>
+        /// Returns the configuration.
+        /// </summary>
+        public IConfiguration Configuration { get; }
+
+        /// <summary>
+        /// Returns the SSO proxy service.
+        /// </summary>
+        public Service Service { get; }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="configuration">Specifies the service configuration.</param>
         /// <param name="service">Specifies the service.</param>
         public Startup(IConfiguration configuration, Service service)
         {
-            Configuration              = configuration;
-            NeonSsoSessionProxyService = service;
+            this.Configuration = configuration;
+            this.Service       = service;
         }
 
         /// <summary>
@@ -59,7 +69,7 @@ namespace NeonSsoSessionProxy
         /// <param name="services">The service collection.</param>
         public void ConfigureServices(IServiceCollection services)
         {
-            if (NeonSsoSessionProxyService.InDevelopment)
+            if (Service.InDevelopment)
             {
                 services.AddDistributedMemoryCache();
             }
@@ -78,11 +88,11 @@ namespace NeonSsoSessionProxy
                     options.ConfigurationOptions.EndPoints.Add("neon-redis.neon-system:26379");
                 });
             }
-            services.AddSingleton<ILogger>(Program.Service.Logger);
+            services.AddSingleton<ILogger>(Service.Logger);
             services.AddHealthChecks();
             services.AddHttpForwarder();
             services.AddHttpClient();
-            services.AddSingleton(Program.Service.DexClient);
+            services.AddSingleton(Service.DexClient);
 
             // Http client for Yarp.
 
@@ -98,7 +108,7 @@ namespace NeonSsoSessionProxy
 
             // Cookie encryption cipher.
 
-            var aesCipher = new AesCipher(NeonSsoSessionProxyService.GetEnvironmentVariable("COOKIE_CIPHER", AesCipher.GenerateKey(), redact: true));
+            var aesCipher = new AesCipher(Service.GetEnvironmentVariable("COOKIE_CIPHER", AesCipher.GenerateKey(), redact: true));
 
             services.AddSingleton(aesCipher);
 
@@ -111,11 +121,13 @@ namespace NeonSsoSessionProxy
             services.AddSingleton<SessionTransformer>(
                 serviceProvider =>
                 {
-                    return new SessionTransformer(serviceProvider.GetService<IDistributedCache>(), aesCipher, Program.Service.DexClient, NeonSsoSessionProxyService.Logger, cacheOptions);
+                    return new SessionTransformer(serviceProvider.GetService<IDistributedCache>(), aesCipher, Program.Service.DexClient, Service.Logger, cacheOptions);
                 });
             
             services.AddControllers()
                 .AddNeon();
+
+            Service.Logger.LogDebugEx("Services configured.");
         }
 
         /// <summary>
@@ -125,16 +137,12 @@ namespace NeonSsoSessionProxy
         /// <param name="env">Specifies the web hosting environment.</param>
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (NeonSsoSessionProxyService.InDevelopment || !string.IsNullOrEmpty(NeonSsoSessionProxyService.GetEnvironmentVariable("DEBUG")))
+            if (Service.InDevelopment || !string.IsNullOrEmpty(Service.GetEnvironmentVariable("DEBUG")))
             {
                 app.UseDeveloperExceptionPage();
             }
             app.UseRouting();
-            app.UseHttpMetrics(options =>
-            {
-                // This identifies the page when using Razor Pages.
-                options.AddRouteParameter("page");
-            });
+            app.UseHttpMetrics();
             app.UseSsoSessionMiddleware();
             app.UseEndpoints(endpoints =>
             {
@@ -142,16 +150,6 @@ namespace NeonSsoSessionProxy
                 endpoints.MapControllers();
             });
         }
-
-        /// <summary>
-        /// Returns the configuration.
-        /// </summary>
-        public IConfiguration Configuration { get; }
-
-        /// <summary>
-        /// Returns the SSO proxy service.
-        /// </summary>
-        public Service NeonSsoSessionProxyService { get; }
     }
 }
 
