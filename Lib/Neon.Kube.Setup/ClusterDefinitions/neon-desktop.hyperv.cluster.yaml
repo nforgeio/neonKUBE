@@ -1,7 +1,7 @@
 name: neon-desktop
 datacenter: neondesktop
 purpose: development
-isDesktopBuiltIn: true
+isDesktop: true
 isLocked: false
 timeSources:
 - pool.ntp.org

@@ -372,9 +372,9 @@ namespace Neon.Kube
         /// <summary>
         /// Indicates whether the definition describes a neonDESKTOP built-in clusters.
         /// </summary>
-        [JsonProperty(PropertyName = "IsDesktopBuiltIn", Required = Required.Always)]
-        [YamlMember(Alias = "isDesktopBuiltIn", ApplyNamingConventions = false)]
-        public bool IsDesktopBuiltIn { get; set; }
+        [JsonProperty(PropertyName = "IsDesktop", Required = Required.Always)]
+        [YamlMember(Alias = "isDesktop", ApplyNamingConventions = false)]
+        public bool IsDesktop { get; set; }
 
         /// <summary>
         /// Indicates whether the cluster should be locked after being deployed successfully.
@@ -1108,14 +1108,14 @@ namespace Neon.Kube
             Container    = Container ?? new ContainerOptions();
             Features     = Features ?? new FeatureOptions();
 
-            if (IsDesktopBuiltIn && Nodes.Count() > 1)
+            if (IsDesktop && Nodes.Count() > 1)
             {
-                new ClusterDefinitionException($"[{nameof(IsDesktopBuiltIn)}=true] is allowed only for single node clusters.");
+                new ClusterDefinitionException($"[{nameof(IsDesktop)}=true] is allowed only for single node clusters.");
             }
 
-            if (IsDesktopBuiltIn && !IsSpecialNeonCluster)
+            if (IsDesktop && !IsSpecialNeonCluster)
             {
-                new ClusterDefinitionException($"[{nameof(IsDesktopBuiltIn)}=true] is allowed only when [{nameof(IsSpecialNeonCluster)}=true].");
+                new ClusterDefinitionException($"[{nameof(IsDesktop)}=true] is allowed only when [{nameof(IsSpecialNeonCluster)}=true].");
             }
 
             foreach (var node in Nodes)

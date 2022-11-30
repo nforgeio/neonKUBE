@@ -134,7 +134,7 @@ namespace Neon.Kube
 
             if (prebuiltDesktop)
             {
-                Covenant.Assert(clusterDefinition.IsDesktopBuiltIn, $"Expected [{nameof(clusterDefinition.IsDesktopBuiltIn)}] to be TRUE.");
+                Covenant.Assert(clusterDefinition.IsDesktop, $"Expected [{nameof(clusterDefinition.IsDesktop)}] to be TRUE.");
                 Covenant.Assert(clusterDefinition.Name == KubeConst.NeonDesktopClusterName, $"Expected cluster name [{KubeConst.NeonDesktopClusterName}] not [{clusterDefinition.Name}].");
 
                 debugMode = false;
@@ -312,7 +312,7 @@ namespace Neon.Kube
 
                     controller.SetGlobalStepStatus("generate: SSH password");
 
-                    if (cluster.Definition.IsDesktopBuiltIn)
+                    if (cluster.Definition.IsDesktop)
                     {
                         // We're going to configure a fixed password for built-in desktop clusters.
 
@@ -338,7 +338,7 @@ namespace Neon.Kube
                     //
                     //       The big advantage here is much faster cluster provisioning with fixed credentials.
 
-                    if (cluster.Definition.IsDesktopBuiltIn)
+                    if (cluster.Definition.IsDesktop)
                     {
                         clusterLogin.SshKey = KubeHelper.GetBuiltinDesktopSskKey();
                     }
@@ -459,7 +459,7 @@ namespace Neon.Kube
 
                     controller.SetGlobalStepStatus("create: cluster neoncluster.io domain");
 
-                    if (clusterDefinition.IsDesktopBuiltIn)
+                    if (clusterDefinition.IsDesktop)
                     {
                         clusterLogin.ClusterDefinition.Id     = KubeHelper.GenerateClusterId();
                         clusterLogin.ClusterDefinition.Domain = KubeConst.DesktopHostname;
@@ -489,7 +489,7 @@ namespace Neon.Kube
                     //      ADDRESS     desktop.neoncluster.io
                     //      ADDRESS     *.desktop.neoncluster.io
 
-                    if (clusterDefinition.IsDesktopBuiltIn)
+                    if (clusterDefinition.IsDesktop)
                     {
                         controller.SetGlobalStepStatus($"configure: node local DNS");
 

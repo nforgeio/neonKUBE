@@ -56,6 +56,7 @@ namespace Neon.Kube
             Environment        = clusterDefinition.Hosting.Environment;
             Purpose            = clusterDefinition.Purpose;
             Datacenter         = clusterDefinition.Datacenter;
+            IsDesktop          = clusterDefinition.IsDesktop;
             Latitude           = clusterDefinition.Latitude;
             Longitude          = clusterDefinition.Longitude;
             Domain             = clusterDefinition.Domain;
@@ -139,6 +140,13 @@ namespace Neon.Kube
         public string Datacenter { get; set; } = string.Empty;
 
         /// <summary>
+        /// Indicates whether the cluster is a neon-desktop cluster.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "IsDesktop", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(false)]
+        public bool IsDesktop { get; set; } = false;
+
+        /// <summary>
         /// <para>
         /// Optionally specifies the latitude of the cluster location.  This is a value
         /// between -90 and +90 degrees.
@@ -148,6 +156,8 @@ namespace Neon.Kube
         /// not at all.
         /// </note>
         /// </summary>
+        [JsonProperty(PropertyName = "Latitude", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
         public double? Latitude { get; set; } = null;
 
         /// <summary>
@@ -160,6 +170,8 @@ namespace Neon.Kube
         /// not at all.
         /// </note>
         /// </summary>
+        [JsonProperty(PropertyName = "Longitude", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
         public double? Longitude { get; set; } = null;
 
         /// <summary>

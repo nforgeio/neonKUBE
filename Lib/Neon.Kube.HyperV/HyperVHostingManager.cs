@@ -603,7 +603,7 @@ namespace Neon.Kube
 
             // Special case the built-in neon-desktop cluster.
 
-            if (cluster.Definition.IsDesktopBuiltIn && 
+            if (cluster.Definition.IsDesktop && 
                 vmName.Equals(KubeConst.NeonDesktopHyperVBuiltInVmName, StringComparison.InvariantCultureIgnoreCase) &&
                 cluster.Definition.NodeDefinitions.TryGetValue(vmName, out var nodeDefinition))
             {
