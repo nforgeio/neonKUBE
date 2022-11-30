@@ -71,7 +71,7 @@ USAGE:
 
             var currentLogin = KubeHelper.GetClusterLogin(currentContextName);
 
-            NeonHelper.OpenBrowser($"https://{currentLogin.ClusterDefinition.Domain}");
+            NeonHelper.OpenPlatformBrowser($"https://{currentLogin.ClusterDefinition.Domain}", newWindow: true);
             await Task.CompletedTask;
         }
     }
