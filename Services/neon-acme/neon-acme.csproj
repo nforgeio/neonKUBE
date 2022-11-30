@@ -17,8 +17,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Neon.Service" Version="10000.0.2598-dev-master" />
-		<PackageReference Include="Neon.Web" Version="10000.0.2598-dev-master" />
+		<PackageReference Include="Neon.Service" Version="10000.0.2601-dev-master" />
+		<PackageReference Include="Neon.Web" Version="10000.0.2601-dev-master" />
 		<PackageReference Include="prometheus-net" Version="6.0.0" />
 		<PackageReference Include="prometheus-net.AspNetCore" Version="6.0.0" />
 		<PackageReference Include="prometheus-net.DotNetRuntime" Version="4.2.4" />
