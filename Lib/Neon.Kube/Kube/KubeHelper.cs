@@ -78,7 +78,6 @@ namespace Neon.Kube
         private static string               cachedDesktopLogFolder;
         private static string               cachedDesktopHypervFolder;
         private static KubeClientConfig     cachedClientConfig;
-        private static X509Certificate2     cachedClusterCertificate;
         private static string               cachedInstallFolder;
         private static string               cachedToolsFolder;
         private static string               cachedPwshPath;
@@ -124,7 +123,6 @@ namespace Neon.Kube
             cachedDesktopFolder        = null;
             cachedDesktopHypervFolder  = null;
             cachedClientConfig         = null;
-            cachedClusterCertificate   = null;
             cachedInstallFolder        = null;
             cachedToolsFolder          = null;
             cachedPwshPath             = null;
@@ -1157,8 +1155,6 @@ namespace Neon.Kube
                 Config.CurrentContext = (string)contextName;
             }
 
-            cachedClusterCertificate = null;
-
             Config.Save();
         }
 
@@ -1208,60 +1204,6 @@ namespace Neon.Kube
         public static bool IsBuiltinCluster => CurrentContext != null && CurrentContext.IsNeonKube && CurrentContext.Name == KubeConst.NeonDesktopContextName;
 
         /// <summary>
-        /// Returns the Kuberneties API service certificate for the current
-        /// cluster context or <c>null</c> if we're not connected to a cluster.
-        /// </summary>
-        public static X509Certificate2 ClusterCertificate
-        {
-            get
-            {
-                if (cachedClusterCertificate != null)
-                {
-                    return cachedClusterCertificate;
-                }
-
-                if (CurrentContext == null)
-                {
-                    return null;
-                }
-
-                var cluster = KubeHelper.Config.GetCluster(KubeHelper.CurrentContext.Properties.Cluster);
-                var certPem = Encoding.UTF8.GetString(Convert.FromBase64String(cluster.Properties.CertificateAuthorityData));
-                var tlsCert = TlsCertificate.FromPemParts(certPem);
-
-                return cachedClusterCertificate = tlsCert.ToX509();
-            }
-        }
-
-        /// <summary>
-        /// Returns the Kuberneties API client certificate for the current
-        /// cluster context or <c>null</c> if we're not connected to a cluster.
-        /// </summary>
-        public static X509Certificate2 ClientCertificate
-        {
-            get
-            {
-                if (cachedClusterCertificate != null)
-                {
-                    return cachedClusterCertificate;
-                }
-
-                if (CurrentContext == null)
-                {
-                    return null;
-                }
-
-                var userContext = KubeHelper.Config.GetUser(KubeHelper.CurrentContext.Properties.User);
-                var certPem     = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientCertificateData));
-                var keyPem      = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientKeyData));
-                var tlsCert     = TlsCertificate.FromPemParts(certPem, keyPem);
-                var clientCert  = tlsCert.ToX509();
-
-                return null;
-            }
-        }
-
-        /// <summary>
         /// Generates a self-signed certificate for arbitrary hostnames, possibly including 
         /// hostnames with wildcards.
         /// </summary>
@@ -1288,7 +1230,7 @@ namespace Neon.Kube
         /// <param name="issuedBy">Optionally specifies the issuer.</param>
         /// <param name="issuedTo">Optionally specifies who/what the certificate is issued for.</param>
         /// <param name="friendlyName">Optionally specifies the certificate's friendly name.</param>
-        /// <returns>The new <see cref="TlsCertificate"/>.</returns>
+        /// <returns>The new <see cref="X509Certificate2"/>.</returns>
         public static X509Certificate2 CreateSelfSigned(
             string      hostname,
             int         bitCount     = 2048,
@@ -2350,7 +2292,6 @@ fingerprint-SHA256: |-
   2048 SHA256:/iqR31hw7aZI4BFWNjBd/Lsf5xZrwkd1+jIq6PafEpc root@neon-desktop (RSA)
 fingerprint-MD5: |-
   2048 MD5:14:17:80:10:c0:66:1a:b6:34:e8:64:0c:f3:5b:66:21 root@neon-desktop (RSA)
-privatePPK: """"
 passphrase: 
 ";
             return NeonHelper.YamlDeserialize<KubeSshKey>(keyYaml);
@@ -2631,18 +2572,18 @@ TCPKeepAlive yes
         /// <param name="progressAction">Optional progress action that will be called with operation percent complete.</param>
         /// <param name="strictCheck">
         /// <para>
-        /// Optionally used to enable a slow but more comprehensive check of any existing file.
-        /// When this is enabled and the download file already exists along with its MD5 hash file,
+        /// Optionally used to disable a slow but more comprehensive check of any existing file.
+        /// When this is disabled and the download file already exists along with its MD5 hash file,
         /// the method will assume that the existing file matches when the file size is the same
         /// as specified in the manifest and manifest overall MD5 matches the local MD5 file.
         /// </para>
         /// <para>
-        /// Otherwise, this method will need to compute the MD5 hashes for the existing file parts
-        /// and compare those to the part MD5 hashes in the manifest, which can take quite a while
-        /// for large files.
+        /// Otherwise when <paramref name="strictCheck"/> is <c>true</c>, this method will need to 
+        /// compute the MD5 hashes for the existing file parts and compare those to the part MD5
+        /// hashes in the manifest, which can take quite a while for large files.
         /// </para>
         /// <para>
-        /// This defaults to <c>false</c>.
+        /// This defaults to <c>true</c>.
         /// </para>
         /// </param>
         /// <param name="cancellationToken">Optional cancellation token.</param>
@@ -2662,7 +2603,7 @@ TCPKeepAlive yes
             string                      imageUri, 
             string                      imagePath,
             DownloadProgressDelegate    progressAction    = null,
-            bool                        strictCheck       = false,
+            bool                        strictCheck       = true,
             CancellationToken           cancellationToken = default)
         {
             await SyncContext.Clear;

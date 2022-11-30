@@ -64,8 +64,8 @@ namespace Neon.Kube
             InvokeIdempotent("setup/clean-up",
                 () =>
                 {
-                    // I'm not sure where this file comes from (perhaps from an old base image.
-                    // We're going to go ahead and delete this if present.
+                    // I'm not sure where this file comes from (perhaps from an old base image).
+                    // We're going to go ahead and delete this when present.
 
                     DeleteFile("/etc/ssh/sshd_config.d/50-neonkube.confE");
                 });

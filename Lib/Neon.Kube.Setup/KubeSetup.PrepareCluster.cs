@@ -241,6 +241,11 @@ namespace Neon.Kube
                 throw new InvalidOperationException($"Cannot overwrite existing cluster login [{KubeConst.RootUser}@{clusterDefinition.Name}].  Remove the login first when you're VERY SURE IT'S NOT IMPORTANT!");
             }
 
+            // Create a [DesktopService] proxy so setup can perform some privileged operations 
+            // from a non-privileged process.
+
+            var desktopServiceProxy = new DesktopServiceProxy();
+
             // Configure the setup controller state.
 
             controller.Add(KubeSetupProperty.Preparing, true);
@@ -256,6 +261,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.DisableImageDownload, !string.IsNullOrEmpty(nodeImagePath));
             controller.Add(KubeSetupProperty.Redact, !unredacted);
             controller.Add(KubeSetupProperty.PrebuiltDesktop, prebuiltDesktop);
+            controller.Add(KubeSetupProperty.DesktopServiceProxy, desktopServiceProxy);
 
             // Configure the cluster preparation steps.
 
@@ -317,7 +323,7 @@ namespace Neon.Kube
                         // Generate a secure SSH password and append a string that guarantees that
                         // the generated password meets minimum cloud requirements.
 
-                        clusterLogin.SshPassword = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
+                        clusterLogin.SshPassword  = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
                         clusterLogin.SshPassword += ".Aa0";
                     }
 
@@ -348,22 +354,13 @@ namespace Neon.Kube
                         }
                     }
 
-                    // We also need to generate the cluster's root SSO password.
+                    // We also need to generate the cluster's root SSO password, unless this was
+                    // specified in the cluster definition (typically for built-in clusters).
 
                     controller.SetGlobalStepStatus("generate: SSO password");
                     
-                    clusterLogin.SsoUsername = "root";
-
-                    if (cluster.Definition.IsDesktopBuiltIn)
-                    {
-                        // Built-in desktop clusters are configured with a fixed SSO password.
-
-                        clusterLogin.SsoPassword = KubeConst.RootDesktopPassword;
-                    }
-                    else
-                    {
-                        clusterLogin.SsoPassword = cluster.Definition.RootPassword ?? NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
-                    }
+                    clusterLogin.SsoUsername = KubeConst.RootUser;
+                    clusterLogin.SsoPassword = cluster.Definition.RootPassword ?? NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
 
                     clusterLogin.Save();
                 });
@@ -496,8 +493,9 @@ namespace Neon.Kube
                     {
                         controller.SetGlobalStepStatus($"configure: node local DNS");
 
-                        var node    = cluster.Nodes.Single();
-                        var sbHosts = new StringBuilder(node.DownloadText("/etc/hosts"));
+                        var node                = cluster.Nodes.Single();
+                        var sbHosts             = new StringBuilder(node.DownloadText("/etc/hosts"));
+                        var desktopServiceProxy = controller.Get<DesktopServiceProxy>(KubeSetupProperty.DesktopServiceProxy);
 
                         sbHosts.AppendLineLinux($"{hostAddress} {hostName}");
                         sbHosts.AppendLineLinux($"{hostAddress} *.{hostName}");
@@ -506,14 +504,14 @@ namespace Neon.Kube
 
                         controller.SetGlobalStepStatus($"configure: workstation local DNS");
 
-                        var sections    = NetHelper.ListLocalHostsSections();
+                        var sections    = desktopServiceProxy.ListLocalHostsSections();
                         var neonSection = sections.FirstOrDefault(section => section.Name.Equals(KubeConst.EtcHostsSectionName, StringComparison.InvariantCultureIgnoreCase));
                         var hostEntries = neonSection != null ? neonSection.HostEntries : new Dictionary<string, IPAddress>();
 
                         hostEntries[hostName]        = hostAddress;
                         hostEntries[$"*.{hostName}"] = hostAddress;
 
-                        NetHelper.ModifyLocalHosts(KubeConst.EtcHostsSectionName, hostEntries);
+                        desktopServiceProxy.ModifyLocalHosts(KubeConst.EtcHostsSectionName, hostEntries);
 
                         // Wait for the new local cluster DNS record to become active.
 
@@ -525,6 +523,7 @@ namespace Neon.Kube
                             timeout: TimeSpan.FromSeconds(120));
                     }
 
+                    clusterLogin.SshPassword = null;    // We're no longer allowing SSH password authentication so we can clear this.
                     clusterLogin.Save();
                 });
 
@@ -549,9 +548,10 @@ namespace Neon.Kube
                 },
                 quiet: true);
 
-            // We need to dispose this after the setup controller runs.
+            // We need to dispose these after the setup controller runs.
 
             controller.AddDisposable(cluster);
+            controller.AddDisposable(desktopServiceProxy);
 
             return controller;
         }

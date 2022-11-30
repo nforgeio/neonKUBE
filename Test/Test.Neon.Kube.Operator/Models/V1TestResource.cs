@@ -28,7 +28,7 @@ using Neon.Kube.Operator;
 using Neon.Kube.Resources;
 using Newtonsoft.Json;
 
-namespace TestKube
+namespace TestKubeOperator
 {
     /// <summary>
     /// Used for unit testing Kubernetes clients.

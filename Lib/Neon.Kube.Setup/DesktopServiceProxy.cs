@@ -45,6 +45,7 @@ using Neon.SSH;
 using Neon.Tasks;
 
 using ProtoBuf.Grpc.Client;
+using static System.Collections.Specialized.BitVector32;
 
 namespace Neon.Kube
 {
@@ -150,7 +151,10 @@ namespace Neon.Kube
             }
             else
             {
-                throw new NotImplementedException("$todo(jefflill): IMPLEMENT THIS!");
+                var request = new GrpcModifyLocalHostsRequest(section, hostEntries);
+                var reply   = desktopService.ModifyLocalHosts(request).Result;
+
+                reply.Error.EnsureSuccess();
             }
         }
 
@@ -166,7 +170,10 @@ namespace Neon.Kube
             }
             else
             {
-                throw new NotImplementedException("$todo(jefflill): IMPLEMENT THIS!");
+                var request = new GrpcListLocalHostsSectionsRequest();
+                var reply   = desktopService.ListLocalHostSections(request).Result;
+
+                return reply.Sections.Select(section => section.ToLocalHostSection());
             }
         }
     }

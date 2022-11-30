@@ -195,7 +195,7 @@ namespace Neon.Kube
         /// details such as the host CPU, RAM, storage, etc.  <see cref="NodeLabels"/>
         /// for more information.
         /// </summary>
-        [JsonProperty(PropertyName = "Labels")]
+        [JsonProperty(PropertyName = "Labels", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "labels", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public NodeLabels Labels { get; set; }
@@ -211,7 +211,7 @@ namespace Neon.Kube
         /// <summary>
         /// Hypervisor hosting related options for environments like Hyper-V and XenServer.
         /// </summary>
-        [JsonProperty(PropertyName = "Vm")]
+        [JsonProperty(PropertyName = "Vm", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "vm", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public VmNodeOptions Vm { get; set; }
@@ -219,7 +219,7 @@ namespace Neon.Kube
         /// <summary>
         /// Azure provisioning options for this node, or <c>null</c> to use reasonable defaults.
         /// </summary>
-        [JsonProperty(PropertyName = "Azure")]
+        [JsonProperty(PropertyName = "Azure", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "azure", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public AzureNodeOptions Azure { get; set; }
@@ -227,7 +227,7 @@ namespace Neon.Kube
         /// <summary>
         /// AWS provisioning options for this node, or <c>null</c> to use reasonable defaults.
         /// </summary>
-        [JsonProperty(PropertyName = "Aws")]
+        [JsonProperty(PropertyName = "Aws", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "aws", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public AwsNodeOptions Aws { get; set; }

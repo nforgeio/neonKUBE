@@ -37,7 +37,7 @@ using Neon.Xunit;
 
 using Xunit;
 
-namespace TestKube
+namespace TestKubeOperator
 {
     /// <summary>
     /// Custom Resource tests.

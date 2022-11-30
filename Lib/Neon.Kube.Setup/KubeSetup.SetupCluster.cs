@@ -47,75 +47,6 @@ namespace Neon.Kube
     public static partial class KubeSetup
     {
         /// <summary>
-        /// Returns the cluster definition required to prepare a neonDESKTOP built-in cluster for 
-        /// a specific hosting environment.
-        /// </summary>
-        /// <param name="hostEnvironment">Specifies the target environment.</param>
-        /// <param name="deploymentPrefix">
-        /// <para>
-        /// Optionally specifies a deployment prefix string to be set as <see cref="DeploymentOptions.Prefix"/>
-        /// in the cluster definition returned.  This can be used by <b>ClusterFixture</b> and custom tools
-        /// to help isolated temporary cluster assets from production clusters.
-        /// </para>
-        /// </param>
-        /// <returns>The cluster definition.</returns>
-        public static ClusterDefinition GetBuiltInClusterDefinition(HostingEnvironment hostEnvironment, string deploymentPrefix = null)
-        {
-            var resourceName = "Neon.Kube.ClusterDefinitions.";
-
-            switch (hostEnvironment)
-            {
-                case HostingEnvironment.HyperV:
-
-                    resourceName += "neon-desktop.hyperv.cluster.yaml";
-                    break;
-
-                case HostingEnvironment.Aws:
-                case HostingEnvironment.Azure:
-                case HostingEnvironment.BareMetal:
-                case HostingEnvironment.Google:
-                case HostingEnvironment.XenServer:
-
-                default:
-
-                    throw new NotSupportedException($"[{nameof(hostEnvironment)}={hostEnvironment}].");
-            }
-
-            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
-            {
-                using (var reader = new StreamReader(stream, encoding: Encoding.UTF8))
-                {
-                    var clusterDefinition = ClusterDefinition.FromYaml(reader.ReadToEnd());
-
-                    clusterDefinition.Validate();
-                    Covenant.Assert(clusterDefinition.NodeDefinitions.Count == 1, "Built-in cluster definitions must include exactly one node.");
-
-                    if (!string.IsNullOrEmpty(deploymentPrefix))
-                    {
-                        clusterDefinition.Deployment.Prefix = deploymentPrefix;
-                    }
-
-                    // We allow the built-in cluster to be deployed on machines with only
-                    // 4 processors.  When we see this, we're going to reduce the number
-                    // of processors assigned to the buuilt-in VM to just 3.
-
-                    var processorCount = Environment.ProcessorCount;
-
-                    if (processorCount < 4)
-                    {
-                        throw new NotSupportedException($"neonKUBE built-in clusters require the host to have at least [4] processors.  Only [{processorCount}] processors are present.");
-                    }
-                    else if (processorCount == 4)
-                    {
-                        clusterDefinition.Hosting.Vm.Cores = 3;
-                    }
-
-                    return clusterDefinition;
-                }
-            }
-        }
-
-        /// <summary>
         /// Constructs the <see cref="ISetupController"/> to be used for setting up a cluster.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
@@ -276,6 +207,11 @@ namespace Neon.Kube
                 LogFailedMarker = "# CLUSTER-END-SETUP-FAILED ####################################################"
             };
 
+            // Create a [DesktopService] proxy so setup can perform some privileged operations 
+            // from a non-privileged process.
+
+            var desktopServiceProxy = new DesktopServiceProxy();
+
             // Configure the setup controller state.
 
             controller.Add(KubeSetupProperty.Preparing, false);
@@ -289,6 +225,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.NeonCloudHeadendClient, HeadendClient.Create());
             controller.Add(KubeSetupProperty.Redact, !unredacted);
             controller.Add(KubeSetupProperty.PrebuiltDesktop, false);   // This is always FALSE for the setup controller.
+            controller.Add(KubeSetupProperty.DesktopServiceProxy, desktopServiceProxy);
 
             // Configure the setup steps.
 
@@ -418,9 +355,10 @@ namespace Neon.Kube
 
             cluster.HostingManager.AddPostSetupSteps(controller);
 
-            // We need to dispose this after the setup controller runs.
+            // We need to dispose these after the setup controller runs.
 
             controller.AddDisposable(cluster);
+            controller.AddDisposable(desktopServiceProxy);
 
             // Add a [Finished] event handler to the setup controller that captures additional
             // information about the cluster including things like cluster pod status and logs
