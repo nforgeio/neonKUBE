@@ -459,7 +459,7 @@ spec:
                 sanNames[node.Name]             = null;
             }
 
-            if (cluster.Definition.IsDesktopBuiltIn)
+            if (cluster.Definition.IsDesktop)
             {
                 sanNames[cluster.Definition.Name] = null;
             }
@@ -3479,7 +3479,7 @@ $@"- name: StorageType
                     values.Add($"loki.schemaConfig.configs[0].object_store", "aws");
                     values.Add($"loki.storageConfig.boltdb_shipper.shared_store", "s3");
 
-                    if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.Nodes.Count() == 1)
+                    if (cluster.Definition.IsDesktop || cluster.Definition.Nodes.Count() == 1)
                     {
                         values.Add($"loki.storageConfig.boltdb_shipper.cache_ttl", "24h");
                         values.Add($"limits_config.retention_period", "24h");
@@ -4844,7 +4844,7 @@ $@"- name: StorageType
             values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
             values.Add($"metrics.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
-            if (cluster.Definition.IsDesktopBuiltIn)
+            if (cluster.Definition.IsDesktop)
             {
                 values.Add($"persistence.size", "1Gi");
             }

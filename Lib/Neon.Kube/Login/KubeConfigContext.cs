@@ -90,7 +90,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public bool IsDesktopBuiltIn => IsNeonKube && Extension != null && Extension.ClusterDefinition.IsDesktopBuiltIn;
+        public bool IsDesktop => IsNeonKube && Extension != null && Extension.ClusterDefinition.IsDesktop;
 
         /// <summary>
         /// The cluster login information for the context.

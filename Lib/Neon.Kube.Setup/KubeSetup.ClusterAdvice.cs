@@ -71,9 +71,9 @@ namespace Neon.Kube
 
             clusterAdvice.MetricsEnabled  = true;
             clusterAdvice.MetricsInterval = cluster.Definition.Nodes.Count() > 6 ? "60s" : "5m";
-            clusterAdvice.MetricsQuota    = cluster.Definition.IsDesktopBuiltIn ? "1Gi" : "10Gi";
-            clusterAdvice.LogsQuota       = cluster.Definition.IsDesktopBuiltIn ? "1Gi" : "10Gi";
-            clusterAdvice.TracesQuota     = cluster.Definition.IsDesktopBuiltIn ? "1Gi" : "10Gi";
+            clusterAdvice.MetricsQuota    = cluster.Definition.IsDesktop ? "1Gi" : "10Gi";
+            clusterAdvice.LogsQuota       = cluster.Definition.IsDesktop ? "1Gi" : "10Gi";
+            clusterAdvice.TracesQuota     = cluster.Definition.IsDesktop ? "1Gi" : "10Gi";
 
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.AlertManager, CalculateAlertManagerAdvice(cluster));
             clusterAdvice.AddServiceAdvice(KubeClusterAdvice.BlackboxExporter, CalculateBlackboxExporterAdvice(cluster));
@@ -205,7 +205,7 @@ namespace Neon.Kube
 
             advice.ReplicaCount = 1;
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("64Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
@@ -221,7 +221,7 @@ namespace Neon.Kube
 
             advice.ReplicaCount = cluster.Definition.ControlNodes.Count();
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
@@ -258,7 +258,7 @@ namespace Neon.Kube
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.Grafana);
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("350Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
@@ -280,7 +280,7 @@ namespace Neon.Kube
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.GrafanaAgent);
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
@@ -300,7 +300,7 @@ namespace Neon.Kube
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.GrafanaAgentNode);
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
@@ -320,7 +320,7 @@ namespace Neon.Kube
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.GrafanaAgentOperator);
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.MetricsEnabled = false;
             }
@@ -335,7 +335,7 @@ namespace Neon.Kube
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.Harbor);
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.MetricsInterval = "1m";
             }
@@ -454,7 +454,7 @@ namespace Neon.Kube
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("32Mi");
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.MetricsEnabled = false;
             }
@@ -471,7 +471,7 @@ namespace Neon.Kube
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.MetricsEnabled = false;
             }
@@ -499,7 +499,7 @@ namespace Neon.Kube
             advice.PodMemoryLimit = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
             }
@@ -516,7 +516,7 @@ namespace Neon.Kube
             advice.ReplicaCount   = Math.Max(1, cluster.Definition.Nodes.Count() / 10);
             advice.MetricsEnabled = true;
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.MetricsInterval = "1m";
                 advice.ReplicaCount    = 1;
@@ -585,7 +585,7 @@ namespace Neon.Kube
 
             advice.ReplicaCount = Math.Min(3, (cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count()));
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.MetricsEnabled   = false;
                 advice.PodMemoryLimit   = ByteUnits.Parse("256Mi");
@@ -609,7 +609,7 @@ namespace Neon.Kube
 
             advice.ReplicaCount = Math.Min(3, (cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count()));
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.MetricsEnabled   = false;
                 advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
@@ -645,7 +645,7 @@ namespace Neon.Kube
 
             advice.ReplicaCount = Math.Min(3, (cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count()));
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.MetricsEnabled   = false;
                 advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
@@ -752,7 +752,7 @@ namespace Neon.Kube
 
             advice.ReplicaCount = Math.Min(3, (cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count()));
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.MetricsEnabled   = true;
                 advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
@@ -775,7 +775,7 @@ namespace Neon.Kube
 
             advice.ReplicaCount = Math.Min(3, (cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count()));
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.MetricsEnabled   = false;
                 advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
@@ -853,7 +853,7 @@ namespace Neon.Kube
                 advice.ReplicaCount = 1;
             }
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("768Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("256Mi");
@@ -880,7 +880,7 @@ namespace Neon.Kube
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.NeonClusterOperator);
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.MetricsEnabled = true;
             }
@@ -895,7 +895,7 @@ namespace Neon.Kube
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.NeonDashboard);
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.MetricsEnabled = false;
             }
@@ -907,7 +907,7 @@ namespace Neon.Kube
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.NeonNodeAgent);
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.MetricsEnabled = true;
             }
@@ -922,7 +922,7 @@ namespace Neon.Kube
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.NeonSsoSessionProxy);
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.MetricsEnabled = false;
             }
@@ -943,7 +943,7 @@ namespace Neon.Kube
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.Oauth2Proxy);
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.MetricsEnabled = true;
             }
@@ -1017,7 +1017,7 @@ namespace Neon.Kube
 
             advice.ReplicaCount = Math.Min(3, (cluster.Definition.Nodes.Where(n => n.Labels.MetricsInternal).Count()));
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("1Gi");
                 advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
@@ -1040,7 +1040,7 @@ namespace Neon.Kube
 
             advice.ReplicaCount = Math.Min(3, (cluster.Definition.Nodes.Where(n => n.Labels.MetricsInternal).Count()));
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.PodMemoryLimit   = ByteUnits.Parse("300Mi");
                 advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
@@ -1141,7 +1141,7 @@ namespace Neon.Kube
             advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("128Mi");
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.PodMemoryRequest = ByteUnits.Parse("64Mi");
             }
@@ -1198,7 +1198,7 @@ namespace Neon.Kube
 
             advice.ReplicaCount = Math.Min(3, (cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count()));
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.MetricsEnabled   = false;
                 advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");
@@ -1233,7 +1233,7 @@ namespace Neon.Kube
 
             advice.ReplicaCount = Math.Min(3, (cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count()));
 
-            if (cluster.Definition.IsDesktopBuiltIn || cluster.Definition.ControlNodes.Count() == 1)
+            if (cluster.Definition.IsDesktop || cluster.Definition.ControlNodes.Count() == 1)
             {
                 advice.MetricsEnabled   = false;
                 advice.PodMemoryLimit   = ByteUnits.Parse("512Mi");

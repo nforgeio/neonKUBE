@@ -132,10 +132,10 @@ namespace Neon.Kube
         public const string HarborCredentials = "harbor-credentials";
 
         /// <summary>
-        /// Property name for a <c>bool</c> value indicating whether cluster using a prebuilt desktop
+        /// Property name for a <c>bool</c> value indicating whether cluster using a ready-to-go desktop
         /// image is being deployed.
         /// </summary>
-        public const string PrebuiltDesktop = "prebuilt-desktop";
+        public const string DesktopReadyToGo = "desktop-readytogo";
 
         /// <summary>
         /// Property name for a <see cref="DesktopServiceProxy"/> instance that can be used to perform

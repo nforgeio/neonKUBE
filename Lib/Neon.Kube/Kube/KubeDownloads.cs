@@ -84,8 +84,9 @@ namespace Neon.Kube
         public const string PrivateNodeImagesRepo = "nforgeio/neonKUBE-images-dev";
 
         /// <summary>
-        /// Returns the default URI to be used for downloading the prepared neonKUBE virtual machine image 
-        /// for the current neonKUBE cluster version.
+        /// Returns the default URI to be used for downloading the prepared neonKUBE node virtual machine image 
+        /// for the current neonKUBE cluster version.  This is the base image we'll use for provisioning cluster
+        /// virtual machines.
         /// </summary>
         /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <param name="setupDebugMode">Optionally indicates that we'll be provisioning in debug mode.</param>
@@ -93,7 +94,7 @@ namespace Neon.Kube
         /// Specifies the base image file name (but not the bucket and path) when <paramref name="setupDebugMode"/><c>==true</c>.
         /// For example: <b>ubuntu-22.04.1.hyperv.amd64.vhdx.gz.manifest</b>
         /// </param>
-        /// <param name="architecture">The process ro architecture.</param>
+        /// <param name="architecture">The target CPU architecture.</param>
         /// <returns>The download URI or <c>null</c>.</returns>
         public static async Task<string> GetNodeImageUriAsync(
             HostingEnvironment  hostingEnvironment, 
@@ -126,23 +127,14 @@ namespace Neon.Kube
 
             if (!setupDebugMode)
             {
-                var headendClient = HeadendClient.Create();
-
-                return await headendClient.ClusterSetup.GetNodeImageManifestUriAsync(hostingEnvironment.ToMemberString(), KubeVersions.NeonKube, architecture);
+                using (var headendClient = HeadendClient.Create())
+                {
+                    return await headendClient.ClusterSetup.GetNodeImageManifestUriAsync(hostingEnvironment.ToMemberString(), KubeVersions.NeonKube, architecture);
+                }
             }
 
             switch (hostingEnvironment)
             {
-                case HostingEnvironment.BareMetal:
-
-                    throw new NotImplementedException("Cluster setup on bare-metal is not supported yet.");
-
-                case HostingEnvironment.Aws:
-                case HostingEnvironment.Azure:
-                case HostingEnvironment.Google:
-
-                    throw new NotSupportedException("Cluster setup debug mode is not supported for cloud environments.");
-
                 case HostingEnvironment.HyperV:
 
                     return $"{NeonHelper.NeonPublicBucketUri}/vm-images/hyperv/base/{baseImageName}";
@@ -153,7 +145,48 @@ namespace Neon.Kube
 
                 default:
 
-                    throw new NotImplementedException($"Node images are not implemented for the [{hostingEnvironmentUpper}] environment.");
+                    throw new NotImplementedException($"Node images are not available for the [{hostingEnvironmentUpper}] environment.");
+            }
+        }
+
+        /// <summary>
+        /// Returns the default URI to be used for downloading the ready-to-go neonKUBE virtual machine image 
+        /// for the current neonKUBE cluster version.  This image includes a fully deployed neon-desktop built-in
+        /// single node cluster.
+        /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
+        /// <param name="architecture">The target CPU architecture.</param>
+        /// <returns>The download URI or <c>null</c>.</returns>
+        public static async Task<string> GetDesktopImageUriAsync(
+            HostingEnvironment  hostingEnvironment,
+            CpuArchitecture     architecture = CpuArchitecture.amd64)
+        {
+            //##############################################################
+            // $debug(jefflill): DELETE THIS AFTER MARCUS REDEPLOYS HEADEND!
+
+            switch (hostingEnvironment)
+            {
+                case HostingEnvironment.HyperV:
+
+                    return $"https://neon-public.s3.us-west-2.amazonaws.com/vm-images/hyperv/node/neonkube-desktop-{KubeVersions.NeonKube}.hyperv.amd64.vhdx.gz.manifest";
+            }
+
+            //##############################################################
+
+            var hostingEnvironmentUpper = hostingEnvironment.ToString().ToUpper();
+
+            using (var headendClient = HeadendClient.Create())
+            {
+                switch (hostingEnvironment)
+                {
+                    case HostingEnvironment.HyperV:
+
+                        return await headendClient.ClusterSetup.GetNodeImageManifestUriAsync(hostingEnvironment.ToMemberString(), KubeVersions.NeonKube, architecture);
+
+                    default:
+
+                        throw new NotImplementedException($"Ready-to-go desktop images are not available for the [{hostingEnvironmentUpper}] environment.");
+                }
             }
         }
     }
