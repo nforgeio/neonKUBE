@@ -89,12 +89,12 @@ namespace NeonClusterOperator
                         Encoding.UTF8.GetString(systemSecret.Data["tls.crt"]),
                         Encoding.UTF8.GetString(systemSecret.Data["tls.key"]));
 
-                    if (ingressCertificate.NotAfter.CompareTo(DateTime.Now.AddDays(90)) < 0
-                        || systemCertificate.NotAfter.CompareTo(DateTime.Now.AddDays(90)) < 0)
+                    if (ingressCertificate.NotAfter.CompareTo(DateTime.Now.AddDays(30)) < 0
+                        || systemCertificate.NotAfter.CompareTo(DateTime.Now.AddDays(30)) < 0)
                     {
                         updating = true;
 
-                        await Task.Delay(TimeSpan.FromSeconds(random.Next(1)));
+                        await Task.Delay(TimeSpan.FromMinutes(random.Next(90)));
 
                         var cert = await headendClient.NeonDesktop.GetNeonDesktopCertificateAsync();
 
