@@ -100,7 +100,7 @@ namespace Neon.Kube
         /// Optionally disables status output to the console.  This is typically
         /// enabled for non-console applications.
         /// </param>
-        /// <param name="prebuiltDesktop">
+        /// <param name="desktopReadyToGo">
         /// Optionally indicates that we're setting up a neon-desktop built-in cluster
         /// from a completely prebuilt desktop image.  In this case, the controller
         /// returned will fully deploy the cluster (so no setup controller needs to
@@ -120,7 +120,7 @@ namespace Neon.Kube
             string                      baseImageName         = null,
             bool                        removeExisting        = false,
             bool                        disableConsoleOutput  = false,
-            bool                        prebuiltDesktop       = false)
+            bool                        desktopReadyToGo      = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
@@ -132,7 +132,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentException>(maxParallel >= 0, nameof(maxParallel));
             Covenant.Requires<ArgumentNullException>(!debugMode || !string.IsNullOrEmpty(baseImageName), nameof(baseImageName));
 
-            if (prebuiltDesktop)
+            if (desktopReadyToGo)
             {
                 Covenant.Assert(clusterDefinition.IsDesktop, $"Expected [{nameof(clusterDefinition.IsDesktop)}] to be TRUE.");
                 Covenant.Assert(clusterDefinition.Name == KubeConst.NeonDesktopClusterName, $"Expected cluster name [{KubeConst.NeonDesktopClusterName}] not [{clusterDefinition.Name}].");
@@ -260,7 +260,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.NeonCloudHeadendClient, HeadendClient.Create());
             controller.Add(KubeSetupProperty.DisableImageDownload, !string.IsNullOrEmpty(nodeImagePath));
             controller.Add(KubeSetupProperty.Redact, !unredacted);
-            controller.Add(KubeSetupProperty.PrebuiltDesktop, prebuiltDesktop);
+            controller.Add(KubeSetupProperty.DesktopReadyToGo, desktopReadyToGo);
             controller.Add(KubeSetupProperty.DesktopServiceProxy, desktopServiceProxy);
 
             // Configure the cluster preparation steps.
@@ -418,7 +418,7 @@ namespace Neon.Kube
                         throw new Exception($"Node image version [{imageVersion}] does not match the neonKUBE version [{KubeVersions.NeonKube}] implemented by the current build.");
                     }
 
-                    if (prebuiltDesktop && !node.IsPrebuiltCluster)
+                    if (desktopReadyToGo && !node.IsPrebuiltCluster)
                     {
                         throw new Exception($"Node is not a pre-built desktop cluster.");
                     }
@@ -436,14 +436,20 @@ namespace Neon.Kube
 
                     // Remove the [sysadmin] user password; we support only SSH certficate autentication.
 
-                    node.SudoCommand("passwd", "--delete", KubeConst.SysAdminUser).EnsureSuccess();
+                    if (!desktopReadyToGo)
+                    {
+                        node.SudoCommand("passwd", "--delete", KubeConst.SysAdminUser).EnsureSuccess();
+                    }
                 });
 
-            controller.AddNodeStep("prepare nodes",
-                (controller, node) =>
-                {
-                    node.PrepareNode(controller);
-                });
+            if (!desktopReadyToGo)
+            {
+                controller.AddNodeStep("prepare nodes",
+                    (controller, node) =>
+                    {
+                        node.PrepareNode(controller);
+                    });
+            }
 
             // Register the cluster domain with the headend, except for built-in desktop clusters.
             //
@@ -532,7 +538,7 @@ namespace Neon.Kube
             //
             // NOTE: This isn't required for pre-built clusters.
 
-            if (!prebuiltDesktop)
+            if (!desktopReadyToGo)
             {
                 hostingManager.AddPostProvisioningSteps(controller);
             }
