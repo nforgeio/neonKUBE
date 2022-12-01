@@ -61,8 +61,8 @@ namespace Neon.Kube.Resources
         /// </summary>
         [JsonProperty(PropertyName = "server", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "server", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string Server { get; set; } = null;
+        [DefaultValue("https://acme-v02.api.letsencrypt.org/directory")]
+        public string Server { get; set; } = "https://acme-v02.api.letsencrypt.org/directory";
 
         /// <summary>
         /// PreferredChain is the chain to use if the ACME server outputs multiple. PreferredChain is no guarantee that this one gets 
@@ -142,6 +142,52 @@ namespace Neon.Kube.Resources
         public bool? EnableDurationFeature { get; set; }
 
         /// <inheritdoc/>
-        public void Validate() { }
+        public void Validate()
+        {
+            var acmeIssuerPrefix = $"{nameof(AcmeIssuer)}";
+
+            Solvers = Solvers ?? new List<AcmeChallengeSolver>();
+
+            if (!Solvers.Any(solver => solver.Dns01?.Webhook?.SolverName == "neoncluster_io"))
+            {
+                var neonWebhookSolver = new AcmeIssuerDns01ProviderWebhook()
+                {
+                    Config = new Dictionary<string, object>()
+                {
+                    { "Registrar", "route53" }
+                },
+                    GroupName = "acme.neoncloud.io",
+                    SolverName = "neoncluster_io"
+                };
+
+                Solvers.Add(new AcmeChallengeSolver()
+                {
+                    Dns01 = new AcmeChallengeSolverDns01()
+                    {
+                        Webhook = neonWebhookSolver
+                    },
+                    Selector = new CertificateDnsNameSelector()
+                    {
+                        DnsZones = new List<string>() { "neoncluster.io" }
+                    }
+                });
+            }
+
+            foreach (var solver in Solvers)
+            {
+                solver.Validate();
+            }
+
+            PrivateKeySecretRef = PrivateKeySecretRef ?? new AcmeSecretKeySelector()
+            {
+                Name = "neon-acme-issuer-account-key",
+                Key = "tls.key"
+            };
+
+            if (ExternalAccountBinding != null)
+            {
+                ExternalAccountBinding.Validate();
+            }
+        }
     }
 }

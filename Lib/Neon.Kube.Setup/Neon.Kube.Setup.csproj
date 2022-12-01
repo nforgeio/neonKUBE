@@ -176,7 +176,6 @@
 
 	<ItemGroup>
 		<Folder Include="Resources\Helm\crd-cluster\templates\" />
-		<Folder Include="Resources\Helm\neon-cluster-operator\crds\" />
 	</ItemGroup>
 
 	<ItemGroup>

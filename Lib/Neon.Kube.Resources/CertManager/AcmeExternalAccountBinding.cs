@@ -84,6 +84,13 @@ namespace Neon.Kube.Resources
         public AcmeSecretKeySelector KeySecretRef { get; set; } = null;
 
         /// <inheritdoc/>
-        public void Validate() { }
+        public void Validate() 
+        {
+            KeySecretRef = KeySecretRef ?? new AcmeSecretKeySelector()
+            {
+                Key = "secret",
+                Name = "neon-acme-secret"
+            };
+        }
     }
 }

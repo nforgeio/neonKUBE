@@ -82,6 +82,7 @@ namespace NeonClusterOperator
         {
             services.AddSingleton<ILogger>(Program.Service.Logger)
                 .AddSingleton(Service.K8s)
+                .AddSingleton(Service.HeadendClient)
                 .AddSingleton(Service.HarborClient);
 
             services.AddKubernetesOperator()

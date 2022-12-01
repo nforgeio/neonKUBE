@@ -67,6 +67,17 @@ namespace Neon.Kube.Resources
         public AcmeIssuerDns01ProviderWebhook Webhook { get; set; } = null;
 
         /// <inheritdoc/>
-        public void Validate() { }
+        public void Validate()
+        {
+            if (Route53 != null)
+            {
+                Route53.Validate();
+            }
+
+            if (Webhook != null)
+            {
+                Webhook.Validate();
+            }
+        }
     }
 }

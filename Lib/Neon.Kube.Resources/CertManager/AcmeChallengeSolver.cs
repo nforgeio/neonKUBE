@@ -65,6 +65,10 @@ namespace Neon.Kube.Resources
         /// <inheritdoc/>
         public void Validate()
         {
+            if (Dns01 != null)
+            {
+                Dns01.Validate();
+            }
         }
     }
 }

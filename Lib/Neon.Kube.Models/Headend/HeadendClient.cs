@@ -97,7 +97,7 @@ namespace Neon.Kube.Models.Headend
     [ApiVersion("0.1")]
     public interface INeonDesktopController
     {
-        [HttpPost]
+        [HttpGet]
         [Route("neondesktop/certificate")]
         IDictionary<string, byte[]> GetNeonDesktopCertificateAsync();
     }

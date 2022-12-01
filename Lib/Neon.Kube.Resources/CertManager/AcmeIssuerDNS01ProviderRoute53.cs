@@ -95,6 +95,13 @@ namespace Neon.Kube.Resources
         public string Region { get; set; } = null;
 
         /// <inheritdoc/>
-        public void Validate() { }
+        public void Validate()
+        {
+            SecretAccessKeySecretRef = SecretAccessKeySecretRef ?? new AcmeSecretKeySelector()
+            {
+                Key  = "secret",
+                Name = "neon-acme-secret-route53"
+            };
+        }
     }
 }

@@ -197,6 +197,8 @@ namespace NeonClusterOperator
             HarborClient = new HarborClient(harborHttpClient);
             HarborClient.BaseUrl = "http://registry-harbor-harbor-core.neon-system/api/v2.0";
 
+            HeadendClient = HeadendClient.Create();
+
             await WatchClusterInfoAsync();
             await CheckCertificateAsync();
             await WatchRootUserAsync();

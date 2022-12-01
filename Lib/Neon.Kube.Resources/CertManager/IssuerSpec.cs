@@ -51,6 +51,10 @@ namespace Neon.Kube.Resources
         /// <inheritdoc/>
         public void Validate()
         {
+            var issuerSpecPrefix = $"{nameof(IssuerSpec)}";
+
+            Acme = Acme ?? new AcmeIssuer();
+            Acme.Validate();
         }
     }
 }

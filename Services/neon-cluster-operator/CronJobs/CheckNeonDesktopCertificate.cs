@@ -78,8 +78,8 @@ namespace NeonClusterOperator
                     var k8s = (IKubernetes)dataMap["Kubernetes"];
                     var headendClient = (HeadendClient)dataMap["HeadendClient"];
 
-                    var ingressSecret = await k8s.ReadNamespacedSecretAsync(KubeNamespace.NeonIngress, "neon-cluster-certificate");
-                    var systemSecret = await k8s.ReadNamespacedSecretAsync(KubeNamespace.NeonSystem, "neon-cluster-certificate");
+                    var ingressSecret = await k8s.ReadNamespacedSecretAsync("neon-cluster-certificate", KubeNamespace.NeonIngress);
+                    var systemSecret = await k8s.ReadNamespacedSecretAsync("neon-cluster-certificate", KubeNamespace.NeonSystem);
 
                     var ingressCertificate = X509Certificate2.CreateFromPem(
                         Encoding.UTF8.GetString(ingressSecret.Data["tls.crt"]),
@@ -89,12 +89,12 @@ namespace NeonClusterOperator
                         Encoding.UTF8.GetString(systemSecret.Data["tls.crt"]),
                         Encoding.UTF8.GetString(systemSecret.Data["tls.key"]));
 
-                    if (ingressCertificate.NotAfter.CompareTo(DateTime.Now.AddDays(30)) < 0
-                        || systemCertificate.NotAfter.CompareTo(DateTime.Now.AddDays(30)) < 0)
+                    if (ingressCertificate.NotAfter.CompareTo(DateTime.Now.AddDays(90)) < 0
+                        || systemCertificate.NotAfter.CompareTo(DateTime.Now.AddDays(90)) < 0)
                     {
                         updating = true;
 
-                        await Task.Delay(TimeSpan.FromMinutes(random.Next(90)));
+                        await Task.Delay(TimeSpan.FromSeconds(random.Next(1)));
 
                         var cert = await headendClient.NeonDesktop.GetNeonDesktopCertificateAsync();
 
