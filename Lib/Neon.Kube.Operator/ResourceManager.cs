@@ -457,23 +457,36 @@ namespace Neon.Kube.Operator
 
         private async Task CreateOrReplaceCustomResourceDefinitionAsync()
         {
-            var generator = new CustomResourceGenerator();
+            await SyncContext.Clear;
 
-            var crd = await generator.GenerateCustomResourceDefinitionAsync(typeof(TEntity));
-
-            var existingList = await k8s.ListCustomResourceDefinitionAsync(
-               fieldSelector: $"metadata.name={crd.Name()}");
-
-            var existingCustomResourceDefinition = existingList?.Items?.SingleOrDefault();
-
-            if (existingCustomResourceDefinition != null)
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
-                crd.Metadata.ResourceVersion = existingCustomResourceDefinition.ResourceVersion();
-                await k8s.ReplaceCustomResourceDefinitionAsync(crd, crd.Name());
-            }
-            else
-            {
-                await k8s.CreateCustomResourceDefinitionAsync(crd);
+                try
+                {
+
+                    var generator = new CustomResourceGenerator();
+
+                    var crd = await generator.GenerateCustomResourceDefinitionAsync(typeof(TEntity));
+
+                    var existingList = await k8s.ListCustomResourceDefinitionAsync(
+                       fieldSelector: $"metadata.name={crd.Name()}");
+
+                    var existingCustomResourceDefinition = existingList?.Items?.SingleOrDefault();
+
+                    if (existingCustomResourceDefinition != null)
+                    {
+                        crd.Metadata.ResourceVersion = existingCustomResourceDefinition.ResourceVersion();
+                        await k8s.ReplaceCustomResourceDefinitionAsync(crd, crd.Name());
+                    }
+                    else
+                    {
+                        await k8s.CreateCustomResourceDefinitionAsync(crd);
+                    }
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e);
+                }
             }
         }
 
