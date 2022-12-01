@@ -2037,7 +2037,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add("cluster.domain", cluster.Definition.Domain);
                     values.Add("certficateDuration", cluster.Definition.Network.AcmeOptions.CertificateDuration);
                     values.Add("certificateRenewBefore", cluster.Definition.Network.AcmeOptions.CertificateRenewBefore);
-                    values.Add("isNeonDesktop", cluster.Definition.IsDesktopBuiltIn);
+                    values.Add("isNeonDesktop", cluster.Definition.IsDesktop);
 
                     int i = 0;
 
@@ -2056,7 +2056,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         values:       values);
                 });
 
-            if (cluster.Definition.IsDesktopBuiltIn)
+            if (cluster.Definition.IsDesktop)
             {
                 controller.ThrowIfCancelled();
                 await controlNode.InvokeIdempotentAsync("setup/cluster-certificates",
@@ -4581,7 +4581,7 @@ $@"- name: StorageType
                         }
                     };
 
-                    if (cluster.Definition.IsDesktopBuiltIn)
+                    if (cluster.Definition.IsDesktop)
                     {
                         nco.Spec.Updates.NeonDesktopCertificate = new V1NeonClusterOperator.UpdateSpec()
                         {

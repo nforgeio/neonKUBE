@@ -302,7 +302,7 @@ namespace NeonClusterOperator
                 {
                     return;
                 }
-                `
+                
                 log.LogInformationEx(() => $"DELETED: {resource.Name()}");
 
                 await ShutDownAsync();
