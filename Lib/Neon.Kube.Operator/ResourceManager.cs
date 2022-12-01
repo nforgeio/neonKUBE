@@ -485,7 +485,7 @@ namespace Neon.Kube.Operator
                 }
                 catch (Exception e)
                 {
-                    logger.LogError(e);
+                    logger.LogErrorEx(e);
                 }
             }
         }
