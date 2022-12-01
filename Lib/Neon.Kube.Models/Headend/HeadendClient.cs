@@ -93,12 +93,12 @@ namespace Neon.Kube.Models.Headend
     [Target("all")]
     [Target("headend")]
     [ServiceModel(name: "Headend", group: "NeonDesktop")]
-    [Route("neondesktop")]
+    [Route("")]
     [ApiVersion("0.1")]
     public interface INeonDesktopController
     {
         [HttpPost]
-        [Route("certificate")]
+        [Route("neondesktop/certificate")]
         IDictionary<string, byte[]> GetNeonDesktopCertificateAsync();
     }
 }

@@ -78,13 +78,19 @@ namespace NeonClusterOperator
                     var k8s = (IKubernetes)dataMap["Kubernetes"];
                     var headendClient = (HeadendClient)dataMap["HeadendClient"];
 
-                    var secret = await k8s.ReadNamespacedSecretAsync(KubeNamespace.NeonIngress, "neon-cluster-certificate");
+                    var ingressSecret = await k8s.ReadNamespacedSecretAsync(KubeNamespace.NeonIngress, "neon-cluster-certificate");
+                    var systemSecret = await k8s.ReadNamespacedSecretAsync(KubeNamespace.NeonSystem, "neon-cluster-certificate");
 
-                    var certificate = X509Certificate2.CreateFromPem(
-                        Encoding.UTF8.GetString(secret.Data["tls.crt"]),
-                        Encoding.UTF8.GetString(secret.Data["tls.key"]));
+                    var ingressCertificate = X509Certificate2.CreateFromPem(
+                        Encoding.UTF8.GetString(ingressSecret.Data["tls.crt"]),
+                        Encoding.UTF8.GetString(ingressSecret.Data["tls.key"]));
 
-                    if (certificate.NotAfter.CompareTo(DateTime.Now.AddDays(30)) < 0)
+                    var systemCertificate = X509Certificate2.CreateFromPem(
+                        Encoding.UTF8.GetString(systemSecret.Data["tls.crt"]),
+                        Encoding.UTF8.GetString(systemSecret.Data["tls.key"]));
+
+                    if (ingressCertificate.NotAfter.CompareTo(DateTime.Now.AddDays(30)) < 0
+                        || systemCertificate.NotAfter.CompareTo(DateTime.Now.AddDays(30)) < 0)
                     {
                         updating = true;
 
@@ -92,15 +98,11 @@ namespace NeonClusterOperator
 
                         var cert = await headendClient.NeonDesktop.GetNeonDesktopCertificateAsync();
 
-                        secret.Data = cert;
+                        ingressSecret.Data = cert;
+                        systemSecret.Data = cert;
 
-                        await k8s.ReplaceNamespacedSecretAsync(secret, secret.Name(), secret.Namespace());
-
-                        secret = await k8s.ReadNamespacedSecretAsync(KubeNamespace.NeonSystem, "neon-cluster-certificate");
-
-                        secret.Data = cert;
-
-                        await k8s.ReplaceNamespacedSecretAsync(secret, secret.Name(), secret.Namespace());
+                        await k8s.ReplaceNamespacedSecretAsync(ingressSecret, ingressSecret.Name(), ingressSecret.Namespace());
+                        await k8s.ReplaceNamespacedSecretAsync(systemSecret, systemSecret.Name(), systemSecret.Namespace());
                     }
                 }
                 finally
