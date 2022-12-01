@@ -40,6 +40,8 @@ namespace Neon.Kube.Resources
     /// <summary>
     /// X509Usages controls how private keys should be regenerated when a re-issuance is being processed.
     /// </summary>
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
+    [Newtonsoft.Json.JsonConverter(typeof(StringEnumConverter))]
     public enum X509Usages
     {
         /// <summary>

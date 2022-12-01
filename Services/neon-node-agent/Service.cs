@@ -207,7 +207,7 @@ namespace NeonNodeAgent
             //-----------------------------------------------------------------
             // Start the controllers: these need to be started before starting KubeOps
 
-            K8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig());
+            K8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
 
             await WatchClusterInfoAsync();
             await CheckCertificateAsync();

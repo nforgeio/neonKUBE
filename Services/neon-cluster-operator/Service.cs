@@ -148,6 +148,11 @@ namespace NeonClusterOperator
         public IKubernetes K8s;
 
         /// <summary>
+        /// Kubernetes client.
+        /// </summary>
+        public HeadendClient HeadendClient;
+
+        /// <summary>
         /// Harbor client.
         /// </summary>
         public HarborClient HarborClient;

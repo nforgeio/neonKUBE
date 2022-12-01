@@ -190,6 +190,7 @@ namespace {targetNamespace}
                 writer.WriteLine($"            var member  = kubernetesJsonType.GetField(\"JsonSerializerOptions\", BindingFlags.Static | BindingFlags.NonPublic);");
                 writer.WriteLine($"            var options = (JsonSerializerOptions)member.GetValue(kubernetesJsonType);");
                 writer.WriteLine();
+                writer.WriteLine($"            options.Converters.Remove(options.Converters.Where(c => c.GetType() == typeof(JsonStringEnumConverter)).Single());");
                 writer.WriteLine($"            options.Converters.Add(new JsonStringEnumMemberConverter());");
                 writer.WriteLine();
                 writer.WriteLine($"            isInitialized = true;");

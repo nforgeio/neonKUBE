@@ -96,8 +96,10 @@ namespace NeonClusterOperator
         private static CheckControlPlaneCertificates    checkControlPlaneCertificates;
         private static CheckRegistryImages              checkRegistryImages;
         private static SendClusterTelemetry             sendClusterTelemetry;
+        private static CheckNeonDesktopCertificate      checkNeonDesktopCert;
 
-        private HarborClient harborClient;
+        private HeadendClient headendClient;
+        private HarborClient  harborClient;
 
         /// <summary>
         /// Static constructor.
@@ -158,6 +160,7 @@ namespace NeonClusterOperator
             checkControlPlaneCertificates = new CheckControlPlaneCertificates();
             checkRegistryImages           = new CheckRegistryImages();
             sendClusterTelemetry          = new SendClusterTelemetry();
+            checkNeonDesktopCert          = new CheckNeonDesktopCertificate();
         }
 
         //---------------------------------------------------------------------
@@ -172,14 +175,17 @@ namespace NeonClusterOperator
         public NeonClusterOperatorController(
             IKubernetes k8s,
             Neon.Kube.Operator.IFinalizerManager<V1NeonClusterOperator> manager,
+            HeadendClient headendClient,
             HarborClient harborClient)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
             Covenant.Requires(manager != null, nameof(manager));
+            Covenant.Requires(headendClient != null, nameof(headendClient));
             Covenant.Requires(harborClient != null, nameof(harborClient));
 
-            this.k8s = k8s;
+            this.k8s              = k8s;
             this.finalizerManager = manager;
+            this.headendClient    = headendClient;
             this.harborClient     = harborClient;
         }
 
@@ -260,6 +266,22 @@ namespace NeonClusterOperator
                     await sendClusterTelemetry.AddToSchedulerAsync(scheduler, k8s, clusterTelemetryExpression);
                 }
 
+                if (resource.Spec.Updates.NeonDesktopCertificate.Enabled)
+                {
+                    var neonDesktopCertExpression = resource.Spec.Updates.NeonDesktopCertificate.Schedule;
+                    CronExpression.ValidateExpression(neonDesktopCertExpression);
+
+                    await checkNeonDesktopCert.DeleteFromSchedulerAsync(scheduler);
+                    await checkNeonDesktopCert.AddToSchedulerAsync(
+                        scheduler, 
+                        k8s, 
+                        neonDesktopCertExpression,
+                        new Dictionary<string, object>()
+                        {
+                            { "HeadendClient", headendClient }
+                        });
+                }
+
                 log.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
 
                 return null;
@@ -280,7 +302,7 @@ namespace NeonClusterOperator
                 {
                     return;
                 }
-
+                `
                 log.LogInformationEx(() => $"DELETED: {resource.Name()}");
 
                 await ShutDownAsync();

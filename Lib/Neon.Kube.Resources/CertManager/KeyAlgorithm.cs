@@ -50,13 +50,19 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// RSA#1
         /// </summary>
-        [EnumMember(Value = "rsa")]
+        [EnumMember(Value = "RSA")]
         RSA = 0,
 
         /// <summary>
         /// ECDSA#8
         /// </summary>
-        [EnumMember(Value = "ecdsa")]
-        ECDSA
+        [EnumMember(Value = "ECDSA")]
+        ECDSA,
+
+        /// <summary>
+        /// ECDSA#8
+        /// </summary>
+        [EnumMember(Value = "Ed25519")]
+        Ed25519
     }
 }

@@ -177,7 +177,6 @@ namespace Neon.Kube.Resources
         /// </summary>
         [JsonProperty(PropertyName = "usages", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        [System.Text.Json.Serialization.JsonConverter(typeof(JsonGenericConverter<X509Usages[]>))]
         public X509Usages[] Usages { get; set; }
     }
 }

@@ -5,3 +5,10 @@ metadata:
   namespace: neon-system
 spec:
   selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: cluster-selfsigned-issuer
+spec:
+  selfSigned: {}

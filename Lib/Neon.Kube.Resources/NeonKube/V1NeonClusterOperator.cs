@@ -149,6 +149,11 @@ namespace Neon.Kube.Resources
             /// Update spec for telemetry.
             /// </summary>
             public UpdateSpec Telemetry { get; set; } = new UpdateSpec();
+
+            /// <summary>
+            /// When the Neon Desktop certificate should be updated.
+            /// </summary>
+            public UpdateSpec NeonDesktopCertificate { get; set; } = new UpdateSpec();
         }
 
         /// <summary>

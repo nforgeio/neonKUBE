@@ -86,4 +86,19 @@ namespace Neon.Kube.Models.Headend
             [FromRoute] string clusterId,
             [FromQuery] string addresses);
     }
+
+    /// <summary>
+    /// Implements cluster methods.
+    /// </summary>
+    [Target("all")]
+    [Target("headend")]
+    [ServiceModel(name: "Headend", group: "NeonDesktop")]
+    [Route("neondesktop")]
+    [ApiVersion("0.1")]
+    public interface INeonDesktopController
+    {
+        [HttpPost]
+        [Route("certificate")]
+        IDictionary<string, byte[]> GetNeonDesktopCertificateAsync();
+    }
 }

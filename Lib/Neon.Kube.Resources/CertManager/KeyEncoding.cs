@@ -47,13 +47,13 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// PKCS#1
         /// </summary>
-        [EnumMember(Value = "pkcs1")]
+        [EnumMember(Value = "PKCS1")]
         PKCS1 = 0,
 
         /// <summary>
         /// PKCS#8
         /// </summary>
-        [EnumMember(Value = "pkcs8")]
+        [EnumMember(Value = "PKCS8")]
         PKCS8
     }
 }

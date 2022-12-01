@@ -1,3 +1,4 @@
+{{- if not .Values.isNeonDesktop -}}
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -59,6 +60,7 @@ spec:
   usages:
     - server auth
     - client auth
+{{- end }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate

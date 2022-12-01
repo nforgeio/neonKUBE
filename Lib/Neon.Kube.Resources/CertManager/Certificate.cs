@@ -99,6 +99,12 @@ namespace Neon.Kube.Resources
         public CertificateSpec Spec { get; set; }
 
         /// <summary>
+        /// Status of the Certificate. This is set and managed automatically.
+        /// </summary>
+        [JsonProperty(PropertyName = "status")]
+        public CertificateStatus Status { get; set; }
+
+        /// <summary>
         /// Validate the object.
         /// </summary>
         /// <exception cref="ValidationException">Thrown if validation fails.</exception>

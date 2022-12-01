@@ -20,11 +20,12 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-
+using k8s;
 using k8s.Models;
 
 using Neon.Common;
@@ -72,6 +73,17 @@ namespace TestKube
                 }
             };
             string jsonString = JsonSerializer.Serialize(cStorPoolCluster, serializerOptions);
+        }
+
+        [Fact]
+        public void SerializeX509Usages()
+        {
+            new KubernetesWithRetry(KubernetesClientConfiguration.BuildConfigFromConfigFile(KubeHelper.KubeConfigPath));
+
+            var usages = new List<X509Usages>() { X509Usages.ServerAuth, X509Usages.ClientAuth };
+            string jsonString = KubernetesJson.Serialize(usages);
+
+            Assert.Equal(@"[""server auth"",""client auth""]", jsonString);
         }
     }
 }

@@ -1888,6 +1888,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
             var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s                = GetK8sClient(controller);
+            var headencClient      = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
             var clusterAdvice      = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CertManager);
             var ingressAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioIngressGateway);
@@ -2036,6 +2037,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add("cluster.domain", cluster.Definition.Domain);
                     values.Add("certficateDuration", cluster.Definition.Network.AcmeOptions.CertificateDuration);
                     values.Add("certificateRenewBefore", cluster.Definition.Network.AcmeOptions.CertificateRenewBefore);
+                    values.Add("isNeonDesktop", cluster.Definition.IsDesktopBuiltIn);
 
                     int i = 0;
 
@@ -2053,6 +2055,35 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         prioritySpec: PriorityClass.NeonNetwork.Name,
                         values:       values);
                 });
+
+            if (cluster.Definition.IsDesktopBuiltIn)
+            {
+                controller.ThrowIfCancelled();
+                await controlNode.InvokeIdempotentAsync("setup/cluster-certificates",
+                    async () =>
+                    {
+                        controller.LogProgress(controlNode, verb: "setup", message: "neon-cluster-certificate");
+
+                        var cert = await headencClient.NeonDesktop.GetNeonDesktopCertificateAsync();
+
+                        var secret = new V1Secret()
+                        {
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Name              = "neon-cluster-certificate",
+                                NamespaceProperty = KubeNamespace.NeonIngress
+                            },
+                            Data = cert,
+                            Type = "kubernetes.io/tls"
+                        };
+
+                        await k8s.CreateNamespacedSecretAsync(secret, secret.Namespace());
+
+                        secret.Metadata.NamespaceProperty = KubeNamespace.NeonSystem;
+
+                        await k8s.CreateNamespacedSecretAsync(secret, secret.Namespace());
+                    });
+            }
         }
 
         /// <summary>
@@ -2080,7 +2111,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = $"{KubeConst.RootUser}-user",
+                            Name              = $"{KubeConst.RootUser}-user",
                             NamespaceProperty = KubeNamespace.KubeSystem
                         }
                     };
@@ -2096,21 +2127,21 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         RoleRef = new V1RoleRef()
                         {
                             ApiGroup = "rbac.authorization.k8s.io",
-                            Kind = "ClusterRole",
-                            Name = "cluster-admin"
+                            Kind     = "ClusterRole",
+                            Name     = "cluster-admin"
                         },
                         Subjects = new List<V1Subject>()
                         {
                             new V1Subject()
                             {
-                                Name = $"{KubeConst.RootUser}-user",
-                                Kind = "ServiceAccount",
+                                Name              = $"{KubeConst.RootUser}-user",
+                                Kind              = "ServiceAccount",
                                 NamespaceProperty = KubeNamespace.KubeSystem
                             },
                             new V1Subject()
                             {
-                                Name = $"superadmin",
-                                Kind = "Group",
+                                Name     = $"superadmin",
+                                Kind     = "Group",
                                 ApiGroup = "rbac.authorization.k8s.io"
                             }
                         }
@@ -4504,6 +4535,65 @@ $@"- name: StorageType
 
                     await k8s.WaitForDaemonsetAsync(KubeNamespace.NeonSystem, "neon-cluster-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
+
+            controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/cluster-operator-resource",
+                async () =>
+                {
+                    controller.LogProgress(controlNode, verb: "create", message: "neon-cluster-operator resource");
+
+                    var nco = new V1NeonClusterOperator()
+                    {
+                        Metadata = new V1ObjectMeta()
+                        {
+                            Name = KubeService.NeonClusterOperator
+                        },
+                        Spec = new V1NeonClusterOperator.OperatorSpec()
+                        {
+                            Updates = new V1NeonClusterOperator.Updates()
+                            {
+                                ContainerImages = new V1NeonClusterOperator.UpdateSpec()
+                                {
+                                    Enabled = true,
+                                    Schedule = "0 0 0 ? * *"
+                                },
+                                ControlPlaneCertificates = new V1NeonClusterOperator.UpdateSpec()
+                                {
+                                    Enabled = true,
+                                    Schedule = "0 0 0 ? * 1"
+                                },
+                                NodeCaCertificates = new V1NeonClusterOperator.UpdateSpec()
+                                {
+                                    Enabled = true,
+                                    Schedule = "0 0 0 ? * *"
+                                },
+                                SecurityPatches = new V1NeonClusterOperator.UpdateSpec()
+                                {
+                                    Enabled = true,
+                                    Schedule = "0 0 0 ? * *"
+                                },
+                                Telemetry = new V1NeonClusterOperator.UpdateSpec()
+                                {
+                                    Enabled = true,
+                                    Schedule = "0 0 0 ? * *"
+                                }
+                            }
+                        }
+                    };
+
+                    if (cluster.Definition.IsDesktopBuiltIn)
+                    {
+                        nco.Spec.Updates.NeonDesktopCertificate = new V1NeonClusterOperator.UpdateSpec()
+                        {
+                            Enabled = true,
+                            Schedule = "0 0 * ? * *"
+                        };
+                    }
+
+                    await k8s.CreateClusterCustomObjectAsync<V1NeonClusterOperator>(nco, nco.Name());
+                });
+
+
         }
 
         /// <summary>
