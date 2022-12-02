@@ -11,24 +11,20 @@ rules:
   - neonnodetasks/status
   - neoncontainerregistries
   - neonssoclients
+  verbs:
+  - "*"
+- apiGroups:
+  - minio.neonkube.io
+  resources:
   - miniobuckets
   verbs:
-  - create
-  - get
-  - list
-  - watch
-  - update
-  - patch
-  - delete
+  - "*"
 - apiGroups:
   - apiextensions.k8s.io
   resources:
   - customresourcedefinitions
   verbs:
-  - create
-  - get
-  - watch
-  - list
+  - '*'
 - apiGroups:
   - ""
   resources:

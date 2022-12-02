@@ -709,6 +709,65 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Waits for a customresourcedefinition to be created in the API server.
+        /// </summary>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <param name="k8s"></param>
+        /// <param name="pollInterval"></param>
+        /// <param name="timeout"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public static async Task WaitForCustomResourceDefinitionAsync<TEntity>(
+            this IKubernetes k8s,
+            TimeSpan pollInterval = default,
+            TimeSpan timeout = default,
+            CancellationToken cancellationToken = default)
+            where TEntity : IKubernetesObject<V1ObjectMeta>
+        {
+            await SyncContext.Clear;
+
+            if (pollInterval <= TimeSpan.Zero)
+            {
+                pollInterval = TimeSpan.FromSeconds(1);
+            }
+
+            if (timeout <= TimeSpan.Zero)
+            {
+                timeout = TimeSpan.FromSeconds(90);
+            }
+
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    try
+                    {
+                        var typeMetadata = typeof(TEntity).GetKubernetesTypeMetadata();
+                        var pluralNameGroup = string.IsNullOrEmpty(typeMetadata.Group) ? typeMetadata.PluralName : $"{typeMetadata.PluralName}.{typeMetadata.Group}";
+
+                        var existingList = await k8s.ListCustomResourceDefinitionAsync(
+                           fieldSelector: $"metadata.name={pluralNameGroup}");
+
+                        var existingCustomResourceDefinition = existingList?.Items?.SingleOrDefault();
+
+                        if (existingCustomResourceDefinition != null)
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                },
+                timeout: timeout,
+                pollInterval: pollInterval);
+        }
+
+        /// <summary>
         /// Returns a running pod within the specified namespace that matches a label selector. 
         /// </summary>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>

@@ -73,7 +73,7 @@ namespace Neon.Kube.Resources
         /// Role is a Role ARN which the Route53 provider will assume using either the explicit credentials AccessKeyID/SecretAccessKey 
         /// or the inferred credentials from environment variables, shared credentials file or AWS Instance metadata
         /// </summary>
-        [JsonProperty(PropertyName = "role", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "role", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "role", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Role { get; set; } = null;

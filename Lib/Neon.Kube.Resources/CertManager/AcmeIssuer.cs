@@ -59,7 +59,7 @@ namespace Neon.Kube.Resources
         /// Server is the URL used to access the ACME server’s ‘directory’ endpoint. For example, for Let’s Encrypt’s staging endpoint, 
         /// you would use: “https://acme-staging-v02.api.letsencrypt.org/directory”. Only ACME v2 endpoints (i.e. RFC 8555) are supported.
         /// </summary>
-        [JsonProperty(PropertyName = "server", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "server", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "server", ApplyNamingConventions = false)]
         [DefaultValue("https://acme-v02.api.letsencrypt.org/directory")]
         public string Server { get; set; } = "https://acme-v02.api.letsencrypt.org/directory";

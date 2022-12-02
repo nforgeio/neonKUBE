@@ -463,7 +463,6 @@ namespace Neon.Kube.Operator
             {
                 try
                 {
-
                     var generator = new CustomResourceGenerator();
 
                     var crd = await generator.GenerateCustomResourceDefinitionAsync(typeof(TEntity));
@@ -482,6 +481,8 @@ namespace Neon.Kube.Operator
                     {
                         await k8s.CreateCustomResourceDefinitionAsync(crd);
                     }
+
+                    await k8s.WaitForCustomResourceDefinitionAsync<TEntity>();
                 }
                 catch (Exception e)
                 {

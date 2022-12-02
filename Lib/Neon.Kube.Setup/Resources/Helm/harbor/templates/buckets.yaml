@@ -1,4 +1,4 @@
-apiVersion: neonkube.io/v1alpha1
+apiVersion: minio.neonkube.io/v1alpha1
 kind: MinioBucket
 metadata:
   name: harbor

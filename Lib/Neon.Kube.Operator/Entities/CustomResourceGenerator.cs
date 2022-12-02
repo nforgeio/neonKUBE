@@ -106,9 +106,9 @@ namespace Neon.Kube.Operator
         {
             await SyncContext.Clear;
 
-            var scope = GetScope(resourceType) ?? EntityScope.Namespaced;
-            var entity = resourceType.GetTypeInfo().GetCustomAttribute<KubernetesEntityAttribute>();
-            var schema = GenerateJsonSchema(resourceType);
+            var scope           = GetScope(resourceType) ?? EntityScope.Namespaced;
+            var entity          = resourceType.GetTypeInfo().GetCustomAttribute<KubernetesEntityAttribute>();
+            var schema          = GenerateJsonSchema(resourceType);
             var pluralNameGroup = string.IsNullOrEmpty(entity.Group) ? entity.PluralName : $"{entity.PluralName}.{entity.Group}";
 
             var crd = new V1CustomResourceDefinition(

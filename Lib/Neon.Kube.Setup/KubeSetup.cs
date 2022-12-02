@@ -380,6 +380,11 @@ namespace Neon.Kube
 
             var logFolder = KubeHelper.LogFolder;
 
+            if (!controller.IsFaulted)
+            {
+                return;
+            }
+
             // Don't upload cluster logs when telemetry is disabled.
 
             if (KubeEnv.IsTelemetryDisabled)

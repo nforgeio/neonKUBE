@@ -87,9 +87,10 @@ namespace NeonClusterOperator
 
             services.AddKubernetesOperator()
                 .AddController<GlauthController, V1Secret>()
+                .AddController<MinioBucketController, V1MinioBucket>()
                 .AddController<NeonClusterOperatorController, V1NeonClusterOperator>()
                 .AddController<NeonContainerRegistryController, V1NeonContainerRegistry>()
-                .AddController<MinioBucketController, V1MinioBucket>()
+                .AddController<NeonDashboardController, V1NeonDashboard>()
                 .AddController<NeonSsoClientController, V1NeonSsoClient>()
                 .AddController<NodeTaskController, V1NeonNodeTask>()
                 .AddFinalizer<NeonContainerRegistryFinalizer, V1NeonContainerRegistry>()

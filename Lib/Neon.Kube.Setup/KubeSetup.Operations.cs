@@ -30,6 +30,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Operator;
 using Neon.Kube.Resources;
 using Neon.Net;
 using Neon.Retry;
@@ -4534,6 +4535,17 @@ $@"- name: StorageType
                     controller.LogProgress(controlNode, verb: "wait for", message: "neon-cluster-operator");
 
                     await k8s.WaitForDaemonsetAsync(KubeNamespace.NeonSystem, "neon-cluster-operator", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+
+                    await NeonHelper.WaitAllAsync(
+                        new List<Task>()
+                        {
+                            k8s.WaitForCustomResourceDefinitionAsync<V1MinioBucket>(),
+                            k8s.WaitForCustomResourceDefinitionAsync<V1NeonClusterOperator>(),
+                            k8s.WaitForCustomResourceDefinitionAsync<V1NeonContainerRegistry>(),
+                            k8s.WaitForCustomResourceDefinitionAsync<V1NeonDashboard>(),
+                            k8s.WaitForCustomResourceDefinitionAsync<V1NeonNodeTask>(),
+                            k8s.WaitForCustomResourceDefinitionAsync<V1NeonSsoClient>()
+                        });
                 });
 
             controller.ThrowIfCancelled();
@@ -4592,8 +4604,6 @@ $@"- name: StorageType
 
                     await k8s.CreateClusterCustomObjectAsync<V1NeonClusterOperator>(nco, nco.Name());
                 });
-
-
         }
 
         /// <summary>

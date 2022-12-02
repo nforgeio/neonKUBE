@@ -159,7 +159,7 @@ namespace Neon.Kube.Operator
             }
             catch (Exception e)
             {
-                logger.LogErrorEx(e);
+                logger.LogDebugEx(e);
             }
 
             await EnqueueAsync(@event, delay, watchEventType);
