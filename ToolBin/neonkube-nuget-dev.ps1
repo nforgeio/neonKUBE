@@ -326,7 +326,7 @@ try
 
     $gitDirty = IsGitDirty
 
-    if ($gitDirty -and -not $dirty -and -not $restore)
+    if (-not $local -and $gitDirty -and -not $dirty -and -not $restore)
     {
         throw "Cannot publish nugets because the git branch is dirty.  Use the [-dirty] option to override."
     }
