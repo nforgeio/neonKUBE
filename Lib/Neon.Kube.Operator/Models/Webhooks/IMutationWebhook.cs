@@ -194,7 +194,7 @@ namespace Neon.Kube.Operator
 
             try
             {
-                var webhook = await k8s.ReadMutatingWebhookConfigurationAsync(WebhookConfiguration.Name());
+                var webhook = await k8s.AdmissionregistrationV1.ReadMutatingWebhookConfigurationAsync(WebhookConfiguration.Name());
             }
             catch (HttpOperationException e) 
             {
@@ -202,7 +202,7 @@ namespace Neon.Kube.Operator
 
                 if (e.Response.StatusCode == System.Net.HttpStatusCode.NotFound) 
                 {
-                    await k8s.CreateMutatingWebhookConfigurationAsync(WebhookConfiguration);
+                    await k8s.AdmissionregistrationV1.CreateMutatingWebhookConfigurationAsync(WebhookConfiguration);
 
                     Logger?.LogInformationEx(() => $"Webhook {this.GetType().Name} created.");
                 }

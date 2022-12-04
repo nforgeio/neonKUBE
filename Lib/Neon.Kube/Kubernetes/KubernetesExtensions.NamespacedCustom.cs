@@ -145,7 +145,7 @@ namespace Neon.Kube
 
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
-            var result = await k8s.ListNamespacedCustomObjectAsync(
+            var result = await k8s.CustomObjects.ListNamespacedCustomObjectAsync(
                 group:                typeMetadata.Group,
                 version:              typeMetadata.ApiVersion,
                 plural:               typeMetadata.PluralName,
@@ -268,7 +268,7 @@ namespace Neon.Kube
         {
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
-            return k8s.ListNamespacedCustomObjectWithHttpMessagesAsync(
+            return k8s.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync(
                 group:                typeMetadata.Group,
                 version:              typeMetadata.ApiVersion,
                 plural:               typeMetadata.PluralName,
@@ -393,7 +393,7 @@ namespace Neon.Kube
         {
             await SyncContext.Clear;
 
-            var result = await k8s.ListNamespacedCustomObjectAsync(
+            var result = await k8s.CustomObjects.ListNamespacedCustomObjectAsync(
                 namespaceParameter:   namespaceParameter,
                 group:                group,
                 version:              version,
@@ -452,7 +452,7 @@ namespace Neon.Kube
             body.Metadata.Name = name;
 
             var typeMetadata = body.GetKubernetesTypeMetadata();
-            var result       = await k8s.CreateNamespacedCustomObjectAsync(
+            var result       = await k8s.CustomObjects.CreateNamespacedCustomObjectAsync(
                 body:               body, 
                 group:              typeMetadata.Group, 
                 version:            typeMetadata.ApiVersion, 
@@ -486,7 +486,7 @@ namespace Neon.Kube
             await SyncContext.Clear;
 
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
-            var result       = await k8s.GetNamespacedCustomObjectAsync(
+            var result       = await k8s.CustomObjects.GetNamespacedCustomObjectAsync(
                 group:              typeMetadata.Group, 
                 version:            typeMetadata.ApiVersion, 
                 namespaceParameter: namespaceParameter, 
@@ -532,7 +532,7 @@ namespace Neon.Kube
             await SyncContext.Clear;
 
             var typeMetadata = body.GetKubernetesTypeMetadata();
-            var result       = await k8s.ReplaceNamespacedCustomObjectAsync(
+            var result       = await k8s.CustomObjects.ReplaceNamespacedCustomObjectAsync(
                 body:               body,
                 group:              typeMetadata.Group,
                 version:            typeMetadata.ApiVersion,
@@ -669,7 +669,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
-            var result       = await k8s.PatchNamespacedCustomObjectStatusAsync(
+            var result       = await k8s.CustomObjects.PatchNamespacedCustomObjectStatusAsync(
                 body:               patch,
                 namespaceParameter: namespaceParameter,
                 group:              typeMetadata.Group,
@@ -738,7 +738,7 @@ namespace Neon.Kube
             {
                 var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
-                await k8s.DeleteNamespacedCustomObjectAsync(
+                await k8s.CustomObjects.DeleteNamespacedCustomObjectAsync(
                     group:              typeMetadata.Group, 
                     version:            typeMetadata.ApiVersion, 
                     namespaceParameter: namespaceParameter, 
@@ -818,7 +818,7 @@ namespace Neon.Kube
             {
                 var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
-                await k8s.DeleteNamespacedCustomObjectAsync(
+                await k8s.CustomObjects.DeleteNamespacedCustomObjectAsync(
                     group:              typeMetadata.Group, 
                     version:            typeMetadata.ApiVersion, 
                     namespaceParameter: namespaceParameter, 

@@ -89,7 +89,7 @@ namespace NeonClusterOperator
             var tenant        = await k8s.ReadNamespacedCustomObjectAsync<V1MinioTenant>(resource.Namespace(), resource.Spec.Tenant);
             var minioEndpoint = $"{tenant.Name()}.{tenant.Namespace()}";
             var secretName    = ((JsonElement)(tenant.Spec)).GetProperty("credsSecret").GetProperty("name").GetString();
-            var secret        = await k8s.ReadNamespacedSecretAsync(secretName, resource.Namespace());
+            var secret        = await k8s.CoreV1.ReadNamespacedSecretAsync(secretName, resource.Namespace());
             var minioClient   = new MinioClient()
                                   .WithEndpoint(minioEndpoint)
                                   .WithCredentials(Encoding.UTF8.GetString(secret.Data["accesskey"]), Encoding.UTF8.GetString(secret.Data["secretkey"]))

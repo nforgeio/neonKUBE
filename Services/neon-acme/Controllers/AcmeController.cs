@@ -53,7 +53,7 @@ namespace NeonAcme.Controllers
     {
         private Service             service;
         private JsonClient          jsonClient;
-        private KubernetesWithRetry k8s;
+        private IKubernetes         k8s;
 
         /// <summary>
         /// Constructor

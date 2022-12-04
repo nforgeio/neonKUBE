@@ -144,7 +144,7 @@ namespace NeonDashboard
                 try
                 {
 
-                    Nodes = await K8s.ListNodeAsync();
+                    Nodes = await K8s.CoreV1.ListNodeAsync();
 
                     TotalNodes = Nodes.Items.Count();
                     UnhealthyNodes = Nodes.Items.Where(node => node.Status.Conditions.Any(condition => negativeNodeConditions.Contains(condition.Type) && condition.Status == "True")).Count();

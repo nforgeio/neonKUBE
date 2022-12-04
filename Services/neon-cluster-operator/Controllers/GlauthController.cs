@@ -146,7 +146,7 @@ namespace NeonClusterOperator
 
             await resourceManager.StartAsync();
 
-            var secret = await k8s.ReadNamespacedSecretAsync("neon-admin.neon-system-db.credentials.postgresql", KubeNamespace.NeonSystem);
+            var secret = await k8s.CoreV1.ReadNamespacedSecretAsync("neon-admin.neon-system-db.credentials.postgresql", KubeNamespace.NeonSystem);
 
             var password = Encoding.UTF8.GetString(secret.Data["password"]);
 

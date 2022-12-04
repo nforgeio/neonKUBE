@@ -73,10 +73,10 @@ namespace NeonClusterOperator
 
                 var clusterTelemetry = new ClusterTelemetry();
 
-                var nodes = await k8s.ListNodeAsync();
+                var nodes = await k8s.CoreV1.ListNodeAsync();
                 clusterTelemetry.Nodes = nodes.Items.ToList();
 
-                var configMap = await k8s.ReadNamespacedConfigMapAsync(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus);
+                var configMap = await k8s.CoreV1.ReadNamespacedConfigMapAsync(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus);
                 clusterTelemetry.ClusterInfo = TypeSafeConfigMap<ClusterInfo>.From(configMap).Config;
 
                 using (var jsonClient = new JsonClient()

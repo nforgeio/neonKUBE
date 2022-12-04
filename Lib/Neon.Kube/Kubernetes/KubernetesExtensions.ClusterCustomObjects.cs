@@ -144,7 +144,7 @@ namespace Neon.Kube
 
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
-            var result = await k8s.ListClusterCustomObjectAsync(
+            var result = await k8s.CustomObjects.ListClusterCustomObjectAsync(
                 group:                typeMetadata.Group,
                 version:              typeMetadata.ApiVersion,
                 plural:               typeMetadata.PluralName,
@@ -266,7 +266,7 @@ namespace Neon.Kube
 
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
-            return await k8s.ListClusterCustomObjectWithHttpMessagesAsync(
+            return await k8s.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync(
                 group:                typeMetadata.Group,
                 version:              typeMetadata.ApiVersion,
                 plural:               typeMetadata.PluralName,
@@ -391,7 +391,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(version), nameof(version));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(plural), nameof(plural));
 
-            var result = await k8s.ListClusterCustomObjectAsync(
+            var result = await k8s.CustomObjects.ListClusterCustomObjectAsync(
                 group:                  group,
                 version:                version,
                 plural:                 plural,
@@ -447,7 +447,7 @@ namespace Neon.Kube
             body.Metadata.Name = name;
 
             var typeMetadata = body.GetKubernetesTypeMetadata();
-            var result       = await k8s.CreateClusterCustomObjectAsync(
+            var result       = await k8s.CustomObjects.CreateClusterCustomObjectAsync(
                 body:              body, 
                 group:             typeMetadata.Group, 
                 version:           typeMetadata.ApiVersion,
@@ -478,7 +478,7 @@ namespace Neon.Kube
             await SyncContext.Clear;
 
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
-            var result       = await k8s.GetClusterCustomObjectAsync(
+            var result       = await k8s.CustomObjects.GetClusterCustomObjectAsync(
                 group:             typeMetadata.Group,
                 version:           typeMetadata.ApiVersion,
                 plural:            typeMetadata.PluralName, 
@@ -521,7 +521,7 @@ namespace Neon.Kube
             await SyncContext.Clear;
 
             var typeMetadata = body.GetKubernetesTypeMetadata();
-            var result       = await k8s.ReplaceClusterCustomObjectAsync(
+            var result       = await k8s.CustomObjects.ReplaceClusterCustomObjectAsync(
                 body:              body, 
                 group:             typeMetadata.Group,
                 version:           typeMetadata.ApiVersion,
@@ -642,7 +642,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
-            var result       = await k8s.PatchClusterCustomObjectStatusAsync(
+            var result       = await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync(
                 body:              patch,
                 group:             typeMetadata.Group,
                 version:           typeMetadata.ApiVersion,
@@ -700,7 +700,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
-            var result       = await k8s.PatchClusterCustomObjectAsync(
+            var result       = await k8s.CustomObjects.PatchClusterCustomObjectAsync(
                 body:              patch,
                 group:             typeMetadata.Group,
                 version:           typeMetadata.ApiVersion,
@@ -766,7 +766,7 @@ namespace Neon.Kube
             {
                 var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
-                await k8s.DeleteClusterCustomObjectAsync(
+                await k8s.CustomObjects.DeleteClusterCustomObjectAsync(
                     group:              typeMetadata.Group, 
                     version:            typeMetadata.ApiVersion, 
                     plural:             typeMetadata.PluralName, 
@@ -844,7 +844,7 @@ namespace Neon.Kube
             {
                 var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
-                await k8s.DeleteClusterCustomObjectAsync(
+                await k8s.CustomObjects.DeleteClusterCustomObjectAsync(
                     group:              typeMetadata.Group, 
                     version:            typeMetadata.ApiVersion, 
                     plural:             typeMetadata.PluralName, 

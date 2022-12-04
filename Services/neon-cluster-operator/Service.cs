@@ -189,8 +189,12 @@ namespace NeonClusterOperator
         {
             //-----------------------------------------------------------------
             // Start the controllers: these need to be started before starting KubeOps
-
-            K8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
+            
+            KubeHelper.InitializeJson();
+            
+            K8s = new Kubernetes(
+                KubernetesClientConfiguration.BuildDefaultConfig(),
+                new RetryHandler());
             LogContext.SetCurrentLogProvider(TelemetryHub.LoggerFactory);
 
             harborHttpClient = new HttpClient(new HttpClientHandler() { UseCookies = false });

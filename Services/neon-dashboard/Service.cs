@@ -64,7 +64,7 @@ namespace NeonDashboard
         /// <summary>
         /// The Kubernetes client.
         /// </summary>
-        public KubernetesWithRetry Kubernetes;
+        public IKubernetes Kubernetes;
 
         /// <summary>
         /// Information about the cluster.
@@ -141,7 +141,11 @@ namespace NeonDashboard
 
             var port = 80;
 
-            Kubernetes = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
+            KubeHelper.InitializeJson();
+
+            Kubernetes = new Kubernetes(
+                KubernetesClientConfiguration.BuildDefaultConfig(),
+                new RetryHandler());
 
             var metricsHost = GetEnvironmentVariable("METRICS_HOST", "http://mimir-query-frontend.neon-monitor.svc.cluster.local:8080");
             PrometheusClient = new PrometheusClient($"{metricsHost}/prometheus/");
@@ -311,7 +315,7 @@ namespace NeonDashboard
 
             try
             {
-                var secret = await Kubernetes.ReadNamespacedSecretAsync("neon-sso-dex", KubeNamespace.NeonSystem);
+                var secret = await Kubernetes.CoreV1.ReadNamespacedSecretAsync("neon-sso-dex", KubeNamespace.NeonSystem);
 
                 SetEnvironmentVariable("SSO_CLIENT_SECRET", Encoding.UTF8.GetString(secret.Data["NEONSSO_CLIENT_SECRET"]));
 

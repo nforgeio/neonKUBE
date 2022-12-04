@@ -258,7 +258,7 @@ namespace Neon.Kube
 
             var taints = new List<V1Taint>();
 
-            foreach (var node in (await GetK8sClient(controller).ListNodeAsync()).Items.Where(node => node.Metadata.Labels.Any(label => label.Key == labelKey && label.Value == labelValue)))
+            foreach (var node in (await GetK8sClient(controller).CoreV1.ListNodeAsync()).Items.Where(node => node.Metadata.Labels.Any(label => label.Key == labelKey && label.Value == labelValue)))
             {
                 if (node.Spec.Taints?.Count() > 0)
                 {
@@ -307,56 +307,10 @@ namespace Neon.Kube
             // modifying the built-in base retry policy.  We're really just trying to handle
             // the transients that happen during setup when the API server is unavailable for
             // some reaon (like it's being restarted).
-
-            var k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildConfigFromConfigFile(configPath, currentContext: cluster.KubeContext.Name));
-
-            k8s.RetryPolicy =
-                new ExponentialRetryPolicy(
-                    transientDetector: 
-                        exception =>
-                        {
-                            var exceptionType = exception.GetType();
-
-                            // Exceptions like this happen when a API server connection can't be established
-                            // because the server isn't running or ready.
-
-                            if (exceptionType == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(SocketException))
-                            {
-                                return true;
-                            }
-
-                            var httpOperationException = exception as HttpOperationException;
-
-                            if (httpOperationException != null)
-                            {
-                                var statusCode = httpOperationException.Response.StatusCode;
-
-                                switch (statusCode)
-                                {
-                                    case HttpStatusCode.GatewayTimeout:
-                                    case HttpStatusCode.InternalServerError:
-                                    case HttpStatusCode.RequestTimeout:
-                                    case HttpStatusCode.ServiceUnavailable:
-                                    case (HttpStatusCode)423:   // Locked
-                                    case (HttpStatusCode)429:   // Too many requests
-
-                                        return true;
-                                }
-                            }
-
-                            // This might be another variant of the check just above.  This looks like an SSL negotiation problem.
-
-                            if (exceptionType == typeof(HttpRequestException) && exception.InnerException != null && exception.InnerException.GetType() == typeof(IOException))
-                            {
-                                return true;
-                            }
-
-                            return false;
-                        },
-                    maxAttempts:          int.MaxValue,
-                    initialRetryInterval: TimeSpan.FromSeconds(1),
-                    maxRetryInterval:     TimeSpan.FromSeconds(5),
-                    timeout:              TimeSpan.FromMinutes(5));
+            
+            var k8s = new Kubernetes(
+                KubernetesClientConfiguration.BuildConfigFromConfigFile(configPath, currentContext: cluster.KubeContext.Name),
+                new RetryHandler());
 
             controller.Add(KubeSetupProperty.K8sClient, k8s);
         }

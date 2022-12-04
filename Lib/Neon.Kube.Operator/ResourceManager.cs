@@ -467,7 +467,7 @@ namespace Neon.Kube.Operator
 
                     var crd = await generator.GenerateCustomResourceDefinitionAsync(typeof(TEntity));
 
-                    var existingList = await k8s.ListCustomResourceDefinitionAsync(
+                    var existingList = await k8s.ApiextensionsV1.ListCustomResourceDefinitionAsync(
                        fieldSelector: $"metadata.name={crd.Name()}");
 
                     var existingCustomResourceDefinition = existingList?.Items?.SingleOrDefault();
@@ -475,11 +475,11 @@ namespace Neon.Kube.Operator
                     if (existingCustomResourceDefinition != null)
                     {
                         crd.Metadata.ResourceVersion = existingCustomResourceDefinition.ResourceVersion();
-                        await k8s.ReplaceCustomResourceDefinitionAsync(crd, crd.Name());
+                        await k8s.ApiextensionsV1.ReplaceCustomResourceDefinitionAsync(crd, crd.Name());
                     }
                     else
                     {
-                        await k8s.CreateCustomResourceDefinitionAsync(crd);
+                        await k8s.ApiextensionsV1.CreateCustomResourceDefinitionAsync(crd);
                     }
 
                     await k8s.WaitForCustomResourceDefinitionAsync<TEntity>();

@@ -55,9 +55,13 @@ namespace Neon.Kube.Operator
 
         internal IOperatorBuilder AddOperatorBase()
         {
+            KubeHelper.InitializeJson();
+
             if (!Services.Any(x => x.ServiceType == typeof(IKubernetes)))
             {
-                var k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
+                var k8s = new Kubernetes(
+                    KubernetesClientConfiguration.BuildDefaultConfig(), 
+                    new RetryHandler());
                 Services.AddSingleton(k8s);
             }
 

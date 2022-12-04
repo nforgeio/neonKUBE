@@ -204,7 +204,7 @@ spec:
 
                     try
                     {
-                        var k8sNodes = (await k8s.ListNodeAsync()).Items;
+                        var k8sNodes = (await k8s.CoreV1.ListNodeAsync()).Items;
 
                         foreach (var node in cluster.Nodes)
                         {
@@ -238,7 +238,7 @@ spec:
                                 }
                             }
 
-                            await k8s.PatchNodeAsync(new V1Patch(patch, V1Patch.PatchType.StrategicMergePatch), k8sNode.Metadata.Name);
+                            await k8s.CoreV1.PatchNodeAsync(new V1Patch(patch, V1Patch.PatchType.StrategicMergePatch), k8sNode.Metadata.Name);
                         }
                     }
                     finally
@@ -1286,7 +1286,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             GlobalDefault = priorityClassDef.IsDefault
                         };
 
-                        await k8s.CreatePriorityClassAsync(priorityClass);
+                        await k8s.SchedulingV1.CreatePriorityClassAsync(priorityClass);
                     }
                 });
         }
@@ -1313,7 +1313,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             await controlNode.InvokeIdempotentAsync("setup/dns",
                 async () =>
                 {
-                    var coreDnsDeployment = await k8s.ReadNamespacedDeploymentAsync("coredns", KubeNamespace.KubeSystem);
+                    var coreDnsDeployment = await k8s.AppsV1.ReadNamespacedDeploymentAsync("coredns", KubeNamespace.KubeSystem);
 
                     var spec = NeonHelper.JsonSerialize(coreDnsDeployment.Spec);
                     var coreDnsDaemonset = new V1DaemonSet()
@@ -1336,8 +1336,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     coreDnsDaemonset.Spec.Template.Spec.Containers.First().Resources.Requests["memory"] = new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryRequest));
                     coreDnsDaemonset.Spec.Template.Spec.Containers.First().Resources.Limits["memory"] = new ResourceQuantity(ToSiString(coreDnsAdvice.PodMemoryLimit));
 
-                    await k8s.CreateNamespacedDaemonSetAsync(coreDnsDaemonset, KubeNamespace.KubeSystem);
-                    await k8s.DeleteNamespacedDeploymentAsync(coreDnsDeployment.Name(), coreDnsDeployment.Namespace());
+                    await k8s.AppsV1.CreateNamespacedDaemonSetAsync(coreDnsDaemonset, KubeNamespace.KubeSystem);
+                    await k8s.AppsV1.DeleteNamespacedDeploymentAsync(coreDnsDeployment.Name(), coreDnsDeployment.Namespace());
 
                 });
 
@@ -1349,11 +1349,11 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 await controlNode.InvokeIdempotentAsync("setup/dns-service",
                     async () =>
                     {
-                        var kubeDns = await k8s.ReadNamespacedServiceAsync("kube-dns", KubeNamespace.KubeSystem);
+                        var kubeDns = await k8s.CoreV1.ReadNamespacedServiceAsync("kube-dns", KubeNamespace.KubeSystem);
 
                         kubeDns.Spec.InternalTrafficPolicy = "Local";
 
-                        await k8s.ReplaceNamespacedServiceAsync(kubeDns, kubeDns.Name(), kubeDns.Namespace());
+                        await k8s.CoreV1.ReplaceNamespacedServiceAsync(kubeDns, kubeDns.Name(), kubeDns.Namespace());
                     });
             }
 
@@ -1412,7 +1412,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         {
                             controller.LogProgress(controlNode, verb: "setup", message: "dnsutils");
 
-                            var pod = await k8s.CreateNamespacedPodAsync(
+                            var pod = await k8s.CoreV1.CreateNamespacedPodAsync(
                                 new V1Pod()
                                 {
                                     Metadata = new V1ObjectMeta()
@@ -1490,7 +1490,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                     {
                                         // Restart coredns and try again.
 
-                                        var coredns = await k8s.ReadNamespacedDaemonSetAsync("coredns", KubeNamespace.KubeSystem);
+                                        var coredns = await k8s.AppsV1.ReadNamespacedDaemonSetAsync("coredns", KubeNamespace.KubeSystem);
 
                                         await coredns.RestartAsync(k8s);
                                         await Task.Delay(TimeSpan.FromSeconds(20));
@@ -1501,7 +1501,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                 timeout:      TimeSpan.FromSeconds(300),
                                 pollInterval: TimeSpan.FromMilliseconds(500));
 
-                            await k8s.DeleteNamespacedPodAsync("dnsutils", KubeNamespace.NeonSystem);
+                            await k8s.CoreV1.DeleteNamespacedPodAsync("dnsutils", KubeNamespace.NeonSystem);
                         });
                 });
 
@@ -1628,7 +1628,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         await NeonHelper.WaitForAsync(
                            async () =>
                            {
-                               nodes = await k8s.ListNodeAsync(labelSelector: "node-role.kubernetes.io/control-plane=");
+                               nodes = await k8s.CoreV1.ListNodeAsync(labelSelector: "node-role.kubernetes.io/control-plane=");
 
                                return nodes.Items.All(n => n.Status.Conditions.Any(c => c.Type == "Ready" && c.Status == "True"));
                            },
@@ -1655,7 +1655,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                 }
                             };
 
-                            await k8s.PatchNodeAsync(new V1Patch(patch, V1Patch.PatchType.StrategicMergePatch), controlNode.Metadata.Name);
+                            await k8s.CoreV1.PatchNodeAsync(new V1Patch(patch, V1Patch.PatchType.StrategicMergePatch), controlNode.Metadata.Name);
                         }
                     }
                 });
@@ -2078,11 +2078,11 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             Type = "kubernetes.io/tls"
                         };
 
-                        await k8s.CreateNamespacedSecretAsync(secret, secret.Namespace());
+                        await k8s.CoreV1.CreateNamespacedSecretAsync(secret, secret.Namespace());
 
                         secret.Metadata.NamespaceProperty = KubeNamespace.NeonSystem;
 
-                        await k8s.CreateNamespacedSecretAsync(secret, secret.Namespace());
+                        await k8s.CoreV1.CreateNamespacedSecretAsync(secret, secret.Namespace());
                     });
             }
         }
@@ -2117,7 +2117,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         }
                     };
 
-                    await k8s.CreateNamespacedServiceAccountAsync(serviceAccount, serviceAccount.Namespace());
+                    await k8s.CoreV1.CreateNamespacedServiceAccountAsync(serviceAccount, serviceAccount.Namespace());
 
                     var clusterRoleBinding = new V1ClusterRoleBinding()
                     {
@@ -2148,7 +2148,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         }
                     };
 
-                    await k8s.CreateClusterRoleBindingAsync(clusterRoleBinding);
+                    await k8s.RbacAuthorizationV1.CreateClusterRoleBindingAsync(clusterRoleBinding);
                 });
         }
 
@@ -2217,7 +2217,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 {
                     controller.LogProgress(controlNode, verb: "taint", message: "nodes");
 
-                    var nodes = await k8s.ListNodeAsync();
+                    var nodes = await k8s.CoreV1.ListNodeAsync();
 
                     foreach (var node in cluster.Nodes)
                     {
@@ -2242,7 +2242,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             }
                         }
 
-                        await k8s.PatchNodeAsync(new V1Patch(patch, V1Patch.PatchType.StrategicMergePatch), node.Metadata.Name);
+                        await k8s.CoreV1.PatchNodeAsync(new V1Patch(patch, V1Patch.PatchType.StrategicMergePatch), node.Metadata.Name);
                     }
                 });
         }
@@ -2297,7 +2297,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     controller.LogProgress(controlNode, verb: "setup", message: "kiali");
 
                     var values = new Dictionary<string, object>();
-                    var secret = await k8s.ReadNamespacedSecretAsync(KubeConst.DexSecret, KubeNamespace.NeonSystem);
+                    var secret = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeConst.DexSecret, KubeNamespace.NeonSystem);
 
                     values.Add("oidc.secret", Encoding.UTF8.GetString(secret.Data["NEONSSO_CLIENT_SECRET"]));
                     values.Add("image.operator.registry", KubeConst.LocalClusterRegistry);
@@ -2779,7 +2779,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             await controlNode.InvokeIdempotentAsync($"setup/namespace-{name}",
                 async () =>
                 {
-                    await k8s.CreateNamespaceAsync(
+                    await k8s.CoreV1.CreateNamespaceAsync(
                         new V1Namespace()
                         {
                             Metadata = new V1ObjectMeta()
@@ -2854,7 +2854,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         };
                     }
 
-                    await k8s.CreateStorageClassAsync(storageClass);
+                    await k8s.StorageV1.CreateStorageClassAsync(storageClass);
                 });
         }
 
@@ -2909,7 +2909,7 @@ $@"- name: StorageType
                         storageClass.Metadata.Annotations.Add("storageclass.kubernetes.io/is-default-class", "true");
                     }
 
-                    await k8s.CreateStorageClassAsync(storageClass);
+                    await k8s.StorageV1.CreateStorageClassAsync(storageClass);
                 });
         }
 
@@ -2974,7 +2974,7 @@ $@"- name: StorageType
                         };
                     }
 
-                    await k8s.CreateStorageClassAsync(storageClass);
+                    await k8s.StorageV1.CreateStorageClassAsync(storageClass);
                 });
         }
 
@@ -3329,7 +3329,7 @@ $@"- name: StorageType
                         async () =>
                         {
 
-                            var dbSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespace.NeonSystem);
+                            var dbSecret = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespace.NeonSystem);
 
                             var citusSecret = new V1Secret()
                             {
@@ -3787,8 +3787,8 @@ $@"- name: StorageType
                     await controlNode.InvokeIdempotentAsync("setup/db-credentials-grafana",
                         async () =>
                         {
-                            var secret    = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespace.NeonSystem);
-                            var dexSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.DexSecret, KubeNamespace.NeonSystem);
+                            var secret    = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespace.NeonSystem);
+                            var dexSecret = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeConst.DexSecret, KubeNamespace.NeonSystem);
 
                             var monitorSecret = new V1Secret()
                             {
@@ -3809,7 +3809,7 @@ $@"- name: StorageType
                                 }
                             };
 
-                            await k8s.CreateNamespacedSecretAsync(monitorSecret, KubeNamespace.NeonMonitor);
+                            await k8s.CoreV1.CreateNamespacedSecretAsync(monitorSecret, KubeNamespace.NeonMonitor);
                         });
 
                     int i = 0;
@@ -3856,10 +3856,10 @@ $@"- name: StorageType
                     {
                         controller.LogProgress(controlNode, verb: "create", message: "kiali-grafana-user");
 
-                        var grafanaSecret   = await k8s.ReadNamespacedSecretAsync("grafana-admin-credentials", KubeNamespace.NeonMonitor);
+                        var grafanaSecret   = await k8s.CoreV1.ReadNamespacedSecretAsync("grafana-admin-credentials", KubeNamespace.NeonMonitor);
                         var grafanaUser     = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_USER"]);
                         var grafanaPassword = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_PASSWORD"]);
-                        var kialiSecret     = await k8s.ReadNamespacedSecretAsync("kiali", KubeNamespace.NeonSystem);
+                        var kialiSecret     = await k8s.CoreV1.ReadNamespacedSecretAsync("kiali", KubeNamespace.NeonSystem);
                         var kialiPassword   = Encoding.UTF8.GetString(kialiSecret.Data["grafanaPassword"]);
 
                         var cmd = new string[]
@@ -3887,7 +3887,7 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(controlNode, verb: "configure", message: "grafana");
 
-                    var grafanaSecret   = await k8s.ReadNamespacedSecretAsync("grafana-admin-credentials", KubeNamespace.NeonMonitor);
+                    var grafanaSecret   = await k8s.CoreV1.ReadNamespacedSecretAsync("grafana-admin-credentials", KubeNamespace.NeonMonitor);
                     var grafanaUser     = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_USER"]);
                     var grafanaPassword = Encoding.UTF8.GetString(grafanaSecret.Data["GF_SECURITY_ADMIN_PASSWORD"]);
                     var grafanaPod      = await k8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonMonitor, labelSelector: "app=grafana");
@@ -4047,7 +4047,7 @@ $@"- name: StorageType
                         {
                             controller.LogProgress(controlNode, verb: "configure", message: "minio secret");
 
-                            var secret = await k8s.ReadNamespacedSecretAsync("minio", KubeNamespace.NeonSystem);
+                            var secret = await k8s.CoreV1.ReadNamespacedSecretAsync("minio", KubeNamespace.NeonSystem);
 
                             secret.Metadata.NamespaceProperty = "monitoring";
 
@@ -4063,7 +4063,7 @@ $@"- name: StorageType
                                 },
                                 Data = secret.Data,
                             };
-                            await k8s.CreateNamespacedSecretAsync(monitoringSecret, KubeNamespace.NeonMonitor);
+                            await k8s.CoreV1.CreateNamespacedSecretAsync(monitoringSecret, KubeNamespace.NeonMonitor);
                         });
 
                     controller.ThrowIfCancelled();
@@ -4243,7 +4243,7 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(controlNode, verb: "configure", message: "minio secret");
 
-                    var minioSecret = await k8s.ReadNamespacedSecretAsync("minio", KubeNamespace.NeonSystem);
+                    var minioSecret = await k8s.CoreV1.ReadNamespacedSecretAsync("minio", KubeNamespace.NeonSystem);
 
                     var secret = new V1Secret()
                     {
@@ -4263,7 +4263,7 @@ $@"- name: StorageType
                         }
                     };
 
-                    await k8s.CreateNamespacedSecretAsync(secret, KubeNamespace.NeonSystem);
+                    await k8s.CoreV1.CreateNamespacedSecretAsync(secret, KubeNamespace.NeonSystem);
                 });
 
             controller.ThrowIfCancelled();
@@ -4276,7 +4276,7 @@ $@"- name: StorageType
 
                     // Create the Harbor databases.
 
-                    var dbSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespace.NeonSystem);
+                    var dbSecret = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespace.NeonSystem);
 
                     var harborSecret = new V1Secret()
                     {
@@ -4289,9 +4289,9 @@ $@"- name: StorageType
                         StringData = new Dictionary<string, string>()
                     };
 
-                    if ((await k8s.ListNamespacedSecretAsync(KubeNamespace.NeonSystem)).Items.Any(s => s.Metadata.Name == KubeConst.RegistrySecretKey))
+                    if ((await k8s.CoreV1.ListNamespacedSecretAsync(KubeNamespace.NeonSystem)).Items.Any(s => s.Metadata.Name == KubeConst.RegistrySecretKey))
                     {
-                        harborSecret = await k8s.ReadNamespacedSecretAsync(KubeConst.RegistrySecretKey, KubeNamespace.NeonSystem);
+                        harborSecret = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeConst.RegistrySecretKey, KubeNamespace.NeonSystem);
 
                         if (harborSecret.Data == null)
                         {
@@ -4324,7 +4324,7 @@ $@"- name: StorageType
 
                     // Create the Harbor Minio bucket.
 
-                    var minioSecret = await k8s.ReadNamespacedSecretAsync("minio", KubeNamespace.NeonSystem);
+                    var minioSecret = await k8s.CoreV1.ReadNamespacedSecretAsync("minio", KubeNamespace.NeonSystem);
                     var accessKey   = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
                     var secretKey   = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
                     var serviceUser = await KubeHelper.GetClusterLdapUserAsync(k8s, "serviceuser");
@@ -4893,7 +4893,7 @@ $@"- name: StorageType
                         }
                     };
 
-                    await k8s.CreateNamespacedSecretAsync(secret, KubeNamespace.NeonSystem);
+                    await k8s.CoreV1.CreateNamespacedSecretAsync(secret, KubeNamespace.NeonSystem);
                 });
 
             controller.ThrowIfCancelled();
@@ -4921,7 +4921,7 @@ $@"- name: StorageType
                         }
                     };
 
-                    await k8s.CreateNamespacedSecretAsync(secret, KubeNamespace.NeonSystem);
+                    await k8s.CoreV1.CreateNamespacedSecretAsync(secret, KubeNamespace.NeonSystem);
                 });
 
             controller.ThrowIfCancelled();
@@ -4970,7 +4970,7 @@ $@"- name: StorageType
                             }
                         };
 
-                        await k8s.CreateNamespacedPersistentVolumeClaimAsync(pvc, pvc.Namespace());
+                        await k8s.CoreV1.CreateNamespacedPersistentVolumeClaimAsync(pvc, pvc.Namespace());
                     }
                 });
 
@@ -5196,7 +5196,7 @@ $@"- name: StorageType
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Glauth);
             var values        = new Dictionary<string, object>();
-            var dbSecret      = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespace.NeonSystem);
+            var dbSecret      = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespace.NeonSystem);
             var dbPassword    = Encoding.UTF8.GetString(dbSecret.Data["password"]);
 
             values.Add("cluster.name", cluster.Definition.Name);
@@ -5287,8 +5287,8 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(controlNode, verb: "create", message: "glauth users");
 
-                    var users  = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespace.NeonSystem);
-                    var groups = await k8s.ReadNamespacedSecretAsync("glauth-groups", KubeNamespace.NeonSystem);
+                    var users  = await k8s.CoreV1.ReadNamespacedSecretAsync("glauth-users", KubeNamespace.NeonSystem);
+                    var groups = await k8s.CoreV1.ReadNamespacedSecretAsync("glauth-groups", KubeNamespace.NeonSystem);
 
                     foreach (var key in groups.Data.Keys)
                     {
@@ -5391,7 +5391,7 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var k8s        = GetK8sClient(controller);
-            var secret     = await k8s.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbAdminSecret, KubeNamespace.NeonSystem);
+            var secret     = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbAdminSecret, KubeNamespace.NeonSystem);
             var username   = Encoding.UTF8.GetString(secret.Data["username"]);
             var password   = Encoding.UTF8.GetString(secret.Data["password"]);
             var dbHost     = KubeService.NeonSystemDb;
@@ -5490,7 +5490,7 @@ $@"- name: StorageType
                         @namespace: KubeNamespace.NeonStatus,
                         config:     new ClusterInfo(cluster.Definition));
 
-                    await k8s.CreateNamespacedConfigMapAsync(clusterInfoMap.ConfigMap, KubeNamespace.NeonStatus);
+                    await k8s.CoreV1.CreateNamespacedConfigMapAsync(clusterInfoMap.ConfigMap, KubeNamespace.NeonStatus);
                 }));
         }
 
@@ -5521,7 +5521,7 @@ $@"- name: StorageType
                             IsLocked = cluster.Definition.IsLocked,
                         });
 
-                    await k8s.CreateNamespacedConfigMapAsync(clusterLockMap.ConfigMap, KubeNamespace.NeonStatus);
+                    await k8s.CoreV1.CreateNamespacedConfigMapAsync(clusterLockMap.ConfigMap, KubeNamespace.NeonStatus);
                 });
 
             await controlNode.InvokeIdempotentAsync("setup/cluster-health",
@@ -5536,7 +5536,7 @@ $@"- name: StorageType
                             Summary = "Cluster is healthy"
                         });
 
-                    await k8s.CreateNamespacedConfigMapAsync(clusterHealthMap.ConfigMap, KubeNamespace.NeonStatus);
+                    await k8s.CoreV1.CreateNamespacedConfigMapAsync(clusterHealthMap.ConfigMap, KubeNamespace.NeonStatus);
                 }));
         }
 

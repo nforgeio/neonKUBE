@@ -63,14 +63,14 @@ namespace Neon.Kube
     /// passing <see cref="ConfigMap"/> as the request body (this holds the <see cref="V1ConfigMap"/>).
     /// </para>
     /// <para>
-    /// To read an existing configmap, call <b>IKubernetes.ReadNamespacedConfigMapAsync</b> to retrieve the
+    /// To read an existing configmap, call <b>IKubernetes.CoreV1.ReadNamespacedConfigMapAsync</b> to retrieve the
     /// Kubernetes configmap and then call the static <see cref="From"/> method to wrap the result
     /// into a <see cref="TypeSafeConfigMap{TConfig}"/> where your typesafe values can be accessed
     /// via the <see cref="Config"/> property.
     /// </para>
     /// <para>
-    /// To update an existing config, call <b>IKubernetes.ReadNamespacedConfigMapAsync</b> to retrieve it, 
-    /// modify it via the <see cref="Config"/> property and then call <b>IKubernetes.ReplaceNamespacedConfigMapAsync()</b>
+    /// To update an existing config, call <b>IKubernetes.CoreV1.ReadNamespacedConfigMapAsync</b> to retrieve it, 
+    /// modify it via the <see cref="Config"/> property and then call <b>IKubernetes.CoreV1.ReplaceNamespacedConfigMapAsync()</b>
     /// passing <see cref="ConfigMap"/>.
     /// </para>
     /// </remarks>
