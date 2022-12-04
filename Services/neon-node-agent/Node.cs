@@ -107,7 +107,7 @@ namespace NeonNodeAgent
 
                     // Query Kubernetes for the node information based on the the node's hostname.
 
-                    cachedNode           = await k8s.ReadNodeAsync(Name);
+                    cachedNode           = await k8s.CoreV1.ReadNodeAsync(Name);
                     cachedOwnerReference = new V1OwnerReference(apiVersion: cachedNode.ApiVersion, name: cachedNode.Name(), kind: cachedNode.Kind, uid: cachedNode.Uid());
 
                     return cachedOwnerReference;

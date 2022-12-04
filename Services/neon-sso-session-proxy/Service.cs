@@ -101,11 +101,13 @@ namespace NeonSsoSessionProxy
         {
             await SetStatusAsync(NeonServiceStatus.Starting);
 
-            k8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
+            k8s = new Kubernetes(
+                KubernetesClientConfiguration.BuildDefaultConfig(),
+                new RetryHandler());
 
             if (NeonHelper.IsDevWorkstation)
             {
-                var configFile = await k8s.ReadNamespacedConfigMapAsync("neon-sso-dex", KubeNamespace.NeonSystem);
+                var configFile = await k8s.CoreV1.ReadNamespacedConfigMapAsync("neon-sso-dex", KubeNamespace.NeonSystem);
 
                 Config = NeonHelper.YamlDeserializeViaJson<DexConfig>(configFile.Data["config.yaml"]);
             }

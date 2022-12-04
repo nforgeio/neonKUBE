@@ -22,6 +22,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Text;
 using System.Text.Json;
@@ -30,7 +31,6 @@ using System.Threading.Tasks;
 
 using k8s;
 using k8s.Models;
-using k8s.Util.Common;
 
 using Neon.Common;
 using Neon.IO;
@@ -615,7 +615,7 @@ namespace Neon.Kube
 
                     var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath: kubeConfigPath, currentContext: context.Name);
 
-                    cachedK8s = new KubernetesWithRetry(new Kubernetes(config));
+                    cachedK8s = new Kubernetes(config, new RetryHandler());
 
                     return cachedK8s;
                 }
@@ -802,7 +802,7 @@ namespace Neon.Kube
 
             try
             {
-                var configMap = await K8s.ReadNamespacedConfigMapAsync(
+                var configMap = await K8s.CoreV1.ReadNamespacedConfigMapAsync(
                     name:               KubeConfigMapName.ClusterLock,
                     namespaceParameter: KubeNamespace.NeonStatus,
                     cancellationToken:  cancellationToken);
@@ -833,7 +833,7 @@ namespace Neon.Kube
             // We need to check and the potentially modify the existing lock configmap
             // so that Kubernetes can check for write conflicts.
 
-            var configMap = await K8s.ReadNamespacedConfigMapAsync(
+            var configMap = await K8s.CoreV1.ReadNamespacedConfigMapAsync(
                 name:               KubeConfigMapName.ClusterLock,
                 namespaceParameter: KubeNamespace.NeonStatus,
                 cancellationToken:  cancellationToken);
@@ -845,7 +845,7 @@ namespace Neon.Kube
                 lockStatusConfig.Config.IsLocked = true;
                 lockStatusConfig.Update();
 
-                await K8s.ReplaceNamespacedConfigMapAsync(configMap, name: configMap.Metadata.Name, namespaceParameter: configMap.Metadata.NamespaceProperty); 
+                await K8s.CoreV1.ReplaceNamespacedConfigMapAsync(configMap, name: configMap.Metadata.Name, namespaceParameter: configMap.Metadata.NamespaceProperty); 
             }
         }
 
@@ -865,7 +865,7 @@ namespace Neon.Kube
             // We need to check and the potentially modify the existing lock configmap
             // so that Kubernetes can check for write conflicts.
 
-            var configMap = await K8s.ReadNamespacedConfigMapAsync(
+            var configMap = await K8s.CoreV1.ReadNamespacedConfigMapAsync(
                 name:               KubeConfigMapName.ClusterLock,
                 namespaceParameter: KubeNamespace.NeonStatus,
                 cancellationToken:  cancellationToken);
@@ -877,7 +877,7 @@ namespace Neon.Kube
                 lockStatusConfig.Config.IsLocked = false;
                 lockStatusConfig.Update();
 
-                await K8s.ReplaceNamespacedConfigMapAsync(configMap, name: configMap.Metadata.Name, namespaceParameter: configMap.Metadata.NamespaceProperty);
+                await K8s.CoreV1.ReplaceNamespacedConfigMapAsync(configMap, name: configMap.Metadata.Name, namespaceParameter: configMap.Metadata.NamespaceProperty);
             }
         }
 
@@ -918,7 +918,7 @@ namespace Neon.Kube
         {
             await SyncContext.Clear;
 
-            var configMap = await K8s.ReadNamespacedConfigMapAsync(
+            var configMap = await K8s.CoreV1.ReadNamespacedConfigMapAsync(
                 name:               KubeConfigMapName.ClusterInfo,
                 namespaceParameter: KubeNamespace.NeonStatus);
 
@@ -939,7 +939,7 @@ namespace Neon.Kube
 
             var clusterInfoMap = new TypeSafeConfigMap<ClusterInfo>(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus, clusterInfo);
 
-            await K8s.ReplaceNamespacedConfigMapAsync(clusterInfoMap.ConfigMap, KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus);
+            await K8s.CoreV1.ReplaceNamespacedConfigMapAsync(clusterInfoMap.ConfigMap, KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus);
         }
 
         /// <summary>
@@ -1105,7 +1105,7 @@ namespace Neon.Kube
                 // [kubectl] will be smarter about deleting resources in the correct order and
                 // we don't want to have to implement that logic right now.
 
-                var resetNamespaces = (await K8s.ListNamespaceAsync()).Items
+                var resetNamespaces = (await K8s.CoreV1.ListNamespaceAsync()).Items
                     .Where(item => !KubeNamespace.InternalNamespacesWithoutDefault.Contains(item.Name()))
                     .Where(item => !options.KeepNamespaces.Contains(item.Name()))
                     .Select(item => item.Metadata.Name)
@@ -1150,7 +1150,7 @@ namespace Neon.Kube
                     //
                     // We're doing it this way because the API server isn't structured to make this easy.
 
-                    var namespacedResourceTypes = (await K8s.GetAPIResourcesAsync())
+                    var namespacedResourceTypes = (await K8s.CoreV1.GetAPIResourcesAsync())
                         .Resources
                         .Where(resource => resource.Namespaced && !resource.Name.Contains("/") && resource.Verbs.Contains("delete"))
                         .ToArray();
@@ -1176,7 +1176,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Remove all neonKUBE custom resources.
 
-            var neonKubeCrds = (await K8s.ListCustomResourceDefinitionAsync()).Items
+            var neonKubeCrds = (await K8s.ApiextensionsV1.ListCustomResourceDefinitionAsync()).Items
                 .Where(crd => KubeHelper.IsNeonKubeCustomResource(crd))
                 .ToArray();
 
@@ -1189,7 +1189,7 @@ namespace Neon.Kube
                 {
                     foreach (var resource in (await K8s.ListClusterCustomObjectMetadataAsync(crd.Spec.Group, crd.Spec.Versions.First().Name, crd.Spec.Names.Plural, labelSelector: $"{NeonLabel.RemoveOnClusterReset}")).Items)
                     {
-                        await K8s.DeleteClusterCustomObjectAsync(crd.Spec.Group, crd.Spec.Versions.First().Name, crd.Spec.Names.Plural, resource.Name());
+                        await K8s.CustomObjects.DeleteClusterCustomObjectAsync(crd.Spec.Group, crd.Spec.Versions.First().Name, crd.Spec.Names.Plural, resource.Name());
                     }
                 }
             }
@@ -1207,7 +1207,7 @@ namespace Neon.Kube
                     {
                         var metadata = item.GetKubernetesTypeMetadata();
 
-                        await K8s.DeleteClusterCustomObjectWithHttpMessagesAsync(metadata.Group, metadata.ApiVersion, metadata.PluralName, item.Name());
+                        await K8s.CustomObjects.DeleteClusterCustomObjectWithHttpMessagesAsync(metadata.Group, metadata.ApiVersion, metadata.PluralName, item.Name());
                     });
 
                 await AddContainerRegistryResourcesAsync();

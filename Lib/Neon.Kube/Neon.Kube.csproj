@@ -43,7 +43,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="DNS" Version="7.0.0" />
-		<PackageReference Include="KubernetesClient" Version="7.2.19" />
+		<PackageReference Include="KubernetesClient" Version="9.0.38" />
 		<PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.2" />
 		<PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />
@@ -71,7 +71,7 @@
 		<PackageReference Include="System.Net.Ping" Version="4.3.0" />
 		<PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
 		<PackageReference Include="System.Threading.Tasks.Parallel" Version="4.3.0" />
-		<PackageReference Include="YamlDotNet" Version="12.0.1" />
+		<PackageReference Include="YamlDotNet" Version="12.0.2" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -93,9 +93,9 @@
     Generate the [KubernetesWithRetry.cs] file.
     -->
 
-	<Target Name="K8sWithRetry" BeforeTargets="BeforeBuild" Condition="Exists('$(NK_ROOT)\Tools\prebuilder\bin\$(Configuration)\net7.0\prebuilder.exe')">
+	<!--<Target Name="K8sWithRetry" BeforeTargets="BeforeBuild" Condition="Exists('$(NK_ROOT)\Tools\prebuilder\bin\$(Configuration)\net7.0\prebuilder.exe')">
 		<Exec Command="$(NK_ROOT)\Tools\prebuilder\bin\$(Configuration)\net7.0\prebuilder generate-kubernetes-with-retry &quot;$(ProjectDir)Kubernetes\KubernetesWithRetry.cs&quot; Neon.Kube" />
-	</Target>
+	</Target>-->
 	
 	<!--
 	Generate the data models and service clients.

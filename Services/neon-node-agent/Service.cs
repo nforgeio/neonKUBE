@@ -62,6 +62,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 using YamlDotNet.RepresentationModel;
+using System.Net.Http;
 
 namespace NeonNodeAgent
 {
@@ -207,7 +208,9 @@ namespace NeonNodeAgent
             //-----------------------------------------------------------------
             // Start the controllers: these need to be started before starting KubeOps
 
-            K8s = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
+            K8s = new Kubernetes(
+                KubernetesClientConfiguration.BuildDefaultConfig(),
+                new RetryHandler());
 
             await WatchClusterInfoAsync();
             await CheckCertificateAsync();

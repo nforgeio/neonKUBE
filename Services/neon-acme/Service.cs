@@ -41,6 +41,7 @@ using k8s;
 using Prometheus;
 using Prometheus.DotNetRuntime;
 using k8s.Models;
+using System.Net.Http;
 
 namespace NeonAcme
 {
@@ -57,7 +58,7 @@ namespace NeonAcme
         /// <summary>
         /// The Kubernetes client.
         /// </summary>
-        public KubernetesWithRetry Kubernetes;
+        public IKubernetes Kubernetes;
 
         /// <summary>
         /// Resources used for discovery.
@@ -95,7 +96,9 @@ namespace NeonAcme
         {
             await SetStatusAsync(NeonServiceStatus.Starting);
 
-            Kubernetes = new KubernetesWithRetry(KubernetesClientConfiguration.BuildDefaultConfig());
+            Kubernetes = new Kubernetes(
+                KubernetesClientConfiguration.BuildDefaultConfig(),
+                new RetryHandler());
 
             Resources = new V1APIResourceList()
             {

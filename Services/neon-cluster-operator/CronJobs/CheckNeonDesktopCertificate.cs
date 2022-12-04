@@ -78,8 +78,8 @@ namespace NeonClusterOperator
                     var k8s = (IKubernetes)dataMap["Kubernetes"];
                     var headendClient = (HeadendClient)dataMap["HeadendClient"];
 
-                    var ingressSecret = await k8s.ReadNamespacedSecretAsync("neon-cluster-certificate", KubeNamespace.NeonIngress);
-                    var systemSecret = await k8s.ReadNamespacedSecretAsync("neon-cluster-certificate", KubeNamespace.NeonSystem);
+                    var ingressSecret = await k8s.CoreV1.ReadNamespacedSecretAsync("neon-cluster-certificate", KubeNamespace.NeonIngress);
+                    var systemSecret = await k8s.CoreV1.ReadNamespacedSecretAsync("neon-cluster-certificate", KubeNamespace.NeonSystem);
 
                     var ingressCertificate = X509Certificate2.CreateFromPem(
                         Encoding.UTF8.GetString(ingressSecret.Data["tls.crt"]),
@@ -101,8 +101,8 @@ namespace NeonClusterOperator
                         ingressSecret.Data = cert;
                         systemSecret.Data = cert;
 
-                        await k8s.ReplaceNamespacedSecretAsync(ingressSecret, ingressSecret.Name(), ingressSecret.Namespace());
-                        await k8s.ReplaceNamespacedSecretAsync(systemSecret, systemSecret.Name(), systemSecret.Namespace());
+                        await k8s.CoreV1.ReplaceNamespacedSecretAsync(ingressSecret, ingressSecret.Name(), ingressSecret.Namespace());
+                        await k8s.CoreV1.ReplaceNamespacedSecretAsync(systemSecret, systemSecret.Name(), systemSecret.Namespace());
                     }
                 }
                 finally

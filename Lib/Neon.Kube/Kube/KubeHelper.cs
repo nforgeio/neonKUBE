@@ -2991,7 +2991,7 @@ TCPKeepAlive yes
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username), nameof(username));
 
-            var users = await k8s.ReadNamespacedSecretAsync("glauth-users", KubeNamespace.NeonSystem);
+            var users = await k8s.CoreV1.ReadNamespacedSecretAsync("glauth-users", KubeNamespace.NeonSystem);
 
             return NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(users.Data[username]));
         }
@@ -3024,14 +3024,14 @@ TCPKeepAlive yes
                 };
             }
             
-            using (var k8s = new Kubernetes(config))
+            using (var k8s = new Kubernetes(config, new RetryHandler()))
             {
                 // Cluster status is persisted to the [neon-status/cluster-health] configmap
                 // during cluster setup and is maintained there after by [neon-cluster-operator].
 
                 try
                 {
-                    var configMap = await k8s.ReadNamespacedConfigMapAsync(
+                    var configMap = await k8s.CoreV1.ReadNamespacedConfigMapAsync(
                         name:               KubeConfigMapName.ClusterHealth,
                         namespaceParameter: KubeNamespace.NeonStatus,
                         cancellationToken:  cancellationToken);

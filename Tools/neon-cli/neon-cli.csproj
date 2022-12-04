@@ -35,7 +35,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="KubernetesClient" Version="7.2.19" />
+		<PackageReference Include="KubernetesClient" Version="9.0.38" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
 		<PackageReference Include="Microsoft.Windows.Compatibility" Version="6.0.0" />
 		<PackageReference Include="Neon.Common" Version="10000.0.2613-dev-master" />
@@ -46,7 +46,7 @@
 		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
 		<PackageReference Include="System.Security.Principal.Windows" Version="5.0.0" />
 		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
-		<PackageReference Include="YamlDotNet" Version="12.0.1" />
+		<PackageReference Include="YamlDotNet" Version="12.0.2" />
 	</ItemGroup>
 
 	<ItemGroup>

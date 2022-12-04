@@ -171,7 +171,7 @@ namespace Neon.Kube
                             watch:                true);
                         }
 
-                        var x = k8s.ListNamespacedServiceWithHttpMessagesAsync("", watch: true);
+                        var x = k8s.CoreV1.ListNamespacedServiceWithHttpMessagesAsync("", watch: true);
 
                         await foreach (var (type, item) in listResponse.WatchAsync<T, object>())
                         {

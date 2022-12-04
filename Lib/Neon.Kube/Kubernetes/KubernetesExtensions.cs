@@ -147,14 +147,14 @@ namespace Neon.Kube
     }}
 }}";
 
-            await k8s.PatchNamespacedDeploymentAsync(new V1Patch(patchStr, V1Patch.PatchType.MergePatch), deployment.Name(), deployment.Namespace());
+            await k8s.AppsV1.PatchNamespacedDeploymentAsync(new V1Patch(patchStr, V1Patch.PatchType.MergePatch), deployment.Name(), deployment.Namespace());
 
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
                     try
                     {
-                        var newDeployment = await k8s.ReadNamespacedDeploymentAsync(deployment.Name(), deployment.Namespace());
+                        var newDeployment = await k8s.AppsV1.ReadNamespacedDeploymentAsync(deployment.Name(), deployment.Namespace());
 
                         return newDeployment.Status.ObservedGeneration > generation;
                     }
@@ -171,7 +171,7 @@ namespace Neon.Kube
                 {
                     try
                     {
-                        deployment = await k8s.ReadNamespacedDeploymentAsync(deployment.Name(), deployment.Namespace());
+                        deployment = await k8s.AppsV1.ReadNamespacedDeploymentAsync(deployment.Name(), deployment.Namespace());
 
                         return (deployment.Status.Replicas == deployment.Status.AvailableReplicas) && deployment.Status.UnavailableReplicas == null;
                     }
@@ -214,14 +214,14 @@ namespace Neon.Kube
     }}
 }}";
 
-            await k8s.PatchNamespacedStatefulSetAsync(new V1Patch(patchStr, V1Patch.PatchType.MergePatch), statefulset.Name(), statefulset.Namespace());
+            await k8s.AppsV1.PatchNamespacedStatefulSetAsync(new V1Patch(patchStr, V1Patch.PatchType.MergePatch), statefulset.Name(), statefulset.Namespace());
 
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
                     try
                     {
-                        var newDeployment = await k8s.ReadNamespacedStatefulSetAsync(statefulset.Name(), statefulset.Namespace());
+                        var newDeployment = await k8s.AppsV1.ReadNamespacedStatefulSetAsync(statefulset.Name(), statefulset.Namespace());
 
                         return newDeployment.Status.ObservedGeneration > generation;
                     }
@@ -238,7 +238,7 @@ namespace Neon.Kube
                 {
                     try
                     {
-                        statefulset = await k8s.ReadNamespacedStatefulSetAsync(statefulset.Name(), statefulset.Namespace());
+                        statefulset = await k8s.AppsV1.ReadNamespacedStatefulSetAsync(statefulset.Name(), statefulset.Namespace());
 
                         return (statefulset.Status.Replicas == statefulset.Status.ReadyReplicas) && statefulset.Status.UpdatedReplicas == null;
                     }
@@ -281,14 +281,14 @@ namespace Neon.Kube
     }}
 }}";
 
-            await k8s.PatchNamespacedDaemonSetAsync(new V1Patch(patchStr, V1Patch.PatchType.MergePatch), daemonset.Name(), daemonset.Namespace());
+            await k8s.AppsV1.PatchNamespacedDaemonSetAsync(new V1Patch(patchStr, V1Patch.PatchType.MergePatch), daemonset.Name(), daemonset.Namespace());
 
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
                     try
                     {
-                        var newDeployment = await k8s.ReadNamespacedDaemonSetAsync(daemonset.Name(), daemonset.Namespace());
+                        var newDeployment = await k8s.AppsV1.ReadNamespacedDaemonSetAsync(daemonset.Name(), daemonset.Namespace());
 
                         return newDeployment.Status.ObservedGeneration > generation;
                     }
@@ -305,7 +305,7 @@ namespace Neon.Kube
                 {
                     try
                     {
-                        daemonset = await k8s.ReadNamespacedDaemonSetAsync(daemonset.Name(), daemonset.Namespace());
+                        daemonset = await k8s.AppsV1.ReadNamespacedDaemonSetAsync(daemonset.Name(), daemonset.Namespace());
 
                         return (daemonset.Status.CurrentNumberScheduled == daemonset.Status.NumberReady) && daemonset.Status.UpdatedNumberScheduled == null;
                     }
@@ -417,13 +417,13 @@ namespace Neon.Kube
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(secret != null, nameof(secret));
 
-            if ((await k8s.ListNamespacedSecretAsync(@namespace)).Items.Any(s => s.Metadata.Name == secret.Name()))
+            if ((await k8s.CoreV1.ListNamespacedSecretAsync(@namespace)).Items.Any(s => s.Metadata.Name == secret.Name()))
             {
-                return await k8s.ReplaceNamespacedSecretAsync(secret, secret.Name(), @namespace);
+                return await k8s.CoreV1.ReplaceNamespacedSecretAsync(secret, secret.Name(), @namespace);
             }
             else
             {
-                return await k8s.CreateNamespacedSecretAsync(secret, @namespace);
+                return await k8s.CoreV1.CreateNamespacedSecretAsync(secret, @namespace);
             }
         }
 
@@ -484,7 +484,7 @@ namespace Neon.Kube
                 {
                     try
                     {
-                        var deployments = await k8s.ListNamespacedDeploymentAsync(namespaceParameter, fieldSelector: fieldSelector, labelSelector: labelSelector);
+                        var deployments = await k8s.AppsV1.ListNamespacedDeploymentAsync(namespaceParameter, fieldSelector: fieldSelector, labelSelector: labelSelector);
 
                         if (deployments == null || deployments.Items.Count == 0)
                         {
@@ -561,7 +561,7 @@ namespace Neon.Kube
                 {
                     try
                     {
-                        var statefulsets = await k8s.ListNamespacedStatefulSetAsync(namespaceParameter, fieldSelector: fieldSelector, labelSelector: labelSelector);
+                        var statefulsets = await k8s.AppsV1.ListNamespacedStatefulSetAsync(namespaceParameter, fieldSelector: fieldSelector, labelSelector: labelSelector);
 
                         if (statefulsets == null || statefulsets.Items.Count == 0)
                         {
@@ -637,7 +637,7 @@ namespace Neon.Kube
                 {
                     try
                     {
-                        var daemonsets = await k8s.ListNamespacedDaemonSetAsync(namespaceParameter, fieldSelector: fieldSelector, labelSelector: labelSelector);
+                        var daemonsets = await k8s.AppsV1.ListNamespacedDaemonSetAsync(namespaceParameter, fieldSelector: fieldSelector, labelSelector: labelSelector);
 
                         if (daemonsets == null || daemonsets.Items.Count == 0)
                         {
@@ -693,7 +693,7 @@ namespace Neon.Kube
                 {
                     try
                     {
-                        var pod = await k8s.ReadNamespacedPodAsync(name, namespaceParameter, cancellationToken: cancellationToken);
+                        var pod = await k8s.CoreV1.ReadNamespacedPodAsync(name, namespaceParameter, cancellationToken: cancellationToken);
 
                         return pod.Status.Phase == "Running";
                     }
@@ -744,7 +744,7 @@ namespace Neon.Kube
                         var typeMetadata = typeof(TEntity).GetKubernetesTypeMetadata();
                         var pluralNameGroup = string.IsNullOrEmpty(typeMetadata.Group) ? typeMetadata.PluralName : $"{typeMetadata.PluralName}.{typeMetadata.Group}";
 
-                        var existingList = await k8s.ListCustomResourceDefinitionAsync(
+                        var existingList = await k8s.ApiextensionsV1.ListCustomResourceDefinitionAsync(
                            fieldSelector: $"metadata.name={pluralNameGroup}");
 
                         var existingCustomResourceDefinition = existingList?.Items?.SingleOrDefault();
@@ -787,7 +787,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(labelSelector), nameof(labelSelector));
 
-            var pods = (await k8s.ListNamespacedPodAsync(namespaceParameter, labelSelector: labelSelector)).Items;
+            var pods = (await k8s.CoreV1.ListNamespacedPodAsync(namespaceParameter, labelSelector: labelSelector)).Items;
             var pod  =  pods.FirstOrDefault(pod => pod.Status.Phase == "Running");
 
             if (pod == null)
@@ -948,13 +948,13 @@ namespace Neon.Kube
 
             const int podListConcurency = 100;
 
-            var namespaces = (await k8s.ListNamespaceAsync()).Items;
+            var namespaces = (await k8s.CoreV1.ListNamespaceAsync()).Items;
             var pods       = new V1PodList() { Items = new List<V1Pod>() };
 
             await Parallel.ForEachAsync(namespaces, new ParallelOptions() { MaxDegreeOfParallelism = podListConcurency },
                 async (@namespace, cancellationToken) =>
                 {
-                    var namespacedPods = await k8s.ListNamespacedPodAsync(@namespace.Name());
+                    var namespacedPods = await k8s.CoreV1.ListNamespacedPodAsync(@namespace.Name());
 
                     lock (pods)
                     {

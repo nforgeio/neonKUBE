@@ -82,7 +82,7 @@ assumes that [Neon.Kube] and this tool are referencing the same version of the
                 {
                     case "generate-kubernetes-with-retry":
 
-                        GenerateKubernetesWithRetry.Run(commandLine);
+                        //GenerateKubernetesWithRetry.Run(commandLine);
                         return;
                 }
             }

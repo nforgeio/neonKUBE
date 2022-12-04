@@ -112,7 +112,7 @@ namespace TestKube
             }
             finally
             {
-                await config.K8s.DeleteNamespacedLeaseWithHttpMessagesAsync(leaseName, config.Namespace);
+                await config.K8s.CoordinationV1.DeleteNamespacedLeaseWithHttpMessagesAsync(leaseName, config.Namespace);
             }
         }
 
@@ -158,7 +158,7 @@ namespace TestKube
             }
             finally
             {
-                await config.K8s.DeleteNamespacedLeaseWithHttpMessagesAsync(leaseName, config.Namespace);
+                await config.K8s.CoordinationV1.DeleteNamespacedLeaseWithHttpMessagesAsync(leaseName, config.Namespace);
             }
         }
 
@@ -208,7 +208,7 @@ namespace TestKube
             }
             finally
             {
-                await config.K8s.DeleteNamespacedLeaseWithHttpMessagesAsync(leaseName, config.Namespace);
+                await config.K8s.CoordinationV1.DeleteNamespacedLeaseWithHttpMessagesAsync(leaseName, config.Namespace);
             }
         }
     }

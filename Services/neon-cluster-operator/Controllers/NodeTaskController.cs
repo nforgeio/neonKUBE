@@ -201,7 +201,7 @@ namespace NeonClusterOperator
 
                 try
                 {
-                    var node = await k8s.ReadNodeAsync(nodeTask.Spec.Node);
+                    var node = await k8s.CoreV1.ReadNodeAsync(nodeTask.Spec.Node);
 
                     nodeExists = true;
                     nodeNameToExists.Add(nodeTask.Spec.Node, nodeExists);

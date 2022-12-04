@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -78,7 +79,7 @@ namespace TestKube
         [Fact]
         public void SerializeX509Usages()
         {
-            new KubernetesWithRetry(KubernetesClientConfiguration.BuildConfigFromConfigFile(KubeHelper.KubeConfigPath));
+            new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(KubeHelper.KubeConfigPath), new RetryHandler());
 
             var usages = new List<X509Usages>() { X509Usages.ServerAuth, X509Usages.ClientAuth };
             string jsonString = KubernetesJson.Serialize(usages);

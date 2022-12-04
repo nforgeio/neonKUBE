@@ -116,9 +116,9 @@ ARGUMENTS:
 
             try
             {
-                using (var k8s = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(KubeHelper.KubeConfigPath)))
+                using (var k8s = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(KubeHelper.KubeConfigPath), new RetryHandler()))
                 {
-                    await k8s.ListNamespaceAsync();
+                    await k8s.CoreV1.ListNamespaceAsync();
                 }
 
                 var login      = KubeHelper.GetClusterLogin(KubeHelper.CurrentContextName);

@@ -67,7 +67,7 @@ namespace NeonDashboard
     {
         public IConfiguration                       Configuration { get; }
         public Service                              NeonDashboardService;
-        public KubernetesWithRetry                  k8s;
+        public IKubernetes                          k8s;
         public static Dictionary<string, string>    Svgs;
 
         /// <summary>

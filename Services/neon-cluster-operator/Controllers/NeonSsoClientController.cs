@@ -205,7 +205,7 @@ namespace NeonClusterOperator
                     Id = resource.Spec.Id
                 });
 
-                var oauth2ProxyConfig = await k8s.ReadNamespacedConfigMapAsync("neon-sso-oauth2-proxy", KubeNamespace.NeonSystem);
+                var oauth2ProxyConfig = await k8s.CoreV1.ReadNamespacedConfigMapAsync("neon-sso-oauth2-proxy", KubeNamespace.NeonSystem);
 
                 var alphaConfig = NeonHelper.YamlDeserialize<Oauth2ProxyConfig>(oauth2ProxyConfig.Data["oauth2_proxy_alpha.cfg"]);
 
@@ -218,7 +218,7 @@ namespace NeonClusterOperator
 
                 oauth2ProxyConfig.Data["oauth2_proxy_alpha.cfg"] = NeonHelper.YamlSerialize(alphaConfig);
 
-                await k8s.ReplaceNamespacedConfigMapAsync(oauth2ProxyConfig, oauth2ProxyConfig.Name(), KubeNamespace.NeonSystem);
+                await k8s.CoreV1.ReplaceNamespacedConfigMapAsync(oauth2ProxyConfig, oauth2ProxyConfig.Name(), KubeNamespace.NeonSystem);
 
                 log.LogInformationEx(() => $"DELETED: {resource.Name()}");
             }
@@ -296,7 +296,7 @@ namespace NeonClusterOperator
                     }
                 }
 
-                var oauth2ProxyConfig = await k8s.ReadNamespacedConfigMapAsync("neon-sso-oauth2-proxy", KubeNamespace.NeonSystem);
+                var oauth2ProxyConfig = await k8s.CoreV1.ReadNamespacedConfigMapAsync("neon-sso-oauth2-proxy", KubeNamespace.NeonSystem);
 
                 var alphaConfig = NeonHelper.YamlDeserialize<Oauth2ProxyConfig>(oauth2ProxyConfig.Data["oauth2_proxy_alpha.cfg"]);
 
@@ -310,7 +310,7 @@ namespace NeonClusterOperator
 
                 oauth2ProxyConfig.Data["oauth2_proxy_alpha.cfg"] = NeonHelper.YamlSerialize(alphaConfig);
 
-                await k8s.ReplaceNamespacedConfigMapAsync(oauth2ProxyConfig, oauth2ProxyConfig.Name(), KubeNamespace.NeonSystem);
+                await k8s.CoreV1.ReplaceNamespacedConfigMapAsync(oauth2ProxyConfig, oauth2ProxyConfig.Name(), KubeNamespace.NeonSystem);
             }
         }
     }

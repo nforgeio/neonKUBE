@@ -205,7 +205,7 @@ namespace NeonCli
                 manifestImages.Add(image.SourceRef);
             }
 
-            var nodes        = await k8s.ListNodeAsync();
+            var nodes        = await k8s.CoreV1.ListNodeAsync();
             var images       = new Dictionary<string, ImageStatus>(StringComparer.InvariantCultureIgnoreCase);
             var sbImageNames = new StringBuilder();
 
@@ -333,7 +333,7 @@ namespace NeonCli
             var priorityToName = new Dictionary<int, string>();
             var nameToPriority = new Dictionary<string, int>(StringComparer.InvariantCultureIgnoreCase);
 
-            foreach (var priorityClass in (await k8s.ListPriorityClassAsync()).Items)
+            foreach (var priorityClass in (await k8s.SchedulingV1.ListPriorityClassAsync()).Items)
             {
                 priorityToName[priorityClass.Value]         = priorityClass.Metadata.Name;
                 nameToPriority[priorityClass.Metadata.Name] = priorityClass.Value;
@@ -346,9 +346,9 @@ namespace NeonCli
 
             var ownerToPriorityInfo = new Dictionary<string, PodPriorityInfo>(StringComparer.InvariantCultureIgnoreCase);
 
-            foreach (var @namespace in (await k8s.ListNamespaceAsync()).Items)
+            foreach (var @namespace in (await k8s.CoreV1.ListNamespaceAsync()).Items)
             {
-                foreach (var pod in (await k8s.ListNamespacedPodAsync(@namespace.Metadata.Name)).Items)
+                foreach (var pod in (await k8s.CoreV1.ListNamespacedPodAsync(@namespace.Metadata.Name)).Items)
                 {
                     foreach (var container in pod.Spec.Containers)
                     {
@@ -481,7 +481,7 @@ namespace NeonCli
 
                         // Use the replica set's owner when present.
 
-                        var replicaSet      = await k8s.ReadNamespacedReplicaSetAsync(owner.Name, pod.Namespace());
+                        var replicaSet      = await k8s.AppsV1.ReadNamespacedReplicaSetAsync(owner.Name, pod.Namespace());
                         var replicaSetOwner = replicaSet.OwnerReferences().FirstOrDefault();
 
                         if (replicaSetOwner != null)
@@ -533,9 +533,9 @@ namespace NeonCli
 
             var podRefToContainerResources = new Dictionary<string, List<ContainerResources>>(StringComparer.InvariantCulture);
 
-            foreach (var @namespace in (await k8s.ListNamespaceAsync()).Items)
+            foreach (var @namespace in (await k8s.CoreV1.ListNamespaceAsync()).Items)
             {
-                foreach (var pod in (await k8s.ListNamespacedPodAsync(@namespace.Metadata.Name)).Items)
+                foreach (var pod in (await k8s.CoreV1.ListNamespacedPodAsync(@namespace.Metadata.Name)).Items)
                 {
                     var podRef     = await GetOwnerIdAsync(k8s, pod);
                     var containers = new List<ContainerResources>();
