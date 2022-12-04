@@ -1511,7 +1511,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 {
                     await NeonHelper.WaitForAsync(async () =>
                     {
-                        var configs = await k8s.ListClusterCustomObjectAsync<FelixConfiguration>();
+                        var configs = await k8s.CustomObjects.ListClusterCustomObjectAsync<FelixConfiguration>();
 
                         return configs.Items.Count() > 0;
                     },
@@ -1519,7 +1519,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     pollInterval:      clusterOpPollInterval,
                     cancellationToken: controller.CancellationToken);
 
-                    var configs = await k8s.ListClusterCustomObjectAsync<FelixConfiguration>();
+                    var configs = await k8s.CustomObjects.ListClusterCustomObjectAsync<FelixConfiguration>();
 
                     dynamic patchContent = new JObject();
 
@@ -1530,7 +1530,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     foreach (var felix in configs.Items)
                     {
-                        await k8s.PatchClusterCustomObjectAsync<FelixConfiguration>(patch, felix.Name());
+                        await k8s.CustomObjects.PatchClusterCustomObjectAsync<FelixConfiguration>(patch, felix.Name());
                     }
                 });
 
@@ -1573,7 +1573,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             }
                         };
 
-                        await k8s.CreateNamespacedCustomObjectAsync<ServiceMonitor>(serviceMonitor, serviceMonitor.Name(), serviceMonitor.Namespace());
+                        await k8s.CustomObjects.CreateNamespacedCustomObjectAsync<ServiceMonitor>(serviceMonitor, serviceMonitor.Name(), serviceMonitor.Namespace());
                     });
             }
         }
@@ -1814,7 +1814,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         {
                             try
                             {
-                                await k8s.ListNamespacedCustomObjectAsync<Telemetry>(KubeNamespace.NeonIngress);
+                                await k8s.CustomObjects.ListNamespacedCustomObjectAsync<Telemetry>(KubeNamespace.NeonIngress);
                                 return true;
                             }
                             catch
@@ -1858,19 +1858,19 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         }
                     };
 
-                    await k8s.UpsertNamespacedCustomObjectAsync<Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
+                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
 
                     // turn down tracing in neon namespaces.
 
                     telemetry.Metadata.Name = "neon-monitor-default";
                     telemetry.Metadata.NamespaceProperty = KubeNamespace.NeonMonitor;
                     telemetry.Spec.Tracing.First().RandomSamplingPercentage = 2.0;
-                    await k8s.UpsertNamespacedCustomObjectAsync<Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
+                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
 
                     telemetry.Metadata.Name = "neon-system-default";
                     telemetry.Metadata.NamespaceProperty = KubeNamespace.NeonSystem;
                     telemetry.Spec.Tracing.First().RandomSamplingPercentage = 2.0;
-                    await k8s.UpsertNamespacedCustomObjectAsync<Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
+                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
                 });
         }
 
@@ -2030,7 +2030,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         }
                     }
 
-                    await k8s.UpsertClusterCustomObjectAsync<ClusterIssuer>(issuer, issuer.Name());
+                    await k8s.CustomObjects.UpsertClusterCustomObjectAsync<ClusterIssuer>(issuer, issuer.Name());
 
                     values.Add("image.registry", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
@@ -2645,7 +2645,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         }
                     };
 
-                    var blockDevices = await k8s.ListNamespacedCustomObjectAsync<V1CStorBlockDevice>(KubeNamespace.NeonStorage);
+                    var blockDevices = await k8s.CustomObjects.ListNamespacedCustomObjectAsync<V1CStorBlockDevice>(KubeNamespace.NeonStorage);
 
                     foreach (var node in cluster.Definition.Nodes.Where(n => n.OpenEbsStorage))
                     {
@@ -2688,7 +2688,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         cStorPoolCluster.Spec.Pools.Add(pool);
                     }
 
-                    await k8s.CreateNamespacedCustomObjectAsync(cStorPoolCluster, cStorPoolCluster.Name(), cStorPoolCluster.Namespace());
+                    await k8s.CustomObjects.CreateNamespacedCustomObjectAsync(cStorPoolCluster, cStorPoolCluster.Name(), cStorPoolCluster.Namespace());
                 });
 
             controller.ThrowIfCancelled();
@@ -4602,7 +4602,7 @@ $@"- name: StorageType
                         };
                     }
 
-                    await k8s.CreateClusterCustomObjectAsync<V1NeonClusterOperator>(nco, nco.Name());
+                    await k8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonClusterOperator>(nco, nco.Name());
                 });
         }
 
@@ -5461,7 +5461,7 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync($"setup/neon-dashboard-{name}",
                 async () =>
                 {
-                    await k8s.CreateClusterCustomObjectAsync<V1NeonDashboard>(dashboard, dashboard.Name());
+                    await k8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonDashboard>(dashboard, dashboard.Name());
                 });
         }
 

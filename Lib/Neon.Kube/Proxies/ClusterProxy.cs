@@ -765,7 +765,7 @@ namespace Neon.Kube
                 clusterRegistry.Spec.Username    = registry.Username;
                 clusterRegistry.Spec.Password    = registry.Password;
 
-                await K8s.CreateClusterCustomObjectAsync(clusterRegistry, registry.Name);
+                await K8s.CustomObjects.CreateClusterCustomObjectAsync(clusterRegistry, registry.Name);
             }
         }
 
@@ -1187,7 +1187,7 @@ namespace Neon.Kube
             {
                 foreach (var version in crd.Spec.Versions.Select(ver => ver.Name))
                 {
-                    foreach (var resource in (await K8s.ListClusterCustomObjectMetadataAsync(crd.Spec.Group, crd.Spec.Versions.First().Name, crd.Spec.Names.Plural, labelSelector: $"{NeonLabel.RemoveOnClusterReset}")).Items)
+                    foreach (var resource in (await K8s.CustomObjects.ListClusterCustomObjectMetadataAsync(crd.Spec.Group, crd.Spec.Versions.First().Name, crd.Spec.Names.Plural, labelSelector: $"{NeonLabel.RemoveOnClusterReset}")).Items)
                     {
                         await K8s.CustomObjects.DeleteClusterCustomObjectAsync(crd.Spec.Group, crd.Spec.Versions.First().Name, crd.Spec.Names.Plural, resource.Name());
                     }
@@ -1202,7 +1202,7 @@ namespace Neon.Kube
 
             if (options.ResetCrio)
             {
-                await Parallel.ForEachAsync((await K8s.ListClusterCustomObjectAsync<V1NeonContainerRegistry>()).Items,
+                await Parallel.ForEachAsync((await K8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonContainerRegistry>()).Items,
                     async (item, cancellationToken) =>
                     {
                         var metadata = item.GetKubernetesTypeMetadata();

@@ -118,7 +118,7 @@ fi
                         }
                     };
 
-                    await k8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, nodeTask.Name());
+                    await k8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, nodeTask.Name());
 
                     startTime = startTime.AddSeconds(10);
                 }

@@ -224,7 +224,7 @@ rm $0
 
             var utcNow = DateTime.UtcNow;
 
-            foreach (var scheduledTask in (await k8s.ListClusterCustomObjectAsync<V1NeonNodeTask>()).Items
+            foreach (var scheduledTask in (await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>()).Items
                 .Where(task => NodeTaskFilter(task))
                 .Where(task => task.Status != null && task.Status.Phase == V1NeonNodeTask.Phase.Pending)
                 .Where(task => !task.Spec.StartAfterTimestamp.HasValue || task.Spec.StartAfterTimestamp <= utcNow)
@@ -274,7 +274,7 @@ rm $0
             {
                 logger.LogWarningEx(e, () => $"Invalid NodeTask: [{name}]");
                 logger.LogWarningEx(() => $"Deleting invalid NodeTask: [{name}]");
-                await k8s.DeleteClusterCustomObjectAsync(nodeTask);
+                await k8s.CustomObjects.DeleteClusterCustomObjectAsync(nodeTask);
 
                 return null;
             }
@@ -289,7 +289,7 @@ rm $0
                 patch.Replace(path => path.Status, new V1NeonNodeTask.TaskStatus());
                 patch.Replace(path => path.Status.Phase, V1NeonNodeTask.Phase.Pending);
 
-                nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
+                nodeTask = await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
 
                 var nodeOwnerReference = await Node.GetOwnerReferenceAsync(k8s);
 
@@ -303,7 +303,7 @@ rm $0
                     nodeTask.Metadata.OwnerReferences.Add(await Node.GetOwnerReferenceAsync(k8s));
                 }
 
-                nodeTask = await k8s.ReplaceClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, nodeTask.Name());
+                nodeTask = await k8s.CustomObjects.ReplaceClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, nodeTask.Name());
             }
 
             if (nodeTask.Status.FinishTimestamp.HasValue)
@@ -313,7 +313,7 @@ rm $0
                 if (retentionTime >= TimeSpan.FromSeconds(nodeTask.Spec.RetentionSeconds))
                 {
                     logger.LogInformationEx(() => $"NodeTask [{name}] retained for [{retentionTime}] (deleting now).");
-                    await k8s.DeleteClusterCustomObjectAsync(nodeTask);
+                    await k8s.CustomObjects.DeleteClusterCustomObjectAsync(nodeTask);
 
                     return null;
                 }
@@ -339,7 +339,7 @@ rm $0
                     patch.Replace(path => path.Status.FinishTimestamp, utcNow);
                     patch.Replace(path => path.Status.ExitCode, -1);
 
-                    await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
+                    await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
 
                     return null;
                 }
@@ -396,7 +396,7 @@ rm $0
         private async Task CleanupTasksAsync()
         {
             var utcNow    = DateTime.UtcNow;
-            var nodeTasks = (await k8s.ListClusterCustomObjectAsync<V1NeonNodeTask>()).Items
+            var nodeTasks = (await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>()).Items
                 .Where(tasks => NodeTaskFilter(tasks))
                 .ToArray();
 
@@ -415,7 +415,7 @@ rm $0
                 {
                     logger.LogWarningEx(e, () => $"Invalid NodeTask: [{taskName}]");
                     logger.LogWarningEx(() => $"Deleting invalid NodeTask: [{taskName}]");
-                    await k8s.DeleteClusterCustomObjectAsync(nodeTask);
+                    await k8s.CustomObjects.DeleteClusterCustomObjectAsync(nodeTask);
                     continue;
                 }
 
@@ -436,7 +436,7 @@ rm $0
                         patch.Replace(path => path.Status.FinishTimestamp, utcNow);
                         patch.Replace(path => path.Status.ExitCode, -1);
 
-                        await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
+                        await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
 
                         await KillTaskAsync(nodeTask);
                         continue;
@@ -460,7 +460,7 @@ rm $0
                         patch.Replace(path => path.Status.RuntimeSeconds, (int)Math.Ceiling((utcNow - nodeTask.Status.StartTimestamp.Value).TotalSeconds));
                         patch.Replace(path => path.Status.ExitCode, -1);
 
-                        await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
+                        await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
                         continue;
                     }
 
@@ -480,7 +480,7 @@ rm $0
                         patch.Replace(path => path.Status.FinishTimestamp, utcNow);
                         patch.Replace(path => path.Status.ExitCode, -1);
 
-                        await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
+                        await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
                         continue;
                     }
                 }
@@ -494,7 +494,7 @@ rm $0
                 .Where(task => (utcNow - task.Status.FinishTimestamp) >= TimeSpan.FromSeconds(task.Spec.RetentionSeconds)))
             {
                 logger.LogWarningEx(() => $"[nodetask={nodeTask.Name()}]: has been retained for [{nodeTask.Spec.RetentionSeconds}] (deleting now).");
-                await k8s.DeleteClusterCustomObjectAsync(nodeTask);
+                await k8s.CustomObjects.DeleteClusterCustomObjectAsync(nodeTask);
             }
 
             //-----------------------------------------------------------------
@@ -679,7 +679,7 @@ export SCRIPT_DIR={hostTaskFolder}
                     failedPatch.Replace(path => path.Status.ExitCode, -1);
                     failedPatch.Replace(path => path.Status.Error, $"EXECUTE FAILED: {e.Message}");
 
-                    await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(failedPatch), nodeTask.Name());
+                    await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(failedPatch), nodeTask.Name());
                     return;
                 }
             }
@@ -710,7 +710,7 @@ export SCRIPT_DIR={hostTaskFolder}
             patch.Replace(path => path.Status.CommandLine, Node.GetBashCommandLine(hostScriptPath).Trim());
             patch.Replace(path => path.Status.RunId, executionId);
 
-            nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
+            nodeTask = await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
 
             // Wait for the command to complete and then update the node task status.
 
@@ -758,7 +758,7 @@ export SCRIPT_DIR={hostTaskFolder}
                         }
                     }
 
-                    nodeTask = await k8s.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
+                    nodeTask = await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonNodeTask>(OperatorHelper.ToV1Patch<V1NeonNodeTask>(patch), nodeTask.Name());
                 }
             }
             catch (Exception e)

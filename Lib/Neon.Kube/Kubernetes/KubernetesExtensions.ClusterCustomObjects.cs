@@ -126,7 +126,7 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object list.</returns>
         public static async Task<V1CustomObjectList<T>> ListClusterCustomObjectAsync<T>(
-            this IKubernetes    k8s,
+            this ICustomObjectsOperations    k8s,
             bool?               allowWatchBookmarks  = null,
             string              continueParameter    = null,
             string              fieldSelector        = null,
@@ -144,7 +144,7 @@ namespace Neon.Kube
 
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
-            var result = await k8s.CustomObjects.ListClusterCustomObjectAsync(
+            var result = await k8s.ListClusterCustomObjectAsync(
                 group:                typeMetadata.Group,
                 version:              typeMetadata.ApiVersion,
                 plural:               typeMetadata.PluralName,
@@ -248,7 +248,7 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object list.</returns>
         public static async Task<HttpOperationResponse<object>> ListClusterCustomObjectWithHttpMessagesAsync<T>(
-            this                IKubernetes k8s,
+            this                ICustomObjectsOperations k8s,
             bool?               allowWatchBookmarks  = null,
             string              continueParameter    = null,
             string              fieldSelector        = null,
@@ -266,7 +266,7 @@ namespace Neon.Kube
 
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
-            return await k8s.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync(
+            return await k8s.ListClusterCustomObjectWithHttpMessagesAsync(
                 group:                typeMetadata.Group,
                 version:              typeMetadata.ApiVersion,
                 plural:               typeMetadata.PluralName,
@@ -371,7 +371,7 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object list.</returns>
         public static async Task<V1CustomObjectList<KubernetesObjectMetadata>> ListClusterCustomObjectMetadataAsync(
-            this IKubernetes    k8s,
+            this ICustomObjectsOperations k8s,
             string              group,
             string              version,
             string              plural,
@@ -391,7 +391,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(version), nameof(version));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(plural), nameof(plural));
 
-            var result = await k8s.CustomObjects.ListClusterCustomObjectAsync(
+            var result = await k8s.ListClusterCustomObjectAsync(
                 group:                  group,
                 version:                version,
                 plural:                 plural,
@@ -431,7 +431,7 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The new object.</returns>
         public static async Task<T> CreateClusterCustomObjectAsync<T>(
-            this IKubernetes    k8s,
+            this ICustomObjectsOperations    k8s,
             T                   body,
             string              name,
             string              dryRun            = null,
@@ -447,7 +447,7 @@ namespace Neon.Kube
             body.Metadata.Name = name;
 
             var typeMetadata = body.GetKubernetesTypeMetadata();
-            var result       = await k8s.CustomObjects.CreateClusterCustomObjectAsync(
+            var result       = await k8s.CreateClusterCustomObjectAsync(
                 body:              body, 
                 group:             typeMetadata.Group, 
                 version:           typeMetadata.ApiVersion,
@@ -469,7 +469,7 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object.</returns>
         public static async Task<T> ReadClusterCustomObjectAsync<T>(
-            this IKubernetes    k8s,
+            this ICustomObjectsOperations    k8s,
             string              name,
             CancellationToken   cancellationToken = default(CancellationToken)) 
             
@@ -478,7 +478,7 @@ namespace Neon.Kube
             await SyncContext.Clear;
 
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
-            var result       = await k8s.CustomObjects.GetClusterCustomObjectAsync(
+            var result       = await k8s.GetClusterCustomObjectAsync(
                 group:             typeMetadata.Group,
                 version:           typeMetadata.ApiVersion,
                 plural:            typeMetadata.PluralName, 
@@ -509,7 +509,7 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated object.</returns>
         public static async Task<T> ReplaceClusterCustomObjectAsync<T>(
-            this IKubernetes    k8s,
+            this ICustomObjectsOperations    k8s,
             T                   body,
             string              name, 
             string              dryRun            = null,
@@ -521,7 +521,7 @@ namespace Neon.Kube
             await SyncContext.Clear;
 
             var typeMetadata = body.GetKubernetesTypeMetadata();
-            var result       = await k8s.CustomObjects.ReplaceClusterCustomObjectAsync(
+            var result       = await k8s.ReplaceClusterCustomObjectAsync(
                 body:              body, 
                 group:             typeMetadata.Group,
                 version:           typeMetadata.ApiVersion,
@@ -556,7 +556,7 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated object.</returns>
         public static async Task<T> UpsertClusterCustomObjectAsync<T>(
-            this IKubernetes    k8s,
+            this ICustomObjectsOperations    k8s,
             T                   body,
             string              name, 
             string              dryRun            = null,
@@ -627,7 +627,7 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated custom object.</returns>
         public static async Task<T> PatchClusterCustomObjectStatusAsync<T>(
-            this IKubernetes    k8s,
+            this ICustomObjectsOperations    k8s,
             V1Patch             patch,
             string              name,
             string              dryRun            = null,
@@ -642,7 +642,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
-            var result       = await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync(
+            var result       = await k8s.PatchClusterCustomObjectStatusAsync(
                 body:              patch,
                 group:             typeMetadata.Group,
                 version:           typeMetadata.ApiVersion,
@@ -685,7 +685,7 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated custom object.</returns>
         public static async Task<T> PatchClusterCustomObjectAsync<T>(
-            this IKubernetes  k8s,
+            this ICustomObjectsOperations  k8s,
             V1Patch           patch,
             string            name,
             string            dryRun = null,
@@ -700,7 +700,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
-            var result       = await k8s.CustomObjects.PatchClusterCustomObjectAsync(
+            var result       = await k8s.PatchClusterCustomObjectAsync(
                 body:              patch,
                 group:             typeMetadata.Group,
                 version:           typeMetadata.ApiVersion,
@@ -749,7 +749,7 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task DeleteClusterCustomObjectAsync<T>(
-            this                IKubernetes k8s,
+            this                ICustomObjectsOperations k8s,
             string              name,
             V1DeleteOptions     body               = null,
             int?                gracePeriodSeconds = null,
@@ -766,7 +766,7 @@ namespace Neon.Kube
             {
                 var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
-                await k8s.CustomObjects.DeleteClusterCustomObjectAsync(
+                await k8s.DeleteClusterCustomObjectAsync(
                     group:              typeMetadata.Group, 
                     version:            typeMetadata.ApiVersion, 
                     plural:             typeMetadata.PluralName, 
@@ -826,7 +826,7 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task DeleteClusterCustomObjectAsync<T>(
-            this                IKubernetes k8s,
+            this                ICustomObjectsOperations k8s,
             T                   @object,
             V1DeleteOptions     body               = null,
             int?                gracePeriodSeconds = null,
@@ -844,7 +844,7 @@ namespace Neon.Kube
             {
                 var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
-                await k8s.CustomObjects.DeleteClusterCustomObjectAsync(
+                await k8s.DeleteClusterCustomObjectAsync(
                     group:              typeMetadata.Group, 
                     version:            typeMetadata.ApiVersion, 
                     plural:             typeMetadata.PluralName, 

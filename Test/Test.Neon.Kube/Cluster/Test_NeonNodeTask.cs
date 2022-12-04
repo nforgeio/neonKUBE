@@ -109,11 +109,11 @@ namespace TestKube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task DeleteExistingTasksAsync()
         {
-            var existingTasks = (await fixture.K8s.ListClusterCustomObjectAsync<V1NeonNodeTask>()).Items;
+            var existingTasks = (await fixture.K8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>()).Items;
 
             foreach (var resource in existingTasks)
             {
-                await fixture.K8s.DeleteClusterCustomObjectAsync(resource);
+                await fixture.K8s.CustomObjects.DeleteClusterCustomObjectAsync(resource);
             }
         }
 
@@ -180,7 +180,7 @@ set -euo pipefail
 mkdir -p $NODE_ROOT{folderPath}
 touch $NODE_ROOT{filePath}
 ";
-                    await fixture.K8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: nodeToTaskName[node.Name]);
+                    await fixture.K8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: nodeToTaskName[node.Name]);
                 }
 
                 // Wait for all of the node tasks to report completion.
@@ -195,7 +195,7 @@ touch $NODE_ROOT{filePath}
                 await NeonHelper.WaitForAsync(
                     async () =>
                     {
-                        foreach (var task in (await fixture.K8s.ListClusterCustomObjectAsync<V1NeonNodeTask>()).Items.Where(task => taskNames.Contains(task.Metadata.Name)))
+                        foreach (var task in (await fixture.K8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>()).Items.Where(task => taskNames.Contains(task.Metadata.Name)))
                         {
                             switch (task.Status.Phase)
                             {
@@ -216,7 +216,7 @@ touch $NODE_ROOT{filePath}
                 // Verify that the node tasks completeted successfully and are being
                 // retained for a while.
 
-                var nodeTasks = await fixture.K8s.ListClusterCustomObjectAsync<V1NeonNodeTask>();
+                var nodeTasks = await fixture.K8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>();
 
                 foreach (var task in nodeTasks.Items)
                 {
@@ -288,7 +288,7 @@ exit 123
 ";
             metadata.SetLabel(NeonLabel.RemoveOnClusterReset);
 
-            await fixture.K8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: taskName);
+            await fixture.K8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: taskName);
 
             //-----------------------------------------------------------------
             // Wait the node task to report completion.
@@ -296,7 +296,7 @@ exit 123
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
-                    var task = await fixture.K8s.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
+                    var task = await fixture.K8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
 
                     switch (task.Status.Phase)
                     {
@@ -319,7 +319,7 @@ exit 123
             // and that the exit code as well as the output/error streams were
             // captured.
 
-            var task = await fixture.K8s.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
+            var task = await fixture.K8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
 
             Assert.Equal(V1NeonNodeTask.Phase.Failed, task.Status.Phase);
             Assert.Equal(123, task.Status.ExitCode);
@@ -349,7 +349,7 @@ sleep 30
 ";
             metadata.SetLabel(NeonLabel.RemoveOnClusterReset);
 
-            await fixture.K8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: taskName);
+            await fixture.K8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: taskName);
 
             //-----------------------------------------------------------------
             // Wait the node task to report completion.
@@ -360,7 +360,7 @@ sleep 30
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
-                    var task = await fixture.K8s.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
+                    var task = await fixture.K8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
 
                     switch (task.Status.Phase)
                     {
@@ -411,7 +411,7 @@ sleep 5
 ";
             metadata.SetLabel(NeonLabel.RemoveOnClusterReset);
 
-            await fixture.K8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: taskName);
+            await fixture.K8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: taskName);
 
             //-----------------------------------------------------------------
             // Wait the node task to reported as TARDY.
@@ -419,7 +419,7 @@ sleep 5
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
-                    var task = await fixture.K8s.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
+                    var task = await fixture.K8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
 
                     return task.Status.Phase == V1NeonNodeTask.Phase.Tardy;
                 },
@@ -452,7 +452,7 @@ sleep 5
 ";
             metadata.SetLabel(NeonLabel.RemoveOnClusterReset);
 
-            await fixture.K8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: taskName);
+            await fixture.K8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: taskName);
 
             //-----------------------------------------------------------------
             // Wait the node task to reported as SUCCESS.
@@ -462,7 +462,7 @@ sleep 5
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
-                    var task = await fixture.K8s.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
+                    var task = await fixture.K8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
 
                     if (task.Status.Phase == V1NeonNodeTask.Phase.Success)
                     {
@@ -509,7 +509,7 @@ sleep 5
 ";
             metadata.SetLabel(NeonLabel.RemoveOnClusterReset);
 
-            await fixture.K8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: taskName);
+            await fixture.K8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: taskName);
 
             //-----------------------------------------------------------------
             // Wait the node task to be deleted.
@@ -519,7 +519,7 @@ sleep 5
                 {
                     try
                     {
-                        await fixture.K8s.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
+                        await fixture.K8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonNodeTask>(taskName);
 
                         return false;
                     }

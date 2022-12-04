@@ -110,11 +110,11 @@ namespace Neon.Kube.Operator
                         {
                             if (string.IsNullOrEmpty(entity.Metadata.NamespaceProperty))
                             {
-                                entity = await client.ReadClusterCustomObjectAsync<TEntity>(entity.Name());
+                                entity = await client.CustomObjects.ReadClusterCustomObjectAsync<TEntity>(entity.Name());
                             }
                             else
                             {
-                                entity = await client.ReadNamespacedCustomObjectAsync<TEntity>(entity.Namespace(), entity.Name());
+                                entity = await client.CustomObjects.ReadNamespacedCustomObjectAsync<TEntity>(entity.Namespace(), entity.Name());
                             }
 
                             if (entity.RemoveFinalizer(finalizer.Identifier))
@@ -187,11 +187,11 @@ namespace Neon.Kube.Operator
 
                 if (string.IsNullOrEmpty(entity.Metadata.NamespaceProperty))
                 {
-                    await client.ReplaceClusterCustomObjectAsync<TEntity>(entity, entity.Name());
+                    await client.CustomObjects.ReplaceClusterCustomObjectAsync<TEntity>(entity, entity.Name());
                 }
                 else
                 {
-                    await client.ReplaceNamespacedCustomObjectAsync<TEntity>(entity, entity.Namespace(), entity.Name());
+                    await client.CustomObjects.ReplaceNamespacedCustomObjectAsync<TEntity>(entity, entity.Namespace(), entity.Name());
                 }
             }
             catch (Exception e)

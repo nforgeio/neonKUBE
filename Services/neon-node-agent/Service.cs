@@ -342,7 +342,7 @@ namespace NeonNodeAgent
         {
             Logger.LogInformationEx(() => "Checking webhook certificate.");
 
-            var cert = await K8s.ListNamespacedCustomObjectAsync<Certificate>(
+            var cert = await K8s.CustomObjects.ListNamespacedCustomObjectAsync<Certificate>(
                 KubeNamespace.NeonSystem,
                 labelSelector: $"{NeonLabel.ManagedBy}={Name}");
 
@@ -379,7 +379,7 @@ namespace NeonNodeAgent
                     }
                 };
 
-                await K8s.UpsertNamespacedCustomObjectAsync(certificate, certificate.Namespace(), certificate.Name());
+                await K8s.CustomObjects.UpsertNamespacedCustomObjectAsync(certificate, certificate.Namespace(), certificate.Name());
 
                 Logger.LogInformationEx(() => "Webhook certificate created.");
             }

@@ -166,7 +166,7 @@ namespace NeonClusterOperator
             // fetch and cache node information as we go along.
 
             var nodeNameToExists = new Dictionary<string, bool>(StringComparer.InvariantCultureIgnoreCase);
-            var resources        = (await k8s.ListClusterCustomObjectAsync<V1NeonNodeTask>()).Items;
+            var resources        = (await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>()).Items;
 
             foreach (var nodeTask in resources)
             {
@@ -186,7 +186,7 @@ namespace NeonClusterOperator
 
                         try
                         {
-                            await k8s.DeleteClusterCustomObjectAsync(nodeTask);
+                            await k8s.CustomObjects.DeleteClusterCustomObjectAsync(nodeTask);
                         }
                         catch (Exception e)
                         {
@@ -231,7 +231,7 @@ namespace NeonClusterOperator
 
                     try
                     {
-                        await k8s.DeleteClusterCustomObjectAsync(nodeTask);
+                        await k8s.CustomObjects.DeleteClusterCustomObjectAsync(nodeTask);
                     }
                     catch (Exception e)
                     {
@@ -336,14 +336,14 @@ done
                             }
                         };
 
-                        var tasks = await k8s.ListClusterCustomObjectAsync<V1NeonNodeTask>(labelSelector: $"{NeonLabel.NodeTaskType}={NeonNodeTaskType.ControlPlaneCertUpdate}");
+                        var tasks = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>(labelSelector: $"{NeonLabel.NodeTaskType}={NeonNodeTaskType.ControlPlaneCertUpdate}");
 
                         if (!tasks.Items.Any(
                                         task => task.Spec.Node == nodeTask.Spec.Node
                                                 && (task.Status.Phase <= V1NeonNodeTask.Phase.Running
                                                     || task.Status == null)))
                         {
-                            await k8s.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: nodeTask.Name());
+                            await k8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: nodeTask.Name());
                         }
                     }
                 }

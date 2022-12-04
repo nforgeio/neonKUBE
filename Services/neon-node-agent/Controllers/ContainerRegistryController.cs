@@ -451,7 +451,7 @@ rm $0
         /// </summary>
         private async Task UpdateContainerRegistriesAsync()
         {
-            var registries = (await k8s.ListClusterCustomObjectAsync<V1NeonContainerRegistry>()).Items;
+            var registries = (await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonContainerRegistry>()).Items;
 
             // NOTE: Here's the documentation for the config file we're generating:
             //

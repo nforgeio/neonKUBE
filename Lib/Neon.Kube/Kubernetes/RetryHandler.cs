@@ -13,6 +13,9 @@ using System.Threading.Tasks;
 
 namespace Neon.Kube
 {
+    /// <summary>
+    /// A <see cref="DelegatingHandler"/> used to retry transient errors.
+    /// </summary>
     public class RetryHandler : DelegatingHandler
     {
         private IRetryPolicy retryPolicy;

@@ -321,12 +321,12 @@ namespace NeonDashboard
 
                 // Configure cluster callback url to allow local dev
 
-                var ssoClient = await Kubernetes.ReadNamespacedCustomObjectAsync<V1NeonSsoClient>(KubeNamespace.NeonSystem, "neon-sso");
+                var ssoClient = await Kubernetes.CustomObjects.ReadNamespacedCustomObjectAsync<V1NeonSsoClient>(KubeNamespace.NeonSystem, "neon-sso");
 
                 if (!ssoClient.Spec.RedirectUris.Contains("http://localhost:11001/oauth2/callback"))
                 {
                     ssoClient.Spec.RedirectUris.Add("http://localhost:11001/oauth2/callback");
-                    await Kubernetes.UpsertNamespacedCustomObjectAsync<V1NeonSsoClient>(ssoClient, ssoClient.Namespace(), ssoClient.Name());
+                    await Kubernetes.CustomObjects.UpsertNamespacedCustomObjectAsync<V1NeonSsoClient>(ssoClient, ssoClient.Namespace(), ssoClient.Name());
                 }
 
                 Logger.LogInformationEx("SSO configured.");
@@ -338,7 +338,7 @@ namespace NeonDashboard
 
             Logger.LogInformationEx("Configure metrics.");
 
-            var virtualServices = await Kubernetes.ListNamespacedCustomObjectAsync<VirtualService>(KubeNamespace.NeonIngress);
+            var virtualServices = await Kubernetes.CustomObjects.ListNamespacedCustomObjectAsync<VirtualService>(KubeNamespace.NeonIngress);
             if (!virtualServices.Items.Any(vs => vs.Name() == "metrics-external"))
             {
                 var virtualService = new VirtualService()
@@ -385,7 +385,7 @@ namespace NeonDashboard
                     }
                 };
 
-                await Kubernetes.CreateNamespacedCustomObjectAsync<VirtualService>(virtualService, virtualService.Name(), KubeNamespace.NeonIngress);
+                await Kubernetes.CustomObjects.CreateNamespacedCustomObjectAsync<VirtualService>(virtualService, virtualService.Name(), KubeNamespace.NeonIngress);
             }
             SetEnvironmentVariable("METRICS_HOST", $"https://metrics.{ClusterInfo.Domain}");
         }

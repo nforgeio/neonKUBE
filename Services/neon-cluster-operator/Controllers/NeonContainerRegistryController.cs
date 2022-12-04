@@ -162,7 +162,7 @@ namespace NeonClusterOperator
 
             try
             {
-                await k8s.ReadClusterCustomObjectAsync<V1NeonContainerRegistry>(KubeConst.LocalClusterRegistryProject);
+                await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonContainerRegistry>(KubeConst.LocalClusterRegistryProject);
             }
             catch (Exception e)
             {
@@ -273,7 +273,7 @@ namespace NeonClusterOperator
                     }
                 };
 
-                await k8s.UpsertClusterCustomObjectAsync(registry, registry.Name());
+                await k8s.CustomObjects.UpsertClusterCustomObjectAsync(registry, registry.Name());
             }
         }
     }

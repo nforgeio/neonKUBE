@@ -147,7 +147,7 @@ namespace Neon.Kube
 
                         if (string.IsNullOrEmpty(namespaceParameter))
                         {
-                            listResponse = k8s.ListClusterCustomObjectWithHttpMessagesAsync<T>(
+                            listResponse = k8s.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync<T>(
                                 allowWatchBookmarks:  true,
                                 fieldSelector:        fieldSelector,
                                 labelSelector:        labelSelector,
@@ -159,7 +159,7 @@ namespace Neon.Kube
                         }
                         else
                         {
-                            listResponse = k8s.ListNamespacedCustomObjectWithHttpMessagesAsync<T>(
+                            listResponse = k8s.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync<T>(
                             namespaceParameter,
                             allowWatchBookmarks:  true,
                             fieldSelector:        fieldSelector,
@@ -276,7 +276,7 @@ namespace Neon.Kube
             {
                 if (string.IsNullOrEmpty(namespaceParameter))
                 {
-                    await k8s.ListClusterCustomObjectWithHttpMessagesAsync<T>(
+                    await k8s.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync<T>(
                     fieldSelector:        fieldSelector,
                     labelSelector:        labelSelector,
                     limit:                1,
@@ -287,7 +287,7 @@ namespace Neon.Kube
                 }
                 else
                 {
-                    await k8s.ListNamespacedCustomObjectWithHttpMessagesAsync<T>(
+                    await k8s.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync<T>(
                     namespaceParameter,
                     fieldSelector:        fieldSelector,
                     labelSelector:        labelSelector,
