@@ -17,7 +17,7 @@ namespace Neon.Kube
     {
         private IRetryPolicy retryPolicy;
 
-        private IRetryPolicy defaultRetryPolicy = new ExponentialRetryPolicy(
+        private static IRetryPolicy defaultRetryPolicy = new ExponentialRetryPolicy(
                     transientDetector:
                         exception =>
                         {
@@ -88,6 +88,7 @@ namespace Neon.Kube
             this.retryPolicy = retryPolicy ?? defaultRetryPolicy;
         }
 
+        /// <inheritdoc/>
         protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken)
