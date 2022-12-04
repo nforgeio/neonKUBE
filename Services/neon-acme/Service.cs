@@ -96,6 +96,8 @@ namespace NeonAcme
         {
             await SetStatusAsync(NeonServiceStatus.Starting);
 
+            KubeHelper.InitializeJson();
+
             Kubernetes = new Kubernetes(
                 KubernetesClientConfiguration.BuildDefaultConfig(),
                 new RetryHandler());

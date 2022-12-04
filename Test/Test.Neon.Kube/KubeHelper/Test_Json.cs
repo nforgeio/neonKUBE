@@ -79,7 +79,7 @@ namespace TestKube
         [Fact]
         public void SerializeX509Usages()
         {
-            new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(KubeHelper.KubeConfigPath), new RetryHandler());
+            KubeHelper.InitializeJson();
 
             var usages = new List<X509Usages>() { X509Usages.ServerAuth, X509Usages.ClientAuth };
             string jsonString = KubernetesJson.Serialize(usages);

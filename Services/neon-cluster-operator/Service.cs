@@ -189,7 +189,9 @@ namespace NeonClusterOperator
         {
             //-----------------------------------------------------------------
             // Start the controllers: these need to be started before starting KubeOps
-
+            
+            KubeHelper.InitializeJson();
+            
             K8s = new Kubernetes(
                 KubernetesClientConfiguration.BuildDefaultConfig(),
                 new RetryHandler());

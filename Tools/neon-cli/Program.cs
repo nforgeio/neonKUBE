@@ -341,6 +341,10 @@ NOTE: Command line arguments and options may include references to
 
             Activity traceActivity = null;
 
+            // Initialize k8s json
+
+            KubeHelper.InitializeJson();
+
             try
             {
                 ICommand command;

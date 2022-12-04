@@ -141,6 +141,8 @@ namespace NeonDashboard
 
             var port = 80;
 
+            KubeHelper.InitializeJson();
+
             Kubernetes = new Kubernetes(
                 KubernetesClientConfiguration.BuildDefaultConfig(),
                 new RetryHandler());

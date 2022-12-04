@@ -29,6 +29,8 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -1123,6 +1125,21 @@ namespace Neon.Kube
         public static void InitContext(KubeConfigContext context = null)
         {
             cachedContext = context;
+        }
+
+        /// <summary>
+        /// Used to initialize <see cref="KubernetesJson"/>
+        /// </summary>
+        public static void InitializeJson()
+        {
+            var kubernetesJsonType = typeof(KubernetesJson).Assembly.GetType("k8s.KubernetesJson");
+            System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(kubernetesJsonType.TypeHandle);
+            
+            var member  = kubernetesJsonType.GetField("JsonSerializerOptions", BindingFlags.Static | BindingFlags.NonPublic);
+            var options = (JsonSerializerOptions)member.GetValue(kubernetesJsonType);
+            
+            options.Converters.Remove(options.Converters.Where(c => c.GetType() == typeof(JsonStringEnumConverter)).Single());
+            options.Converters.Add(new JsonStringEnumMemberConverter());
         }
 
         /// <summary>

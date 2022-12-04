@@ -101,6 +101,8 @@ namespace NeonSsoSessionProxy
         {
             await SetStatusAsync(NeonServiceStatus.Starting);
 
+            KubeHelper.InitializeJson(); 
+            
             k8s = new Kubernetes(
                 KubernetesClientConfiguration.BuildDefaultConfig(),
                 new RetryHandler());

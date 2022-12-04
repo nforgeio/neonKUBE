@@ -55,6 +55,8 @@ namespace Neon.Kube.Operator
 
         internal IOperatorBuilder AddOperatorBase()
         {
+            KubeHelper.InitializeJson();
+
             if (!Services.Any(x => x.ServiceType == typeof(IKubernetes)))
             {
                 var k8s = new Kubernetes(
