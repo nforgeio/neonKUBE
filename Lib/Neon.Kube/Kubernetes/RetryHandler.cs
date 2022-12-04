@@ -99,9 +99,26 @@ namespace Neon.Kube
                     {
                         var result = await base.SendAsync(request, cancellationToken);
                         
-                        result.EnsureSuccessStatusCode();
+                        if (result.IsSuccessStatusCode)
+                        {
+                            return result;
+                        }
+                        else
+                        {
+                            var content = await result.Content.ReadAsStringAsync() ?? null;
+                            string requestContent = null;
 
-                        return result;
+                            if (request.Content != null)
+                            {
+                                requestContent = await request.Content.ReadAsStringAsync();
+                            }
+                            throw new HttpOperationException()
+                            {
+                                Body = content,
+                                Request = new HttpRequestMessageWrapper(request, requestContent),
+                                Response = new HttpResponseMessageWrapper(result, content)
+                            };
+                        }
                     }
                     catch (HttpOperationException e)
                     {
