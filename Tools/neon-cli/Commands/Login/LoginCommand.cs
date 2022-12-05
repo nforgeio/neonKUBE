@@ -116,7 +116,7 @@ ARGUMENTS:
 
             try
             {
-                using (var k8s = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(KubeHelper.KubeConfigPath), new RetryHandler()))
+                using (var k8s = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(KubeHelper.KubeConfigPath), new KubernetesRetryHandler()))
                 {
                     await k8s.CoreV1.ListNamespaceAsync();
                 }

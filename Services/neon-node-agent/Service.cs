@@ -210,9 +210,7 @@ namespace NeonNodeAgent
 
             KubeHelper.InitializeJson(); 
             
-            K8s = new Kubernetes(
-                KubernetesClientConfiguration.BuildDefaultConfig(),
-                new RetryHandler());
+            K8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig(), new KubernetesRetryHandler());
 
             await WatchClusterInfoAsync();
             await CheckCertificateAsync();

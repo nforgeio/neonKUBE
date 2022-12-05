@@ -103,9 +103,7 @@ namespace NeonSsoSessionProxy
 
             KubeHelper.InitializeJson(); 
             
-            k8s = new Kubernetes(
-                KubernetesClientConfiguration.BuildDefaultConfig(),
-                new RetryHandler());
+            k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig(), new KubernetesRetryHandler());
 
             if (NeonHelper.IsDevWorkstation)
             {

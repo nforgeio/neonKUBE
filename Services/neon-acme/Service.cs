@@ -98,25 +98,22 @@ namespace NeonAcme
 
             KubeHelper.InitializeJson();
 
-            Kubernetes = new Kubernetes(
-                KubernetesClientConfiguration.BuildDefaultConfig(),
-                new RetryHandler());
-
-            Resources = new V1APIResourceList()
+            Kubernetes = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig(),new KubernetesRetryHandler());
+            Resources  = new V1APIResourceList()
             {
-                ApiVersion = "v1",
+                ApiVersion   = "v1",
                 GroupVersion = "acme.neoncloud.io/v1alpha1",
-                Resources = new List<V1APIResource>()
+                Resources    = new List<V1APIResource>()
                 {
                     new V1APIResource()
                     {
-                        Name = "neoncluster_io",
+                        Name         = "neoncluster_io",
                         SingularName = "neoncluster_io",
-                        Namespaced = false,
-                        Group = "webhook.acme.cert-manager.io",
-                        Version = "v1alpha1",
-                        Kind = "ChallengePayload",
-                        Verbs = new List<string>(){ "create"}
+                        Namespaced   = false,
+                        Group        = "webhook.acme.cert-manager.io",
+                        Version      = "v1alpha1",
+                        Kind         = "ChallengePayload",
+                        Verbs        = new List<string>(){ "create"}
                     }
                 }
             };

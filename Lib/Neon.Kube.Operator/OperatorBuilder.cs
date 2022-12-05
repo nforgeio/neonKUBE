@@ -61,7 +61,7 @@ namespace Neon.Kube.Operator
             {
                 var k8s = new Kubernetes(
                     KubernetesClientConfiguration.BuildDefaultConfig(), 
-                    new RetryHandler());
+                    new KubernetesRetryHandler());
                 Services.AddSingleton(k8s);
             }
 

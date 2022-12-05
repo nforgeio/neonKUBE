@@ -434,7 +434,7 @@ namespace Neon.Kube
             //
             // The log files will include logs from any failed pod containers.
 
-            using (var k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig(), new RetryHandler()))
+            using (var k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig(), new KubernetesRetryHandler()))
             {
                 var pods = k8s.ListAllPodsAsync().Result;
 

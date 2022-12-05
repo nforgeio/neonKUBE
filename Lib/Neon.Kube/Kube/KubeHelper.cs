@@ -24,6 +24,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Security.AccessControl;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -1129,16 +1130,17 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Used to initialize <see cref="KubernetesJson"/>
+        /// Used to initialize <see cref="KubernetesJson"/>.
         /// </summary>
         public static void InitializeJson()
         {
             lock (jsonConverterLock)
             {
                 var kubernetesJsonType = typeof(KubernetesJson).Assembly.GetType("k8s.KubernetesJson");
-                System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(kubernetesJsonType.TypeHandle);
+                
+                RuntimeHelpers.RunClassConstructor(kubernetesJsonType.TypeHandle);
 
-                var member = kubernetesJsonType.GetField("JsonSerializerOptions", BindingFlags.Static | BindingFlags.NonPublic);
+                var member  = kubernetesJsonType.GetField("JsonSerializerOptions", BindingFlags.Static | BindingFlags.NonPublic);
                 var options = (JsonSerializerOptions)member.GetValue(kubernetesJsonType);
 
                 var converters = options.Converters.Where(c => c.GetType() == typeof(JsonStringEnumMemberConverter));
@@ -3048,7 +3050,7 @@ TCPKeepAlive yes
                 };
             }
             
-            using (var k8s = new Kubernetes(config, new RetryHandler()))
+            using (var k8s = new Kubernetes(config, new KubernetesRetryHandler()))
             {
                 // Cluster status is persisted to the [neon-status/cluster-health] configmap
                 // during cluster setup and is maintained there after by [neon-cluster-operator].
