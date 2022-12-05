@@ -87,6 +87,7 @@ namespace Neon.Kube
         private static string               cachedNodeImageFolder;
         private static string               cachedDashboardStateFolder;
         private static string               cachedUserSshFolder;
+        private static object               jsonConverterLock = new object();
 
         private static List<KeyValuePair<string, object>> cachedTelemetryTags;
 
@@ -1132,14 +1133,20 @@ namespace Neon.Kube
         /// </summary>
         public static void InitializeJson()
         {
-            var kubernetesJsonType = typeof(KubernetesJson).Assembly.GetType("k8s.KubernetesJson");
-            System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(kubernetesJsonType.TypeHandle);
-            
-            var member  = kubernetesJsonType.GetField("JsonSerializerOptions", BindingFlags.Static | BindingFlags.NonPublic);
-            var options = (JsonSerializerOptions)member.GetValue(kubernetesJsonType);
-            
-            options.Converters.Remove(options.Converters.Where(c => c.GetType() == typeof(JsonStringEnumConverter)).Single());
-            options.Converters.Add(new JsonStringEnumMemberConverter());
+            lock (jsonConverterLock)
+            {
+                var kubernetesJsonType = typeof(KubernetesJson).Assembly.GetType("k8s.KubernetesJson");
+                System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(kubernetesJsonType.TypeHandle);
+
+                var member = kubernetesJsonType.GetField("JsonSerializerOptions", BindingFlags.Static | BindingFlags.NonPublic);
+                var options = (JsonSerializerOptions)member.GetValue(kubernetesJsonType);
+
+                var converters = options.Converters.Where(c => c.GetType() == typeof(JsonStringEnumMemberConverter));
+                if (!converters.Any())
+                {
+                    options.Converters.Insert(0, new JsonStringEnumMemberConverter());
+                }
+            }
         }
 
         /// <summary>
