@@ -192,9 +192,8 @@ namespace NeonClusterOperator
             
             KubeHelper.InitializeJson();
             
-            K8s = new Kubernetes(
-                KubernetesClientConfiguration.BuildDefaultConfig(),
-                new RetryHandler());
+            K8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig(), new KubernetesRetryHandler());
+
             LogContext.SetCurrentLogProvider(TelemetryHub.LoggerFactory);
 
             harborHttpClient = new HttpClient(new HttpClientHandler() { UseCookies = false });

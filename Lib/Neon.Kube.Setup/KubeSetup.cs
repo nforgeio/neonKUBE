@@ -310,7 +310,7 @@ namespace Neon.Kube
             
             var k8s = new Kubernetes(
                 KubernetesClientConfiguration.BuildConfigFromConfigFile(configPath, currentContext: cluster.KubeContext.Name),
-                new RetryHandler());
+                new KubernetesRetryHandler());
 
             controller.Add(KubeSetupProperty.K8sClient, k8s);
         }

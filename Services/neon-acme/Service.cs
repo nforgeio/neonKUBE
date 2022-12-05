@@ -100,7 +100,7 @@ namespace NeonAcme
 
             Kubernetes = new Kubernetes(
                 KubernetesClientConfiguration.BuildDefaultConfig(),
-                new RetryHandler());
+                new KubernetesRetryHandler());
 
             Resources = new V1APIResourceList()
             {

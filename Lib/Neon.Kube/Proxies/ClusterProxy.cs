@@ -615,7 +615,7 @@ namespace Neon.Kube
 
                     var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath: kubeConfigPath, currentContext: context.Name);
 
-                    cachedK8s = new Kubernetes(config, new RetryHandler());
+                    cachedK8s = new Kubernetes(config, new KubernetesRetryHandler());
 
                     return cachedK8s;
                 }
