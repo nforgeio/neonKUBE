@@ -270,6 +270,17 @@ namespace Neon.Kube
                 {
                     controller.SetGlobalStepStatus("configure: hosting manager");
 
+                    if (!string.IsNullOrEmpty(nodeImageUri))
+                    {
+                        controller.LogGlobal();
+                        controller.LogGlobal($"node image URI: {nodeImageUri}");
+                    }
+                    else if (string.IsNullOrEmpty(nodeImagePath))
+                    {
+                        controller.LogGlobal();
+                        controller.LogGlobal($"node image PATH: {nodeImageUri}");
+                    }
+
                     hostingManager.MaxParallel = controller.MaxParallel;
                     hostingManager.WaitSeconds = 60;
                 });
