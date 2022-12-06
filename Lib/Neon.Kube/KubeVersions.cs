@@ -34,17 +34,99 @@ namespace Neon.Kube
     public static class KubeVersions
     {
         /// <summary>
-        /// <para>
         /// The current neonKUBE version.
-        /// </para>
-        /// <note>
-        /// Pre-release versions should append <b>-alpha</b>, <b>-beta</b>,
-        /// or <b>-preview</b> to the version number.  When multiple prereleases
-        /// with the same tag have been released, we will append a two digits like
-        /// <b>0.3.0-alpha.01</b> which will allow us to describe up to 101
-        /// pre-preleases for the same version.
-        /// </note>
         /// </summary>
+        /// <remarks>
+        /// </remarks>
+        /// <para><b>RELEASE VERSION CONVENTIONS:</b></para>
+        /// <para>
+        /// We're going to use this version to help manage public releases as well as
+        /// to help us isolate development changes made by individual developers or 
+        /// by multiple developers colloborating on common features.
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        ///     <term><b>-alpha[.FEATURE][.##]</b></term>
+        ///     <description>
+        ///     <para>
+        ///     Used for internal releases that are not meant to be consumed by the
+        ///     public.  FEATURE optionally specifies the feature being worked on and
+        ///     is typically set the name of the feature as specified in the GitHub
+        ///     feature branch; i.e. <b>FOO</b> from the feature branch <b>feature-FOO</b>.
+        ///     </para>
+        ///     <para>
+        ///     <b>FEATURE</b> may also be set to <b>release</b> when working towards a
+        ///     release within a <b>release-*</b> branch.
+        ///     </para>
+        ///     <para>
+        ///     Individual developers can also set <b>FEATURE</b> to one of their private
+        ///     branches while work is in progress.
+        ///     </para>
+        ///     <para>
+        ///     The <b>.##</b> part is optional and can be used when it's necessary to
+        ///     retain artifacts like container and node images for multiple internal
+        ///     feature releases.  This must include two digits so a leading "0" will
+        ///     be required for small numbers.
+        ///     </para>
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>-preview[.##]</b></term>
+        ///     <description>
+        ///     <para>
+        ///     This is used for public preview releases where NEONFORGE is not making
+        ///     any short or long term support promises.  We may remove, change, or break
+        ///     features included in this release in subsequent releases.
+        ///     </para>
+        ///     <para>
+        ///     The <b>.##</b> part is optional and can be used when it's necessary to
+        ///     retain artifacts like container and node images for multiple internal
+        ///     feature releases.  This must include two digits so a leading "0" will
+        ///     be required for small numbers.
+        ///     </para>
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>-preview[.##]</b></term>
+        ///     <description>
+        ///     <para>
+        ///     This is used for public preview releases where NEONFORGE is not making
+        ///     any short or long term support promises.  We may remove, change, or break
+        ///     features included in this release in subsequent releases.
+        ///     </para>
+        ///     <para>
+        ///     The <b>.##</b> part is optional and can be used when it's necessary to
+        ///     retain artifacts like container and node images for multiple internal
+        ///     feature releases.  This must include two digits so a leading "0" will
+        ///     be required for small numbers.
+        ///     </para>
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>-rc[.##]</b></term>
+        ///     <description>
+        ///     <para>
+        ///     This is used for public release candidate releases.  For these releases,
+        ///     NEONKUBE is still not making any short or long term support promises, but
+        ///     we're going to try a lot harder to avoid future incompatibilities.  RC
+        ///     release will typically be feature complete and reasonably well tested.
+        ///     </para>
+        ///     <para>
+        ///     The <b>.##</b> part is optional and can be used when it's necessary to
+        ///     retain artifacts like container and node images for multiple internal
+        ///     feature releases.  This must include two digits so a leading "0" will
+        ///     be required for small numbers.
+        ///     </para>
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>NONE</b></term>
+        ///     <description>
+        ///     Generally available public releases do not include a preview part in
+        ///     their semantic version.
+        ///     </description>
+        /// </item>
+        /// </list>
         public const string NeonKube = "0.8.5-alpha";
 
         /// <summary>
