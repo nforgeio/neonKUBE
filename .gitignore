@@ -109,3 +109,4 @@ KubernetesWithRetry.cs
 /**/*.gitignore/**
 /UpgradeLog.htm
 /ToolBin/nuget.config
+**/Protos/**/*.cs
