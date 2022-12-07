@@ -457,15 +457,38 @@ if [ ""{install}"" = ""true"" ]; then
 
     set -euo pipefail
 
-# Initialize the OS and VERSION environment variables.
+    # Initialize the OS and VERSION environment variables.
 
     OS=xUbuntu_22.04
     VERSION={crioVersionNoPatch}
 
-# Install the CRI-O packages.
+    # $hack(jefflill):
+    #
+    # The CRI-O GPG key has expired and we're waiting on [haircommander] to fix it.
+    #
+    #       https://github.com/cri-o/cri-o/issues/6432
+    #
+    # In the meantime, we're going to disable the GPG check for this as described here:
+    #
+    #       https://github.com/nforgeio/neonKUBE/issues/1723
+    #
+    # I'm going to retain this code here in case we need it again in the future, but we
+    # should come back and set [TRUST_HACK=false] after Red Hat fixes this.
 
-    echo ""deb [signed-by=/usr/share/keyrings/libcontainers-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/ /"" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-    echo ""deb [signed-by=/usr/share/keyrings/libcontainers-crio-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/ /"" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:$VERSION.list
+    # $todo(jefflill): Restore [TRUST_HACK=false] after Red Hat fixes this GPG key.
+
+   TRUST_HACK=true
+
+    if [ ""$TRUST_HACK"" == ""true"" ] ; then 
+        TRUSTED=trusted=yes
+    else
+        TRUSTED=
+    fi
+
+    # Install the CRI-O packages.
+
+    echo ""deb [$TRUSTED signed-by=/usr/share/keyrings/libcontainers-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/ /"" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+    echo ""deb [$TRUSTED signed-by=/usr/share/keyrings/libcontainers-crio-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/ /"" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:$VERSION.list
 
     mkdir -p /usr/share/keyrings
 
@@ -605,7 +628,7 @@ conmon_cgroup = ""system.slice""
 # Environment variable list for the conmon process, used for passing necessary
 # environment variables to conmon or the runtime.
 conmon_env = [
-        ""PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"",
+    ""PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"",
 ]
 
 # Additional environment variables to set for all the
@@ -636,15 +659,15 @@ cgroup_manager = ""systemd""
 # only the capabilities defined in the containers json file by the user/kube
 # will be added.
 default_capabilities = [
-        ""CHOWN"",
-        ""DAC_OVERRIDE"",
-        ""FSETID"",
-        ""FOWNER"",
-        ""SETGID"",
-        ""SETUID"",
-        ""SETPCAP"",
-        ""NET_BIND_SERVICE"",
-        ""KILL"",
+    ""CHOWN"",
+    ""DAC_OVERRIDE"",
+    ""FSETID"",
+    ""FOWNER"",
+    ""SETGID"",
+    ""SETUID"",
+    ""SETPCAP"",
+    ""NET_BIND_SERVICE"",
+    ""KILL"",
 ]
 
 # List of default sysctls. If it is empty or commented out, only the sysctls
@@ -662,7 +685,7 @@ additional_devices = [
 # Path to OCI hooks directories for automatically executed hooks. If one of the
 # directories does not exist, then CRI-O will automatically skip them.
 hooks_dir = [
-        ""/usr/share/containers/oci/hooks.d"",
+    ""/usr/share/containers/oci/hooks.d"",
 ]
 
 # List of default mounts for each container. **Deprecated:** this option will
