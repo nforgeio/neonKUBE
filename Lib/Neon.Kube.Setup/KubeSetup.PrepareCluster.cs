@@ -307,12 +307,13 @@ namespace Neon.Kube
                     // service to mount a virtual DVD that will change the password before
                     // configuring the network on first boot.
 
-                    var hostingManager = controller.Get<IHostingManager>(KubeSetupProperty.HostingManager);
-                    var clusterLogin   = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+                    var hostingManager   = controller.Get<IHostingManager>(KubeSetupProperty.HostingManager);
+                    var clusterLogin     = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+                    var desktopReadyToGo = controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo);
 
                     controller.SetGlobalStepStatus("generate: SSH password");
 
-                    if (cluster.Definition.IsDesktop)
+                    if (desktopReadyToGo)
                     {
                         // We're going to configure a fixed password for built-in desktop clusters.
 
@@ -338,7 +339,7 @@ namespace Neon.Kube
                     //
                     //       The big advantage here is much faster cluster provisioning with fixed credentials.
 
-                    if (cluster.Definition.IsDesktop)
+                    if (desktopReadyToGo)
                     {
                         clusterLogin.SshKey = KubeHelper.GetBuiltinDesktopSskKey();
                     }
@@ -354,8 +355,8 @@ namespace Neon.Kube
                         }
                     }
 
-                    // We also need to generate the cluster's root SSO password, unless this was
-                    // specified in the cluster definition (typically for built-in clusters).
+                    // We also need to generate the cluster's root SSO password, unless this was specified
+                    // in the cluster definition (typically for built-in neon-desktop clusters).
 
                     controller.SetGlobalStepStatus("generate: SSO password");
                     
@@ -465,7 +466,7 @@ namespace Neon.Kube
 
                     controller.SetGlobalStepStatus("create: cluster neoncluster.io domain");
 
-                    if (clusterDefinition.IsDesktop)
+                    if (desktopReadyToGo)
                     {
                         clusterLogin.ClusterDefinition.Id     = KubeHelper.GenerateClusterId();
                         clusterLogin.ClusterDefinition.Domain = KubeConst.DesktopHostname;
@@ -495,7 +496,7 @@ namespace Neon.Kube
                     //      ADDRESS     desktop.neoncluster.io
                     //      ADDRESS     *.desktop.neoncluster.io
 
-                    if (clusterDefinition.IsDesktop)
+                    if (desktopReadyToGo)
                     {
                         controller.SetGlobalStepStatus($"configure: node local DNS");
 

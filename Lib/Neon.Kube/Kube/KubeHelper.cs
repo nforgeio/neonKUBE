@@ -2231,10 +2231,14 @@ exit 0
         /// <returns>The <see cref="KubeSshKey"/>.</returns>
         public static KubeSshKey GetBuiltinDesktopSskKey()
         {
-            // We simply called [GenerateSshKey(KubeConst.NeonDesktopClusterName)] once
-            // and then serialized the resulting key to the YAML below.
+            // $note(jefflill):
             //
-            // NOTE: I also needed to take care to escape all double quotes.
+            // This key was generated using the neonCLOUD neon-image tool via:
+            //
+            //      neon-image sshkey neon-desktop root
+            //
+            // SSH keys don't have an expiration so this key could potentionally work
+            // forever, as long as the encryption algorithms are still supported.
 
             var keyYaml =
 @"

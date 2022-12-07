@@ -187,21 +187,7 @@ systemctl restart sshd
             // Verify that we can login with the new SSH private key and also verify that
             // the password still works.
 
-            // $todo(jefflill):
-            //
-            // Key based authentication isn't working at the moment for some reason.  I'm
-            // going to disable the login check for now and come back to this when we switch
-            // to key based authentication for AWS.
-
-#if DISABLED
             controller.LogProgress(this, verb: "verify", message: "ssh keys");
-
-            Disconnect();
-            UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, clusterLogin.SshKey.PrivatePEM));
-            WaitForBoot();
-#endif
-
-            controller.LogProgress(this, verb: "verify", message: "ssh password");
 
             Disconnect();
             UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, clusterLogin.SshKey.PrivatePEM));
@@ -241,10 +227,10 @@ fi
         }
 
         /// <summary>
-        /// Required NFS setup.
+        /// Installs NFS.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        public void ConfigureNFS(ISetupController controller)
+        public void InstallNFS(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
@@ -327,7 +313,7 @@ systemctl restart rsyslog.service
                     ConfigureJournald(controller);
 
                     controller.ThrowIfCancelled();
-                    ConfigureNFS(controller);
+                    InstallNFS(controller);
                 });
         }
 

@@ -590,11 +590,11 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Manually sets whether SSH login using a password is enabled. 
+        /// Manually controls whether SSH login using password authentication is enabled. 
         /// </para>
         /// </summary>
         /// <param name="enabled">
-        /// Pass <c>true</c> to enable login using a password, or false to disable.
+        /// Pass <c>true</c> to enable login using a password, or <c>false</c> to disable.
         /// </param>        
         public void SetSshPasswordLogin(bool enabled)
         {
