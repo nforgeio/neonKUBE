@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -460,8 +461,10 @@ namespace Neon.Kube
             controller.AddGlobalStep("neoncluster.io domain",
                 async controller =>
                 {
-                    string      hostName;
-                    IPAddress   hostAddress;
+                    string    hostName;
+                    IPAddress hostAddress;
+                    string    ssoClientSecret;
+                    string    ssoRedirectUri;
 
                     controller.SetGlobalStepStatus("create: cluster neoncluster.io domain");
 
@@ -472,6 +475,9 @@ namespace Neon.Kube
 
                         hostName    = KubeConst.DesktopHostname;
                         hostAddress = IPAddress.Parse(cluster.Definition.NodeDefinitions.Values.Single().Address);
+
+                        ssoClientSecret = "neondesktop";
+                        ssoRedirectUri  = "https://neon-sso.desktop.neoncluster.io/callback";
                     }
                     else
                     {
@@ -479,14 +485,44 @@ namespace Neon.Kube
                         var headendClient      = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
                         var clusterAddresses   = string.Join(',', cluster.HostingManager.GetClusterAddresses());
 
-                        var result = await headendClient.ClusterSetup.CreateClusterAsync(addresses: clusterAddresses);
+                        var result = await headendClient.ClusterSetup.CreateClusterAsync();
 
-                        clusterLogin.ClusterDefinition.Id     = result["Id"];
-                        clusterLogin.ClusterDefinition.Domain = result["Domain"];
+                        clusterLogin.ClusterDefinition.Id             = result["Id"];
+                        clusterLogin.ClusterDefinition.NeonCloudToken = result["Token"];
 
-                        hostName    = clusterLogin.ClusterDefinition.Id;
+                        headendClient.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+                                                                                "Bearer",
+                                                                                clusterLogin.ClusterDefinition.NeonCloudToken);
+
+                        clusterLogin.ClusterDefinition.Domain = await headendClient.Cluster.UpdateClusterDomainAsync(
+                            clusterLogin.ClusterDefinition.Id, 
+                            addresses: clusterAddresses);
+
+                        var ssoClient = await headendClient.Cluster.CreateSsoClientAsync(
+                            clusterLogin.ClusterDefinition.Id,
+                            clusterLogin.ClusterDefinition.Name);
+
+                        ssoClientSecret = result["Secret"];
+                        ssoRedirectUri  = result["RedirectURI"];
+
+                        hostName = clusterLogin.ClusterDefinition.Id;
                         hostAddress = IPAddress.Parse(cluster.HostingManager.GetClusterAddresses().First());
                     }
+
+                    clusterDefinition.SsoConnectors.Add(
+                            new DexOidcConnector()
+                            {
+                                Id     = "neoncloud",
+                                Name   = "NeonCLOUD",
+                                Type   = DexConnectorType.Oidc,
+                                Config = new DexOidcConfig()
+                                {
+                                    Issuer       = "https://sso.neoncloud.io",
+                                    ClientId     = "neoncloud",
+                                    ClientSecret = ssoClientSecret,
+                                    RedirectURI  = ssoRedirectUri
+                                }
+                            });
 
                     // For the built-in desktop cluster, add these records to both the
                     // node's local [/etc/hosts] file as well as the host file for the
@@ -528,6 +564,21 @@ namespace Neon.Kube
                             },
                             timeout: TimeSpan.FromSeconds(120));
                     }
+
+
+                    clusterDefinition.SsoConnectors.Add(new DexOidcConnector()
+                    {
+                        Id = "neoncloud",
+                        Name = "NeonCLOUD SSO",
+                        Type = DexConnectorType.Oidc,
+                        Config = new DexOidcConfig()
+                        {
+                            Issuer       = "https://sso.neoncloud.io",
+                            ClientId     = clusterDefinition.Id,
+                            ClientSecret = ssoClientSecret,
+                            RedirectURI  = ssoRedirectUri
+                        }
+                    });
 
                     clusterLogin.SshPassword = null;    // We're no longer allowing SSH password authentication so we can clear this.
                     clusterLogin.Save();

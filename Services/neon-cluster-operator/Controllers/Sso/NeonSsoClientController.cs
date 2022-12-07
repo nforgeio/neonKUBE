@@ -76,7 +76,7 @@ namespace NeonClusterOperator
 
         private static ResourceManager<V1NeonSsoClient, NeonSsoClientController> resourceManager;
 
-        private static Dex.Dex.DexClient dexClient;
+        private Dex.Dex.DexClient dexClient;
 
         /// <summary>
         /// Static constructor.
@@ -133,9 +133,6 @@ namespace NeonClusterOperator
                 serviceProvider: serviceProvider);
 
             await resourceManager.StartAsync();
-
-            var channel = GrpcChannel.ForAddress($"http://{KubeService.Dex}:5557");
-            dexClient = new Dex.Dex.DexClient(channel);
         }
 
         //---------------------------------------------------------------------
@@ -146,11 +143,14 @@ namespace NeonClusterOperator
         /// <summary>
         /// Constructor.
         /// </summary>
-        public NeonSsoClientController(IKubernetes k8s)
+        public NeonSsoClientController(IKubernetes k8s,
+            Dex.Dex.DexClient dexClient)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
+            Covenant.Requires(dexClient != null, nameof(dexClient));
 
-            this.k8s = k8s;
+            this.k8s       = k8s;
+            this.dexClient = dexClient;
         }
 
         /// <summary>

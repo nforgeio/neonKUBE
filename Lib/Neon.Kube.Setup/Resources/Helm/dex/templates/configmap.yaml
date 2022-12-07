@@ -22,6 +22,22 @@ data:
       issuer: SSO Login - {{ .Values.cluster.name }}
       theme: dark
     connectors:
+    - type: oidc
+      id: neoncloud
+      name: NeonCLOUD SSO
+      config:
+        # Canonical URL of the provider, also used for configuration discovery.
+        # This value MUST match the value returned in the provider config discovery.
+        #
+        # See: https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfig
+        issuer: https://accounts.google.com
+
+        # Connector config values starting with a "$" will read from the environment.
+        clientID: $NEONCLOUD_CLIENT_ID
+        clientSecret: $NEONCLOUD_CLIENT_SECRET
+
+        # Dex's issuer URL + "/callback"
+        redirectURI: https://neon-sso.{{ .Values.cluster.domain }}/callback
     - type: ldap
       # Required field for connector id.
       id: ldap

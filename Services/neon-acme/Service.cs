@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
@@ -42,6 +43,8 @@ using Prometheus;
 using Prometheus.DotNetRuntime;
 using k8s.Models;
 using System.Net.Http;
+using Microsoft.AspNetCore.Http;
+using Neon.Net;
 
 namespace NeonAcme
 {
@@ -59,6 +62,11 @@ namespace NeonAcme
         /// The Kubernetes client.
         /// </summary>
         public IKubernetes Kubernetes;
+
+        /// <summary>
+        /// The <see cref="JsonClient"/> used for interacting with the headend.
+        /// </summary>
+        public JsonClient HeadendClient;
 
         /// <summary>
         /// Resources used for discovery.
@@ -97,6 +105,14 @@ namespace NeonAcme
             await SetStatusAsync(NeonServiceStatus.Starting);
 
             KubeHelper.InitializeJson();
+
+            HeadendClient = new JsonClient()
+            {
+                BaseAddress = new Uri(GetEnvironmentVariable("HEADEND_URL", "https://headend.neoncloud.io"))
+            };
+            HeadendClient.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+                                                                                "Bearer",
+                                                                                GetEnvironmentVariable("NEONCLOUD_HEADEND_TOKEN"));
 
             Kubernetes = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig(),new KubernetesRetryHandler());
             Resources  = new V1APIResourceList()

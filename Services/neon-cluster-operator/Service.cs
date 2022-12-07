@@ -55,6 +55,8 @@ using NeonClusterOperator.Harbor;
 
 using DnsClient;
 
+using Grpc.Net.Client;
+
 using k8s;
 using k8s.Models;
 
@@ -157,6 +159,11 @@ namespace NeonClusterOperator
         /// </summary>
         public HarborClient HarborClient;
 
+        /// <summary>
+        /// Dex client.
+        /// </summary>
+        public Dex.Dex.DexClient DexClient;
+
         // private fields
         private IWebHost webHost;
         private HttpClient harborHttpClient;
@@ -201,6 +208,9 @@ namespace NeonClusterOperator
             HarborClient.BaseUrl = "http://registry-harbor-harbor-core.neon-system/api/v2.0";
 
             HeadendClient = HeadendClient.Create();
+
+            var channel = GrpcChannel.ForAddress($"http://{KubeService.Dex}:5557");
+            DexClient = new Dex.Dex.DexClient(channel);
 
             await WatchClusterInfoAsync();
             await CheckCertificateAsync();

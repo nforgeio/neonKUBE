@@ -82,6 +82,7 @@ namespace NeonClusterOperator
         {
             services.AddSingleton<ILogger>(Program.Service.Logger)
                 .AddSingleton(Service.K8s)
+                .AddSingleton(Service.DexClient)
                 .AddSingleton(Service.HeadendClient)
                 .AddSingleton(Service.HarborClient);
 
@@ -91,11 +92,13 @@ namespace NeonClusterOperator
                 .AddController<NeonClusterOperatorController, V1NeonClusterOperator>()
                 .AddController<NeonContainerRegistryController, V1NeonContainerRegistry>()
                 .AddController<NeonDashboardController, V1NeonDashboard>()
+                .AddController<NeonSsoConnectorController, V1NeonSsoConnector>()
                 .AddController<NeonSsoClientController, V1NeonSsoClient>()
                 .AddController<NodeTaskController, V1NeonNodeTask>()
                 .AddFinalizer<NeonContainerRegistryFinalizer, V1NeonContainerRegistry>()
                 .AddFinalizer<MinioBucketFinalizer, V1MinioBucket>()
-                .AddMutatingWebhook<PodWebhook, V1Pod>();
+                .AddMutatingWebhook<PodWebhook, V1Pod>()
+                .AddValidatingWebhook<SsoConnectorValidatingWebhook, V1NeonSsoConnector>();
         }
 
         /// <summary>

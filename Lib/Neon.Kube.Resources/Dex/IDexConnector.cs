@@ -101,7 +101,15 @@ namespace Neon.Kube
             switch (type)
             {
                 case DexConnectorType.Ldap:
+
                     connector = new DexLdapConnector();
+
+                    break;
+
+                case DexConnectorType.Oidc:
+
+                    connector = new DexOidcConnector();
+
                     break;
             }
             

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DexConnectorType.cs
+// FILE:	    DexOidcConnector.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -18,36 +18,45 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Text;
-using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
 
-using Neon.Common;
-using Neon.Net;
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// Enumerates Dex storage types.
+    /// Configuration for OIDC connectors.
     /// </summary>
-    [Newtonsoft.Json.JsonConverter(typeof(StringEnumConverter))]
-    [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringEnumMemberConverter))]
-    public enum DexConnectorType
+    public class DexOidcConnector : IDexConnector
     {
         /// <summary>
-        /// LDAP
+        /// Constructor.
         /// </summary>
-        [EnumMember(Value = "ldap")]
-        Ldap = 0
+        public DexOidcConnector()
+        {
+            Type = DexConnectorType.Oidc;
+        }
+
+        /// <inheritdoc/>
+        public string Id { get; set; }
+
+
+        /// <inheritdoc/>
+        public string Name { get; set; }
+
+        /// <inheritdoc/>
+        public DexConnectorType Type { get; set; }
+
+        /// <summary>
+        /// Connector specific config.
+        /// information.
+        /// </summary>
+        [JsonProperty(PropertyName = "Config", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "config", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public DexOidcConfig Config { get; set; }
     }
 }
