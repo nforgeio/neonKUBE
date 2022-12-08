@@ -84,7 +84,7 @@ set -euo pipefail
 
 rmmod floppy
 echo ""blacklist floppy"" | tee /etc/modprobe.d/blacklist-floppy.conf
-dpkg-reconfigure initramfs-tools
+update-initramfs -u
 ";
                     SudoCommand(CommandBundle.FromScript(floppyScript));
                 });
