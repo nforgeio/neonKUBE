@@ -23,7 +23,7 @@
 	</PropertyGroup>
 
     <ItemGroup>
-        <Protobuf Include="Protos/**/*.proto" OutputDir="$(ProjectDir)" />
+        <Protobuf Include="Protos/**/*.proto" OutputDir="$(ProjectDir)" GrpcServices="Client" />
     </ItemGroup>
 
 	<ItemGroup>
