@@ -61,5 +61,22 @@ namespace TestKubeOperator
                 await generator.WriteToFile(crd, tempFile.Path);
             }
         }
+
+        /// <summary>
+        /// Ensures that the CRD can be written to a Yaml file.
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task CanSerializeCustomResources()
+        {
+            var generator = new CustomResourceGenerator();
+
+            var crd = await generator.GenerateCustomResourceDefinitionAsync(typeof(V1NeonSsoConnector));
+
+            using (var tempFile = new TempFile(".yaml"))
+            {
+                await generator.WriteToFile(crd, tempFile.Path);
+            }
+        }
     }
 }

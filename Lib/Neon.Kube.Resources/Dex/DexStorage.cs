@@ -45,7 +45,8 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Type", Required = Required.Always)]
         [YamlMember(Alias = "type", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public DexStorageType Type { get; set; }
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
+        DexStorageType Type { get; set; }
 
         /// <summary>
         /// Config See the documentation (https://dexidp.io/docs/storage/) for further 

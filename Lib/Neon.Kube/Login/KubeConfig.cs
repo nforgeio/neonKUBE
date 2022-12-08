@@ -77,7 +77,7 @@ namespace Neon.Kube
 
                     if (File.Exists(extensionPath))
                     {
-                        context.Extension = NeonHelper.YamlDeserialize<ClusterLogin>(KubeHelper.ReadFileTextWithRetry(extensionPath));
+                        context.Extension = NeonHelper.YamlDeserializeViaJson<ClusterLogin>(KubeHelper.ReadFileTextWithRetry(extensionPath));
                     }
                     else
                     {

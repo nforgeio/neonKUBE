@@ -48,6 +48,7 @@ namespace Neon.Kube
         public string Name { get; set; }
 
         /// <inheritdoc/>
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
         public DexConnectorType Type { get; set; }
 
         /// <summary>

@@ -48,12 +48,14 @@ namespace Neon.Kube.Resources
         /// The device type.
         /// </summary>
         [DefaultValue(null)]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
         public BlockDeviceType? DeviceType { get; set; }
 
         /// <summary>
         /// The drive type.
         /// </summary>
         [DefaultValue(null)]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
         public DriveType? DriveType { get; set; }
 
         /// <summary>

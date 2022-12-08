@@ -22,7 +22,7 @@ using System.Linq;
 using System.Text;
 
 using Neon.Common;
-
+using Neon.Kube.Resources;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -34,7 +34,8 @@ namespace Neon.Kube
     /// <summary>
     /// Configuration for backend connectors.
     /// </summary>
-    [JsonConverter(typeof(DexConnectorConverter))]
+    [Newtonsoft.Json.JsonConverter(typeof(DexConnectorConverter))]
+    [System.Text.Json.Serialization.JsonConverter(typeof(DexConnectorJsonConverter))]
     public interface IDexConnector
     {
         /// <summary>
@@ -61,7 +62,17 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Type", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "type", ApplyNamingConventions = false)]
         [DefaultValue(null)]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
         DexConnectorType Type { get; set; }
+
+        /// <summary>
+        /// Connector Config.
+        /// information.
+        /// </summary>
+        [JsonProperty(PropertyName = "Config", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "config", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        IDexConnectorConfig Config { get; set; }
     }
 
     /// <summary>

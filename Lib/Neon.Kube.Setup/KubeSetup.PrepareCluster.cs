@@ -502,8 +502,8 @@ namespace Neon.Kube
                             clusterLogin.ClusterDefinition.Id,
                             clusterLogin.ClusterDefinition.Name);
 
-                        ssoClientSecret = result["Secret"];
-                        ssoRedirectUri  = result["RedirectURI"];
+                        ssoClientSecret = ssoClient["Secret"];
+                        ssoRedirectUri  = ssoClient["RedirectURI"];
 
                         hostName = clusterLogin.ClusterDefinition.Id;
                         hostAddress = IPAddress.Parse(cluster.HostingManager.GetClusterAddresses().First());
@@ -564,21 +564,6 @@ namespace Neon.Kube
                             },
                             timeout: TimeSpan.FromSeconds(120));
                     }
-
-
-                    clusterDefinition.SsoConnectors.Add(new DexOidcConnector()
-                    {
-                        Id = "neoncloud",
-                        Name = "NeonCLOUD SSO",
-                        Type = DexConnectorType.Oidc,
-                        Config = new DexOidcConfig()
-                        {
-                            Issuer       = "https://sso.neoncloud.io",
-                            ClientId     = clusterDefinition.Id,
-                            ClientSecret = ssoClientSecret,
-                            RedirectURI  = ssoRedirectUri
-                        }
-                    });
 
                     clusterLogin.SshPassword = null;    // We're no longer allowing SSH password authentication so we can clear this.
                     clusterLogin.Save();

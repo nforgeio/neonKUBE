@@ -30,7 +30,7 @@ namespace Neon.Kube
     /// <summary>
     /// Configuration for backend connectors.
     /// </summary>
-    public class DexOidcConfig
+    public class DexOidcConfig : IDexConnectorConfig
     {
         /// <summary>
         /// Constructor.
@@ -79,7 +79,7 @@ namespace Neon.Kube
         /// https://tools.ietf.org/html/rfc6749#section-2.3.1
         /// </summary>
         [JsonProperty(PropertyName = "BasicAuthUnsupported", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "clientId", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "basicAuthUnsupported", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public bool? BasicAuthUnsupported { get; set; }
 

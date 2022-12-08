@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -79,12 +80,26 @@ namespace TestKube
         [Fact]
         public void SerializeX509Usages()
         {
-            KubeHelper.InitializeJson();
+            //KubeHelper.InitializeJson();
 
-            var usages = new List<X509Usages>() { X509Usages.ServerAuth, X509Usages.ClientAuth };
-            string jsonString = KubernetesJson.Serialize(usages);
+            var cert = new Certificate()
+            {
+                Usages = new List<X509Usages>() { X509Usages.ServerAuth, X509Usages.ClientAuth }
+            };
+            
+            string jsonString = KubernetesJson.Serialize(cert);
 
-            Assert.Equal(@"[""server auth"",""client auth""]", jsonString);
+            ///{"usages":["server auth","client auth"]}
+            Assert.Equal($@"{{""usages"":[""server auth"",""client auth""]}}", jsonString);
+        }
+
+        public class Certificate
+        {
+            /// <summary>
+            /// Usages is the set of x509 usages that are requested for the certificate.
+            /// </summary>
+            [System.Text.Json.Serialization.JsonConverter(typeof(JsonCollectionItemConverter<X509Usages, System.Text.Json.Serialization.JsonStringEnumMemberConverter>))]
+            public IEnumerable<X509Usages> Usages { get; set; }
         }
     }
 }

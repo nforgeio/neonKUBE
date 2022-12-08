@@ -54,6 +54,7 @@ namespace Neon.Kube.Resources
         /// </summary>
         [JsonProperty(PropertyName = "mode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
         public TLSMode? Mode { get; set; }
 
         /// <summary>
@@ -128,6 +129,7 @@ namespace Neon.Kube.Resources
         /// </summary>
         [JsonProperty(PropertyName = "minProtocolVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
         public TLSProtocol? MinProtocolVersion { get; set; }
 
         /// <summary>
@@ -135,6 +137,7 @@ namespace Neon.Kube.Resources
         /// </summary>
         [JsonProperty(PropertyName = "maxProtocolVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
         public TLSProtocol? MaxProtocolVersion { get; set; }
 
         /// <summary>
