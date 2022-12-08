@@ -5177,15 +5177,39 @@ $@"- name: StorageType
                     
                     foreach (var connector in cluster.Definition.SsoConnectors)
                     {
-                        await k8s.CustomObjects.UpsertClusterCustomObjectAsync<V1NeonSsoConnector>(
-                            new V1NeonSsoConnector()
-                            {
-                                Metadata = new V1ObjectMeta()
-                                {
-                                    Name = connector.Id,
-                                },
-                                Spec = connector
-                            }, connector.Id);
+                        switch (connector.Type)
+                        {
+                            case DexConnectorType.Ldap:
+
+                                await k8s.CustomObjects.UpsertClusterCustomObjectAsync<V1NeonSsoLdapConnector>(
+                                    new V1NeonSsoLdapConnector()
+                                    {
+                                        Metadata = new V1ObjectMeta()
+                                        {
+                                            Name = connector.Id,
+                                        },
+                                        Spec = (DexLdapConnector)connector
+                                    }, connector.Id);
+
+                                break;
+
+                            case DexConnectorType.Oidc:
+
+                                await k8s.CustomObjects.UpsertClusterCustomObjectAsync<V1NeonSsoOidcConnector>(
+                                    new V1NeonSsoOidcConnector()
+                                    {
+                                        Metadata = new V1ObjectMeta()
+                                        {
+                                            Name = connector.Id,
+                                        },
+                                        Spec = (DexOidcConnector)connector
+                                    }, connector.Id);
+
+                                break;
+
+                            default:
+                                break;
+                        }
                     }
                 });
         }

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    V1NeonSsoConnector.cs
+// FILE:	    V1NeonSsoLdapConnector.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -29,7 +29,7 @@ namespace Neon.Kube.Resources
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
     [EntityScope(EntityScope.Cluster)]
-    public class V1NeonSsoConnector : IKubernetesObject<V1ObjectMeta>, ISpec<IDexConnector>
+    public class V1NeonSsoLdapConnector : IKubernetesObject<V1ObjectMeta>, ISpec<DexLdapConnector>
     {
         /// <summary>
         /// Object API group.
@@ -44,17 +44,17 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// Object API kind.
         /// </summary>
-        public const string KubeKind = "NeonSsoConnector";
+        public const string KubeKind = "NeonSsoLdapConnector";
 
         /// <summary>
         /// Object plural name.
         /// </summary>
-        public const string KubePlural = "neonssoconnectors";
+        public const string KubePlural = "neonssoldapconnectors";
 
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public V1NeonSsoConnector()
+        public V1NeonSsoLdapConnector()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
             Kind = KubeKind;
@@ -86,6 +86,6 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// The spec.
         /// </summary>
-        public IDexConnector Spec { get; set; }
+        public DexLdapConnector Spec { get; set; }
     }
 }

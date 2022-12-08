@@ -64,17 +64,19 @@ namespace NeonClusterOperator
 {
     /// <summary>
     /// <para>
-    /// Configures Neon SSO using <see cref="V1NeonSsoConnector"/>.
+    /// Configures Neon SSO using <see cref="T"/>.
     /// </para>
     /// </summary>
-    public class NeonSsoConnectorController : IOperatorController<V1NeonSsoConnector>
+    public class NeonSsoConnectorController<TEntity, TSpec> : IOperatorController<TEntity>
+        where TEntity : class, IKubernetesObject<V1ObjectMeta>, ISpec<TSpec>, new()
+        where TSpec : IDexConnector
     {
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly ILogger log = TelemetryHub.CreateLogger<NeonSsoConnectorController>();
+        private static readonly ILogger log = TelemetryHub.CreateLogger<NeonSsoConnectorController<TEntity, TSpec>>();
 
-        private static ResourceManager<V1NeonSsoConnector, NeonSsoConnectorController> resourceManager;
+        private static ResourceManager<TEntity, NeonSsoConnectorController<TEntity, TSpec>> resourceManager;
 
         private Dex.Dex.DexClient dexClient;
 
@@ -126,7 +128,7 @@ namespace NeonClusterOperator
                 FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoconnectors_finalize_error", "Failed FINALIZE events processing.")
             };
 
-            resourceManager = new ResourceManager<V1NeonSsoConnector, NeonSsoConnectorController>(
+            resourceManager = new ResourceManager<TEntity, NeonSsoConnectorController<TEntity, TSpec>>(
                 k8s,
                 options: options,
                 leaderConfig: leaderConfig,
@@ -165,7 +167,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonSsoConnector resource)
+        public async Task<ResourceControllerResult> ReconcileAsync(TEntity resource)
         {
             await SyncContext.Clear;
 
@@ -201,7 +203,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task DeletedAsync(V1NeonSsoConnector resource)
+        public async Task DeletedAsync(TEntity resource)
         {
             await SyncContext.Clear;
 

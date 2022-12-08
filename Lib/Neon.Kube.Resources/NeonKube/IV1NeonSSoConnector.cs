@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IDexConnectorConfig.cs
+// FILE:	    V1NeonSsoLdapConnector.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -17,25 +17,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
+using k8s;
+using k8s.Models;
 
-using Neon.Common;
-using Neon.Kube.Resources;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
-using YamlDotNet.Core.Events;
-using YamlDotNet.Serialization;
-
-namespace Neon.Kube
+namespace Neon.Kube.Resources
 {
     /// <summary>
-    /// Configuration for backend connectors.
+    /// Specifies Neon SSO client settings.
     /// </summary>
-    public interface IDexConnectorConfig
+    public interface IV1NeonSsoConnector<T> : IKubernetesObject<V1ObjectMeta>, ISpec<T>
     {
-       
     }
 }

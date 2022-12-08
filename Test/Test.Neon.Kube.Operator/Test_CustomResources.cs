@@ -24,7 +24,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-
+using k8s;
 using k8s.Models;
 
 using Neon.Common;
@@ -71,12 +71,9 @@ namespace TestKubeOperator
         {
             var generator = new CustomResourceGenerator();
 
-            var crd = await generator.GenerateCustomResourceDefinitionAsync(typeof(V1NeonSsoConnector));
+            var crd = await generator.GenerateCustomResourceDefinitionAsync(typeof(V1NeonSsoOidcConnector));
 
-            using (var tempFile = new TempFile(".yaml"))
-            {
-                await generator.WriteToFile(crd, tempFile.Path);
-            }
+            var str = KubernetesJson.Serialize(crd);
         }
     }
 }

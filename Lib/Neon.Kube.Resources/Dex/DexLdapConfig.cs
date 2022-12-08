@@ -30,7 +30,7 @@ namespace Neon.Kube
     /// <summary>
     /// Configuration for backend connectors.
     /// </summary>
-    public class DexLdapConfig : IDexConnectorConfig
+    public class DexLdapConfig
     {
         /// <summary>
         /// Constructor.

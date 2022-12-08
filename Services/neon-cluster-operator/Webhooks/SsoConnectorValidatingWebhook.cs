@@ -54,7 +54,7 @@ namespace NeonClusterOperator
         operations: AdmissionOperations.Create | AdmissionOperations.Update, 
         resources: "neonssoconnectors",
         scope: "*")]
-    public class SsoConnectorValidatingWebhook : IValidatingWebhook<V1NeonSsoConnector>
+    public class SsoConnectorValidatingWebhook : IValidatingWebhook<V1NeonSsoOidcConnector>
     {
         /// <inheritdoc/>
         public ILogger Logger { get; set; }
@@ -77,7 +77,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task<ValidationResult> CreateAsync(V1NeonSsoConnector entity, bool dryRun)
+        public async Task<ValidationResult> CreateAsync(V1NeonSsoOidcConnector entity, bool dryRun)
         {
             await SyncContext.Clear;
 
@@ -97,7 +97,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task<ValidationResult> UpdateAsync(V1NeonSsoConnector entity, V1NeonSsoConnector oldEntity, bool dryRun)
+        public async Task<ValidationResult> UpdateAsync(V1NeonSsoOidcConnector entity, V1NeonSsoOidcConnector oldEntity, bool dryRun)
         {
             await SyncContext.Clear;
 

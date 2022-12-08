@@ -92,13 +92,14 @@ namespace NeonClusterOperator
                 .AddController<NeonClusterOperatorController, V1NeonClusterOperator>()
                 .AddController<NeonContainerRegistryController, V1NeonContainerRegistry>()
                 .AddController<NeonDashboardController, V1NeonDashboard>()
-                .AddController<NeonSsoConnectorController, V1NeonSsoConnector>()
+                .AddController<NeonSsoConnectorController<V1NeonSsoOidcConnector, DexOidcConnector>, V1NeonSsoOidcConnector>()
+                .AddController<NeonSsoConnectorController<V1NeonSsoLdapConnector, DexLdapConnector>, V1NeonSsoLdapConnector>()
                 .AddController<NeonSsoClientController, V1NeonSsoClient>()
                 .AddController<NodeTaskController, V1NeonNodeTask>()
                 .AddFinalizer<NeonContainerRegistryFinalizer, V1NeonContainerRegistry>()
                 .AddFinalizer<MinioBucketFinalizer, V1MinioBucket>()
-                .AddMutatingWebhook<PodWebhook, V1Pod>()
-                .AddValidatingWebhook<SsoConnectorValidatingWebhook, V1NeonSsoConnector>();
+                .AddMutatingWebhook<PodWebhook, V1Pod>();
+                //.AddValidatingWebhook<SsoConnectorValidatingWebhook, V1NeonSsoOidcConnector>();
         }
 
         /// <summary>

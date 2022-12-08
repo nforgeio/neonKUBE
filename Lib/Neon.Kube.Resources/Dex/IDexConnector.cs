@@ -64,15 +64,6 @@ namespace Neon.Kube
         [DefaultValue(null)]
         [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
         DexConnectorType Type { get; set; }
-
-        /// <summary>
-        /// Connector Config.
-        /// information.
-        /// </summary>
-        [JsonProperty(PropertyName = "Config", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "config", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        IDexConnectorConfig Config { get; set; }
     }
 
     /// <summary>
