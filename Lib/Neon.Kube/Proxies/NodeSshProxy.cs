@@ -508,9 +508,9 @@ namespace Neon.Kube
                 controller.LogProgress(this, verb: "check", message: "operating system");
             }
 
-            if (!OsName.Equals("Ubuntu", StringComparison.InvariantCultureIgnoreCase) || OsVersion != Version.Parse("22.04"))
+            if (!OsName.Equals("Ubuntu", StringComparison.InvariantCultureIgnoreCase) || OsVersion.Major != 22 || OsVersion.Minor != 4)
             {
-                Fault("Expected: Ubuntu 22.04");
+                Fault($"Expected Ubuntu 22.04[.*]: [name={OsName}] [version={OsVersion}]");
                 return false;
             }
 
@@ -602,23 +602,17 @@ namespace Neon.Kube
 $@"
 set -euo pipefail
 
-if [ -f ""/etc/ssh/sshd_config.d/50-neonkube.conf"" ]; 
+if [ -f ""/etc/ssh/sshd_config.d/50-neonkube.conf"" ] ; 
 then     
-
     sed -iE 's/#*PasswordAuthentication.*/PasswordAuthentication {(enabled ? "yes" : "no")}/' /etc/ssh/sshd_config.d/50-neonkube.conf
-
     sed -iE 's/^PasswordAuthentication.*/#PasswordAuthentication {(enabled ? "yes" : "no")}/' /etc/ssh/sshd_config
-
 else
-
     sed -iE 's/#*PasswordAuthentication.*/PasswordAuthentication {(enabled ? "yes" : "no")}/' /etc/ssh/sshd_config
-
 fi
+
+systemctl restart sshd
 ";
-
             SudoCommand(CommandBundle.FromScript(script), RunOptions.FaultOnError);
-
-            SudoCommand("systemctl", "restart", "sshd", RunOptions.FaultOnError);
         }
 
         //---------------------------------------------------------------------
