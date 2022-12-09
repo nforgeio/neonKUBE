@@ -508,9 +508,9 @@ namespace Neon.Kube
                 controller.LogProgress(this, verb: "check", message: "operating system");
             }
 
-            if (!OsName.Equals("Ubuntu", StringComparison.InvariantCultureIgnoreCase) || OsVersion != Version.Parse("22.04"))
+            if (!OsName.Equals("Ubuntu", StringComparison.InvariantCultureIgnoreCase) || OsVersion.Major != 22 || OsVersion.Minor != 4)
             {
-                Fault("Expected: Ubuntu 22.04");
+                Fault($"Expected Ubuntu 22.04[.*]: [name={OsName}] [version={OsVersion}]");
                 return false;
             }
 
