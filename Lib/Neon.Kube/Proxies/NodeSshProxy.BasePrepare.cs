@@ -70,12 +70,12 @@ namespace Neon.Kube
 
             WaitForBoot();
             VerifyNodeOS(controller);
-            BaseBlacklistFloppy(controller);
             BaseDisableSwap(controller);
             BaseInstallToolScripts(controller);
             BaseConfigureDebianFrontend(controller);
             UpdateRootCertificates();
             BaseInstallPackages(controller);
+            BaseBlacklistFloppy(controller);
             BaseConfigureApt(controller);
             BaseConfigureBashEnvironment(controller);
             BaseConfigureDnsIPv4Preference(controller);
@@ -113,8 +113,8 @@ set -euo pipefail
 
 # Blacklist the floppy drive:
 
-echo ""blacklist floppy"" > /etc/modprobe.d/blacklist-floppy.conf
-update-initramfs -u
+echo ""blacklist floppy"" | sudo tee /etc/modprobe.d/blacklist-floppy.conf
+dpkg-reconfigure initramfs-tools 
 
 # This seems to cause the kernel to restart sometimes, so we're
 # not going to actually remove the module in the current session.
@@ -123,9 +123,8 @@ update-initramfs -u
 
 # rmmod -v floppy
 ";
-                    SudoCommand(CommandBundle.FromScript(floppyScript));
+                    SudoCommand(CommandBundle.FromScript(floppyScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });
-
         }
 
         /// <summary>
@@ -374,7 +373,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
             InvokeIdempotent("base/guest-integration",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "setup", message: "guest integration services");
+                    controller.LogProgress(this, verb: "setup", message: "guest integration");
 
                     var guestServicesScript =
 $@"#!/bin/bash
