@@ -2229,7 +2229,7 @@ exit 0
         /// </note>
         /// </summary>
         /// <returns>The <see cref="KubeSshKey"/>.</returns>
-        public static KubeSshKey GetBuiltinDesktopSskKey()
+        public static KubeSshKey GetBuiltinDesktopSshKey()
         {
             // $note(jefflill):
             //

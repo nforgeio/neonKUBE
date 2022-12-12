@@ -222,31 +222,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Indicates that the node is a pre-built neon-desktop cluster.  This uses
-        /// the existence of the <b>/etc/neonkube/prebuilt-desktop</b> file on the
-        /// node to indicate this condition.
-        /// </summary>
-        public bool IsPrebuiltCluster
-        {
-            get => FileExists(KubeConst.ImagePrebuiltDesktopPath);
-
-            set
-            {
-                if (value)
-                {
-                    if (FileExists(KubeConst.ImagePrebuiltDesktopPath))
-                    {
-                        RemoveFile(KubeConst.ImagePrebuiltDesktopPath);
-                    }
-                }
-                else
-                {
-                    SudoCommand("touch", KubeConst.ImagePrebuiltDesktopPath).EnsureSuccess();
-                }
-            }
-        }
-
-        /// <summary>
         /// Returns the NTP time sources to be used by the node.
         /// </summary>
         /// <returns>The quoted and space separated list of IP address or DNS hostnames for the node's NTP time sources in priority order.</returns>
@@ -262,7 +237,7 @@ namespace Neon.Kube
         /// external time sources to avoid having large clusters spam the sources.
         /// </para>
         /// <para>
-        /// The nice thing about this is that the cluster will almost always be closly synchronized with the first control-plane
+        /// The nice thing about this is that the cluster will almost always be closely synchronized with the first control-plane
         /// with graceful fallback on node failures.
         /// </para>
         /// </remarks>

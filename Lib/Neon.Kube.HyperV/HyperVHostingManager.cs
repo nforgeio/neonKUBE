@@ -858,7 +858,7 @@ namespace Neon.Kube
 
                     if (controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo))
                     {
-                        node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, secureSshPassword));
+                        node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, KubeHelper.GetBuiltinDesktopSshKey().PrivatePEM));
                     }
                     else
                     {
