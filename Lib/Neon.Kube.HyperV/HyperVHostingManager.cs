@@ -978,7 +978,7 @@ namespace Neon.Kube
                 {
                     // We're going to assume that all virtual machines that match cluster node names
                     // (after stripping off any cluster prefix) belong to the cluster and we'll map
-                    // zxthe actual VM states to public node states.
+                    // the actual VM states to public node states.
 
                     var clusterHealth = new ClusterHealth();
 

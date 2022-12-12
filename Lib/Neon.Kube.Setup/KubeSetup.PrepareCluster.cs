@@ -96,6 +96,9 @@ namespace Neon.Kube
         /// Optionally disables status output to the console.  This is typically
         /// enabled for non-console applications.
         /// </param>
+        /// <param name="desktopImage">
+        /// Optionally indicates that we're building a ready-to-go neon desktop image.
+        /// </param>
         /// <param name="desktopReadyToGo">
         /// Optionally indicates that we're setting up a neon-desktop built-in cluster
         /// from a completely prebuilt desktop image.  In this case, the controller
@@ -116,6 +119,7 @@ namespace Neon.Kube
             string                      baseImageName         = null,
             bool                        removeExisting        = false,
             bool                        disableConsoleOutput  = false,
+            bool                        desktopImage          = false,
             bool                        desktopReadyToGo      = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
@@ -258,6 +262,7 @@ namespace Neon.Kube
             controller.Add(KubeSetupProperty.DisableImageDownload, !string.IsNullOrEmpty(nodeImagePath));
             controller.Add(KubeSetupProperty.Redact, !unredacted);
             controller.Add(KubeSetupProperty.DesktopReadyToGo, desktopReadyToGo);
+            controller.Add(KubeSetupProperty.DesktopImage, desktopImage);
             controller.Add(KubeSetupProperty.DesktopServiceProxy, desktopServiceProxy);
 
             // Configure the cluster preparation steps.
@@ -482,9 +487,9 @@ namespace Neon.Kube
                     if (desktopReadyToGo)
                     {
                         clusterLogin.ClusterDefinition.Id     = KubeHelper.GenerateClusterId();
-                        clusterLogin.ClusterDefinition.Domain = KubeConst.DesktopHostname;
+                        clusterLogin.ClusterDefinition.Domain = KubeConst.DesktopClusterDomain;
 
-                        hostName    = KubeConst.DesktopHostname;
+                        hostName    = KubeConst.DesktopClusterDomain;
                         hostAddress = IPAddress.Parse(cluster.Definition.NodeDefinitions.Values.Single().Address);
                     }
                     else
@@ -496,7 +501,7 @@ namespace Neon.Kube
                         var result = await headendClient.ClusterSetup.CreateClusterAsync(addresses: clusterAddresses);
 
                         clusterLogin.ClusterDefinition.Id     = result["Id"];
-                        clusterLogin.ClusterDefinition.Domain = result["Domain"];
+                        clusterLogin.ClusterDefinition.Domain = desktopImage ? KubeConst.DesktopClusterDomain : result["Domain"];
 
                         hostName    = clusterLogin.ClusterDefinition.Id;
                         hostAddress = IPAddress.Parse(cluster.HostingManager.GetClusterAddresses().First());
@@ -571,7 +576,15 @@ namespace Neon.Kube
             controller.AddGlobalStep("finish",
                 controller =>
                 {
-                    File.Create(Path.Combine(logFolder, "prepare-ok"));
+                    if (desktopReadyToGo)
+                    {
+                        clusterLogin.SetupDetails.SetupPending = false;
+                        clusterLogin.Save();
+                    }
+                    else
+                    {
+                        File.Create(Path.Combine(logFolder, "prepare-ok"));
+                    }
                 },
                 quiet: true);
 
