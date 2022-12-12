@@ -317,7 +317,7 @@ spec:
                     ConfigureKubelet(controller, cluster.ControlNodes);
 
                     controller.ThrowIfCancelled();
-                    ConfigureWorkstation(controller);
+                    ConfigureWorkstation(controller, cluster.FirstControlNode);
 
                     controller.ThrowIfCancelled();
                     ConnectCluster(controller);
@@ -750,30 +750,7 @@ exit 1
 
                     if (clusterLogin.SetupDetails.ControlNodeFiles.Count == 0)
                     {
-                        // I'm hardcoding the permissions and owner here.  It would be nice to
-                        // scrape this from the source files in the future but it's not worth
-                        // the bother at this point.
-
-                        var files = new RemoteFile[]
-                        {
-                            new RemoteFile("/etc/kubernetes/admin.conf", "600", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/ca.crt", "600", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/ca.key", "600", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/sa.pub", "600", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/sa.key", "644", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/front-proxy-ca.crt", "644", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/front-proxy-ca.key", "600", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/etcd/ca.crt", "644", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/etcd/ca.key", "600", "root:root"),
-                        };
-
-                        foreach (var file in files)
-                        {
-                            var text = firstControlNode.DownloadText(file.Path);
-
-                            controller.ThrowIfCancelled();
-                            clusterLogin.SetupDetails.ControlNodeFiles[file.Path] = new KubeFileDetails(text, permissions: file.Permissions, owner: file.Owner);
-                        }
+                        clusterLogin.SetupDetails.ControlNodeFiles = firstControlNode.GetControlPlaneFiles();
                     }
 
                     // Persist the cluster join command and downloaded control-plane files.
@@ -1172,13 +1149,25 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         /// Configures the local workstation.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        public static void ConfigureWorkstation(ISetupController controller)
+        /// <param name="firstControlNode">The first control-plane node in the cluster where the operation will be performed.</param>
+        public static void ConfigureWorkstation(ISetupController controller, NodeSshProxy<NodeDefinition> firstControlNode)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            var cluster        = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterLogin   = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
-            var kubeConfigPath = KubeHelper.KubeConfigPath;
+            var cluster          = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterLogin     = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+            var desktopReadyToGo = controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo);
+            var kubeConfigPath   = KubeHelper.KubeConfigPath;
+
+            // For built-in desktop clusters, we need to obtain the control plane files from
+            // the node and add them to the cluster login because we didn't so a full cluster
+            // setup when this would normally happen.
+
+            if (desktopReadyToGo)
+            {
+                clusterLogin.SetupDetails.ControlNodeFiles = firstControlNode.GetControlPlaneFiles();
+                clusterLogin.Save();
+            }
 
             // Update kubeconfig.
 
@@ -1234,13 +1223,13 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 KubeHelper.SetConfig(existingConfig);
             }
 
-            // Save the cluster node SSH certificate in the users [~/.ssh] folder.
-
-            File.WriteAllText(Path.Combine(KubeHelper.UserSshFolder, KubeHelper.CurrentContextName.ToString()), clusterLogin.SshKey.PrivatePEM);
-
             // Make sure that the config cached by [KubeHelper] is up to date.
 
             KubeHelper.LoadConfig();
+
+            // Save the cluster node SSH certificate in the users [~/.ssh] folder.
+
+            File.WriteAllText(Path.Combine(KubeHelper.UserSshFolder, KubeHelper.CurrentContextName.ToString()), clusterLogin.SshKey.PrivatePEM);
         }
 
         /// <summary>

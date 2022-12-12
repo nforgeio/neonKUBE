@@ -416,7 +416,10 @@ namespace Neon.Kube
                         {
                             throw new Exception($"Node is not a pre-built desktop cluster.");
                         }
-                        else if (node.ImageType != KubeImageType.Node)
+                    }
+                    else
+                    {
+                        if (node.ImageType != KubeImageType.Node)
                         {
                             throw new Exception($"Node image type is [{node.ImageType}], expected: [{KubeImageType.Node}]");
                         }
@@ -558,7 +561,7 @@ namespace Neon.Kube
 
             if (desktopReadyToGo)
             {
-                controller.AddGlobalStep("configure: workstation", KubeSetup.ConfigureWorkstation);
+                controller.AddNodeStep("configure: workstation", KubeSetup.ConfigureWorkstation, (controller, node) => node == cluster.FirstControlNode); ;
             }
 
             // Indicate that cluster prepare succeeded by creating [prepare-ok] file to

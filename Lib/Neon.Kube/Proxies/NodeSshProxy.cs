@@ -84,6 +84,46 @@ namespace Neon.Kube
     public partial class NodeSshProxy<TMetadata> : LinuxSshProxy<TMetadata>, INodeSshProxy
         where TMetadata : class
     {
+        //---------------------------------------------------------------------
+        // Private types
+
+        /// <summary>
+        /// Holds information about a remote file we'll need to download.
+        /// </summary>
+        private class RemoteFile
+        {
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="path">The file path.</param>
+            /// <param name="permissions">Optional file permissions.</param>
+            /// <param name="owner">Optional file owner.</param>
+            public RemoteFile(string path, string permissions = "600", string owner = "root:root")
+            {
+                this.Path = path;
+                this.Permissions = permissions;
+                this.Owner = owner;
+            }
+
+            /// <summary>
+            /// Returns the file path.
+            /// </summary>
+            public string Path { get; private set; }
+
+            /// <summary>
+            /// Returns the file permissions.
+            /// </summary>
+            public string Permissions { get; private set; }
+
+            /// <summary>
+            /// Returns the file owner formatted as: <b>USER:GROUP</b>
+            /// </summary>
+            public string Owner { get; private set; }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
         private static readonly Regex   idempotentRegex  = new Regex(@"[a-z0-9\.-/]+", RegexOptions.IgnoreCase);
 
         private ClusterProxy        cluster;
@@ -588,6 +628,43 @@ fi
 systemctl restart sshd
 ";
             SudoCommand(CommandBundle.FromScript(script), RunOptions.FaultOnError);
+        }
+
+        /// <summary>
+        /// Returns a dictionary of <see cref="KubeFileDetails"/> holding the control plane files
+        /// required to provision a new control plane node in the cluster.  This dictionary is 
+        /// keyed by the target file name node the node.
+        /// </summary>
+        /// <returns>The file dictionary.</returns>
+        public Dictionary<string, KubeFileDetails> GetControlPlaneFiles()
+        {
+            var files = new Dictionary<string, KubeFileDetails>();
+
+            // I'm hardcoding the permissions and owner here.  It would be nice to
+            // scrape this from the source files in the future but it's not worth
+            // the bother at this point.
+
+            var remoteFiles = new RemoteFile[]
+            {
+                new RemoteFile("/etc/kubernetes/admin.conf", "600", "root:root"),
+                new RemoteFile("/etc/kubernetes/pki/ca.crt", "600", "root:root"),
+                new RemoteFile("/etc/kubernetes/pki/ca.key", "600", "root:root"),
+                new RemoteFile("/etc/kubernetes/pki/sa.pub", "600", "root:root"),
+                new RemoteFile("/etc/kubernetes/pki/sa.key", "644", "root:root"),
+                new RemoteFile("/etc/kubernetes/pki/front-proxy-ca.crt", "644", "root:root"),
+                new RemoteFile("/etc/kubernetes/pki/front-proxy-ca.key", "600", "root:root"),
+                new RemoteFile("/etc/kubernetes/pki/etcd/ca.crt", "644", "root:root"),
+                new RemoteFile("/etc/kubernetes/pki/etcd/ca.key", "600", "root:root"),
+            };
+
+            foreach (var remote in remoteFiles)
+            {
+                var text = DownloadText(remote.Path);
+
+                files[remote.Path] = new KubeFileDetails(text, permissions: remote.Permissions, owner: remote.Owner);
+            }
+
+            return files;
         }
 
         //---------------------------------------------------------------------
