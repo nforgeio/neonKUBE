@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -37,7 +38,6 @@ namespace Neon.Kube
         /// The current neonKUBE version.
         /// </summary>
         /// <remarks>
-        /// </remarks>
         /// <para><b>RELEASE CONVENTIONS:</b></para>
         /// <para>
         /// We're going to use this version to help manage public releases as well as
@@ -55,11 +55,7 @@ namespace Neon.Kube
         ///     feature branch; i.e. <b>FOO</b> from the feature branch <b>feature-FOO</b>.
         ///     </para>
         ///     <para>
-        ///     <b>FEATURE</b> may also be set to <b>release</b> when working towards a
-        ///     release within a <b>release-*</b> branch.
-        ///     </para>
-        ///     <para>
-        ///     Individual developers can also set <b>FEATURE</b> to one of their private
+        ///     Individual developers may also set <b>FEATURE</b> to one of their private
         ///     branches while work is in progress.
         ///     </para>
         ///     <para>
@@ -68,6 +64,12 @@ namespace Neon.Kube
         ///     feature releases.  This must include two digits so a leading "0" will
         ///     be required for small numbers.
         ///     </para>
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>-master</b></term>
+        ///     <description>
+        ///     This is used for code in the <b>master</b> branch to avoid overwriting already published node/desktop images.
         ///     </description>
         /// </item>
         /// <item>
@@ -127,7 +129,20 @@ namespace Neon.Kube
         ///     </description>
         /// </item>
         /// </list>
-        public const string NeonKube = "0.8.5-alpha.release";
+        /// <note>
+        /// <para>
+        /// Pending releases can be identified by appending <b>".pending"</b> to versions
+        /// that already include a preview part or <b>-pending</b> for GA versions that
+        /// don't include a preview part.  This indicates that we're still working on that
+        /// version and should only be used by NEONFORGE maintainers.
+        /// </para>
+        /// <para>
+        /// For example, <b>1.0.0-pending</b> identifies a pending GA 1.0.0 release and
+        /// <b>1.0.0-rc.00.pending</b> identifies a pending 1.0.0-rc.00 release candidate. 
+        /// </para>
+        /// </note>
+        /// </remarks>
+        public const string NeonKube = "0.8.5-alpha";
 
         /// <summary>
         /// Returns the prefix used for neonKUBE container tags.
