@@ -58,14 +58,16 @@ namespace Neon.Kube.GrpcProto
                 return null;
             }
 
-            // $todo(jefflill):
+            // $note(jefflill):
             //
-            // We need to enable support for gRPC on plain HTTP because we have not
-            // configured the desktop service with a certificate:
+            // We're not encrypting the neon-desktop-service channel since being a
+            // Unix domain socket, it won't be reachable by other computers.
             //
-            //      https://github.com/nforgeio/neonCLOUD/issues/254
+            // We're also not securing this API with any kind of API key which means
+            // that other users on the computer could potentially access the service
+            // to manage Hyper-V.
             //
-            // It's not really clear if this is necessary though.
+            // This is low risk, so we're not going to worry about it.
 
             AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 
