@@ -96,7 +96,7 @@ spec:
               protocol: TCP
             {{- end }}
             {{- if .Values.traces.opencensus }}
-            - containerPort: 55678
+            - containerPort: 4320
               name: opencensus
               protocol: TCP
             {{- end }}

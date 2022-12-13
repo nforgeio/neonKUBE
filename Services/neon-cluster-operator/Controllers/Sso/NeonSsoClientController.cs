@@ -139,18 +139,22 @@ namespace NeonClusterOperator
         // Instance members
 
         private readonly IKubernetes k8s;
+        private readonly IFinalizerManager<V1NeonSsoClient> finalizerManager;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public NeonSsoClientController(IKubernetes k8s,
+            IFinalizerManager<V1NeonSsoClient> manager,
             Dex.Dex.DexClient dexClient)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
+            Covenant.Requires(manager != null, nameof(manager));
             Covenant.Requires(dexClient != null, nameof(dexClient));
 
-            this.k8s       = k8s;
-            this.dexClient = dexClient;
+            this.k8s              = k8s;
+            this.finalizerManager = manager;
+            this.dexClient        = dexClient;
         }
 
         /// <summary>
@@ -177,6 +181,8 @@ namespace NeonClusterOperator
                 {
                     return null;
                 }
+                
+                await finalizerManager.RegisterAllFinalizersAsync(resource);
 
                 await UpsertClientAsync(resource);
 

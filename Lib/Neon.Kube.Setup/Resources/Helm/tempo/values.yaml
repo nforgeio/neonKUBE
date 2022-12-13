@@ -570,7 +570,7 @@ config: |
       {{- end }}
       {{- if .Values.traces.opencensus }}
       opencensus:
-        endpoint: 0.0.0.0:55678
+        endpoint: 0.0.0.0:4320
       {{- end }}
       {{- if .Values.traces.kafka }}
       kafka:

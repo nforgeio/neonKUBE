@@ -4559,8 +4559,9 @@ $@"- name: StorageType
 
                     var values = new Dictionary<string, object>();
 
-                    values.Add("image.registry", KubeConst.LocalClusterRegistry);
-                    values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
+                    values.Add("image.registry", "ghcr.io/neonkube-dev");
+                    values.Add("image.tag", "neonkube-0.8.5-alpha.feature-sso");
+                    values.Add("image.pullPolicy", "Always");
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add("resource.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
                     values.Add("resource.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
@@ -4590,6 +4591,7 @@ $@"- name: StorageType
                             k8s.WaitForCustomResourceDefinitionAsync<V1NeonContainerRegistry>(),
                             k8s.WaitForCustomResourceDefinitionAsync<V1NeonDashboard>(),
                             k8s.WaitForCustomResourceDefinitionAsync<V1NeonNodeTask>(),
+                            k8s.WaitForCustomResourceDefinitionAsync<V1NeonSsoConnector>(),
                             k8s.WaitForCustomResourceDefinitionAsync<V1NeonSsoClient>()
                         });
                 });
@@ -5181,35 +5183,40 @@ $@"- name: StorageType
                         {
                             case DexConnectorType.Ldap:
 
-                                await k8s.CustomObjects.UpsertClusterCustomObjectAsync<V1NeonSsoLdapConnector>(
-                                    new V1NeonSsoLdapConnector()
+                                var ldapConnector = (DexConnector<DexLdapConfig>)connector;
+
+                                await k8s.CustomObjects.UpsertClusterCustomObjectAsync(
+                                    new V1NeonSsoConnector()
                                     {
                                         Metadata = new V1ObjectMeta()
                                         {
                                             Name = connector.Id,
                                         },
-                                        Spec = (DexLdapConnector)connector
+                                        Spec = ldapConnector
                                     }, connector.Id);
 
                                 break;
 
                             case DexConnectorType.Oidc:
 
-                                await k8s.CustomObjects.UpsertClusterCustomObjectAsync<V1NeonSsoOidcConnector>(
-                                    new V1NeonSsoOidcConnector()
+                                var oidcConnector = (IDexConnector<DexOidcConfig>)connector;
+
+                                var str = KubernetesJson.Serialize(oidcConnector);
+
+                                await k8s.CustomObjects.UpsertClusterCustomObjectAsync(
+                                    new V1NeonSsoConnector()
                                     {
                                         Metadata = new V1ObjectMeta()
                                         {
                                             Name = connector.Id,
                                         },
-                                        Spec = (DexOidcConnector)connector
+                                        Spec = oidcConnector
                                     }, connector.Id);
 
                                 break;
-
-                            default:
-                                break;
                         }
+
+                        
                     }
                 });
         }

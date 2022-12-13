@@ -20,24 +20,30 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
-
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Neon.Kube.Resources;
 using Newtonsoft.Json;
-
+using NJsonSchema;
+using NJsonSchema.Annotations;
 using YamlDotNet.Serialization;
+using static Org.BouncyCastle.Bcpg.Attr.ImageAttrib;
 
 namespace Neon.Kube
 {
     /// <summary>
     /// Configuration for OIDC connectors.
     /// </summary>
-    public class DexOidcConnector : IDexConnector
+    [JsonSchemaAbstract]
+    [System.Text.Json.Serialization.JsonConverter(typeof(DexConnectorJsonConverter))]
+    public class DexConnector<T> : IDexConnector<T>
+        where T : class
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public DexOidcConnector()
+        public DexConnector()
         {
-            Type = DexConnectorType.Oidc;
         }
 
         /// <inheritdoc/>
@@ -58,6 +64,8 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Config", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "config", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public DexOidcConfig Config { get; set; }
+        [JsonSchemaExtensionData("x-kubernetes-preserve-unknown-fields", true)]
+        public T Config { get; set; }
+        object IDexConnector.Config { get => (T)Config; set => Config = (T)value; }
     }
 }

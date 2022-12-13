@@ -463,8 +463,6 @@ namespace Neon.Kube
                 {
                     string    hostName;
                     IPAddress hostAddress;
-                    string    ssoClientSecret;
-                    string    ssoRedirectUri;
 
                     controller.SetGlobalStepStatus("create: cluster neoncluster.io domain");
 
@@ -475,9 +473,6 @@ namespace Neon.Kube
 
                         hostName    = KubeConst.DesktopHostname;
                         hostAddress = IPAddress.Parse(cluster.Definition.NodeDefinitions.Values.Single().Address);
-
-                        ssoClientSecret = "neondesktop";
-                        ssoRedirectUri  = "https://neon-sso.desktop.neoncluster.io/callback";
                     }
                     else
                     {
@@ -498,31 +493,9 @@ namespace Neon.Kube
                             clusterLogin.ClusterDefinition.Id, 
                             addresses: clusterAddresses);
 
-                        var ssoClient = await headendClient.Cluster.CreateSsoClientAsync(
-                            clusterLogin.ClusterDefinition.Id,
-                            clusterLogin.ClusterDefinition.Name);
-
-                        ssoClientSecret = ssoClient["Secret"];
-                        ssoRedirectUri  = ssoClient["RedirectURI"];
-
                         hostName = clusterLogin.ClusterDefinition.Id;
                         hostAddress = IPAddress.Parse(cluster.HostingManager.GetClusterAddresses().First());
                     }
-
-                    clusterDefinition.SsoConnectors.Add(
-                            new DexOidcConnector()
-                            {
-                                Id     = "neoncloud",
-                                Name   = "NeonCLOUD",
-                                Type   = DexConnectorType.Oidc,
-                                Config = new DexOidcConfig()
-                                {
-                                    Issuer       = "https://sso.neoncloud.io",
-                                    ClientId     = "neoncloud",
-                                    ClientSecret = ssoClientSecret,
-                                    RedirectURI  = ssoRedirectUri
-                                }
-                            });
 
                     // For the built-in desktop cluster, add these records to both the
                     // node's local [/etc/hosts] file as well as the host file for the

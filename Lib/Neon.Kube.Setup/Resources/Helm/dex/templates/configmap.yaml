@@ -21,48 +21,5 @@ data:
       dir: /srv/dex/web
       issuer: SSO Login - {{ .Values.cluster.name }}
       theme: dark
-    connectors:
-    - type: oidc
-      id: neoncloud
-      name: NeonCLOUD SSO
-      config:
-        # Canonical URL of the provider, also used for configuration discovery.
-        # This value MUST match the value returned in the provider config discovery.
-        #
-        # See: https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfig
-        issuer: https://accounts.google.com
-
-        # Connector config values starting with a "$" will read from the environment.
-        clientID: $NEONCLOUD_CLIENT_ID
-        clientSecret: $NEONCLOUD_CLIENT_SECRET
-
-        # Dex's issuer URL + "/callback"
-        redirectURI: https://neon-sso.{{ .Values.cluster.domain }}/callback
-    - type: ldap
-      # Required field for connector id.
-      id: ldap
-      # Required field for connector name.
-      name: LDAP
-      config:
-        host: {{ .Values.config.ldap.host }}
-        insecureNoSSL: true
-        insecureSkipVerify: true
-        rootCA: /etc/certs/ca.crt
-        bindDN: {{ .Values.config.ldap.bindDN }}
-        bindPW: {{ .Values.secrets.ldap }}
-        usernamePrompt: {{ .Values.config.ldap.usernamePrompt }}
-        userSearch:
-          baseDN: {{ .Values.config.ldap.userSearch.baseDN }}
-          filter: "{{ .Values.config.ldap.userSearch.filter }}"
-          username: {{ .Values.config.ldap.userSearch.username }}
-          idAttr: {{ .Values.config.ldap.userSearch.idAttr }}
-          emailAttr: {{ .Values.config.ldap.userSearch.emailAttr }}
-          nameAttr: {{ .Values.config.ldap.userSearch.nameAttr }}
-        groupSearch:
-          baseDN: {{ .Values.config.ldap.groupSearch.baseDN }}
-          filter: "{{ .Values.config.ldap.groupSearch.filter }}"
-          userMatchers:
-          {{- toYaml .Values.config.ldap.groupSearch.userMatchers | nindent 12 }}
-          nameAttr: {{ .Values.config.ldap.groupSearch.nameAttr }}
     oauth2:
       skipApprovalScreen: true

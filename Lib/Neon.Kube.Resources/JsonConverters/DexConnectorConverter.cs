@@ -29,6 +29,12 @@ using k8s;
 using k8s.Models;
 using IdentityModel.OidcClient;
 using System.Text.Json.Nodes;
+using System.Data;
+using YamlDotNet.Core;
+using AutoMapper;
+using System.Collections;
+using YamlDotNet.Core.Tokens;
+using static Neon.Common.Stub;
 
 namespace Neon.Kube.Resources
 {
@@ -44,7 +50,10 @@ namespace Neon.Kube.Resources
         /// <returns></returns>
         public override bool CanConvert(Type objectType)
         {
-            return objectType == typeof(IDexConnector);
+            var result = objectType == typeof(IDexConnector)
+                || objectType.Implements<IDexConnector>();
+
+            return result;
         }
 
         /// <inheritdoc/>
@@ -62,44 +71,100 @@ namespace Neon.Kube.Resources
             var result = default(IDexConnector);
 
             DexConnectorType? type = null;
+            int depth = 0;
 
             while (readerClone.Read() 
-                && type != null)
+                && !type.HasValue)
             {
-                if (readerClone.TokenType == JsonTokenType.EndObject)
+                JsonTokenType tokenType = readerClone.TokenType;
+
+                switch (tokenType)
+                {
+                    case JsonTokenType.StartObject:
+                        depth++;
+                        continue;
+
+                    case JsonTokenType.EndObject:
+                        depth--;
+                        continue;
+                }
+
+                if (tokenType == JsonTokenType.EndObject
+                    && depth == 0)
                 {
                     return result;
                 }
 
                 // Get the key.
-                if (readerClone.TokenType != JsonTokenType.PropertyName)
+                if (tokenType == JsonTokenType.PropertyName)
                 {
-                    throw new JsonException();
-                }
+                    var propertyName = readerClone.GetString();
 
-                var propertyName = readerClone.GetString();
-
-                if (propertyName == "type")
-                {
-                    var value = (JsonElement)JsonSerializer.Deserialize<dynamic>(ref readerClone, options);
-                    var str = value.ToString();
-                    type = NeonHelper.ParseEnum<DexConnectorType>(value.ToString());
+                    if (propertyName == "type" && depth == 0)
+                    {
+                        var value = (JsonElement)JsonSerializer.Deserialize<dynamic>(ref readerClone, options);
+                        var str = value.ToString();
+                        type = NeonHelper.ParseEnum<DexConnectorType>(value.ToString());
+                    }
                 }
             }
+            
 
             switch (type)
             {
                 case DexConnectorType.Ldap:
-
-                    result = JsonSerializer.Deserialize<DexLdapConnector>(ref reader);
-
+                    result = new DexConnector<DexLdapConfig>();
                     break;
+
 
                 case DexConnectorType.Oidc:
-
-                    result = JsonSerializer.Deserialize<DexOidcConnector>(ref reader);
-
+                    result = new DexConnector<DexOidcConfig>();
                     break;
+            }
+
+            while (reader.Read())
+            {
+                if (reader.TokenType == JsonTokenType.EndObject)
+                {
+                    return result;
+                }
+
+                if (reader.TokenType == JsonTokenType.PropertyName)
+                {
+                    var propertyName = reader.GetString();
+                    reader.Read();
+                    switch (propertyName)
+                    {
+                        case "id":
+                            result.Id = reader.GetString();
+                            break;
+                        case "name":
+                            result.Name = reader.GetString();
+
+                            break;
+                        case "type":
+                            result.Type = type.Value;
+                            break;
+
+                        case "config":
+
+                            switch (type)
+                            {
+                                case DexConnectorType.Ldap:
+
+                                    ((DexConnector<DexLdapConfig>)result).Config = JsonSerializer.Deserialize<DexLdapConfig>(ref reader, options);
+
+                                    break;
+
+                                case DexConnectorType.Oidc:
+
+                                    ((DexConnector<DexOidcConfig>)result).Config = JsonSerializer.Deserialize<DexOidcConfig>(ref reader, options);
+
+                                    break;
+                            }
+                            break;
+                    }
+                }
             }
 
             return result;
@@ -108,9 +173,24 @@ namespace Neon.Kube.Resources
         /// <inheritdoc/>
         public override void Write(Utf8JsonWriter writer, IDexConnector value, JsonSerializerOptions options)
         {
-            var stringValue = NeonHelper.JsonSerialize(value);
+            writer.WriteStartObject();
 
-            writer.WriteRawValue(stringValue);
+            writer.WriteString("id", value.Id);
+            writer.WriteString("name", value.Name);
+            writer.WriteString("type", value.Type.ToMemberString());
+
+            writer.WritePropertyName("config");
+
+            if (value is IDexConnector<DexOidcConfig> oidcConfig)
+            {
+                JsonSerializer.Serialize(writer, oidcConfig.Config, options);
+            }
+            else if (value is IDexConnector<DexLdapConfig> ldapConfig)
+            {
+                JsonSerializer.Serialize(writer, ldapConfig.Config, options);
+            }
+
+            writer.WriteEndObject();
         }
     }
 }

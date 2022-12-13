@@ -23,6 +23,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
@@ -198,9 +199,9 @@ namespace NeonClusterOperator
             // Start the controllers: these need to be started before starting KubeOps
             
             KubeHelper.InitializeJson();
-            
-            K8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig(), new KubernetesRetryHandler());
 
+            K8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig(), new KubernetesRetryHandler());
+            
             LogContext.SetCurrentLogProvider(TelemetryHub.LoggerFactory);
 
             harborHttpClient = new HttpClient(new HttpClientHandler() { UseCookies = false });
@@ -208,6 +209,9 @@ namespace NeonClusterOperator
             HarborClient.BaseUrl = "http://registry-harbor-harbor-core.neon-system/api/v2.0";
 
             HeadendClient = HeadendClient.Create();
+            HeadendClient.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+                                                                                "Bearer",
+                                                                                GetEnvironmentVariable("NEONCLOUD_HEADEND_TOKEN"));
 
             var channel = GrpcChannel.ForAddress($"http://{KubeService.Dex}:5557");
             DexClient = new Dex.Dex.DexClient(channel);
@@ -244,6 +248,8 @@ namespace NeonClusterOperator
                 .Build();
 
             _ = webHost.RunAsync();
+
+            Logger.LogInformationEx(() => $"Listening on: {IPAddress.Any}:{port}");
 
 #if DISABLED
             _ = Host.CreateDefaultBuilder()

@@ -167,14 +167,14 @@ namespace NeonClusterOperator
         // Instance members
 
         private readonly IKubernetes k8s;
-        private readonly Neon.Kube.Operator.IFinalizerManager<V1NeonClusterOperator> finalizerManager;
+        private readonly IFinalizerManager<V1NeonClusterOperator> finalizerManager;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public NeonClusterOperatorController(
             IKubernetes k8s,
-            Neon.Kube.Operator.IFinalizerManager<V1NeonClusterOperator> manager,
+            IFinalizerManager<V1NeonClusterOperator> manager,
             HeadendClient headendClient,
             HarborClient harborClient)
         {

@@ -20,14 +20,14 @@ spec:
     usernamePrompt: {{ .Values.config.ldap.usernamePrompt }}
     userSearch:
       baseDN: {{ .Values.config.ldap.userSearch.baseDN }}
-      filter: "{{ .Values.config.ldap.userSearch.filter }}"
+      filter: {{ .Values.config.ldap.userSearch.filter }}
       username: {{ .Values.config.ldap.userSearch.username }}
       idAttr: {{ .Values.config.ldap.userSearch.idAttr }}
       emailAttr: {{ .Values.config.ldap.userSearch.emailAttr }}
       nameAttr: {{ .Values.config.ldap.userSearch.nameAttr }}
     groupSearch:
       baseDN: {{ .Values.config.ldap.groupSearch.baseDN }}
-      filter: "{{ .Values.config.ldap.groupSearch.filter }}"
+      filter: {{ .Values.config.ldap.groupSearch.filter }}
       userMatchers:
       {{- toYaml .Values.config.ldap.groupSearch.userMatchers | nindent 12 }}
       nameAttr: {{ .Values.config.ldap.groupSearch.nameAttr }}

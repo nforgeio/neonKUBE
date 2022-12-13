@@ -28,7 +28,6 @@ using System.Threading.Tasks;
 
 using k8s;
 using k8s.Autorest;
-
 using Neon.Retry;
 
 namespace Neon.Kube
@@ -72,6 +71,7 @@ namespace Neon.Kube
                             case (HttpStatusCode)429:   // Too many requests
 
                                 return true;
+
                         }
                     }
 

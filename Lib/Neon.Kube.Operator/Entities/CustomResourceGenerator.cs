@@ -63,7 +63,9 @@ namespace Neon.Kube.Operator
         /// <summary>
         /// Constructor.
         /// </summary>
-        public CustomResourceGenerator()
+        public CustomResourceGenerator(
+            int maxDepth = 128,
+            IEnumerable<JsonConverter> converters = null)
         {
             serializerSettings = new JsonSerializerSettings
             {
@@ -78,7 +80,16 @@ namespace Neon.Kube.Operator
                     new Iso8601TimeSpanConverter(),
                     new StringEnumConverter()
                 },
+                MaxDepth = maxDepth
             };
+
+            if (converters != null)
+            {
+                foreach (var converter in converters)
+                {
+                    serializerSettings.Converters.Add(converter);
+                }
+            }
 
             jsonSchemaGeneratorSettings = new JsonSchemaGeneratorSettings()
             {
@@ -102,7 +113,9 @@ namespace Neon.Kube.Operator
         /// <param name="resourceType"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<V1CustomResourceDefinition> GenerateCustomResourceDefinitionAsync(Type resourceType, CancellationToken cancellationToken = default)
+        public async Task<V1CustomResourceDefinition> GenerateCustomResourceDefinitionAsync(
+            Type resourceType,
+            CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 

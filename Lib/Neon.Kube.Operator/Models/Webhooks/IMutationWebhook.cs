@@ -195,6 +195,11 @@ namespace Neon.Kube.Operator
             try
             {
                 var webhook = await k8s.AdmissionregistrationV1.ReadMutatingWebhookConfigurationAsync(WebhookConfiguration.Name());
+
+                webhook.Webhooks = WebhookConfiguration.Webhooks;
+                await k8s.AdmissionregistrationV1.ReplaceMutatingWebhookConfigurationAsync(webhook, webhook.Name());
+
+                Logger?.LogInformationEx(() => $"Webhook {this.GetType().Name} updated.");
             }
             catch (HttpOperationException e) 
             {
@@ -213,8 +218,6 @@ namespace Neon.Kube.Operator
                     throw e;
                 }
             }
-
-            Logger?.LogInformationEx(() => $"Webhook {this.GetType().Name} already exists.");
         }
     }
 }

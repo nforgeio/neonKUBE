@@ -24,6 +24,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Builder;
@@ -59,24 +60,23 @@ using Grpc.Core;
 using Grpc.Net.Client;
 
 using Prometheus;
+using System.IdentityModel.Tokens.Jwt;
+using YamlDotNet.Serialization;
 
 namespace NeonClusterOperator
 {
     /// <summary>
     /// <para>
-    /// Configures Neon SSO using <see cref="T"/>.
+    /// Configures Neon SSO using.
     /// </para>
     /// </summary>
-    public class NeonSsoConnectorController<TEntity, TSpec> : IOperatorController<TEntity>
-        where TEntity : class, IKubernetesObject<V1ObjectMeta>, ISpec<TSpec>, new()
-        where TSpec : IDexConnector
+    public class NeonSsoConnectorController : IOperatorController<V1NeonSsoConnector>
     {
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly ILogger log = TelemetryHub.CreateLogger<NeonSsoConnectorController<TEntity, TSpec>>();
-
-        private static ResourceManager<TEntity, NeonSsoConnectorController<TEntity, TSpec>> resourceManager;
+        private static readonly ILogger log = TelemetryHub.CreateLogger<NeonSsoConnectorController>();
+        private static ResourceManager<V1NeonSsoConnector, NeonSsoConnectorController> resourceManager;
 
         private Dex.Dex.DexClient dexClient;
 
@@ -128,7 +128,7 @@ namespace NeonClusterOperator
                 FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoconnectors_finalize_error", "Failed FINALIZE events processing.")
             };
 
-            resourceManager = new ResourceManager<TEntity, NeonSsoConnectorController<TEntity, TSpec>>(
+            resourceManager = new ResourceManager<V1NeonSsoConnector, NeonSsoConnectorController>(
                 k8s,
                 options: options,
                 leaderConfig: leaderConfig,
@@ -141,18 +141,22 @@ namespace NeonClusterOperator
         // Instance members
 
         private readonly IKubernetes k8s;
+        private readonly IFinalizerManager<V1NeonSsoConnector> finalizerManager;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public NeonSsoConnectorController(IKubernetes k8s,
+            IFinalizerManager<V1NeonSsoConnector> manager,
             Dex.Dex.DexClient dexClient)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
+            Covenant.Requires(manager != null, nameof(manager));
             Covenant.Requires(dexClient != null, nameof(dexClient));
 
-            this.k8s       = k8s;
-            this.dexClient = dexClient;
+            this.k8s              = k8s;
+            this.finalizerManager = manager;
+            this.dexClient        = dexClient;
         }
 
         /// <summary>
@@ -167,7 +171,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task<ResourceControllerResult> ReconcileAsync(TEntity resource)
+        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonSsoConnector resource)
         {
             await SyncContext.Clear;
 
@@ -180,10 +184,16 @@ namespace NeonClusterOperator
                     return null;
                 }
 
+                await finalizerManager.RegisterAllFinalizersAsync(resource);
+
                 var configMap = await k8s.CoreV1.ReadNamespacedConfigMapAsync("neon-sso-dex", KubeNamespace.NeonSystem);
                 var dexConfig = NeonHelper.YamlDeserializeViaJson<DexConfig>(configMap.Data["config.yaml"]);
 
-                if (dexConfig.Connectors.Any(connector => connector.Id == resource.Spec.Id))
+                if (dexConfig.Connectors == null)
+                {
+                    dexConfig.Connectors = new List<IDexConnector>();
+                }
+                else if (dexConfig.Connectors.Any(connector => connector.Id == resource.Spec.Id))
                 {
                     var connector = dexConfig.Connectors.Where(connector => connector.Id == resource.Spec.Id).Single();
 
@@ -192,7 +202,8 @@ namespace NeonClusterOperator
 
                 dexConfig.Connectors.Add(resource.Spec);
 
-                configMap.Data["config.yaml"] = NeonHelper.YamlSerialize(dexConfig);
+                var yamlString = NeonHelper.YamlSerialize(dexConfig);
+                configMap.Data["config.yaml"] = yamlString;
 
                 await k8s.CoreV1.ReplaceNamespacedConfigMapAsync(configMap, configMap.Name(), configMap.Namespace());
 
@@ -203,7 +214,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task DeletedAsync(TEntity resource)
+        public async Task DeletedAsync(V1NeonSsoConnector resource)
         {
             await SyncContext.Clear;
 
@@ -215,20 +226,6 @@ namespace NeonClusterOperator
                 {
                     return;
                 }
-
-                var configMap = await k8s.CoreV1.ReadNamespacedConfigMapAsync("neon-sso-dex", KubeNamespace.NeonSystem);
-                var dexConfig = NeonHelper.YamlDeserializeViaJson<DexConfig>(configMap.Data["config.yaml"]);
-
-                if (dexConfig.Connectors.Any(connector => connector.Id == resource.Spec.Id))
-                {
-                    var connector = dexConfig.Connectors.Where(connector => connector.Id == resource.Spec.Id).Single();
-
-                    dexConfig.Connectors.Remove(connector);
-                }
-
-                configMap.Data["config.yaml"] = NeonHelper.YamlSerialize(dexConfig);
-
-                await k8s.CoreV1.ReplaceNamespacedConfigMapAsync(configMap, configMap.Name(), configMap.Namespace());
 
                 log.LogInformationEx(() => $"DELETED: {resource.Name()}");
             }

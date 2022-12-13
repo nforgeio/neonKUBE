@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Reactive;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -69,11 +70,67 @@ namespace TestKubeOperator
         [Fact]
         public async Task CanSerializeCustomResources()
         {
-            var generator = new CustomResourceGenerator();
+            var generator = new CustomResourceGenerator(converters:
+                new List<Newtonsoft.Json.JsonConverter>() { new DexConnectorConverter() });
 
-            var crd = await generator.GenerateCustomResourceDefinitionAsync(typeof(V1NeonSsoOidcConnector));
+            var crd = await generator.GenerateCustomResourceDefinitionAsync(typeof(V1NeonSsoConnector));
 
             var str = KubernetesJson.Serialize(crd);
+            var yaml = KubernetesYaml.Serialize(crd);
+        }
+
+        /// <summary>
+        /// Ensures that the CRD can be written to a Yaml file.
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task CanCastToInterface()
+        {
+            var s = $@"{{
+  ""apiVersion"": ""neonkube.io/v1alpha1"",
+  ""kind"": ""NeonSsoConnector"",
+  ""metadata"": {{
+    ""name"": ""neoncloud""
+  }},
+  ""spec"": {{
+    ""config"": {{
+      ""clientId"": ""neoncloud"",
+      ""clientSecret"": ""clEwZfEeLx45ICqM95bVJsomBtkU4uPqIbhJcbLYIZLOFXpUdI"",
+      ""getUserInfo"": false,
+      ""insecureEnableGroups"": false,
+      ""insecureSkipEmailVerified"": false,
+      ""insecureSkipVerify"": false,
+      ""issuer"": ""https://sso.neoncloud.io"",
+      ""overrideClaimMapping"": false,
+      ""redirectURI"": ""https://neon-sso.7093-e202-b93b-d8cc.neoncluster.io/callback""
+    }},
+    ""id"": ""neoncloud"",
+    ""name"": ""NeonCLOUD"",
+    ""type"": ""oidc""
+  }}
+}}";
+
+            //var ssoConnector = KubernetesJson.Deserialize<V1NeonSsoConnector>(s);
+
+            s = $@"{{
+    ""config"": {{
+      ""clientId"": ""neoncloud"",
+      ""clientSecret"": ""clEwZfEeLx45ICqM95bVJsomBtkU4uPqIbhJcbLYIZLOFXpUdI"",
+      ""getUserInfo"": false,
+      ""insecureEnableGroups"": false,
+      ""insecureSkipEmailVerified"": false,
+      ""insecureSkipVerify"": false,
+      ""issuer"": ""https://sso.neoncloud.io"",
+      ""overrideClaimMapping"": false,
+      ""redirectURI"": ""https://neon-sso.7093-e202-b93b-d8cc.neoncluster.io/callback""
+    }},
+    ""id"": ""neoncloud"",
+    ""name"": ""NeonCLOUD"",
+    ""type"": ""oidc""
+  }}";
+
+            var dexConnector = KubernetesJson.Deserialize<IDexConnector<DexOidcConfig>>(s);
+            var dc = (IDexConnector)dexConnector;
         }
     }
 }

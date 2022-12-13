@@ -35,9 +35,9 @@ namespace Neon.Kube
     /// Configuration for backend connectors.
     /// </summary>
     [Newtonsoft.Json.JsonConverter(typeof(DexConnectorConverter))]
-
     [System.Text.Json.Serialization.JsonConverter(typeof(DexConnectorJsonConverter))]
-    public interface IDexConnector
+    public interface IDexConnector<T> : IDexConnector
+        where T : class
     {
         /// <summary>
         /// Connector ID
@@ -45,7 +45,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Id", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "id", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        string Id { get; set; }
+        new string Id { get; set; }
 
         /// <summary>
         /// Connector name.
@@ -54,7 +54,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "name", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        string Name { get; set; }
+        new string Name { get; set; }
 
         /// <summary>
         /// Connector Type.
@@ -64,82 +64,16 @@ namespace Neon.Kube
         [YamlMember(Alias = "type", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
-        DexConnectorType Type { get; set; }
+        new DexConnectorType Type { get; set; }
 
         /// <summary>
         /// Connector config.
         /// information.
         /// </summary>
+        [JsonProperty(PropertyName = "Config", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "config", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
         [JsonSchemaExtensionData("x-kubernetes-preserve-unknown-fields", true)]
-        object Config { get; set; }
-    }
-
-    /// <summary>
-    /// Converter for Dex connectors.
-    /// </summary>
-    public class DexConnectorConverter : JsonConverter
-    {
-        /// <summary>
-        /// Returns whether the connectio can be converted.
-        /// </summary>
-        /// <param name="objectType"></param>
-        /// <returns></returns>
-        public override bool CanConvert(Type objectType)
-        {
-            var result = objectType == typeof(IDexConnector)
-                || objectType.Implements<IDexConnector>();
-
-            return result;
-        }
-
-        /// <summary>
-        /// Reads the json.
-        /// </summary>
-        /// <param name="reader"></param>
-        /// <param name="objectType"></param>
-        /// <param name="existingValue"></param>
-        /// <param name="serializer"></param>
-        /// <returns></returns>
-        public override object ReadJson(JsonReader reader,
-               Type             objectType, 
-               object           existingValue,
-               JsonSerializer   serializer)
-        {
-            var jsonObject = JObject.Load(reader);
-            var connector = default(IDexConnector);
-
-            var value = jsonObject.Value<string>("type");
-            var type  = NeonHelper.ParseEnum<DexConnectorType>(value);
-
-            switch (type)
-            {
-                case DexConnectorType.Ldap:
-
-                    connector = new DexConnector<DexLdapConfig>();
-
-                    break;
-
-                case DexConnectorType.Oidc:
-
-                    connector = new DexConnector<DexOidcConfig>();
-
-                    break;
-            }
-            
-            serializer.Populate(jsonObject.CreateReader(), connector);
-            return connector;
-        }
-
-        /// <summary>
-        /// Writes json.
-        /// </summary>
-        /// <param name="writer"></param>
-        /// <param name="value"></param>
-        /// <param name="serializer"></param>
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-        {
-            serializer.Serialize(writer, value);
-
-        }
+        T Config { get; set; }
     }
 }

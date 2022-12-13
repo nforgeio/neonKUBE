@@ -49,12 +49,12 @@ namespace NeonClusterOperator
         admissionReviewVersions: "v1",
         failurePolicy: "Fail")]
     [WebhookRule(
-        apiGroups: "neonkube.io", 
-        apiVersions: "v1alpha1", 
-        operations: AdmissionOperations.Create | AdmissionOperations.Update, 
-        resources: "neonssoconnectors",
+        apiGroups: V1NeonSsoConnector.KubeGroup,
+        apiVersions: V1NeonSsoConnector.KubeApiVersion,
+        operations: AdmissionOperations.Create | AdmissionOperations.Update,
+        resources: V1NeonSsoConnector.KubePlural,
         scope: "*")]
-    public class SsoConnectorValidatingWebhook : IValidatingWebhook<V1NeonSsoOidcConnector>
+    public class NeonSsoConnectorValidatingWebhook : IValidatingWebhook<V1NeonSsoConnector>
     {
         /// <inheritdoc/>
         public ILogger Logger { get; set; }
@@ -62,7 +62,7 @@ namespace NeonClusterOperator
         /// <summary>
         /// Constructor.
         /// </summary>
-        public SsoConnectorValidatingWebhook()
+        public NeonSsoConnectorValidatingWebhook()
         {
         }
 
@@ -70,20 +70,20 @@ namespace NeonClusterOperator
         /// Constructor.
         /// </summary>
         /// <param name="logger"></param>
-        public SsoConnectorValidatingWebhook(ILogger logger)
+        public NeonSsoConnectorValidatingWebhook(ILogger logger)
             : base()
         {
             this.Logger = logger;
         }
 
         /// <inheritdoc/>
-        public async Task<ValidationResult> CreateAsync(V1NeonSsoOidcConnector entity, bool dryRun)
+        public async Task<ValidationResult> CreateAsync(V1NeonSsoConnector entity, bool dryRun)
         {
             await SyncContext.Clear;
 
             using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
-                Logger?.LogInformationEx(() => $"Received request for V1NeonSsoConnector {entity.Namespace()}/{entity.Name()}");
+                Logger?.LogInformationEx(() => $"Received request for V1NeonSsoConnector {entity.Name()}");
 
                 if (entity.Metadata.Name != entity.Spec.Id)
                 {
@@ -97,7 +97,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task<ValidationResult> UpdateAsync(V1NeonSsoOidcConnector entity, V1NeonSsoOidcConnector oldEntity, bool dryRun)
+        public async Task<ValidationResult> UpdateAsync(V1NeonSsoConnector entity, V1NeonSsoConnector oldEntity, bool dryRun)
         {
             await SyncContext.Clear;
 

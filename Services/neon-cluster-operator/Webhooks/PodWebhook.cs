@@ -47,10 +47,10 @@ namespace NeonClusterOperator
         admissionReviewVersions: "v1",
         failurePolicy: "Ignore")]
     [WebhookRule(
-        apiGroups: "", 
-        apiVersions: "v1", 
+        apiGroups: V1Pod.KubeGroup,
+        apiVersions: V1Pod.KubeApiVersion, 
         operations: AdmissionOperations.Create | AdmissionOperations.Update, 
-        resources: "pods",
+        resources: V1Pod.KubePluralName,
         scope: "*")]
     public class PodWebhook : IMutatingWebhook<V1Pod>
     {
@@ -128,25 +128,33 @@ namespace NeonClusterOperator
 
         private void CheckPriorityClass(V1Pod entity)
         {
-            if (string.IsNullOrEmpty(entity.Spec.PriorityClassName)
-                    || entity.Spec.PriorityClassName == PriorityClass.UserMedium.Name)
+            try
             {
-                modified = true;
-
-                if (entity.Metadata.Labels.ContainsKey("goharbor.io/operator-version"))
+                if (string.IsNullOrEmpty(entity.Spec.PriorityClassName)
+                    || entity.Spec.PriorityClassName == PriorityClass.UserMedium.Name)
                 {
-                    Logger?.LogInformationEx(() => $"Setting priority class for harbor pod.");
+                    modified = true;
 
-                    entity.Spec.PriorityClassName = PriorityClass.NeonStorage.Name;
-                    entity.Spec.Priority = null;
-                }
-                else
-                {
-                    Logger?.LogInformationEx(() => $"Setting default priority class to neon-min.");
+                    if (entity.Metadata.Labels != null
+                        && entity.Metadata.Labels.ContainsKey("goharbor.io/operator-version"))
+                    {
+                        Logger?.LogInformationEx(() => $"Setting priority class for harbor pod.");
 
-                    entity.Spec.PriorityClassName = PriorityClass.NeonMin.Name;
-                    entity.Spec.Priority = null;
+                        entity.Spec.PriorityClassName = PriorityClass.NeonStorage.Name;
+                        entity.Spec.Priority = null;
+                    }
+                    else
+                    {
+                        Logger?.LogInformationEx(() => $"Setting default priority class to neon-min.");
+
+                        entity.Spec.PriorityClassName = PriorityClass.NeonMin.Name;
+                        entity.Spec.Priority = null;
+                    }
                 }
+            }
+            catch (Exception e) 
+            {
+                Logger?.LogErrorEx(e);
             }
         }
     }
