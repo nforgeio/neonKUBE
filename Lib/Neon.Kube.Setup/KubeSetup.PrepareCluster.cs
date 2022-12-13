@@ -490,7 +490,7 @@ namespace Neon.Kube
                         clusterLogin.ClusterDefinition.Id     = KubeHelper.GenerateClusterId();
                         clusterLogin.ClusterDefinition.Domain = KubeConst.DesktopClusterDomain;
 
-                        hostName = KubeConst.DesktopClusterDomain;
+                        hostName    = KubeConst.DesktopClusterDomain;
                         hostAddress = IPAddress.Parse(cluster.Definition.NodeDefinitions.Values.Single().Address);
                     }
                     else
@@ -508,9 +508,16 @@ namespace Neon.Kube
                                                                                 "Bearer",
                                                                                 clusterLogin.ClusterDefinition.NeonCloudToken);
 
-                        clusterLogin.ClusterDefinition.Domain = await headendClient.Cluster.UpdateClusterDomainAsync(
-                            clusterLogin.ClusterDefinition.Id, 
-                            addresses: clusterAddresses);
+                        if (desktopImage)
+                        {
+                            clusterLogin.ClusterDefinition.Domain = KubeConst.DesktopClusterDomain;
+                        }
+                        else
+                        {
+                            clusterLogin.ClusterDefinition.Domain = await headendClient.Cluster.UpdateClusterDomainAsync(
+                                clusterLogin.ClusterDefinition.Id,
+                                addresses: clusterAddresses);
+                        }
 
                         hostName = clusterLogin.ClusterDefinition.Id;
                         hostAddress = IPAddress.Parse(cluster.HostingManager.GetClusterAddresses().First());
