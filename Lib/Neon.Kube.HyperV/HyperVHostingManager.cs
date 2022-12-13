@@ -850,10 +850,21 @@ namespace Neon.Kube
                     node.Status = $"start: virtual machine";
                     hyperv.StartVm(vmName);
 
-                    // Update the node credentials to use the secure password and then wait for the node to boot.
+                    // Update the node credentials to use the secure password for normal clusters or the
+                    // hardcoded SSH key for ready-to-go neon-desktop clusters and then wait for the node
+                    // to boot.
 
                     controller.ThrowIfCancelled();
-                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
+
+                    if (controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo))
+                    {
+                        node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, KubeHelper.GetBuiltinDesktopSshKey().PrivatePEM));
+                    }
+                    else
+                    {
+                        node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
+                    }
+
                     node.WaitForBoot();
                     controller.ThrowIfCancelled();
 
@@ -967,7 +978,7 @@ namespace Neon.Kube
                 {
                     // We're going to assume that all virtual machines that match cluster node names
                     // (after stripping off any cluster prefix) belong to the cluster and we'll map
-                    // zxthe actual VM states to public node states.
+                    // the actual VM states to public node states.
 
                     var clusterHealth = new ClusterHealth();
 

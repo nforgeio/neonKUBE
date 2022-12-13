@@ -40,7 +40,7 @@ using Neon.IO;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Holds the contents and permissions for a downloaded Kubernetes file.
+    /// Holds the contents and permissions for a downloaded Kubernetes text file.
     /// </summary>
     public class KubeFileDetails
     {

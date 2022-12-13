@@ -70,25 +70,6 @@ namespace Neon.Kube
                     DeleteFile("/etc/ssh/sshd_config.d/50-neonkube.confE");
                 });
 
-            InvokeIdempotent("setup/blacklist-floppy",
-                () =>
-                {
-                    controller.LogProgress(this, verb: "blacklist", message: "floppy drive");
-
-                    var floppyScript =
-@"
-set -euo pipefail
-
-# We need to blacklist the floppy drive.  Not doing this can cause
-# node failures:
-
-rmmod floppy
-echo ""blacklist floppy"" | tee /etc/modprobe.d/blacklist-floppy.conf
-dpkg-reconfigure initramfs-tools
-";
-                    SudoCommand(CommandBundle.FromScript(floppyScript));
-                });
-
             InvokeIdempotent("setup/sysstat",
                 () =>
                 {

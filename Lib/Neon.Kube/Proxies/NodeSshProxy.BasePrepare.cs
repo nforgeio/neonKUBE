@@ -53,7 +53,7 @@ namespace Neon.Kube
         where TMetadata : class
     {
         /// <summary>
-        /// Performs low-level initialization of a cluster.
+        /// Performs low-level initialization of a cluster node.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="upgradeLinux">Optionally upgrade the node's Linux distribution (defaults to <c>false</c>).</param>
@@ -75,6 +75,7 @@ namespace Neon.Kube
             BaseConfigureDebianFrontend(controller);
             UpdateRootCertificates();
             BaseInstallPackages(controller);
+            BaseBlacklistFloppy(controller);
             BaseConfigureApt(controller);
             BaseConfigureBashEnvironment(controller);
             BaseConfigureDnsIPv4Preference(controller);
@@ -92,6 +93,38 @@ namespace Neon.Kube
             {
                 BaseUpgradeLinuxDistribution(controller);
             }
+        }
+
+        /// <summary>
+        /// Blacklists the Kernel floppy module so it will be disabled when
+        /// the machine is rebooted.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        public void BaseBlacklistFloppy(ISetupController controller)
+        {
+            InvokeIdempotent("base/blacklist-floppy",
+                () =>
+                {
+                    controller.LogProgress(this, verb: "blacklist", message: "floppy drive");
+
+                    var floppyScript =
+@"
+set -euo pipefail
+
+# Blacklist the floppy drive:
+
+echo ""blacklist floppy"" | sudo tee /etc/modprobe.d/blacklist-floppy.conf
+dpkg-reconfigure initramfs-tools 
+
+# This seems to cause the kernel to restart sometimes, so we're
+# not going to actually remove the module in the current session.
+# The commands above will ensure that the module will be disabled
+# after the next reboot.
+
+# rmmod -v floppy
+";
+                    SudoCommand(CommandBundle.FromScript(floppyScript), RunOptions.Defaults | RunOptions.FaultOnError);
+                });
         }
 
         /// <summary>
@@ -340,7 +373,7 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
             InvokeIdempotent("base/guest-integration",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "setup", message: "guest integration services");
+                    controller.LogProgress(this, verb: "setup", message: "guest integration");
 
                     var guestServicesScript =
 $@"#!/bin/bash

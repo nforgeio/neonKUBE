@@ -129,10 +129,10 @@ namespace Neon.Kube
                     //      https://help.ubuntu.com/community/SSH/OpenSSH/Configuring
                     //      https://help.ubuntu.com/community/SSH/OpenSSH/Keys
 
-                    controller.LogProgress(this, verb: "generate", message: "ssh keys");
+                    controller.LogProgress(this, verb: "configure", message: "ssh key");
 
                     // Enable the public key by appending it to [$HOME/.ssh/authorized_keys],
-                    // creating the file if necessary.  Note that we're allowing only a single
+                    // creating the file if necessary.  Note that we support only a single
                     // authorized key.
 
                     var addKeyScript =
@@ -147,26 +147,22 @@ chmod 600 $HOME/.ssh/authorized_keys
                     bundle = new CommandBundle("./addkeys.sh");
 
                     bundle.AddFile("addkeys.sh", addKeyScript, isExecutable: true);
-                    bundle.AddFile("ssh_host_rsa_key", clusterLogin.SshKey.PublicSSH2);
+                    bundle.AddFile("ssh-key.ssh2", clusterLogin.SshKey.PublicPUB);
 
-                    // NOTE: I'm explicitly not running the bundle as [sudo] because the OpenSSH
-                    //       server is very picky about the permissions on the user's [$HOME]
-                    //       and [$HOME/.ssl] folder and contents.  This took me a couple 
-                    //       hours to figure out.
+                    // $note(jefflill):
+                    //
+                    // I'm explicitly not running the bundle as [sudo] because the OpenSSH
+                    // server is very picky about the permissions on the user's [$HOME]
+                    // and [$HOME/.ssl] folder and contents.  This took me a couple 
+                    // hours to figure out.
 
                     RunCommand(bundle);
-
-                    // These steps are required for both password and public key authentication.
 
                     // Upload the server key and edit the [sshd] config to disable all host keys 
                     // except for RSA.
 
                     var configScript =
 $@"
-# Install public SSH key for the [sysadmin] user.
-
-cp ssh_host_rsa_key.pub /home/{KubeConst.SysAdminUser}/.ssh/authorized_keys
-
 # Disable all host keys except for RSA.
 
 sed -i 's!^\HostKey /etc/ssh/ssh_host_dsa_key$!#HostKey /etc/ssh/ssh_host_dsa_key!g' /etc/ssh/sshd_config
@@ -180,28 +176,13 @@ systemctl restart sshd
                     bundle = new CommandBundle("./config.sh");
 
                     bundle.AddFile("config.sh", configScript, isExecutable: true);
-                    bundle.AddFile("ssh_host_rsa_key.pub", clusterLogin.SshKey.PublicPUB);
                     SudoCommand(bundle, RunOptions.FaultOnError);
                 });
 
             // Verify that we can login with the new SSH private key and also verify that
             // the password still works.
 
-            // $todo(jefflill):
-            //
-            // Key based authentication isn't working at the moment for some reason.  I'm
-            // going to disable the login check for now and come back to this when we switch
-            // to key based authentication for AWS.
-
-#if DISABLED
             controller.LogProgress(this, verb: "verify", message: "ssh keys");
-
-            Disconnect();
-            UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, clusterLogin.SshKey.PrivatePEM));
-            WaitForBoot();
-#endif
-
-            controller.LogProgress(this, verb: "verify", message: "ssh password");
 
             Disconnect();
             UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, clusterLogin.SshKey.PrivatePEM));
@@ -241,10 +222,10 @@ fi
         }
 
         /// <summary>
-        /// Required NFS setup.
+        /// Installs NFS.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        public void ConfigureNFS(ISetupController controller)
+        public void InstallNFS(ISetupController controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
@@ -327,7 +308,7 @@ systemctl restart rsyslog.service
                     ConfigureJournald(controller);
 
                     controller.ThrowIfCancelled();
-                    ConfigureNFS(controller);
+                    InstallNFS(controller);
                 });
         }
 
@@ -489,20 +470,18 @@ if [ ""{install}"" = ""true"" ]; then
     # I'm going to retain this code here in case we need it again in the future, but we
     # should come back and set [TRUST_HACK=false] after Red Hat fixes this.
 
-    # $todo(jefflill): Restore [TRUST_HACK=false] after Red Hat fixes this GPG key.
-
-   TRUST_HACK=true
+    TRUST_HACK=false
 
     if [ ""$TRUST_HACK"" == ""true"" ] ; then 
-        TRUSTED=trusted=yes
+        TRUSTED=""trusted=yes ""
     else
         TRUSTED=
     fi
 
     # Install the CRI-O packages.
 
-    echo ""deb [$TRUSTED signed-by=/usr/share/keyrings/libcontainers-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/ /"" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-    echo ""deb [$TRUSTED signed-by=/usr/share/keyrings/libcontainers-crio-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/ /"" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:$VERSION.list
+    echo ""deb [${{TRUSTED}}signed-by=/usr/share/keyrings/libcontainers-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/ /"" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+    echo ""deb [${{TRUSTED}}signed-by=/usr/share/keyrings/libcontainers-crio-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/ /"" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:$VERSION.list
 
     mkdir -p /usr/share/keyrings
 

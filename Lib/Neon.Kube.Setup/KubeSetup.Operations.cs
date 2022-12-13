@@ -317,7 +317,7 @@ spec:
                     ConfigureKubelet(controller, cluster.ControlNodes);
 
                     controller.ThrowIfCancelled();
-                    ConfigureWorkstation(controller, controlNode);
+                    ConfigureWorkstation(controller, cluster.FirstControlNode);
 
                     controller.ThrowIfCancelled();
                     ConnectCluster(controller);
@@ -739,9 +739,9 @@ exit 1
                             firstControlNode.UploadText("/etc/kubernetes/admin.conf", adminConfig, permissions: "600", owner: "root:root");
                         });
 
-                    // Download the boot control-plane files that will need to be provisioned on
-                    // the remaining control-plane nodes and may also be needed for other purposes
-                    // (if we haven't already downloaded these).
+                    // Download the control-plane files that will need to be provisioned on the remaining
+                    // control-plane nodes and may also be needed for other purposes (if we haven't already
+                    // downloaded these).
 
                     if (clusterLogin.SetupDetails.ControlNodeFiles != null)
                     {
@@ -750,30 +750,7 @@ exit 1
 
                     if (clusterLogin.SetupDetails.ControlNodeFiles.Count == 0)
                     {
-                        // I'm hardcoding the permissions and owner here.  It would be nice to
-                        // scrape this from the source files in the future but it's not worth
-                        // the bother at this point.
-
-                        var files = new RemoteFile[]
-                        {
-                            new RemoteFile("/etc/kubernetes/admin.conf", "600", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/ca.crt", "600", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/ca.key", "600", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/sa.pub", "600", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/sa.key", "644", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/front-proxy-ca.crt", "644", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/front-proxy-ca.key", "600", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/etcd/ca.crt", "644", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/etcd/ca.key", "600", "root:root"),
-                        };
-
-                        foreach (var file in files)
-                        {
-                            var text = firstControlNode.DownloadText(file.Path);
-
-                            controller.ThrowIfCancelled();
-                            clusterLogin.SetupDetails.ControlNodeFiles[file.Path] = new KubeFileDetails(text, permissions: file.Permissions, owner: file.Owner);
-                        }
+                        clusterLogin.SetupDetails.ControlNodeFiles = firstControlNode.GetControlPlaneFiles();
                     }
 
                     // Persist the cluster join command and downloaded control-plane files.
@@ -781,7 +758,7 @@ exit 1
                     clusterLogin.Save();
 
                     //---------------------------------------------------------
-                    // Join the remaining control-plane to the cluster:
+                    // Join the remaining control-plane nodes to the cluster:
 
                     foreach (var controlNode in cluster.ControlNodes.Where(node => node != firstControlNode))
                     {
@@ -1172,83 +1149,87 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         /// Configures the local workstation.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
-        public static void ConfigureWorkstation(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        /// <param name="firstControlNode">The first control-plane node in the cluster where the operation will be performed.</param>
+        public static void ConfigureWorkstation(ISetupController controller, NodeSshProxy<NodeDefinition> firstControlNode)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
-            controlNode.InvokeIdempotent("setup/workstation",
-                (Action)(() =>
+            var cluster          = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterLogin     = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+            var desktopReadyToGo = controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo);
+            var kubeConfigPath   = KubeHelper.KubeConfigPath;
+
+            // For built-in desktop clusters, we need to obtain the control plane files from
+            // the node and add them to the cluster login because we didn't so a full cluster
+            // setup when this would normally happen.
+
+            if (desktopReadyToGo)
+            {
+                clusterLogin.SetupDetails.ControlNodeFiles = firstControlNode.GetControlPlaneFiles();
+                clusterLogin.Save();
+            }
+
+            // Update kubeconfig.
+
+            var configText = clusterLogin.SetupDetails.ControlNodeFiles["/etc/kubernetes/admin.conf"].Text;
+            var port       = NetworkPorts.KubernetesApiServer;
+
+            configText = configText.Replace("https://kubernetes-control-plane:6442", $"https://{cluster.Definition.Domain}:{port}");
+
+            if (!File.Exists(kubeConfigPath))
+            {
+                File.WriteAllText(kubeConfigPath, configText);
+            }
+            else
+            {
+                // The user already has an existing kubeconfig, so we need
+                // to merge in the new config.
+
+                var newConfig      = NeonHelper.YamlDeserialize<KubeConfig>(configText);
+                var existingConfig = KubeHelper.Config;
+
+                // Remove any existing user, context, and cluster with the same names.
+                // Note that we're assuming that there's only one of each in the config
+                // we downloaded from the cluster.
+
+                var newCluster      = newConfig.Clusters.Single();
+                var newContext      = newConfig.Contexts.Single();
+                var newUser         = newConfig.Users.Single();
+                var existingCluster = existingConfig.GetCluster(newCluster.Name);
+                var existingContext = existingConfig.GetContext(newContext.Name);
+                var existingUser    = existingConfig.GetUser(newUser.Name);
+
+                if (existingConfig != null)
                 {
-                    controller.LogProgress(controlNode, verb: "configure", message: "workstation");
+                    existingConfig.Clusters.Remove(existingCluster);
+                }
 
-                    var cluster        = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-                    var clusterLogin   = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
-                    var kubeConfigPath = KubeHelper.KubeConfigPath;
+                if (existingContext != null)
+                {
+                    existingConfig.Contexts.Remove(existingContext);
+                }
 
-                    // Update kubeconfig.
+                if (existingUser != null)
+                {
+                    existingConfig.Users.Remove(existingUser);
+                }
 
-                    var configText = clusterLogin.SetupDetails.ControlNodeFiles["/etc/kubernetes/admin.conf"].Text;
-                    var port       = NetworkPorts.KubernetesApiServer;
+                existingConfig.Clusters.Add(newCluster);
+                existingConfig.Contexts.Add(newContext);
+                existingConfig.Users.Add(newUser);
 
-                    configText = configText.Replace("https://kubernetes-control-plane:6442", $"https://{cluster.Definition.Domain}:{port}");
+                existingConfig.CurrentContext = newContext.Name;
 
-                    if (!File.Exists(kubeConfigPath))
-                    {
-                        File.WriteAllText(kubeConfigPath, configText);
-                    }
-                    else
-                    {
-                        // The user already has an existing kubeconfig, so we need
-                        // to merge in the new config.
+                KubeHelper.SetConfig(existingConfig);
+            }
 
-                        var newConfig      = NeonHelper.YamlDeserialize<KubeConfig>(configText);
-                        var existingConfig = KubeHelper.Config;
+            // Make sure that the config cached by [KubeHelper] is up to date.
 
-                        // Remove any existing user, context, and cluster with the same names.
-                        // Note that we're assuming that there's only one of each in the config
-                        // we downloaded from the cluster.
+            KubeHelper.LoadConfig();
 
-                        var newCluster      = newConfig.Clusters.Single();
-                        var newContext      = newConfig.Contexts.Single();
-                        var newUser         = newConfig.Users.Single();
-                        var existingCluster = existingConfig.GetCluster(newCluster.Name);
-                        var existingContext = existingConfig.GetContext(newContext.Name);
-                        var existingUser    = existingConfig.GetUser(newUser.Name);
+            // Save the cluster node SSH certificate in the users [~/.ssh] folder.
 
-                        if (existingConfig != null)
-                        {
-                            existingConfig.Clusters.Remove(existingCluster);
-                        }
-
-                        if (existingContext != null)
-                        {
-                            existingConfig.Contexts.Remove(existingContext);
-                        }
-
-                        if (existingUser != null)
-                        {
-                            existingConfig.Users.Remove(existingUser);
-                        }
-
-                        existingConfig.Clusters.Add(newCluster);
-                        existingConfig.Contexts.Add(newContext);
-                        existingConfig.Users.Add(newUser);
-
-                        existingConfig.CurrentContext = newContext.Name;
-
-                        KubeHelper.SetConfig(existingConfig);
-                    }
-
-                    // Save the cluster node SSH certificate in the users [~/.ssh] folder.
-
-                    File.WriteAllText(Path.Combine(KubeHelper.UserSshFolder, KubeHelper.CurrentContextName.ToString()), clusterLogin.SshKey.PrivatePEM);
-
-                    // Make sure that the config cached by [KubeHelper] is up to date.
-
-                    KubeHelper.LoadConfig();
-                }));
+            File.WriteAllText(Path.Combine(KubeHelper.UserSshFolder, KubeHelper.CurrentContextName.ToString()), clusterLogin.SshKey.PrivatePEM);
         }
 
         /// <summary>
@@ -1280,10 +1261,10 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             {
                                 Name = priorityClassDef.Name
                             },
-                            Value = priorityClassDef.Value,
-                            Description = priorityClassDef.Description,
+                            Value            = priorityClassDef.Value,
+                            Description      = priorityClassDef.Description,
                             PreemptionPolicy = "PreemptLowerPriority",
-                            GlobalDefault = priorityClassDef.IsDefault
+                            GlobalDefault    = priorityClassDef.IsDefault
                         };
 
                         await k8s.SchedulingV1.CreatePriorityClassAsync(priorityClass);

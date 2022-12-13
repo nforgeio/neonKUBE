@@ -99,14 +99,14 @@ namespace Neon.Kube
         public const string RootDesktopPassword = "root";
 
         /// <summary>
-        /// The neonKUBE domain used to host cluster DNS records.
+        /// The neonKUBE domain used to host neonKUBE cluster DNS records.
         /// </summary>
         public const string NeonClusterDomain = "neoncluster.io";
 
         /// <summary>
-        /// The fixed hostname for all desktop clusters.
+        /// The fixed domain for all desktop clusters.
         /// </summary>
-        public const string DesktopHostname = $"desktop.{NeonClusterDomain}";
+        public const string DesktopClusterDomain = $"desktop.{NeonClusterDomain}";
 
         /// <summary>
         /// The default host machine sysadmin username.

@@ -32,7 +32,7 @@ param
     [switch]$nopush      = $false,      # Don't push to the registry
     [switch]$noprune     = $false,      # Don't prune the local Docker cache
     [switch]$allVersions = $false,      # Rebuild all image versions
-    [switch]$release     = $false       # Build release mode
+    [switch]$public      = $false       # Publish to [ghcr.io/neonkube] instead of [ghcr.io/neonkube-dev] (the default)
 )
 
 #----------------------------------------------------------
@@ -53,13 +53,6 @@ function Publish
     )
 
     Push-Cwd "$Path" | Out-Null
-
-    $config     = "Debug"
-
-    if ($release)
-    {
-        $config     = "Release"
-    }
 
     try
     {
@@ -123,6 +116,10 @@ try
         $services = $true
     }
 
+    # This controls whether we're publishing a public release.
+    
+    $publishAsPubic = $public
+
     # Verify that the user has the required environment variables.  These will
     # be available only for maintainers and are intialized by the neonCLOUD
     # [buildenv.cmd] script.
@@ -140,13 +137,7 @@ try
     # We need to do a solution build to ensure that any tools or other dependencies 
     # are built before we build and publish the individual container images.
 
-    $config = "Debug"
-
-    if ($release)
-    {
-        $config     = "Release"
-    }
-
+    $config     = "Debug"
     $msbuild    = $env:MSBUILDPATH
     $nkRoot     = "$env:NK_ROOT"
     $nkSolution = "$nkRoot\neonKUBE.sln"
