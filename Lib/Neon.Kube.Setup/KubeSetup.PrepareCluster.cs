@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -479,8 +480,8 @@ namespace Neon.Kube
             controller.AddGlobalStep("neoncluster.io domain",
                 async controller =>
                 {
-                    string      hostName;
-                    IPAddress   hostAddress;
+                    string    hostName;
+                    IPAddress hostAddress;
 
                     controller.SetGlobalStepStatus("create: cluster neoncluster.io domain");
 
@@ -489,7 +490,7 @@ namespace Neon.Kube
                         clusterLogin.ClusterDefinition.Id     = KubeHelper.GenerateClusterId();
                         clusterLogin.ClusterDefinition.Domain = KubeConst.DesktopClusterDomain;
 
-                        hostName    = KubeConst.DesktopClusterDomain;
+                        hostName = KubeConst.DesktopClusterDomain;
                         hostAddress = IPAddress.Parse(cluster.Definition.NodeDefinitions.Values.Single().Address);
                     }
                     else
@@ -498,12 +499,20 @@ namespace Neon.Kube
                         var headendClient      = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
                         var clusterAddresses   = string.Join(',', cluster.HostingManager.GetClusterAddresses());
 
-                        var result = await headendClient.ClusterSetup.CreateClusterAsync(addresses: clusterAddresses);
+                        var result = await headendClient.ClusterSetup.CreateClusterAsync();
 
-                        clusterLogin.ClusterDefinition.Id     = result["Id"];
-                        clusterLogin.ClusterDefinition.Domain = desktopImage ? KubeConst.DesktopClusterDomain : result["Domain"];
+                        clusterLogin.ClusterDefinition.Id             = result["Id"];
+                        clusterLogin.ClusterDefinition.NeonCloudToken = result["Token"];
 
-                        hostName    = clusterLogin.ClusterDefinition.Id;
+                        headendClient.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+                                                                                "Bearer",
+                                                                                clusterLogin.ClusterDefinition.NeonCloudToken);
+
+                        clusterLogin.ClusterDefinition.Domain = await headendClient.Cluster.UpdateClusterDomainAsync(
+                            clusterLogin.ClusterDefinition.Id, 
+                            addresses: clusterAddresses);
+
+                        hostName = clusterLogin.ClusterDefinition.Id;
                         hostAddress = IPAddress.Parse(cluster.HostingManager.GetClusterAddresses().First());
                     }
 

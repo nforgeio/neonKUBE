@@ -22,7 +22,6 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
-
 using k8s;
 using k8s.Models;
 
@@ -52,6 +51,7 @@ namespace Neon.Kube.Resources
         /// The protocol exposed on the port.
         /// </summary>
         [JsonProperty(PropertyName = "protocol", Required = Required.Always)]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
         public PortProtocol Protocol { get; set; }
 
         /// <summary>

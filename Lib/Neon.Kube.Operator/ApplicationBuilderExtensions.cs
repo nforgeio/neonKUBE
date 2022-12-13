@@ -59,34 +59,6 @@ namespace Neon.Kube.Operator
                     using var scope = app.ApplicationServices.CreateScope();
                     var componentRegistrar = scope.ServiceProvider.GetRequiredService<ComponentRegister>();
 
-                    foreach (var ct in componentRegistrar.ControllerRegistrations)
-                    {
-                        try
-                        {
-                            (Type controllerType, Type entityType) = ct;
-                            
-                            logger.LogInformationEx(() => $"Registering controller [{controllerType.Name}].");
-
-                            var controller = scope.ServiceProvider.GetRequiredService(controllerType);
-
-                            var methods = controllerType
-                                .GetMethods(BindingFlags.Static | BindingFlags.Public);
-
-                            var startMethod = methods
-                                .First(m => m.Name == "StartAsync");
-
-                            var task = (Task)startMethod.Invoke(controller, new object[] { k8s, app.ApplicationServices });
-                            await task;
-
-                            logger.LogInformationEx(() => $"Registered controller [{controllerType.Name}]");
-                        }
-                        catch (Exception e) 
-                        {
-                            logger.LogErrorEx(e);
-                        }
-                        
-                    }
-
                     foreach (var webhook in componentRegistrar.MutatingWebhookRegistrations)
                     {
                         try
@@ -110,10 +82,6 @@ namespace Neon.Kube.Operator
                                 .First(m => m.Name == "Create");
 
                             createMethod.Invoke(mutator, new object[] { k8s });
-
-                            var endpoint = WebhookHelper.CreateEndpoint(entityType, mutatorType, WebhookType.Mutate);
-
-                            logger.LogInformationEx(() => $"Registered mutating webhook [{mutatorType.Name}] at [{endpoint}]");
                         }
                         catch (Exception e)
                         {
@@ -144,15 +112,39 @@ namespace Neon.Kube.Operator
                                 .First(m => m.Name == "Create");
 
                             createMethod.Invoke(validator, new object[] { k8s });
-                            
-                            var endpoint = WebhookHelper.CreateEndpoint(entityType, validatorType, WebhookType.Mutate);
-
-                            logger.LogInformationEx(() => $"Registered validating webhook [{validatorType.Name}] at [{endpoint}]");
                         }
                         catch (Exception e)
                         {
                             logger.LogErrorEx(e);
                         }
+                    }
+
+                    foreach (var ct in componentRegistrar.ControllerRegistrations)
+                    {
+                        try
+                        {
+                            (Type controllerType, Type entityType) = ct;
+
+                            logger.LogInformationEx(() => $"Registering controller [{controllerType.Name}].");
+
+                            var controller = scope.ServiceProvider.GetRequiredService(controllerType);
+
+                            var methods = controllerType
+                                .GetMethods(BindingFlags.Static | BindingFlags.Public);
+
+                            var startMethod = methods
+                                .First(m => m.Name == "StartAsync");
+
+                            var task = (Task)startMethod.Invoke(controller, new object[] { k8s, app.ApplicationServices });
+                            await task;
+
+                            logger.LogInformationEx(() => $"Registered controller [{controllerType.Name}]");
+                        }
+                        catch (Exception e)
+                        {
+                            logger.LogErrorEx(e);
+                        }
+
                     }
                 });
         }

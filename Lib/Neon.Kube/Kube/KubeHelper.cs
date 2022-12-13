@@ -938,7 +938,7 @@ namespace Neon.Kube
                 return null;
             }
 
-            var extension = NeonHelper.YamlDeserialize<ClusterLogin>(ReadFileTextWithRetry(path));
+            var extension = NeonHelper.YamlDeserializeViaJson<ClusterLogin>(ReadFileTextWithRetry(path));
 
             extension.SetPath(path);
             extension.ClusterDefinition?.Validate();

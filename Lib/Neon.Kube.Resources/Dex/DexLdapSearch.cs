@@ -43,7 +43,7 @@ namespace Neon.Kube
         /// Base search DN
         /// </summary>
         [JsonProperty(PropertyName = "BaseDN", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "baseDN", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "baseDN", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public string BaseDN { get; set; }
 
@@ -51,7 +51,7 @@ namespace Neon.Kube
         /// User search filter
         /// </summary>
         [JsonProperty(PropertyName = "Filter", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "filter", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "filter", SerializeAs = typeof(int), ScalarStyle = YamlDotNet.Core.ScalarStyle.DoubleQuoted, ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public string Filter { get; set; }
 
@@ -59,7 +59,7 @@ namespace Neon.Kube
         /// The username attribute name on the LDAP server.
         /// </summary>
         [JsonProperty(PropertyName = "Username", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "username", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "username", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public string Username { get; set; }
 
@@ -67,23 +67,23 @@ namespace Neon.Kube
         /// The ID attribute name on the LDAP server.
         /// </summary>
         [JsonProperty(PropertyName = "IdAttr", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "idAttr", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "idAttr", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
-        public string IdAttribute { get; set; }
+        public string IdAttr { get; set; }
 
         /// <summary>
         /// The Email attribute name on the LDAP server.
         /// </summary>
         [JsonProperty(PropertyName = "EmailAttr", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "emailAttr", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "emailAttr", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
-        public string EmailAttribute { get; set; }
+        public string EmailAttr { get; set; }
 
         /// <summary>
         /// The name attribute name on the LDAP server.
         /// </summary>
         [JsonProperty(PropertyName = "NameAttr", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "nameAttr", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "nameAttr", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public string NameAttr { get; set; }
 
@@ -91,7 +91,7 @@ namespace Neon.Kube
         /// User matching settings.
         /// </summary>
         [JsonProperty(PropertyName = "UserMatchers", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "userMatchers", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "userMatchers", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public List<DexUserMatcher> UserMatchers { get; set; }
     }

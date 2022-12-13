@@ -40,6 +40,11 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
+        - name: NEONCLOUD_HEADEND_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: neoncloud-headend-token
+              key: token
         - name: WATCHER_MAX_RETRY_INTERVAL
           value: 15s
         - name: CLUSTEROPERATOR_IDLE_INTERVAL

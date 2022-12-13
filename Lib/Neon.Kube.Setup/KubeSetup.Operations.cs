@@ -42,6 +42,7 @@ using k8s.Models;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Octokit;
 
 namespace Neon.Kube
 {
@@ -354,6 +355,9 @@ spec:
 
                     controller.ThrowIfCancelled();
                     await InstallPrometheusAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await InstallNeonCloudTokenAsync(controller, controlNode);
 
                     controller.ThrowIfCancelled();
                     await InstallCertManagerAsync(controller, controlNode);
@@ -1868,13 +1872,13 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
-            var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s                = GetK8sClient(controller);
-            var headencClient      = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
-            var clusterAdvice      = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CertManager);
-            var ingressAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioIngressGateway);
-            var proxyAdvice        = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioProxy);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s = GetK8sClient(controller);
+            var headencClient = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
+            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CertManager);
+            var ingressAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioIngressGateway);
+            var proxyAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioProxy);
             var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
             controller.ThrowIfCancelled();
@@ -1919,7 +1923,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             k8s.WaitForDeploymentAsync(KubeNamespace.NeonIngress, "cert-manager-cainjector", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                             k8s.WaitForDeploymentAsync(KubeNamespace.NeonIngress, "cert-manager-webhook", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                         },
-                        timeoutMessage:    "setup/cert-manager-ready",
+                        timeoutMessage: "setup/cert-manager-ready",
                         cancellationToken: controller.CancellationToken);
                 });
 
@@ -1929,16 +1933,16 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 {
                     controller.LogProgress(controlNode, verb: "setup", message: "neon-acme");
 
-                    var cluster     = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-                    var k8s         = GetK8sClient(controller);
-                    var values      = new Dictionary<string, object>();
+                    var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+                    var k8s = GetK8sClient(controller);
+                    var values = new Dictionary<string, object>();
                     var acmeOptions = cluster.Definition.Network.AcmeOptions;
 
                     var issuer = new ClusterIssuer()
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name              = "neon-acme",
+                            Name = "neon-acme",
                             NamespaceProperty = KubeNamespace.NeonIngress
                         },
                         Spec = new IssuerSpec()
@@ -1962,7 +1966,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             }
                         };
 
-                        await k8s.UpsertSecretAsync(secret, secret.Namespace());
+                        await k8s.CoreV1.UpsertSecretAsync(secret, secret.Namespace());
 
                         issuer.Spec.Acme.ExternalAccountBinding.Key = null;
                     }
@@ -1973,7 +1977,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         {
                             Metadata = new V1ObjectMeta()
                             {
-                                Name              = issuer.Spec.Acme.PrivateKeySecretRef.Name,
+                                Name = issuer.Spec.Acme.PrivateKeySecretRef.Name,
                                 NamespaceProperty = KubeNamespace.NeonIngress
                             },
                             StringData = new Dictionary<string, string>()
@@ -1982,9 +1986,9 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             }
                         };
 
-                        await k8s.UpsertSecretAsync(secret, secret.Namespace());
+                        await k8s.CoreV1.UpsertSecretAsync(secret, secret.Namespace());
 
-                        issuer.Spec.Acme.PrivateKey                  = null;
+                        issuer.Spec.Acme.PrivateKey = null;
                         issuer.Spec.Acme.DisableAccountKeyGeneration = true;
                     }
 
@@ -1996,7 +2000,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             {
                                 Metadata = new V1ObjectMeta()
                                 {
-                                    Name              = solver.Dns01.Route53.SecretAccessKeySecretRef.Name,
+                                    Name = solver.Dns01.Route53.SecretAccessKeySecretRef.Name,
                                     NamespaceProperty = KubeNamespace.NeonIngress
                                 },
                                 StringData = new Dictionary<string, string>()
@@ -2005,7 +2009,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                 }
                             };
 
-                            await k8s.UpsertSecretAsync(secret, secret.Namespace());
+                            await k8s.CoreV1.UpsertSecretAsync(secret, secret.Namespace());
 
                             solver.Dns01.Route53.SecretAccessKey = null;
                         }
@@ -2032,10 +2036,10 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     }
 
                     await controlNode.InstallHelmChartAsync(controller, "neon-acme",
-                        releaseName:  "neon-acme",
-                        @namespace:   KubeNamespace.NeonIngress,
+                        releaseName: "neon-acme",
+                        @namespace: KubeNamespace.NeonIngress,
                         prioritySpec: PriorityClass.NeonNetwork.Name,
-                        values:       values);
+                        values: values);
                 });
 
             if (cluster.Definition.IsDesktop)
@@ -2052,7 +2056,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         {
                             Metadata = new V1ObjectMeta()
                             {
-                                Name              = "neon-cluster-certificate",
+                                Name = "neon-cluster-certificate",
                                 NamespaceProperty = KubeNamespace.NeonIngress
                             },
                             Data = cert,
@@ -2066,6 +2070,48 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         await k8s.CoreV1.CreateNamespacedSecretAsync(secret, secret.Namespace());
                     });
             }
+        }
+
+        /// <summary>
+        /// Installs tokens needed to authenticate with NeonCLOUD services.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallNeonCloudTokenAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        {
+            await SyncContext.Clear;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
+
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s = GetK8sClient(controller);
+
+            controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/neoncloud-token",
+                async () =>
+                {
+                    controller.LogProgress(controlNode, verb: "setup", message: "neoncloud token");
+
+                    var secret = new V1Secret()
+                    {
+                        Metadata = new V1ObjectMeta()
+                        {
+                            NamespaceProperty = KubeNamespace.NeonSystem,
+                            Name = "neoncloud-headend-token"
+                        },
+                        StringData = new Dictionary<string, string>()
+                        {
+                            { "token", cluster.Definition.NeonCloudToken }
+                        }
+                    };
+
+                    await k8s.CoreV1.UpsertSecretAsync(secret, secret.Namespace());
+
+                    secret.Metadata.NamespaceProperty = KubeNamespace.NeonIngress;
+                    await k8s.CoreV1.CreateNamespacedSecretAsync(secret, secret.Namespace());
+                });
         }
 
         /// <summary>
@@ -3326,7 +3372,7 @@ $@"- name: StorageType
                             citusSecret.Data["username"] = dbSecret.Data["username"];
                             citusSecret.Data["password"] = dbSecret.Data["password"];
 
-                            await k8s.UpsertSecretAsync(citusSecret, KubeNamespace.NeonMonitor);
+                            await k8s.CoreV1.UpsertSecretAsync(citusSecret, KubeNamespace.NeonMonitor);
                         }
                         );
 
@@ -4286,14 +4332,14 @@ $@"- name: StorageType
                     {
                         harborSecret.Data["postgresql-password"] = dbSecret.Data["password"];
 
-                        await k8s.UpsertSecretAsync(harborSecret, KubeNamespace.NeonSystem);
+                        await k8s.CoreV1.UpsertSecretAsync(harborSecret, KubeNamespace.NeonSystem);
                     }
 
                     if (!harborSecret.Data.ContainsKey("secret"))
                     {
                         harborSecret.StringData["secret"] = NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
 
-                        await k8s.UpsertSecretAsync(harborSecret, KubeNamespace.NeonSystem);
+                        await k8s.CoreV1.UpsertSecretAsync(harborSecret, KubeNamespace.NeonSystem);
                     }
                 });
 
@@ -4494,8 +4540,9 @@ $@"- name: StorageType
 
                     var values = new Dictionary<string, object>();
 
-                    values.Add("image.registry", KubeConst.LocalClusterRegistry);
-                    values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
+                    values.Add("image.registry", "ghcr.io/neonkube-dev");
+                    values.Add("image.tag", "neonkube-0.8.5-alpha.feature-sso");
+                    values.Add("image.pullPolicy", "Always");
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add("resource.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
                     values.Add("resource.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
@@ -4503,10 +4550,10 @@ $@"- name: StorageType
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
                     await controlNode.InstallHelmChartAsync(controller, "neon-cluster-operator",
-                        releaseName:  "neon-cluster-operator",
-                        @namespace:   KubeNamespace.NeonSystem,
+                        releaseName: "neon-cluster-operator",
+                        @namespace: KubeNamespace.NeonSystem,
                         prioritySpec: PriorityClass.NeonOperator.Name,
-                        values:       values);
+                        values: values);
                 });
 
             controller.ThrowIfCancelled();
@@ -4525,6 +4572,7 @@ $@"- name: StorageType
                             k8s.WaitForCustomResourceDefinitionAsync<V1NeonContainerRegistry>(),
                             k8s.WaitForCustomResourceDefinitionAsync<V1NeonDashboard>(),
                             k8s.WaitForCustomResourceDefinitionAsync<V1NeonNodeTask>(),
+                            k8s.WaitForCustomResourceDefinitionAsync<V1NeonSsoConnector>(),
                             k8s.WaitForCustomResourceDefinitionAsync<V1NeonSsoClient>()
                         });
                 });
@@ -5102,6 +5150,55 @@ $@"- name: StorageType
                     controller.LogProgress(controlNode, verb: "wait for", message: "neon-sso");
 
                     await k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-sso-dex", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                });
+
+            controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/dex-connectors",
+                async () =>
+                {
+                    controller.LogProgress(controlNode, verb: "wait for", message: "neon-sso connectors");
+                    
+                    foreach (var connector in cluster.Definition.SsoConnectors)
+                    {
+                        switch (connector.Type)
+                        {
+                            case DexConnectorType.Ldap:
+
+                                var ldapConnector = (DexConnector<DexLdapConfig>)connector;
+
+                                await k8s.CustomObjects.UpsertClusterCustomObjectAsync(
+                                    new V1NeonSsoConnector()
+                                    {
+                                        Metadata = new V1ObjectMeta()
+                                        {
+                                            Name = connector.Id,
+                                        },
+                                        Spec = ldapConnector
+                                    }, connector.Id);
+
+                                break;
+
+                            case DexConnectorType.Oidc:
+
+                                var oidcConnector = (IDexConnector<DexOidcConfig>)connector;
+
+                                var str = KubernetesJson.Serialize(oidcConnector);
+
+                                await k8s.CustomObjects.UpsertClusterCustomObjectAsync(
+                                    new V1NeonSsoConnector()
+                                    {
+                                        Metadata = new V1ObjectMeta()
+                                        {
+                                            Name = connector.Id,
+                                        },
+                                        Spec = oidcConnector
+                                    }, connector.Id);
+
+                                break;
+                        }
+
+                        
+                    }
                 });
         }
 

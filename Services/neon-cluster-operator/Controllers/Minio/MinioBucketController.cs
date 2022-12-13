@@ -137,14 +137,14 @@ namespace NeonClusterOperator
         // Instance members
 
         private readonly IKubernetes k8s;
-        private readonly Neon.Kube.Operator.IFinalizerManager<V1MinioBucket> finalizerManager;
+        private readonly IFinalizerManager<V1MinioBucket> finalizerManager;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public MinioBucketController(
             IKubernetes k8s,
-            Neon.Kube.Operator.IFinalizerManager<V1MinioBucket> manager)
+            IFinalizerManager<V1MinioBucket> manager)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
             Covenant.Requires(manager != null, nameof(manager));

@@ -85,6 +85,7 @@ namespace Neon.Kube.Resources
         /// </summary>
         [JsonProperty(PropertyName = "location", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
         public Location? Location { get; set; }
 
         /// <summary>
@@ -93,6 +94,7 @@ namespace Neon.Kube.Resources
         /// </summary>
         [JsonProperty(PropertyName = "resolution", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
         public Resolution Resolution { get; set; }
 
         /// <summary>

@@ -57,6 +57,7 @@ namespace Neon.Kube.Resources
         /// </summary>
         [JsonProperty(PropertyName = "allowMethods", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
         public List<HTTPMethod> AllowMethods { get; set; }
 
         /// <summary>

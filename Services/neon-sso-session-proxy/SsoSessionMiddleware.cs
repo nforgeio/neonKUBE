@@ -80,6 +80,8 @@ namespace NeonSsoSessionProxy
                     {
                         var code = NeonHelper.GetCryptoRandomPassword(10);
 
+                        logger.LogDebugEx(() => $"code: [{code}]");
+
                         await cache.SetAsync(code, cipher.EncryptToBytes(NeonHelper.JsonSerializeToBytes(requestCookie.TokenResponse)), cacheOptions);
 
                         var query = new Dictionary<string, string>()
@@ -89,13 +91,20 @@ namespace NeonSsoSessionProxy
 
                         if (context.Request.Query.TryGetValue("state", out var state))
                         {
+                            logger.LogDebugEx(() => $"state: [{state}]");
+
                             query["state"] = state;
+
                         }
 
                         if (context.Request.Query.TryGetValue("redirect_uri", out var redirectUri))
                         {
+                            logger.LogDebugEx(() => $"redirectUri: [{redirectUri}]");
+
                             if (context.Request.Query.TryGetValue("client_id", out var clientId))
                             {
+                                logger.LogDebugEx(() => $"clientId: [{clientId}]");
+
                                 if (!NeonSsoSessionProxyService.Clients.Where(client => client.Spec.Id == clientId).First().Spec.RedirectUris.Contains(redirectUri))
                                 {
                                     logger.LogErrorEx("Invalid redirect URI");

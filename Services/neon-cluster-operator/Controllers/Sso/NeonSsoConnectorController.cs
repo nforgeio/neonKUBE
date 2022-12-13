@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonDashboardController.cs
+// FILE:	    NeonSsoConnectorController.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -24,12 +24,16 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.JsonPatch.Helpers;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
+using JsonDiffPatch;
 
 using Neon.Common;
 using Neon.Diagnostics;
@@ -41,7 +45,7 @@ using Neon.Retry;
 using Neon.Tasks;
 using Neon.Time;
 
-using NeonClusterOperator.Harbor;
+using Dex;
 
 using k8s;
 using k8s.Autorest;
@@ -52,31 +56,36 @@ using Newtonsoft.Json;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-using Prometheus;
+using Grpc.Core;
+using Grpc.Net.Client;
 
-using Task = System.Threading.Tasks.Task;
-using Metrics = Prometheus.Metrics;
+using Prometheus;
+using System.IdentityModel.Tokens.Jwt;
+using YamlDotNet.Serialization;
 
 namespace NeonClusterOperator
 {
     /// <summary>
     /// <para>
-    /// Manages <see cref="V1NeonDashboard"/> resources.
+    /// Configures Neon SSO using.
     /// </para>
     /// </summary>
-    public class NeonDashboardController : IOperatorController<V1NeonDashboard>
+    public class NeonSsoConnectorController : IOperatorController<V1NeonSsoConnector>
     {
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly ILogger log = TelemetryHub.CreateLogger<NeonDashboardController>();
+        private static readonly ILogger log = TelemetryHub.CreateLogger<NeonSsoConnectorController>();
+        private static ResourceManager<V1NeonSsoConnector, NeonSsoConnectorController> resourceManager;
 
-        private static ResourceManager<V1NeonDashboard, NeonDashboardController> resourceManager;
+        private Dex.Dex.DexClient dexClient;
 
         /// <summary>
         /// Static constructor.
         /// </summary>
-        static NeonDashboardController() { }
+        static NeonSsoConnectorController()
+        {
+        }
 
         /// <summary>
         /// Starts the controller.
@@ -95,33 +104,33 @@ namespace NeonClusterOperator
             var leaderConfig =
                 new LeaderElectionConfig(
                     k8s,
-                    @namespace:       KubeNamespace.NeonSystem,
-                    leaseName:        $"{Program.Service.Name}.neondashboard",
-                    identity:         Pod.Name,
-                    promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}neondashboard_promoted", "Leader promotions"),
-                    demotionCounter:  Metrics.CreateCounter($"{Program.Service.MetricsPrefix}neondashboard_demoted", "Leader demotions"),
-                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}neondashboard_new_leader", "Leadership changes"));
+                    @namespace: KubeNamespace.NeonSystem,
+                    leaseName: $"{Program.Service.Name}.ssoconnector",
+                    identity: Pod.Name,
+                    promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoconnectors_promoted", "Leader promotions"),
+                    demotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoconnectors_demoted", "Leader demotions"),
+                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoconnectors_new_leader", "Leadership changes"));
 
             var options = new ResourceManagerOptions()
             {
                 ErrorMaxRetryCount       = int.MaxValue,
                 ErrorMaxRequeueInterval  = TimeSpan.FromMinutes(10),
-                ErrorMinRequeueInterval  = TimeSpan.FromSeconds(60),
-                IdleCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}neondashboard_idle", "IDLE events processed."),
-                ReconcileCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}neondashboard_idle", "RECONCILE events processed."),
-                DeleteCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}neondashboard_idle", "DELETED events processed."),
-                StatusModifyCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}neondashboard_idle", "STATUS-MODIFY events processed."),
-                FinalizeCounter          = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}neondashboard_finalize", "FINALIZE events processed."),
-                IdleErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}neondashboard_idle_error", "Failed IDLE event processing."),
-                ReconcileErrorCounter    = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}neondashboard_reconcile_error", "Failed RECONCILE event processing."),
-                DeleteErrorCounter       = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}neondashboard_delete_error", "Failed DELETE event processing."),
-                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}neondashboard_statusmodify_error", "Failed STATUS-MODIFY events processing."),
-                FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}neondashboard_finalize_error", "Failed FINALIZE events processing.")
+                ErrorMinRequeueInterval  = TimeSpan.FromSeconds(5),
+                IdleCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoconnectors_idle", "IDLE events processed."),
+                ReconcileCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoconnectors_idle", "RECONCILE events processed."),
+                DeleteCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoconnectors_idle", "DELETED events processed."),
+                StatusModifyCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoconnectors_idle", "STATUS-MODIFY events processed."),
+                FinalizeCounter          = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoconnectors_finalize", "FINALIZE events processed."),
+                IdleErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoconnectors_idle_error", "Failed IDLE event processing."),
+                ReconcileErrorCounter    = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoconnectors_reconcile_error", "Failed RECONCILE event processing."),
+                DeleteErrorCounter       = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoconnectors_delete_error", "Failed DELETE event processing."),
+                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoconnectors_statusmodify_error", "Failed STATUS-MODIFY events processing."),
+                FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoconnectors_finalize_error", "Failed FINALIZE events processing.")
             };
 
-            resourceManager = new ResourceManager<V1NeonDashboard, NeonDashboardController>(
+            resourceManager = new ResourceManager<V1NeonSsoConnector, NeonSsoConnectorController>(
                 k8s,
-                options:      options,
+                options: options,
                 leaderConfig: leaderConfig,
                 serviceProvider: serviceProvider);
 
@@ -132,20 +141,22 @@ namespace NeonClusterOperator
         // Instance members
 
         private readonly IKubernetes k8s;
-        private readonly IFinalizerManager<V1NeonDashboard> finalizerManager;
+        private readonly IFinalizerManager<V1NeonSsoConnector> finalizerManager;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public NeonDashboardController(
-            IKubernetes k8s,
-            IFinalizerManager<V1NeonDashboard> manager)
+        public NeonSsoConnectorController(IKubernetes k8s,
+            IFinalizerManager<V1NeonSsoConnector> manager,
+            Dex.Dex.DexClient dexClient)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
             Covenant.Requires(manager != null, nameof(manager));
+            Covenant.Requires(dexClient != null, nameof(dexClient));
 
             this.k8s              = k8s;
             this.finalizerManager = manager;
+            this.dexClient        = dexClient;
         }
 
         /// <summary>
@@ -160,14 +171,12 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonDashboard resource)
+        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonSsoConnector resource)
         {
             await SyncContext.Clear;
 
             using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
-                Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("customresource", nameof(V1NeonDashboard)));
-
                 // Ignore all events when the controller hasn't been started.
 
                 if (resourceManager == null)
@@ -177,6 +186,27 @@ namespace NeonClusterOperator
 
                 await finalizerManager.RegisterAllFinalizersAsync(resource);
 
+                var configMap = await k8s.CoreV1.ReadNamespacedConfigMapAsync("neon-sso-dex", KubeNamespace.NeonSystem);
+                var dexConfig = NeonHelper.YamlDeserializeViaJson<DexConfig>(configMap.Data["config.yaml"]);
+
+                if (dexConfig.Connectors == null)
+                {
+                    dexConfig.Connectors = new List<IDexConnector>();
+                }
+                else if (dexConfig.Connectors.Any(connector => connector.Id == resource.Spec.Id))
+                {
+                    var connector = dexConfig.Connectors.Where(connector => connector.Id == resource.Spec.Id).Single();
+
+                    dexConfig.Connectors.Remove(connector);
+                }
+
+                dexConfig.Connectors.Add(resource.Spec);
+
+                var yamlString = NeonHelper.YamlSerialize(dexConfig);
+                configMap.Data["config.yaml"] = yamlString;
+
+                await k8s.CoreV1.ReplaceNamespacedConfigMapAsync(configMap, configMap.Name(), configMap.Namespace());
+
                 log.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
 
                 return null;
@@ -184,20 +214,19 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task DeletedAsync(V1NeonDashboard resource)
+        public async Task DeletedAsync(V1NeonSsoConnector resource)
         {
             await SyncContext.Clear;
 
             using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
-
                 // Ignore all events when the controller hasn't been started.
 
                 if (resourceManager == null)
                 {
                     return;
                 }
-                
+
                 log.LogInformationEx(() => $"DELETED: {resource.Name()}");
             }
         }
@@ -214,7 +243,7 @@ namespace NeonClusterOperator
         public async Task OnDemotionAsync()
         {
             await SyncContext.Clear;
-
+            
             log.LogInformationEx(() => $"DEMOTED");
         }
 

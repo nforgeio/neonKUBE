@@ -48,6 +48,12 @@ namespace Neon.Kube
         /// LDAP
         /// </summary>
         [EnumMember(Value = "ldap")]
-        Ldap = 0
+        Ldap = 0,
+
+        /// <summary>
+        /// OIDC
+        /// </summary>
+        [EnumMember(Value = "oidc")]
+        Oidc
     }
 }

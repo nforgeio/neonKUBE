@@ -75,7 +75,7 @@ spec:
         - containerPort: 4319
           name: otlp-grpc-lb
           protocol: TCP
-        - containerPort: 55678
+        - containerPort: 4320
           name: tcp-opencensus
           protocol: TCP
         - containerPort: 5140

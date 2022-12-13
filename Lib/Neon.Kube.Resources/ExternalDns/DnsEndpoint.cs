@@ -61,6 +61,7 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// The <see cref="RecordType"/>
         /// </summary>
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
         public DnsRecordType RecordType { get; set; }
 
         /// <summary>

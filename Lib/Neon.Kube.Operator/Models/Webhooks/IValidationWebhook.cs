@@ -93,7 +93,7 @@ namespace Neon.Kube.Operator
                                 {
                                     Name = hook.ServiceName,
                                     NamespaceProperty = hook.Namespace,
-                                    Path = WebhookHelper.CreateEndpoint<TEntity>(this.GetType(), WebhookType.Mutate)
+                                    Path = WebhookHelper.CreateEndpoint<TEntity>(this.GetType(), WebhookType.Validate)
                                 }
                             },
                             AdmissionReviewVersions = hook.AdmissionReviewVersions,
@@ -177,6 +177,11 @@ namespace Neon.Kube.Operator
             try
             {
                 var webhook = await k8s.AdmissionregistrationV1.ReadValidatingWebhookConfigurationAsync(WebhookConfiguration.Name());
+
+                webhook.Webhooks = WebhookConfiguration.Webhooks;
+                await k8s.AdmissionregistrationV1.ReplaceValidatingWebhookConfigurationAsync(webhook, webhook.Name());
+
+                Logger?.LogInformationEx(() => $"Webhook {this.GetType().Name} updated.");
             }
             catch (HttpOperationException e) 
             {
@@ -195,8 +200,6 @@ namespace Neon.Kube.Operator
                     throw e;
                 }
             }
-
-            Logger?.LogInformationEx(() => $"Webhook {this.GetType().Name} already exists.");
         }
     }
 }

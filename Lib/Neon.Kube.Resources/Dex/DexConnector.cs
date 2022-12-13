@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    BlockDeviceDevLink.cs
+// FILE:	    DexOidcConnector.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -20,35 +20,40 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Neon.Kube.Resources;
+using Newtonsoft.Json;
+using NJsonSchema;
+using NJsonSchema.Annotations;
+using YamlDotNet.Serialization;
+using static Org.BouncyCastle.Bcpg.Attr.ImageAttrib;
 
-using k8s;
-using k8s.Models;
-
-namespace Neon.Kube.Resources
+namespace Neon.Kube
 {
     /// <summary>
-    /// OpenEBS block device links.
+    /// Configuration for OIDC connectors.
     /// </summary>
-    public class BlockDeviceDevLink
+    [System.Text.Json.Serialization.JsonConverter(typeof(DexConnectorJsonConverter))]
+    public class DexConnector : IDexConnector
     {
         /// <summary>
-        /// Initializes a new instance of the BlockDeviceDevLink class.
+        /// Constructor.
         /// </summary>
-        public BlockDeviceDevLink()
+        public DexConnector()
         {
         }
 
-        /// <summary>
-        /// The <see cref="DevLinkType"/>. Devices are listed by ID or by path.
-        /// </summary>
-        [DefaultValue(null)]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
-        public DevLinkType Kind { get; set; }
+        /// <inheritdoc/>
+        public string Id { get; set; }
 
-        /// <summary>
-        /// List of device links. 
-        /// </summary>
-        [DefaultValue(null)]
-        public List<string> Links { get; set; }
+
+        /// <inheritdoc/>
+        public string Name { get; set; }
+
+        /// <inheritdoc/>
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
+        public DexConnectorType Type { get; set; }
+        public object Config { get; set; }
     }
 }

@@ -11,6 +11,8 @@ rules:
   - neonnodetasks/status
   - neoncontainerregistries
   - neonssoclients
+  - neonssoconnectors
+  - neondashboards
   verbs:
   - "*"
 - apiGroups:

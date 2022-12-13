@@ -1,0 +1,48 @@
+{
+  "metadata": [
+    {
+      "src": [
+        {
+          "files": ["**/*.csproj"],
+            "exclude": [
+                "**/bin/**",
+                "**/obj/**",
+                "**/Protos/**/*.cs"
+            ], 
+          "cwd": "."
+        }
+      ],
+      "dest": "obj/docfx/api/dotnet"
+    }
+  ],
+  "build": {
+    "content":
+      [
+        {
+          "files": ["**/*.yml"],
+          "cwd": "obj/docfx"
+        },
+        {
+          "files": ["tutorial/**/*.md", "spec/**/*.md"]
+        },
+        {
+          "files": ["toc.yml"]
+        }
+      ],
+    "resource": [
+        {
+          "files": ["images/**"]
+        }
+    ],
+    "overwrite": "apispec/*.md",
+    "externalReference": [
+      "external/*.yml.zip"
+    ],
+    "globalMetadata" : {
+      "_appTitle": "Doc-as-code documentation"
+    },
+    "dest": "_site",
+    "template": ["default", "override"],
+    "theme": "happy"
+  }
+}

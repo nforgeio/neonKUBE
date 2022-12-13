@@ -75,7 +75,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Connectors", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "connectors", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public List<IDexConnector> Connectors { get; set; }
+        public List<IDexConnector> Connectors { get; set; } = new List<IDexConnector>();
 
         /// <summary>
         /// Configuration for telemetry.
@@ -100,7 +100,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Logger", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "logger", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public LogOptions Logger { get; set; }
+        public DexLogConfig Logger { get; set; }
 
         /// <summary>
         /// Options for Oauth2 related settings.

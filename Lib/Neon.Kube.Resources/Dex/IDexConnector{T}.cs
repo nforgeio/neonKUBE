@@ -22,10 +22,10 @@ using System.Linq;
 using System.Text;
 
 using Neon.Common;
-
+using Neon.Kube.Resources;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
+using NJsonSchema.Annotations;
 using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
 
@@ -34,8 +34,10 @@ namespace Neon.Kube
     /// <summary>
     /// Configuration for backend connectors.
     /// </summary>
-    [JsonConverter(typeof(DexConnectorConverter))]
-    public interface IDexConnector
+    [Newtonsoft.Json.JsonConverter(typeof(DexConnectorConverter))]
+    [System.Text.Json.Serialization.JsonConverter(typeof(DexConnectorJsonConverter))]
+    public interface IDexConnector<T> : IDexConnector
+        where T : class
     {
         /// <summary>
         /// Connector ID
@@ -43,7 +45,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Id", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "id", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        string Id { get; set; }
+        new string Id { get; set; }
 
         /// <summary>
         /// Connector name.
@@ -52,7 +54,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "name", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        string Name { get; set; }
+        new string Name { get; set; }
 
         /// <summary>
         /// Connector Type.
@@ -61,63 +63,17 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Type", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "type", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        DexConnectorType Type { get; set; }
-    }
-
-    /// <summary>
-    /// Converter for Dex connectors.
-    /// </summary>
-    public class DexConnectorConverter : JsonConverter
-    {
-        /// <summary>
-        /// Returns whether the connectio can be converted.
-        /// </summary>
-        /// <param name="objectType"></param>
-        /// <returns></returns>
-        public override bool CanConvert(Type objectType)
-        {
-            return objectType == typeof(IDexConnector);
-        }
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
+        new DexConnectorType Type { get; set; }
 
         /// <summary>
-        /// Reads the json.
+        /// Connector config.
+        /// information.
         /// </summary>
-        /// <param name="reader"></param>
-        /// <param name="objectType"></param>
-        /// <param name="existingValue"></param>
-        /// <param name="serializer"></param>
-        /// <returns></returns>
-        public override object ReadJson(JsonReader reader,
-               Type             objectType, 
-               object           existingValue,
-               JsonSerializer   serializer)
-        {
-            var jsonObject = JObject.Load(reader);
-            var connector = default(IDexConnector);
-
-            var value = jsonObject.Value<string>("type");
-            var type  = NeonHelper.ParseEnum<DexConnectorType>(value);
-
-            switch (type)
-            {
-                case DexConnectorType.Ldap:
-                    connector = new DexLdapConnector();
-                    break;
-            }
-            
-            serializer.Populate(jsonObject.CreateReader(), connector);
-            return connector;
-        }
-
-        /// <summary>
-        /// Writes json.
-        /// </summary>
-        /// <param name="writer"></param>
-        /// <param name="value"></param>
-        /// <param name="serializer"></param>
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-        {
-            serializer.Serialize(writer, value);
-        }
+        [JsonProperty(PropertyName = "Config", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "config", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        [JsonSchemaExtensionData("x-kubernetes-preserve-unknown-fields", true)]
+        T Config { get; set; }
     }
 }

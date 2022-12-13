@@ -67,7 +67,7 @@ spec:
     {{- end }}
     {{- if .Values.traces.opencensus }}
     - name: distributor-opencensus
-      port: 55678
+      port: 4320
       protocol: TCP
       targetPort: opencensus
     {{- end }}

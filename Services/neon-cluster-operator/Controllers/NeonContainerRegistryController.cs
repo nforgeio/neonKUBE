@@ -134,19 +134,19 @@ namespace NeonClusterOperator
         // Instance members
 
         private readonly IKubernetes k8s;
-        private readonly Neon.Kube.Operator.IFinalizerManager<V1NeonContainerRegistry> finalizerManager;
+        private readonly IFinalizerManager<V1NeonContainerRegistry> finalizerManager;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public NeonContainerRegistryController(
             IKubernetes k8s,
-            Neon.Kube.Operator.IFinalizerManager<V1NeonContainerRegistry> manager)
+            IFinalizerManager<V1NeonContainerRegistry> manager)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
             Covenant.Requires(manager != null, nameof(manager));
 
-            this.k8s = k8s;
+            this.k8s              = k8s;
             this.finalizerManager = manager;
         }
 

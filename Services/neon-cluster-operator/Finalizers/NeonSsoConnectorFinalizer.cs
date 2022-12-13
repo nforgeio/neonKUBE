@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    MinioBucketFinalizer.cs
+// FILE:	    SsoConnectorFinalizer.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -35,13 +35,15 @@ using k8s;
 using k8s.Models;
 
 using Minio;
+using Neon.Common;
+using System.Resources;
 
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// Finalizes deletion of <see cref="V1MinioBucket"/> resources.
+    /// Finalizes deletion of <see cref="V1NeonSsoConnector"/> resources.
     /// </summary>
-    public class MinioBucketFinalizer : IResourceFinalizer<V1MinioBucket>
+    public class NeonSsoConnectorFinalizer : IResourceFinalizer<V1NeonSsoConnector>
     {
         private ILogger logger;
         private IKubernetes k8s;
@@ -51,7 +53,7 @@ namespace NeonClusterOperator
         /// </summary>
         /// <param name="logger">The logger.</param>
         /// <param name="k8s">The Kubernetes client.</param>
-        public MinioBucketFinalizer(
+        public NeonSsoConnectorFinalizer(
             ILogger logger,
             IKubernetes k8s)
         {
@@ -63,7 +65,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task FinalizeAsync(V1MinioBucket resource)
+        public async Task FinalizeAsync(V1NeonSsoConnector resource)
         {
             await SyncContext.Clear;
 
@@ -71,35 +73,21 @@ namespace NeonClusterOperator
             {
                 logger.LogInformationEx(() => $"Finalizing {resource.Name()}");
 
-                var minioClient = await GetMinioClientAsync(resource);
-                bool exists     = await minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(resource.Name()));
+                var configMap = await k8s.CoreV1.ReadNamespacedConfigMapAsync("neon-sso-dex", KubeNamespace.NeonSystem);
+                var dexConfig = NeonHelper.YamlDeserializeViaJson<DexConfig>(configMap.Data["config.yaml"]);
 
-                if (exists)
+                if (dexConfig.Connectors.Any(connector => connector.Id == resource.Spec.Id))
                 {
-                    await minioClient.RemoveBucketAsync(new RemoveBucketArgs().WithBucket(resource.Name()));
-                    logger.LogInformationEx(() => $"Bucket {resource.Name()} deleted.");
-                }
-                else
-                {
-                    logger.LogInformationEx(() => $"Bucket {resource.Name()} doesn't exist.");
-                }
-            }
-        }
+                    var connector = dexConfig.Connectors.Where(connector => connector.Id == resource.Spec.Id).Single();
 
-        private async Task<MinioClient> GetMinioClientAsync(V1MinioBucket resource)
-        {
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
-            {
-                var tenant = await k8s.CustomObjects.ReadNamespacedCustomObjectAsync<V1MinioTenant>(resource.Namespace(), resource.Spec.Tenant);
-                var minioEndpoint = $"{tenant.Name()}.{tenant.Namespace()}";
-                var secretName = ((JsonElement)(tenant.Spec)).GetProperty("credsSecret").GetProperty("name").GetString();
-                var secret = await k8s.CoreV1.ReadNamespacedSecretAsync(secretName, resource.Namespace());
-                var minioClient = new MinioClient()
-                                      .WithEndpoint(minioEndpoint)
-                                      .WithCredentials(Encoding.UTF8.GetString(secret.Data["accesskey"]), Encoding.UTF8.GetString(secret.Data["secretkey"]))
-                                      .Build();
+                    dexConfig.Connectors.Remove(connector);
+                }
 
-                return minioClient;
+                configMap.Data["config.yaml"] = NeonHelper.YamlSerialize(dexConfig);
+
+                await k8s.CoreV1.ReplaceNamespacedConfigMapAsync(configMap, configMap.Name(), configMap.Namespace());
+
+                logger.LogInformationEx(() => $"Finalized: {resource.Name()}");
             }
         }
     }

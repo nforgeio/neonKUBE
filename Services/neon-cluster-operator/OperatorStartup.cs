@@ -82,6 +82,7 @@ namespace NeonClusterOperator
         {
             services.AddSingleton<ILogger>(Program.Service.Logger)
                 .AddSingleton(Service.K8s)
+                .AddSingleton(Service.DexClient)
                 .AddSingleton(Service.HeadendClient)
                 .AddSingleton(Service.HarborClient);
 
@@ -91,11 +92,15 @@ namespace NeonClusterOperator
                 .AddController<NeonClusterOperatorController, V1NeonClusterOperator>()
                 .AddController<NeonContainerRegistryController, V1NeonContainerRegistry>()
                 .AddController<NeonDashboardController, V1NeonDashboard>()
+                .AddController<NeonSsoConnectorController, V1NeonSsoConnector>()
                 .AddController<NeonSsoClientController, V1NeonSsoClient>()
                 .AddController<NodeTaskController, V1NeonNodeTask>()
                 .AddFinalizer<NeonContainerRegistryFinalizer, V1NeonContainerRegistry>()
+                .AddFinalizer<NeonSsoConnectorFinalizer, V1NeonSsoConnector>()
+                .AddFinalizer<NeonSsoClientFinalizer, V1NeonSsoClient>()
                 .AddFinalizer<MinioBucketFinalizer, V1MinioBucket>()
-                .AddMutatingWebhook<PodWebhook, V1Pod>();
+                .AddMutatingWebhook<PodWebhook, V1Pod>()
+                .AddValidatingWebhook<NeonSsoConnectorValidatingWebhook, V1NeonSsoConnector>();
         }
 
         /// <summary>
@@ -104,7 +109,8 @@ namespace NeonClusterOperator
         /// <param name="app">Specifies the application builder.</param>
         public void Configure(IApplicationBuilder app)
         {
-            if (NeonHelper.IsDevWorkstation)
+            if (NeonHelper.IsDevWorkstation
+                || !string.IsNullOrEmpty(Service.GetEnvironmentVariable("DEBUG")))
             {
                 app.UseDeveloperExceptionPage();
             }

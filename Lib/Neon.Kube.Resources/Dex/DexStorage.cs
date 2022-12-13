@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DexLdapConnector.cs
+// FILE:	    DexStorage.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -22,41 +22,41 @@ using System.Linq;
 using System.Text;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 using YamlDotNet.Serialization;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// Configuration for backend connectors.
+    /// Dex configuration model.
     /// </summary>
-    public class DexLdapConnector : IDexConnector
+    public class DexStorage
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public DexLdapConnector()
+        public DexStorage()
         {
-            Type = DexConnectorType.Ldap;
         }
 
-        /// <inheritdoc/>
-        public string Id { get; set; }
-
-
-        /// <inheritdoc/>
-        public string Name { get; set; }
-
-        /// <inheritdoc/>
-        public DexConnectorType Type { get; set; }
+        /// <summary>
+        /// Supported options include SQL flavors and Kubernetes third party resources.
+        /// </summary>
+        [JsonProperty(PropertyName = "Type", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "type", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        [Newtonsoft.Json.JsonConverter(typeof(StringEnumConverter))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
+        public DexStorageType Type { get; set; }
 
         /// <summary>
-        /// Connector specific config.
+        /// Config See the documentation (https://dexidp.io/docs/storage/) for further 
         /// information.
         /// </summary>
-        [JsonProperty(PropertyName = "Config", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Config", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "config", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public DexLdapConfig Config { get; set; }
+        public Dictionary<string, object> Config { get; set; }
     }
 }
