@@ -100,7 +100,12 @@ namespace NeonClusterOperator
                 .AddFinalizer<NeonSsoClientFinalizer, V1NeonSsoClient>()
                 .AddFinalizer<MinioBucketFinalizer, V1MinioBucket>()
                 .AddMutatingWebhook<PodWebhook, V1Pod>()
-                .AddValidatingWebhook<NeonSsoConnectorValidatingWebhook, V1NeonSsoConnector>();
+                .AddValidatingWebhook<NeonSsoConnectorValidatingWebhook, V1NeonSsoConnector>()
+                .AddNgrokTunnnel(hostname: Service.GetEnvironmentVariable("NGROK_HOSTNAME", def: "127.0.0.1", redact: false),
+                    port: Service.Port,
+                    ngrokDirectory: Service.GetEnvironmentVariable("NGROK_DIRECTORY", def: "C:/bin", redact: false),
+                    ngrokAuthToken: Service.GetEnvironmentVariable("NGROK_AUTH_TOKEN", def: null, redact: true),
+                    enabled: NeonHelper.IsDevWorkstation);
         }
 
         /// <summary>

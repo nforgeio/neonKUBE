@@ -44,17 +44,19 @@ namespace Neon.Kube.Operator
         /// <param name="timeoutSeconds"></param>
         /// <param name="matchPolicy"></param>
         /// <param name="reinvocationPolicy"></param>
+        /// <param name="url"></param>
         public WebhookAttribute(
-            string name, 
-            string serviceName, 
-            string @namespace,
-            string certificate,
+            string name,
             string admissionReviewVersions,
+            string serviceName = null,
+            string @namespace = null,
+            string certificate = null,
             string failurePolicy = "Fail", 
             string sideEffects = "None", 
             int timeoutSeconds = 5,
             string matchPolicy = "Equivalent",
-            string reinvocationPolicy = "Never")
+            string reinvocationPolicy = "Never",
+            string url = null)
         {
             Name = name;
             ServiceName = serviceName;
@@ -66,6 +68,7 @@ namespace Neon.Kube.Operator
             TimeoutSeconds = timeoutSeconds;
             MatchPolicy = matchPolicy;
             ReinvocationPolicy = reinvocationPolicy;
+            Url = url;
         }
 
         /// <summary>
@@ -164,5 +167,10 @@ namespace Neon.Kube.Operator
         /// Defaults to "Never".
         /// </summary>
         public string ReinvocationPolicy { get; } = "Never";
+
+        /// <summary>
+        /// The external URL of the webhook.
+        /// </summary>
+        public string Url { get; set; } = string.Empty;
     }
 }

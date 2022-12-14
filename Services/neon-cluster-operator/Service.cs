@@ -165,6 +165,11 @@ namespace NeonClusterOperator
         /// </summary>
         public Dex.Dex.DexClient DexClient;
 
+        /// <summary>
+        /// The service port;
+        /// </summary>
+        public int Port { get; private set; } = 443;
+
         // private fields
         private IWebHost webHost;
         private HttpClient harborHttpClient;
@@ -221,11 +226,10 @@ namespace NeonClusterOperator
             await WatchRootUserAsync();
 
             // Start the web service.
-            var port = 443;
 
             if (NeonHelper.IsDevWorkstation)
             {
-                port = 11005;
+                Port = 11005;
             }
 
             webHost = new WebHostBuilder()
@@ -238,9 +242,12 @@ namespace NeonClusterOperator
                 .UseKestrel(options => {
                     options.ConfigureEndpointDefaults(o =>
                     {
-                        o.UseHttps(Certificate);
+                        if (!NeonHelper.IsDevWorkstation)
+                        {
+                            o.UseHttps(Certificate);
+                        }
                     });
-                    options.Listen(IPAddress.Any, port);
+                    options.Listen(IPAddress.Any, Port);
                         
                 })
                 .ConfigureServices(services => services.AddSingleton(typeof(Service), this))
@@ -249,7 +256,7 @@ namespace NeonClusterOperator
 
             _ = webHost.RunAsync();
 
-            Logger.LogInformationEx(() => $"Listening on: {IPAddress.Any}:{port}");
+            Logger.LogInformationEx(() => $"Listening on: {IPAddress.Any}:{Port}");
 
 #if DISABLED
             _ = Host.CreateDefaultBuilder()

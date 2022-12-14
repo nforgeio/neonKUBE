@@ -87,5 +87,24 @@ namespace Neon.Kube.Operator
         IOperatorBuilder AddValidatingWebhook<TImplementation, TEntity>()
             where TImplementation : class, IValidatingWebhook<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>, new();
+
+        /// <summary>
+        /// <para>
+        /// For development purposes only. Adds a tunnel and configures webhooks to 
+        /// tunnel through to the developer workstation.
+        /// </para>
+        /// </summary>
+        /// <param name="hostname">The hostname for the tunnel.</param>
+        /// <param name="port">The port.</param>
+        /// <param name="ngrokDirectory">The directory where the ngrok binary is located.</param>
+        /// <param name="ngrokAuthToken">The ngrok auth token</param>
+        /// <param name="enabled">Set to false to optionally disable this feature.</param>
+        /// <returns></returns>
+        IOperatorBuilder AddNgrokTunnnel(
+            string hostname = "localhost",
+            int port = 5000,
+            string ngrokDirectory = null,
+            string ngrokAuthToken = null,
+            bool enabled = true);
     }
 }

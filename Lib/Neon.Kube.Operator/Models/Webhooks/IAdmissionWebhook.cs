@@ -127,7 +127,6 @@ namespace Neon.Kube.Operator
                 {
                     using (var activity = TelemetryHub.ActivitySource.StartActivity())
                     {
-
                         try
                         {
                             if (!context.Request.HasJsonContentType())
