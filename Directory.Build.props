@@ -49,6 +49,20 @@
 		<Optimize>true</Optimize>
 	</PropertyGroup>
 
+	<!--
+	$note(jefflill):
+	
+	We need to pin the runtime to specific versions for .NRT 6+ and .NET 7+ so upgrading
+	Visual Studio won't build for a runtime that more recent than the base MSFT .NET 
+	container image we're building our containers from.
+	-->
+
+	<PropertyGroup>
+		<RuntimeFrameworkVersion Condition="'$(TargetFramework)'=='net6.0'">6.0.302</RuntimeFrameworkVersion>
+		<RuntimeFrameworkVersion Condition="'$(TargetFramework)'=='net7.0'">7.0.100</RuntimeFrameworkVersion>
+		<RollForward>disable</RollForward>
+	</PropertyGroup>
+
 	<!-- 
 	$hack(jefflill):
 	
