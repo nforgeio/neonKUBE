@@ -63,7 +63,7 @@ function Build
 
 	if ($latest -and $tagAsLatest)
 	{
-		$result = Invoke-CaptureStreams "docker tag ${registry}:${tag} ${registry}:latest" -interleave
+		Invoke-CaptureStreams "docker tag ${registry}:${tag} ${registry}:latest" -interleave | Out-Null
 		Push-DockerImage ${registry}:latest
 	}
 }
