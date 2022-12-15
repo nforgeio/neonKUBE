@@ -504,9 +504,8 @@ namespace Neon.Kube
                         clusterLogin.ClusterDefinition.Id             = result["Id"];
                         clusterLogin.ClusterDefinition.NeonCloudToken = result["Token"];
 
-                        headendClient.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-                                                                                "Bearer",
-                                                                                clusterLogin.ClusterDefinition.NeonCloudToken);
+                        headendClient.HttpClient.DefaultRequestHeaders.Authorization =
+                            new AuthenticationHeaderValue("Bearer", clusterLogin.ClusterDefinition.NeonCloudToken);
 
                         if (desktopImage)
                         {
@@ -519,7 +518,7 @@ namespace Neon.Kube
                                 addresses: clusterAddresses);
                         }
 
-                        hostName = clusterLogin.ClusterDefinition.Id;
+                        hostName    = clusterLogin.ClusterDefinition.Id;
                         hostAddress = IPAddress.Parse(cluster.HostingManager.GetClusterAddresses().First());
                     }
 

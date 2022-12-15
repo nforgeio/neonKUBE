@@ -1735,6 +1735,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add("cluster.domain", clusterLogin.ClusterDefinition.Domain);
 
                     var i = 0;
+
                     foreach (var rule in controlNode.Cluster.Definition.Network.IngressRules
                         .Where(rule => rule.TargetPort != 0))   // [TargetPort=0] indicates that traffic does not route through ingress gateway
                     {
@@ -1764,10 +1765,10 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     
                     await controlNode.InstallHelmChartAsync(controller, "istio",
-                        releaseName: "neon-ingress",
-                        @namespace: KubeNamespace.NeonIngress,
+                        releaseName:  "neon-ingress",
+                        @namespace:   KubeNamespace.NeonIngress,
                         prioritySpec: PriorityClass.SystemClusterCritical.Name,
-                        values: values);
+                        values:       values);
                 });
 
             controller.ThrowIfCancelled();
@@ -1784,7 +1785,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             k8s.WaitForDaemonsetAsync(KubeNamespace.NeonIngress, "istio-ingressgateway", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                             k8s.WaitForDaemonsetAsync(KubeNamespace.KubeSystem, "istio-cni-node", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                         },
-                        timeoutMessage: "setup/ingress-ready",
+                        timeoutMessage:    "setup/ingress-ready",
                         cancellationToken: controller.CancellationToken);
                 });
 
@@ -1807,7 +1808,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                 return false;
                             }
                         },
-                        timeout: TimeSpan.FromSeconds(300),
+                        timeout:      TimeSpan.FromSeconds(300),
                         pollInterval: TimeSpan.FromMilliseconds(500));
                 });
 
@@ -1821,7 +1822,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = "mesh-default",
+                            Name              = "mesh-default",
                             NamespaceProperty = KubeNamespace.NeonIngress
                         },
                         Spec = new TelemetrySpec()
@@ -1847,14 +1848,16 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     // turn down tracing in neon namespaces.
 
-                    telemetry.Metadata.Name = "neon-monitor-default";
-                    telemetry.Metadata.NamespaceProperty = KubeNamespace.NeonMonitor;
+                    telemetry.Metadata.Name                                 = "neon-monitor-default";
+                    telemetry.Metadata.NamespaceProperty                    = KubeNamespace.NeonMonitor;
                     telemetry.Spec.Tracing.First().RandomSamplingPercentage = 2.0;
+
                     await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
 
-                    telemetry.Metadata.Name = "neon-system-default";
-                    telemetry.Metadata.NamespaceProperty = KubeNamespace.NeonSystem;
+                    telemetry.Metadata.Name                                 = "neon-system-default";
+                    telemetry.Metadata.NamespaceProperty                    = KubeNamespace.NeonSystem;
                     telemetry.Spec.Tracing.First().RandomSamplingPercentage = 2.0;
+
                     await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
                 });
         }
@@ -1872,13 +1875,13 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
-            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s = GetK8sClient(controller);
-            var headencClient = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
-            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
-            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CertManager);
-            var ingressAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioIngressGateway);
-            var proxyAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioProxy);
+            var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s                = GetK8sClient(controller);
+            var headencClient      = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
+            var clusterAdvice      = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CertManager);
+            var ingressAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioIngressGateway);
+            var proxyAdvice        = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioProxy);
             var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
             controller.ThrowIfCancelled();
@@ -1904,10 +1907,10 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     }
 
                     await controlNode.InstallHelmChartAsync(controller, "cert-manager",
-                        releaseName: "cert-manager",
-                        @namespace: KubeNamespace.NeonIngress,
+                        releaseName:  "cert-manager",
+                        @namespace:   KubeNamespace.NeonIngress,
                         prioritySpec: $"global.priorityClassName={PriorityClass.NeonNetwork.Name}",
-                        values: values);
+                        values:       values);
                 });
 
             controller.ThrowIfCancelled();
@@ -1923,7 +1926,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             k8s.WaitForDeploymentAsync(KubeNamespace.NeonIngress, "cert-manager-cainjector", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                             k8s.WaitForDeploymentAsync(KubeNamespace.NeonIngress, "cert-manager-webhook", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                         },
-                        timeoutMessage: "setup/cert-manager-ready",
+                        timeoutMessage:   "setup/cert-manager-ready",
                         cancellationToken: controller.CancellationToken);
                 });
 
@@ -1933,16 +1936,16 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 {
                     controller.LogProgress(controlNode, verb: "setup", message: "neon-acme");
 
-                    var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-                    var k8s = GetK8sClient(controller);
-                    var values = new Dictionary<string, object>();
+                    var cluster     = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+                    var k8s         = GetK8sClient(controller);
+                    var values      = new Dictionary<string, object>();
                     var acmeOptions = cluster.Definition.Network.AcmeOptions;
 
                     var issuer = new ClusterIssuer()
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = "neon-acme",
+                            Name              = "neon-acme",
                             NamespaceProperty = KubeNamespace.NeonIngress
                         },
                         Spec = new IssuerSpec()
@@ -1957,7 +1960,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         {
                             Metadata = new V1ObjectMeta()
                             {
-                                Name = issuer.Spec.Acme.ExternalAccountBinding.KeySecretRef.Name,
+                                Name              = issuer.Spec.Acme.ExternalAccountBinding.KeySecretRef.Name,
                                 NamespaceProperty = KubeNamespace.NeonIngress
                             },
                             StringData = new Dictionary<string, string>()
@@ -1977,7 +1980,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         {
                             Metadata = new V1ObjectMeta()
                             {
-                                Name = issuer.Spec.Acme.PrivateKeySecretRef.Name,
+                                Name              = issuer.Spec.Acme.PrivateKeySecretRef.Name,
                                 NamespaceProperty = KubeNamespace.NeonIngress
                             },
                             StringData = new Dictionary<string, string>()
@@ -1988,7 +1991,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                         await k8s.CoreV1.UpsertSecretAsync(secret, secret.Namespace());
 
-                        issuer.Spec.Acme.PrivateKey = null;
+                        issuer.Spec.Acme.PrivateKey                  = null;
                         issuer.Spec.Acme.DisableAccountKeyGeneration = true;
                     }
 
@@ -2000,7 +2003,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             {
                                 Metadata = new V1ObjectMeta()
                                 {
-                                    Name = solver.Dns01.Route53.SecretAccessKeySecretRef.Name,
+                                    Name              = solver.Dns01.Route53.SecretAccessKeySecretRef.Name,
                                     NamespaceProperty = KubeNamespace.NeonIngress
                                 },
                                 StringData = new Dictionary<string, string>()
@@ -2037,9 +2040,9 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     await controlNode.InstallHelmChartAsync(controller, "neon-acme",
                         releaseName: "neon-acme",
-                        @namespace: KubeNamespace.NeonIngress,
+                        @namespace:   KubeNamespace.NeonIngress,
                         prioritySpec: PriorityClass.NeonNetwork.Name,
-                        values: values);
+                        values:       values);
                 });
 
             if (cluster.Definition.IsDesktop)
@@ -2056,7 +2059,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         {
                             Metadata = new V1ObjectMeta()
                             {
-                                Name = "neon-cluster-certificate",
+                                Name              = "neon-cluster-certificate",
                                 NamespaceProperty = KubeNamespace.NeonIngress
                             },
                             Data = cert,
@@ -2086,7 +2089,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var k8s = GetK8sClient(controller);
+            var k8s     = GetK8sClient(controller);
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/neoncloud-token",
@@ -2099,7 +2102,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         Metadata = new V1ObjectMeta()
                         {
                             NamespaceProperty = KubeNamespace.NeonSystem,
-                            Name = "neoncloud-headend-token"
+                            Name              = "neoncloud-headend-token"
                         },
                         StringData = new Dictionary<string, string>()
                         {
@@ -2110,6 +2113,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     await k8s.CoreV1.UpsertSecretAsync(secret, secret.Namespace());
 
                     secret.Metadata.NamespaceProperty = KubeNamespace.NeonIngress;
+
                     await k8s.CoreV1.CreateNamespacedSecretAsync(secret, secret.Namespace());
                 });
         }
