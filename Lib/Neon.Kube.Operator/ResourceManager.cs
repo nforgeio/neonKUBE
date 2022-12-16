@@ -67,7 +67,7 @@ using Microsoft.AspNetCore.Http;
 namespace Neon.Kube.Operator
 {
     /// <summary>
-    /// Used by custom <b>KubeOps</b> based operators to manage a collection of custom resources.
+    /// Used by custom Kubernetes operators to manage a collection of custom resources.
     /// </summary>
     /// <typeparam name="TEntity">Specifies the custom Kubernetes entity type being managed.</typeparam>
     /// <typeparam name="TController">Specifies the entity controller type.</typeparam>
