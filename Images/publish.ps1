@@ -189,7 +189,7 @@ try
 
     if (!$noprune)
     {
-        $result = Invoke-CaptureStreams "docker system prune -af" -interleave
+        Invoke-CaptureStreams "docker system prune -af" -interleave | Out-Null
     }
 
     # NOTE: 
@@ -220,7 +220,7 @@ try
 
     if (!$noprune)
     {
-        $result = Invoke-CaptureStreams "docker system prune -af" -interleave
+        Invoke-CaptureStreams "docker system prune -af" -interleave | Out-Null
     }
 }
 catch

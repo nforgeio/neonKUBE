@@ -142,7 +142,7 @@ namespace Neon.Kube
         /// </para>
         /// </note>
         /// </remarks>
-        public const string NeonKube = "0.8.6-alpha.master";
+        public const string NeonKube = "0.8.6-alpha.pending";
 
         /// <summary>
         /// Returns the prefix used for neonKUBE container tags.

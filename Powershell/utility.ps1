@@ -725,7 +725,7 @@ function Push-DockerImage
 				$baseImage = $fields[0] + ":" + $baseTag
 
 				Write-Info "tag image: $image --> $baseImage"
-				$result = Invoke-CaptureStreams "docker tag $image $baseImage" -interleave
+				Invoke-CaptureStreams "docker tag $image $baseImage" -interleave | Out-Null
 			}
 
 			return
