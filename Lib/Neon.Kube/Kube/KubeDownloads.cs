@@ -102,8 +102,6 @@ namespace Neon.Kube
             string              baseImageName  = null,
             CpuArchitecture     architecture   = CpuArchitecture.amd64)
         {
-            var hostingEnvironmentUpper = hostingEnvironment.ToString().ToUpper();
-
             if (setupDebugMode && string.IsNullOrEmpty(baseImageName))
             {
                 throw new NotSupportedException($"[{KubeSetupProperty.BaseImageName}] must be passed when [{nameof(setupDebugMode)}=true].");
@@ -129,7 +127,7 @@ namespace Neon.Kube
 
                 default:
 
-                    throw new NotImplementedException($"Node images are not available for the [{hostingEnvironmentUpper}] environment.");
+                    throw new NotImplementedException($"Node images are not available for the [{hostingEnvironment}] environment.");
             }
         }
 
@@ -145,20 +143,45 @@ namespace Neon.Kube
             HostingEnvironment  hostingEnvironment,
             CpuArchitecture     architecture = CpuArchitecture.amd64)
         {
-            var hostingEnvironmentUpper = hostingEnvironment.ToString().ToUpper();
+            //#####################################################################
+            // $debug(jefflill): REMOVE THIS AFTER WE REDEPLOY THE HEADEND SERVICE!
+
+            var extension = string.Empty;
+
+            switch (hostingEnvironment)
+            {
+                case HostingEnvironment.HyperV:
+
+                    extension = "vhdx";
+                    break;
+
+                default:
+
+                    Covenant.Requires(false, $"[{nameof(hostingEnvironment)}={hostingEnvironment}] is not supported.");
+                    break;
+            }
+
+            switch (architecture)
+            {
+                case CpuArchitecture.amd64:
+
+                    // Supported.
+
+                    break;
+
+                default:
+
+                    Covenant.Requires(false, $"[{nameof(architecture)}={architecture}] is not supported.");
+                    break;
+            }
+
+            return $"{NeonHelper.NeonPublicBucketUri}/vm-images/{hostingEnvironment.ToMemberString()}/desktop/neonkube-desktop-{KubeVersions.NeonKube}.{hostingEnvironment.ToMemberString()}.{architecture}.{extension}.gz.manifest";
+
+            //#####################################################################
 
             using (var headendClient = HeadendClient.Create())
             {
-                switch (hostingEnvironment)
-                {
-                    case HostingEnvironment.HyperV:
-
-                        return await headendClient.ClusterSetup.GetNodeImageManifestUriAsync(hostingEnvironment.ToMemberString(), KubeVersions.NeonKube, architecture);
-
-                    default:
-
-                        throw new NotImplementedException($"Ready-to-go desktop images are not available for the [{hostingEnvironmentUpper}] environment.");
-                }
+                return await headendClient.ClusterSetup.GetNodeImageManifestUriAsync(hostingEnvironment.ToMemberString(), KubeVersions.NeonKube, architecture);
             }
         }
     }

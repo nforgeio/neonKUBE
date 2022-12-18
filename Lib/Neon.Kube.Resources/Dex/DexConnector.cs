@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DexLdapConnector.cs
+// FILE:	    DexOidcConnector.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -20,24 +20,28 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
-
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Neon.Kube.Resources;
 using Newtonsoft.Json;
-
+using NJsonSchema;
+using NJsonSchema.Annotations;
 using YamlDotNet.Serialization;
+using static Org.BouncyCastle.Bcpg.Attr.ImageAttrib;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// Configuration for backend connectors.
+    /// Configuration for OIDC connectors.
     /// </summary>
-    public class DexLdapConnector : IDexConnector
+    [System.Text.Json.Serialization.JsonConverter(typeof(DexConnectorJsonConverter))]
+    public class DexConnector : IDexConnector
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public DexLdapConnector()
+        public DexConnector()
         {
-            Type = DexConnectorType.Ldap;
         }
 
         /// <inheritdoc/>
@@ -48,15 +52,11 @@ namespace Neon.Kube
         public string Name { get; set; }
 
         /// <inheritdoc/>
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
         public DexConnectorType Type { get; set; }
-
         /// <summary>
-        /// Connector specific config.
-        /// information.
+        /// Placeholder.
         /// </summary>
-        [JsonProperty(PropertyName = "Config", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "config", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public DexLdapConfig Config { get; set; }
+        public object Config { get; set; }
     }
 }

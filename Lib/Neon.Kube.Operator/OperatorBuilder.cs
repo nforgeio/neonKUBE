@@ -25,6 +25,9 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
+
+using Neon.Diagnostics;
 
 using k8s.Models;
 using k8s;
@@ -115,6 +118,35 @@ namespace Neon.Kube.Operator
         {
             Services.TryAddScoped<TImplementation>();
             componentRegister.RegisterController<TImplementation, TEntity>();
+
+            return this;
+        }
+
+        /// <inheritdoc/>
+        public IOperatorBuilder AddNgrokTunnnel(
+            string hostname = "localhost", 
+            int port = 5000,
+            string ngrokDirectory = null,
+            string ngrokAuthToken = null,
+            bool enabled = true)
+        {
+            if (!enabled)
+            {
+                return this;
+            }
+
+            Services.AddHostedService<NgrokWebhookTunnel>(
+                services => new NgrokWebhookTunnel(
+                    services.GetRequiredService<IKubernetes>(),
+                    componentRegister,
+                    services,
+                    ngrokDirectory,
+                    ngrokAuthToken,
+                    services.GetService<ILogger>())
+                { 
+                    Host                       = hostname,
+                    Port                       = port
+                });
 
             return this;
         }

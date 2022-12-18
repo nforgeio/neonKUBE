@@ -51,43 +51,6 @@ namespace Neon.Kube
     public static partial class KubeSetup
     {
         //---------------------------------------------------------------------
-        // Private types
-
-        /// <summary>
-        /// Holds information about a remote file we'll need to download.
-        /// </summary>
-        private class RemoteFile
-        {
-            /// <summary>
-            /// Constructor.
-            /// </summary>
-            /// <param name="path">The file path.</param>
-            /// <param name="permissions">Optional file permissions.</param>
-            /// <param name="owner">Optional file owner.</param>
-            public RemoteFile(string path, string permissions = "600", string owner = "root:root")
-            {
-                this.Path        = path;
-                this.Permissions = permissions;
-                this.Owner       = owner;
-            }
-
-            /// <summary>
-            /// Returns the file path.
-            /// </summary>
-            public string Path { get; private set; }
-
-            /// <summary>
-            /// Returns the file permissions.
-            /// </summary>
-            public string Permissions { get; private set; }
-
-            /// <summary>
-            /// Returns the file owner formatted as: <b>USER:GROUP</b>
-            /// </summary>
-            public string Owner { get; private set; }
-        }
-
-        //---------------------------------------------------------------------
         // Private constants
 
         private const string                    joinCommandMarker       = "kubeadm join";

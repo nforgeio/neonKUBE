@@ -21,6 +21,8 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 
+using Neon.Kube.Resources;
+
 using Newtonsoft.Json;
 
 using YamlDotNet.Serialization;
@@ -45,7 +47,9 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "ResponseTypes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "responseTypes", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public List<Oauth2ResponseType> ResponseTypes { get; set; }
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonCollectionItemConverter<Oauth2ResponseType, System.Text.Json.Serialization.JsonStringEnumMemberConverter>))]
+
+        public IEnumerable<Oauth2ResponseType> ResponseTypes { get; set; }
 
         /// <summary>
         /// By default, Dex will ask for approval to share data with application

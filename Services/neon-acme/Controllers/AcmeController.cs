@@ -41,6 +41,7 @@ using Neon.Web;
 using k8s;
 using k8s.Models;
 using Neon.Kube.Resources;
+using Neon.Collections;
 
 namespace NeonAcme.Controllers
 {
@@ -52,21 +53,17 @@ namespace NeonAcme.Controllers
     public class AcmeController : NeonControllerBase
     {
         private Service             service;
-        private JsonClient          jsonClient;
-        private IKubernetes         k8s;
+        private JsonClient          headendClient => service.HeadendClient;
+        private IKubernetes         k8s           => service.Kubernetes;
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="service">The parent service.</param>
-        /// <param name="jsonClient">The JSON client for interacting with the headend.</param>
         public AcmeController(
-            Service    service,
-            JsonClient jsonClient)
+            Service    service)
         {
             this.service    = service;
-            this.jsonClient = jsonClient;
-            this.k8s        = service.Kubernetes;
         }
 
         /// <summary>
@@ -98,8 +95,13 @@ namespace NeonAcme.Controllers
             Logger.LogInformationEx(() => $"Challenge request [{challenge.Request.Action}] [{challenge.Request.DnsName}]");
             Logger.LogDebugEx(() => $"Headers: {NeonHelper.JsonSerialize(HttpContext.Request.Headers)}");
             Logger.LogDebugEx(() => NeonHelper.JsonSerialize(challenge));
-
-            var response = await jsonClient.PostAsync<ChallengePayload>("acme/challenge", challenge);
+            
+            var args = new ArgDictionary()
+                {
+                    { "api-version", "0.2" },
+                };
+            
+            var response = await headendClient.PostAsync<ChallengePayload>(uri: "acme/challenge", document: challenge, args: args);
 
             challenge.Response = response.Response;
 

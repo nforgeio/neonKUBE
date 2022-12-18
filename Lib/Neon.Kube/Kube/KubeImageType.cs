@@ -42,6 +42,12 @@ namespace Neon.Kube
         /// single or multi-node clusters.
         /// </summary>
         [EnumMember(Value = "node")]
-        Node
+        Node,
+
+        /// <summary>
+        /// Identifies a prebuilt built-in neondesktop cluster image.
+        /// </summary>
+        [EnumMember(Value = "desktop")]
+        Desktop,
     }
 }

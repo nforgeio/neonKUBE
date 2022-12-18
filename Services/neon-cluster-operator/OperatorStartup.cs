@@ -82,6 +82,7 @@ namespace NeonClusterOperator
         {
             services.AddSingleton<ILogger>(Program.Service.Logger)
                 .AddSingleton(Service.K8s)
+                .AddSingleton(Service.DexClient)
                 .AddSingleton(Service.HeadendClient)
                 .AddSingleton(Service.HarborClient);
 
@@ -91,11 +92,20 @@ namespace NeonClusterOperator
                 .AddController<NeonClusterOperatorController, V1NeonClusterOperator>()
                 .AddController<NeonContainerRegistryController, V1NeonContainerRegistry>()
                 .AddController<NeonDashboardController, V1NeonDashboard>()
+                .AddController<NeonSsoConnectorController, V1NeonSsoConnector>()
                 .AddController<NeonSsoClientController, V1NeonSsoClient>()
                 .AddController<NodeTaskController, V1NeonNodeTask>()
                 .AddFinalizer<NeonContainerRegistryFinalizer, V1NeonContainerRegistry>()
+                .AddFinalizer<NeonSsoConnectorFinalizer, V1NeonSsoConnector>()
+                .AddFinalizer<NeonSsoClientFinalizer, V1NeonSsoClient>()
                 .AddFinalizer<MinioBucketFinalizer, V1MinioBucket>()
-                .AddMutatingWebhook<PodWebhook, V1Pod>();
+                .AddMutatingWebhook<PodWebhook, V1Pod>()
+                .AddValidatingWebhook<NeonSsoConnectorValidatingWebhook, V1NeonSsoConnector>()
+                .AddNgrokTunnnel(hostname: Service.GetEnvironmentVariable("NGROK_HOSTNAME", def: "127.0.0.1", redact: false),
+                    port: Service.Port,
+                    ngrokDirectory: Service.GetEnvironmentVariable("NGROK_DIRECTORY", def: "C:/bin", redact: false),
+                    ngrokAuthToken: Service.GetEnvironmentVariable("NGROK_AUTH_TOKEN", def: null, redact: true),
+                    enabled: NeonHelper.IsDevWorkstation);
         }
 
         /// <summary>
@@ -104,7 +114,8 @@ namespace NeonClusterOperator
         /// <param name="app">Specifies the application builder.</param>
         public void Configure(IApplicationBuilder app)
         {
-            if (NeonHelper.IsDevWorkstation)
+            if (NeonHelper.IsDevWorkstation
+                || !string.IsNullOrEmpty(Service.GetEnvironmentVariable("DEBUG")))
             {
                 app.UseDeveloperExceptionPage();
             }

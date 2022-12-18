@@ -46,6 +46,12 @@ $ncLib      = "$ncRoot\Lib"
 $ncServices = "$ncRoot\Services"
 $ncTools    = "$ncRoot\Tools"
 
+# This variable controls whether we're publishing container images to
+# release or debug registries.  This defaults to [false] and is typically
+# set by publish scripts.
+
+$publishAsPubic = $false
+
 #------------------------------------------------------------------------------
 # Global constants.
 
@@ -106,15 +112,13 @@ function ImageTag
 }
 
 #------------------------------------------------------------------------------
-# Returns $true if the current Git branch is considered to be a release branch.
-# Branches with names starting with "release-" are always considered to be a
-# RELEASE branch.
+# This returns the value of the [$publishAsPubic] global variable set by publish
+# scripts.  This controls whether container images are published to public or
+# private/internal container registries.
 
-function IsRelease
+function IsPublic
 {
-    $branch = GitBranch $env:NK_ROOT
-
-	return ($branch -like "release-*")
+	return $publishAsPubic
 }
 
 #------------------------------------------------------------------------------
@@ -146,10 +150,6 @@ function GetSdkRegistry($image)
 	# the publish scripts in the other repos can't handle multiple image repos yet.
 
 	return GetKubeSetupRegistry $image
-
-	# $org = SdkRegistryOrg
-	#
-	# return "$org/$image"
 }
 
 #------------------------------------------------------------------------------
@@ -163,15 +163,6 @@ function SdkRegistryOrg
 	# the publish scripts in the other repos can't handle multiple image repos yet.
 
 	return KubeSetupRegistryOrg
-
-	# if (IsRelease)
-	# {
-	#     return "ghcr.io/neon-sdk"
-	# }
-	# else
-	# {
-	# 	return "ghcr.io/neon-sdk-dev"
-	# }
 }
 
 #------------------------------------------------------------------------------
@@ -193,7 +184,7 @@ function GetKubeSetupRegistry($image)
 
 function KubeSetupRegistryOrg
 {
-	if (IsRelease)
+	if (IsPublic)
 	{
 		return "ghcr.io/neonkube"
 	}
@@ -222,7 +213,7 @@ function GetKubeBaseRegistry($image)
 
 function KubeBaseRegistryOrg
 {
-	if (IsRelease)
+	if (IsPublic)
 	{
 		return "ghcr.io/neonkube-base"
 	}
@@ -250,7 +241,7 @@ function GetNeonCloudRegistry($image)
 
 function NeonCloudRegistryOrg
 {
-	if (IsRelease)
+	if (IsPublic)
 	{
 		return "ghcr.io/neonrelease"
 	}

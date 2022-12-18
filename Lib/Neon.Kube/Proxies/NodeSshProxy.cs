@@ -84,6 +84,46 @@ namespace Neon.Kube
     public partial class NodeSshProxy<TMetadata> : LinuxSshProxy<TMetadata>, INodeSshProxy
         where TMetadata : class
     {
+        //---------------------------------------------------------------------
+        // Private types
+
+        /// <summary>
+        /// Holds information about a remote file we'll need to download.
+        /// </summary>
+        private class RemoteFile
+        {
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="path">The file path.</param>
+            /// <param name="permissions">Optional file permissions.</param>
+            /// <param name="owner">Optional file owner.</param>
+            public RemoteFile(string path, string permissions = "600", string owner = "root:root")
+            {
+                this.Path = path;
+                this.Permissions = permissions;
+                this.Owner = owner;
+            }
+
+            /// <summary>
+            /// Returns the file path.
+            /// </summary>
+            public string Path { get; private set; }
+
+            /// <summary>
+            /// Returns the file permissions.
+            /// </summary>
+            public string Permissions { get; private set; }
+
+            /// <summary>
+            /// Returns the file owner formatted as: <b>USER:GROUP</b>
+            /// </summary>
+            public string Owner { get; private set; }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
         private static readonly Regex   idempotentRegex  = new Regex(@"[a-z0-9\.-/]+", RegexOptions.IgnoreCase);
 
         private ClusterProxy        cluster;
@@ -222,31 +262,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Indicates that the node is a pre-built neon-desktop cluster.  This uses
-        /// the existence of the <b>/etc/neonkube/prebuilt-desktop</b> file on the
-        /// node to indicate this condition.
-        /// </summary>
-        public bool IsPrebuiltCluster
-        {
-            get => FileExists(KubeConst.ImagePrebuiltDesktopPath);
-
-            set
-            {
-                if (value)
-                {
-                    if (FileExists(KubeConst.ImagePrebuiltDesktopPath))
-                    {
-                        RemoveFile(KubeConst.ImagePrebuiltDesktopPath);
-                    }
-                }
-                else
-                {
-                    SudoCommand("touch", KubeConst.ImagePrebuiltDesktopPath).EnsureSuccess();
-                }
-            }
-        }
-
-        /// <summary>
         /// Returns the NTP time sources to be used by the node.
         /// </summary>
         /// <returns>The quoted and space separated list of IP address or DNS hostnames for the node's NTP time sources in priority order.</returns>
@@ -262,7 +277,7 @@ namespace Neon.Kube
         /// external time sources to avoid having large clusters spam the sources.
         /// </para>
         /// <para>
-        /// The nice thing about this is that the cluster will almost always be closly synchronized with the first control-plane
+        /// The nice thing about this is that the cluster will almost always be closely synchronized with the first control-plane
         /// with graceful fallback on node failures.
         /// </para>
         /// </remarks>
@@ -508,9 +523,9 @@ namespace Neon.Kube
                 controller.LogProgress(this, verb: "check", message: "operating system");
             }
 
-            if (!OsName.Equals("Ubuntu", StringComparison.InvariantCultureIgnoreCase) || OsVersion != Version.Parse("22.04"))
+            if (!OsName.Equals("Ubuntu", StringComparison.InvariantCultureIgnoreCase) || OsVersion.Major != 22 || OsVersion.Minor != 4)
             {
-                Fault("Expected: Ubuntu 22.04");
+                Fault($"Expected Ubuntu 22.04[.*]: [name={OsName}] [version={OsVersion}]");
                 return false;
             }
 
@@ -590,11 +605,11 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Manually sets whether SSH login using a password is enabled. 
+        /// Manually controls whether SSH login using password authentication is enabled. 
         /// </para>
         /// </summary>
         /// <param name="enabled">
-        /// Pass <c>true</c> to enable login using a password, or false to disable.
+        /// Pass <c>true</c> to enable login using a password, or <c>false</c> to disable.
         /// </param>        
         public void SetSshPasswordLogin(bool enabled)
         {
@@ -602,23 +617,54 @@ namespace Neon.Kube
 $@"
 set -euo pipefail
 
-if [ -f ""/etc/ssh/sshd_config.d/50-neonkube.conf"" ]; 
+if [ -f ""/etc/ssh/sshd_config.d/50-neonkube.conf"" ] ; 
 then     
-
     sed -iE 's/#*PasswordAuthentication.*/PasswordAuthentication {(enabled ? "yes" : "no")}/' /etc/ssh/sshd_config.d/50-neonkube.conf
-
     sed -iE 's/^PasswordAuthentication.*/#PasswordAuthentication {(enabled ? "yes" : "no")}/' /etc/ssh/sshd_config
-
 else
-
     sed -iE 's/#*PasswordAuthentication.*/PasswordAuthentication {(enabled ? "yes" : "no")}/' /etc/ssh/sshd_config
-
 fi
+
+systemctl restart sshd
 ";
-
             SudoCommand(CommandBundle.FromScript(script), RunOptions.FaultOnError);
+        }
 
-            SudoCommand("systemctl", "restart", "sshd", RunOptions.FaultOnError);
+        /// <summary>
+        /// Returns a dictionary of <see cref="KubeFileDetails"/> holding the control plane files
+        /// required to provision a new control plane node in the cluster.  This dictionary is 
+        /// keyed by the target file name node the node.
+        /// </summary>
+        /// <returns>The file dictionary.</returns>
+        public Dictionary<string, KubeFileDetails> GetControlPlaneFiles()
+        {
+            var files = new Dictionary<string, KubeFileDetails>();
+
+            // I'm hardcoding the permissions and owner here.  It would be nice to
+            // scrape this from the source files in the future but it's not worth
+            // the bother at this point.
+
+            var remoteFiles = new RemoteFile[]
+            {
+                new RemoteFile("/etc/kubernetes/admin.conf", "600", "root:root"),
+                new RemoteFile("/etc/kubernetes/pki/ca.crt", "600", "root:root"),
+                new RemoteFile("/etc/kubernetes/pki/ca.key", "600", "root:root"),
+                new RemoteFile("/etc/kubernetes/pki/sa.pub", "600", "root:root"),
+                new RemoteFile("/etc/kubernetes/pki/sa.key", "644", "root:root"),
+                new RemoteFile("/etc/kubernetes/pki/front-proxy-ca.crt", "644", "root:root"),
+                new RemoteFile("/etc/kubernetes/pki/front-proxy-ca.key", "600", "root:root"),
+                new RemoteFile("/etc/kubernetes/pki/etcd/ca.crt", "644", "root:root"),
+                new RemoteFile("/etc/kubernetes/pki/etcd/ca.key", "600", "root:root"),
+            };
+
+            foreach (var remote in remoteFiles)
+            {
+                var text = DownloadText(remote.Path);
+
+                files[remote.Path] = new KubeFileDetails(text, permissions: remote.Permissions, owner: remote.Owner);
+            }
+
+            return files;
         }
 
         //---------------------------------------------------------------------

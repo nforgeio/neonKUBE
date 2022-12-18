@@ -127,12 +127,18 @@ namespace NeonSsoSessionProxy
                 var location = new Uri(httpContext.Response.Headers.Location.Single());
                 var code     = HttpUtility.ParseQueryString(location.Query).Get("code");
 
+                logger.LogDebugEx(() => $"Location: [{location}] code: [{code}].");
+
                 if (!string.IsNullOrEmpty(code))
                 {
                     if (cookie != null)
                     {
+                        logger.LogDebugEx(() => $"cookie.ClientId: [{cookie.ClientId}].");
+
                         var redirect = cookie.RedirectUri;
                         var token    = await dexClient.GetTokenAsync(cookie.ClientId, code, redirect, "authorization_code");
+                        
+                        logger.LogDebugEx(() => $"Redirect: [{redirect}] token: [{token}].");
 
                         await cache.SetAsync(code, cipher.EncryptToBytes(NeonHelper.JsonSerializeToBytes(token)), cacheOptions);
                         logger.LogDebugEx(() => NeonHelper.JsonSerialize(token));

@@ -74,15 +74,9 @@ namespace NeonAcme
         /// <param name="services">The service collection.</param>
         public void ConfigureServices(IServiceCollection services)
         {
-            var jsonClient = new JsonClient()
-            {
-                BaseAddress = new Uri(NeonAcmeService.GetEnvironmentVariable("HEADEND_URL", "https://headend.neoncloud.io"))
-            };
-
             services
                 .AddSingleton(NeonAcmeService)
                 .AddSingleton<ILogger>(Program.Service.Logger)
-                .AddSingleton(jsonClient)
                 .AddSwaggerGen(options =>
                 {
                     options.SwaggerDoc("v3",

@@ -49,6 +49,7 @@ using Microsoft.AspNetCore.Mvc;
 using KellermanSoftware.CompareNetObjects;
 using System.Security.AccessControl;
 using Neon.Kube.Resources;
+using Microsoft.AspNetCore.Http;
 
 // $todo(jefflill):
 //
@@ -66,7 +67,7 @@ using Neon.Kube.Resources;
 namespace Neon.Kube.Operator
 {
     /// <summary>
-    /// Used by custom <b>KubeOps</b> based operators to manage a collection of custom resources.
+    /// Used by custom Kubernetes operators to manage a collection of custom resources.
     /// </summary>
     /// <typeparam name="TEntity">Specifies the custom Kubernetes entity type being managed.</typeparam>
     /// <typeparam name="TController">Specifies the entity controller type.</typeparam>
@@ -357,6 +358,36 @@ namespace Neon.Kube.Operator
             }
         }
 
+        private async Task EnsurePermissionsAsync()
+        {
+            HttpOperationResponse<object> resp;
+            try
+            {
+                if (string.IsNullOrEmpty(resourceNamespace))
+                {
+                    resp = await k8s.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync<TEntity>(
+                        allowWatchBookmarks: true,
+                        watch: true);
+                }
+                else
+                {
+                    resp = await k8s.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync<TEntity>(
+                    resourceNamespace,
+                    allowWatchBookmarks: true,
+                    watch: true);
+                }
+            }
+            catch (HttpOperationException e)
+            {
+                if (e.Response.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    logger?.LogErrorEx("Cannot watch resource, please check RBAC rules for this service account.");
+
+                    throw;
+                }
+            }
+        }
+
         /// <summary>
         /// Called when the instance has a <see cref="LeaderElector"/> and this instance has
         /// assumed leadership.
@@ -374,6 +405,8 @@ namespace Neon.Kube.Operator
                     {
                         await CreateOrReplaceCustomResourceDefinitionAsync();
                     }
+
+                    await EnsurePermissionsAsync();
 
                     // Start the IDLE reconcile loop.
 
@@ -619,8 +652,8 @@ namespace Neon.Kube.Operator
                                 }
                                 catch (OperationCanceledException)
                                 {
-                                // Exit the loop when the [mutex] is disposed which happens
-                                // when the resource manager is disposed.
+                                    // Exit the loop when the [mutex] is disposed which happens
+                                    // when the resource manager is disposed.
 
                                     return;
                                 }
@@ -959,6 +992,10 @@ namespace Neon.Kube.Operator
             {
                 // This is thrown when the watcher is stopped due the operator being demoted.
 
+                return;
+            }
+            catch (HttpOperationException)
+            {
                 return;
             }
         }

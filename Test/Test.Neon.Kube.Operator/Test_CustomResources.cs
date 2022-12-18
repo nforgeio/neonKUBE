@@ -20,11 +20,12 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Reactive;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-
+using k8s;
 using k8s.Models;
 
 using Neon.Common;
@@ -60,6 +61,22 @@ namespace TestKubeOperator
             {
                 await generator.WriteToFile(crd, tempFile.Path);
             }
+        }
+
+        /// <summary>
+        /// Ensures that the CRD can be written to a Yaml file.
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task CanSerializeCustomResources()
+        {
+            var generator = new CustomResourceGenerator(converters:
+                new List<Newtonsoft.Json.JsonConverter>() { new DexConnectorConverter() });
+
+            var crd = await generator.GenerateCustomResourceDefinitionAsync(typeof(V1NeonSsoConnector));
+
+            var str = KubernetesJson.Serialize(crd);
+            var yaml = KubernetesYaml.Serialize(crd);
         }
     }
 }

@@ -115,15 +115,18 @@ namespace Neon.Kube.Operator
         /// </summary>
         /// <param name="endpoints"></param>
         /// <returns></returns>
-        internal void Register(IEndpointRouteBuilder endpoints) =>
-                endpoints.MapPost(
+        internal void Register(IEndpointRouteBuilder endpoints)
+        {
+            var logger = TelemetryHub.LoggerFactory.CreateLogger(GetType().Name);
+
+            logger.LogInformationEx(() => $"Registered webhook at [{Endpoint}]");
+
+            endpoints.MapPost(
                 Endpoint,
                 async context =>
                 {
                     using (var activity = TelemetryHub.ActivitySource.StartActivity())
                     {
-                        var logger = TelemetryHub.LoggerFactory.CreateLogger(GetType().Name);
-
                         try
                         {
                             if (!context.Request.HasJsonContentType())
@@ -158,7 +161,7 @@ namespace Neon.Kube.Operator
 
                                 var @object = KubernetesJson.Deserialize<TEntity>(KubernetesJson.Serialize(review.Request.Object));
                                 var oldObject = KubernetesJson.Deserialize<TEntity>(KubernetesJson.Serialize(review.Request.OldObject));
-                                
+
                                 logger.LogInformationEx(() => @$"Admission with method ""{review.Request.Operation}"".");
 
                                 TResult result;
@@ -217,5 +220,6 @@ namespace Neon.Kube.Operator
                         }
                     }
                 });
+        }
     }
 }

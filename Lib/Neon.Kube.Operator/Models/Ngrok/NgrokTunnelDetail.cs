@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DexConnectorType.cs
+// FILE:	    NgrokTunnelDetail.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -17,37 +17,32 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Text;
-using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
 
-using Neon.Common;
-using Neon.Net;
-
-namespace Neon.Kube
+namespace Neon.Kube.Operator.Models.Ngrok
 {
-    /// <summary>
-    /// Enumerates Dex storage types.
-    /// </summary>
-    [Newtonsoft.Json.JsonConverter(typeof(StringEnumConverter))]
-    [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringEnumMemberConverter))]
-    public enum DexConnectorType
+    internal class NgrokTunnelDetail
     {
-        /// <summary>
-        /// LDAP
-        /// </summary>
-        [EnumMember(Value = "ldap")]
-        Ldap = 0
+        [JsonProperty("name")]
+        public string Name { get; set; }
+
+        [JsonProperty("uri")]
+        public string Uri { get; set; }
+
+        [JsonProperty("public_url")]
+        public string PublicUrl { get; set; }
+
+        [JsonProperty("proto")]
+        public string Proto { get; set; }
+
+        [JsonProperty("config")]
+        public NgrokTunnelConfig Config { get; set; }
+
+        [JsonProperty("metrics")]
+        public NgrokTunnelMetrics Metrics { get; set; }
     }
 }

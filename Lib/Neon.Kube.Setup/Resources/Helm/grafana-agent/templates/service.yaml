@@ -44,9 +44,9 @@ spec:
     protocol: TCP
     targetPort: 4319
   - name: agent-opencensus
-    port: 55678
+    port: 4320
     protocol: TCP
-    targetPort: 55678
+    targetPort: 4320
   - name: agent-syslog
     port: 5140
     protocol: TCP

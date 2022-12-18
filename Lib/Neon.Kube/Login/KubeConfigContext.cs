@@ -115,7 +115,7 @@ namespace Neon.Kube
 
                 if (File.Exists(loginPath))
                 {
-                    cachedLogins = NeonHelper.YamlDeserialize<ClusterLogin>(KubeHelper.ReadFileTextWithRetry(loginPath));
+                    cachedLogins = NeonHelper.YamlDeserializeViaJson<ClusterLogin>(KubeHelper.ReadFileTextWithRetry(loginPath));
 
                     // Validate the extension's cluster definition.
 

@@ -67,35 +67,40 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            logger.LogInformationEx(() => $"Finalizing {resource.Name()}");
-
-            var minioClient = await GetMinioClientAsync(resource);
-
-            bool exists = await minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(resource.Name()));
-
-            if (exists) 
-            { 
-                await minioClient.RemoveBucketAsync(new RemoveBucketArgs().WithBucket(resource.Name()));
-                logger.LogInformationEx(() => $"Bucket {resource.Name()} deleted.");
-            }
-            else
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
-                logger.LogInformationEx(() => $"Bucket {resource.Name()} doesn't exist.");
+                logger.LogInformationEx(() => $"Finalizing {resource.Name()}");
+
+                var minioClient = await GetMinioClientAsync(resource);
+                bool exists     = await minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(resource.Name()));
+
+                if (exists)
+                {
+                    await minioClient.RemoveBucketAsync(new RemoveBucketArgs().WithBucket(resource.Name()));
+                    logger.LogInformationEx(() => $"Bucket {resource.Name()} deleted.");
+                }
+                else
+                {
+                    logger.LogInformationEx(() => $"Bucket {resource.Name()} doesn't exist.");
+                }
             }
         }
 
         private async Task<MinioClient> GetMinioClientAsync(V1MinioBucket resource)
         {
-            var tenant        = await k8s.CustomObjects.ReadNamespacedCustomObjectAsync<V1MinioTenant>(resource.Namespace(), resource.Spec.Tenant);
-            var minioEndpoint = $"{tenant.Name()}.{tenant.Namespace()}";
-            var secretName    = ((JsonElement)(tenant.Spec)).GetProperty("credsSecret").GetProperty("name").GetString();
-            var secret        = await k8s.CoreV1.ReadNamespacedSecretAsync(secretName, resource.Namespace());
-            var minioClient   = new MinioClient()
-                                  .WithEndpoint(minioEndpoint)
-                                  .WithCredentials(Encoding.UTF8.GetString(secret.Data["accesskey"]), Encoding.UTF8.GetString(secret.Data["secretkey"]))
-                                  .Build();
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            {
+                var tenant = await k8s.CustomObjects.ReadNamespacedCustomObjectAsync<V1MinioTenant>(resource.Namespace(), resource.Spec.Tenant);
+                var minioEndpoint = $"{tenant.Name()}.{tenant.Namespace()}";
+                var secretName = ((JsonElement)(tenant.Spec)).GetProperty("credsSecret").GetProperty("name").GetString();
+                var secret = await k8s.CoreV1.ReadNamespacedSecretAsync(secretName, resource.Namespace());
+                var minioClient = new MinioClient()
+                                      .WithEndpoint(minioEndpoint)
+                                      .WithCredentials(Encoding.UTF8.GetString(secret.Data["accesskey"]), Encoding.UTF8.GetString(secret.Data["secretkey"]))
+                                      .Build();
 
-            return minioClient;
+                return minioClient;
+            }
         }
     }
 }

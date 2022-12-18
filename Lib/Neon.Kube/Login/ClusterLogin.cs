@@ -61,7 +61,7 @@ namespace Neon.Kube
                 return null;
             }
 
-            var clusterLogin = NeonHelper.YamlDeserialize<ClusterLogin>(File.ReadAllText(path), strict: true);
+            var clusterLogin = NeonHelper.YamlDeserializeViaJson<ClusterLogin>(File.ReadAllText(path), strict: true);
 
             clusterLogin.path = path;
 

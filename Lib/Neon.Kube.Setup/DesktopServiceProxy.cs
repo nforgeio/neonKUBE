@@ -53,7 +53,7 @@ namespace Neon.Kube
     /// execute them directly when the current process is running with 
     /// elevated privileges.
     /// </summary>
-    internal class DesktopServiceProxy : IDisposable
+    public sealed class DesktopServiceProxy : IDisposable
     {
         private bool                    isDisposed = false;
         private bool                    isAdmin;
@@ -86,6 +86,23 @@ namespace Neon.Kube
             if (!isAdmin)
             {
                 desktopServiceChannel = NeonGrpcServices.CreateDesktopServiceChannel(socketPath);
+                desktopService        = desktopServiceChannel.CreateGrpcService<IGrpcDesktopService>();
+            }
+        }
+
+        /// <summary>
+        /// Alternate constructor the associated an open gRPC channel with the instance.
+        /// </summary>
+        /// <param name="channel">The open gRPC channel.</param>
+        public DesktopServiceProxy(GrpcChannel channel)
+        {
+            Covenant.Requires<ArgumentNullException>(channel != null, nameof(channel));
+
+            isAdmin = NeonHelper.HasElevatedPermissions;
+
+            if (!isAdmin)
+            {
+                desktopServiceChannel = channel;
                 desktopService        = desktopServiceChannel.CreateGrpcService<IGrpcDesktopService>();
             }
         }
@@ -173,6 +190,25 @@ namespace Neon.Kube
                 var reply   = desktopService.ListLocalHostSections(request).Result;
 
                 return reply.Sections.Select(section => section.ToLocalHostSection());
+            }
+        }
+
+        /// <summary>
+        /// Returns the status of optional Windows features.
+        /// </summary>
+        /// <returns>A <see cref="Dictionary{TKey, TValue}"/> mapping feature names to <see cref="WindowsFeatureStatus"/>"/> instances.</returns>
+        public async Task<Dictionary<string, WindowsFeatureStatus>> GetWindowsOptionalFeaturesAsync()
+        {
+            if (isAdmin)
+            {
+                return NeonHelper.GetWindowsOptionalFeatures();
+            }
+            else
+            {
+                var request = new GrpcGetWindowsOptionalFeaturesRequest();
+                var reply   = await desktopService.GetWindowsOptionalFeaturesAsync(request);
+
+                return reply.Capabilities;
             }
         }
     }

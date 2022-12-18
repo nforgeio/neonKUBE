@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -79,7 +80,7 @@ namespace Neon.Kube
         public Watcher(IKubernetes k8s, ILogger logger = null)
         {
             this.k8s     = k8s;
-            this.logger  = logger;
+            this.logger  = logger ?? TelemetryHub.LoggerFactory.CreateLogger(GetType().Name);
             eventChannel = Channel.CreateUnbounded<WatchEvent<T>>();
         }
 
@@ -171,8 +172,6 @@ namespace Neon.Kube
                             watch:                true);
                         }
 
-                        var x = k8s.CoreV1.ListNamespacedServiceWithHttpMessagesAsync("", watch: true);
-
                         await foreach (var (type, item) in listResponse.WatchAsync<T, object>())
                         {
                             await eventChannel.Writer.WriteAsync(new WatchEvent<T>() { Type = type, Value = item });
@@ -195,6 +194,32 @@ namespace Neon.Kube
                             // force control back to outer loop
                             this.resourceVersion = null;
                         }
+                    }
+                    catch (HttpOperationException e)
+                    {
+                        var statusCode = e.Response.StatusCode;
+
+                        switch (statusCode)
+                        {
+                            case HttpStatusCode.GatewayTimeout:
+                            case HttpStatusCode.InternalServerError:
+                            case HttpStatusCode.ServiceUnavailable:
+                            case (HttpStatusCode)423:   // Locked
+                            case (HttpStatusCode)429:   // Too many requests
+
+                                return;
+
+                            default:
+
+                                logger?.LogErrorEx(e);
+                                logger?.LogErrorEx("Cannot watch resource, please check RBAC rules for this service account.");
+
+                                throw;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        logger?.LogErrorEx(e);
                     }
                 }
             }

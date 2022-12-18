@@ -46,6 +46,7 @@ namespace Neon.Kube.Resources
         /// </summary>
         [JsonProperty(PropertyName = "rotationPolicy", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(RotationPolicy.Never)]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
         public RotationPolicy RotationPolicy { get; set; }
 
         /// <summary>
@@ -55,6 +56,7 @@ namespace Neon.Kube.Resources
         /// </summary>
         [JsonProperty(PropertyName = "encoding", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(KeyEncoding.PKCS1)]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
         public KeyEncoding Encoding { get; set; }
 
         /// <summary>
@@ -62,6 +64,7 @@ namespace Neon.Kube.Resources
         /// </summary>
         [JsonProperty(PropertyName = "algorithm", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(KeyAlgorithm.RSA)]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
         public KeyAlgorithm Algorithm { get; set; }
 
         /// <summary>

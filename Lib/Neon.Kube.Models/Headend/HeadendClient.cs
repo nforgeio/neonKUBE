@@ -30,13 +30,12 @@ namespace Neon.Kube.Models.Headend
     [Target("headend")]
     [ServiceModel(name: "Headend", group: "ClusterSetup")]
     [Route("cluster-setup")]
-    [ApiVersion("0.1")]
+    [ApiVersion("0.2")]
     public interface IClusterSetupController
     {
         [HttpPost]
         [Route("create")]
-        Dictionary<string, string> CreateClusterAsync(
-            [FromQuery] string addresses);
+        Dictionary<string, string> CreateClusterAsync();
 
         [HttpGet]
         [Route("image/node")]
@@ -77,14 +76,24 @@ namespace Neon.Kube.Models.Headend
     [Target("headend")]
     [ServiceModel(name: "Headend", group: "Cluster")]
     [Route("cluster")]
-    [ApiVersion("0.1")]
+    [ApiVersion("0.2")]
     public interface IClusterController
     {
-        [HttpPost]
+        [HttpPut]
         [Route("{clusterId}/domain")]
         string UpdateClusterDomainAsync(
             [FromRoute] string clusterId,
             [FromQuery] string addresses);
+
+        [HttpPost]
+        [Route("{clusterId}/sso-client")]
+        Dictionary<string, string> CreateSsoClientAsync(
+            [FromRoute] string clusterId,
+            [FromQuery] string clusterName);
+
+        [HttpGet]
+        [Route("{clusterId}/token/renew")]
+        string GetTokenAsync([FromRoute] string clusterId);
     }
 
     /// <summary>
@@ -94,7 +103,7 @@ namespace Neon.Kube.Models.Headend
     [Target("headend")]
     [ServiceModel(name: "Headend", group: "NeonDesktop")]
     [Route("")]
-    [ApiVersion("0.1")]
+    [ApiVersion("0.2")]
     public interface INeonDesktopController
     {
         [HttpGet]

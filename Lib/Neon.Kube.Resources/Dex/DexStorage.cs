@@ -22,6 +22,7 @@ using System.Linq;
 using System.Text;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 using YamlDotNet.Serialization;
 
@@ -42,16 +43,18 @@ namespace Neon.Kube
         /// <summary>
         /// Supported options include SQL flavors and Kubernetes third party resources.
         /// </summary>
-        [JsonProperty(PropertyName = "Type", Required = Required.Always)]
+        [JsonProperty(PropertyName = "Type", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "type", ApplyNamingConventions = false)]
         [DefaultValue(null)]
+        [Newtonsoft.Json.JsonConverter(typeof(StringEnumConverter))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
         public DexStorageType Type { get; set; }
 
         /// <summary>
         /// Config See the documentation (https://dexidp.io/docs/storage/) for further 
         /// information.
         /// </summary>
-        [JsonProperty(PropertyName = "Config", Required = Required.Always)]
+        [JsonProperty(PropertyName = "Config", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "config", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public Dictionary<string, object> Config { get; set; }

@@ -88,6 +88,7 @@ namespace Neon.Kube
         private static string               cachedNodeImageFolder;
         private static string               cachedDashboardStateFolder;
         private static string               cachedUserSshFolder;
+        private static object               jsonConverterLock = new object();
 
         private static List<KeyValuePair<string, object>> cachedTelemetryTags;
 
@@ -937,7 +938,7 @@ namespace Neon.Kube
                 return null;
             }
 
-            var extension = NeonHelper.YamlDeserialize<ClusterLogin>(ReadFileTextWithRetry(path));
+            var extension = NeonHelper.YamlDeserializeViaJson<ClusterLogin>(ReadFileTextWithRetry(path));
 
             extension.SetPath(path);
             extension.ClusterDefinition?.Validate();
@@ -1133,15 +1134,21 @@ namespace Neon.Kube
         /// </summary>
         public static void InitializeJson()
         {
-            var kubernetesJsonType = typeof(KubernetesJson).Assembly.GetType("k8s.KubernetesJson");
+            lock (jsonConverterLock)
+            {
+                var kubernetesJsonType = typeof(KubernetesJson).Assembly.GetType("k8s.KubernetesJson");
+                
+                RuntimeHelpers.RunClassConstructor(kubernetesJsonType.TypeHandle);
 
-            RuntimeHelpers.RunClassConstructor(kubernetesJsonType.TypeHandle);
-            
-            var member  = kubernetesJsonType.GetField("JsonSerializerOptions", BindingFlags.Static | BindingFlags.NonPublic);
-            var options = (JsonSerializerOptions)member.GetValue(kubernetesJsonType);
-            
-            options.Converters.Remove(options.Converters.Where(c => c.GetType() == typeof(JsonStringEnumConverter)).Single());
-            options.Converters.Add(new JsonStringEnumMemberConverter());
+                var member  = kubernetesJsonType.GetField("JsonSerializerOptions", BindingFlags.Static | BindingFlags.NonPublic);
+                var options = (JsonSerializerOptions)member.GetValue(kubernetesJsonType);
+
+                var converters = options.Converters.Where(c => c.GetType() == typeof(JsonStringEnumMemberConverter));
+                if (!converters.Any())
+                {
+                    options.Converters.Insert(0, new JsonStringEnumMemberConverter());
+                }
+            }
         }
 
         /// <summary>
@@ -2222,12 +2229,16 @@ exit 0
         /// </note>
         /// </summary>
         /// <returns>The <see cref="KubeSshKey"/>.</returns>
-        public static KubeSshKey GetBuiltinDesktopSskKey()
+        public static KubeSshKey GetBuiltinDesktopSshKey()
         {
-            // We simply called [GenerateSshKey(KubeConst.NeonDesktopClusterName)] once
-            // and then serialized the resulting key to the YAML below.
+            // $note(jefflill):
             //
-            // NOTE: I also needed to take care to escape all double quotes.
+            // This key was generated using the neonCLOUD neon-image tool via:
+            //
+            //      neon-image sshkey neon-desktop root
+            //
+            // SSH keys don't have an expiration so this key could potentionally work
+            // forever, as long as the encryption algorithms are still supported.
 
             var keyYaml =
 @"

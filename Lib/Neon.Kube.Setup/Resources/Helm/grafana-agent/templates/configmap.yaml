@@ -287,7 +287,7 @@ data:
                 http:
                   endpoint: "0.0.0.0:4318"
             opencensus:
-              endpoint: "0.0.0.0:55678"
+              endpoint: "0.0.0.0:4320"
           remote_write:
             - endpoint: tempo-distributor.neon-monitor.svc.cluster.local:4317
               headers: 

@@ -42,6 +42,7 @@ using k8s.Models;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Octokit;
 
 namespace Neon.Kube
 {
@@ -317,7 +318,7 @@ spec:
                     ConfigureKubelet(controller, cluster.ControlNodes);
 
                     controller.ThrowIfCancelled();
-                    ConfigureWorkstation(controller, controlNode);
+                    ConfigureWorkstation(controller, cluster.FirstControlNode);
 
                     controller.ThrowIfCancelled();
                     ConnectCluster(controller);
@@ -354,6 +355,9 @@ spec:
 
                     controller.ThrowIfCancelled();
                     await InstallPrometheusAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await InstallNeonCloudTokenAsync(controller, controlNode);
 
                     controller.ThrowIfCancelled();
                     await InstallCertManagerAsync(controller, controlNode);
@@ -739,9 +743,9 @@ exit 1
                             firstControlNode.UploadText("/etc/kubernetes/admin.conf", adminConfig, permissions: "600", owner: "root:root");
                         });
 
-                    // Download the boot control-plane files that will need to be provisioned on
-                    // the remaining control-plane nodes and may also be needed for other purposes
-                    // (if we haven't already downloaded these).
+                    // Download the control-plane files that will need to be provisioned on the remaining
+                    // control-plane nodes and may also be needed for other purposes (if we haven't already
+                    // downloaded these).
 
                     if (clusterLogin.SetupDetails.ControlNodeFiles != null)
                     {
@@ -750,30 +754,7 @@ exit 1
 
                     if (clusterLogin.SetupDetails.ControlNodeFiles.Count == 0)
                     {
-                        // I'm hardcoding the permissions and owner here.  It would be nice to
-                        // scrape this from the source files in the future but it's not worth
-                        // the bother at this point.
-
-                        var files = new RemoteFile[]
-                        {
-                            new RemoteFile("/etc/kubernetes/admin.conf", "600", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/ca.crt", "600", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/ca.key", "600", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/sa.pub", "600", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/sa.key", "644", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/front-proxy-ca.crt", "644", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/front-proxy-ca.key", "600", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/etcd/ca.crt", "644", "root:root"),
-                            new RemoteFile("/etc/kubernetes/pki/etcd/ca.key", "600", "root:root"),
-                        };
-
-                        foreach (var file in files)
-                        {
-                            var text = firstControlNode.DownloadText(file.Path);
-
-                            controller.ThrowIfCancelled();
-                            clusterLogin.SetupDetails.ControlNodeFiles[file.Path] = new KubeFileDetails(text, permissions: file.Permissions, owner: file.Owner);
-                        }
+                        clusterLogin.SetupDetails.ControlNodeFiles = firstControlNode.GetControlPlaneFiles();
                     }
 
                     // Persist the cluster join command and downloaded control-plane files.
@@ -781,7 +762,7 @@ exit 1
                     clusterLogin.Save();
 
                     //---------------------------------------------------------
-                    // Join the remaining control-plane to the cluster:
+                    // Join the remaining control-plane nodes to the cluster:
 
                     foreach (var controlNode in cluster.ControlNodes.Where(node => node != firstControlNode))
                     {
@@ -1172,83 +1153,87 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         /// Configures the local workstation.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
-        public static void ConfigureWorkstation(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        /// <param name="firstControlNode">The first control-plane node in the cluster where the operation will be performed.</param>
+        public static void ConfigureWorkstation(ISetupController controller, NodeSshProxy<NodeDefinition> firstControlNode)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
-            controlNode.InvokeIdempotent("setup/workstation",
-                (Action)(() =>
+            var cluster          = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterLogin     = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+            var desktopReadyToGo = controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo);
+            var kubeConfigPath   = KubeHelper.KubeConfigPath;
+
+            // For built-in desktop clusters, we need to obtain the control plane files from
+            // the node and add them to the cluster login because we didn't so a full cluster
+            // setup when this would normally happen.
+
+            if (desktopReadyToGo)
+            {
+                clusterLogin.SetupDetails.ControlNodeFiles = firstControlNode.GetControlPlaneFiles();
+                clusterLogin.Save();
+            }
+
+            // Update kubeconfig.
+
+            var configText = clusterLogin.SetupDetails.ControlNodeFiles["/etc/kubernetes/admin.conf"].Text;
+            var port       = NetworkPorts.KubernetesApiServer;
+
+            configText = configText.Replace("https://kubernetes-control-plane:6442", $"https://{cluster.Definition.Domain}:{port}");
+
+            if (!File.Exists(kubeConfigPath))
+            {
+                File.WriteAllText(kubeConfigPath, configText);
+            }
+            else
+            {
+                // The user already has an existing kubeconfig, so we need
+                // to merge in the new config.
+
+                var newConfig      = NeonHelper.YamlDeserialize<KubeConfig>(configText);
+                var existingConfig = KubeHelper.Config;
+
+                // Remove any existing user, context, and cluster with the same names.
+                // Note that we're assuming that there's only one of each in the config
+                // we downloaded from the cluster.
+
+                var newCluster      = newConfig.Clusters.Single();
+                var newContext      = newConfig.Contexts.Single();
+                var newUser         = newConfig.Users.Single();
+                var existingCluster = existingConfig.GetCluster(newCluster.Name);
+                var existingContext = existingConfig.GetContext(newContext.Name);
+                var existingUser    = existingConfig.GetUser(newUser.Name);
+
+                if (existingConfig != null)
                 {
-                    controller.LogProgress(controlNode, verb: "configure", message: "workstation");
+                    existingConfig.Clusters.Remove(existingCluster);
+                }
 
-                    var cluster        = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-                    var clusterLogin   = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
-                    var kubeConfigPath = KubeHelper.KubeConfigPath;
+                if (existingContext != null)
+                {
+                    existingConfig.Contexts.Remove(existingContext);
+                }
 
-                    // Update kubeconfig.
+                if (existingUser != null)
+                {
+                    existingConfig.Users.Remove(existingUser);
+                }
 
-                    var configText = clusterLogin.SetupDetails.ControlNodeFiles["/etc/kubernetes/admin.conf"].Text;
-                    var port       = NetworkPorts.KubernetesApiServer;
+                existingConfig.Clusters.Add(newCluster);
+                existingConfig.Contexts.Add(newContext);
+                existingConfig.Users.Add(newUser);
 
-                    configText = configText.Replace("https://kubernetes-control-plane:6442", $"https://{cluster.Definition.Domain}:{port}");
+                existingConfig.CurrentContext = newContext.Name;
 
-                    if (!File.Exists(kubeConfigPath))
-                    {
-                        File.WriteAllText(kubeConfigPath, configText);
-                    }
-                    else
-                    {
-                        // The user already has an existing kubeconfig, so we need
-                        // to merge in the new config.
+                KubeHelper.SetConfig(existingConfig);
+            }
 
-                        var newConfig      = NeonHelper.YamlDeserialize<KubeConfig>(configText);
-                        var existingConfig = KubeHelper.Config;
+            // Make sure that the config cached by [KubeHelper] is up to date.
 
-                        // Remove any existing user, context, and cluster with the same names.
-                        // Note that we're assuming that there's only one of each in the config
-                        // we downloaded from the cluster.
+            KubeHelper.LoadConfig();
 
-                        var newCluster      = newConfig.Clusters.Single();
-                        var newContext      = newConfig.Contexts.Single();
-                        var newUser         = newConfig.Users.Single();
-                        var existingCluster = existingConfig.GetCluster(newCluster.Name);
-                        var existingContext = existingConfig.GetContext(newContext.Name);
-                        var existingUser    = existingConfig.GetUser(newUser.Name);
+            // Save the cluster node SSH certificate in the users [~/.ssh] folder.
 
-                        if (existingConfig != null)
-                        {
-                            existingConfig.Clusters.Remove(existingCluster);
-                        }
-
-                        if (existingContext != null)
-                        {
-                            existingConfig.Contexts.Remove(existingContext);
-                        }
-
-                        if (existingUser != null)
-                        {
-                            existingConfig.Users.Remove(existingUser);
-                        }
-
-                        existingConfig.Clusters.Add(newCluster);
-                        existingConfig.Contexts.Add(newContext);
-                        existingConfig.Users.Add(newUser);
-
-                        existingConfig.CurrentContext = newContext.Name;
-
-                        KubeHelper.SetConfig(existingConfig);
-                    }
-
-                    // Save the cluster node SSH certificate in the users [~/.ssh] folder.
-
-                    File.WriteAllText(Path.Combine(KubeHelper.UserSshFolder, KubeHelper.CurrentContextName.ToString()), clusterLogin.SshKey.PrivatePEM);
-
-                    // Make sure that the config cached by [KubeHelper] is up to date.
-
-                    KubeHelper.LoadConfig();
-                }));
+            File.WriteAllText(Path.Combine(KubeHelper.UserSshFolder, KubeHelper.CurrentContextName.ToString()), clusterLogin.SshKey.PrivatePEM);
         }
 
         /// <summary>
@@ -1280,10 +1265,10 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             {
                                 Name = priorityClassDef.Name
                             },
-                            Value = priorityClassDef.Value,
-                            Description = priorityClassDef.Description,
+                            Value            = priorityClassDef.Value,
+                            Description      = priorityClassDef.Description,
                             PreemptionPolicy = "PreemptLowerPriority",
-                            GlobalDefault = priorityClassDef.IsDefault
+                            GlobalDefault    = priorityClassDef.IsDefault
                         };
 
                         await k8s.SchedulingV1.CreatePriorityClassAsync(priorityClass);
@@ -1750,6 +1735,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add("cluster.domain", clusterLogin.ClusterDefinition.Domain);
 
                     var i = 0;
+
                     foreach (var rule in controlNode.Cluster.Definition.Network.IngressRules
                         .Where(rule => rule.TargetPort != 0))   // [TargetPort=0] indicates that traffic does not route through ingress gateway
                     {
@@ -1779,10 +1765,10 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     
                     await controlNode.InstallHelmChartAsync(controller, "istio",
-                        releaseName: "neon-ingress",
-                        @namespace: KubeNamespace.NeonIngress,
+                        releaseName:  "neon-ingress",
+                        @namespace:   KubeNamespace.NeonIngress,
                         prioritySpec: PriorityClass.SystemClusterCritical.Name,
-                        values: values);
+                        values:       values);
                 });
 
             controller.ThrowIfCancelled();
@@ -1799,7 +1785,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             k8s.WaitForDaemonsetAsync(KubeNamespace.NeonIngress, "istio-ingressgateway", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                             k8s.WaitForDaemonsetAsync(KubeNamespace.KubeSystem, "istio-cni-node", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                         },
-                        timeoutMessage: "setup/ingress-ready",
+                        timeoutMessage:    "setup/ingress-ready",
                         cancellationToken: controller.CancellationToken);
                 });
 
@@ -1822,7 +1808,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                 return false;
                             }
                         },
-                        timeout: TimeSpan.FromSeconds(300),
+                        timeout:      TimeSpan.FromSeconds(300),
                         pollInterval: TimeSpan.FromMilliseconds(500));
                 });
 
@@ -1836,7 +1822,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = "mesh-default",
+                            Name              = "mesh-default",
                             NamespaceProperty = KubeNamespace.NeonIngress
                         },
                         Spec = new TelemetrySpec()
@@ -1862,14 +1848,16 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     // turn down tracing in neon namespaces.
 
-                    telemetry.Metadata.Name = "neon-monitor-default";
-                    telemetry.Metadata.NamespaceProperty = KubeNamespace.NeonMonitor;
+                    telemetry.Metadata.Name                                 = "neon-monitor-default";
+                    telemetry.Metadata.NamespaceProperty                    = KubeNamespace.NeonMonitor;
                     telemetry.Spec.Tracing.First().RandomSamplingPercentage = 2.0;
+
                     await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
 
-                    telemetry.Metadata.Name = "neon-system-default";
-                    telemetry.Metadata.NamespaceProperty = KubeNamespace.NeonSystem;
+                    telemetry.Metadata.Name                                 = "neon-system-default";
+                    telemetry.Metadata.NamespaceProperty                    = KubeNamespace.NeonSystem;
                     telemetry.Spec.Tracing.First().RandomSamplingPercentage = 2.0;
+
                     await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
                 });
         }
@@ -1919,10 +1907,10 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     }
 
                     await controlNode.InstallHelmChartAsync(controller, "cert-manager",
-                        releaseName: "cert-manager",
-                        @namespace: KubeNamespace.NeonIngress,
+                        releaseName:  "cert-manager",
+                        @namespace:   KubeNamespace.NeonIngress,
                         prioritySpec: $"global.priorityClassName={PriorityClass.NeonNetwork.Name}",
-                        values: values);
+                        values:       values);
                 });
 
             controller.ThrowIfCancelled();
@@ -1938,7 +1926,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             k8s.WaitForDeploymentAsync(KubeNamespace.NeonIngress, "cert-manager-cainjector", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                             k8s.WaitForDeploymentAsync(KubeNamespace.NeonIngress, "cert-manager-webhook", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                         },
-                        timeoutMessage:    "setup/cert-manager-ready",
+                        timeoutMessage:   "setup/cert-manager-ready",
                         cancellationToken: controller.CancellationToken);
                 });
 
@@ -1972,7 +1960,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         {
                             Metadata = new V1ObjectMeta()
                             {
-                                Name = issuer.Spec.Acme.ExternalAccountBinding.KeySecretRef.Name,
+                                Name              = issuer.Spec.Acme.ExternalAccountBinding.KeySecretRef.Name,
                                 NamespaceProperty = KubeNamespace.NeonIngress
                             },
                             StringData = new Dictionary<string, string>()
@@ -1981,7 +1969,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             }
                         };
 
-                        await k8s.UpsertSecretAsync(secret, secret.Namespace());
+                        await k8s.CoreV1.UpsertSecretAsync(secret, secret.Namespace());
 
                         issuer.Spec.Acme.ExternalAccountBinding.Key = null;
                     }
@@ -2001,7 +1989,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             }
                         };
 
-                        await k8s.UpsertSecretAsync(secret, secret.Namespace());
+                        await k8s.CoreV1.UpsertSecretAsync(secret, secret.Namespace());
 
                         issuer.Spec.Acme.PrivateKey                  = null;
                         issuer.Spec.Acme.DisableAccountKeyGeneration = true;
@@ -2024,7 +2012,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                 }
                             };
 
-                            await k8s.UpsertSecretAsync(secret, secret.Namespace());
+                            await k8s.CoreV1.UpsertSecretAsync(secret, secret.Namespace());
 
                             solver.Dns01.Route53.SecretAccessKey = null;
                         }
@@ -2051,7 +2039,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     }
 
                     await controlNode.InstallHelmChartAsync(controller, "neon-acme",
-                        releaseName:  "neon-acme",
+                        releaseName: "neon-acme",
                         @namespace:   KubeNamespace.NeonIngress,
                         prioritySpec: PriorityClass.NeonNetwork.Name,
                         values:       values);
@@ -2085,6 +2073,49 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         await k8s.CoreV1.CreateNamespacedSecretAsync(secret, secret.Namespace());
                     });
             }
+        }
+
+        /// <summary>
+        /// Installs tokens needed to authenticate with NeonCLOUD services.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallNeonCloudTokenAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        {
+            await SyncContext.Clear;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
+
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s     = GetK8sClient(controller);
+
+            controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/neoncloud-token",
+                async () =>
+                {
+                    controller.LogProgress(controlNode, verb: "setup", message: "neoncloud token");
+
+                    var secret = new V1Secret()
+                    {
+                        Metadata = new V1ObjectMeta()
+                        {
+                            NamespaceProperty = KubeNamespace.NeonSystem,
+                            Name              = "neoncloud-headend-token"
+                        },
+                        StringData = new Dictionary<string, string>()
+                        {
+                            { "token", cluster.Definition.NeonCloudToken }
+                        }
+                    };
+
+                    await k8s.CoreV1.UpsertSecretAsync(secret, secret.Namespace());
+
+                    secret.Metadata.NamespaceProperty = KubeNamespace.NeonIngress;
+
+                    await k8s.CoreV1.CreateNamespacedSecretAsync(secret, secret.Namespace());
+                });
         }
 
         /// <summary>
@@ -3345,7 +3376,7 @@ $@"- name: StorageType
                             citusSecret.Data["username"] = dbSecret.Data["username"];
                             citusSecret.Data["password"] = dbSecret.Data["password"];
 
-                            await k8s.UpsertSecretAsync(citusSecret, KubeNamespace.NeonMonitor);
+                            await k8s.CoreV1.UpsertSecretAsync(citusSecret, KubeNamespace.NeonMonitor);
                         }
                         );
 
@@ -4305,14 +4336,14 @@ $@"- name: StorageType
                     {
                         harborSecret.Data["postgresql-password"] = dbSecret.Data["password"];
 
-                        await k8s.UpsertSecretAsync(harborSecret, KubeNamespace.NeonSystem);
+                        await k8s.CoreV1.UpsertSecretAsync(harborSecret, KubeNamespace.NeonSystem);
                     }
 
                     if (!harborSecret.Data.ContainsKey("secret"))
                     {
                         harborSecret.StringData["secret"] = NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
 
-                        await k8s.UpsertSecretAsync(harborSecret, KubeNamespace.NeonSystem);
+                        await k8s.CoreV1.UpsertSecretAsync(harborSecret, KubeNamespace.NeonSystem);
                     }
                 });
 
@@ -4513,8 +4544,9 @@ $@"- name: StorageType
 
                     var values = new Dictionary<string, object>();
 
-                    values.Add("image.registry", KubeConst.LocalClusterRegistry);
-                    values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
+                    values.Add("image.registry", "ghcr.io/neonkube-dev");
+                    values.Add("image.tag", "neonkube-0.8.5-alpha.feature-sso");
+                    values.Add("image.pullPolicy", "Always");
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add("resource.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
                     values.Add("resource.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
@@ -4522,10 +4554,10 @@ $@"- name: StorageType
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
                     await controlNode.InstallHelmChartAsync(controller, "neon-cluster-operator",
-                        releaseName:  "neon-cluster-operator",
-                        @namespace:   KubeNamespace.NeonSystem,
+                        releaseName: "neon-cluster-operator",
+                        @namespace: KubeNamespace.NeonSystem,
                         prioritySpec: PriorityClass.NeonOperator.Name,
-                        values:       values);
+                        values: values);
                 });
 
             controller.ThrowIfCancelled();
@@ -4544,6 +4576,7 @@ $@"- name: StorageType
                             k8s.WaitForCustomResourceDefinitionAsync<V1NeonContainerRegistry>(),
                             k8s.WaitForCustomResourceDefinitionAsync<V1NeonDashboard>(),
                             k8s.WaitForCustomResourceDefinitionAsync<V1NeonNodeTask>(),
+                            k8s.WaitForCustomResourceDefinitionAsync<V1NeonSsoConnector>(),
                             k8s.WaitForCustomResourceDefinitionAsync<V1NeonSsoClient>()
                         });
                 });
@@ -5121,6 +5154,55 @@ $@"- name: StorageType
                     controller.LogProgress(controlNode, verb: "wait for", message: "neon-sso");
 
                     await k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-sso-dex", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
+                });
+
+            controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/dex-connectors",
+                async () =>
+                {
+                    controller.LogProgress(controlNode, verb: "wait for", message: "neon-sso connectors");
+                    
+                    foreach (var connector in cluster.Definition.SsoConnectors)
+                    {
+                        switch (connector.Type)
+                        {
+                            case DexConnectorType.Ldap:
+
+                                var ldapConnector = (DexConnector<DexLdapConfig>)connector;
+
+                                await k8s.CustomObjects.UpsertClusterCustomObjectAsync(
+                                    new V1NeonSsoConnector()
+                                    {
+                                        Metadata = new V1ObjectMeta()
+                                        {
+                                            Name = connector.Id,
+                                        },
+                                        Spec = ldapConnector
+                                    }, connector.Id);
+
+                                break;
+
+                            case DexConnectorType.Oidc:
+
+                                var oidcConnector = (IDexConnector<DexOidcConfig>)connector;
+
+                                var str = KubernetesJson.Serialize(oidcConnector);
+
+                                await k8s.CustomObjects.UpsertClusterCustomObjectAsync(
+                                    new V1NeonSsoConnector()
+                                    {
+                                        Metadata = new V1ObjectMeta()
+                                        {
+                                            Name = connector.Id,
+                                        },
+                                        Spec = oidcConnector
+                                    }, connector.Id);
+
+                                break;
+                        }
+
+                        
+                    }
                 });
         }
 

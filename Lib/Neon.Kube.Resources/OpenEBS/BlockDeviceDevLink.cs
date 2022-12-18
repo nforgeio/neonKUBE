@@ -42,6 +42,7 @@ namespace Neon.Kube.Resources
         /// The <see cref="DevLinkType"/>. Devices are listed by ID or by path.
         /// </summary>
         [DefaultValue(null)]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
         public DevLinkType Kind { get; set; }
 
         /// <summary>

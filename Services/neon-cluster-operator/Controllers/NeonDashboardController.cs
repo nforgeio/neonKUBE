@@ -132,14 +132,14 @@ namespace NeonClusterOperator
         // Instance members
 
         private readonly IKubernetes k8s;
-        private readonly Neon.Kube.Operator.IFinalizerManager<V1NeonDashboard> finalizerManager;
+        private readonly IFinalizerManager<V1NeonDashboard> finalizerManager;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public NeonDashboardController(
             IKubernetes k8s,
-            Neon.Kube.Operator.IFinalizerManager<V1NeonDashboard> manager)
+            IFinalizerManager<V1NeonDashboard> manager)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
             Covenant.Requires(manager != null, nameof(manager));
