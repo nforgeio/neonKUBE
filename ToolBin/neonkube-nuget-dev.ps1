@@ -112,10 +112,6 @@ if (!(Test-Path env:NC_ROOT))
     return 1
 }
 
-# This needs to run with elevated privileges.
-
-Request-AdminPermissions
-
 # We're going to build the DEBUG configuration by default for DEV packages so debugging will be easier.
 
 if ($release)

@@ -59,10 +59,6 @@ if (!(Test-Path env:NC_ROOT))
     return 1
 }
 
-# This needs to run with elevated privileges.
-
-Request-AdminPermissions
-
 # Retrieve any necessary credentials.
 
 $nugetApiKey = Get-SecretPassword "NUGET_PUBLIC_KEY"
