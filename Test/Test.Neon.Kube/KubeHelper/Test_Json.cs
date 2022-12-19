@@ -36,6 +36,8 @@ using Neon.Kube;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.CertManager;
 using Neon.Kube.Resources.JsonConverters;
+using Neon.Kube.Resources.OpenEBS;
+using Neon.Kube.Resources.Prometheus;
 using Neon.Kube.Xunit;
 using Neon.Xunit;
 
@@ -54,6 +56,7 @@ namespace TestKube
             var serializerOptions = new JsonSerializerOptions();
 
             serializerOptions.Converters.Add(new JsonV1ResourceConverter());
+
             var cStorPoolCluster = new V1CStorPoolCluster()
             {
                 Metadata = new V1ObjectMeta()

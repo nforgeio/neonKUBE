@@ -26,7 +26,7 @@ using k8s.Models;
 
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.Prometheus
 {
     /// <summary>
     /// NamespaceSelector is a selector for selecting either all namespaces or a list of namespaces. If any is true,
