@@ -28,7 +28,7 @@ using k8s.Models;
 
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
     /// Each routing rule is associated with one or more service versions (see glossary in beginning of document). Weights associated 

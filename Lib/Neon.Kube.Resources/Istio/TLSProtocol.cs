@@ -35,7 +35,7 @@ using Newtonsoft.Json.Serialization;
 using Neon.Common;
 using Neon.Net;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
     /// TLSProtocol controls how private keys should be regenerated when a re-issuance is being processed.

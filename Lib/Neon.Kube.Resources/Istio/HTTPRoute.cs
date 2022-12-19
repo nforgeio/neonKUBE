@@ -28,7 +28,7 @@ using k8s.Models;
 
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
     /// Describes the properties of a specific HTTPRoute of a service.

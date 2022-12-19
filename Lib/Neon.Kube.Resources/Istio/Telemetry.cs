@@ -27,7 +27,7 @@ using k8s.Models;
 
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
     /// CRD that controls Istio tracing.

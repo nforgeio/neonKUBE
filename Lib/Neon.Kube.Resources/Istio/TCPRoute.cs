@@ -28,7 +28,7 @@ using k8s.Models;
 
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
     /// Describes match conditions and actions for routing TCP traffic. The following routing rule forwards traffic arriving at port 

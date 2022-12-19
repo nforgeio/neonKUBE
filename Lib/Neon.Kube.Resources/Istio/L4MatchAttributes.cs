@@ -28,7 +28,7 @@ using k8s.Models;
 
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
     /// L4 connection match attributes. Note that L4 connection matching support is incomplete.

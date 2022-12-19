@@ -28,7 +28,7 @@ using k8s.Models;
 
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
     /// HTTPRedirect can be used to send a 301 redirect response to the caller, where the Authority/Host and the URI in the response can be 

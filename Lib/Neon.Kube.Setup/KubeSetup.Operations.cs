@@ -37,6 +37,7 @@ using Neon.Kube.Resources;
 using Neon.Kube.Resources.Calico;
 using Neon.Kube.Resources.CertManager;
 using Neon.Kube.Resources.Dex;
+using Neon.Kube.Resources.Istio;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;

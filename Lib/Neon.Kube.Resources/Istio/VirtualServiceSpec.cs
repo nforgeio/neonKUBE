@@ -15,11 +15,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.ComponentModel;
 
-namespace Neon.Kube.Resources
+using Newtonsoft.Json;
+
+namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
     /// Describes a load balancer operating at the edge of the mesh receiving incoming or outgoing HTTP/TCP connections.

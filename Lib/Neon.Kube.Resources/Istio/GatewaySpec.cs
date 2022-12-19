@@ -26,7 +26,7 @@ using k8s.Models;
 
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
     /// Describes a load balancer operating at the edge of the mesh receiving incoming or outgoing HTTP/TCP connections.

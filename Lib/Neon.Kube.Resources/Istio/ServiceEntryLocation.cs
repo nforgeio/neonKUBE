@@ -35,7 +35,7 @@ using Newtonsoft.Json.Serialization;
 using Neon.Common;
 using Neon.Net;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
     /// Location specifies whether the service is part of Istio mesh or outside the mesh. Location determines the behavior of several
