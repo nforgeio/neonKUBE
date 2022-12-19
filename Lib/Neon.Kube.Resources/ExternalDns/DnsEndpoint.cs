@@ -23,7 +23,7 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.ExternalDns
 {
     /// <summary>
     /// Endpoint is a high-level way of a connection between a

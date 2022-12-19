@@ -32,7 +32,7 @@ using Neon.JsonConverters;
 
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.ExternalDns
 {
     /// <summary>
     /// ExternalDnsEndpoint.
