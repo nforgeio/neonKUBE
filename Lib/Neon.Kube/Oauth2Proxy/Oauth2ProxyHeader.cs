@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Oauth2ProxyLoginUrlParameters.cs
+// FILE:	    Oauth2ProxyHeader.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -18,32 +18,30 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.IO;
 using System.Linq;
-using System.Security.Policy;
 using System.Text;
-
+using DNS.Protocol;
 using Newtonsoft.Json;
 
 using YamlDotNet.Serialization;
 
-namespace Neon.Kube
+namespace Neon.Kube.Oauth2Proxy
 {
     /// <summary>
-    /// Oauth2Proxy login url parameters model.
+    /// Oauth2Proxy header model.
     /// </summary>
-    public class Oauth2ProxyLoginUrlParameters
+    public class Oauth2ProxyHeader
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public Oauth2ProxyLoginUrlParameters()
+        public Oauth2ProxyHeader()
         {
         }
 
         /// <summary>
-        /// Specifies the name of the query parameter.
+        /// The header name to be used for this set of values. Names should be unique within a list of Headers.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Always)]
         [YamlMember(Alias = "name", ApplyNamingConventions = false)]
@@ -51,20 +49,22 @@ namespace Neon.Kube
         public string Name { get; set; }
 
         /// <summary>
-        /// Specifies a default value or values that will be passed to the IdP if not overridden.
+        /// Determines whether any values for this header
+        /// should be preserved for the request to the upstream server.
+        /// This option only applies to injected request headers.
+        /// Defaults to false (headers that match this header will be stripped).
         /// </summary>
-        [JsonProperty(PropertyName = "Default", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
-        [YamlMember(Alias = "default", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public List<string> Default { get; set; }
+        [JsonProperty(PropertyName = "PreserveRequestValue", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [YamlMember(Alias = "preserveRequestValue", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool PreserveRequestValue { get; set; } = false;
 
         /// <summary>
-        /// Specifies rules about how the default (if any) may be overridden via the query string to /oauth2/start. Only
-        /// values that match one or more of the allow rules will be forwarded to the IdP.
+        /// Contains the desired values for this header
         /// </summary>
-        [JsonProperty(PropertyName = "Allow", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
-        [YamlMember(Alias = "allow", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Values", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [YamlMember(Alias = "values", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public List<Oauth2ProxyLoginUrlParameterRule> Allow { get; set; }
+        public List<Oauth2ProxyHeaderValue> Values { get; set; }
     }
 }

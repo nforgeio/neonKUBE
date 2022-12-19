@@ -26,7 +26,7 @@ using Newtonsoft.Json;
 
 using YamlDotNet.Serialization;
 
-namespace Neon.Kube
+namespace Neon.Kube.Oauth2Proxy
 {
     /// <summary>
     /// Oauth2Proxy configuration model.

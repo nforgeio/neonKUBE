@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Oauth2ProxyLoginUrlParameterRule.cs
+// FILE:	    Oauth2ProxyServer.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -18,46 +18,53 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.IO;
 using System.Linq;
-using System.Reflection.Metadata;
-using System.Security.Policy;
 using System.Text;
-
+using DNS.Protocol;
 using Newtonsoft.Json;
 
 using YamlDotNet.Serialization;
 
-namespace Neon.Kube
+namespace Neon.Kube.Oauth2Proxy
 {
     /// <summary>
-    /// Oauth2Proxy login url parameters model.
+    /// Oauth2Proxy header model.
     /// </summary>
-    public class Oauth2ProxyLoginUrlParameterRule
+    public class Oauth2ProxyServer
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public Oauth2ProxyLoginUrlParameterRule()
+        public Oauth2ProxyServer()
         {
         }
 
         /// <summary>
-        /// A Value rule matches just this specific value.
+        /// The address on which to serve traffic.
+        /// Leave blank or set to "-" to disable.
         /// </summary>
-        [JsonProperty(PropertyName = "Value", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
-        [YamlMember(Alias = "value", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "BindAddress", Required = Required.Always)]
+        [YamlMember(Alias = "BindAddress", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string Value { get; set; }
+        public string BindAddress { get; set; }
 
         /// <summary>
-        /// A Pattern rule gives a regular expression that must be matched by some substring of the value.The expression is not automatically
-        /// anchored to the start and end of the value, if you want to restrict the whole parameter value you must anchor it yourself with ^ and $.
+        /// The address on which to serve secure traffic.
+        /// Leave blank or set to "-" to disable.
         /// </summary>
-        [JsonProperty(PropertyName = "Pattern", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
-        [YamlMember(Alias = "pattern", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "SecureBindAddress", Required = Required.Always)]
+        [YamlMember(Alias = "SecureBindAddress", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string Pattern { get; set; }
+        public string SecureBindAddress { get; set; }
+
+        /// <summary>
+        /// The address on which to serve secure traffic.
+        /// Leave blank or set to "-" to disable.
+        /// </summary>
+        [JsonProperty(PropertyName = "TLS", Required = Required.Always)]
+        [YamlMember(Alias = "TLS", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public Oauth2ProxyTls TLS { get; set; }
     }
 }

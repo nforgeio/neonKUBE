@@ -28,14 +28,12 @@ using System.Reflection.PortableExecutable;
 using System.Security.Policy;
 using System.Text;
 using System.Text.RegularExpressions;
-using DNS.Protocol;
-using Microsoft.Net.Http.Server;
+
 using Newtonsoft.Json;
 
 using YamlDotNet.Serialization;
-using static System.Net.WebRequestMethods;
 
-namespace Neon.Kube
+namespace Neon.Kube.Oauth2Proxy
 {
     /// <summary>
     /// Oauth2Proxy header model.

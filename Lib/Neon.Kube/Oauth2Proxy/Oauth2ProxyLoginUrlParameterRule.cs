@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Oauth2ProxyUpstreamConfig.cs
+// FILE:	    Oauth2ProxyLoginUrlParameterRule.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -18,43 +18,46 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
+using System.Security.Policy;
 using System.Text;
-using DNS.Protocol;
+
 using Newtonsoft.Json;
 
 using YamlDotNet.Serialization;
 
-namespace Neon.Kube
+namespace Neon.Kube.Oauth2Proxy
 {
     /// <summary>
-    /// Oauth2Proxy header model.
+    /// Oauth2Proxy login url parameters model.
     /// </summary>
-    public class Oauth2ProxyUpstreamConfig
+    public class Oauth2ProxyLoginUrlParameterRule
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public Oauth2ProxyUpstreamConfig()
+        public Oauth2ProxyLoginUrlParameterRule()
         {
         }
 
         /// <summary>
-        /// Will pass the raw url path to upstream allowing for url's
-        /// like: "/%2F/" which would otherwise be redirected to "/"
+        /// A Value rule matches just this specific value.
         /// </summary>
-        [JsonProperty(PropertyName = "ProxyRawPath", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
-        [YamlMember(Alias = "proxyRawPath", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Value", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [YamlMember(Alias = "value", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public bool? ProxyRawPath { get; set; } = null;
+        public string Value { get; set; }
 
         /// <summary>
-        /// Represents the configuration for the upstream servers. Requests will be proxied to this upstream if the path matches the request path.
+        /// A Pattern rule gives a regular expression that must be matched by some substring of the value.The expression is not automatically
+        /// anchored to the start and end of the value, if you want to restrict the whole parameter value you must anchor it yourself with ^ and $.
         /// </summary>
-        [JsonProperty(PropertyName = "Upstreams", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
-        [YamlMember(Alias = "upstreams", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Pattern", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [YamlMember(Alias = "pattern", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public List<Oauth2ProxyUpstream> Upstreams { get; set; }
+        public string Pattern { get; set; }
     }
 }
