@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
 		<OutputType>Library</OutputType>
+		<RootNamespace>Neon.Kube</RootNamespace>
 		<IsPackable>true</IsPackable>
 		<Version>10000.0.2236-dev-master</Version>
 		<Description>INTERNAL USE ONLY: Defines internal GRPC protobuf messages and services used by neonKUBE applcations.</Description>
@@ -14,7 +15,6 @@
 		<Configurations>Debug;Release</Configurations>
 		<PackageIcon>nuget-icon.png</PackageIcon>
 		<PackageTags>kubernetes</PackageTags>
-		<RootNamespace>Neon.Kube</RootNamespace>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 

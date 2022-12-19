@@ -38,7 +38,7 @@ using Neon.Time;
 using Renci.SshNet;
 using Renci.SshNet.Common;
 
-namespace Neon.Kube
+namespace Neon.Kube.Hosting
 {
     /// <summary>
     /// Interface describing neonKUBE hosting manager implementions for different environments..

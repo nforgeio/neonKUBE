@@ -1,8 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
 		<OutputType>Library</OutputType>
+		<RootNamespace>Neon.Kube.Hosting.HyperV</RootNamespace>
 		<Version>10000.0.2236-dev-master</Version>
 		<Description>INTERNAL USE ONLY: neonKUBE hosting manager for Windows Hyper-V on remote servers (e.g. production)</Description>
 		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
@@ -13,7 +14,6 @@
 		<Configurations>Debug;Release</Configurations>
 		<PackageIcon>nuget-icon.png</PackageIcon>
 		<PackageTags>kubernetes</PackageTags>
-		<RootNamespace>Neon.Kube</RootNamespace>
 	</PropertyGroup>
 
 	<ItemGroup>

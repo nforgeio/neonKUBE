@@ -3,9 +3,9 @@
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
 		<OutputType>Exe</OutputType>
+		<RootNamespace>NeonSsoProxy</RootNamespace>
 		<IsPackable>false</IsPackable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<RootNamespace>NeonSsoProxy</RootNamespace>
 		<ServerGarbageCollection>true</ServerGarbageCollection>
 		<ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
 		<AssemblyName>neon-sso-session-proxy</AssemblyName>

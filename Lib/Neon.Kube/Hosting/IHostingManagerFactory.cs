@@ -37,7 +37,7 @@ using Neon.IO;
 using Neon.Net;
 using Neon.Time;
 
-namespace Neon.Kube
+namespace Neon.Kube.Hosting
 {
     /// <summary>
     /// Describes the implementation for mapping a hosting environment into

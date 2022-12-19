@@ -40,7 +40,7 @@ using Neon.SSH;
 using Neon.Tasks;
 using Neon.Time;
 
-namespace Neon.Kube
+namespace Neon.Kube.Hosting
 {
     /// <summary>
     /// Base class for environment specific hosting managers. 

@@ -44,9 +44,8 @@ using Neon.SSH;
 using Neon.Tasks;
 
 using ProtoBuf.Grpc.Client;
-using static System.Collections.Specialized.BitVector32;
 
-namespace Neon.Kube
+namespace Neon.Kube.Setup
 {
     /// <summary>
     /// Used to proxy non-HyperV operations to the Neon Desktop service or

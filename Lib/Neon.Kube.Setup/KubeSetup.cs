@@ -39,11 +39,12 @@ using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
+using Neon.Kube;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
 
-namespace Neon.Kube
+namespace Neon.Kube.Setup
 {
     /// <summary>
     /// Implements cluster setup operations.
@@ -78,7 +79,7 @@ namespace Neon.Kube
                     return cachedResources;
                 }
 
-                return cachedResources = Assembly.GetExecutingAssembly().GetResourceFileSystem("Neon.Kube.Resources");
+                return cachedResources = Assembly.GetExecutingAssembly().GetResourceFileSystem("Neon.Kube.Setup.Resources");
             }
         }
 
@@ -115,7 +116,7 @@ namespace Neon.Kube
         /// <returns>The cluster definition.</returns>
         public static ClusterDefinition GetBuiltInClusterDefinition(HostingEnvironment hostEnvironment, string deploymentPrefix = null)
         {
-            var resourceName = "Neon.Kube.ClusterDefinitions.";
+            var resourceName = "Neon.Kube.Setup.ClusterDefinitions.";
 
             switch (hostEnvironment)
             {

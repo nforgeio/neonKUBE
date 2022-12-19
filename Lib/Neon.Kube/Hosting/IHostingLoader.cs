@@ -38,7 +38,7 @@ using Neon.IO;
 using Neon.Net;
 using Neon.Time;
 
-namespace Neon.Kube
+namespace Neon.Kube.Hosting
 {
     /// <summary>
     /// <b>INTERNAL USE ONLY:</b> This interface describes a low-level class implementations

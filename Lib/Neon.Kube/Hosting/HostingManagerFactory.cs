@@ -18,7 +18,7 @@
 using System;
 using System.Diagnostics.Contracts;
 
-namespace Neon.Kube
+namespace Neon.Kube.Hosting
 {
     /// <summary>
     /// Provides for the creation of <see cref="HostingManager"/> implementations

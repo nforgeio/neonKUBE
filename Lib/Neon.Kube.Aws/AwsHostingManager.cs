@@ -61,7 +61,7 @@ using ElbAction      = Amazon.ElasticLoadBalancingV2.Model.Action;
 using ElbTag         = Amazon.ElasticLoadBalancingV2.Model.Tag;
 using ElbTargetGroup = Amazon.ElasticLoadBalancingV2.Model.TargetGroup;
 
-namespace Neon.Kube
+namespace Neon.Kube.Hosting.Aws
 {
     /// <summary>
     /// Manages cluster provisioning on Amazon Web Services.

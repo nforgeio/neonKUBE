@@ -34,12 +34,15 @@ using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
+using Neon.Kube;
+using Neon.Kube.Hosting;
+using Neon.Kube.Setup;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
 
-namespace Neon.Kube
+namespace Neon.Kube.Setup
 {
     public static partial class KubeSetup
     {

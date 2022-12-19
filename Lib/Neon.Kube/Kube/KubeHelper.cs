@@ -197,7 +197,7 @@ namespace Neon.Kube
                     return cachedResources;
                 }
 
-                return cachedResources = Assembly.GetExecutingAssembly().GetResourceFileSystem("Neon.Kube.Resources");
+                return cachedResources = Assembly.GetExecutingAssembly().GetResourceFileSystem("Neon.Kube.Setup.Resources");
             }
         }
 

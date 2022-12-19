@@ -1,8 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
 		<OutputType>Library</OutputType>
+		<RootNamespace>Neon.Kube.Hosting.Google</RootNamespace>
 		<Version>10000.0.2236-dev-master</Version>
 		<Description>INTERNAL USE ONLY: neonKUBE hosting manager for Google Cloud.</Description>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
@@ -13,7 +14,6 @@
 		<Configurations>Debug;Release</Configurations>
 		<PackageIcon>nuget-icon.png</PackageIcon>
 		<PackageTags>kubernetes</PackageTags>
-		<RootNamespace>Neon.Kube</RootNamespace>
 	</PropertyGroup>
 
 	<ItemGroup>

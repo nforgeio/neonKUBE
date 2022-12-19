@@ -25,6 +25,7 @@ using Neon.HyperV;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.DesktopService;
+using Neon.Kube.Hosting.HyperV;
 using Neon.Net;
 using Neon.Xunit;
 

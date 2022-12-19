@@ -30,6 +30,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Hosting;
 using Neon.Kube.Operator;
 using Neon.Kube.Resources;
 using Neon.Net;
@@ -44,7 +45,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Octokit;
 
-namespace Neon.Kube
+namespace Neon.Kube.Setup
 {
     public static partial class KubeSetup
     {

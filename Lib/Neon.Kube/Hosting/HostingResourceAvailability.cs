@@ -38,7 +38,7 @@ using Neon.SSH;
 
 using k8s.Models;
 
-namespace Neon.Kube
+namespace Neon.Kube.Hosting
 {
     /// <summary>
     /// Returned by <see cref="IHostingManager.GetResourceAvailabilityAsync(long, long)"/> indicating whether a hosting

@@ -35,6 +35,7 @@ using k8s.Models;
 using Neon.Common;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Hosting;
 using Neon.Kube.Resources;
 using Neon.Net;
 using Neon.Retry;

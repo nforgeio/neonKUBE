@@ -43,7 +43,7 @@ using Neon.SSH;
 using Neon.Time;
 using Neon.Tasks;
 
-namespace Neon.Kube
+namespace Neon.Kube.Hosting.Google
 {
     /// <summary>
     /// Manages cluster provisioning on the Google Cloud Platform.

@@ -48,7 +48,7 @@ using Neon.Tasks;
 using Neon.Time;
 using Neon.Windows;
 
-namespace Neon.Kube
+namespace Neon.Kube.Hosting.HyperV
 {
     /// <summary>
     /// Manages cluster provisioning using Microsoft Hyper-V virtual machines.

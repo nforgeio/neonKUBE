@@ -3,6 +3,7 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
         <OutputType>Library</OutputType>
+        <RootNamespace>Neon.Kube.Resources</RootNamespace>
         <Version>10000.0.2236-dev-master</Version>
         <Description>INTERNAL USE ONLY: neonKUBE Kubernetes CRDs and implementations.</Description>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
@@ -13,7 +14,6 @@
         <Configurations>Debug;Release</Configurations>
         <PackageIcon>nuget-icon.png</PackageIcon>
         <PackageTags>kubernetes</PackageTags>
-        <RootNamespace>Neon.Kube.Resources</RootNamespace>
     </PropertyGroup>
 
 	<ItemGroup>

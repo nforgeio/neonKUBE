@@ -18,7 +18,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace Neon.Kube
+namespace Neon.Kube.Hosting
 {
     /// <summary>
     /// Flags that describe any optional capabilities of a <see cref="IHostingManager"/> implementation.

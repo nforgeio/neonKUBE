@@ -65,7 +65,7 @@ using PublicIPAddressSku     = Azure.ResourceManager.Network.Models.PublicIPAddr
 using PublicIPAddressSkuName = Azure.ResourceManager.Network.Models.PublicIPAddressSkuName;
 using PublicIPAddressSkuTier = Azure.ResourceManager.Network.Models.PublicIPAddressSkuTier;
 
-namespace Neon.Kube
+namespace Neon.Kube.Hosting.Azure
 {
     /// <summary>
     /// Manages cluster provisioning on the Google Cloud Platform.
@@ -2140,7 +2140,7 @@ namespace Neon.Kube
                     Location               = azureLocation,
                     PrefixLength           = azureOptions.Network.EgressPublicIpPrefixLength,
                     Sku                    = new PublicIPPrefixSku() { Name = PublicIPPrefixSkuName.Standard, Tier = PublicIPPrefixSkuTier.Regional },
-                    PublicIPAddressVersion = Azure.ResourceManager.Network.Models.IPVersion.IPv4
+                    PublicIPAddressVersion = global::Azure.ResourceManager.Network.Models.IPVersion.IPv4
                 };
 
                 publicEgressPrefix = (await publicPrefixCollection.CreateOrUpdateAsync(WaitUntil.Completed, publicEgressPrefixName, WithNetworkTags(publicIpPrefixData))).Value;

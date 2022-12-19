@@ -35,6 +35,8 @@ using Neon.Cryptography;
 using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Hosting;
+using Neon.Kube.Setup;
 using Neon.Net;
 using Neon.SSH;
 

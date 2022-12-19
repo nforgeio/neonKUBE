@@ -34,10 +34,16 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
+using Neon.Kube.Hosting.Aws;
+using Neon.Kube.Hosting.Azure;
+using Neon.Kube.Hosting.BareMetal;
+using Neon.Kube.Hosting.Google;
+using Neon.Kube.Hosting.HyperV;
+using Neon.Kube.Hosting.XenServer;
 using Neon.Net;
 using Neon.Time;
 
-namespace Neon.Kube
+namespace Neon.Kube.Hosting
 {
     /// <summary>
     /// Cluster hosting utilities.

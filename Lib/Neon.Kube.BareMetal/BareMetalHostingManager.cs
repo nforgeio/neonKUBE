@@ -47,7 +47,7 @@ using Neon.SSH;
 using Neon.Time;
 using Neon.Tasks;
 
-namespace Neon.Kube
+namespace Neon.Kube.Hosting.BareMetal
 {
     /// <summary>
     /// Manages cluster provisioning directly on (mostly) bare manually provisioned machines or virtual machines.

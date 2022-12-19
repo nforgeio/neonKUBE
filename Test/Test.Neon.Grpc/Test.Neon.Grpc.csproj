@@ -2,8 +2,8 @@
 
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
-		<IsPackable>false</IsPackable>
 		<RootNamespace>TestDeployment</RootNamespace>
+		<IsPackable>false</IsPackable>
 		<AssemblyName>Test.Neon.Grpc</AssemblyName>
 		<Configurations>Debug;Release</Configurations>
 		<GenerateDocumentationFile>false</GenerateDocumentationFile>

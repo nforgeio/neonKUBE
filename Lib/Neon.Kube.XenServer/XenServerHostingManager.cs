@@ -41,7 +41,7 @@ using Neon.IO;
 using Neon.SSH;
 using Neon.Tasks;
 
-namespace Neon.Kube
+namespace Neon.Kube.Hosting.XenServer
 {
     /// <summary>
     /// Manages cluster provisioning on the XenServer hypervisor.

@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
 		<OutputType>Library</OutputType>
+		<RootNamespace>Neon.Kube.DesktopService</RootNamespace>
 		<IsPackable>true</IsPackable>
 		<Version>10000.0.2466-dev-master</Version>
 		<Description>INTERNAL USE ONLY: Implements the Neon Desktop (gRPC) Service</Description>
@@ -15,7 +16,6 @@
 		<Configurations>Debug;Release</Configurations>
 		<PackageIcon>nuget-icon.png</PackageIcon>
 		<PackageTags>kubernetes</PackageTags>
-		<RootNamespace>Neon.Kube.DesktopService</RootNamespace>
 	</PropertyGroup>
 
 	<ItemGroup>

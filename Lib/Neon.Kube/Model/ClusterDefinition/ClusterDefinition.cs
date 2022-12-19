@@ -37,6 +37,7 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
+using Neon.Kube.Hosting;
 using Neon.Net;
 using Neon.BuildInfo;
 

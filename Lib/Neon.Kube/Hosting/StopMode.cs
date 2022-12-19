@@ -17,7 +17,7 @@
 
 using System;
 
-namespace Neon.Kube
+namespace Neon.Kube.Hosting
 {
     /// <summary>
     /// Used to control how cluster nodes are shutdown.

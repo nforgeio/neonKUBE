@@ -2,8 +2,8 @@
 
   <PropertyGroup>
 	  <TargetFramework>net7.0</TargetFramework>
-	  <IsPackable>false</IsPackable>
 	  <RootNamespace>TestKubeFixture</RootNamespace>
+	  <IsPackable>false</IsPackable>
 	  <Configurations>Debug;Release</Configurations>
 	  <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>

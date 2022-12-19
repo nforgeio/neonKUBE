@@ -18,6 +18,7 @@
 using System;
 
 using Neon.Common;
+using Neon.Kube.Hosting;
 
 using k8s;
 

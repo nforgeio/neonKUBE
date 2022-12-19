@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
 		<OutputType>Library</OutputType>
+		<RootNamespace>Neon.Kube.Hosting.XenServer</RootNamespace>
 		<Version>10000.0.2236-dev-master</Version>
 		<Description>INTERNAL USE ONLY: neonKUBE hosting manager for XenServer/XCP-ng envirojnhments.</Description>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
@@ -13,7 +14,6 @@
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<Configurations>Debug;Release</Configurations>
 		<PackageIcon>nuget-icon.png</PackageIcon>
-		<RootNamespace>Neon.Kube</RootNamespace>
 	</PropertyGroup>
 
 	<ItemGroup>

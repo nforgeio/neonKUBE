@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
 		<OutputType>Library</OutputType>
-		<RootNamespace>Neon.Kube</RootNamespace>
+		<RootNamespace>Neon.Kube.Setup</RootNamespace>
 		<Version>10000.0.2236-dev-master</Version>
 		<Description>INTERNAL USE ONLY: Core library used by neonKUBE related tooling.</Description>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>

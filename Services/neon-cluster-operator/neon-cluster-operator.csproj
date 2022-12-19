@@ -3,8 +3,8 @@
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
 		<OutputType>Exe</OutputType>
-		<IsPackable>false</IsPackable>
 		<RootNamespace>NeonClusterOperator</RootNamespace>
+		<IsPackable>false</IsPackable>
 		<ServerGarbageCollection>true</ServerGarbageCollection>
 		<ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
 		<AssemblyName>neon-cluster-operator</AssemblyName>
