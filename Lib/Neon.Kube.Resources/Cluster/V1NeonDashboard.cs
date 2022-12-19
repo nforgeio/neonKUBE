@@ -23,7 +23,7 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.Cluster
 {
     /// <summary>
     /// Describes a Dashboard that will be accesible via the Neon Dashboard.

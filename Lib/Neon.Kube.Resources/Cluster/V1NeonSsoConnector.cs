@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    V1NeonSsoClient.cs
+// FILE:	    V1NeonSsoConnector.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -18,18 +18,22 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json.Serialization;
 
 using k8s;
 using k8s.Models;
 
-namespace Neon.Kube.Resources
+using Neon.Kube.Resources.Dex;
+using Neon.Kube.Resources.JsonConverters;
+
+namespace Neon.Kube.Resources.Cluster
 {
     /// <summary>
     /// Specifies Neon SSO client settings.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
     [EntityScope(EntityScope.Cluster)]
-    public class V1NeonSsoClient : IKubernetesObject<V1ObjectMeta>, ISpec<SsoClientSpec>
+    public class V1NeonSsoConnector : IKubernetesObject<V1ObjectMeta>, ISpec<IDexConnector>
     {
         /// <summary>
         /// Object API group.
@@ -44,17 +48,17 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// Object API kind.
         /// </summary>
-        public const string KubeKind = "NeonSsoClient";
+        public const string KubeKind = "NeonSsoConnector";
 
         /// <summary>
         /// Object plural name.
         /// </summary>
-        public const string KubePlural = "neonssoclients";
+        public const string KubePlural = "neonssoconnectors";
 
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public V1NeonSsoClient()
+        public V1NeonSsoConnector()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
             Kind = KubeKind;
@@ -86,52 +90,7 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// The spec.
         /// </summary>
-        public SsoClientSpec Spec { get; set; }
-    }
-
-    /// <summary>
-    /// The SSO client specification.
-    /// </summary>
-    public class SsoClientSpec
-    {
-        /// <summary>
-        /// The client ID used to identify the client.
-        /// </summary>
-        public string Id { get; set; }
-
-        /// <summary>
-        /// The client Secret used to identify the client.
-        /// </summary>
-        public string Secret { get; set; }
-
-        /// <summary>
-        /// A registered set of redirect URIs. When redirecting from dex to the client, the URI
-        /// requested to redirect to MUST match one of these values, unless the client is "public".
-        /// </summary>
-        public List<string> RedirectUris { get; set; }
-
-        /// <summary>
-        /// TrustedPeers are a list of peers which can issue tokens on this client's behalf using
-        /// the dynamic "oauth2:server:client_id:(client_id)" scope. If a peer makes such a request,
-        /// this client's ID will appear as the ID Token's audience.
-        ///
-        /// Clients inherently trust themselves.
-        /// </summary>
-        public List<string> TrustedPeers { get; set; }
-
-        /// <summary>
-        /// Public clients must use either use a redirectURL 127.0.0.1:X or "urn:ietf:wg:oauth:2.0:oob"
-        /// </summary>
-        public bool Public { get; set; }
-
-        /// <summary>
-        /// Name used when displaying this client to the end user.
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// Logo used when displaying this client to the end user.
-        /// </summary>
-        public string LogoUrl { get; set; }
+        [System.Text.Json.Serialization.JsonConverter(typeof(DexConnectorJsonConverter))]
+        public IDexConnector Spec { get; set; }
     }
 }

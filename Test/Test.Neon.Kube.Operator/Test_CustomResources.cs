@@ -34,6 +34,7 @@ using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Operator;
 using Neon.Kube.Resources;
+using Neon.Kube.Resources.Cluster;
 using Neon.Kube.Resources.Dex;
 using Neon.Kube.Xunit;
 using Neon.Xunit;

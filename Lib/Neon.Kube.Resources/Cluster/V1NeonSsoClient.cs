@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    V1NeonTestObject.cs
-// CONTRIBUTOR: Jeff Lill
+// FILE:	    V1NeonSsoClient.cs
+// CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,16 +22,14 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
-using NJsonSchema.Annotations;
-
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.Cluster
 {
     /// <summary>
-    /// Used for unit testing Kubernetes clients.
+    /// Specifies Neon SSO client settings.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
     [EntityScope(EntityScope.Cluster)]
-    public class V1NeonTestObject : IKubernetesObject<V1ObjectMeta>, ISpec<TestSpec>, IValidate
+    public class V1NeonSsoClient : IKubernetesObject<V1ObjectMeta>, ISpec<SsoClientSpec>
     {
         /// <summary>
         /// Object API group.
@@ -46,17 +44,17 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// Object API kind.
         /// </summary>
-        public const string KubeKind = "NeonTestObject";
+        public const string KubeKind = "NeonSsoClient";
 
         /// <summary>
         /// Object plural name.
         /// </summary>
-        public const string KubePlural = "neontestobjects";
+        public const string KubePlural = "neonssoclients";
 
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public V1NeonTestObject()
+        public V1NeonSsoClient()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
             Kind = KubeKind;
@@ -88,38 +86,52 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// The spec.
         /// </summary>
-        public TestSpec Spec { get; set; }
-
-        /// <summary>
-        /// The spec.
-        /// </summary>
-        public TestStatus Status { get; set; }
-
-        /// <inheritdoc/>
-        public void Validate()
-        {
-        }
+        public SsoClientSpec Spec { get; set; }
     }
 
     /// <summary>
-    /// The node execute task specification.
+    /// The SSO client specification.
     /// </summary>
-    public class TestSpec
+    public class SsoClientSpec
     {
         /// <summary>
-        /// A test string.
+        /// The client ID used to identify the client.
         /// </summary>
-        public string Message { get; set; }
-    }
+        public string Id { get; set; }
 
-    /// <summary>
-    /// The node execute task status.
-    /// </summary>
-    public class TestStatus
-    {
         /// <summary>
-        /// Testing <see cref="DateTime"/> .
+        /// The client Secret used to identify the client.
         /// </summary>
-        public DateTime? Timestamp { get; set; }
+        public string Secret { get; set; }
+
+        /// <summary>
+        /// A registered set of redirect URIs. When redirecting from dex to the client, the URI
+        /// requested to redirect to MUST match one of these values, unless the client is "public".
+        /// </summary>
+        public List<string> RedirectUris { get; set; }
+
+        /// <summary>
+        /// TrustedPeers are a list of peers which can issue tokens on this client's behalf using
+        /// the dynamic "oauth2:server:client_id:(client_id)" scope. If a peer makes such a request,
+        /// this client's ID will appear as the ID Token's audience.
+        ///
+        /// Clients inherently trust themselves.
+        /// </summary>
+        public List<string> TrustedPeers { get; set; }
+
+        /// <summary>
+        /// Public clients must use either use a redirectURL 127.0.0.1:X or "urn:ietf:wg:oauth:2.0:oob"
+        /// </summary>
+        public bool Public { get; set; }
+
+        /// <summary>
+        /// Name used when displaying this client to the end user.
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Logo used when displaying this client to the end user.
+        /// </summary>
+        public string LogoUrl { get; set; }
     }
 }

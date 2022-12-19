@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    V1NeonSsoConnector.cs
-// CONTRIBUTOR: Marcus Bowyer
+// FILE:	    V1NeonTestObject.cs
+// CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,22 +18,20 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.Json.Serialization;
 
 using k8s;
 using k8s.Models;
 
-using Neon.Kube.Resources.Dex;
-using Neon.Kube.Resources.JsonConverters;
+using NJsonSchema.Annotations;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.Cluster
 {
     /// <summary>
-    /// Specifies Neon SSO client settings.
+    /// Used for unit testing Kubernetes clients.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
     [EntityScope(EntityScope.Cluster)]
-    public class V1NeonSsoConnector : IKubernetesObject<V1ObjectMeta>, ISpec<IDexConnector>
+    public class V1NeonTestObject : IKubernetesObject<V1ObjectMeta>, ISpec<TestSpec>, IValidate
     {
         /// <summary>
         /// Object API group.
@@ -48,17 +46,17 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// Object API kind.
         /// </summary>
-        public const string KubeKind = "NeonSsoConnector";
+        public const string KubeKind = "NeonTestObject";
 
         /// <summary>
         /// Object plural name.
         /// </summary>
-        public const string KubePlural = "neonssoconnectors";
+        public const string KubePlural = "neontestobjects";
 
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public V1NeonSsoConnector()
+        public V1NeonTestObject()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
             Kind = KubeKind;
@@ -90,7 +88,38 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// The spec.
         /// </summary>
-        [System.Text.Json.Serialization.JsonConverter(typeof(DexConnectorJsonConverter))]
-        public IDexConnector Spec { get; set; }
+        public TestSpec Spec { get; set; }
+
+        /// <summary>
+        /// The spec.
+        /// </summary>
+        public TestStatus Status { get; set; }
+
+        /// <inheritdoc/>
+        public void Validate()
+        {
+        }
+    }
+
+    /// <summary>
+    /// The node execute task specification.
+    /// </summary>
+    public class TestSpec
+    {
+        /// <summary>
+        /// A test string.
+        /// </summary>
+        public string Message { get; set; }
+    }
+
+    /// <summary>
+    /// The node execute task status.
+    /// </summary>
+    public class TestStatus
+    {
+        /// <summary>
+        /// Testing <see cref="DateTime"/> .
+        /// </summary>
+        public DateTime? Timestamp { get; set; }
     }
 }

@@ -38,6 +38,7 @@ using Neon.Kube;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Hosting;
 using Neon.Kube.Resources;
+using Neon.Kube.Resources.Cluster;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;

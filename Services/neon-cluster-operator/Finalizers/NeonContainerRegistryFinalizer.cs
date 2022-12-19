@@ -27,6 +27,7 @@ using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Operator;
 using Neon.Kube.Resources;
+using Neon.Kube.Resources.Cluster;
 using Neon.Tasks;
 
 using k8s.Models;

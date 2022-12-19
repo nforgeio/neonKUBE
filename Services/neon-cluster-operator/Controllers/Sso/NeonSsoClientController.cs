@@ -50,6 +50,8 @@ using k8s;
 using k8s.Autorest;
 using k8s.Models;
 
+using Neon.Kube.Resources.Cluster;
+
 using Newtonsoft.Json;
 
 using OpenTelemetry.Resources;

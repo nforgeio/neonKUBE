@@ -22,7 +22,7 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.Cluster
 {
     /// <summary>
     /// Specifies the <b>neon-cluster-operator</b> settings.

@@ -31,6 +31,7 @@ using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Operator;
 using Neon.Kube.Resources;
+using Neon.Kube.Resources.Cluster;
 using Neon.Retry;
 using Neon.Tasks;
 using Neon.Time;
@@ -38,9 +39,9 @@ using Neon.Time;
 using k8s;
 using k8s.Models;
 
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Prometheus;
-using Microsoft.Extensions.Logging;
 
 namespace NeonNodeAgent
 {

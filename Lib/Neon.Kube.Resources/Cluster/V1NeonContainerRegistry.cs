@@ -25,7 +25,7 @@ using k8s.Models;
 
 using NJsonSchema.Annotations;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.Cluster
 {
     /// <summary>
     /// Describes an upstream container registry to be configured on each of the cluster nodes.

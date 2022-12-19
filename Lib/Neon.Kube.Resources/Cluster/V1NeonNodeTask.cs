@@ -26,7 +26,7 @@ using Neon.JsonConverters;
 using k8s;
 using k8s.Models;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.Cluster
 {
     /// <summary>
     /// <para>
