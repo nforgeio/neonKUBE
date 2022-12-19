@@ -49,6 +49,7 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube.BuildInfo;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.Glauth;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Tasks;

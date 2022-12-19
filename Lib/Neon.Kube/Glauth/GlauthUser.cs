@@ -20,12 +20,13 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
-using Neon.Cryptography;
-using Newtonsoft.Json;
 
+using Neon.Cryptography;
+
+using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
-namespace Neon.Kube
+namespace Neon.Kube.Glauth
 {
     /// <summary>
     /// Defines a Glauth User.

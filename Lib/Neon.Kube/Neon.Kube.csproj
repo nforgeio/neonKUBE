@@ -84,11 +84,6 @@
 		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <Folder Include="Model\CRDs\Kubernetes\" />
-	  <Folder Include="Model\CRDs\Minio\" />
-	</ItemGroup>
-
 	<!--
     $note(jefflill): 12/04/2022
 	

@@ -38,6 +38,7 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Glauth;
 using Neon.Kube.Operator;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
@@ -253,7 +254,7 @@ namespace NeonClusterOperator
 
                 // todo(marcusbooyah): make this use robot accounts.
 
-                var secret = await k8s.CoreV1.ReadNamespacedSecretAsync("glauth-users", KubeNamespace.NeonSystem);
+                var secret   = await k8s.CoreV1.ReadNamespacedSecretAsync("glauth-users", KubeNamespace.NeonSystem);
                 var rootUser = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(secret.Data["root"]));
 
                 var registry = new V1NeonContainerRegistry()
@@ -264,13 +265,13 @@ namespace NeonClusterOperator
                     },
                     Spec = new V1NeonContainerRegistry.RegistrySpec()
                     {
-                        Blocked = false,
-                        Insecure = true,
-                        Location = KubeConst.LocalClusterRegistryHostName,
-                        Password = rootUser.Password,
-                        Prefix = KubeConst.LocalClusterRegistryHostName,
+                        Blocked     = false,
+                        Insecure    = true,
+                        Location    = KubeConst.LocalClusterRegistryHostName,
+                        Password    = rootUser.Password,
+                        Prefix      = KubeConst.LocalClusterRegistryHostName,
                         SearchOrder = -1,
-                        Username = rootUser.Name
+                        Username    = rootUser.Name
                     }
                 };
 

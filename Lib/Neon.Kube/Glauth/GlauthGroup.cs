@@ -25,7 +25,7 @@ using Newtonsoft.Json;
 
 using YamlDotNet.Serialization;
 
-namespace Neon.Kube
+namespace Neon.Kube.Glauth
 {
     /// <summary>
     /// Defines a Glauth user group.

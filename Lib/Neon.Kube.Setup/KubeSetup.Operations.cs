@@ -31,6 +31,7 @@ using Neon.Cryptography;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.Glauth;
 using Neon.Kube.Hosting;
 using Neon.Kube.Operator;
 using Neon.Kube.Resources;
