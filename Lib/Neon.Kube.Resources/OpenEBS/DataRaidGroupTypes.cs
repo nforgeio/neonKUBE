@@ -31,7 +31,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Net;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.OpenEBS
 {
     /// <summary>
     /// Data Raid Group Types.

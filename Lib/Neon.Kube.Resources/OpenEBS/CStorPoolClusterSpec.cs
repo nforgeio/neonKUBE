@@ -25,7 +25,7 @@ using Neon.Kube.Resources.JsonConverters;
 using k8s;
 using k8s.Models;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.OpenEBS
 {
     /// <summary>
     /// The kubernetes spec for the pool cluster.

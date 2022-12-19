@@ -39,6 +39,7 @@ using Neon.Kube.Resources.CertManager;
 using Neon.Kube.Resources.Dex;
 using Neon.Kube.Resources.Istio;
 using Neon.Kube.Resources.Minio;
+using Neon.Kube.Resources.OpenEBS;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
