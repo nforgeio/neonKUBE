@@ -29,7 +29,7 @@ using Neon.Kube.Resources.Dex;
 using k8s;
 using k8s.Models;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.JsonConverters
 {
     /// <summary>
     /// Converter for Dex connectors.

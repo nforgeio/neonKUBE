@@ -24,6 +24,7 @@ using k8s;
 using k8s.Models;
 
 using Neon.Kube.Resources.Dex;
+using Neon.Kube.Resources.JsonConverters;
 
 namespace Neon.Kube.Resources
 {

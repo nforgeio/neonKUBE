@@ -23,6 +23,7 @@ using System.Text;
 
 using Neon.Common;
 using Neon.Kube.Resources;
+using Neon.Kube.Resources.JsonConverters;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
