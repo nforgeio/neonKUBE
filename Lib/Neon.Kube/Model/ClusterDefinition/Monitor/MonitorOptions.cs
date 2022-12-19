@@ -36,7 +36,7 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.IO;
 
-namespace Neon.Kube
+namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// Specifies the options for configuring the cluster integrated logging stack.

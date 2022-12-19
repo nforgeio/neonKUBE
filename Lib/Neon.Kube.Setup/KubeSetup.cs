@@ -40,6 +40,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.ClusterDef;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;

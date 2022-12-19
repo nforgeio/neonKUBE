@@ -34,7 +34,7 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.Net;
 
-namespace Neon.Kube
+namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// Azure specific options for a cluster node.  These options can be used to

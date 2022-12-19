@@ -25,7 +25,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using YamlDotNet.Serialization;
 
-namespace Neon.Kube
+namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// Specifies hosting settings for the local Microsoft Hyper-V hypervisor.

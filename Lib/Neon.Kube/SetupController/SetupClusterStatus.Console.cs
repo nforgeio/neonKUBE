@@ -31,6 +31,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.Kube.ClusterDef;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;

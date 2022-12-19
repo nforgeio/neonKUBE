@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text;
 
-namespace Neon.Kube
+namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// Enumerates the possible cluster hosting environments.

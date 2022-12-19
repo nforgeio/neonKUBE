@@ -18,6 +18,7 @@
 using System;
 
 using Neon.Common;
+using Neon.Kube.ClusterDef;
 using Neon.Kube.Hosting;
 
 using k8s;
@@ -71,7 +72,7 @@ namespace Neon.Kube
         public const string BaseImageName = "base-image-name";
 
         /// <summary>
-        /// Property name for determining the current hosting environment: <see cref="Kube.HostingEnvironment"/>,
+        /// Property name for determining the current hosting environment: <see cref="HostingEnvironment"/>,
         /// </summary>
         public const string HostingEnvironment = "hosting-environment";
 

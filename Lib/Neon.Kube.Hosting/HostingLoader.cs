@@ -34,6 +34,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
+using Neon.Kube.ClusterDef;
 using Neon.Kube.Hosting.Aws;
 using Neon.Kube.Hosting.Azure;
 using Neon.Kube.Hosting.BareMetal;

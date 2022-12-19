@@ -38,7 +38,7 @@ using Neon.Net;
 using Neon.Time;
 using Neon.Kube.Resources;
 
-namespace Neon.Kube
+namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// Describes CertManager related options.

@@ -36,7 +36,7 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.Net;
 
-namespace Neon.Kube
+namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// Describes a tag that can be attached to resources for clusters deployed to 

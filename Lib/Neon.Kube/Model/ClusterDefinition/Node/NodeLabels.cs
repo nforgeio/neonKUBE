@@ -39,7 +39,7 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Net;
 
-namespace Neon.Kube
+namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// Describes the standard cluster and custom labels to be assigned to 

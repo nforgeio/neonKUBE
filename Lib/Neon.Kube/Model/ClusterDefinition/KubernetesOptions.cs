@@ -40,7 +40,7 @@ using Newtonsoft.Json.Serialization;
 
 using YamlDotNet.Serialization;
 
-namespace Neon.Kube
+namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// Describes the Kubernetes options for a neonKUBE.

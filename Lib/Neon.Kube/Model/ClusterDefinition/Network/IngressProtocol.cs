@@ -38,7 +38,7 @@ using Neon.Common;
 using Neon.IO;
 using Neon.Net;
 
-namespace Neon.Kube
+namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// <para>

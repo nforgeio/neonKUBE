@@ -37,11 +37,12 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
+using Neon.Kube.ClusterDef;
 using Neon.Kube.Hosting;
 using Neon.Net;
 using Neon.BuildInfo;
 
-namespace Neon.Kube
+namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// Describes a Kubernetes cluster.
@@ -1048,7 +1049,7 @@ namespace Neon.Kube
         /// <summary>
         /// Validates that node private IP addresses are set, are within the nodes subnet, and
         /// are unique.  This method is intended to be called from hosting options classes
-        /// like <see cref="MachineHostingOptions"/> which require specified node IP addresses.
+        /// like <see cref="BareMetalHostingOptions"/> which require specified node IP addresses.
         /// </summary>
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         public void ValidatePrivateNodeAddresses()

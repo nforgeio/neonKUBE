@@ -18,6 +18,8 @@
 using System;
 using System.Diagnostics.Contracts;
 
+using Neon.Kube.ClusterDef;
+
 namespace Neon.Kube.Hosting
 {
     /// <summary>

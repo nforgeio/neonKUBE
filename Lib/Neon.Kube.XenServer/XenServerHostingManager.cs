@@ -35,6 +35,7 @@ using YamlDotNet.Serialization;
 using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Kube.ClusterDef;
 using Neon.Net;
 using Neon.XenServer;
 using Neon.IO;

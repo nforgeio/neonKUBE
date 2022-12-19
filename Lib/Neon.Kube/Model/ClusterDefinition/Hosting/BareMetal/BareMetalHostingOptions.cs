@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    MachineHostingOptions.cs
+// FILE:	    BareMetalHostingOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -35,17 +35,17 @@ using Newtonsoft.Json.Serialization;
 using Neon.Common;
 using Neon.Net;
 
-namespace Neon.Kube
+namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// Specifies hosting settings for bare metal or virtual machines.
     /// </summary>
-    public class MachineHostingOptions
+    public class BareMetalHostingOptions
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public MachineHostingOptions()
+        public BareMetalHostingOptions()
         {
         }
 

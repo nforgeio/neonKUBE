@@ -35,7 +35,7 @@ using Neon.Common;
 using Neon.Net;
 using System.Runtime;
 
-namespace Neon.Kube
+namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// Specifies the Amazon Web Services hosting settings.

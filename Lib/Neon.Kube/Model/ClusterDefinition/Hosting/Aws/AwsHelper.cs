@@ -33,7 +33,7 @@ using Newtonsoft.Json.Serialization;
 using Neon.Common;
 using Neon.Net;
 
-namespace Neon.Kube
+namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// AWS helpers.

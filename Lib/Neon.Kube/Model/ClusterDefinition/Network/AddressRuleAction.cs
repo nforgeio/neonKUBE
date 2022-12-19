@@ -37,7 +37,7 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.Net;
 
-namespace Neon.Kube
+namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// Enumerates the possible actions for an <see cref="AddressRule"/>.

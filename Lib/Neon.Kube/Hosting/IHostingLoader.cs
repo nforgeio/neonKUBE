@@ -35,6 +35,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Deployment;
 using Neon.IO;
+using Neon.Kube.ClusterDef;
 using Neon.Net;
 using Neon.Time;
 

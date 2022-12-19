@@ -37,7 +37,7 @@ using Neon.Net;
 
 using k8s.Models;
 
-namespace Neon.Kube
+namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// Describes a cluster node.

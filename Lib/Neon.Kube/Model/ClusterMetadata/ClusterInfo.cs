@@ -24,6 +24,7 @@ using System.Runtime.Serialization;
 using Newtonsoft.Json;
 
 using Neon.Common;
+using Neon.Kube.ClusterDef;
 
 namespace Neon.Kube
 {

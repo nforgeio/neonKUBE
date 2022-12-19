@@ -38,7 +38,7 @@ using Neon.IO;
 
 using k8s.Models;
 
-namespace Neon.Kube
+namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// Specifies the options for configuring the cluster integrated Prometheus 

@@ -37,7 +37,7 @@ using Neon.Common;
 using Neon.IO;
 using Neon.Net;
 
-namespace Neon.Kube
+namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// Describes the location and credentials required to connect to

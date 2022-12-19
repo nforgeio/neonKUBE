@@ -18,7 +18,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace Neon.Kube
+namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// Enumerates the cluster purposes.

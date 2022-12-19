@@ -17,6 +17,8 @@
 
 using System;
 
+using Neon.Kube.ClusterDef;
+
 namespace Neon.Kube
 {
     /// <summary>

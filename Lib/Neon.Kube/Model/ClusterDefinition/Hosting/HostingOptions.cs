@@ -34,10 +34,10 @@ using Newtonsoft.Json.Serialization;
 using YamlDotNet.Serialization;
 
 using Neon.Common;
+using Neon.Kube.ClusterDef;
 using Neon.Net;
-using System.Resources;
 
-namespace Neon.Kube
+namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// Specifies the cloud or co-location/on-premise hosting settings.
@@ -103,10 +103,10 @@ namespace Neon.Kube
         /// <summary>
         /// Specifies the hosting settings when hosting directly on bare metal or virtual machines.
         /// </summary>
-        [JsonProperty(PropertyName = "Machine", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "machine", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "BareMetal", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "bareMetal", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public MachineHostingOptions Machine { get; set; } = null;
+        public BareMetalHostingOptions BareMetal { get; set; } = null;
 
         /// <summary>
         /// Specifies cloud related options for clusters to be deployed to one of the public cloud providers.
@@ -233,8 +233,8 @@ namespace Neon.Kube
 
                 case HostingEnvironment.BareMetal:
 
-                    Machine = Machine ?? new MachineHostingOptions();
-                    Machine.Validate(clusterDefinition);
+                    BareMetal = BareMetal ?? new BareMetalHostingOptions();
+                    BareMetal.Validate(clusterDefinition);
                     break;
 
                 case HostingEnvironment.Google:
@@ -289,7 +289,7 @@ namespace Neon.Kube
             clusterDefinition.Hosting.Azure?.ClearSecrets();
             clusterDefinition.Hosting.Google?.ClearSecrets();
             clusterDefinition.Hosting.HyperV?.ClearSecrets();
-            clusterDefinition.Hosting.Machine?.ClearSecrets();
+            clusterDefinition.Hosting.BareMetal?.ClearSecrets();
             clusterDefinition.Hosting.Vm?.ClearSecrets();
             clusterDefinition.Hosting.XenServer?.ClearSecrets();
         }

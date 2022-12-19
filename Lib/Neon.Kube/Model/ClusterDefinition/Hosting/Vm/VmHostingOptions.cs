@@ -34,7 +34,7 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.Net;
 
-namespace Neon.Kube
+namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// Specifies common options for on-premise hypervisor based hosting environments such as

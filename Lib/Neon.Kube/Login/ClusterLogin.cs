@@ -34,6 +34,7 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Kube.ClusterDef;
 using Neon.SSH;
 
 namespace Neon.Kube

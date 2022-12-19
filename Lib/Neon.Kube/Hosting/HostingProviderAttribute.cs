@@ -19,6 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+using Neon.Kube.ClusterDef;
+
 namespace Neon.Kube.Hosting
 {
     /// <summary>

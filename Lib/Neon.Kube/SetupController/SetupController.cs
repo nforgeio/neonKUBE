@@ -28,6 +28,7 @@ using System.Threading.Tasks;
 
 using Neon.Collections;
 using Neon.Common;
+using Neon.Kube.ClusterDef;
 using Neon.Net;
 using Neon.SSH;
 using Neon.Tasks;

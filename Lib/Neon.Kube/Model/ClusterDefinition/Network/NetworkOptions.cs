@@ -38,7 +38,7 @@ using Neon.Net;
 using Neon.Time;
 using System.Data;
 
-namespace Neon.Kube
+namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// Describes the network options for a cluster.

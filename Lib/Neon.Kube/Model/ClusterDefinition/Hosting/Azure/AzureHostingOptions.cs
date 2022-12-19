@@ -35,7 +35,7 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.Net;
 
-namespace Neon.Kube
+namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// Specifies the Microsoft Azure cluster hosting settings.
