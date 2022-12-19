@@ -102,8 +102,8 @@
 
     <Target Name="ModelGen" BeforeTargets="CoreCompile">
         <!--- Generate the model source files -->
-        <Message Importance="high" Text="&quot;$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\win-x64\neon-modelgen&quot; --targets=all --target-namespace=Neon.Kube &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\net7.0\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
-        <Exec Command="&quot;$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\win-x64\neon-modelgen&quot; --targets=all --target-namespace=Neon.Kube &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\net7.0\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
+        <Message Importance="high" Text="&quot;$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\win-x64\neon-modelgen&quot; --targets=all --target-namespace=Neon.Kube.Clients &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\net7.0\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
+        <Exec Command="&quot;$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\win-x64\neon-modelgen&quot; --targets=all --target-namespace=Neon.Kube.Clients &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\net7.0\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
         <ItemGroup>
             <!--- Ensure that the new files are included in the build -->
             <Compile Include="**\*.cs" KeepDuplicates="false" />

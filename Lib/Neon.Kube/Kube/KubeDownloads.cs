@@ -25,6 +25,7 @@ using System.Threading.Tasks;
 
 using Neon.Collections;
 using Neon.Common;
+using Neon.Kube.Clients;
 using Neon.Kube.ClusterDef;
 using Neon.Net;
 

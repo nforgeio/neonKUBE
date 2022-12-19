@@ -45,6 +45,7 @@ using Neon.Common;
 using Neon.Data;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.Clients;
 using Neon.Kube.Glauth;
 using Neon.Kube.Operator;
 using Neon.Kube.Resources;
