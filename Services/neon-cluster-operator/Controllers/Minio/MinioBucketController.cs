@@ -40,6 +40,7 @@ using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Operator;
 using Neon.Kube.Resources;
+using Neon.Kube.Resources.Minio;
 using Neon.Retry;
 using Neon.Tasks;
 using Neon.Time;
