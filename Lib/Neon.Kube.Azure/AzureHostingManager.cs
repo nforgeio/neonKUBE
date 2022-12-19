@@ -58,6 +58,7 @@ using Neon.Cryptography;
 using Neon.IO;
 using Neon.Kube.Clients;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.Proxy;
 using Neon.Net;
 using Neon.SSH;
 using Neon.Tasks;

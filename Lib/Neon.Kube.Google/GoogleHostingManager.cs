@@ -39,6 +39,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.Proxy;
 using Neon.Net;
 using Neon.SSH;
 using Neon.Time;

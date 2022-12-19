@@ -40,7 +40,7 @@ using Neon.SSH;
 using Neon.Time;
 using Neon.Tasks;
 
-namespace Neon.Kube
+namespace Neon.Kube.Proxy
 {
     /// <summary>
     /// Specifies options for resetting an existing cluster.

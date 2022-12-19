@@ -18,6 +18,7 @@
 using System;
 
 using Neon.Kube.ClusterDef;
+using Neon.Kube.Proxy;
 
 namespace Neon.Kube
 {

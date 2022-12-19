@@ -41,6 +41,7 @@ using Neon.Kube.Hosting.BareMetal;
 using Neon.Kube.Hosting.Google;
 using Neon.Kube.Hosting.HyperV;
 using Neon.Kube.Hosting.XenServer;
+using Neon.Kube.Proxy;
 using Neon.Net;
 using Neon.Time;
 

@@ -39,6 +39,7 @@ using Neon.Common;
 using Neon.Data;
 using Neon.Deployment;
 using Neon.IO;
+using Neon.Kube.Proxy;
 using Neon.Retry;
 using Neon.Net;
 using Neon.SSH;

@@ -29,6 +29,7 @@ using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Hosting;
+using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
 using Neon.SSH;
 using Neon.Xunit;

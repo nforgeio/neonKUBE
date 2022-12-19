@@ -30,6 +30,7 @@ using Newtonsoft.Json;
 using Neon.Common;
 using Neon.Data;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.Proxy;
 using Neon.SSH;
 using Neon.XenServer;
 

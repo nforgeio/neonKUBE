@@ -49,7 +49,7 @@ using Newtonsoft.Json.Linq;
 using Renci.SshNet;
 using Renci.SshNet.Common;
 
-namespace Neon.Kube
+namespace Neon.Kube.Proxy
 {
     public partial class NodeSshProxy<TMetadata> : LinuxSshProxy<TMetadata>
         where TMetadata : class

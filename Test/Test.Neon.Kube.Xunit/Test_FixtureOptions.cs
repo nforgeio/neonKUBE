@@ -29,6 +29,7 @@ using Neon.Common;
 using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Proxy;
 using Neon.Kube.Xunit;
 using Neon.Xunit;
 

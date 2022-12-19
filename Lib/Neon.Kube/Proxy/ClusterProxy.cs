@@ -44,7 +44,7 @@ using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
 
-namespace Neon.Kube
+namespace Neon.Kube.Proxy
 {
     /// <summary>
     /// Creates a <see cref="NodeSshProxy{TMetadata}"/> for the specified host and server name,

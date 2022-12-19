@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    HarborCluster.cs
+// FILE:	    HarborNotaryServer.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -16,39 +16,36 @@
 // limitations under the License.
 
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
-using System.Text.Json;
 
 using k8s;
 using k8s.Models;
 
-using Neon.Common;
 using Neon.JsonConverters;
 
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.Harbor
 {
     /// <summary>
-    /// HarborCluster.
+    /// HarborNotaryServer.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
-    public class HarborCluster : IKubernetesObject<V1ObjectMeta>, ISpec<object>, IValidate
+    public class HarborNotaryServer : IKubernetesObject<V1ObjectMeta>, ISpec<object>, IValidate
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeApiVersion = "v1alpha3";
+        public const string KubeApiVersion = "v1beta1";
 
         /// <summary>
         /// The Kubernetes named schema this object is based on.
         /// </summary>
-        public const string KubeKind = "HarborCluster";
+        public const string KubeKind = "NotaryServer";
 
         /// <summary>
         /// The Group this Kubernetes type belongs to.
@@ -58,12 +55,12 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// The plural name of the entity.
         /// </summary>
-        public const string KubePlural = "harborclusters";
+        public const string KubePlural = "notaryservers";
 
         /// <summary>
-        /// Initializes a new instance of the HarborCluster class.
+        /// Initializes a new instance of the HarborNotaryServer class.
         /// </summary>
-        public HarborCluster()
+        public HarborNotaryServer()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
             Kind = KubeKind;
@@ -97,7 +94,7 @@ namespace Neon.Kube.Resources
 
         /// <summary>
         /// Gets or sets specification of the desired behavior of the
-        /// HarborCluster.
+        /// HarborNotaryServer.
         /// </summary>
         [JsonProperty(PropertyName = "spec")]
         [System.Text.Json.Serialization.JsonConverter(typeof(JsonGenericConverter<dynamic>))]

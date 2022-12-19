@@ -44,7 +44,7 @@ using Newtonsoft.Json.Linq;
 using Renci.SshNet;
 using Renci.SshNet.Common;
 
-namespace Neon.Kube
+namespace Neon.Kube.Proxy
 {
     /// <summary>
     /// Used to reference node proxy common properties.

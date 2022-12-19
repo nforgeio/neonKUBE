@@ -27,6 +27,7 @@ using System.Threading.Tasks;
 
 using Neon.Collections;
 using Neon.Common;
+using Neon.Kube.Proxy;
 using Neon.SSH;
 
 namespace Neon.Kube

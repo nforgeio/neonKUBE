@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Grafana.cs
+// FILE:	    HarborCluster.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -16,52 +16,57 @@
 // limitations under the License.
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 
 using k8s;
 using k8s.Models;
+
+using Neon.Common;
 using Neon.JsonConverters;
+
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.Harbor
 {
     /// <summary>
-    /// Grafana.
+    /// HarborCluster.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
-    public class Grafana : IKubernetesObject<V1ObjectMeta>, ISpec<object>, IValidate
+    public class HarborCluster : IKubernetesObject<V1ObjectMeta>, ISpec<object>, IValidate
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeApiVersion = "v1alpha1";
+        public const string KubeApiVersion = "v1alpha3";
 
         /// <summary>
         /// The Kubernetes named schema this object is based on.
         /// </summary>
-        public const string KubeKind = "Grafana";
+        public const string KubeKind = "HarborCluster";
 
         /// <summary>
         /// The Group this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeGroup = "integreatly.org";
+        public const string KubeGroup = "goharbor.io";
 
         /// <summary>
         /// The plural name of the entity.
         /// </summary>
-        public const string KubePlural = "grafanas";
+        public const string KubePlural = "harborclusters";
 
         /// <summary>
-        /// Initializes a new instance of the Grafana class.
+        /// Initializes a new instance of the HarborCluster class.
         /// </summary>
-        public Grafana()
+        public HarborCluster()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
-            Kind       = KubeKind;
+            Kind = KubeKind;
         }
 
         /// <summary>
@@ -92,7 +97,7 @@ namespace Neon.Kube.Resources
 
         /// <summary>
         /// Gets or sets specification of the desired behavior of the
-        /// Grafana.
+        /// HarborCluster.
         /// </summary>
         [JsonProperty(PropertyName = "spec")]
         [System.Text.Json.Serialization.JsonConverter(typeof(JsonGenericConverter<dynamic>))]

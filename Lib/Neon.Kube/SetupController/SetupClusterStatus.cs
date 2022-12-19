@@ -29,6 +29,7 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.Data;
+using Neon.Kube.Proxy;
 
 namespace Neon.Kube
 {

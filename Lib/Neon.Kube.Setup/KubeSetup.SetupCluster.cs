@@ -42,6 +42,7 @@ using Neon.Kube;
 using Neon.Kube.Clients;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Hosting;
+using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
 using Neon.Retry;
 using Neon.SSH;
