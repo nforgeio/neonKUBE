@@ -40,7 +40,7 @@ using Neon.IO;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Hosting;
 using Neon.Net;
-using Neon.BuildInfo;
+using Neon.Kube.Resources.Dex;
 
 namespace Neon.Kube.ClusterDef
 {

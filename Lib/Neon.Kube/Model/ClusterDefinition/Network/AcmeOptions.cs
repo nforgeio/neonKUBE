@@ -34,6 +34,7 @@ using Newtonsoft.Json.Serialization;
 using YamlDotNet.Serialization;
 
 using Neon.Common;
+using Neon.Kube.Resources.CertManager;
 using Neon.Net;
 using Neon.Time;
 using Neon.Kube.Resources;

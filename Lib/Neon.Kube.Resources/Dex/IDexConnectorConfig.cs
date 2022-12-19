@@ -23,13 +23,14 @@ using System.Text;
 
 using Neon.Common;
 using Neon.Kube.Resources;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
 
-namespace Neon.Kube
+namespace Neon.Kube.Resources.Dex
 {
     /// <summary>
     /// Configuration for backend connectors.

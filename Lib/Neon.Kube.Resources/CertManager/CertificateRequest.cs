@@ -26,7 +26,7 @@ using k8s.Models;
 using Neon.JsonConverters;
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.CertManager
 {
     /// <summary>
     /// A CertificateRequest is used to request a signed certificate from one of the configured issuers. 

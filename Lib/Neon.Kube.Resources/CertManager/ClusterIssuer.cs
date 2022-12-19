@@ -26,7 +26,7 @@ using k8s.Models;
 
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.CertManager
 {
     /// <summary>
     /// A ClusterIssuer represents a certificate issuing authority which can be referenced as part of issuerRef fields. 

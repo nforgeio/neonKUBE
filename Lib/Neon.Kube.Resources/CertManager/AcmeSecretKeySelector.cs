@@ -37,7 +37,7 @@ using Neon.Common;
 using Neon.Net;
 using Neon.Time;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.CertManager
 {
     /// <summary>
     /// Describes CertManager Secret Key Selector.

@@ -35,7 +35,7 @@ using Newtonsoft.Json.Serialization;
 using Neon.Common;
 using Neon.Net;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.CertManager
 {
     /// <summary>
     /// The private key cryptography standards (PKCS) for this certificate's private key to be encoded in. 

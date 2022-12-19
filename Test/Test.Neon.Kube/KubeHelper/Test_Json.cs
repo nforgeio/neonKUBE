@@ -34,6 +34,7 @@ using Neon.Common;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Resources;
+using Neon.Kube.Resources.CertManager;
 using Neon.Kube.Xunit;
 using Neon.Xunit;
 

@@ -28,7 +28,7 @@ using Newtonsoft.Json;
 
 using YamlDotNet.Serialization;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.CertManager
 {
     /// <summary>
     /// Defines the Route 53 configuration for AWS.

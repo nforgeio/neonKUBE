@@ -26,7 +26,7 @@ using k8s.Models;
 
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.CertManager
 {
     /// <summary>
     /// Full X509 name specification (https://golang.org/pkg/crypto/x509/pkix/#Name).

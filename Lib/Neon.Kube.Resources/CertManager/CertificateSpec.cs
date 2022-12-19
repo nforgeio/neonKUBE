@@ -26,7 +26,7 @@ using k8s.Models;
 using Neon.JsonConverters;
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.CertManager
 {
     /// <summary>
     /// The kubernetes spec for a cert-manager certificate.

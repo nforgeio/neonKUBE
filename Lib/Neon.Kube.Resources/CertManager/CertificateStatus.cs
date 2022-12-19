@@ -32,7 +32,7 @@ using Org.BouncyCastle.Asn1.Ocsp;
 using Org.BouncyCastle.Crypto.Tls;
 using static System.Net.Mime.MediaTypeNames;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.CertManager
 {
     /// <summary>
     /// Status of the Certificate. This is set and managed automatically.

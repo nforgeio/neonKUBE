@@ -26,7 +26,7 @@ using k8s.Models;
 
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.CertManager
 {
     /// <summary>
     /// A Certificate resource should be created to ensure an up to date and signed x509 certificate is stored in the Kubernetes 

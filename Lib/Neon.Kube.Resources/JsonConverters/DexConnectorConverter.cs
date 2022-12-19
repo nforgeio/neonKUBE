@@ -24,17 +24,10 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Kube.Resources.Dex;
 
 using k8s;
 using k8s.Models;
-using IdentityModel.OidcClient;
-using System.Text.Json.Nodes;
-using System.Data;
-using YamlDotNet.Core;
-using AutoMapper;
-using System.Collections;
-using YamlDotNet.Core.Tokens;
-using static Neon.Common.Stub;
 
 namespace Neon.Kube.Resources
 {

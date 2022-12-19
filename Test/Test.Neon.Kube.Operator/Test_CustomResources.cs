@@ -25,6 +25,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+
 using k8s;
 using k8s.Models;
 
@@ -33,6 +34,7 @@ using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Operator;
 using Neon.Kube.Resources;
+using Neon.Kube.Resources.Dex;
 using Neon.Kube.Xunit;
 using Neon.Xunit;
 

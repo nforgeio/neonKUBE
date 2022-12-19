@@ -24,10 +24,9 @@ using System.Text;
 using Neon.Kube.Resources;
 
 using Newtonsoft.Json;
-
 using YamlDotNet.Serialization;
 
-namespace Neon.Kube
+namespace Neon.Kube.Resources.Dex
 {
     /// <summary>
     /// Dex Oauth2 configuration model.

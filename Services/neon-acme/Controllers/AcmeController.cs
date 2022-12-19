@@ -34,6 +34,7 @@ using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Service;
 using Neon.Kube;
+using Neon.Kube.Resources.CertManager;
 using Neon.Tasks;
 using Neon.Net;
 using Neon.Web;

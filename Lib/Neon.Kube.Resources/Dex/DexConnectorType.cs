@@ -35,7 +35,7 @@ using Newtonsoft.Json.Serialization;
 using Neon.Common;
 using Neon.Net;
 
-namespace Neon.Kube
+namespace Neon.Kube.Resources.Dex
 {
     /// <summary>
     /// Enumerates Dex storage types.
