@@ -89,6 +89,9 @@ cluster definition or by executing this command on your cluster:
         public override string[] ExtendedOptions => new string[] { "--force" };
 
         /// <inheritdoc/>
+        public override bool NeedsHostingManager => true;
+
+        /// <inheritdoc/>
         public override void Help()
         {
             Console.WriteLine(usage);

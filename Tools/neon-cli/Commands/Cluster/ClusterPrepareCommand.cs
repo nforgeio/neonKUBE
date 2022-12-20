@@ -147,6 +147,9 @@ OPTIONS:
         public override bool NeedsSshCredentials(CommandLine commandLine) => !commandLine.HasOption("--remove-templates");
 
         /// <inheritdoc/>
+        public override bool NeedsHostingManager => true;
+
+        /// <inheritdoc/>
         public override void Help()
         {
             Console.WriteLine(usage);

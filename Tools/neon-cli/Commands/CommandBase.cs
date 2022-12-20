@@ -66,6 +66,9 @@ namespace NeonCli
         }
 
         /// <inheritdoc/>
+        public virtual bool NeedsHostingManager => false;
+
+        /// <inheritdoc/>
         public virtual string SplitItem
         {
             get { return null; }

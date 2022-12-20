@@ -75,6 +75,9 @@ USAGE:
         public override string[] Words => new string[] { "cluster", "unlock" };
 
         /// <inheritdoc/>
+        public override bool NeedsHostingManager => true;
+
+        /// <inheritdoc/>
         public override void Help()
         {
             Console.WriteLine(usage);

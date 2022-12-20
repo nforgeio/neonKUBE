@@ -69,6 +69,12 @@ USAGE: neon cluster ingo
         public override string[] Words => new string[] { "cluster", "info" };
 
         /// <inheritdoc/>
+        public override string[] ExtendedOptions => new string[] { "--force" };
+
+        /// <inheritdoc/>
+        public override bool NeedsHostingManager => true;
+
+        /// <inheritdoc/>
         public override void Help()
         {
             Console.WriteLine(usage);

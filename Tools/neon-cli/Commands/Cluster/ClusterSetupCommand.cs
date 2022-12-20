@@ -132,6 +132,9 @@ OPTIONS:
         };
 
         /// <inheritdoc/>
+        public override bool NeedsHostingManager => true;
+
+        /// <inheritdoc/>
         public override void Help()
         {
             Console.WriteLine(usage);

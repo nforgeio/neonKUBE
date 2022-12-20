@@ -89,6 +89,9 @@ where PURPOSE can be passed as (case insensitive):
         public override string[] Words => new string[] { "cluster", "purpose" };
 
         /// <inheritdoc/>
+        public override bool NeedsHostingManager => true;
+
+        /// <inheritdoc/>
         public override void Help()
         {
             Console.WriteLine(usage);

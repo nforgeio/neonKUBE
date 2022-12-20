@@ -70,13 +70,18 @@ namespace NeonCli
         bool CheckOptions { get; }
 
         /// <summary>
-        /// Returns <c>true</c> if the command requires server SSH credentials to be
+        /// Returns <c>true</c> when the command requires server SSH credentials to be
         /// specified on the command line via the <b>-u/--user</b> and <b>-p/--password</b>
         /// options vs. obtaining them from the currently logged in cluster secrets or
         /// not needing credentials at all.
         /// </summary>
         /// <param name="commandLine">The command line.</param>
         bool NeedsSshCredentials(CommandLine commandLine);
+
+        /// <summary>
+        /// Returns <c>true</c> when the command will require access to a hosting manager.
+        /// </summary>
+        bool NeedsHostingManager { get; }
 
         /// <summary>
         /// Returns the item used to split a command line into two parts with
@@ -104,6 +109,7 @@ namespace NeonCli
         public string[]     Words { get; }
         public string[]     AltWords { get; }
         public string[]     ExtendedOptions { get; }
+        public bool         NeedsHostingManager { get; }
         public bool         CheckOptions { get; }
         public string       SplitItem { get; }
 
