@@ -5168,55 +5168,6 @@ $@"- name: StorageType
 
                     await k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-sso-dex", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
-
-            controller.ThrowIfCancelled();
-            await controlNode.InvokeIdempotentAsync("setup/dex-connectors",
-                async () =>
-                {
-                    controller.LogProgress(controlNode, verb: "wait for", message: "neon-sso connectors");
-                    
-                    foreach (var connector in cluster.Definition.SsoConnectors)
-                    {
-                        switch (connector.Type)
-                        {
-                            case DexConnectorType.Ldap:
-
-                                var ldapConnector = (DexConnector<DexLdapConfig>)connector;
-
-                                await k8s.CustomObjects.UpsertClusterCustomObjectAsync(
-                                    new V1NeonSsoConnector()
-                                    {
-                                        Metadata = new V1ObjectMeta()
-                                        {
-                                            Name = connector.Id,
-                                        },
-                                        Spec = ldapConnector
-                                    }, connector.Id);
-
-                                break;
-
-                            case DexConnectorType.Oidc:
-
-                                var oidcConnector = (IDexConnector<DexOidcConfig>)connector;
-
-                                var str = KubernetesJson.Serialize(oidcConnector);
-
-                                await k8s.CustomObjects.UpsertClusterCustomObjectAsync(
-                                    new V1NeonSsoConnector()
-                                    {
-                                        Metadata = new V1ObjectMeta()
-                                        {
-                                            Name = connector.Id,
-                                        },
-                                        Spec = oidcConnector
-                                    }, connector.Id);
-
-                                break;
-                        }
-
-                        
-                    }
-                });
         }
 
         /// <summary>

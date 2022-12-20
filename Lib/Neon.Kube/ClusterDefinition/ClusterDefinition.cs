@@ -613,14 +613,6 @@ namespace Neon.Kube.ClusterDef
         public string Datacenter { get; set; } = String.Empty;
 
         /// <summary>
-        /// 
-        /// </summary>
-        [JsonProperty(PropertyName = "SsoConnectors", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "ssoConnectors", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public List<IV1DexConnector> SsoConnectors { get; set; } = new List<IV1DexConnector>();
-
-        /// <summary>
         /// The JWT used by the cluster to interact with the headend.
         /// </summary>
         [JsonProperty(PropertyName = "NeonCloudToken", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -1114,19 +1106,18 @@ namespace Neon.Kube.ClusterDef
 
             // Validate the properties.
 
-            FeatureGates  = FeatureGates ?? new Dictionary<string, bool>();
-            Deployment    = Deployment ?? new DeploymentOptions();
-            Storage       = Storage ?? new StorageOptions();
-            Security      = Security ?? new SecurityOptions();
-            Kubernetes    = Kubernetes ?? new KubernetesOptions();
-            Monitor       = Monitor ?? new MonitorOptions();
-            Hosting       = Hosting ?? new HostingOptions();
-            Hosting.Vm    = Hosting.Vm ?? new VmHostingOptions();
-            NodeOptions   = NodeOptions ?? new NodeOptions();
-            Network       = Network ?? new NetworkOptions();
-            Container     = Container ?? new ContainerOptions();
-            Features      = Features ?? new FeatureOptions();
-            SsoConnectors = SsoConnectors ?? new List<IV1DexConnector>();
+            FeatureGates = FeatureGates ?? new Dictionary<string, bool>();
+            Deployment   = Deployment ?? new DeploymentOptions();
+            Storage      = Storage ?? new StorageOptions();
+            Security     = Security ?? new SecurityOptions();
+            Kubernetes   = Kubernetes ?? new KubernetesOptions();
+            Monitor      = Monitor ?? new MonitorOptions();
+            Hosting      = Hosting ?? new HostingOptions();
+            Hosting.Vm   = Hosting.Vm ?? new VmHostingOptions();
+            NodeOptions  = NodeOptions ?? new NodeOptions();
+            Network      = Network ?? new NetworkOptions();
+            Container    = Container ?? new ContainerOptions();
+            Features     = Features ?? new FeatureOptions();
 
             if (IsDesktop && Nodes.Count() > 1)
             {

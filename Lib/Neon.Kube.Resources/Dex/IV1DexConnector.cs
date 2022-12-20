@@ -88,10 +88,7 @@ namespace Neon.Kube.Resources.Dex
         /// <returns></returns>
         public override bool CanConvert(Type objectType)
         {
-            var result = objectType == typeof(IV1DexConnector)
-                || objectType.Implements<IV1DexConnector>();
-
-            return result;
+            return objectType == typeof(IV1DexConnector) || objectType.Implements<IV1DexConnector>();
         }
 
         /// <summary>
