@@ -21,6 +21,7 @@ using Neon.Common;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Hosting;
 using Neon.Kube.Proxy;
+using Neon.Kube.Setup;
 
 using k8s;
 

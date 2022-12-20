@@ -31,7 +31,7 @@ using Neon.Common;
 using Neon.Data;
 using Neon.Kube.Proxy;
 
-namespace Neon.Kube
+namespace Neon.Kube.Setup
 {
     /// <summary>
     /// Describes the current state of cluster setup.

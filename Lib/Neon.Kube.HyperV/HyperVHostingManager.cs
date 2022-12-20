@@ -44,6 +44,7 @@ using Neon.HyperV;
 using Neon.IO;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Proxy;
+using Neon.Kube.Setup;
 using Neon.Net;
 using Neon.SSH;
 using Neon.Tasks;

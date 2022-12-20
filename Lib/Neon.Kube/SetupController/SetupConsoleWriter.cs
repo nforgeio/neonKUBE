@@ -26,7 +26,7 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 
-namespace Neon.Kube
+namespace Neon.Kube.Setup
 {
     /// <summary>
     /// Used internally to update .NET console window without flickering.

@@ -39,6 +39,7 @@ using Neon.Cryptography;
 using Neon.IO;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Hosting;
+using Neon.Kube.Setup;
 using Neon.Net;
 using Neon.Kube.Resources.Dex;
 

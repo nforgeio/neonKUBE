@@ -37,7 +37,7 @@ using Neon.Retry;
 using Neon.SSH;
 using Neon.Time;
 
-namespace Neon.Kube
+namespace Neon.Kube.Setup
 {
     public partial class SetupClusterStatus
     {

@@ -30,7 +30,7 @@ using Neon.Common;
 using Neon.Kube.Proxy;
 using Neon.SSH;
 
-namespace Neon.Kube
+namespace Neon.Kube.Setup
 {
     /// <summary>
     /// Describes some common methods exposed by all <see cref="SetupController{NodeMetadata}"/> implementations.

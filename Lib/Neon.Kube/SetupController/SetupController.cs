@@ -28,13 +28,14 @@ using System.Threading.Tasks;
 
 using Neon.Collections;
 using Neon.Common;
+using Neon.Kube;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Proxy;
 using Neon.Net;
 using Neon.SSH;
 using Neon.Tasks;
 
-namespace Neon.Kube
+namespace Neon.Kube.Setup
 {
     /// <summary>
     /// Manages a cluster setup operation consisting of a series of setup steps

@@ -30,7 +30,7 @@ using Newtonsoft.Json;
 using Neon.Common;
 using Neon.Data;
 
-namespace Neon.Kube
+namespace Neon.Kube.Setup
 {
     /// <summary>
     /// Holds information about an executing setup step.  This is the argument

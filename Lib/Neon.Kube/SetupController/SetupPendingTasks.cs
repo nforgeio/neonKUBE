@@ -32,7 +32,7 @@ using Neon.Data;
 using Neon.Kube.Proxy;
 using Neon.Tasks;
 
-namespace Neon.Kube
+namespace Neon.Kube.Setup
 {
     /// <summary>
     /// Used to track and wait for previously initiated setup tasks to complete by

@@ -18,6 +18,8 @@
 using System;
 using System.Runtime.Serialization;
 
+using Neon.Kube.Setup;
+
 namespace Neon.Kube.ClusterDef
 {
     /// <summary>
