@@ -34,7 +34,7 @@ namespace Neon.Kube.Resources.CertManager
     /// in any namespace, not just the same namespace as the referent.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
-    public class ClusterIssuer : IKubernetesObject<V1ObjectMeta>, ISpec<IssuerSpec>, IValidate
+    public class ClusterIssuer : IKubernetesObject<V1ObjectMeta>, ISpec<V1IssuerSpec>, IValidate
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
@@ -62,7 +62,7 @@ namespace Neon.Kube.Resources.CertManager
         public ClusterIssuer()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
-            Kind = KubeKind;
+            Kind       = KubeKind;
         }
 
         /// <summary>
@@ -96,7 +96,7 @@ namespace Neon.Kube.Resources.CertManager
         /// ClusterIssuer.
         /// </summary>
         [JsonProperty(PropertyName = "spec")]
-        public IssuerSpec Spec { get; set; }
+        public V1IssuerSpec Spec { get; set; }
 
         /// <summary>
         /// Validate the object.

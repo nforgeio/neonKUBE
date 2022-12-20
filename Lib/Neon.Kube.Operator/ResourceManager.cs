@@ -32,24 +32,16 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-using Neon.Common;
-using Neon.Diagnostics;
-using Neon.IO;
-using Neon.Kube;
-using Neon.Tasks;
-
 using k8s;
 using k8s.Autorest;
 using k8s.LeaderElection;
 using k8s.Models;
 
-using Prometheus;
-using OpenTelemetry.Resources;
-using Microsoft.AspNetCore.Mvc;
-using KellermanSoftware.CompareNetObjects;
-using System.Security.AccessControl;
-using Neon.Kube.Resources;
-using Microsoft.AspNetCore.Http;
+using Neon.Common;
+using Neon.Diagnostics;
+using Neon.IO;
+using Neon.Kube;
+using Neon.Tasks;
 
 // $todo(jefflill):
 //

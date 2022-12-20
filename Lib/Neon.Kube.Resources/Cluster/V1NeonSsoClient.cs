@@ -29,7 +29,7 @@ namespace Neon.Kube.Resources.Cluster
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
     [EntityScope(EntityScope.Cluster)]
-    public class V1NeonSsoClient : IKubernetesObject<V1ObjectMeta>, ISpec<SsoClientSpec>
+    public class V1NeonSsoClient : IKubernetesObject<V1ObjectMeta>, ISpec<V1SsoClientSpec>
     {
         /// <summary>
         /// Object API group.
@@ -57,7 +57,7 @@ namespace Neon.Kube.Resources.Cluster
         public V1NeonSsoClient()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
-            Kind = KubeKind;
+            Kind       = KubeKind;
         }
 
         /// <summary>
@@ -86,13 +86,13 @@ namespace Neon.Kube.Resources.Cluster
         /// <summary>
         /// The spec.
         /// </summary>
-        public SsoClientSpec Spec { get; set; }
+        public V1SsoClientSpec Spec { get; set; }
     }
 
     /// <summary>
     /// The SSO client specification.
     /// </summary>
-    public class SsoClientSpec
+    public class V1SsoClientSpec
     {
         /// <summary>
         /// The client ID used to identify the client.

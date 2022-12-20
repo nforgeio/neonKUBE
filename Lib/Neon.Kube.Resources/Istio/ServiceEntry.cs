@@ -33,7 +33,7 @@ namespace Neon.Kube.Resources.Istio
     /// ServiceEntry enables adding additional entries into Istio’s internal service registry.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
-    public class ServiceEntry : IKubernetesObject<V1ObjectMeta>, ISpec<ServiceEntrySpec>, IValidate
+    public class ServiceEntry : IKubernetesObject<V1ObjectMeta>, ISpec<V1ServiceEntrySpec>, IValidate
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
@@ -61,7 +61,7 @@ namespace Neon.Kube.Resources.Istio
         public ServiceEntry()
         {
             ApiVersion = "networking.istio.io/v1beta1";
-            Kind = "ServiceEntry";
+            Kind       = "ServiceEntry";
         }
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace Neon.Kube.Resources.Istio
         /// ServiceEntry.
         /// </summary>
         [JsonProperty(PropertyName = "spec")]
-        public ServiceEntrySpec Spec { get; set; }
+        public V1ServiceEntrySpec Spec { get; set; }
 
         /// <summary>
         /// Validate the object.

@@ -370,13 +370,13 @@ namespace NeonClusterOperator
         {
             Logger.LogInformationEx(() => "Checking webhook certificate.");
 
-            var cert = await K8s.CustomObjects.ListNamespacedCustomObjectAsync<Certificate>(KubeNamespace.NeonSystem, labelSelector: $"{NeonLabel.ManagedBy}={Name}");
+            var cert = await K8s.CustomObjects.ListNamespacedCustomObjectAsync<V1Certificate>(KubeNamespace.NeonSystem, labelSelector: $"{NeonLabel.ManagedBy}={Name}");
 
             if (!cert.Items.Any())
             {
                 Logger.LogInformationEx(() => "Webhook certificate does not exist, creating...");
 
-                var certificate = new Certificate()
+                var certificate = new V1Certificate()
                 {
                     Metadata = new V1ObjectMeta()
                     {
@@ -387,7 +387,7 @@ namespace NeonClusterOperator
                             { NeonLabel.ManagedBy, Name }
                         }
                     },
-                    Spec = new CertificateSpec()
+                    Spec = new V1CertificateSpec()
                     {
                         DnsNames = new List<string>()
                     {

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IDexConnector.cs
+// FILE:	    IV1DexConnector.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -39,7 +39,7 @@ namespace Neon.Kube.Resources.Dex
     [Newtonsoft.Json.JsonConverter(typeof(DexConnectorConverter))]
 
     [System.Text.Json.Serialization.JsonConverter(typeof(DexConnectorJsonConverter))]
-    public interface IDexConnector
+    public interface IV1DexConnector
     {
         /// <summary>
         /// Connector ID
@@ -88,8 +88,8 @@ namespace Neon.Kube.Resources.Dex
         /// <returns></returns>
         public override bool CanConvert(Type objectType)
         {
-            var result = objectType == typeof(IDexConnector)
-                || objectType.Implements<IDexConnector>();
+            var result = objectType == typeof(IV1DexConnector)
+                || objectType.Implements<IV1DexConnector>();
 
             return result;
         }
@@ -108,7 +108,7 @@ namespace Neon.Kube.Resources.Dex
                JsonSerializer   serializer)
         {
             var jsonObject = JObject.Load(reader);
-            var connector = default(IDexConnector);
+            var connector = default(IV1DexConnector);
 
             var value = jsonObject.Value<string>("type");
             var type  = NeonHelper.ParseEnum<DexConnectorType>(value);

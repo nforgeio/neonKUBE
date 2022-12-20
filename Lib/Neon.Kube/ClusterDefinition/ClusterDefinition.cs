@@ -618,7 +618,7 @@ namespace Neon.Kube.ClusterDef
         [JsonProperty(PropertyName = "SsoConnectors", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "ssoConnectors", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public List<IDexConnector> SsoConnectors { get; set; } = new List<IDexConnector>();
+        public List<IV1DexConnector> SsoConnectors { get; set; } = new List<IV1DexConnector>();
 
         /// <summary>
         /// The JWT used by the cluster to interact with the headend.
@@ -1004,7 +1004,7 @@ namespace Neon.Kube.ClusterDef
             {
                 // $todo(jefflill):
                 //
-                // This amy need to return an array of possible subnets for more advanced cloud
+                // This may need to return an array of possible subnets for more advanced cloud
                 // deployment scenarios (e.g. multiple availability zones or cross region
                 // deployments).
 
@@ -1126,7 +1126,7 @@ namespace Neon.Kube.ClusterDef
             Network       = Network ?? new NetworkOptions();
             Container     = Container ?? new ContainerOptions();
             Features      = Features ?? new FeatureOptions();
-            SsoConnectors = SsoConnectors ?? new List<IDexConnector>();
+            SsoConnectors = SsoConnectors ?? new List<IV1DexConnector>();
 
             if (IsDesktop && Nodes.Count() > 1)
             {

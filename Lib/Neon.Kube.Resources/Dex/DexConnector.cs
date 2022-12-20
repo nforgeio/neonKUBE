@@ -32,7 +32,7 @@ namespace Neon.Kube.Resources.Dex
     /// Configuration for OIDC connectors.
     /// </summary>
     [System.Text.Json.Serialization.JsonConverter(typeof(DexConnectorJsonConverter))]
-    public class DexConnector : IDexConnector
+    public class DexConnector : IV1DexConnector
     {
         /// <summary>
         /// Constructor.

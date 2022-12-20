@@ -57,7 +57,7 @@ namespace Neon.Kube.Resources.Cluster
         public V1NeonClusterOperator()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
-            Kind = KubeKind;
+            Kind       = KubeKind;
         }
 
         /// <summary>

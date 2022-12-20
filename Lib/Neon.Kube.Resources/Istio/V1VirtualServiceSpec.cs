@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    VirtualServiceSpec.cs
+// FILE:	    V1VirtualServiceSpec.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -25,12 +25,12 @@ namespace Neon.Kube.Resources.Istio
     /// <summary>
     /// Describes a load balancer operating at the edge of the mesh receiving incoming or outgoing HTTP/TCP connections.
     /// </summary>
-    public class VirtualServiceSpec
+    public class V1VirtualServiceSpec
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public VirtualServiceSpec()
+        public V1VirtualServiceSpec()
         {
         }
 

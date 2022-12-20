@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TelemetrySpec.cs
+// FILE:	    V1DnsEndpointSpec.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -17,34 +17,29 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Text;
 
 using k8s;
 using k8s.Models;
 
-using Newtonsoft.Json;
-
-namespace Neon.Kube.Resources.Istio
+namespace Neon.Kube.Resources.ExternalDns
 {
     /// <summary>
-    /// Describes a Telemetry spec.
+    /// The Endpoint Spec.
     /// </summary>
-    public class TelemetrySpec
+    public class V1DnsEndpointSpec
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public TelemetrySpec()
+        public V1DnsEndpointSpec()
         {
         }
 
         /// <summary>
-        /// The tracing config.
+        /// The list of <see cref="DnsEndpoint"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "tracing", Required = Required.Default)]
-        [DefaultValue(null)]
-        public List<Tracing> Tracing { get; set; }
+        public List<DnsEndpoint> Endpoints { get; set; }
     }
 }

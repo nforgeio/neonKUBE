@@ -193,7 +193,7 @@ namespace NeonClusterOperator
 
                 if (dexConfig.Connectors == null)
                 {
-                    dexConfig.Connectors = new List<IDexConnector>();
+                    dexConfig.Connectors = new List<IV1DexConnector>();
                 }
                 else if (dexConfig.Connectors.Any(connector => connector.Id == resource.Spec.Id))
                 {

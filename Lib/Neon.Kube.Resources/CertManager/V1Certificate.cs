@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Certificate.cs
+// FILE:	    V1Certificate.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -34,7 +34,7 @@ namespace Neon.Kube.Resources.CertManager
     /// (as configured by `spec.renewBefore`)."
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
-    public class Certificate : IKubernetesObject<V1ObjectMeta>, ISpec<CertificateSpec>, IValidate
+    public class V1Certificate : IKubernetesObject<V1ObjectMeta>, ISpec<V1CertificateSpec>, IValidate
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
@@ -59,10 +59,10 @@ namespace Neon.Kube.Resources.CertManager
         /// Initializes a new instance of the Certificate class.
         /// </summary>
         /// 
-        public Certificate()
+        public V1Certificate()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
-            Kind = KubeKind;
+            Kind       = KubeKind;
         }
 
         /// <summary>
@@ -96,13 +96,13 @@ namespace Neon.Kube.Resources.CertManager
         /// Certificate.
         /// </summary>
         [JsonProperty(PropertyName = "spec")]
-        public CertificateSpec Spec { get; set; }
+        public V1CertificateSpec Spec { get; set; }
 
         /// <summary>
         /// Status of the Certificate. This is set and managed automatically.
         /// </summary>
         [JsonProperty(PropertyName = "status")]
-        public CertificateStatus Status { get; set; }
+        public V1CertificateStatus Status { get; set; }
 
         /// <summary>
         /// Validate the object.

@@ -1538,14 +1538,14 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 await controlNode.InvokeIdempotentAsync("setup/coredns-metrics",
                     async () =>
                     {
-                        var serviceMonitor = new ServiceMonitor()
+                        var serviceMonitor = new V1ServiceMonitor()
                         {
                             Metadata = new V1ObjectMeta()
                             {
                                 Name              = "kube-dns",
                                 NamespaceProperty = "kube-system"
                             },
-                            Spec = new ServiceMonitorSpec()
+                            Spec = new V1ServiceMonitorSpec()
                             {
                                 Endpoints = new List<Endpoint>()
                                 {
@@ -1571,7 +1571,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             }
                         };
 
-                        await k8s.CustomObjects.CreateNamespacedCustomObjectAsync<ServiceMonitor>(serviceMonitor, serviceMonitor.Name(), serviceMonitor.Namespace());
+                        await k8s.CustomObjects.CreateNamespacedCustomObjectAsync<V1ServiceMonitor>(serviceMonitor, serviceMonitor.Name(), serviceMonitor.Namespace());
                     });
             }
         }
@@ -1813,7 +1813,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         {
                             try
                             {
-                                await k8s.CustomObjects.ListNamespacedCustomObjectAsync<Telemetry>(KubeNamespace.NeonIngress);
+                                await k8s.CustomObjects.ListNamespacedCustomObjectAsync<V1Telemetry>(KubeNamespace.NeonIngress);
                                 return true;
                             }
                             catch
@@ -1831,14 +1831,14 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 {
                     controller.LogProgress(controlNode, verb: "setup", message: "telemetry");
 
-                    var telemetry = new Telemetry()
+                    var telemetry = new V1Telemetry()
                     {
                         Metadata = new V1ObjectMeta()
                         {
                             Name              = "mesh-default",
                             NamespaceProperty = KubeNamespace.NeonIngress
                         },
-                        Spec = new TelemetrySpec()
+                        Spec = new V1TelemetrySpec()
                         {
                             Tracing = new List<Tracing>()
                             {
@@ -1857,7 +1857,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         }
                     };
 
-                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
+                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<V1Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
 
                     // turn down tracing in neon namespaces.
 
@@ -1865,13 +1865,13 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     telemetry.Metadata.NamespaceProperty                    = KubeNamespace.NeonMonitor;
                     telemetry.Spec.Tracing.First().RandomSamplingPercentage = 2.0;
 
-                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
+                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<V1Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
 
                     telemetry.Metadata.Name                                 = "neon-system-default";
                     telemetry.Metadata.NamespaceProperty                    = KubeNamespace.NeonSystem;
                     telemetry.Spec.Tracing.First().RandomSamplingPercentage = 2.0;
 
-                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
+                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<V1Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
                 });
         }
 
@@ -1961,7 +1961,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             Name              = "neon-acme",
                             NamespaceProperty = KubeNamespace.NeonIngress
                         },
-                        Spec = new IssuerSpec()
+                        Spec = new V1IssuerSpec()
                         {
                             Acme = acmeOptions.Issuer
                         }

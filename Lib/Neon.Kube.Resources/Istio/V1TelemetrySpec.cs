@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IssuerSpec.cs
+// FILE:	    V1TelemetrySpec.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -18,43 +18,33 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 
 using k8s;
 using k8s.Models;
-using Neon.JsonConverters;
+
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources.CertManager
+namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// The kubernetes spec for a cert-manager Issuer.
+    /// Describes a Telemetry spec.
     /// </summary>
-    public class IssuerSpec
+    public class V1TelemetrySpec
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public IssuerSpec()
+        public V1TelemetrySpec()
         {
         }
 
         /// <summary>
-        /// ACME configures this issuer to communicate with a RFC8555 (ACME) server to obtain signed x509 certificates.
+        /// The tracing config.
         /// </summary>
-        [JsonProperty(PropertyName = "Acme", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "tracing", Required = Required.Default)]
         [DefaultValue(null)]
-        public AcmeIssuer Acme { get; set; } = null;
-
-        /// <inheritdoc/>
-        public void Validate()
-        {
-            var issuerSpecPrefix = $"{nameof(IssuerSpec)}";
-
-            Acme = Acme ?? new AcmeIssuer();
-            Acme.Validate();
-        }
+        public List<Tracing> Tracing { get; set; }
     }
 }

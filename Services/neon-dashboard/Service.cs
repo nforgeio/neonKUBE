@@ -349,7 +349,7 @@ namespace NeonDashboard
                         Name = "metrics-external",
                         NamespaceProperty = KubeNamespace.NeonIngress
                     },
-                    Spec = new VirtualServiceSpec()
+                    Spec = new V1VirtualServiceSpec()
                     {
                         Gateways = new List<string>() { "neoncluster-gateway" },
                         Hosts = new List<string>() { $"metrics.{ClusterInfo.Domain}" },

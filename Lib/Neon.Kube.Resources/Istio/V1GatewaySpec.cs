@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GatewaySpec.cs
+// FILE:	    V1GatewaySpec.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -31,12 +31,12 @@ namespace Neon.Kube.Resources.Istio
     /// <summary>
     /// Describes a load balancer operating at the edge of the mesh receiving incoming or outgoing HTTP/TCP connections.
     /// </summary>
-    public class GatewaySpec
+    public class V1GatewaySpec
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public GatewaySpec()
+        public V1GatewaySpec()
         {
         }
 

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ServiceMonitor.cs
+// FILE:	    V1Gateway.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -16,57 +16,52 @@
 // limitations under the License.
 
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
-using System.Text.Json;
 
 using k8s;
 using k8s.Models;
 
-using Neon.Common;
-using Neon.JsonConverters;
-
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources.Prometheus
+namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// ServiceMonitor.
+    /// 
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
-    public class ServiceMonitor : IKubernetesObject<V1ObjectMeta>, ISpec<ServiceMonitorSpec>, IValidate
+    public class V1Gateway : IKubernetesObject<V1ObjectMeta>, ISpec<V1GatewaySpec>, IValidate
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeApiVersion = "v1";
+        public const string KubeApiVersion = "v1beta1";
 
         /// <summary>
         /// The Kubernetes named schema this object is based on.
         /// </summary>
-        public const string KubeKind = "ServiceMonitor";
+        public const string KubeKind = "Gateway";
 
         /// <summary>
         /// The Group this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeGroup = "monitoring.coreos.com";
+        public const string KubeGroup = "networking.istio.io";
 
         /// <summary>
         /// The plural name of the entity.
         /// </summary>
-        public const string KubePlural = "servicemonitors";
+        public const string KubePlural = "gateways";
 
         /// <summary>
-        /// Initializes a new instance of the ServiceMonitor class.
+        /// Initializes a new instance of the Gateway class.
         /// </summary>
-        public ServiceMonitor()
+        public V1Gateway()
         {
-            ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
-            Kind = KubeKind;
+            ApiVersion = "networking.istio.io/v1beta1";
+            Kind       = "Gateway";
         }
 
         /// <summary>
@@ -97,11 +92,10 @@ namespace Neon.Kube.Resources.Prometheus
 
         /// <summary>
         /// Gets or sets specification of the desired behavior of the
-        /// ServiceMonitor.
+        /// Gateway.
         /// </summary>
         [JsonProperty(PropertyName = "spec")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(JsonGenericConverter<dynamic>))]
-        public ServiceMonitorSpec Spec { get; set; }
+        public V1GatewaySpec Spec { get; set; }
 
         /// <summary>
         /// Validate the object.

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ServiceMonitorSpec.cs
+// FILE:	    V1ServiceMonitorSpec.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -30,12 +30,12 @@ namespace Neon.Kube.Resources.Prometheus
     /// <summary>
     /// ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
     /// </summary>
-    public class ServiceMonitorSpec
+    public class V1ServiceMonitorSpec
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ServiceMonitorSpec()
+        public V1ServiceMonitorSpec()
         {
         }
 

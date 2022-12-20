@@ -38,7 +38,7 @@ namespace Neon.Kube.Resources.Dex
     /// </summary>
     [Newtonsoft.Json.JsonConverter(typeof(DexConnectorConverter))]
     [System.Text.Json.Serialization.JsonConverter(typeof(DexConnectorJsonConverter))]
-    public interface IDexConnector<T> : IDexConnector
+    public interface IDexConnector<T> : IV1DexConnector
         where T : class
     {
         /// <summary>

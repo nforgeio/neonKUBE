@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CertificateStatus.cs
+// FILE:	    V1CertificateStatus.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -37,12 +37,12 @@ namespace Neon.Kube.Resources.CertManager
     /// <summary>
     /// Status of the Certificate. This is set and managed automatically.
     /// </summary>
-    public class CertificateStatus
+    public class V1CertificateStatus
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public CertificateStatus()
+        public V1CertificateStatus()
         {
         }
 

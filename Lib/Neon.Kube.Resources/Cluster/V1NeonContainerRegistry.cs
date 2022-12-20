@@ -66,7 +66,7 @@ namespace Neon.Kube.Resources.Cluster
         public V1NeonContainerRegistry()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
-            Kind = KubeKind;
+            Kind       = KubeKind;
         }
 
         /// <summary>

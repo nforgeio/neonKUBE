@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Gateway.cs
+// FILE:	    V1Telemetry.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -30,38 +30,38 @@ using Newtonsoft.Json;
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// 
+    /// CRD that controls Istio tracing.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
-    public class Gateway : IKubernetesObject<V1ObjectMeta>, ISpec<GatewaySpec>, IValidate
+    public class V1Telemetry : IKubernetesObject<V1ObjectMeta>, ISpec<V1TelemetrySpec>, IValidate
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeApiVersion = "v1beta1";
+        public const string KubeApiVersion = "v1alpha1";
 
         /// <summary>
         /// The Kubernetes named schema this object is based on.
         /// </summary>
-        public const string KubeKind = "Gateway";
+        public const string KubeKind = "Telemetry";
 
         /// <summary>
         /// The Group this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeGroup = "networking.istio.io";
+        public const string KubeGroup = "telemetry.istio.io";
 
         /// <summary>
         /// The plural name of the entity.
         /// </summary>
-        public const string KubePlural = "gateways";
+        public const string KubePlural = "telemetries";
 
         /// <summary>
-        /// Initializes a new instance of the Gateway class.
+        /// Initializes a new instance of the Telemetry class.
         /// </summary>
-        public Gateway()
+        public V1Telemetry()
         {
-            ApiVersion = "networking.istio.io/v1beta1";
-            Kind = "Gateway";
+            ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
+            Kind       = KubeKind;
         }
 
         /// <summary>
@@ -92,10 +92,10 @@ namespace Neon.Kube.Resources.Istio
 
         /// <summary>
         /// Gets or sets specification of the desired behavior of the
-        /// Gateway.
+        /// Telemetry.
         /// </summary>
         [JsonProperty(PropertyName = "spec")]
-        public GatewaySpec Spec { get; set; }
+        public V1TelemetrySpec Spec { get; set; }
 
         /// <summary>
         /// Validate the object.

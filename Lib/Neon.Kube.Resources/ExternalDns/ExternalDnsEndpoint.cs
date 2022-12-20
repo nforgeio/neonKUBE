@@ -38,7 +38,7 @@ namespace Neon.Kube.Resources.ExternalDns
     /// ExternalDnsEndpoint.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
-    public class ExternalDnsEndpoint : IKubernetesObject<V1ObjectMeta>, ISpec<DnsEndpointSpec>, IValidate
+    public class ExternalDnsEndpoint : IKubernetesObject<V1ObjectMeta>, ISpec<V1DnsEndpointSpec>, IValidate
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
@@ -66,7 +66,7 @@ namespace Neon.Kube.Resources.ExternalDns
         public ExternalDnsEndpoint()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
-            Kind = KubeKind;
+            Kind       = KubeKind;
         }
 
         /// <summary>
@@ -100,7 +100,7 @@ namespace Neon.Kube.Resources.ExternalDns
         /// ExternalDnsEndpoint.
         /// </summary>
         [JsonProperty(PropertyName = "spec")]
-        public DnsEndpointSpec Spec { get; set; }
+        public V1DnsEndpointSpec Spec { get; set; }
 
         /// <summary>
         /// Validate the object.

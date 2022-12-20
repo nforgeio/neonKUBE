@@ -67,6 +67,6 @@ namespace Neon.Kube.Resources.Dex
         [DefaultValue(null)]
         [JsonSchemaExtensionData("x-kubernetes-preserve-unknown-fields", true)]
         public T Config { get; set; }
-        object IDexConnector.Config { get => (T)Config; set => Config = (T)value; }
+        object IV1DexConnector.Config { get => (T)Config; set => Config = (T)value; }
     }
 }

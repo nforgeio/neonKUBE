@@ -31,7 +31,7 @@ namespace Neon.Kube.Resources.Cluster
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
     [EntityScope(EntityScope.Cluster)]
-    public class V1NeonTestObject : IKubernetesObject<V1ObjectMeta>, ISpec<TestSpec>, IValidate
+    public class V1NeonTestObject : IKubernetesObject<V1ObjectMeta>, ISpec<V1TestSpec>, IValidate
     {
         /// <summary>
         /// Object API group.
@@ -59,7 +59,7 @@ namespace Neon.Kube.Resources.Cluster
         public V1NeonTestObject()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
-            Kind = KubeKind;
+            Kind       = KubeKind;
         }
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace Neon.Kube.Resources.Cluster
         /// <summary>
         /// The spec.
         /// </summary>
-        public TestSpec Spec { get; set; }
+        public V1TestSpec Spec { get; set; }
 
         /// <summary>
         /// The spec.
@@ -104,7 +104,7 @@ namespace Neon.Kube.Resources.Cluster
     /// <summary>
     /// The node execute task specification.
     /// </summary>
-    public class TestSpec
+    public class V1TestSpec
     {
         /// <summary>
         /// A test string.

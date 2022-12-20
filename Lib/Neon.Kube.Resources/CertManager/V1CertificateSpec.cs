@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CertificateSpec.cs
+// FILE:	    V1CertificateSpec.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -33,12 +33,12 @@ namespace Neon.Kube.Resources.CertManager
     /// <summary>
     /// The kubernetes spec for a cert-manager certificate.
     /// </summary>
-    public class CertificateSpec
+    public class V1CertificateSpec
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public CertificateSpec()
+        public V1CertificateSpec()
         {
         }
 

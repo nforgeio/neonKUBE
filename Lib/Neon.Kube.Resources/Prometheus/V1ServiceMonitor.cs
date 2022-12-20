@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Telemetry.cs
+// FILE:	    V1ServiceMonitor.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -16,52 +16,57 @@
 // limitations under the License.
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 
 using k8s;
 using k8s.Models;
 
+using Neon.Common;
+using Neon.JsonConverters;
+
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources.Istio
+namespace Neon.Kube.Resources.Prometheus
 {
     /// <summary>
-    /// CRD that controls Istio tracing.
+    /// ServiceMonitor.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
-    public class Telemetry : IKubernetesObject<V1ObjectMeta>, ISpec<TelemetrySpec>, IValidate
+    public class V1ServiceMonitor : IKubernetesObject<V1ObjectMeta>, ISpec<V1ServiceMonitorSpec>, IValidate
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeApiVersion = "v1alpha1";
+        public const string KubeApiVersion = "v1";
 
         /// <summary>
         /// The Kubernetes named schema this object is based on.
         /// </summary>
-        public const string KubeKind = "Telemetry";
+        public const string KubeKind = "ServiceMonitor";
 
         /// <summary>
         /// The Group this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeGroup = "telemetry.istio.io";
+        public const string KubeGroup = "monitoring.coreos.com";
 
         /// <summary>
         /// The plural name of the entity.
         /// </summary>
-        public const string KubePlural = "telemetries";
+        public const string KubePlural = "servicemonitors";
 
         /// <summary>
-        /// Initializes a new instance of the Telemetry class.
+        /// Initializes a new instance of the ServiceMonitor class.
         /// </summary>
-        public Telemetry()
+        public V1ServiceMonitor()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
-            Kind = KubeKind;
+            Kind       = KubeKind;
         }
 
         /// <summary>
@@ -92,10 +97,11 @@ namespace Neon.Kube.Resources.Istio
 
         /// <summary>
         /// Gets or sets specification of the desired behavior of the
-        /// Telemetry.
+        /// ServiceMonitor.
         /// </summary>
         [JsonProperty(PropertyName = "spec")]
-        public TelemetrySpec Spec { get; set; }
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonGenericConverter<dynamic>))]
+        public V1ServiceMonitorSpec Spec { get; set; }
 
         /// <summary>
         /// Validate the object.

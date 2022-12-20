@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ServiceEntrySpec.cs
+// FILE:	    V1ServiceEntrySpec.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -24,12 +24,12 @@ namespace Neon.Kube.Resources.Istio
     /// <summary>
     /// ServiceEntry enables adding additional entries into Istio’s internal service registry.
     /// </summary>
-    public class ServiceEntrySpec
+    public class V1ServiceEntrySpec
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ServiceEntrySpec()
+        public V1ServiceEntrySpec()
         {
         }
 

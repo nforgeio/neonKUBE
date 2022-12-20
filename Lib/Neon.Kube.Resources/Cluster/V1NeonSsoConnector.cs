@@ -33,7 +33,7 @@ namespace Neon.Kube.Resources.Cluster
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
     [EntityScope(EntityScope.Cluster)]
-    public class V1NeonSsoConnector : IKubernetesObject<V1ObjectMeta>, ISpec<IDexConnector>
+    public class V1NeonSsoConnector : IKubernetesObject<V1ObjectMeta>, ISpec<IV1DexConnector>
     {
         /// <summary>
         /// Object API group.
@@ -61,7 +61,7 @@ namespace Neon.Kube.Resources.Cluster
         public V1NeonSsoConnector()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
-            Kind = KubeKind;
+            Kind       = KubeKind;
         }
 
         /// <summary>
@@ -91,6 +91,6 @@ namespace Neon.Kube.Resources.Cluster
         /// The spec.
         /// </summary>
         [System.Text.Json.Serialization.JsonConverter(typeof(DexConnectorJsonConverter))]
-        public IDexConnector Spec { get; set; }
+        public IV1DexConnector Spec { get; set; }
     }
 }

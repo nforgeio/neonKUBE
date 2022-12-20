@@ -58,7 +58,7 @@ namespace Neon.Kube.Resources.Cluster
         public V1NeonDashboard()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
-            Kind = KubeKind;
+            Kind       = KubeKind;
         }
 
         /// <summary>

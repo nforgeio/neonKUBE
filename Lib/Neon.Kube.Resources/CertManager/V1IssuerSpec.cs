@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DnsEndpointSpec.cs
+// FILE:	    V1IssuerSpec.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -17,29 +17,44 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 
 using k8s;
 using k8s.Models;
+using Neon.JsonConverters;
+using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources.ExternalDns
+namespace Neon.Kube.Resources.CertManager
 {
     /// <summary>
-    /// The Endpoint Spec.
+    /// The kubernetes spec for a cert-manager Issuer.
     /// </summary>
-    public class DnsEndpointSpec
+    public class V1IssuerSpec
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public DnsEndpointSpec()
+        public V1IssuerSpec()
         {
         }
 
         /// <summary>
-        /// The list of <see cref="DnsEndpoint"/>.
+        /// ACME configures this issuer to communicate with a RFC8555 (ACME) server to obtain signed x509 certificates.
         /// </summary>
-        public List<DnsEndpoint> Endpoints { get; set; }
+        [JsonProperty(PropertyName = "Acme", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public AcmeIssuer Acme { get; set; } = null;
+
+        /// <inheritdoc/>
+        public void Validate()
+        {
+            var issuerSpecPrefix = $"{nameof(V1IssuerSpec)}";
+
+            Acme = Acme ?? new AcmeIssuer();
+            Acme.Validate();
+        }
     }
 }
