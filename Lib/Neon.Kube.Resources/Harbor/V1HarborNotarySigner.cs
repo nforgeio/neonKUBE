@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    FelixConfiguration.cs
+// FILE:	    V1HarborNotarySigner.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -16,57 +16,54 @@
 // limitations under the License.
 
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
-using System.Text.Json;
 
 using k8s;
 using k8s.Models;
 
-using Neon.Common;
 using Neon.JsonConverters;
 
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources.Calico
+namespace Neon.Kube.Resources.Harbor
 {
     /// <summary>
-    /// FelixConfiguration.
+    /// HarborNotarySigner.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
-    public class FelixConfiguration : IKubernetesObject<V1ObjectMeta>, ISpec<object>, IValidate
+    public class V1HarborNotarySigner : IKubernetesObject<V1ObjectMeta>, ISpec<object>, IValidate
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeApiVersion = "v1";
+        public const string KubeApiVersion = "v1beta1";
 
         /// <summary>
         /// The Kubernetes named schema this object is based on.
         /// </summary>
-        public const string KubeKind = "FelixConfiguration";
+        public const string KubeKind = "NotarySigner";
 
         /// <summary>
         /// The Group this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeGroup = "crd.projectcalico.org";
+        public const string KubeGroup = "goharbor.io";
 
         /// <summary>
         /// The plural name of the entity.
         /// </summary>
-        public const string KubePlural = "felixconfigurations";
+        public const string KubePlural = "notarysigners";
 
         /// <summary>
-        /// Initializes a new instance of the FelixConfiguration class.
+        /// Initializes a new instance of the HarborNotarySigner class.
         /// </summary>
-        public FelixConfiguration()
+        public V1HarborNotarySigner()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
-            Kind = KubeKind;
+            Kind       = KubeKind;
         }
 
         /// <summary>
@@ -76,6 +73,7 @@ namespace Neon.Kube.Resources.Calico
         /// values. More info:
         /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
         /// </summary>
+        [JsonProperty(PropertyName = "apiVersion")]
         public string ApiVersion { get; set; }
 
         /// <summary>
@@ -85,17 +83,21 @@ namespace Neon.Kube.Resources.Calico
         /// More info:
         /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
         /// </summary>
+        [JsonProperty(PropertyName = "kind")]
         public string Kind { get; set; }
 
         /// <summary>
         /// Gets or sets standard object metadata.
         /// </summary>
+        [JsonProperty(PropertyName = "metadata")]
         public V1ObjectMeta Metadata { get; set; }
 
         /// <summary>
         /// Gets or sets specification of the desired behavior of the
-        /// FelixConfiguration.
+        /// HarborNotarySigner.
         /// </summary>
+        [JsonProperty(PropertyName = "spec")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonGenericConverter<dynamic>))]
         public dynamic Spec { get; set; }
 
         /// <summary>

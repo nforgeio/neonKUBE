@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CertificateRequest.cs
+// FILE:	    V1HarborCluster.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -16,56 +16,57 @@
 // limitations under the License.
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 
 using k8s;
 using k8s.Models;
+
+using Neon.Common;
 using Neon.JsonConverters;
+
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources.CertManager
+namespace Neon.Kube.Resources.Harbor
 {
     /// <summary>
-    /// A CertificateRequest is used to request a signed certificate from one of the configured issuers. 
-    /// All fields within the CertificateRequest's `spec` are immutable after creation. A CertificateRequest 
-    /// will either succeed or fail, as denoted by its `status.state` field. A CertificateRequest is a
-    /// one-shot resource, meaning it represents a single point in time request for a certificate and cannot 
-    /// be re-used.
+    /// HarborCluster.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
-    public class CertificateRequest : IKubernetesObject<V1ObjectMeta>, ISpec<object>, IValidate
+    public class V1HarborCluster : IKubernetesObject<V1ObjectMeta>, ISpec<object>, IValidate
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeApiVersion = "v1alpha2";
+        public const string KubeApiVersion = "v1alpha3";
 
         /// <summary>
         /// The Kubernetes named schema this object is based on.
         /// </summary>
-        public const string KubeKind = "CertificateRequest";
+        public const string KubeKind = "HarborCluster";
 
         /// <summary>
         /// The Group this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeGroup = "cert-manager.io";
+        public const string KubeGroup = "goharbor.io";
 
         /// <summary>
         /// The plural name of the entity.
         /// </summary>
-        public const string KubePlural = "certificaterequests";
+        public const string KubePlural = "harborclusters";
 
         /// <summary>
-        /// Initializes a new instance of the CertificateRequest class.
+        /// Initializes a new instance of the HarborCluster class.
         /// </summary>
-        /// 
-        public CertificateRequest()
+        public V1HarborCluster()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
-            Kind = KubeKind;
+            Kind       = KubeKind;
         }
 
         /// <summary>
@@ -96,7 +97,7 @@ namespace Neon.Kube.Resources.CertManager
 
         /// <summary>
         /// Gets or sets specification of the desired behavior of the
-        /// CertificateRequest.
+        /// HarborCluster.
         /// </summary>
         [JsonProperty(PropertyName = "spec")]
         [System.Text.Json.Serialization.JsonConverter(typeof(JsonGenericConverter<dynamic>))]

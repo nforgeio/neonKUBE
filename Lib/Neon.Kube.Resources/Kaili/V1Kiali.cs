@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    HarborConfiguration.cs
+// FILE:	    V1Kiali.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -29,41 +29,41 @@ using Neon.JsonConverters;
 
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources.Harbor
+namespace Neon.Kube.Resources.Kiali
 {
     /// <summary>
-    /// HarborConfiguration.
+    /// Kiali enables adding additional entries into Istio’s internal service registry.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
-    public class HarborConfiguration : IKubernetesObject<V1ObjectMeta>, ISpec<object>, IValidate
+    public class V1Kiali : IKubernetesObject<V1ObjectMeta>, ISpec<object>, IValidate
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeApiVersion = "v1beta1";
+        public const string KubeApiVersion = "v1alpha1";
 
         /// <summary>
         /// The Kubernetes named schema this object is based on.
         /// </summary>
-        public const string KubeKind = "HarborConfiguration";
+        public const string KubeKind = "Kiali";
 
         /// <summary>
         /// The Group this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeGroup = "goharbor.io";
+        public const string KubeGroup = "kiali.io";
 
         /// <summary>
         /// The plural name of the entity.
         /// </summary>
-        public const string KubePlural = "harborconfigurations";
+        public const string KubePlural = "kialis";
 
         /// <summary>
-        /// Initializes a new instance of the HarborConfiguration class.
+        /// Initializes a new instance of the Kiali class.
         /// </summary>
-        public HarborConfiguration()
+        public V1Kiali()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
-            Kind = KubeKind;
+            Kind       = KubeKind;
         }
 
         /// <summary>
@@ -94,7 +94,7 @@ namespace Neon.Kube.Resources.Harbor
 
         /// <summary>
         /// Gets or sets specification of the desired behavior of the
-        /// HarborConfiguration.
+        /// Kiali.
         /// </summary>
         [JsonProperty(PropertyName = "spec")]
         [System.Text.Json.Serialization.JsonConverter(typeof(JsonGenericConverter<dynamic>))]

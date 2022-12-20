@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Grafana.cs
+// FILE:	    V1CertificateRequest.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -18,49 +18,51 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 
 using k8s;
 using k8s.Models;
-
 using Neon.JsonConverters;
-
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources.GRafana
+namespace Neon.Kube.Resources.CertManager
 {
     /// <summary>
-    /// Grafana.
+    /// A CertificateRequest is used to request a signed certificate from one of the configured issuers. 
+    /// All fields within the CertificateRequest's `spec` are immutable after creation. A CertificateRequest 
+    /// will either succeed or fail, as denoted by its `status.state` field. A CertificateRequest is a
+    /// one-shot resource, meaning it represents a single point in time request for a certificate and cannot 
+    /// be re-used.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
-    public class Grafana : IKubernetesObject<V1ObjectMeta>, ISpec<object>, IValidate
+    public class V1CertificateRequest : IKubernetesObject<V1ObjectMeta>, ISpec<object>, IValidate
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeApiVersion = "v1alpha1";
+        public const string KubeApiVersion = "v1alpha2";
 
         /// <summary>
         /// The Kubernetes named schema this object is based on.
         /// </summary>
-        public const string KubeKind = "Grafana";
+        public const string KubeKind = "CertificateRequest";
 
         /// <summary>
         /// The Group this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeGroup = "integreatly.org";
+        public const string KubeGroup = "cert-manager.io";
 
         /// <summary>
         /// The plural name of the entity.
         /// </summary>
-        public const string KubePlural = "grafanas";
+        public const string KubePlural = "certificaterequests";
 
         /// <summary>
-        /// Initializes a new instance of the Grafana class.
+        /// Initializes a new instance of the CertificateRequest class.
         /// </summary>
-        public Grafana()
+        /// 
+        public V1CertificateRequest()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
             Kind       = KubeKind;
@@ -93,7 +95,8 @@ namespace Neon.Kube.Resources.GRafana
         public V1ObjectMeta Metadata { get; set; }
 
         /// <summary>
-        /// Gets or sets specification of the desired behavior of Grafana.
+        /// Gets or sets specification of the desired behavior of the
+        /// CertificateRequest.
         /// </summary>
         [JsonProperty(PropertyName = "spec")]
         [System.Text.Json.Serialization.JsonConverter(typeof(JsonGenericConverter<dynamic>))]

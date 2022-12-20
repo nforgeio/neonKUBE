@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    HarborNotarySigner.cs
+// FILE:	    V1Grafana.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -29,41 +29,41 @@ using Neon.JsonConverters;
 
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources.Harbor
+namespace Neon.Kube.Resources.GRafana
 {
     /// <summary>
-    /// HarborNotarySigner.
+    /// Grafana.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
-    public class HarborNotarySigner : IKubernetesObject<V1ObjectMeta>, ISpec<object>, IValidate
+    public class V1Grafana : IKubernetesObject<V1ObjectMeta>, ISpec<object>, IValidate
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeApiVersion = "v1beta1";
+        public const string KubeApiVersion = "v1alpha1";
 
         /// <summary>
         /// The Kubernetes named schema this object is based on.
         /// </summary>
-        public const string KubeKind = "NotarySigner";
+        public const string KubeKind = "Grafana";
 
         /// <summary>
         /// The Group this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeGroup = "goharbor.io";
+        public const string KubeGroup = "integreatly.org";
 
         /// <summary>
         /// The plural name of the entity.
         /// </summary>
-        public const string KubePlural = "notarysigners";
+        public const string KubePlural = "grafanas";
 
         /// <summary>
-        /// Initializes a new instance of the HarborNotarySigner class.
+        /// Initializes a new instance of the Grafana class.
         /// </summary>
-        public HarborNotarySigner()
+        public V1Grafana()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
-            Kind = KubeKind;
+            Kind       = KubeKind;
         }
 
         /// <summary>
@@ -93,8 +93,7 @@ namespace Neon.Kube.Resources.Harbor
         public V1ObjectMeta Metadata { get; set; }
 
         /// <summary>
-        /// Gets or sets specification of the desired behavior of the
-        /// HarborNotarySigner.
+        /// Gets or sets specification of the desired behavior of Grafana.
         /// </summary>
         [JsonProperty(PropertyName = "spec")]
         [System.Text.Json.Serialization.JsonConverter(typeof(JsonGenericConverter<dynamic>))]

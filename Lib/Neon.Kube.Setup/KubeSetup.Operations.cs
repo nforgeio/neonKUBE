@@ -1509,7 +1509,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 {
                     await NeonHelper.WaitForAsync(async () =>
                     {
-                        var configs = await k8s.CustomObjects.ListClusterCustomObjectAsync<FelixConfiguration>();
+                        var configs = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1FelixConfiguration>();
 
                         return configs.Items.Count() > 0;
                     },
@@ -1517,7 +1517,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     pollInterval:      clusterOpPollInterval,
                     cancellationToken: controller.CancellationToken);
 
-                    var configs = await k8s.CustomObjects.ListClusterCustomObjectAsync<FelixConfiguration>();
+                    var configs = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1FelixConfiguration>();
 
                     dynamic patchContent = new JObject();
 
@@ -1528,7 +1528,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     foreach (var felix in configs.Items)
                     {
-                        await k8s.CustomObjects.PatchClusterCustomObjectAsync<FelixConfiguration>(patch, felix.Name());
+                        await k8s.CustomObjects.PatchClusterCustomObjectAsync<V1FelixConfiguration>(patch, felix.Name());
                     }
                 });
 
