@@ -5168,6 +5168,67 @@ $@"- name: StorageType
 
                     await k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-sso-dex", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
+
+            // $todo(jefflill):
+            //
+            // I'm commenting this out for now after removing the [SsoConnectors] property from
+            // the cluster definition.  @marcusbooyah says that we need a connector for so that
+            // dashboard login will work and that this was being added to the connectors during
+            // cluster prepare.
+            //
+            // I couldn't find that special connector anywhere.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1731
+#if TODO
+            controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/dex-connectors",
+                async () =>
+                {
+                    controller.LogProgress(controlNode, verb: "wait for", message: "neon-sso connectors");
+                    
+                    foreach (var connector in cluster.Definition.SsoConnectors)
+                    {
+                        switch (connector.Type)
+                        {
+                            case DexConnectorType.Ldap:
+
+                                var ldapConnector = (DexConnector<DexLdapConfig>)connector;
+
+                                await k8s.CustomObjects.UpsertClusterCustomObjectAsync(
+                                    new V1NeonSsoConnector()
+                                    {
+                                        Metadata = new V1ObjectMeta()
+                                        {
+                                            Name = connector.Id,
+                                        },
+                                        Spec = ldapConnector
+                                    },
+                                    connector.Id);
+
+                                break;
+
+                            case DexConnectorType.Oidc:
+
+                                var oidcConnector = (IDexConnector<DexOidcConfig>)connector;
+
+                                var str = KubernetesJson.Serialize(oidcConnector);
+
+                                await k8s.CustomObjects.UpsertClusterCustomObjectAsync(
+                                    new V1NeonSsoConnector()
+                                    {
+                                        Metadata = new V1ObjectMeta()
+                                        {
+                                            Name = connector.Id,
+                                        },
+                                        Spec = oidcConnector
+                                    },
+                                    connector.Id);
+
+                                break;
+                        }
+                    }
+                });
+#endif
         }
 
         /// <summary>
