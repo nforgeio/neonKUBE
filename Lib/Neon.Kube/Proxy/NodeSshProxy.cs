@@ -607,14 +607,12 @@ namespace Neon.Kube.Proxy
         }
 
         /// <summary>
-        /// <para>
-        /// Manually controls whether SSH login using password authentication is enabled. 
-        /// </para>
+        /// Controls whether SSH login using password authentication is enabled for the node.
         /// </summary>
         /// <param name="enabled">
         /// Pass <c>true</c> to enable login using a password, or <c>false</c> to disable.
         /// </param>        
-        public void SetSshPasswordLogin(bool enabled)
+        public void AllowSshPasswordLogin(bool enabled)
         {
             var script =
 $@"

@@ -1192,9 +1192,9 @@ namespace Neon.Kube.Hosting.Aws
             controller.AddNodeStep("credentials",
                 (controller, node) =>
                 {
-                    // Update the node SSH proxies to use the secure SSH password.
+                    // Update the node SSH proxies to use the private SSH key.
 
-                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword));
+                    node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, clusterLogin.SshKey.PrivatePEM));
                 },
                 quiet: true);
             controller.AddGlobalStep("load balancer", ConfigureLoadBalancerAsync);
@@ -2820,7 +2820,7 @@ namespace Neon.Kube.Hosting.Aws
                 // Determine the placement group (1-based) partition number for the node.
 
                 var placementGroupName = (string)null;
-                var partitionNumber = -1;
+                var partitionNumber    = -1;
 
                 if (node.Metadata.IsControlPane)
                 {
@@ -2984,7 +2984,7 @@ $@"#cloud-boothook
 #   https://aws.amazon.com/premiumsupport/knowledge-center/ec2-linux-log-user-data/
 #
 # WARNING: Do not leave the ""-ex"" SHABANG option in production builds to avoid 
-#          leaking the secure SSH password to any logs!
+#          leaking SSH credentials to any logs!
 #          
 # exec &> >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
@@ -3007,6 +3007,11 @@ chmod 600 /etc/neonkube/cloud-init/boot-script-path
 # Update the [sysadmin] user password:
 
 echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
+
+#------------------------------------------------------------------------------
+# Enable the [sysadmin] SSH public key:
+
+echo '{clusterLogin.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_keys
 
 #------------------------------------------------------------------------------
 # Configure the node's static IP address:
