@@ -80,7 +80,10 @@ USAGE:
         public override string[] Words => new string[] { "login", "list" }; 
 
         /// <inheritdoc/>
-        public override string[] AltWords => new string[] { "login", "ls" }; 
+        public override string[] AltWords => new string[] { "login", "ls" };
+
+        /// <inheritdoc/>
+        public override bool NeedsHostingManager => true;
 
         /// <inheritdoc/>
         public override void Help()

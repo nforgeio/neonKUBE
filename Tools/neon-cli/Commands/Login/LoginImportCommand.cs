@@ -61,7 +61,10 @@ OPTIONS:
         public override string[] Words => new string[] { "login", "import" }; 
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--nologin", "--force" }; 
+        public override string[] ExtendedOptions => new string[] { "--nologin", "--force" };
+
+        /// <inheritdoc/>
+        public override bool NeedsHostingManager => true;
 
         /// <inheritdoc/>
         public override void Help()

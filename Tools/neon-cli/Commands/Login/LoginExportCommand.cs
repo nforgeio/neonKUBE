@@ -63,7 +63,10 @@ REMARKS:
         public override string[] Words => new string[] { "login", "export" }; 
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--force", "--context" }; 
+        public override string[] ExtendedOptions => new string[] { "--force", "--context" };
+
+        /// <inheritdoc/>
+        public override bool NeedsHostingManager => true;
 
         /// <inheritdoc/>
         public override void Help()
