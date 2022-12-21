@@ -231,14 +231,19 @@ OPTIONS:
 
             var clusterDefinition = clusterLogin.ClusterDefinition;
 
+            var setupOptions = new SetupClusterOptions()
+            {
+                MaxParallel          = maxParallel,
+                Unredacted           = unredacted,
+                DebugMode            = debug,
+                UploadCharts         = uploadCharts,
+                DisableConsoleOutput = quiet
+            };
+
             var controller = KubeSetup.CreateClusterSetupController(
                 clusterDefinition,
-                cloudMarketplace:     !privateImage,
-                maxParallel:          maxParallel,
-                unredacted:           unredacted,
-                debugMode:            debug,
-                uploadCharts:         uploadCharts,
-                disableConsoleOutput: quiet);
+                cloudMarketplace: !privateImage,
+                options:          setupOptions);
 
             controller.DisablePendingTasks = disablePending;
 

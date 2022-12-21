@@ -67,44 +67,19 @@ namespace Neon.Kube.Setup
         /// Only NEONFORGE maintainers will have permission to use the private image.
         /// </note>
         /// </param>
-        /// <param name="maxParallel">
-        /// Optionally specifies the maximum number of node operations to be performed in parallel.
-        /// This <b>defaults to 0</b> which means that we'll use <see cref="IHostingManager.MaxParallel"/>.
-        /// </param>
-        /// <param name="unredacted">
-        /// Optionally indicates that sensitive information <b>won't be redacted</b> from the setup logs 
-        /// (typically used when debugging).
-        /// </param>
-        /// <param name="debugMode">Optionally indicates that the cluster will be prepared in debug mode.</param>
-        /// <param name="uploadCharts">
-        /// <para>
-        /// Optionally specifies that the current Helm charts should be uploaded to replace the charts in the base image.
-        /// </para>
-        /// <note>
-        /// This will be treated as <c>true</c> when <paramref name="debugMode"/> is passed as <c>true</c>.
-        /// </note>
-        /// </param>
-        /// <param name="neonCloudHeadendUri">Optionally overrides the neonCLOUD headend service URI.  This defaults to <see cref="KubeEnv.HeadendUri"/>.</param>
-        /// <param name="disableConsoleOutput">
-        /// Optionally disables status output to the console.  This is typically
-        /// enabled for non-console applications.
-        /// </param>
+        /// <param name="options">Specifies the cluster setup options.</param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
         /// <exception cref="NeonKubeException">Thrown when there's a problem.</exception>
         public static ISetupController CreateClusterSetupController(
             ClusterDefinition   clusterDefinition,
             bool                cloudMarketplace,
-            int                 maxParallel          = 500,
-            bool                unredacted           = false,
-            bool                debugMode            = false,
-            bool                uploadCharts         = false,
-            string              neonCloudHeadendUri  = null,
-            bool                disableConsoleOutput = false)
+            SetupClusterOptions options)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
-            Covenant.Requires<ArgumentException>(maxParallel > 0, nameof(maxParallel));
+            Covenant.Requires<ArgumentNullException>(options != null, nameof(options));
+            Covenant.Requires<ArgumentException>(options.MaxParallel > 0, nameof(options.MaxParallel));
 
-            neonCloudHeadendUri ??= KubeEnv.HeadendUri.ToString();
+            options.NeonCloudHeadendUri ??= KubeEnv.HeadendUri.ToString();
 
             clusterDefinition.Validate();
 
@@ -177,7 +152,7 @@ namespace Neon.Kube.Setup
                     return new NodeSshProxy<NodeDefinition>(nodeName, nodeAddress, sshCredentials, logWriter: logWriter);
                 });
 
-            if (unredacted)
+            if (options.Unredacted)
             {
                 cluster.SecureRunOptions = RunOptions.None;
             }
@@ -205,9 +180,9 @@ namespace Neon.Kube.Setup
 
             // Configure the setup controller.
 
-            var controller = new SetupController<NodeDefinition>($"Setup [{cluster.Definition.Name}] cluster", cluster.Nodes, KubeHelper.LogFolder, disableConsoleOutput: disableConsoleOutput)
+            var controller = new SetupController<NodeDefinition>($"Setup [{cluster.Definition.Name}] cluster", cluster.Nodes, KubeHelper.LogFolder, disableConsoleOutput: options.DisableConsoleOutput)
             {
-                MaxParallel     = maxParallel > 0 ? maxParallel: cluster.HostingManager.MaxParallel,
+                MaxParallel     = options.MaxParallel > 0 ? options.MaxParallel: cluster.HostingManager.MaxParallel,
                 LogBeginMarker  = "# CLUSTER-BEGIN-SETUP #########################################################",
                 LogEndMarker    = "# CLUSTER-END-SETUP-SUCCESS ###################################################",
                 LogFailedMarker = "# CLUSTER-END-SETUP-FAILED ####################################################"
@@ -222,14 +197,14 @@ namespace Neon.Kube.Setup
 
             controller.Add(KubeSetupProperty.Preparing, false);
             controller.Add(KubeSetupProperty.ReleaseMode, KubeHelper.IsRelease);
-            controller.Add(KubeSetupProperty.DebugMode, debugMode);
+            controller.Add(KubeSetupProperty.DebugMode, options.DebugMode);
             controller.Add(KubeSetupProperty.MaintainerMode, !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NC_ROOT")));
             controller.Add(KubeSetupProperty.ClusterProxy, cluster);
             controller.Add(KubeSetupProperty.ClusterLogin, clusterLogin);
             controller.Add(KubeSetupProperty.HostingManager, cluster.HostingManager);
             controller.Add(KubeSetupProperty.HostingEnvironment, cluster.HostingManager.HostingEnvironment);
             controller.Add(KubeSetupProperty.NeonCloudHeadendClient, HeadendClient.Create());
-            controller.Add(KubeSetupProperty.Redact, !unredacted);
+            controller.Add(KubeSetupProperty.Redact, !options.Unredacted);
             controller.Add(KubeSetupProperty.DesktopReadyToGo, false);   // This is always FALSE for the setup controller.
             controller.Add(KubeSetupProperty.DesktopServiceProxy, desktopServiceProxy);
 
@@ -292,7 +267,7 @@ namespace Neon.Kube.Setup
                     (controller, node) => node != cluster.FirstControlNode);
             }
 
-            if (debugMode)
+            if (options.DebugMode)
             {
                 controller.AddNodeStep("load images", (controller, node) => node.NodeLoadImagesAsync(controller, downloadParallel: 5, loadParallel: 3));
             }
@@ -309,7 +284,7 @@ namespace Neon.Kube.Setup
                     node.NodeInstallKustomize(controller);
                 });
 
-            if (uploadCharts || debugMode)
+            if (options.UploadCharts || options.DebugMode)
             {
                 controller.AddNodeStep("upload helm charts",
                     (controller, node) =>

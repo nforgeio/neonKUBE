@@ -676,13 +676,18 @@ namespace Neon.Kube.Xunit
 
             try
             {
+                var prepareOptions = new PrepareClusterOptions()
+                {
+                    NodeImageUri  = imageUri,
+                    NodeImagePath = imagePath,
+                    MaxParallel   = options.MaxParallel,
+                    Unredacted    = options.Unredacted
+                };
+
                 var controller = KubeSetup.CreateClusterPrepareController(
                     clusterDefinition:   clusterDefinition,
                     cloudMarketplace:    options.CloudMarketplace,
-                    nodeImageUri:        imageUri,
-                    nodeImagePath:       imagePath,
-                    maxParallel:         options.MaxParallel,
-                    unredacted:          options.Unredacted);
+                    options:             prepareOptions);
 
                 switch (controller.RunAsync().ResultWithoutAggregate())
                 {
@@ -716,11 +721,16 @@ namespace Neon.Kube.Xunit
 
             try
             {
+                var setupOptions = new SetupClusterOptions()
+                {
+                    MaxParallel = options.MaxParallel,
+                    Unredacted  = options.Unredacted
+                };
+
                 var controller = KubeSetup.CreateClusterSetupController(
                     clusterDefinition: clusterDefinition,
                     cloudMarketplace:  options.CloudMarketplace,
-                    maxParallel:       options.MaxParallel,
-                    unredacted:        options.Unredacted);
+                    options:           setupOptions);
 
                 switch (controller.RunAsync().ResultWithoutAggregate())
                 {

@@ -290,17 +290,22 @@ OPTIONS:
 
             // Create and run the cluster prepare controller.
 
+            var prepareOptions = new PrepareClusterOptions()
+            {
+                NodeImageUri          = nodeImageUri,
+                NodeImagePath         = nodeImagePath,
+                MaxParallel           = maxParallel,
+                PackageCacheEndpoints = packageCacheEndpoints,
+                Unredacted            = commandLine.HasOption("--unredacted"),
+                DebugMode             = debug,
+                BaseImageName         = baseImageName,
+                DisableConsoleOutput  = quiet
+            };
+
             var controller = KubeSetup.CreateClusterPrepareController(
                 clusterDefinition, 
-                cloudMarketplace:       !privateImage,
-                nodeImageUri:           nodeImageUri,
-                nodeImagePath:          nodeImagePath,
-                maxParallel:            maxParallel,
-                packageCacheEndpoints:  packageCacheEndpoints,
-                unredacted:             commandLine.HasOption("--unredacted"),
-                debugMode:              debug,
-                baseImageName:          baseImageName,
-                disableConsoleOutput:   quiet);
+                cloudMarketplace: !privateImage,
+                options:          prepareOptions);
 
             controller.DisablePendingTasks = disablePending;
 
