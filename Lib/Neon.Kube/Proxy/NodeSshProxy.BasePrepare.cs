@@ -107,13 +107,13 @@ namespace Neon.Kube.Proxy
             InvokeIdempotent("base/blacklist-floppy",
                 () =>
                 {
-                    controller.LogProgress(this, verb: "blacklist", message: "floppy drive");
+                    controller.LogProgress(this, verb: "blacklist", message: "floppy disk");
 
                     var floppyScript =
 @"
 set -euo pipefail
 
-# Blacklist the floppy drive:
+# Blacklist the floppy disk:
 
 echo ""blacklist floppy"" | sudo tee /etc/modprobe.d/blacklist-floppy.conf
 dpkg-reconfigure initramfs-tools 
