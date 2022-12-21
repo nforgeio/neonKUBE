@@ -42,6 +42,8 @@ using k8s.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 
+using Newtonsoft.Json;
+
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Deployment;
@@ -53,9 +55,6 @@ using Neon.Kube.Glauth;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Tasks;
-
-using Newtonsoft.Json;
-using Renci.SshNet.Common;
 using SharpCompress.Readers;
 
 namespace Neon.Kube
