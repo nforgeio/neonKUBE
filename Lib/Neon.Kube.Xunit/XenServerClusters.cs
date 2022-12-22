@@ -220,7 +220,7 @@ hosting:
     openEbsDisk: 32 GiB
     hosts:
     - name: XEN-TEST
-      address: $<profile:xen-test.ip>
+      address: $<profile:xen-test.host>
   xenServer:
      snapshot: true
 network:
@@ -261,7 +261,7 @@ hosting:
     openEbsDisk: 32 GiB
     hosts:
     - name: XEN-TEST
-      address: $<profile:xen-test.ip>
+      address: $<profile:xen-test.host>
   xenServer:
      snapshot: true
 network:
@@ -317,7 +317,7 @@ hosting:
     openEbsDisk: 32 GiB
     hosts:
     - name: XEN-TEST
-      address: $<profile:xen-test.ip>
+      address: $<profile:xen-test.host>
   xenServer:
      snapshot: true
 network:
