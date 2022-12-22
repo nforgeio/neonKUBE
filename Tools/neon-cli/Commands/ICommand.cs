@@ -65,7 +65,7 @@ namespace NeonCli
         string[] ExtendedOptions { get; }
 
         /// <summary>
-        /// Indicates that unknown command options should be checked against <see cref="ExtendedOptions"/>.
+        /// Indicates that command options should be checked against <see cref="ExtendedOptions"/>.
         /// </summary>
         bool CheckOptions { get; }
 

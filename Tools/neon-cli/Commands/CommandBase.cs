@@ -51,7 +51,7 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Indicates that unknown command options should be checked against <see cref="ExtendedOptions"/>.
+        /// Indicates that command options should be checked against <see cref="ExtendedOptions"/>.
         /// This defaults to <c>true</c>.
         /// </summary>
         public virtual bool CheckOptions
