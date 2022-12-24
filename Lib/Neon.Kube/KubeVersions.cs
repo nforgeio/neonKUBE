@@ -124,7 +124,7 @@ namespace Neon.Kube
         /// <item>
         ///     <term><b>NONE</b></term>
         ///     <description>
-        ///     Generally available public releases do not include a preview part in
+        ///     Generally available public releases do not include a prerelease part in
         ///     their semantic version.
         ///     </description>
         /// </item>
@@ -132,8 +132,8 @@ namespace Neon.Kube
         /// <note>
         /// <para>
         /// Pending releases can be identified by appending <b>".pending"</b> to versions
-        /// that already include a preview part or <b>-pending</b> for GA versions that
-        /// don't include a preview part.  This indicates that we're still working on that
+        /// that already include a prerelease part or <b>-pending</b> for GA versions that
+        /// don't include a prerelease part.  This indicates that we're still working on that
         /// version and should only be used by NEONFORGE maintainers.
         /// </para>
         /// <para>
