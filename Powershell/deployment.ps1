@@ -261,7 +261,7 @@ function Remove-GitHubCredentials
 #
 # ARGUMENTS:
 #
-#   organization    - specifies the GitHib organization hosting the registry
+#   organization    - specifies the GitHub organization hosting the registry
 #   name            - the container image name (with optional wildcards)
 
 function Remove-GitHub-Container
@@ -283,7 +283,7 @@ function Remove-GitHub-Container
 #
 # ARGUMENTS:
 #
-#   organization    - specifies the GitHib organization hosting the registry
+#   organization    - specifies the GitHub organization hosting the registry
 #   name            - the container image name (with optional wildcards)
 #   visibility      - the new visibility, one of:
 #
