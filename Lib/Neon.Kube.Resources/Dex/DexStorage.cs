@@ -26,7 +26,7 @@ using Newtonsoft.Json.Converters;
 
 using YamlDotNet.Serialization;
 
-namespace Neon.Kube
+namespace Neon.Kube.Resources.Dex
 {
     /// <summary>
     /// Dex configuration model.

@@ -26,7 +26,7 @@ using k8s.Models;
 
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
     /// WorkloadSelector specifies the criteria used to determine if the Gateway, Sidecar, EnvoyFilter, or ServiceEntry 

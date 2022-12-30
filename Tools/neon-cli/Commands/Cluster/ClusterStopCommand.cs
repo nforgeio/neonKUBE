@@ -43,6 +43,8 @@ using Neon.Cryptography;
 using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Hosting;
+using Neon.Kube.Proxy;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
@@ -88,6 +90,9 @@ cluster definition or by executing this command on your cluster:
 
         /// <inheritdoc/>
         public override string[] ExtendedOptions => new string[] { "--turnoff", "--force" };
+
+        /// <inheritdoc/>
+        public override bool NeedsHostingManager => true;
 
         /// <inheritdoc/>
         public override void Help()

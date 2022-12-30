@@ -25,6 +25,13 @@
 #
 #       -dirty      - Use GitHub sources for SourceLink even if local repo is dirty
 #       -restore    - Just restore the CSPROJ files after cancelling publish
+#
+# REMARKS:
+#
+# NOTE: The script writes the package publication version to:
+#
+#           $/build/nuget/version.txt
+#
 
 param 
 (
@@ -58,10 +65,6 @@ if (!(Test-Path env:NC_ROOT))
 
     return 1
 }
-
-# This needs to run with elevated privileges.
-
-Request-AdminPermissions
 
 # Retrieve any necessary credentials.
 
@@ -124,6 +127,7 @@ function Publish
 
 try
 {
+    #------------------------------------------------------------------------------
     # Load the library and neonKUBE versions.
 
     $msbuild         = $env:MSBUILDPATH
@@ -135,6 +139,12 @@ try
     $nkToolBin       = "$nkRoot\ToolBin"
     $neonSdkVersion  = $(& "neon-build" read-version "$nkLib/Neon.Common/Build.cs" NeonSdkVersion)
     $neonkubeVersion = $(& "neon-build" read-version "$nkLib/Neon.Kube/KubeVersions.cs" NeonKube)
+
+    #------------------------------------------------------------------------------
+    # Save the publish version to [$/build/nuget/version.text] so release tools can
+    # determine the current release.
+
+    [System.IO.File]::WriteAllText("$nkRoot\build\nuget\version.txt", $neonkubeVersion)
 
     #--------------------------------------------------------------------------
     # SourceLink configuration:
@@ -152,12 +162,11 @@ try
     $env:NEON_PUBLIC_SOURCELINK = "true"
 
     #--------------------------------------------------------------------------
-    # Build the solution.
+    # We need to do a release solution build to ensure that any tools or other
+    # dependencies are built before we build and publish the individual packages.
 
     if (-not $restore)
     {
-        # We need to do a release solution build to ensure that any tools or other
-        # dependencies are built before we build and publish the individual packages.
 
         Write-Info ""
         Write-Info "********************************************************************************"
@@ -198,6 +207,7 @@ try
             throw "ERROR: BUILD FAILED"
         }
 
+        #------------------------------------------------------------------------------
         # Update the project versions.
 
         SetVersion Neon.Kube                      $neonkubeVersion
@@ -218,6 +228,7 @@ try
         SetVersion Neon.Kube.XenServer            $neonkubeVersion
         SetVersion Neon.Kube.Xunit                $neonkubeVersion
 
+        #------------------------------------------------------------------------------
         # Build and publish the projects.
 
         Publish Neon.Kube                         $neonkubeVersion
@@ -239,9 +250,10 @@ try
         Publish Neon.Kube.Xunit                   $neonkubeVersion
     }
 
+    #------------------------------------------------------------------------------
     # Remove all of the generated nuget files so these don't accumulate.
 
-    Remove-Item "$env:NK_BUILD\nuget\*"
+    Remove-Item "$env:NK_BUILD\nuget\*.nupkg"
 
     ""
     "** Package publication completed"

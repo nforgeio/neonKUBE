@@ -36,6 +36,8 @@ using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Resources;
+using Neon.Kube.Resources.Cluster;
+using Neon.Kube.Resources.Istio;
 using Neon.Service;
 using Neon.Tasks;
 
@@ -347,7 +349,7 @@ namespace NeonDashboard
                         Name = "metrics-external",
                         NamespaceProperty = KubeNamespace.NeonIngress
                     },
-                    Spec = new VirtualServiceSpec()
+                    Spec = new V1VirtualServiceSpec()
                     {
                         Gateways = new List<string>() { "neoncluster-gateway" },
                         Hosts = new List<string>() { $"metrics.{ClusterInfo.Domain}" },

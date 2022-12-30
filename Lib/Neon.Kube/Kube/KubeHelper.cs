@@ -42,18 +42,19 @@ using k8s.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 
+using Newtonsoft.Json;
+
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Deployment;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube.BuildInfo;
+using Neon.Kube.ClusterDef;
+using Neon.Kube.Glauth;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Tasks;
-
-using Newtonsoft.Json;
-using Renci.SshNet.Common;
 using SharpCompress.Readers;
 
 namespace Neon.Kube
@@ -3227,6 +3228,102 @@ TCPKeepAlive yes
                 var @namespace = await reader.ReadToEndAsync();
                 return @namespace;
             }
+        }
+
+        /// <summary>
+        /// Returns the path to the <b>$/neonKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file.
+        /// </summary>
+        /// <returns>The <b>KubeVersions.cd</b> path.</returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if the <b>NK_ROOT</b> environment variable does not exist or the git repo is
+        /// invalid, the source file doesn't exist or the <see cref="KubeVersions.NeonKube"/>
+        /// constant could not be located.
+        /// </exception>
+        private static string GetKubeVersionsPath()
+        {
+            var nkRoot = Environment.GetEnvironmentVariable("NK_ROOT");
+
+            if (string.IsNullOrEmpty(nkRoot))
+            {
+                throw new InvalidOperationException("NK_ROOT environment variable does not exist.");
+            }
+
+            if (!Directory.Exists(nkRoot))
+            {
+                throw new InvalidOperationException($"[NK_ROOT={nkRoot}] directory does not exist.");
+            }
+
+            if (!File.Exists(Path.Combine(nkRoot, "neonKUBE.sln")))
+            {
+                throw new InvalidOperationException($"[NK_ROOT={nkRoot}] directory does not include the [neonKUBE.sln] file.");
+            }
+
+            var versionsPath = Path.Combine(nkRoot, "Lib", "Neon.Kube", "KUbeVersions.cs");
+
+            if (!File.Exists(versionsPath))
+            {
+                throw new InvalidOperationException($"[{versionsPath}] file does not exist.");
+            }
+
+            return versionsPath;
+        }
+
+        /// <summary>
+        /// Regular expression used to extract the <b>NeonKube</b> version constant value from
+        /// the <b>$/neonKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file.
+        /// </summary>
+        private static readonly Regex VersionRegex = new Regex(@"^\s*public const string NeonKube = ""(?<version>.+)"";", RegexOptions.Multiline);
+
+        /// <summary>
+        /// Returns the <see cref="KubeVersions.NeonKube"/> contant value extracted from the 
+        /// <b>$/neonKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file.  Note that the
+        /// <b>NK_ROOT</b> environment variable must reference the root of the <b>neonKUBE</b>
+        /// git repository.
+        /// </summary>
+        /// <returns>The <b>NeonKube</b> version.</returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if the <b>NK_ROOT</b> environment variable does not exist or the git repo is
+        /// invalid, the source file doesn't exist or the <see cref="KubeVersions.NeonKube"/>
+        /// constant could not be located.
+        /// </exception>
+        public static SemanticVersion GetNeonKubeVersion()
+        {
+            var versionsPath = GetKubeVersionsPath();
+            var versionsText = File.ReadAllText(versionsPath);
+            var match        = VersionRegex.Match(versionsText);
+
+            if (!match.Success)
+            {
+                throw new InvalidOperationException($"[KubeVersions.NeonKube] constant not found.");
+            }
+
+            return SemanticVersion.Parse(match.Groups["version"].Value);
+        }
+
+        /// <summary>
+        /// Edits the <b>$/neonKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file by setting
+        /// the <see cref="KubeVersions.NeonKube"/> constant to the version passed.
+        /// </summary>
+        /// <param name="version">The new version number.</param>
+        /// <returns>
+        /// <c>true</c> if the version constant value was changed, <c>false</c> when 
+        /// the constant was already set to this version.
+        /// </returns>
+        public static bool EditNeonKubeVersion(SemanticVersion version)
+        {
+            if (GetNeonKubeVersion() == version)
+            {
+                return false;
+            }
+
+            var versionsPath = GetKubeVersionsPath();
+            var versionsText = File.ReadAllText(versionsPath);
+
+            versionsText = VersionRegex.Replace(versionsText, version.ToString());
+
+            File.WriteAllText(versionsPath, versionsText, Encoding.UTF8);
+
+            return true;
         }
     }
 }

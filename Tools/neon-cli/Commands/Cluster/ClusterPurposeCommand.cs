@@ -43,6 +43,9 @@ using Neon.Cryptography;
 using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.ClusterDef;
+using Neon.Kube.Hosting;
+using Neon.Kube.Proxy;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
@@ -84,6 +87,9 @@ where PURPOSE can be passed as (case insensitive):
 ";
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "purpose" };
+
+        /// <inheritdoc/>
+        public override bool NeedsHostingManager => true;
 
         /// <inheritdoc/>
         public override void Help()

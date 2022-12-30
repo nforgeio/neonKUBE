@@ -41,6 +41,10 @@
 # faster and will reduce the accumulation of packages in our private feed.
 # Use the [-local] option for this.
 #
+# NOTE: The script writes the package publication version to:
+#
+#           $/build/nuget/version.txt
+#
 # EMERGENCY USE:
 # 
 # By default, [-local] will still use the atomic versioner service in the
@@ -111,10 +115,6 @@ if (!(Test-Path env:NC_ROOT))
 
     return 1
 }
-
-# This needs to run with elevated privileges.
-
-Request-AdminPermissions
 
 # We're going to build the DEBUG configuration by default for DEV packages so debugging will be easier.
 
@@ -228,24 +228,6 @@ try
     $nkSolution  = "$nkRoot\neonKUBE.sln"
     $branch      = GitBranch $nkRoot
 
-    ############################################
-    # $todo(jefflill): Remove this on 12-01-2022
-    #
-    # This ensures that any [$/ToolBin/nuget.config] file is removed.
-    # This file may include a GITHUB_PAT token and shouldn't ever be 
-    # the in the repo due to security concerns.
-    #
-    # We can also remove this file from [.gitignore] at the same time.
-    
-    $nugetConfigPath = "$nkRoot/ToolBin/nuget.config"
-
-    if ([System.IO.File]::Exists($nugetConfigPath))
-    {
-        [System.IO.File]::Delete($nugetConfigPath)
-    }
-
-    ###########################################
-
     if ($localVersion)
     {
         $local = $true
@@ -313,12 +295,18 @@ try
 
         $versionerKeyBase64 = [Convert]::ToBase64String(([System.Text.Encoding]::UTF8.GetBytes($versionerKey)))
 
-        # Submit PUTs request to the versioner service, specifying the counter name.  The service will
+        # Submit PUT requests to the versioner service, specifying the counter name.  The service will
         # atomically increment the counter and return the next value.
 
         $reply           = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonKUBE-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
         $neonkubeVersion = "10000.0.$reply-dev-$branch"
     }
+
+    #------------------------------------------------------------------------------
+    # Save the publish version to [$/build/nuget/version.text] so release tools can
+    # determine the current release.
+
+    [System.IO.File]::WriteAllText("$nkRoot\build\nuget\version.txt", $neonkubeVersion)
 
     #--------------------------------------------------------------------------
     # SourceLink configuration: We need to decide whether to set the environment variable 
@@ -333,11 +321,12 @@ try
 
     $env:NEON_PUBLIC_SOURCELINK = "true"
 
+    #------------------------------------------------------------------------------
+    # We need to do a solution build to ensure that any tools or other dependencies 
+    # are built before we build and publish the individual packages.
+
     if (-not $restore)
     {
-        # We need to do a solution build to ensure that any tools or other dependencies 
-        # are built before we build and publish the individual packages.
-
         Write-Info ""
         Write-Info "********************************************************************************"
         Write-Info "***                           RESTORE PACKAGES                               ***"
@@ -378,12 +367,13 @@ try
         }
     }
 
+    #------------------------------------------------------------------------------
+    # We need to set the version in all of the project files so that implicit 
+    # package dependencies will work for external projects importing these 
+    # packages.
+
     if (-not $restore)
     {
-        # We need to set the version first in all of the project files so that
-        # implicit package dependencies will work for external projects importing
-        # these packages.
-
         SetVersion Neon.Kube                        $neonkubeVersion
         SetVersion Neon.Kube.Aws                    $neonkubeVersion
         SetVersion Neon.Kube.Azure                  $neonkubeVersion
@@ -443,7 +433,7 @@ try
 
     # Remove all of the generated nuget files so these don't accumulate.
 
-    Remove-Item "$env:NK_BUILD\nuget\*"
+    Remove-Item "$env:NK_BUILD\nuget\*.nupkg"
 
     ""
     "** Package publication completed"

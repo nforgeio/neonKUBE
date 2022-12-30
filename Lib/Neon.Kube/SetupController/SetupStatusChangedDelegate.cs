@@ -29,7 +29,7 @@ using Neon.Collections;
 using Neon.Common;
 using Neon.SSH;
 
-namespace Neon.Kube
+namespace Neon.Kube.Setup
 {
     /// <summary>
     /// Used for raising the <see cref="ISetupController.StatusChangedEvent"/>.

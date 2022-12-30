@@ -38,7 +38,7 @@ using Neon.Net;
 using Neon.Time;
 using System.Text.Json.Serialization;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.CertManager
 {
 /// <summary>
 /// Describes CertManager External Account Binding options.

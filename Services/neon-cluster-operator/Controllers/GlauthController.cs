@@ -38,6 +38,7 @@ using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Glauth;
 using Neon.Kube.Operator;
 using Neon.Retry;
 using Neon.Tasks;
@@ -97,11 +98,11 @@ namespace NeonClusterOperator
             var leaderConfig =
                 new LeaderElectionConfig(
                     k8s,
-                    @namespace: KubeNamespace.NeonSystem,
-                    leaseName: $"{Program.Service.Name}.glauth",
-                    identity: Pod.Name,
+                    @namespace:       KubeNamespace.NeonSystem,
+                    leaseName:        $"{Program.Service.Name}.glauth",
+                    identity:         Pod.Name,
                     promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_promoted", "Leader promotions"),
-                    demotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_demoted", "Leader demotions"),
+                    demotionCounter:  Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_demoted", "Leader demotions"),
                     newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_new_leader", "Leadership changes"));
 
             var options = new ResourceManagerOptions()
@@ -124,10 +125,10 @@ namespace NeonClusterOperator
 
             resourceManager = new ResourceManager<V1Secret, GlauthController>(
                 k8s,
-                options: options,
-                leaderConfig: leaderConfig,
+                options:         options,
+                leaderConfig:    leaderConfig,
                 serviceProvider: serviceProvider,
-                filter: (secret) =>
+                filter:          (secret) =>
                 {
                     try
                     {
@@ -274,13 +275,13 @@ namespace NeonClusterOperator
                 {
                     using (var userActivity = TelemetryHub.ActivitySource.StartActivity("AddUser"))
                     {
-                        var userData = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(resource.Data[user]));
-                        var name = userData.Name;
-                        var givenname = userData.Name;
-                        var mail = userData.Mail ?? $"{userData.Name}@{Program.Service.ClusterInfo.Domain}";
-                        var uidnumber = userData.UidNumber;
+                        var userData     = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(resource.Data[user]));
+                        var name         = userData.Name;
+                        var givenname    = userData.Name;
+                        var mail         = userData.Mail ?? $"{userData.Name}@{Program.Service.ClusterInfo.Domain}";
+                        var uidnumber    = userData.UidNumber;
                         var primarygroup = userData.PrimaryGroup;
-                        var passsha256 = CryptoHelper.ComputeSHA256String(userData.Password);
+                        var passsha256   = CryptoHelper.ComputeSHA256String(userData.Password);
 
                         await using (var cmd = new NpgsqlCommand(
                             $@"INSERT INTO users(name, givenname, mail, uidnumber, primarygroup, passsha256)

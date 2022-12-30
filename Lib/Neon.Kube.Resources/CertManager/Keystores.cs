@@ -25,7 +25,7 @@ using k8s.Models;
 
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.CertManager
 {
     /// <summary>
     /// Configures additional keystore output formats stored in the `secretName` Secret resource.

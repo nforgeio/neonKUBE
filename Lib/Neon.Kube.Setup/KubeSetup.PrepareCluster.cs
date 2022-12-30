@@ -34,12 +34,19 @@ using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
+using Neon.Kube;
+using Neon.Kube.Clients;
+using Neon.Kube.ClusterDef;
+using Neon.Kube.Proxy;
+using Neon.Kube.Hosting;
+using Neon.Kube.Setup;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
+using Namotion.Reflection;
 
-namespace Neon.Kube
+namespace Neon.Kube.Setup
 {
     public static partial class KubeSetup
     {
@@ -58,96 +65,40 @@ namespace Neon.Kube
         /// Only NEONFORGE maintainers will have permission to use the private image.
         /// </note>
         /// </param>
-        /// <param name="nodeImageUri">
-        /// <para>
-        /// Optionally specifies the node image URI.
-        /// </para>
-        /// </param>
-        /// <param name="nodeImagePath">
-        /// <para>
-        /// Optionally specifies the node image path.
-        /// </para>
-        /// <note>
-        /// One of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be specified for 
-        /// on-premise hypervisor based environments.  These are ignored for cloud hosting.
-        /// </note>
-        /// </param>
-        /// <param name="maxParallel">
-        /// Optionally specifies the maximum number of node operations to be performed in parallel.
-        /// This <b>defaults to 0</b> which means that we'll use <see cref="IHostingManager.MaxParallel"/>.
-        /// </param>
-        /// <param name="packageCacheEndpoints">
-        /// <para>
-        /// Optionally specifies the IP endpoints for the APT package caches to be used by
-        /// the cluster, overriding the cluster definition settings.  This is useful when
-        /// package caches are already deployed in an environment.
-        /// </para>
-        /// <note>
-        /// Package cache servers are deployed to the control-plane nodes by default.
-        /// </note>
-        /// </param>
-        /// <param name="unredacted">
-        /// Optionally indicates that sensitive information <b>won't be redacted</b> from the setup logs 
-        /// (typically used when debugging).
-        /// </param>
-        /// <param name="debugMode">Optionally indicates that the cluster will be prepared in debug mode.</param>
-        /// <param name="baseImageName">Optionally specifies the base image name to use for debug mode.</param>
-        /// <param name="removeExisting">Optionally remove any existing cluster with the same name in the target environment.</param>
-        /// <param name="disableConsoleOutput">
-        /// Optionally disables status output to the console.  This is typically
-        /// enabled for non-console applications.
-        /// </param>
-        /// <param name="desktopImage">
-        /// Optionally indicates that we're building a ready-to-go neon desktop image.
-        /// </param>
-        /// <param name="desktopReadyToGo">
-        /// Optionally indicates that we're setting up a neon-desktop built-in cluster
-        /// from a completely prebuilt desktop image.  In this case, the controller
-        /// returned will fully deploy the cluster (so no setup controller needs to
-        /// be created and run afterwards).
-        /// </param>
+        /// <param name="options">Specifies the cluster prepare options.</param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
         /// <exception cref="NeonKubeException">Thrown when there's a problem.</exception>
         public static ISetupController CreateClusterPrepareController(
             ClusterDefinition           clusterDefinition,
             bool                        cloudMarketplace,
-            string                      nodeImageUri          = null,
-            string                      nodeImagePath         = null,
-            int                         maxParallel           = 0,
-            IEnumerable<IPEndPoint>     packageCacheEndpoints = null,
-            bool                        unredacted            = false, 
-            bool                        debugMode             = false, 
-            string                      baseImageName         = null,
-            bool                        removeExisting        = false,
-            bool                        disableConsoleOutput  = false,
-            bool                        desktopImage          = false,
-            bool                        desktopReadyToGo      = false)
+            PrepareClusterOptions       options)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Requires<ArgumentNullException>(options != null, nameof(options));
 
             if (KubeHelper.IsOnPremiseHypervisorEnvironment(clusterDefinition.Hosting.Environment))
             {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri) || !string.IsNullOrEmpty(nodeImagePath), $"{nameof(nodeImageUri)}/{nameof(nodeImagePath)}");
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(options.NodeImageUri) || !string.IsNullOrEmpty(options.NodeImagePath), $"{nameof(options.NodeImageUri)}/{nameof(options.NodeImagePath)}");
             }
 
-            Covenant.Requires<ArgumentException>(maxParallel >= 0, nameof(maxParallel));
-            Covenant.Requires<ArgumentNullException>(!debugMode || !string.IsNullOrEmpty(baseImageName), nameof(baseImageName));
+            Covenant.Requires<ArgumentException>(options.MaxParallel >= 0, nameof(options.MaxParallel));
+            Covenant.Requires<ArgumentNullException>(!options.DebugMode || !string.IsNullOrEmpty(options.BaseImageName), nameof(options.BaseImageName));
 
-            if (desktopReadyToGo)
+            if (options.DesktopReadyToGo)
             {
                 Covenant.Assert(clusterDefinition.IsDesktop, $"Expected [{nameof(clusterDefinition.IsDesktop)}] to be TRUE.");
                 Covenant.Assert(clusterDefinition.Name == KubeConst.NeonDesktopClusterName, $"Expected cluster name [{KubeConst.NeonDesktopClusterName}] not [{clusterDefinition.Name}].");
 
-                debugMode = false;
+                options.DebugMode = false;
             }
 
             clusterDefinition.Validate();
 
-            if (!string.IsNullOrEmpty(nodeImagePath))
+            if (!string.IsNullOrEmpty(options.NodeImagePath))
             {
-                if (!File.Exists(nodeImagePath))
+                if (!File.Exists(options.NodeImagePath))
                 {
-                    throw new NeonKubeException($"No node image file exists at: {nodeImagePath}");
+                    throw new NeonKubeException($"No node image file exists at: {options.NodeImagePath}");
                 }
             }
 
@@ -169,19 +120,19 @@ namespace Neon.Kube
                 hostingManagerFactory:  new HostingManagerFactory(() => HostingLoader.Initialize()),
                 cloudMarketplace:       cloudMarketplace,
                 operation:              ClusterProxy.Operation.Prepare,
-                nodeImageUri:           nodeImageUri,
-                nodeImagePath:          nodeImagePath,
+                nodeImageUri:           options.NodeImageUri,
+                nodeImagePath:          options.NodeImagePath,
                 nodeProxyCreator:       (nodeName, nodeAddress) =>
                 {
                     var logStream      = new FileStream(Path.Combine(logFolder, $"{nodeName}.log"), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
                     var logWriter      = new StreamWriter(logStream);
-                    var sshCredentials = desktopReadyToGo ? SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, KubeHelper.GetBuiltinDesktopSshKey().PrivatePEM)
-                                                          : SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
+                    var sshCredentials = options.DesktopReadyToGo ? SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, KubeHelper.GetBuiltinDesktopSshKey().PrivatePEM)
+                                                                  : SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
 
                     return new NodeSshProxy<NodeDefinition>(nodeName, nodeAddress, sshCredentials, logWriter: logWriter);
                 });
             
-            if (unredacted)
+            if (options.Unredacted)
             {
                 cluster.SecureRunOptions = RunOptions.None;
             }
@@ -194,11 +145,11 @@ namespace Neon.Kube
 
             // Override the cluster definition package caches when requested.
 
-            if (packageCacheEndpoints != null && packageCacheEndpoints.Count() > 0)
+            if (options.PackageCacheEndpoints != null && options.PackageCacheEndpoints.Count() > 0)
             {
                 var sb = new StringBuilder();
 
-                foreach (var endpoint in packageCacheEndpoints)
+                foreach (var endpoint in options.PackageCacheEndpoints)
                 {
                     sb.AppendWithSeparator($"{endpoint.Address}:{endpoint.Port}");
                 }
@@ -208,9 +159,9 @@ namespace Neon.Kube
 
             // Configure the setup controller.
 
-            var controller = new SetupController<NodeDefinition>($"Preparing [{cluster.Definition.Name}] cluster infrastructure", cluster.Nodes, KubeHelper.LogFolder, disableConsoleOutput: disableConsoleOutput)
+            var controller = new SetupController<NodeDefinition>($"Preparing [{cluster.Definition.Name}] cluster infrastructure", cluster.Nodes, KubeHelper.LogFolder, disableConsoleOutput: options.DisableConsoleOutput)
             {
-                MaxParallel     = maxParallel > 0 ? maxParallel: hostingManager.MaxParallel,
+                MaxParallel     = options.MaxParallel > 0 ? options.MaxParallel: hostingManager.MaxParallel,
                 LogBeginMarker  = "# CLUSTER-BEGIN-PREPARE #######################################################",
                 LogEndMarker    = "# CLUSTER-END-PREPARE-SUCCESS #################################################",
                 LogFailedMarker = "# CLUSTER-END-PREPARE-FAILED ##################################################"
@@ -252,18 +203,18 @@ namespace Neon.Kube
 
             controller.Add(KubeSetupProperty.Preparing, true);
             controller.Add(KubeSetupProperty.ReleaseMode, KubeHelper.IsRelease);
-            controller.Add(KubeSetupProperty.DebugMode, debugMode);
-            controller.Add(KubeSetupProperty.BaseImageName, baseImageName);
+            controller.Add(KubeSetupProperty.DebugMode, options.DebugMode);
+            controller.Add(KubeSetupProperty.BaseImageName, options.BaseImageName);
             controller.Add(KubeSetupProperty.MaintainerMode, !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NC_ROOT")));
             controller.Add(KubeSetupProperty.ClusterProxy, cluster);
             controller.Add(KubeSetupProperty.ClusterLogin, clusterLogin);
             controller.Add(KubeSetupProperty.HostingManager, cluster.HostingManager);
             controller.Add(KubeSetupProperty.HostingEnvironment, cluster.HostingManager.HostingEnvironment);
             controller.Add(KubeSetupProperty.NeonCloudHeadendClient, HeadendClient.Create());
-            controller.Add(KubeSetupProperty.DisableImageDownload, !string.IsNullOrEmpty(nodeImagePath));
-            controller.Add(KubeSetupProperty.Redact, !unredacted);
-            controller.Add(KubeSetupProperty.DesktopReadyToGo, desktopReadyToGo);
-            controller.Add(KubeSetupProperty.DesktopImage, desktopImage);
+            controller.Add(KubeSetupProperty.DisableImageDownload, !string.IsNullOrEmpty(options.NodeImagePath));
+            controller.Add(KubeSetupProperty.Redact, !options.Unredacted);
+            controller.Add(KubeSetupProperty.DesktopReadyToGo, options.DesktopReadyToGo);
+            controller.Add(KubeSetupProperty.DesktopImage, options.DesktopImage);
             controller.Add(KubeSetupProperty.DesktopServiceProxy, desktopServiceProxy);
 
             // Configure the cluster preparation steps.
@@ -273,13 +224,24 @@ namespace Neon.Kube
                 {
                     controller.SetGlobalStepStatus("configure: hosting manager");
 
+                    if (!string.IsNullOrEmpty(options.NodeImageUri))
+                    {
+                        controller.LogGlobal();
+                        controller.LogGlobal($"node image URI: {options.NodeImageUri}");
+                    }
+                    else if (string.IsNullOrEmpty(options.NodeImagePath))
+                    {
+                        controller.LogGlobal();
+                        controller.LogGlobal($"node image PATH: {options.NodeImagePath}");
+                    }
+
                     hostingManager.MaxParallel = controller.MaxParallel;
                     hostingManager.WaitSeconds = 60;
                 });
 
             // Delete any existing cluster in the environment when requested.
 
-            if (removeExisting)
+            if (options.RemoveExisting)
             {
                 controller.AddGlobalStep("remove existing cluster",
                     async controller =>
@@ -331,11 +293,6 @@ namespace Neon.Kube
                         clusterLogin.SshPassword  = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
                         clusterLogin.SshPassword += ".Aa0";
                     }
-
-                    //#######################################
-                    // $debug(jefflill): DELETE THIS CODE!!!!
-                    //clusterLogin.SshPassword = KubeConst.SysAdminPassword;
-                    //#######################################
 
                     // We're also going to generate the server's SSH key here and pass that to the hosting
                     // manager's provisioner.  We need to do this up front because some hosting environment
@@ -416,7 +373,7 @@ namespace Neon.Kube
 
                     var imageType = node.ImageType;
 
-                    if (desktopReadyToGo)
+                    if (options.DesktopReadyToGo)
                     {
                         if (node.ImageType != KubeImageType.Desktop)
                         {
@@ -448,7 +405,7 @@ namespace Neon.Kube
                 (controller, node) =>
                 {
                     node.ConfigureSshKey(controller);
-                    node.SetSshPasswordLogin(false);
+                    node.AllowSshPasswordLogin(false);
 
                     // Update node proxies with the generated SSH credentials.
 
@@ -456,13 +413,13 @@ namespace Neon.Kube
 
                     // Remove the [sysadmin] user password; we support only SSH key authentication.
 
-                    if (!desktopReadyToGo)
+                    if (!options.DesktopReadyToGo)
                     {
                         node.SudoCommand("passwd", "--delete", KubeConst.SysAdminUser).EnsureSuccess();
                     }
                 });
 
-            if (!desktopReadyToGo)
+            if (!options.DesktopReadyToGo)
             {
                 controller.AddNodeStep("prepare nodes",
                     (controller, node) =>
@@ -485,7 +442,7 @@ namespace Neon.Kube
 
                     controller.SetGlobalStepStatus("create: cluster neoncluster.io domain");
 
-                    if (desktopReadyToGo)
+                    if (options.DesktopReadyToGo)
                     {
                         clusterLogin.ClusterDefinition.Id     = KubeHelper.GenerateClusterId();
                         clusterLogin.ClusterDefinition.Domain = KubeConst.DesktopClusterDomain;
@@ -507,7 +464,7 @@ namespace Neon.Kube
                         headendClient.HttpClient.DefaultRequestHeaders.Authorization =
                             new AuthenticationHeaderValue("Bearer", clusterLogin.ClusterDefinition.NeonCloudToken);
 
-                        if (desktopImage)
+                        if (options.DesktopImage)
                         {
                             clusterLogin.ClusterDefinition.Domain = KubeConst.DesktopClusterDomain;
                         }
@@ -529,7 +486,7 @@ namespace Neon.Kube
                     //      ADDRESS     desktop.neoncluster.io
                     //      ADDRESS     *.desktop.neoncluster.io
 
-                    if (desktopReadyToGo)
+                    if (options.DesktopReadyToGo)
                     {
                         controller.SetGlobalStepStatus($"configure: node local DNS");
 
@@ -572,14 +529,14 @@ namespace Neon.Kube
             //
             // NOTE: This isn't required for pre-built clusters.
 
-            if (!desktopReadyToGo)
+            if (!options.DesktopReadyToGo)
             {
                 hostingManager.AddPostProvisioningSteps(controller);
             }
 
             // Built-in neon-desktop clusters need to configure the workstation login, etc.
 
-            if (desktopReadyToGo)
+            if (options.DesktopReadyToGo)
             {
                 controller.AddNodeStep("configure: workstation", KubeSetup.ConfigureWorkstation, (controller, node) => node == cluster.FirstControlNode); ;
             }
@@ -591,7 +548,7 @@ namespace Neon.Kube
             controller.AddGlobalStep("finish",
                 controller =>
                 {
-                    if (desktopReadyToGo)
+                    if (options.DesktopReadyToGo)
                     {
                         clusterLogin.SetupDetails.SetupPending = false;
                         clusterLogin.Save();

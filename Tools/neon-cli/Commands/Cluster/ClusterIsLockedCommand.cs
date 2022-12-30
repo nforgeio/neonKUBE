@@ -43,6 +43,8 @@ using Neon.Cryptography;
 using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Hosting;
+using Neon.Kube.Proxy;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
@@ -71,6 +73,9 @@ EXITCODE:
 ";
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "islocked" };
+
+        /// <inheritdoc/>
+        public override bool NeedsHostingManager => true;
 
         /// <inheritdoc/>
         public override void Help()

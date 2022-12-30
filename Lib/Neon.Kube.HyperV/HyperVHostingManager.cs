@@ -42,13 +42,16 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.HyperV;
 using Neon.IO;
+using Neon.Kube.ClusterDef;
+using Neon.Kube.Proxy;
+using Neon.Kube.Setup;
 using Neon.Net;
 using Neon.SSH;
 using Neon.Tasks;
 using Neon.Time;
 using Neon.Windows;
 
-namespace Neon.Kube
+namespace Neon.Kube.Hosting.HyperV
 {
     /// <summary>
     /// Manages cluster provisioning using Microsoft Hyper-V virtual machines.

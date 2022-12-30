@@ -35,13 +35,16 @@ using YamlDotNet.Serialization;
 using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Kube.ClusterDef;
+using Neon.Kube.Proxy;
+using Neon.Kube.Setup;
 using Neon.Net;
 using Neon.XenServer;
 using Neon.IO;
 using Neon.SSH;
 using Neon.Tasks;
 
-namespace Neon.Kube
+namespace Neon.Kube.Hosting.XenServer
 {
     /// <summary>
     /// Manages cluster provisioning on the XenServer hypervisor.

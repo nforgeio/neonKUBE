@@ -27,7 +27,7 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 
-namespace Neon.Kube
+namespace Neon.Kube.Hosting
 {
     /// <summary>
     /// Describes a resource constraint that will prevent a cluster from being deployed.

@@ -34,10 +34,12 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
+using Neon.Kube.ClusterDef;
+using Neon.Kube.Proxy;
 using Neon.Net;
 using Neon.Time;
 
-namespace Neon.Kube
+namespace Neon.Kube.Hosting
 {
     /// <summary>
     /// Describes the implementation for mapping a hosting environment into

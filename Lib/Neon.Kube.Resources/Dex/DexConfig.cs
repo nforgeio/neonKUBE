@@ -25,7 +25,7 @@ using Newtonsoft.Json;
 
 using YamlDotNet.Serialization;
 
-namespace Neon.Kube
+namespace Neon.Kube.Resources.Dex
 {
     /// <summary>
     /// Dex configuration model.
@@ -75,7 +75,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Connectors", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "connectors", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public List<IDexConnector> Connectors { get; set; } = new List<IDexConnector>();
+        public List<IV1DexConnector> Connectors { get; set; } = new List<IV1DexConnector>();
 
         /// <summary>
         /// Configuration for telemetry.

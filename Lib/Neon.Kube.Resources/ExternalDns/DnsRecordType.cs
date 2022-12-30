@@ -21,10 +21,11 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json.Serialization;
+
 using k8s;
 using k8s.Models;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.ExternalDns
 {
     /// <summary>
     /// Enumerates the possible Block Device types.

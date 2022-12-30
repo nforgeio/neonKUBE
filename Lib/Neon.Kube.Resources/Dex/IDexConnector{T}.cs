@@ -23,20 +23,22 @@ using System.Text;
 
 using Neon.Common;
 using Neon.Kube.Resources;
+using Neon.Kube.Resources.JsonConverters;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NJsonSchema.Annotations;
 using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
 
-namespace Neon.Kube
+namespace Neon.Kube.Resources.Dex
 {
     /// <summary>
     /// Configuration for backend connectors.
     /// </summary>
     [Newtonsoft.Json.JsonConverter(typeof(DexConnectorConverter))]
     [System.Text.Json.Serialization.JsonConverter(typeof(DexConnectorJsonConverter))]
-    public interface IDexConnector<T> : IDexConnector
+    public interface IDexConnector<T> : IV1DexConnector
         where T : class
     {
         /// <summary>

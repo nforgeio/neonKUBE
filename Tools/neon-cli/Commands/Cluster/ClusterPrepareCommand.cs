@@ -35,6 +35,10 @@ using Neon.Cryptography;
 using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.ClusterDef;
+using Neon.Kube.Hosting;
+using Neon.Kube.Proxy;
+using Neon.Kube.Setup;
 using Neon.Net;
 using Neon.SSH;
 
@@ -143,6 +147,9 @@ OPTIONS:
         public override bool NeedsSshCredentials(CommandLine commandLine) => !commandLine.HasOption("--remove-templates");
 
         /// <inheritdoc/>
+        public override bool NeedsHostingManager => true;
+
+        /// <inheritdoc/>
         public override void Help()
         {
             Console.WriteLine(usage);
@@ -163,7 +170,7 @@ OPTIONS:
             // We need to inject an implementation for [PreprocessReader] so it will be able to
             // perform the lookups.
 
-            NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new ProfileClient());
+            NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfileClient());
 
             // Handle the [--remove-templates] option.
 
@@ -283,17 +290,22 @@ OPTIONS:
 
             // Create and run the cluster prepare controller.
 
+            var prepareOptions = new PrepareClusterOptions()
+            {
+                NodeImageUri          = nodeImageUri,
+                NodeImagePath         = nodeImagePath,
+                MaxParallel           = maxParallel,
+                PackageCacheEndpoints = packageCacheEndpoints,
+                Unredacted            = commandLine.HasOption("--unredacted"),
+                DebugMode             = debug,
+                BaseImageName         = baseImageName,
+                DisableConsoleOutput  = quiet
+            };
+
             var controller = KubeSetup.CreateClusterPrepareController(
                 clusterDefinition, 
-                cloudMarketplace:       !privateImage,
-                nodeImageUri:           nodeImageUri,
-                nodeImagePath:          nodeImagePath,
-                maxParallel:            maxParallel,
-                packageCacheEndpoints:  packageCacheEndpoints,
-                unredacted:             commandLine.HasOption("--unredacted"),
-                debugMode:              debug,
-                baseImageName:          baseImageName,
-                disableConsoleOutput:   quiet);
+                cloudMarketplace: !privateImage,
+                options:          prepareOptions);
 
             controller.DisablePendingTasks = disablePending;
 

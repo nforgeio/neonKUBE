@@ -28,7 +28,7 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 
-namespace Neon.Kube
+namespace Neon.Kube.Setup
 {
     /// <summary>
     /// Enumerates the final disposition of a <see cref="SetupController{NodeMetadata}"/> run.

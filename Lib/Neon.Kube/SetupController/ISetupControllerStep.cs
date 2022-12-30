@@ -31,7 +31,7 @@ using Neon.Common;
 using Neon.Net;
 using Neon.SSH;
 
-namespace Neon.Kube
+namespace Neon.Kube.Setup
 {
     /// <summary>
     /// Interface implemented by internal <see cref="SetupController{NodeMetadata}.Step"/>

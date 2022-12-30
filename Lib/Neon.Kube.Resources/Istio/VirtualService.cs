@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    VirtualService.cs
+// FILE:	    V1VirtualService.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
 //
@@ -27,13 +27,13 @@ using k8s.Models;
 
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
     /// 
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
-    public class VirtualService : IKubernetesObject<V1ObjectMeta>, ISpec<VirtualServiceSpec>, IValidate
+    public class VirtualService : IKubernetesObject<V1ObjectMeta>, ISpec<V1VirtualServiceSpec>, IValidate
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
@@ -61,7 +61,7 @@ namespace Neon.Kube.Resources
         public VirtualService()
         {
             ApiVersion = "networking.istio.io/v1beta1";
-            Kind = "VirtualService";
+            Kind       = "VirtualService";
         }
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace Neon.Kube.Resources
         /// VirtualService.
         /// </summary>
         [JsonProperty(PropertyName = "spec")]
-        public VirtualServiceSpec Spec { get; set; }
+        public V1VirtualServiceSpec Spec { get; set; }
 
         /// <summary>
         /// Validate the object.

@@ -43,6 +43,8 @@ using Neon.Cryptography;
 using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Hosting;
+using Neon.Kube.Proxy;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
@@ -138,6 +140,9 @@ cluster definition or by executing this command on your cluster:
         public override string[] ExtendedOptions => new string[] { "--force", "--auth", "--crio", "--harbor", "--minio", "--monitoring", "--keep-namespaces" };
 
         /// <inheritdoc/>
+        public override bool NeedsHostingManager => true;
+
+        /// <inheritdoc/>
         public override void Help()
         {
             Console.WriteLine(usage);
@@ -176,7 +181,7 @@ cluster definition or by executing this command on your cluster:
             if (!crio && !auth && !harbor && !minio && monitoring)
             {
                 crio       = true;
-                auth        = true;
+                auth       = true;
                 harbor     = true;
                 minio      = true;
                 monitoring = true;

@@ -28,7 +28,7 @@ using Neon.Common;
 using k8s;
 using k8s.Models;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.JsonConverters
 {
     /// <summary>
     /// <see cref="System.Text.Json"/>: Converts <see cref="V1ResourceRequirements"/>.

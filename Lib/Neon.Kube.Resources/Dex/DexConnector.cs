@@ -22,20 +22,17 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Neon.Kube.Resources;
-using Newtonsoft.Json;
-using NJsonSchema;
-using NJsonSchema.Annotations;
-using YamlDotNet.Serialization;
-using static Org.BouncyCastle.Bcpg.Attr.ImageAttrib;
 
-namespace Neon.Kube
+using Neon.Kube.Resources;
+using Neon.Kube.Resources.JsonConverters;
+
+namespace Neon.Kube.Resources.Dex
 {
     /// <summary>
     /// Configuration for OIDC connectors.
     /// </summary>
     [System.Text.Json.Serialization.JsonConverter(typeof(DexConnectorJsonConverter))]
-    public class DexConnector : IDexConnector
+    public class DexConnector : IV1DexConnector
     {
         /// <summary>
         /// Constructor.

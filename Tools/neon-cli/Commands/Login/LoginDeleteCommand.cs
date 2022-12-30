@@ -65,7 +65,10 @@ USER@CLUSTER[/NAMESPACE is not specified.
         public override string[] Words => new string[] { "login", "delete" }; 
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--force" }; 
+        public override string[] ExtendedOptions => new string[] { "--force" };
+
+        /// <inheritdoc/>
+        public override bool NeedsHostingManager => true;
 
         /// <inheritdoc/>
         public override void Help()

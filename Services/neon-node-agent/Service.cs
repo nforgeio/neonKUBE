@@ -44,6 +44,7 @@ using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Operator;
 using Neon.Kube.Resources;
+using Neon.Kube.Resources.CertManager;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Service;
@@ -340,7 +341,7 @@ namespace NeonNodeAgent
         {
             Logger.LogInformationEx(() => "Checking webhook certificate.");
 
-            var cert = await K8s.CustomObjects.ListNamespacedCustomObjectAsync<Certificate>(
+            var cert = await K8s.CustomObjects.ListNamespacedCustomObjectAsync<V1Certificate>(
                 KubeNamespace.NeonSystem,
                 labelSelector: $"{NeonLabel.ManagedBy}={Name}");
 
@@ -348,7 +349,7 @@ namespace NeonNodeAgent
             {
                 Logger.LogInformationEx(() => "Webhook certificate does not exist, creating...");
 
-                var certificate = new Certificate()
+                var certificate = new V1Certificate()
                 {
                     Metadata = new V1ObjectMeta()
                     {
@@ -359,7 +360,7 @@ namespace NeonNodeAgent
                             { NeonLabel.ManagedBy, Name }
                         }
                     },
-                    Spec = new CertificateSpec()
+                    Spec = new V1CertificateSpec()
                     {
                         DnsNames = new List<string>()
                     {

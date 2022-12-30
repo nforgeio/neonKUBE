@@ -20,7 +20,7 @@ using System;
 namespace NeonCli
 {
     /// <summary>
-    /// Used to tag a <see cref="ICommand"/> for automatic inclusion in a program.
+    /// Used to tag an <see cref="ICommand"/> for automatic inclusion in a program.
     /// </summary>
     public class CommandAttribute : Attribute
     {

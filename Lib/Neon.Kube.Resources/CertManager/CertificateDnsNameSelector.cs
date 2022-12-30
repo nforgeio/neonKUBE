@@ -30,7 +30,7 @@ using Newtonsoft.Json;
 
 using YamlDotNet.Serialization;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.CertManager
 {
 /// <summary>
 /// The kubernetes spec for a cert-manager ClusterIssuer.

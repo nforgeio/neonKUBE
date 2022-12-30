@@ -48,7 +48,10 @@ USAGE:
 ";
 
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "logout" }; 
+        public override string[] Words => new string[] { "logout" };
+
+        /// <inheritdoc/>
+        public override bool NeedsHostingManager => true;
 
         /// <inheritdoc/>
         public override void Help()

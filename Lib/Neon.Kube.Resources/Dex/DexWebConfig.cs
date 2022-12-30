@@ -22,10 +22,9 @@ using System.Linq;
 using System.Text;
 
 using Newtonsoft.Json;
-
 using YamlDotNet.Serialization;
 
-namespace Neon.Kube
+namespace Neon.Kube.Resources.Dex
 {
     /// <summary>
     /// Configuration for the http server.

@@ -22,14 +22,15 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+
 using Neon.Kube.Resources;
+using Neon.Kube.Resources.JsonConverters;
+
 using Newtonsoft.Json;
-using NJsonSchema;
 using NJsonSchema.Annotations;
 using YamlDotNet.Serialization;
-using static Org.BouncyCastle.Bcpg.Attr.ImageAttrib;
 
-namespace Neon.Kube
+namespace Neon.Kube.Resources.Dex
 {
     /// <summary>
     /// Configuration for OIDC connectors.
@@ -66,6 +67,6 @@ namespace Neon.Kube
         [DefaultValue(null)]
         [JsonSchemaExtensionData("x-kubernetes-preserve-unknown-fields", true)]
         public T Config { get; set; }
-        object IDexConnector.Config { get => (T)Config; set => Config = (T)value; }
+        object IV1DexConnector.Config { get => (T)Config; set => Config = (T)value; }
     }
 }

@@ -42,12 +42,15 @@ using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
+using Neon.Kube.ClusterDef;
+using Neon.Kube.Proxy;
+using Neon.Kube.Setup;
 using Neon.Net;
 using Neon.SSH;
 using Neon.Time;
 using Neon.Tasks;
 
-namespace Neon.Kube
+namespace Neon.Kube.Hosting.BareMetal
 {
     /// <summary>
     /// Manages cluster provisioning directly on (mostly) bare manually provisioned machines or virtual machines.

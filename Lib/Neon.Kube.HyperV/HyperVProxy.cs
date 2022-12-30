@@ -50,7 +50,7 @@ using Neon.Net;
 using Neon.SSH;
 using Neon.Time;
 
-namespace Neon.Kube
+namespace Neon.Kube.Hosting.HyperV
 {
     /// <summary>
     /// <para>

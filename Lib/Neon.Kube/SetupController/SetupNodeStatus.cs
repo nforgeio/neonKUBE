@@ -29,10 +29,12 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.Data;
+using Neon.Kube.ClusterDef;
+using Neon.Kube.Proxy;
 using Neon.SSH;
 using Neon.XenServer;
 
-namespace Neon.Kube
+namespace Neon.Kube.Setup
 {
     /// <summary>
     /// Describes the current state of a node during cluster setup.

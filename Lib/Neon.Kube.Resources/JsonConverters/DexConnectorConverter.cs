@@ -24,24 +24,17 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Kube.Resources.Dex;
 
 using k8s;
 using k8s.Models;
-using IdentityModel.OidcClient;
-using System.Text.Json.Nodes;
-using System.Data;
-using YamlDotNet.Core;
-using AutoMapper;
-using System.Collections;
-using YamlDotNet.Core.Tokens;
-using static Neon.Common.Stub;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.JsonConverters
 {
     /// <summary>
     /// Converter for Dex connectors.
     /// </summary>
-    public class DexConnectorJsonConverter : JsonConverter<IDexConnector>
+    public class DexConnectorJsonConverter : JsonConverter<IV1DexConnector>
     {
         /// <summary>
         /// Returns whether the connectio can be converted.
@@ -50,15 +43,15 @@ namespace Neon.Kube.Resources
         /// <returns></returns>
         public override bool CanConvert(Type objectType)
         {
-            var result = objectType == typeof(IDexConnector)
-                || objectType.Implements<IDexConnector>();
+            var result = objectType == typeof(IV1DexConnector)
+                || objectType.Implements<IV1DexConnector>();
 
             return result;
         }
 
         /// <inheritdoc/>
 
-        public override IDexConnector Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override IV1DexConnector Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 
         {
             if (reader.TokenType != JsonTokenType.StartObject)
@@ -68,7 +61,7 @@ namespace Neon.Kube.Resources
 
             Utf8JsonReader readerClone = reader;
 
-            var result = default(IDexConnector);
+            var result = default(IV1DexConnector);
 
             DexConnectorType? type = null;
             int depth = 0;
@@ -171,7 +164,7 @@ namespace Neon.Kube.Resources
         }
 
         /// <inheritdoc/>
-        public override void Write(Utf8JsonWriter writer, IDexConnector value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, IV1DexConnector value, JsonSerializerOptions options)
         {
             writer.WriteStartObject();
 

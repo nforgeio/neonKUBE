@@ -41,6 +41,8 @@ using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Operator;
 using Neon.Kube.Resources;
+using Neon.Kube.Resources.Cluster;
+using Neon.Kube.Resources.Dex;
 using Neon.Retry;
 using Neon.Tasks;
 using Neon.Time;
@@ -191,7 +193,7 @@ namespace NeonClusterOperator
 
                 if (dexConfig.Connectors == null)
                 {
-                    dexConfig.Connectors = new List<IDexConnector>();
+                    dexConfig.Connectors = new List<IV1DexConnector>();
                 }
                 else if (dexConfig.Connectors.Any(connector => connector.Id == resource.Spec.Id))
                 {

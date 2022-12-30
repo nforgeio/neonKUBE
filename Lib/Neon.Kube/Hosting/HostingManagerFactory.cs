@@ -18,7 +18,10 @@
 using System;
 using System.Diagnostics.Contracts;
 
-namespace Neon.Kube
+using Neon.Kube.ClusterDef;
+using Neon.Kube.Proxy;
+
+namespace Neon.Kube.Hosting
 {
     /// <summary>
     /// Provides for the creation of <see cref="HostingManager"/> implementations

@@ -27,7 +27,7 @@ using Neon.JsonConverters;
 using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.CertManager
 {
     /// <summary>
     /// Used to configure a DNS01 challenge provider to be used when solving DNS01 challenges. 

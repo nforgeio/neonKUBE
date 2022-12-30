@@ -118,7 +118,7 @@ namespace NeonDashboard
             /// <param name="end"></param>
             /// <param name="stepSize"></param>
             /// <returns></returns>
-            public async Task<PrometheusResponse<PrometheusMatrixResult>> GetMemoryUsageAsync(DateTime start, DateTime end, string stepSize = "15s")
+            public async Task<PrometheusResponse<PrometheusMatrixResult>> GetMemoryUsageAsync(DateTime start, DateTime end, TimeSpan stepSize = default)
             {
                 await SyncContext.Clear;
 
@@ -164,7 +164,7 @@ namespace NeonDashboard
             /// <param name="end"></param>
             /// <param name="stepSize"></param>
             /// <returns></returns>
-            public async Task<PrometheusResponse<PrometheusMatrixResult>> GetCpuUsageAsync(DateTime start, DateTime end, string stepSize = "15s")
+            public async Task<PrometheusResponse<PrometheusMatrixResult>> GetCpuUsageAsync(DateTime start, DateTime end, TimeSpan stepSize = default)
             {
                 await SyncContext.Clear;
 
@@ -210,7 +210,7 @@ namespace NeonDashboard
             /// <param name="end"></param>
             /// <param name="stepSize"></param>
             /// <returns></returns>
-            public async Task<PrometheusResponse<PrometheusMatrixResult>> GetDiskUsageAsync(DateTime start, DateTime end, string stepSize = "15s")
+            public async Task<PrometheusResponse<PrometheusMatrixResult>> GetDiskUsageAsync(DateTime start, DateTime end, TimeSpan stepSize = default)
             {
                 await SyncContext.Clear;
 
@@ -252,13 +252,13 @@ namespace NeonDashboard
             /// <summary>
             /// Executes a range query.
             /// </summary>
-            /// <param name="query">The query to be executed</param>
+            /// <param name="query">The query to be executed.</param>
             /// <param name="start">The start time.</param>
             /// <param name="end">The end time.</param>
-            /// <param name="stepSize">The optional step size</param>
+            /// <param name="stepSize">The optional step size.  This defaults to <b>15</b> seconds.</param>
             /// <param name="cacheInterval">The cache interval</param>
             /// <returns></returns>
-            public async Task<PrometheusResponse<PrometheusMatrixResult>> QueryRangeAsync(string query, DateTime start, DateTime end, string stepSize = "15s", int cacheInterval = 1)
+            public async Task<PrometheusResponse<PrometheusMatrixResult>> QueryRangeAsync(string query, DateTime start, DateTime end, TimeSpan stepSize = default, int cacheInterval = 1)
             {
                 await SyncContext.Clear;
 

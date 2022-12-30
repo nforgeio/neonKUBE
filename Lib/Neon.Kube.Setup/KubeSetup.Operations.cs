@@ -30,8 +30,21 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Clients;
+using Neon.Kube.ClusterDef;
+using Neon.Kube.Glauth;
+using Neon.Kube.Hosting;
 using Neon.Kube.Operator;
 using Neon.Kube.Resources;
+using Neon.Kube.Resources.Calico;
+using Neon.Kube.Resources.CertManager;
+using Neon.Kube.Resources.Cluster;
+using Neon.Kube.Resources.Dex;
+using Neon.Kube.Resources.Istio;
+using Neon.Kube.Resources.Minio;
+using Neon.Kube.Resources.OpenEBS;
+using Neon.Kube.Resources.Prometheus;
+using Neon.Kube.Proxy;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
@@ -44,7 +57,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Octokit;
 
-namespace Neon.Kube
+namespace Neon.Kube.Setup
 {
     public static partial class KubeSetup
     {
@@ -1496,7 +1509,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 {
                     await NeonHelper.WaitForAsync(async () =>
                     {
-                        var configs = await k8s.CustomObjects.ListClusterCustomObjectAsync<FelixConfiguration>();
+                        var configs = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1FelixConfiguration>();
 
                         return configs.Items.Count() > 0;
                     },
@@ -1504,7 +1517,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     pollInterval:      clusterOpPollInterval,
                     cancellationToken: controller.CancellationToken);
 
-                    var configs = await k8s.CustomObjects.ListClusterCustomObjectAsync<FelixConfiguration>();
+                    var configs = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1FelixConfiguration>();
 
                     dynamic patchContent = new JObject();
 
@@ -1515,7 +1528,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     foreach (var felix in configs.Items)
                     {
-                        await k8s.CustomObjects.PatchClusterCustomObjectAsync<FelixConfiguration>(patch, felix.Name());
+                        await k8s.CustomObjects.PatchClusterCustomObjectAsync<V1FelixConfiguration>(patch, felix.Name());
                     }
                 });
 
@@ -1525,14 +1538,14 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 await controlNode.InvokeIdempotentAsync("setup/coredns-metrics",
                     async () =>
                     {
-                        var serviceMonitor = new ServiceMonitor()
+                        var serviceMonitor = new V1ServiceMonitor()
                         {
                             Metadata = new V1ObjectMeta()
                             {
                                 Name              = "kube-dns",
                                 NamespaceProperty = "kube-system"
                             },
-                            Spec = new ServiceMonitorSpec()
+                            Spec = new V1ServiceMonitorSpec()
                             {
                                 Endpoints = new List<Endpoint>()
                                 {
@@ -1558,7 +1571,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             }
                         };
 
-                        await k8s.CustomObjects.CreateNamespacedCustomObjectAsync<ServiceMonitor>(serviceMonitor, serviceMonitor.Name(), serviceMonitor.Namespace());
+                        await k8s.CustomObjects.CreateNamespacedCustomObjectAsync<V1ServiceMonitor>(serviceMonitor, serviceMonitor.Name(), serviceMonitor.Namespace());
                     });
             }
         }
@@ -1800,7 +1813,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         {
                             try
                             {
-                                await k8s.CustomObjects.ListNamespacedCustomObjectAsync<Telemetry>(KubeNamespace.NeonIngress);
+                                await k8s.CustomObjects.ListNamespacedCustomObjectAsync<V1Telemetry>(KubeNamespace.NeonIngress);
                                 return true;
                             }
                             catch
@@ -1818,14 +1831,14 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 {
                     controller.LogProgress(controlNode, verb: "setup", message: "telemetry");
 
-                    var telemetry = new Telemetry()
+                    var telemetry = new V1Telemetry()
                     {
                         Metadata = new V1ObjectMeta()
                         {
                             Name              = "mesh-default",
                             NamespaceProperty = KubeNamespace.NeonIngress
                         },
-                        Spec = new TelemetrySpec()
+                        Spec = new V1TelemetrySpec()
                         {
                             Tracing = new List<Tracing>()
                             {
@@ -1844,7 +1857,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         }
                     };
 
-                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
+                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<V1Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
 
                     // turn down tracing in neon namespaces.
 
@@ -1852,13 +1865,13 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     telemetry.Metadata.NamespaceProperty                    = KubeNamespace.NeonMonitor;
                     telemetry.Spec.Tracing.First().RandomSamplingPercentage = 2.0;
 
-                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
+                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<V1Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
 
                     telemetry.Metadata.Name                                 = "neon-system-default";
                     telemetry.Metadata.NamespaceProperty                    = KubeNamespace.NeonSystem;
                     telemetry.Spec.Tracing.First().RandomSamplingPercentage = 2.0;
 
-                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
+                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<V1Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
                 });
         }
 
@@ -1948,7 +1961,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             Name              = "neon-acme",
                             NamespaceProperty = KubeNamespace.NeonIngress
                         },
-                        Spec = new IssuerSpec()
+                        Spec = new V1IssuerSpec()
                         {
                             Acme = acmeOptions.Issuer
                         }
@@ -5156,6 +5169,17 @@ $@"- name: StorageType
                     await k8s.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-sso-dex", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
 
+            // $todo(jefflill):
+            //
+            // I'm commenting this out for now after removing the [SsoConnectors] property from
+            // the cluster definition.  @marcusbooyah says that we need a connector for so that
+            // dashboard login will work and that this was being added to the connectors during
+            // cluster prepare.
+            //
+            // I couldn't find that special connector anywhere.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1731
+#if TODO
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/dex-connectors",
                 async () =>
@@ -5178,7 +5202,8 @@ $@"- name: StorageType
                                             Name = connector.Id,
                                         },
                                         Spec = ldapConnector
-                                    }, connector.Id);
+                                    },
+                                    connector.Id);
 
                                 break;
 
@@ -5196,14 +5221,14 @@ $@"- name: StorageType
                                             Name = connector.Id,
                                         },
                                         Spec = oidcConnector
-                                    }, connector.Id);
+                                    },
+                                    connector.Id);
 
                                 break;
                         }
-
-                        
                     }
                 });
+#endif
         }
 
         /// <summary>

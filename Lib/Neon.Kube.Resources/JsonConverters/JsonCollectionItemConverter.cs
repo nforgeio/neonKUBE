@@ -25,12 +25,7 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 
-using k8s;
-using k8s.Models;
-using IdentityModel.OidcClient;
-using System.Text.Json.Nodes;
-
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.JsonConverters
 {
     /// <summary>
     /// Json collection converter.

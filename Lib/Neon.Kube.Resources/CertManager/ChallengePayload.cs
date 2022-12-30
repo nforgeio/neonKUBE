@@ -23,7 +23,7 @@ using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.CertManager
 {
     /// <summary>
     /// Describes a request/response for presenting or cleaning up

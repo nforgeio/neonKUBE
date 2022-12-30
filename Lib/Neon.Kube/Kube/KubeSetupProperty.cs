@@ -18,6 +18,10 @@
 using System;
 
 using Neon.Common;
+using Neon.Kube.ClusterDef;
+using Neon.Kube.Hosting;
+using Neon.Kube.Proxy;
+using Neon.Kube.Setup;
 
 using k8s;
 
@@ -70,17 +74,17 @@ namespace Neon.Kube
         public const string BaseImageName = "base-image-name";
 
         /// <summary>
-        /// Property name for determining the current hosting environment: <see cref="Kube.HostingEnvironment"/>,
+        /// Property name for determining the current hosting environment: <see cref="HostingEnvironment"/>,
         /// </summary>
         public const string HostingEnvironment = "hosting-environment";
 
         /// <summary>
-        /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <see cref="Kube.ClusterProxy"/> property.
+        /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <see cref="ClusterProxy"/> property.
         /// </summary>
         public const string ClusterProxy = "cluster-proxy";
 
         /// <summary>
-        /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <see cref="Kube.ClusterLogin"/> property.
+        /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <see cref="ClusterLogin"/> property.
         /// </summary>
         public const string ClusterLogin = "cluster-login";
 

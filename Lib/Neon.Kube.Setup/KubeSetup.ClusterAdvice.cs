@@ -40,11 +40,12 @@ using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
+using Neon.Kube.Proxy;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
 
-namespace Neon.Kube
+namespace Neon.Kube.Setup
 {
     public static partial class KubeSetup
     {
@@ -174,12 +175,14 @@ namespace Neon.Kube
 
             clusterAdvice.IsReadOnly = true;
         }
+
         private static KubeServiceAdvice CalculateAlertManagerAdvice(ClusterProxy cluster)
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.AlertManager);
 
             return advice;
         }
+
         private static KubeServiceAdvice CalculateBlackboxExporterAdvice(ClusterProxy cluster)
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.BlackboxExporter);

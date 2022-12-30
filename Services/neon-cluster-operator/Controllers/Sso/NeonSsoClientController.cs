@@ -38,6 +38,7 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Oauth2Proxy;
 using Neon.Kube.Operator;
 using Neon.Kube.Resources;
 using Neon.Retry;
@@ -49,6 +50,8 @@ using Dex;
 using k8s;
 using k8s.Autorest;
 using k8s.Models;
+
+using Neon.Kube.Resources.Cluster;
 
 using Newtonsoft.Json;
 

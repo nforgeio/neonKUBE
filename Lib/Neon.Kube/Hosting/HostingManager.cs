@@ -35,12 +35,14 @@ using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
+using Neon.Kube.ClusterDef;
+using Neon.Kube.Setup;
 using Neon.Net;
 using Neon.SSH;
 using Neon.Tasks;
 using Neon.Time;
 
-namespace Neon.Kube
+namespace Neon.Kube.Hosting
 {
     /// <summary>
     /// Base class for environment specific hosting managers. 

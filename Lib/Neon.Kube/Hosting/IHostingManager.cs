@@ -30,6 +30,8 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.Kube.ClusterDef;
+using Neon.Kube.Setup;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
@@ -38,7 +40,7 @@ using Neon.Time;
 using Renci.SshNet;
 using Renci.SshNet.Common;
 
-namespace Neon.Kube
+namespace Neon.Kube.Hosting
 {
     /// <summary>
     /// Interface describing neonKUBE hosting manager implementions for different environments..

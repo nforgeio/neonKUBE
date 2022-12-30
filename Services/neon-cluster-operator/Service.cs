@@ -45,8 +45,11 @@ using Neon.Common;
 using Neon.Data;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.Clients;
+using Neon.Kube.Glauth;
 using Neon.Kube.Operator;
 using Neon.Kube.Resources;
+using Neon.Kube.Resources.CertManager;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Service;
@@ -78,7 +81,7 @@ using Quartz.Impl;
 using Quartz.Logging;
 using System.Net.Http;
 
-using Task = System.Threading.Tasks.Task;
+using Task    = System.Threading.Tasks.Task;
 using Metrics = Prometheus.Metrics;
 
 namespace NeonClusterOperator
@@ -214,9 +217,7 @@ namespace NeonClusterOperator
             HarborClient.BaseUrl = "http://registry-harbor-harbor-core.neon-system/api/v2.0";
 
             HeadendClient = HeadendClient.Create();
-            HeadendClient.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-                                                                                "Bearer",
-                                                                                GetEnvironmentVariable("NEONCLOUD_HEADEND_TOKEN"));
+            HeadendClient.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", GetEnvironmentVariable("NEONCLOUD_HEADEND_TOKEN"));
 
             var channel = GrpcChannel.ForAddress($"http://{KubeService.Dex}:5557");
             DexClient = new Dex.Dex.DexClient(channel);
@@ -322,10 +323,10 @@ namespace NeonClusterOperator
             builder.AddOtlpExporter(
                 options =>
                 {
-                    options.ExportProcessorType = ExportProcessorType.Batch;
+                    options.ExportProcessorType         = ExportProcessorType.Batch;
                     options.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>();
-                    options.Endpoint = new Uri(NeonHelper.NeonKubeOtelCollectorUri);
-                    options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
+                    options.Endpoint                    = new Uri(NeonHelper.NeonKubeOtelCollectorUri);
+                    options.Protocol                    = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
                 });
             return true;
         }
@@ -354,9 +355,9 @@ namespace NeonClusterOperator
             {
                 await SyncContext.Clear;
 
-                var rootUser = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(@event.Value.Data["root"]));
-
+                var rootUser   = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(@event.Value.Data["root"]));
                 var authString = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{rootUser.Name}:{rootUser.Password}"));
+
                 harborHttpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", authString);
 
                 Logger.LogInformationEx("Updated Harbor Client");
@@ -369,26 +370,24 @@ namespace NeonClusterOperator
         {
             Logger.LogInformationEx(() => "Checking webhook certificate.");
 
-            var cert = await K8s.CustomObjects.ListNamespacedCustomObjectAsync<Certificate>(
-                KubeNamespace.NeonSystem,
-                labelSelector: $"{NeonLabel.ManagedBy}={Name}");
+            var cert = await K8s.CustomObjects.ListNamespacedCustomObjectAsync<V1Certificate>(KubeNamespace.NeonSystem, labelSelector: $"{NeonLabel.ManagedBy}={Name}");
 
             if (!cert.Items.Any())
             {
                 Logger.LogInformationEx(() => "Webhook certificate does not exist, creating...");
 
-                var certificate = new Certificate()
+                var certificate = new V1Certificate()
                 {
                     Metadata = new V1ObjectMeta()
                     {
-                        Name = Name,
+                        Name              = Name,
                         NamespaceProperty = KubeNamespace.NeonSystem,
-                        Labels = new Dictionary<string, string>()
+                        Labels            = new Dictionary<string, string>()
                         {
                             { NeonLabel.ManagedBy, Name }
                         }
                     },
-                    Spec = new CertificateSpec()
+                    Spec = new V1CertificateSpec()
                     {
                         DnsNames = new List<string>()
                     {
@@ -432,7 +431,7 @@ namespace NeonClusterOperator
 
                    return Certificate != null;
                },
-               timeout: TimeSpan.FromSeconds(300),
+               timeout:      TimeSpan.FromSeconds(300),
                pollInterval: TimeSpan.FromMilliseconds(500));
         }
 

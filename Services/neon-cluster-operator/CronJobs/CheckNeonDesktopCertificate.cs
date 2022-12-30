@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.Clients;
 using Neon.Kube.Resources;
 
 using k8s;
@@ -74,12 +75,11 @@ namespace NeonClusterOperator
 
                 try
                 {
-                    var dataMap = context.MergedJobDataMap;
-                    var k8s = (IKubernetes)dataMap["Kubernetes"];
+                    var dataMap       = context.MergedJobDataMap;
+                    var k8s           = (IKubernetes)dataMap["Kubernetes"];
                     var headendClient = (HeadendClient)dataMap["HeadendClient"];
-
                     var ingressSecret = await k8s.CoreV1.ReadNamespacedSecretAsync("neon-cluster-certificate", KubeNamespace.NeonIngress);
-                    var systemSecret = await k8s.CoreV1.ReadNamespacedSecretAsync("neon-cluster-certificate", KubeNamespace.NeonSystem);
+                    var systemSecret  = await k8s.CoreV1.ReadNamespacedSecretAsync("neon-cluster-certificate", KubeNamespace.NeonSystem);
 
                     var ingressCertificate = X509Certificate2.CreateFromPem(
                         Encoding.UTF8.GetString(ingressSecret.Data["tls.crt"]),
@@ -89,8 +89,7 @@ namespace NeonClusterOperator
                         Encoding.UTF8.GetString(systemSecret.Data["tls.crt"]),
                         Encoding.UTF8.GetString(systemSecret.Data["tls.key"]));
 
-                    if (ingressCertificate.NotAfter.CompareTo(DateTime.Now.AddDays(30)) < 0
-                        || systemCertificate.NotAfter.CompareTo(DateTime.Now.AddDays(30)) < 0)
+                    if (ingressCertificate.NotAfter.CompareTo(DateTime.Now.AddDays(30)) < 0 || systemCertificate.NotAfter.CompareTo(DateTime.Now.AddDays(30)) < 0)
                     {
                         updating = true;
 
@@ -99,7 +98,7 @@ namespace NeonClusterOperator
                         var cert = await headendClient.NeonDesktop.GetNeonDesktopCertificateAsync();
 
                         ingressSecret.Data = cert;
-                        systemSecret.Data = cert;
+                        systemSecret.Data  = cert;
 
                         await k8s.CoreV1.ReplaceNamespacedSecretAsync(ingressSecret, ingressSecret.Name(), ingressSecret.Namespace());
                         await k8s.CoreV1.ReplaceNamespacedSecretAsync(systemSecret, systemSecret.Name(), systemSecret.Namespace());

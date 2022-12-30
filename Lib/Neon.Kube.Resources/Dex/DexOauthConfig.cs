@@ -22,12 +22,12 @@ using System.Linq;
 using System.Text;
 
 using Neon.Kube.Resources;
+using Neon.Kube.Resources.JsonConverters;
 
 using Newtonsoft.Json;
-
 using YamlDotNet.Serialization;
 
-namespace Neon.Kube
+namespace Neon.Kube.Resources.Dex
 {
     /// <summary>
     /// Dex Oauth2 configuration model.

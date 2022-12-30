@@ -43,11 +43,12 @@ using Neon;
 using Neon.Common;
 using Neon.Deployment;
 using Neon.Diagnostics;
+using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.BuildInfo;
 using Neon.Kube.GrpcProto;
 using Neon.Kube.GrpcProto.Desktop;
-using Neon.IO;
+using Neon.Kube.Hosting;
 using Neon.SSH;
 using Neon.Windows;
 using Neon.WinTTY;
@@ -321,15 +322,10 @@ NOTE: Command line arguments and options may include references to
 
             PowerShell.PwshPath = KubeHelper.PwshPath;
 
-            // Ensure that all of the non-premium cluster hosting manager 
-            // implementations are loaded.
-
-            _ = new HostingManagerFactory(() => HostingLoader.Initialize());
-
             // Register a [ProfileClient] so commands will be able to pick
             // up secrets and profile information from [neon-assistant].
 
-            NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new ProfileClient());
+            NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfileClient());
 
             // Fetch the paths to the [kubectl] and [helm] binaries.  Note that these
             // will download them when they're not already present.
@@ -352,11 +348,11 @@ NOTE: Command line arguments and options may include references to
                 // $hack(jefflill):
                 //
                 // We hardcoding our own profile client for the time being.  Eventually,
-                // we'll need to support custom or retail profile clients somehow.
+                // we'll need to support custom or retail profile clients.
                 //
                 // This is required by: CommandLine.Preprocess()
 
-                NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new ProfileClient());
+                NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfileClient());
 
                 CommandLine = new CommandLine(args);
 
@@ -504,6 +500,14 @@ NOTE: Command line arguments and options may include references to
                             Program.Exit(1);
                         }
                     }
+                }
+
+                // Ensure that all of the non-premium cluster hosting manager 
+                // implementations are loaded, when required.
+
+                if (command.NeedsHostingManager)
+                {
+                    _ = new HostingManagerFactory(() => HostingLoader.Initialize());
                 }
 
                 // Run the command.

@@ -45,6 +45,8 @@ using Neon.Cryptography;
 using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Hosting;
+using Neon.Kube.Proxy;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
@@ -65,6 +67,12 @@ USAGE: neon cluster ingo
 ";
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "info" };
+
+        /// <inheritdoc/>
+        public override string[] ExtendedOptions => new string[] { "--force" };
+
+        /// <inheritdoc/>
+        public override bool NeedsHostingManager => true;
 
         /// <inheritdoc/>
         public override void Help()

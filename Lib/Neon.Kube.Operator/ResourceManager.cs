@@ -32,24 +32,16 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-using Neon.Common;
-using Neon.Diagnostics;
-using Neon.IO;
-using Neon.Kube;
-using Neon.Tasks;
-
 using k8s;
 using k8s.Autorest;
 using k8s.LeaderElection;
 using k8s.Models;
 
-using Prometheus;
-using OpenTelemetry.Resources;
-using Microsoft.AspNetCore.Mvc;
-using KellermanSoftware.CompareNetObjects;
-using System.Security.AccessControl;
-using Neon.Kube.Resources;
-using Microsoft.AspNetCore.Http;
+using Neon.Common;
+using Neon.Diagnostics;
+using Neon.IO;
+using Neon.Kube;
+using Neon.Tasks;
 
 // $todo(jefflill):
 //
@@ -704,7 +696,7 @@ namespace Neon.Kube.Operator
 
                     ResourceControllerResult result = null;
 
-                    var resource = @event.Value;
+                    var resource     = @event.Value;
                     var resourceName = resource.Metadata.Name;
 
                     try
@@ -730,8 +722,7 @@ namespace Neon.Kube.Operator
                                 catch (Exception e)
                                 {
                                     options.ReconcileErrorCounter.Inc();
-                                    logger.LogErrorEx(() => $"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] " +
-                                                                $"threw a [{e.GetType()}] error. Retrying... Attempt [{@event.Attempt}]");
+                                    logger.LogErrorEx(() => $"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Retrying... Attempt [{@event.Attempt}]");
 
                                     if (@event.Attempt < options.ErrorMaxRetryCount)
                                     {
@@ -780,8 +771,7 @@ namespace Neon.Kube.Operator
 
                                             if (@event.Attempt < options.ErrorMaxRetryCount)
                                             {
-                                                logger.LogErrorEx(() => $"Event type [{modifiedEventType}] on resource [{resource.Kind}/{resourceName}] " +
-                                                                        $"threw a [{e.GetType()}] error. Retrying... Attempt [{@event.Attempt}]");
+                                                logger.LogErrorEx(() => $"Event type [{modifiedEventType}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Retrying... Attempt [{@event.Attempt}]");
 
                                                 @event.Attempt += 1;
                                                 resourceCache.Remove(resource);
@@ -818,8 +808,7 @@ namespace Neon.Kube.Operator
 
                                             if (@event.Attempt < options.ErrorMaxRetryCount)
                                             {
-                                                logger.LogErrorEx(() => $"Event type [{modifiedEventType}] on resource [{resource.Kind}/{resourceName}] " +
-                                                                        $"threw a [{e.GetType()}] error. Retrying... Attempt [{@event.Attempt}]");
+                                                logger.LogErrorEx(() => $"Event type [{modifiedEventType}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Retrying... Attempt [{@event.Attempt}]");
 
                                                 @event.Attempt += 1;
                                                 resourceCache.Remove(resource);

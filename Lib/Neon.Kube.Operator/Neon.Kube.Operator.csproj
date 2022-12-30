@@ -40,8 +40,8 @@
 		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.9" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
 		<PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.24" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2627-dev-master" />
-		<PackageReference Include="Neon.Service" Version="10000.0.2627-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2653-dev-master" />
+		<PackageReference Include="Neon.Service" Version="10000.0.2653-dev-master" />
 		<PackageReference Include="NgrokSharp" Version="1.0.13" />
 		<PackageReference Include="NJsonSchema" Version="10.8.0" />
 		<PackageReference Include="prometheus-net" Version="6.0.0" />

@@ -28,7 +28,7 @@ using k8s.Models;
 
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
     /// HTTPRewrite can be used to rewrite specific parts of a HTTP request before forwarding the request to the destination. Rewrite 

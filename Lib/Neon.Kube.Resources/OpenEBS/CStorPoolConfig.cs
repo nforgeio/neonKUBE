@@ -21,10 +21,11 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
+
 using k8s;
 using k8s.Models;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.OpenEBS
 {
     /// <summary>
     /// OpenEBS cStor pool configuration.

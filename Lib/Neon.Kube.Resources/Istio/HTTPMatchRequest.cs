@@ -28,7 +28,7 @@ using k8s.Models;
 
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources
+namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
     /// HttpMatchRequest specifies a set of criterion to be met in order for the rule to be applied to the HTTP request. For example, the following 

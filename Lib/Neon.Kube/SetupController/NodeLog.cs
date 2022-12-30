@@ -26,7 +26,7 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 
-namespace Neon.Kube
+namespace Neon.Kube.Setup
 {
     /// <summary>
     /// Holds the setup related log for a specific cluster node.

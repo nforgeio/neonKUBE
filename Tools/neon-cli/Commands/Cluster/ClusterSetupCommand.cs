@@ -43,6 +43,7 @@ using Neon.Cryptography;
 using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Setup;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
@@ -131,6 +132,9 @@ OPTIONS:
         };
 
         /// <inheritdoc/>
+        public override bool NeedsHostingManager => true;
+
+        /// <inheritdoc/>
         public override void Help()
         {
             Console.WriteLine(usage);
@@ -151,7 +155,7 @@ OPTIONS:
             // We need to inject an implementation for [PreprocessReader] so it will be able to
             // perform the lookups.
 
-            NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new ProfileClient());
+            NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfileClient());
 
             var contextName       = KubeContextName.Parse(commandLine.Arguments[0]);
             var kubeCluster       = KubeHelper.Config.GetCluster(contextName.Cluster);
@@ -227,14 +231,19 @@ OPTIONS:
 
             var clusterDefinition = clusterLogin.ClusterDefinition;
 
+            var setupOptions = new SetupClusterOptions()
+            {
+                MaxParallel          = maxParallel,
+                Unredacted           = unredacted,
+                DebugMode            = debug,
+                UploadCharts         = uploadCharts,
+                DisableConsoleOutput = quiet
+            };
+
             var controller = KubeSetup.CreateClusterSetupController(
                 clusterDefinition,
-                cloudMarketplace:     !privateImage,
-                maxParallel:          maxParallel,
-                unredacted:           unredacted,
-                debugMode:            debug,
-                uploadCharts:         uploadCharts,
-                disableConsoleOutput: quiet);
+                cloudMarketplace: !privateImage,
+                options:          setupOptions);
 
             controller.DisablePendingTasks = disablePending;
 

@@ -30,7 +30,7 @@ using Newtonsoft.Json;
 using Neon.Common;
 using Neon.Data;
 
-namespace Neon.Kube
+namespace Neon.Kube.Setup
 {
     /// <summary>
     /// Holds state information about a setup step.

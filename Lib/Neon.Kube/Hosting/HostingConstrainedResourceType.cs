@@ -21,7 +21,7 @@ using System.Runtime.Serialization;
 
 using Neon.Common;
 
-namespace Neon.Kube
+namespace Neon.Kube.Hosting
 {
     /// <summary>
     /// Enumerates the types of <see cref="HostingResourceConstraint"/> instances,

@@ -31,12 +31,13 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.Kube.ClusterDef;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Time;
 
-namespace Neon.Kube
+namespace Neon.Kube.Setup
 {
     public partial class SetupClusterStatus
     {
