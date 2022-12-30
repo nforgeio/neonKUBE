@@ -833,7 +833,7 @@ namespace Neon.Kube.Xunit
         /// </exception>
         public TestFixtureStatus StartWithNeonAssistant(ClusterFixtureOptions options = null)
         {
-            var profileClient = new ProfileClient();
+            var profileClient = new MaintainerProfileClient();
             var key           = profileClient.GetProfileValue("clusterdefinition.key");
 
             return StartWithClusterDefinition(ClusterDefinition.FromYaml(KubeTestHelper.ClusterDefinitions[key], strict: true, validate: true), options);

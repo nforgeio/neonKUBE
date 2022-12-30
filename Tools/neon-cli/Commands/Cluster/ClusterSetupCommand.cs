@@ -155,7 +155,7 @@ OPTIONS:
             // We need to inject an implementation for [PreprocessReader] so it will be able to
             // perform the lookups.
 
-            NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new ProfileClient());
+            NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfileClient());
 
             var contextName       = KubeContextName.Parse(commandLine.Arguments[0]);
             var kubeCluster       = KubeHelper.Config.GetCluster(contextName.Cluster);
