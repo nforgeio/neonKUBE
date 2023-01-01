@@ -310,7 +310,7 @@ namespace Neon.Kube.Hosting.HyperV
         /// Gets the current status for a named virtual machine.
         /// </summary>
         /// <param name="machineName">The machine name.</param>
-        /// <returns>The <see cref="VirtualMachine"/> or <c>null</c> when the virtual machine doesn't exist..</returns>
+        /// <returns>The <see cref="VirtualMachine"/> or <c>null</c> when the virtual machine doesn't exist.</returns>
         public VirtualMachine GetVm(string machineName)
         {
             if (isAdmin)

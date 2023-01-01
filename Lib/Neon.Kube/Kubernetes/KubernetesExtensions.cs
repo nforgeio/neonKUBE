@@ -897,7 +897,7 @@ namespace Neon.Kube
         /// </summary>
         /// <typeparam name="T">The type parameter.</typeparam>
         /// <param name="k8s">The <see cref="IKubernetes"/> instance.</param>
-        /// <param name="actionAsync">The async action called as watch events are received..</param>
+        /// <param name="actionAsync">The async action called as watch events are received.</param>
         /// <param name="namespaceParameter">That target Kubernetes namespace.</param>
         /// <param name="fieldSelector">The optional field selector</param>
         /// <param name="labelSelector">The optional label selector</param>
