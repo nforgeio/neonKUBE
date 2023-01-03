@@ -1,10 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<Configurations>Debug;Release</Configurations>
-		<Version>10000.0.3238-dev-master</Version>
+		<Version>10000.0.2236-dev-master</Version>
 		<Description>INTERNAL USE ONLY: Core library used by neonKUBE related tooling.</Description>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Operator/README.md</PackageProjectUrl>

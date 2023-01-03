@@ -1,11 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<RootNamespace>Neon.Kube.DesktopService</RootNamespace>
 		<IsPackable>true</IsPackable>
-		<Version>10000.0.3238-dev-master</Version>
+		<Version>10000.0.2466-dev-master</Version>
 		<Description>INTERNAL USE ONLY: Implements the Neon Desktop (gRPC) Service</Description>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
