@@ -3,22 +3,31 @@
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
 		<OutputType>Library</OutputType>
-		<RootNamespace>Neon.Kube.Hosting.XenServer</RootNamespace>
-		<Version>10000.0.3238-dev-master</Version>
-		<Description>INTERNAL USE ONLY: neonKUBE hosting manager for XenServer/XCP-ng envirojnhments.</Description>
-		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<RootNamespace>Neon.Kube</RootNamespace>
+		<IsPackable>true</IsPackable>
+		<Version>10000.0.2236-dev-master</Version>
+		<Description>INTERNAL USE ONLY: Defines internal GRPC protobuf messages and services used by neonKUBE applcations.</Description>
 		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
-		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.XenServer/README.md</PackageProjectUrl>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.GrpcProto/README.md</PackageProjectUrl>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
-		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<Configurations>Debug;Release</Configurations>
 		<PackageIcon>nuget-icon.png</PackageIcon>
+		<PackageTags>kubernetes</PackageTags>
+		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
 		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Grpc.Net.Client" Version="2.49.0" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2664-dev-master" />
+		<PackageReference Include="Neon.HyperV" Version="10000.0.2664-dev-master" />
+		<PackageReference Include="protobuf-net.Grpc" Version="1.0.177" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -29,11 +38,6 @@
 	<ItemGroup>
 		<None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
 		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <PackageReference Include="Neon.Common" Version="10000.0.2664-dev-master" />
-	  <PackageReference Include="Neon.SSH" Version="10000.0.2664-dev-master" />
 	</ItemGroup>
 
 </Project>

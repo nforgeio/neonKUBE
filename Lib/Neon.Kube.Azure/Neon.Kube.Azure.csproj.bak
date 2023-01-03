@@ -1,19 +1,19 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
 		<OutputType>Library</OutputType>
-		<RootNamespace>Neon.Kube.Hosting.XenServer</RootNamespace>
-		<Version>10000.0.3238-dev-master</Version>
-		<Description>INTERNAL USE ONLY: neonKUBE hosting manager for XenServer/XCP-ng envirojnhments.</Description>
+		<RootNamespace>Neon.Kube.Hosting.Azure</RootNamespace>
+		<Version>10000.0.2236-dev-master</Version>
+		<Description>INTERNAL USE ONLY: neonKUBE hosting manager for Azure</Description>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
-		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.XenServer/README.md</PackageProjectUrl>
+		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Azure/README.md</PackageProjectUrl>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
-		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<Configurations>Debug;Release</Configurations>
 		<PackageIcon>nuget-icon.png</PackageIcon>
+		<PackageTags>kubernetes</PackageTags>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -32,8 +32,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Neon.Common" Version="10000.0.2664-dev-master" />
-	  <PackageReference Include="Neon.SSH" Version="10000.0.2664-dev-master" />
+		<PackageReference Include="Azure.Identity" Version="1.6.0" />
+		<PackageReference Include="Azure.ResourceManager" Version="1.0.0" />
+		<PackageReference Include="Azure.ResourceManager.Compute" Version="1.0.0-beta.8" />
+		<PackageReference Include="Azure.ResourceManager.Network" Version="1.0.0-beta.7" />
+		<PackageReference Include="Azure.ResourceManager.Storage" Version="1.0.0-beta.9" />
 	</ItemGroup>
 
 </Project>
