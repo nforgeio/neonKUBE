@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    WatchStream.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -96,7 +96,7 @@ namespace Neon.Kube
         /// <summary>
         /// A generic Watcher to watch Kubernetes resources, and respond with a custom (async) callback method.
         /// </summary>
-        /// <param name="actionAsync">The async action called as watch events are received..</param>
+        /// <param name="actionAsync">The async action called as watch events are received.</param>
         /// <param name="namespaceParameter">That target Kubernetes namespace.</param>
         /// <param name="fieldSelector">The optional field selector</param>
         /// <param name="labelSelector">The optional label selector</param>

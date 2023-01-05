@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    HyperVProxy.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -310,7 +310,7 @@ namespace Neon.Kube.Hosting.HyperV
         /// Gets the current status for a named virtual machine.
         /// </summary>
         /// <param name="machineName">The machine name.</param>
-        /// <returns>The <see cref="VirtualMachine"/> or <c>null</c> when the virtual machine doesn't exist..</returns>
+        /// <returns>The <see cref="VirtualMachine"/> or <c>null</c> when the virtual machine doesn't exist.</returns>
         public VirtualMachine GetVm(string machineName)
         {
             if (isAdmin)

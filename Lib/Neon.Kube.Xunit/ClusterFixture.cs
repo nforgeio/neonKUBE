@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    ClusterFixture.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2022 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -765,78 +765,6 @@ namespace Neon.Kube.Xunit
             Cluster   = new ClusterProxy(KubeHelper.CurrentContext, new HostingManagerFactory(), options.CloudMarketplace);
 
             return TestFixtureStatus.Started;
-        }
-
-        /// <summary>
-        /// <para>
-        /// <b>INTERNAL USE ONLY:</b> Deploys a new cluster using the current user's <b>neon-assistant</b> 
-        /// <b>clusterdefinition.key</b> profile value to determine which of the built-in cluster definitions
-        /// from <see cref="KubeTestHelper.ClusterDefinitions"/> to be used for unit testing in the user's
-        /// environment.
-        /// </para>
-        /// <note>
-        /// This method removes any existing neonKUBE cluster before deploying a fresh one.
-        /// </note>
-        /// </summary>
-        /// <param name="options">
-        /// Optionally specifies the options that <see cref="ClusterFixture"/> will use to
-        /// manage the test cluster.
-        /// </param>
-        /// <returns>
-        /// <para>
-        /// The <see cref="TestFixtureStatus"/>:
-        /// </para>
-        /// <list type="table">
-        /// <item>
-        ///     <term><see cref="TestFixtureStatus.Disabled"/></term>
-        ///     <description>
-        ///     Returned when cluster unit testing is disabled due to the <c>NEON_CLUSTER_TESTING</c> environment
-        ///     variable not being present on the current machine which means that <see cref="TestHelper.IsClusterTestingEnabled"/>
-        ///     returns <c>false</c>.
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><see cref="TestFixtureStatus.Started"/></term>
-        ///     <description>
-        ///     Returned when one of the <c>Start()</c> methods is called for the first time for the fixture
-        ///     instance, indicating that an existing cluster has been connected or a new cluster has been deployed.
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><see cref="TestFixtureStatus.AlreadyRunning"/></term>
-        ///     <description>
-        ///     Returned when one of the <c>Start()</c> methods has already been called by your test
-        ///     class instance.
-        ///     </description>
-        /// </item>
-        /// </list>
-        /// </returns>
-        /// <remarks>
-        /// <para>
-        /// <b>IMPORTANT:</b> Only one <see cref="ClusterFixture"/> can be run at a time on
-        /// any one computer.  This is due to the fact that cluster state like the kubeconfig,
-        /// neonKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/$fixture/*</b>
-        /// so multiple fixture instances will be confused when trying to manage these same files.
-        /// </para>
-        /// <para>
-        /// This means that not only will running <see cref="ClusterFixture"/> based tests in parallel
-        /// within the same instance of Visual Studio fail, but but running these tests in different
-        /// Visual Studio instances will also fail.
-        /// </para>
-        /// </remarks>
-        /// <exception cref="KeyNotFoundException">
-        /// Thrown when the cluster definition requested by the <b>clusterdefinition.key</b>
-        /// does not exist.
-        /// </exception>
-        /// <exception cref="ProfileException">
-        /// Thrown when the <b>clusterdefinition.key</b> profile value could not be retrieved.
-        /// </exception>
-        public TestFixtureStatus StartWithNeonAssistant(ClusterFixtureOptions options = null)
-        {
-            var profileClient = new MaintainerProfileClient();
-            var key           = profileClient.GetProfileValue("clusterdefinition.key");
-
-            return StartWithClusterDefinition(ClusterDefinition.FromYaml(KubeTestHelper.ClusterDefinitions[key], strict: true, validate: true), options);
         }
 
         /// <summary>
