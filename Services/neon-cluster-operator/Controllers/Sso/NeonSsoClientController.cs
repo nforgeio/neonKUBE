@@ -77,8 +77,6 @@ namespace NeonClusterOperator
 
         private static readonly ILogger log = TelemetryHub.CreateLogger<NeonSsoClientController>();
 
-        private static ResourceManager<V1NeonSsoClient, NeonSsoClientController> resourceManager;
-
         private Dex.Dex.DexClient dexClient;
 
         /// <summary>
@@ -86,56 +84,6 @@ namespace NeonClusterOperator
         /// </summary>
         static NeonSsoClientController()
         {
-        }
-
-        /// <summary>
-        /// Starts the controller.
-        /// </summary>
-        /// <param name="k8s">The <see cref="IKubernetes"/> client to use.</param>
-        /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task StartAsync(
-            IKubernetes k8s,
-            IServiceProvider serviceProvider)
-        {
-            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
-
-            // Load the configuration settings.
-
-            var leaderConfig =
-                new LeaderElectionConfig(
-                    k8s,
-                    @namespace: KubeNamespace.NeonSystem,
-                    leaseName: $"{Program.Service.Name}.ssoclient",
-                    identity: Pod.Name,
-                    promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_promoted", "Leader promotions"),
-                    demotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_demoted", "Leader demotions"),
-                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_new_leader", "Leadership changes"));
-
-            var options = new ResourceManagerOptions()
-            {
-                ErrorMaxRetryCount       = int.MaxValue,
-                ErrorMaxRequeueInterval  = TimeSpan.FromMinutes(10),
-                ErrorMinRequeueInterval  = TimeSpan.FromSeconds(5),
-                IdleCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "IDLE events processed."),
-                ReconcileCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "RECONCILE events processed."),
-                DeleteCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "DELETED events processed."),
-                StatusModifyCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle", "STATUS-MODIFY events processed."),
-                FinalizeCounter          = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_finalize", "FINALIZE events processed."),
-                IdleErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_idle_error", "Failed IDLE event processing."),
-                ReconcileErrorCounter    = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_reconcile_error", "Failed RECONCILE event processing."),
-                DeleteErrorCounter       = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_delete_error", "Failed DELETE event processing."),
-                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_statusmodify_error", "Failed STATUS-MODIFY events processing."),
-                FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}ssoclients_finalize_error", "Failed FINALIZE events processing.")
-            };
-
-            resourceManager = new ResourceManager<V1NeonSsoClient, NeonSsoClientController>(
-                k8s,
-                options: options,
-                leaderConfig: leaderConfig,
-                serviceProvider: serviceProvider);
-
-            await resourceManager.StartAsync();
         }
 
         //---------------------------------------------------------------------
@@ -180,11 +128,6 @@ namespace NeonClusterOperator
             {
                 // Ignore all events when the controller hasn't been started.
 
-                if (resourceManager == null)
-                {
-                    return null;
-                }
-                
                 await finalizerManager.RegisterAllFinalizersAsync(resource);
 
                 await UpsertClientAsync(resource);
@@ -203,11 +146,6 @@ namespace NeonClusterOperator
             using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 // Ignore all events when the controller hasn't been started.
-
-                if (resourceManager == null)
-                {
-                    return;
-                }
 
                 await dexClient.DeleteClientAsync(new DeleteClientReq()
                 {

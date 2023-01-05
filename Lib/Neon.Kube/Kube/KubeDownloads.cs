@@ -145,42 +145,6 @@ namespace Neon.Kube
             HostingEnvironment  hostingEnvironment,
             CpuArchitecture     architecture = CpuArchitecture.amd64)
         {
-            //#####################################################################
-            // $debug(jefflill): REMOVE THIS AFTER WE REDEPLOY THE HEADEND SERVICE!
-
-            var extension = string.Empty;
-
-            switch (hostingEnvironment)
-            {
-                case HostingEnvironment.HyperV:
-
-                    extension = "vhdx";
-                    break;
-
-                default:
-
-                    Covenant.Requires(false, $"[{nameof(hostingEnvironment)}={hostingEnvironment}] is not supported.");
-                    break;
-            }
-
-            switch (architecture)
-            {
-                case CpuArchitecture.amd64:
-
-                    // Supported.
-
-                    break;
-
-                default:
-
-                    Covenant.Requires(false, $"[{nameof(architecture)}={architecture}] is not supported.");
-                    break;
-            }
-
-            return $"{NeonHelper.NeonPublicBucketUri}/vm-images/{hostingEnvironment.ToMemberString()}/desktop/neonkube-desktop-{KubeVersions.NeonKube}.{hostingEnvironment.ToMemberString()}.{architecture}.{extension}.gz.manifest";
-
-            //#####################################################################
-
             using (var headendClient = HeadendClient.Create())
             {
                 return await headendClient.ClusterSetup.GetNodeImageManifestUriAsync(hostingEnvironment.ToMemberString(), KubeVersions.NeonKube, architecture);

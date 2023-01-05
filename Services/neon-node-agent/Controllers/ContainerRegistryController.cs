@@ -259,8 +259,6 @@ namespace NeonNodeAgent
         private static TimeSpan             reloginInterval;
         private static TimeSpan             reloginMaxRandomInterval;
 
-        private static ResourceManager<V1NeonContainerRegistry, ContainerRegistryController> resourceManager;
-
         // Paths to relevant folders in the host file system.
 
         private static readonly string      hostNeonRunFolder;
@@ -295,15 +293,10 @@ namespace NeonNodeAgent
         /// <summary>
         /// Starts the controller.
         /// </summary>
-        /// <param name="k8s">The <see cref="IKubernetes"/> client to use.</param>
         /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task StartAsync(
-            IKubernetes k8s,
-            IServiceProvider serviceProvider)
+        public static async Task StartAsync(IServiceProvider serviceProvider)
         {
-            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
-
             if (NeonHelper.IsLinux)
             {
                 // Ensure that the [/var/run/neonkube/container-registries] folder exists on the node.
@@ -347,41 +340,6 @@ rm $0
 
             reloginInterval          = Program.Service.Environment.Get("CONTAINERREGISTRY_RELOGIN_INTERVAL", TimeSpan.FromHours(24));
             reloginMaxRandomInterval = reloginInterval.Divide(4);
-
-            var leaderConfig = 
-                new LeaderElectionConfig(
-                    k8s,
-                    @namespace:       KubeNamespace.NeonSystem,
-                    leaseName:        $"{Program.Service.Name}.containerregistry-{Node.Name}",
-                    identity:         Pod.Name,
-                    promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_promoted", "Leader promotions"),
-                    demotionCounter:  Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_demoted", "Leader demotions"),
-                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_newLeader", "Leadership changes"));
-
-            var options = new ResourceManagerOptions()
-            {
-                ManageCustomResourceDefinitions = false,
-                IdleInterval                    = Program.Service.Environment.Get("CONTAINERREGISTRY_IDLE_INTERVAL", TimeSpan.FromMinutes(5)),
-                ErrorMinRequeueInterval         = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15)),
-                ErrorMaxRequeueInterval         = Program.Service.Environment.Get("CONTAINERREGISTRY_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromSeconds(60)),
-                IdleCounter                     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_idle", "IDLE events processed."),
-                ReconcileCounter                = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_reconcile", "RECONCILE events processed."),
-                DeleteCounter                   = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_delete", "DELETED events processed."),
-                FinalizeCounter                 = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_finalize", "FINALIZE events processed."),
-                IdleErrorCounter                = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_idle_error", "Failed NodeTask IDLE event processing."),
-                ReconcileErrorCounter           = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_reconcile_error", "Failed NodeTask RECONCILE event processing."),
-                DeleteErrorCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_delete_error", "Failed NodeTask DELETE event processing."),
-                StatusModifyErrorCounter        = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_statusmodify_error", "Failed NodeTask STATUS-MODIFY events processing."),
-                FinalizeErrorCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_finalize_error", "Failed NodeTask FINALIZE events processing.")
-            };
-
-            resourceManager = new ResourceManager<V1NeonContainerRegistry, ContainerRegistryController>(
-                k8s,
-                options:      options,
-                leaderConfig: leaderConfig,
-                serviceProvider: serviceProvider);
-
-            await resourceManager.StartAsync();
         }
         
         //---------------------------------------------------------------------
@@ -402,13 +360,6 @@ rm $0
         /// <inheritdoc/>
         public async Task IdleAsync()
         {
-            // Ignore all events when the controller hasn't been started.
-
-            if (resourceManager == null)
-            {
-                return;
-            }
-
             log.LogInformationEx("IDLE");
             await UpdateContainerRegistriesAsync();
 
@@ -418,15 +369,9 @@ rm $0
         /// <inheritdoc/>
         public async Task<ResourceControllerResult> ReconcileAsync(V1NeonContainerRegistry resource)
         {
-            // Ignore all events when the controller hasn't been started.
-
-            if (resourceManager == null)
-            {
-                return null;
-            }
+            await SyncContext.Clear;
 
             log.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
-            await UpdateContainerRegistriesAsync();
 
             return null;
         }
@@ -434,15 +379,9 @@ rm $0
         /// <inheritdoc/>
         public async Task DeletedAsync(V1NeonContainerRegistry resource)
         {
-            // Ignore all events when the controller hasn't been started.
-
-            if (resourceManager == null)
-            {
-                return;
-            }
-
+            await SyncContext.Clear;
+            
             log.LogInformationEx(() => $"DELETED: {resource.Name()}");
-            await UpdateContainerRegistriesAsync();
         }
 
         /// <summary>

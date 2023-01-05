@@ -73,63 +73,11 @@ namespace NeonClusterOperator
 
         private static readonly ILogger log = TelemetryHub.CreateLogger<NeonContainerRegistryController>();
 
-        private static ResourceManager<V1NeonContainerRegistry, NeonContainerRegistryController> resourceManager;
-
         /// <summary>
         /// Static constructor.
         /// </summary>
         static NeonContainerRegistryController()
         {
-        }
-
-        /// <summary>
-        /// Starts the controller.
-        /// </summary>
-        /// <param name="k8s">The <see cref="IKubernetes"/> client to use.</param>
-        /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task StartAsync(
-            IKubernetes k8s,
-            IServiceProvider serviceProvider)
-        {
-            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
-
-            // Load the configuration settings.
-
-            var leaderConfig =
-                new LeaderElectionConfig(
-                    k8s,
-                    @namespace: KubeNamespace.NeonSystem,
-                    leaseName: $"{Program.Service.Name}.containerregistries",
-                    identity: Pod.Name,
-                    promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_promoted", "Leader promotions"),
-                    demotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_demoted", "Leader demotions"),
-                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_new_leader", "Leadership changes"));
-
-            var options = new ResourceManagerOptions()
-            {
-                ErrorMaxRetryCount       = 3,
-                ErrorMaxRequeueInterval  = TimeSpan.FromSeconds(10),
-                ErrorMinRequeueInterval  = TimeSpan.FromSeconds(10),
-                IdleCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle", "IDLE events processed."),
-                ReconcileCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle", "RECONCILE events processed."),
-                DeleteCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle", "DELETED events processed."),
-                StatusModifyCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle", "STATUS-MODIFY events processed."),
-                FinalizeCounter          = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_finalize", "FINALIZE events processed."),
-                IdleErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_idle_error", "Failed IDLE event processing."),
-                ReconcileErrorCounter    = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_reconcile_error", "Failed RECONCILE event processing."),
-                DeleteErrorCounter       = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_delete_error", "Failed DELETE event processing."),
-                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_statusmodify_error", "Failed STATUS-MODIFY events processing."),
-                FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistries_finalize_error", "Failed FINALIZE events processing.")
-            };
-
-            resourceManager = new ResourceManager<V1NeonContainerRegistry, NeonContainerRegistryController>(
-                k8s,
-                options: options,
-                leaderConfig: leaderConfig,
-                serviceProvider: serviceProvider);
-
-            await resourceManager.StartAsync();
         }
 
         //---------------------------------------------------------------------
@@ -182,13 +130,6 @@ namespace NeonClusterOperator
             {
                 Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("customresource", nameof(V1NeonContainerRegistry)));
 
-                // Ignore all events when the controller hasn't been started.
-
-                if (resourceManager == null)
-                {
-                    return null;
-                }
-
                 await finalizerManager.RegisterAllFinalizersAsync(resource);
 
                 log.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
@@ -205,13 +146,6 @@ namespace NeonClusterOperator
             using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("delete", attributes => attributes.Add("customresource", nameof(V1NeonContainerRegistry)));
-
-                // Ignore all events when the controller hasn't been started.
-
-                if (resourceManager == null)
-                {
-                    return;
-                }
 
                 if (resource.Name() == KubeConst.LocalClusterRegistryProject)
                 {

@@ -151,8 +151,7 @@ namespace Neon.Kube.Operator
                             AdmissionResponse response;
                             try
                             {
-                                using var scope = context.RequestServices.CreateScope();
-                                if (scope.ServiceProvider.GetRequiredService(GetType()) is not
+                                if (context.RequestServices.GetRequiredService(GetType()) is not
                                     IAdmissionWebhook<TEntity, TResult>
                                     webhook)
                                 {

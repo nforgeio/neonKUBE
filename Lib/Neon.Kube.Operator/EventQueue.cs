@@ -49,7 +49,7 @@ using OpenTelemetry.Resources;
 namespace Neon.Kube.Operator
 {
     internal class EventQueue<TEntity>
-        where TEntity : class, IKubernetesObject<V1ObjectMeta>
+        where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         private readonly IKubernetes                                                            k8s;
         private readonly ILogger                                                                logger;
@@ -176,7 +176,12 @@ namespace Neon.Kube.Operator
 
             var queuedEvent = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).FirstOrDefault();
 
-            if (queuedEvent?.Value != null)
+            if (queuedEvent == null) 
+            { 
+                return; 
+            }
+
+            if (queuedEvent.Value != null)
             {
                 if (!queue[queuedEvent].IsCancellationRequested)
                 {

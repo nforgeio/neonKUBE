@@ -56,6 +56,7 @@ using OpenTelemetry.Trace;
 using Prometheus;
 
 using Npgsql;
+using Neon.Kube.Resources.Cluster;
 
 namespace NeonClusterOperator
 {
@@ -69,7 +70,6 @@ namespace NeonClusterOperator
 
         private static readonly ILogger log = TelemetryHub.CreateLogger<GlauthController>();
 
-        private static ResourceManager<V1Secret, GlauthController> resourceManager;
         private static string connectionString;
 
         /// <summary>
@@ -82,78 +82,24 @@ namespace NeonClusterOperator
         /// <summary>
         /// Starts the controller.
         /// </summary>
-        /// <param name="k8s">The <see cref="IKubernetes"/> client to use.</param>
         /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task StartAsync(
-            IKubernetes k8s,
-            IServiceProvider serviceProvider)
+        public static async Task StartAsync(IServiceProvider serviceProvider)
         {
-            await SyncContext.Clear;
-
-            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
-
-            // Load the configuration settings.
-
-            var leaderConfig =
-                new LeaderElectionConfig(
-                    k8s,
-                    @namespace:       KubeNamespace.NeonSystem,
-                    leaseName:        $"{Program.Service.Name}.glauth",
-                    identity:         Pod.Name,
-                    promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_promoted", "Leader promotions"),
-                    demotionCounter:  Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_demoted", "Leader demotions"),
-                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_new_leader", "Leadership changes"));
-
-            var options = new ResourceManagerOptions()
+            using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
-                ManageCustomResourceDefinitions = false,
-                ErrorMaxRetryCount              = int.MaxValue,
-                ErrorMaxRequeueInterval         = TimeSpan.FromMinutes(10),
-                ErrorMinRequeueInterval         = TimeSpan.FromSeconds(60),
-                IdleCounter                     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "IDLE events processed."),
-                ReconcileCounter                = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "RECONCILE events processed."),
-                DeleteCounter                   = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "DELETED events processed."),
-                FinalizeCounter                 = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_finalize", "FINALIZE events processed."),
-                StatusModifyCounter             = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle", "STATUS-MODIFY events processed."),
-                IdleErrorCounter                = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_idle_error", "Failed IDLE event processing."),
-                ReconcileErrorCounter           = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_reconcile_error", "Failed RECONCILE event processing."),
-                DeleteErrorCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_delete_error", "Failed DELETE event processing."),
-                StatusModifyErrorCounter        = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_statusmodify_error", "Failed STATUS-MODIFY events processing."),
-                FinalizeErrorCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}glauth_finalize_error", "Failed FINALIZE events processing.")
-            };
+                Tracer.CurrentSpan?.AddEvent("start", attributes => attributes.Add("customresource", nameof(V1Secret)));
 
-            resourceManager = new ResourceManager<V1Secret, GlauthController>(
-                k8s,
-                options:         options,
-                leaderConfig:    leaderConfig,
-                serviceProvider: serviceProvider,
-                filter:          (secret) =>
-                {
-                    try
-                    {
-                        if (secret.Metadata.Labels[NeonLabel.ManagedBy] == KubeService.NeonClusterOperator
-                                && secret.Name() == "glauth-users" || secret.Name() == "glauth-groups")
-                        {
-                            return true;
-                        }
-                        return false;
-                    }
-                    catch
-                    {
-                        return false;
-                    }
-                });
+                var k8s = serviceProvider.GetRequiredService<IKubernetes>();
 
-            await resourceManager.StartAsync();
+                var secret = await k8s.CoreV1.ReadNamespacedSecretAsync("neon-admin.neon-system-db.credentials.postgresql", KubeNamespace.NeonSystem);
 
-            var secret = await k8s.CoreV1.ReadNamespacedSecretAsync("neon-admin.neon-system-db.credentials.postgresql", KubeNamespace.NeonSystem);
+                var password = Encoding.UTF8.GetString(secret.Data["password"]);
 
-            var password = Encoding.UTF8.GetString(secret.Data["password"]);
+                connectionString = $"Host={KubeService.NeonSystemDb}.{KubeNamespace.NeonSystem};Username={KubeConst.NeonSystemDbAdminUser};Password={password};Database=glauth";
 
-            connectionString = $"Host={KubeService.NeonSystemDb}.{KubeNamespace.NeonSystem};Username={KubeConst.NeonSystemDbAdminUser};Password={password};Database=glauth";
-
-            log.LogInformationEx($"ConnectionString: [{connectionString}]");
+                log.LogInformationEx($"ConnectionString: [{connectionString}]");
+            }
         }
 
         //---------------------------------------------------------------------
@@ -191,13 +137,6 @@ namespace NeonClusterOperator
             {
                 Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("resource", nameof(V1Secret)));
 
-                // Ignore all events when the controller hasn't been started.
-
-                if (resourceManager == null)
-                {
-                    return null;
-                }
-
                 switch (resource.Name())
                 {
                     case "glauth-users":
@@ -228,14 +167,6 @@ namespace NeonClusterOperator
 
             using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
-
-                // Ignore all events when the controller hasn't been started.
-
-                if (resourceManager == null)
-                {
-                    return;
-                }
-
                 log.LogInformationEx(() => $"DELETED: {resource.Name()}");
             }
         }

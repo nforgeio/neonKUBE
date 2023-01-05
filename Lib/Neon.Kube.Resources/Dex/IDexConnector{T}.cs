@@ -76,6 +76,6 @@ namespace Neon.Kube.Resources.Dex
         [YamlMember(Alias = "config", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         [JsonSchemaExtensionData("x-kubernetes-preserve-unknown-fields", true)]
-        T Config { get; set; }
+        new T Config { get; set; }
     }
 }

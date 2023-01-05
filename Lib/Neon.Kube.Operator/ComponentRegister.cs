@@ -37,6 +37,7 @@ namespace Neon.Kube.Operator
         public HashSet<EntityRegistration> EntityRegistrations { get; set; }
         public HashSet<FinalizerRegistration> FinalizerRegistrations { get; set; }
         public HashSet<MutatingWebhookRegistration> MutatingWebhookRegistrations { get; set; }
+        public HashSet<Type> ResourceManagerRegistrations { get; set; }
         public HashSet<ValidatingWebhookRegistration> ValidatingWebhookRegistrations { get; set; }
 
         public ComponentRegister() 
@@ -45,6 +46,7 @@ namespace Neon.Kube.Operator
             EntityRegistrations            = new HashSet<EntityRegistration>();
             FinalizerRegistrations         = new HashSet<FinalizerRegistration>();
             MutatingWebhookRegistrations   = new HashSet<MutatingWebhookRegistration>();
+            ResourceManagerRegistrations   = new HashSet<Type>();
             ValidatingWebhookRegistrations = new HashSet<ValidatingWebhookRegistration>();
         }
         public void RegisterController<TController, TEntity>()
@@ -78,6 +80,12 @@ namespace Neon.Kube.Operator
 
             return;
         }
+        public void RegisterResourceManager<TResourceManager>()
+        {
+            ResourceManagerRegistrations.Add(typeof(TResourceManager));
+
+            return;
+        }
         public void RegisterValidatingWebhook<TMutator, TEntity>()
             where TMutator : class, IValidatingWebhook<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
@@ -92,5 +100,6 @@ namespace Neon.Kube.Operator
     internal record EntityRegistration(Type EntityType);
     internal record FinalizerRegistration(Type FinalizerType, Type EntityType);
     internal record MutatingWebhookRegistration(Type WebhookType, Type EntityType);
+    internal record ResourceManagerRegistration(Type ResourceManagerType);
     internal record ValidatingWebhookRegistration(Type WebhookType, Type EntityType);
 }

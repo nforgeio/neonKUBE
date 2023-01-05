@@ -75,17 +75,8 @@ namespace Neon.Kube
         /// Optionally specifies the interval that <see cref="LeaderElector"/> instances should 
         /// wait before retrying any actions.  This defaults to <b>2 seconds</b>.
         /// </param>
-        /// <param name="promotionCounter">
-        /// Optionally specifies the metrics counter to be incremented when the instance is 
-        /// promoted to leader.  This defaults to <c>null</c>.
-        /// </param>
-        /// <param name="demotionCounter">
-        /// Optionally specifies the metrics counter to be incremented when the instance is 
-        /// demoted from leader.  This defaults to <c>null</c>.
-        /// </param>
-        /// <param name="newLeaderCounter">
-        /// Optionally specifies the metrics counter to be incremented when the the leader
-        /// changes.  This defaults to <c>null</c>.
+        /// <param name="metricsPrefix">
+        /// Optionally specifies the metrics prefix. This defaults to <c>null</c>.
         /// </param>
         /// <param name="counterLabels">
         /// Optionally specifies any label values to be included when the metrics counters 
@@ -100,9 +91,7 @@ namespace Neon.Kube
             TimeSpan        leaseDuration    = default,
             TimeSpan        renewDeadline    = default,
             TimeSpan        retryPeriod      = default,
-            Counter         promotionCounter = null,
-            Counter         demotionCounter  = null,
-            Counter         newLeaderCounter = null,
+            string          metricsPrefix    = null,
             string[]        counterLabels    = null)
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
@@ -130,29 +119,12 @@ namespace Neon.Kube
                 throw new ArgumentException($"[{nameof(leaseDuration)}={leaseDuration}] is not greater than [{nameof(renewDeadline)}={renewDeadline}].");
             }
 
-            // Ensure that the number of counter label values passed match the number
-            // of labels defined for each counter.
-
-            var counterLabelCount = 0;
-
-            if (counterLabels != null)
+            if (!string.IsNullOrEmpty(metricsPrefix))
             {
-                counterLabelCount = counterLabels.Length;
-            }
-
-            if (promotionCounter != null && promotionCounter.LabelNames.Length != counterLabelCount)
-            {
-                throw new ArgumentException($"[{nameof(promotionCounter)}] label name [count={promotionCounter.LabelNames.Length}] cannot be different from label value [count={counterLabelCount}].");
-            }
-
-            if (demotionCounter != null && demotionCounter.LabelNames.Length != counterLabelCount)
-            {
-                throw new ArgumentException($"[{nameof(demotionCounter)}] label name [count={demotionCounter.LabelNames.Length}] cannot be different from label value [count={counterLabelCount}].");
-            }
-
-            if (newLeaderCounter != null && promotionCounter.LabelNames.Length != counterLabelCount)
-            {
-                throw new ArgumentException($"[{nameof(newLeaderCounter)}] label name [count={newLeaderCounter.LabelNames.Length}] cannot be different from label value [count={counterLabelCount}].");
+                if (!metricsPrefix.EndsWith('_'))
+                {
+                    metricsPrefix += "_";
+                }
             }
 
             // Initialize the properties.
@@ -165,10 +137,33 @@ namespace Neon.Kube
             this.LeaseDuration    = leaseDuration;
             this.RenewDeadline    = renewDeadline;
             this.RetryPeriod      = retryPeriod;
-            this.PromotionCounter = promotionCounter;
-            this.DemotionCounter  = demotionCounter;
-            this.NewLeaderCounter = newLeaderCounter;
+            this.MetricsPrefix    = metricsPrefix;
             this.CounterLabels    = counterLabels;
+
+            if (!string.IsNullOrEmpty(metricsPrefix))
+            {
+                this.PromotionCounter = Metrics.CreateCounter($"{metricsPrefix}promoted", "Leader promotions", labelNames: counterLabels);
+                this.DemotionCounter = Metrics.CreateCounter($"{metricsPrefix}demoted", "Leader demotions", labelNames: counterLabels);
+                this.NewLeaderCounter = Metrics.CreateCounter($"{metricsPrefix}new_leader", "Leadership changes", labelNames: counterLabels);
+            }
+        }
+
+        public void SetCounters(string metricsPrefix)
+        {
+            Covenant.Requires<ArgumentNullException>(metricsPrefix != null, nameof(metricsPrefix));
+
+            if (this.PromotionCounter != null
+                || this.DemotionCounter != null
+                || this.NewLeaderCounter != null)
+            {
+                throw new InvalidOperationException("Counters are already initialized.");
+            }
+
+            this.MetricsPrefix = metricsPrefix;
+
+            this.PromotionCounter = Metrics.CreateCounter($"{metricsPrefix}promoted", "Leader promotions", labelNames: this.CounterLabels);
+            this.DemotionCounter = Metrics.CreateCounter($"{metricsPrefix}demoted", "Leader demotions", labelNames: this.CounterLabels);
+            this.NewLeaderCounter = Metrics.CreateCounter($"{metricsPrefix}new_leader", "Leadership changes", labelNames: this.CounterLabels);
         }
 
         /// <summary>
@@ -201,6 +196,11 @@ namespace Neon.Kube
         /// Returns the interval a follower must wait before attempting to become the leader.
         /// </summary>
         public TimeSpan LeaseDuration { get; private set; }
+
+        /// <summary>
+        /// The metrics prefix.
+        /// </summary>
+        public string MetricsPrefix { get; private set; }
 
         /// <summary>
         /// Returns <see cref="LeaseDuration"/> rounded up to the nearest second

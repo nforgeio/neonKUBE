@@ -77,63 +77,11 @@ namespace NeonClusterOperator
 
         private static readonly ILogger log = TelemetryHub.CreateLogger<NodeTaskController>();
 
-        private static ResourceManager<V1NeonNodeTask, NodeTaskController>  resourceManager;
-
         /// <summary>
         /// Static constructor.
         /// </summary>
         static NodeTaskController()
         {
-        }
-
-        /// <summary>
-        /// Starts the controller.
-        /// </summary>
-        /// <param name="k8s">The <see cref="IKubernetes"/> client to use.</param>
-        /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task StartAsync(
-            IKubernetes k8s,
-            IServiceProvider serviceProvider)
-        {
-            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
-
-            // Load the configuration settings.
-
-            var leaderConfig = 
-                new LeaderElectionConfig(
-                    k8s,
-                    @namespace: KubeNamespace.NeonSystem,
-                    leaseName:        $"{Program.Service.Name}.nodetask",
-                    identity:         Pod.Name,
-                    promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_promoted", "Leader promotions"),
-                    demotionCounter:  Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_demoted", "Leader demotions"),
-                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_new_leader", "Leadership changes"));
-
-            var options = new ResourceManagerOptions()
-            {
-                IdleInterval             = Program.Service.Environment.Get("NODETASK_IDLE_INTERVAL", TimeSpan.FromSeconds(1)),
-                ErrorMinRequeueInterval  = Program.Service.Environment.Get("NODETASK_ERROR_MIN_REQUEUE_INTERVAL", TimeSpan.FromSeconds(15)),
-                ErrorMaxRequeueInterval  = Program.Service.Environment.Get("NODETASK_ERROR_MAX_REQUEUE_INTERVAL", TimeSpan.FromSeconds(60)),
-                IdleCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle", "IDLE events processed."),
-                ReconcileCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle", "RECONCILE events processed."),
-                DeleteCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle", "DELETED events processed."),
-                StatusModifyCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle", "STATUS-MODIFY events processed."),
-                FinalizeCounter          = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_finalize", "FINALIZE events processed."),
-                IdleErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_idle_error", "Failed IDLE event processing."),
-                ReconcileErrorCounter    = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_reconcile_error", "Failed RECONCILE event processing."),
-                DeleteErrorCounter       = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_delete_error", "Failed DELETE event processing."),
-                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_statusmodify_error", "Failed STATUS-MODIFY events processing."),
-                FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}nodetask_finalize_error", "Failed FINALIZE events processing.")
-            };
-
-            resourceManager = new ResourceManager<V1NeonNodeTask, NodeTaskController>(
-                k8s,
-                options:      options,
-                leaderConfig: leaderConfig,
-                serviceProvider: serviceProvider);
-
-            await resourceManager.StartAsync();
         }
 
         //---------------------------------------------------------------------

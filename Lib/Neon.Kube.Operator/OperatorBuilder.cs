@@ -31,6 +31,8 @@ using Neon.Diagnostics;
 
 using k8s.Models;
 using k8s;
+using Neon.Kube.Resources.Cluster;
+using System.Resources;
 
 namespace Neon.Kube.Operator
 {
@@ -73,6 +75,7 @@ namespace Neon.Kube.Operator
             Services.AddTransient(typeof(IFinalizerManager<>), typeof(FinalizerManager<>));
             Services.AddScoped(typeof(IResourceCache<>), typeof(ResourceCache<>));
             Services.AddScoped(typeof(ILockProvider<>), typeof(LockProvider<>));
+            Services.AddHostedService<ResourceControllerManager>();
 
             Services.AddRouting();
             return this;
@@ -112,10 +115,26 @@ namespace Neon.Kube.Operator
         }
 
         /// <inheritdoc/>
-        public IOperatorBuilder AddController<TImplementation, TEntity>()
+        public IOperatorBuilder AddController<TImplementation, TEntity>(
+            string                  @namespace             = null,
+            ResourceManagerOptions  options                = null,
+            Func<TEntity, bool>     filter                 = null,
+            LeaderElectionConfig    leaderConfig           = null,
+            bool                    leaderElectionDisabled = false)
             where TImplementation : class, IOperatorController<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
+            var resourceManager = new ResourceManager<TEntity, TImplementation>(
+                serviceProvider: Services.BuildServiceProvider(),
+                @namespace: @namespace,
+                options: options,
+                filter: filter,
+                leaderConfig: leaderConfig,
+                leaderElectionDisabled: leaderElectionDisabled);
+            
+            Services.AddSingleton(resourceManager);
+            componentRegister.RegisterResourceManager<ResourceManager<TEntity, TImplementation>>();
+
             Services.TryAddScoped<TImplementation>();
             componentRegister.RegisterController<TImplementation, TEntity>();
 

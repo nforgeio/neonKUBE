@@ -33,6 +33,9 @@ using Neon.Diagnostics;
 
 using k8s.Models;
 using k8s;
+using Neon.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore;
 
 namespace Neon.Kube.Operator
 {
@@ -54,6 +57,8 @@ namespace Neon.Kube.Operator
             app.UseEndpoints(
                 async endpoints =>
                 {
+                    await SyncContext.Clear;
+
                     var k8s    = (IKubernetes)app.ApplicationServices.GetRequiredService<IKubernetes>();
                     var logger = (ILogger)app.ApplicationServices.GetRequiredService<ILogger>();
                     NgrokWebhookTunnel tunnel = null;
@@ -65,9 +70,7 @@ namespace Neon.Kube.Operator
                     }
                     catch { }
 
-
-                    using var scope = app.ApplicationServices.CreateScope();
-                    var componentRegistrar = scope.ServiceProvider.GetRequiredService<ComponentRegister>();
+                    var componentRegistrar = app.ApplicationServices.GetRequiredService<ComponentRegister>();
 
                     foreach (var webhook in componentRegistrar.MutatingWebhookRegistrations)
                     {
@@ -77,7 +80,7 @@ namespace Neon.Kube.Operator
 
                             logger.LogInformationEx(() => $"Registering mutating webhook [{mutatorType.Name}].");
 
-                            var mutator = scope.ServiceProvider.GetRequiredService(mutatorType);
+                            var mutator = app.ApplicationServices.GetRequiredService(mutatorType);
 
                             var registerMethod = typeof(IAdmissionWebhook<,>)
                                 .MakeGenericType(entityType, typeof(MutationResult))
@@ -110,7 +113,7 @@ namespace Neon.Kube.Operator
 
                             logger.LogInformationEx(() => $"Registering validating webhook [{validatorType.Name}].");
 
-                            var validator = scope.ServiceProvider.GetRequiredService(validatorType);
+                            var validator = app.ApplicationServices.GetRequiredService(validatorType);
 
                             var registerMethod = typeof(IAdmissionWebhook<,>)
                                 .MakeGenericType(entityType, typeof(ValidationResult))
@@ -133,34 +136,6 @@ namespace Neon.Kube.Operator
                         {
                             logger.LogErrorEx(e);
                         }
-                    }
-
-                    foreach (var ct in componentRegistrar.ControllerRegistrations)
-                    {
-                        try
-                        {
-                            (Type controllerType, Type entityType) = ct;
-
-                            logger.LogInformationEx(() => $"Registering controller [{controllerType.Name}].");
-
-                            var controller = scope.ServiceProvider.GetRequiredService(controllerType);
-
-                            var methods = controllerType
-                                .GetMethods(BindingFlags.Static | BindingFlags.Public);
-
-                            var startMethod = methods
-                                .First(m => m.Name == "StartAsync");
-
-                            var task = (Task)startMethod.Invoke(controller, new object[] { k8s, app.ApplicationServices });
-                            await task;
-
-                            logger.LogInformationEx(() => $"Registered controller [{controllerType.Name}]");
-                        }
-                        catch (Exception e)
-                        {
-                            logger.LogErrorEx(e);
-                        }
-
                     }
                 });
         }

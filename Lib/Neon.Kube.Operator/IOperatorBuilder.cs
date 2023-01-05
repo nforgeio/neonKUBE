@@ -48,7 +48,12 @@ namespace Neon.Kube.Operator
         /// <typeparam name="TImplementation">The type of the controller to register.</typeparam>
         /// <typeparam name="TEntity">The type of the entity to associate the controller with.</typeparam>
         /// <returns>The builder for chaining.</returns>
-        IOperatorBuilder AddController<TImplementation, TEntity>()
+        IOperatorBuilder AddController<TImplementation, TEntity>(
+            string                  @namespace             = null,
+            ResourceManagerOptions  options                = null,
+            Func<TEntity, bool>     filter                 = null,
+            LeaderElectionConfig    leaderConfig           = null,
+            bool                    leaderElectionDisabled = false)
             where TImplementation : class, IOperatorController<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>, new();
 

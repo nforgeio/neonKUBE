@@ -53,6 +53,16 @@ namespace Neon.Kube.Operator
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         /// <summary>
+        /// Starts the controller.
+        /// </summary>
+        /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static Task StartAsync(IServiceProvider serviceProvider)
+        {
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
         /// Called periodically to allow the operator to perform global operations.
         /// The period is controlled by <see cref="ResourceManagerOptions.IdleInterval"/>.
         /// </summary>

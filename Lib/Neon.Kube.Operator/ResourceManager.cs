@@ -42,6 +42,7 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Tasks;
+using Prometheus;
 
 // $todo(jefflill):
 //
@@ -67,7 +68,7 @@ namespace Neon.Kube.Operator
     /// <para>
     /// This class helps makes it easier to manage custom cluster resources.  Simply construct an
     /// instance with <see cref="ResourceManager{TResource, TController}"/> in your controller 
-    /// (passing any custom settings as parameters) and then call <see cref="StartAsync(string)"/>.
+    /// (passing any custom settings as parameters) and then call <see cref="StartAsync()"/>.
     /// </para>
     /// <para>
     /// After the resource manager starts, your controller's <see cref="IOperatorController{TEntity}.ReconcileAsync(TEntity)"/>, 
@@ -161,36 +162,37 @@ namespace Neon.Kube.Operator
     /// </list>
     /// </remarks>
     public sealed class ResourceManager<TEntity, TController> : IDisposable
-        where TEntity : class, IKubernetesObject<V1ObjectMeta>, new()
+        where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         where TController : IOperatorController<TEntity>
     {
-        private bool                            isDisposed   = false;
-        private bool                            stopIdleLoop = false;
-        private AsyncReentrantMutex             mutex        = new AsyncReentrantMutex();
-        private bool                            started      = false;
-        private ResourceManagerOptions          options;
-        private IKubernetes                     k8s;
-        private IServiceProvider                serviceProvider;
-        private IResourceCache<TEntity>         resourceCache;
-        private ILockProvider<TEntity>          lockProvider;
-        private string                          resourceNamespace;
-        private ConstructorInfo                 controllerConstructor;
-        private Type                            controllerType;
-        private Func<TEntity, bool>             filter;
-        private ILogger                         logger;
-        private DateTime                        nextIdleReconcileUtc;
-        private LeaderElectionConfig            leaderConfig;
-        private LeaderElector                   leaderElector;
-        private Task                            leaderTask;
-        private Task                            idleLoopTask;
-        private Task                            watcherTask;
-        private CancellationTokenSource         watcherTcs;
-        private EventQueue<TEntity>             eventQueue;
+        private bool                                         isDisposed   = false;
+        private bool                                         stopIdleLoop = false;
+        private AsyncReentrantMutex                          mutex        = new AsyncReentrantMutex();
+        private bool                                         started      = false;
+        private ResourceManagerOptions                       options;
+        private ResourceManagerMetrics<TEntity, TController> metrics;
+        private IKubernetes                                  k8s;
+        private IServiceProvider                             serviceProvider;
+        private IResourceCache<TEntity>                      resourceCache;
+        private ILockProvider<TEntity>                       lockProvider;
+        private string                                       resourceNamespace;
+        private Type                                         controllerType;
+        private Func<TEntity, bool>                          filter;
+        private ILogger                                      logger;
+        private DateTime                                     nextIdleReconcileUtc;
+        private LeaderElectionConfig                         leaderConfig;
+        private bool                                         leaderElectionDisabled;
+        private LeaderElector                                leaderElector;
+        private Task                                         leaderTask;
+        private Task                                         idleLoopTask;
+        private Task                                         watcherTask;
+        private CancellationTokenSource                      watcherTcs;
+        private EventQueue<TEntity>                          eventQueue;
 
         /// <summary>
         /// Default constructor.
         /// </summary>
-        /// <param name="k8s">The <see cref="IKubernetes"/> client used by the controller.</param>
+        /// <param name="namespace"></param>
         /// <param name="options">
         /// Optionally specifies options that customize the resource manager's behavior.  Reasonable
         /// defaults will be used when this isn't specified.
@@ -207,63 +209,68 @@ namespace Neon.Kube.Operator
         /// should be managed by this resource manager.  The default filter always returns <c>true</c>.
         /// </para>
         /// </param>
-        /// <param name="logger">Optionally specifies the logger to be used by the instance.</param>
         /// <param name="leaderConfig">
         /// Optionally specifies the <see cref="LeaderElectionConfig"/> to be used to control
         /// whether only a single entity is managing a specific resource kind at a time.  See
         /// the <b>LEADER ELECTION SECTION</b> in the <see cref="ResourceManager{TResource, TController}"/>
         /// remarks for more information.
         /// </param>
-        /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
+        /// <param name="leaderElectionDisabled"></param>
+        /// <param name="serviceProvider"></param>
         public ResourceManager(
-            IKubernetes             k8s,
-            ResourceManagerOptions  options         = null,
-            Func<TEntity, bool>     filter          = null,
-            ILogger                 logger          = null,
-            LeaderElectionConfig    leaderConfig    = null,
-            IServiceProvider        serviceProvider = null)
+            IServiceProvider        serviceProvider,
+            string                  @namespace             = null,
+            ResourceManagerOptions  options                = null,
+            Func<TEntity, bool>     filter                 = null,
+            LeaderElectionConfig    leaderConfig           = null,
+            bool                    leaderElectionDisabled = false)
         {
-            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            Covenant.Requires<ArgumentException>(@namespace == null || @namespace != string.Empty, nameof(@namespace));
+            Covenant.Requires<ArgumentException>(!(leaderConfig != null && leaderElectionDisabled == true), nameof(leaderElectionDisabled));
+            
+            this.serviceProvider        = serviceProvider;
+            this.resourceNamespace      = @namespace;
+            this.options                = options ?? new ResourceManagerOptions();
+            this.filter                 = filter ?? new Func<TEntity, bool>(resource => true);
+            this.leaderConfig           = leaderConfig;
+            this.leaderElectionDisabled = leaderElectionDisabled;
+            this.metrics                = new ResourceManagerMetrics<TEntity, TController>();
 
-            this.k8s             = k8s;  // $todo(jefflill): Can we obtain this from KubeOps or the [IServiceProvider] somehow?
-            this.serviceProvider = serviceProvider;
-            this.options         = options ?? new ResourceManagerOptions();
-            this.filter          = filter ?? new Func<TEntity, bool>(resource => true);
-            this.logger          = logger ?? TelemetryHub.CreateLogger($"Neon.Kube.Operator.ResourceManager({typeof(TEntity).Name})");
-            this.leaderConfig    = leaderConfig;
-            this.resourceCache   = serviceProvider.GetRequiredService<IResourceCache<TEntity>>();
-            this.lockProvider    = serviceProvider.GetRequiredService<ILockProvider<TEntity>>();
+            this.options.Validate();
 
-            options.Validate();
-
-            // $todo(jefflill): https://github.com/nforgeio/neonKUBE/issues/1589
-            //
-            // Locate the controller's constructor that has a single [IKubernetes] parameter.
 
             this.controllerType = typeof(TController);
             var entityType      = typeof(TEntity);
-
-            if (serviceProvider == null) 
-            { 
-                this.controllerConstructor = controllerType.GetConstructor(new Type[] { typeof(IKubernetes) });
-
-                if (this.controllerConstructor == null)
-                {
-                    throw new NotSupportedException($"Controller type [{controllerType.FullName}] does not have a constructor accepting a single [{nameof(IKubernetes)}] parameter.  This is currently required.");
-                }
-
-            }
-            var controller = CreateController();
         }
 
         /// <summary>
         /// Starts the resource manager.
         /// </summary>
-        /// <param name="namespace">Optionally specifies the namespace for namespace scoped operators.</param>
         /// <exception cref="InvalidOperationException">Thrown when the resource manager has already been started.</exception>
-        public async Task StartAsync(string @namespace = null)
+        public async Task StartAsync()
         {
-            Covenant.Requires<ArgumentException>(@namespace == null || @namespace != string.Empty, nameof(@namespace));
+            Covenant.Requires<ArgumentNullException>(serviceProvider != null, nameof(serviceProvider));
+
+            this.k8s             = serviceProvider.GetRequiredService<IKubernetes>();
+            this.logger          = serviceProvider.GetService<ILogger>() ?? TelemetryHub.CreateLogger($"Neon.Kube.Operator.ResourceManager({typeof(TEntity).Name})");
+            this.resourceCache   = serviceProvider.GetRequiredService<IResourceCache<TEntity>>();
+            this.lockProvider    = serviceProvider.GetRequiredService<ILockProvider<TEntity>>();
+
+            if (leaderConfig != null && string.IsNullOrEmpty(leaderConfig.MetricsPrefix))
+            {
+                leaderConfig.SetCounters($"{typeof(TController).Name}_{typeof(TEntity).Name}".ToLower());
+            }
+
+            if (leaderConfig == null && !leaderElectionDisabled)
+            {
+                this.leaderConfig =
+                    new LeaderElectionConfig(
+                        this.k8s,
+                        @namespace: Pod.Namespace,
+                        leaseName: $"{typeof(TController).Name}.{typeof(TEntity).GetKubernetesTypeMetadata().PluralName}".ToLower(),
+                        identity: Pod.Name,
+                        metricsPrefix: $"{typeof(TController).Name}_{typeof(TEntity).Name}".ToLower());
+            }
 
             if (started)
             {
@@ -273,7 +280,6 @@ namespace Neon.Kube.Operator
             //-----------------------------------------------------------------
             // Start the leader elector if enabled.
 
-            resourceNamespace = @namespace;
             started           = true;
 
             // Start the leader elector when enabled.
@@ -340,13 +346,13 @@ namespace Neon.Kube.Operator
         /// Ensures that the controller has been started before KubeOps.
         /// </summary>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when KubeOps is running before <see cref="StartAsync(string)"/> is called for this controller.
+        /// Thrown when Operator is running before <see cref="StartAsync()"/> is called for this controller.
         /// </exception>
         private void EnsureStarted()
         {
             if (!started)
             {
-                throw new InvalidOperationException($"You must call [{nameof(TController)}.{nameof(StartAsync)}()] before starting KubeOps.");
+                throw new InvalidOperationException($"You must call [{nameof(TController)}.{nameof(StartAsync)}()] before starting Operator.");
             }
         }
 
@@ -533,16 +539,7 @@ namespace Neon.Kube.Operator
         /// <returns>The controller.</returns>
         private IOperatorController<TEntity> CreateController()
         {
-            if (this.serviceProvider== null)
-            {
-                return (IOperatorController<TEntity>)controllerConstructor.Invoke(new object[] { k8s });
-            }
-            else
-            {
-                using var scope = serviceProvider.CreateScope();
-
-                return (IOperatorController<TEntity>)ActivatorUtilities.CreateInstance(scope.ServiceProvider, controllerType);
-            }
+            return (IOperatorController<TEntity>)ActivatorUtilities.CreateInstance(serviceProvider, controllerType);
         }
 
         //---------------------------------------------------------------------
@@ -651,7 +648,7 @@ namespace Neon.Kube.Operator
                                 }
                                 catch (Exception e)
                                 {
-                                    options.IdleErrorCounter?.Inc();
+                                    metrics.IdleErrorCounter?.Inc();
                                     logger.LogErrorEx(e);
                                 }
                             });
@@ -714,14 +711,14 @@ namespace Neon.Kube.Operator
 
                                 try
                                 {
-                                    options.ReconcileCounter?.Inc();
+                                    metrics.ReconcileCounter?.Inc();
 
                                     result = await CreateController().ReconcileAsync(resource);
 
                                 }
                                 catch (Exception e)
                                 {
-                                    options.ReconcileErrorCounter.Inc();
+                                    metrics.ReconcileErrorCounter.Inc();
                                     logger.LogErrorEx(() => $"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Retrying... Attempt [{@event.Attempt}]");
 
                                     if (@event.Attempt < options.ErrorMaxRetryCount)
@@ -739,14 +736,14 @@ namespace Neon.Kube.Operator
 
                                 try
                                 {
-                                    options.DeleteCounter?.Inc();
+                                    metrics.DeleteCounter?.Inc();
                                     await CreateController().DeletedAsync(resource);
 
                                     resourceCache.Remove(resource);
                                 }
                                 catch (Exception e)
                                 {
-                                    options.DeleteErrorCounter?.Inc();
+                                    metrics.DeleteErrorCounter?.Inc();
                                     logger.LogErrorEx(e);
                                 }
 
@@ -760,13 +757,13 @@ namespace Neon.Kube.Operator
 
                                         try
                                         {
-                                            options.ReconcileCounter?.Inc();
+                                            metrics.ReconcileCounter?.Inc();
 
                                             result = await CreateController().ReconcileAsync(resource);
                                         }
                                         catch (Exception e)
                                         {
-                                            options.ReconcileErrorCounter?.Inc();
+                                            metrics.ReconcileErrorCounter?.Inc();
                                             logger.LogErrorEx(e);
 
                                             if (@event.Attempt < options.ErrorMaxRetryCount)
@@ -785,15 +782,13 @@ namespace Neon.Kube.Operator
 
                                         try
                                         {
-                                            options.FinalizeCounter?.Inc();
+                                            metrics.FinalizeCounter?.Inc();
 
                                             if (!resourceCache.IsFinalizing(resource))
                                             {
-                                                using var scope = serviceProvider.CreateScope();
-
                                                 resourceCache.AddFinalizer(resource);
 
-                                                await scope.ServiceProvider.GetRequiredService<IFinalizerManager<TEntity>>()
+                                                await serviceProvider.GetRequiredService<IFinalizerManager<TEntity>>()
                                                     .FinalizeAsync(resource);
                                             }
 
@@ -801,7 +796,7 @@ namespace Neon.Kube.Operator
                                         }
                                         catch (Exception e)
                                         {
-                                            options.FinalizeErrorCounter?.Inc();
+                                            metrics.FinalizeErrorCounter?.Inc();
                                             logger.LogErrorEx(e);
 
                                             resourceCache.RemoveFinalizer(resource);
@@ -835,12 +830,12 @@ namespace Neon.Kube.Operator
                                         {
                                             try
                                             {
-                                                options.StatusModifyCounter?.Inc();
+                                                metrics.StatusModifyCounter?.Inc();
                                                 await CreateController().StatusModifiedAsync(resource);
                                             }
                                             catch (Exception e)
                                             {
-                                                options.StatusModifyErrorCounter?.Inc();
+                                                metrics.StatusModifyErrorCounter?.Inc();
                                                 logger.LogErrorEx(e);
                                             }
                                         }

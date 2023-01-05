@@ -243,6 +243,10 @@ namespace NeonNodeAgent
                 .UseStaticWebAssets()
             .Build();
 
+            // Indicate that the service is running.
+
+            await StartedAsync();
+
             _ = webHost.RunAsync();
 
             //-----------------------------------------------------------------
@@ -285,10 +289,6 @@ namespace NeonNodeAgent
                     .Build()
                     .RunOperatorAsync(Array.Empty<string>());
 #endif
-
-            // Indicate that the service is running.
-
-            await StartedAsync();
 
             // Handle termination gracefully.
 

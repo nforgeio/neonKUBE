@@ -71,7 +71,6 @@ namespace NeonClusterOperator
 
 
         private static readonly ILogger log = TelemetryHub.CreateLogger<MinioBucketController>();
-        private static ResourceManager<V1MinioBucket, MinioBucketController> resourceManager;
         private const string MinioExe = "/mc";
         private MinioClient minioClient;
 
@@ -80,58 +79,6 @@ namespace NeonClusterOperator
         /// </summary>
         static MinioBucketController()
         {
-        }
-
-        /// <summary>
-        /// Starts the controller.
-        /// </summary>
-        /// <param name="k8s">The <see cref="IKubernetes"/> client to use.</param>
-        /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task StartAsync(
-            IKubernetes k8s,
-            IServiceProvider serviceProvider)
-        {
-            await SyncContext.Clear;
-
-            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
-
-            // Load the configuration settings.
-
-            var leaderConfig =
-                new LeaderElectionConfig(
-                    k8s,
-                    @namespace: KubeNamespace.NeonSystem,
-                    leaseName: $"{Program.Service.Name}.miniobucket",
-                    identity: Pod.Name,
-                    promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_promoted", "Leader promotions"),
-                    demotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_demoted", "Leader demotions"),
-                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_new_leader", "Leadership changes"));
-
-            var options = new ResourceManagerOptions()
-            {
-                ErrorMaxRetryCount       = int.MaxValue,
-                ErrorMaxRequeueInterval  = TimeSpan.FromMinutes(10),
-                ErrorMinRequeueInterval  = TimeSpan.FromSeconds(60),
-                IdleCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_idle", "IDLE events processed."),
-                ReconcileCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_idle", "RECONCILE events processed."),
-                DeleteCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_idle", "DELETED events processed."),
-                FinalizeCounter          = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_finalize", "FINALIZE events processed."),
-                StatusModifyCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_idle", "STATUS-MODIFY events processed."),
-                IdleErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_idle_error", "Failed IDLE event processing."),
-                ReconcileErrorCounter    = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_reconcile_error", "Failed RECONCILE event processing."),
-                DeleteErrorCounter       = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_delete_error", "Failed DELETE event processing."),
-                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_statusmodify_error", "Failed STATUS-MODIFY events processing."),
-                FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}miniobucket_finalize_error", "Failed FINALIZE events processing.")
-            };
-
-            resourceManager = new ResourceManager<V1MinioBucket, MinioBucketController>(
-                k8s,
-                options: options,
-                leaderConfig: leaderConfig,
-                serviceProvider: serviceProvider);
-
-            await resourceManager.StartAsync();
         }
 
         //---------------------------------------------------------------------
@@ -173,13 +120,6 @@ namespace NeonClusterOperator
             using (var activity = TelemetryHub.ActivitySource.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("resource", nameof(V1MinioBucket)));
-
-                // Ignore all events when the controller hasn't been started.
-
-                if (resourceManager == null)
-                {
-                    return null;
-                }
 
                 await finalizerManager.RegisterAllFinalizersAsync(resource);
 
@@ -240,11 +180,6 @@ namespace NeonClusterOperator
             {
 
                 // Ignore all events when the controller hasn't been started.
-
-                if (resourceManager == null)
-                {
-                    return;
-                }
 
                 log.LogInformationEx(() => $"DELETED: {resource.Name()}");
             }

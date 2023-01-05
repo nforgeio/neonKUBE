@@ -167,12 +167,11 @@ namespace Neon.Kube.Operator
                     
                 }
 
-                using var scope = serviceProvider.CreateScope();
-                var componentRegistrar = scope.ServiceProvider.GetRequiredService<ComponentRegister>();
+                var componentRegistrar = serviceProvider.GetRequiredService<ComponentRegister>();
 
                 foreach (var mutatingWebhookRegistration in componentRegister.MutatingWebhookRegistrations)
                 {
-                    var mutator = scope.ServiceProvider.GetRequiredService(mutatingWebhookRegistration.WebhookType);
+                    var mutator = serviceProvider.GetRequiredService(mutatingWebhookRegistration.WebhookType);
 
                     var createMethod = typeof(IMutatingWebhook<>)
                                     .MakeGenericType(mutatingWebhookRegistration.EntityType)
@@ -205,7 +204,7 @@ namespace Neon.Kube.Operator
 
                 foreach (var validatingWebhookRegistration in componentRegister.ValidatingWebhookRegistrations)
                 {
-                    var validator = scope.ServiceProvider.GetRequiredService(validatingWebhookRegistration.WebhookType);
+                    var validator = serviceProvider.GetRequiredService(validatingWebhookRegistration.WebhookType);
 
                     var createMethod = typeof(IValidatingWebhook<>)
                                     .MakeGenericType(validatingWebhookRegistration.EntityType)

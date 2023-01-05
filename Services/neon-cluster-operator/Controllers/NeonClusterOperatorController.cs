@@ -89,8 +89,6 @@ namespace NeonClusterOperator
 
         private static readonly ILogger log = TelemetryHub.CreateLogger<NeonClusterOperatorController>();
 
-        private static ResourceManager<V1NeonClusterOperator, NeonClusterOperatorController> resourceManager;
-
         private static IScheduler                       scheduler;
         private static StdSchedulerFactory              schedulerFactory;
         private static bool                             initialized;
@@ -106,63 +104,14 @@ namespace NeonClusterOperator
         /// <summary>
         /// Static constructor.
         /// </summary>
-        static NeonClusterOperatorController() { }
-
-        /// <summary>
-        /// Starts the controller.
-        /// </summary>
-        /// <param name="k8s">The <see cref="IKubernetes"/> client to use.</param>
-        /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task StartAsync(
-            IKubernetes k8s,
-            IServiceProvider serviceProvider)
+        static NeonClusterOperatorController() 
         {
-            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
-
-            // Load the configuration settings.
-
-            var leaderConfig =
-                new LeaderElectionConfig(
-                    k8s,
-                    @namespace:       KubeNamespace.NeonSystem,
-                    leaseName:        $"{Program.Service.Name}.operatorsettings",
-                    identity:         Pod.Name,
-                    promotionCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_promoted", "Leader promotions"),
-                    demotionCounter:  Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_demoted", "Leader demotions"),
-                    newLeaderCounter: Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_new_leader", "Leadership changes"));
-
-            var options = new ResourceManagerOptions()
-            {
-                ErrorMaxRetryCount       = int.MaxValue,
-                ErrorMaxRequeueInterval  = TimeSpan.FromMinutes(10),
-                ErrorMinRequeueInterval  = TimeSpan.FromSeconds(60),
-                IdleCounter              = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle", "IDLE events processed."),
-                ReconcileCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle", "RECONCILE events processed."),
-                DeleteCounter            = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle", "DELETED events processed."),
-                StatusModifyCounter      = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle", "STATUS-MODIFY events processed."),
-                FinalizeCounter          = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_finalize", "FINALIZE events processed."),
-                IdleErrorCounter         = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_idle_error", "Failed IDLE event processing."),
-                ReconcileErrorCounter    = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_reconcile_error", "Failed RECONCILE event processing."),
-                DeleteErrorCounter       = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_delete_error", "Failed DELETE event processing."),
-                StatusModifyErrorCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_statusmodify_error", "Failed STATUS-MODIFY events processing."),
-                FinalizeErrorCounter     = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}operatorsettings_finalize_error", "Failed FINALIZE events processing.")
-            };
-
-            resourceManager = new ResourceManager<V1NeonClusterOperator, NeonClusterOperatorController>(
-                k8s,
-                options:      options,
-                leaderConfig: leaderConfig,
-                serviceProvider: serviceProvider);
-
-            await resourceManager.StartAsync();
-
-            schedulerFactory              = new StdSchedulerFactory();
-            updateCaCertificates          = new UpdateCaCertificates();
+            schedulerFactory = new StdSchedulerFactory();
+            updateCaCertificates = new UpdateCaCertificates();
             checkControlPlaneCertificates = new CheckControlPlaneCertificates();
-            checkRegistryImages           = new CheckRegistryImages();
-            sendClusterTelemetry          = new SendClusterTelemetry();
-            checkNeonDesktopCert          = new CheckNeonDesktopCertificate();
+            checkRegistryImages = new CheckRegistryImages();
+            sendClusterTelemetry = new SendClusterTelemetry();
+            checkNeonDesktopCert = new CheckNeonDesktopCertificate();
         }
 
         //---------------------------------------------------------------------
@@ -218,8 +167,7 @@ namespace NeonClusterOperator
 
                 // Ignore all events when the controller hasn't been started.
 
-                if (resourceManager == null
-                    || resource.Name() != KubeService.NeonClusterOperator)
+                if (resource.Name() != KubeService.NeonClusterOperator)
                 {
                     return null;
                 }
@@ -300,7 +248,7 @@ namespace NeonClusterOperator
 
                 // Ignore all events when the controller hasn't been started.
 
-                if (resourceManager == null || resource.Name() != KubeService.NeonClusterOperator)
+                if (resource.Name() != KubeService.NeonClusterOperator)
                 {
                     return;
                 }
