@@ -15,11 +15,17 @@ Note that the build environment currently assumes that only one Windows user wil
 
 Follow the steps below to configure a development or test workstation:
 
-1. Follow the maintainer setup instructions for the **neonSDK** repo at: [neonSDK](https://github.com/nforgeio/neonsdk/blob/master/Doc/DEVELOPER.md)
+1. Follow the **optional** maintainer setup instructions for the **neonSDK** repo at: [neonSDK](https://github.com/nforgeio/neonsdk/blob/master/Doc/DEVELOPER.md)
 
 2. **Clone** the https://github.com/nforgeio/neonKUBE.git repository to your workstation:
 
     * **IMPORTANT:** All NEONFORGE related repositories must be cloned within the same parent directory and their folder names must be the same as the repo names.
+
+    ```
+    cd "%NF_ROOT%\.."
+    mkdir neonKUBE
+    git clone https://github.com/nforgeio/neonKUBE.git
+    ```
 
 3. Configure the build **environment variables**:
 
