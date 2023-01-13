@@ -129,20 +129,8 @@ namespace Neon.Kube
         ///     </description>
         /// </item>
         /// </list>
-        /// <note>
-        /// <para>
-        /// Pending releases can be identified by appending <b>".pending"</b> to versions
-        /// that already include a prerelease part or <b>-pending</b> for GA versions that
-        /// don't include a prerelease part.  This indicates that we're still working on that
-        /// version and should only be used by NEONFORGE maintainers.
-        /// </para>
-        /// <para>
-        /// For example, <b>1.0.0-pending</b> identifies a pending GA 1.0.0 release and
-        /// <b>1.0.0-rc.00.pending</b> identifies a pending 1.0.0-rc.00 release candidate. 
-        /// </para>
-        /// </note>
         /// </remarks>
-        public const string NeonKube = "0.8.6-alpha.pending";
+        public const string NeonKube = "0.8.6-alpha";
 
         /// <summary>
         /// Returns the prefix used for neonKUBE container tags.
