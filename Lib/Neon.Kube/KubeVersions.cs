@@ -130,7 +130,7 @@ namespace Neon.Kube
         /// </item>
         /// </list>
         /// </remarks>
-        public const string NeonKube = "0.8.6-alpha";
+        public const string NeonKube = "0.8.7-alpha";
 
         /// <summary>
         /// Returns the prefix used for neonKUBE container tags.
