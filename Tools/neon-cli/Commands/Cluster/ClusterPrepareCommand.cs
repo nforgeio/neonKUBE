@@ -120,8 +120,8 @@ OPTIONS:
 
                                   NOTE: This is required for [--debug]
 
-    --private-image             - Specifies that the private node image should be deployed.
-                                  Only NEONFORGE maintainers should use this.
+    --use-staged                - MAINTAINERS ONLY: Specifies that the staged image 
+                                  should be used as opposed to the public release image.
 ";
 
         /// <inheritdoc/>
@@ -140,7 +140,7 @@ OPTIONS:
             "--debug",
             "--quiet",
             "--base-image-name",
-            "--private-image"
+            "--use-staged"
         };
 
         /// <inheritdoc/>
@@ -191,7 +191,7 @@ OPTIONS:
             var baseImageName     = commandLine.GetOption("--base-image-name");
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
             var disablePending    = commandLine.HasOption("--disable-pending");
-            var privateImage      = commandLine.HasOption("--private-image");
+            var useStaged         = commandLine.HasOption("--use-staged");
 
             if (!int.TryParse(maxParallelOption, out var maxParallel) || maxParallel <= 0)
             {
@@ -231,7 +231,7 @@ OPTIONS:
             // Do a quick sanity check to ensure that the hosting environment has no conflicts
             // as well as enough resources (memory, disk,...) to actually host the cluster.
 
-            using (var cluster = new ClusterProxy(clusterDefinition, new HostingManagerFactory(), !privateImage))
+            using (var cluster = new ClusterProxy(clusterDefinition, new HostingManagerFactory(), !useStaged))
             {
                 var status = await cluster.GetResourceAvailabilityAsync();
 
@@ -265,7 +265,7 @@ OPTIONS:
 
                 if (string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath))
                 {
-                    nodeImageUri = await KubeDownloads.GetNodeImageUriAsync(clusterDefinition.Hosting.Environment);
+                    nodeImageUri = await KubeDownloads.GetNodeImageUriAsync(clusterDefinition.Hosting.Environment, useStaged: useStaged);
                 }
             }
 
@@ -304,7 +304,7 @@ OPTIONS:
 
             var controller = KubeSetup.CreateClusterPrepareController(
                 clusterDefinition, 
-                cloudMarketplace: !privateImage,
+                cloudMarketplace: !useStaged,
                 options:          prepareOptions);
 
             controller.DisablePendingTasks = disablePending;

@@ -961,7 +961,7 @@ namespace Neon.Kube
                     return cachedNodeImageFolder;
                 }
 
-                var path = Path.Combine(StandardNeonKubeFolder, "node-images");
+                var path = Path.Combine(StandardNeonKubeFolder, "images");
 
                 Directory.CreateDirectory(path);
 

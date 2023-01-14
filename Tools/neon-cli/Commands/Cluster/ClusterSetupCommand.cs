@@ -102,7 +102,7 @@ OPTIONS:
                           NOTE: A non-zero exit code will be returned when this
                                 option is specified and one or more chechks fail.
 
-    --private-image     - Specifies that the private node image should be deployed.
+    --use-staged        - Specifies that the private node image should be deployed.
                           Only NEONFORGE maintainers should use this.
 
     --no-telemetry      - Disables whether telemetry for failed cluster deployment,
@@ -127,7 +127,7 @@ OPTIONS:
             "--debug",
             "--quiet",
             "--check",
-            "--private-image",
+            "--use-staged",
             "--no-telemetry"
         };
 
@@ -166,7 +166,7 @@ OPTIONS:
             var uploadCharts      = commandLine.HasOption("--upload-charts") || debug;
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
             var disablePending    = commandLine.HasOption("--disable-pending");
-            var privateImage      = commandLine.HasOption("--private-image");
+            var useStaged         = commandLine.HasOption("--use-staged");
             var noTelemetry       = commandLine.HasOption("--no-telemetry");
 
             if (noTelemetry)
@@ -242,7 +242,7 @@ OPTIONS:
 
             var controller = KubeSetup.CreateClusterSetupController(
                 clusterDefinition,
-                cloudMarketplace: !privateImage,
+                cloudMarketplace: !useStaged,
                 options:          setupOptions);
 
             controller.DisablePendingTasks = disablePending;
