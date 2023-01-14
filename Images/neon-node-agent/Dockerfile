@@ -16,7 +16,7 @@
 # limitations under the License.
 
 ARG         ORGANIZATION
-FROM        mcr.microsoft.com/dotnet/aspnet:7.0-jammy-amd64
+FROM        mcr.microsoft.com/dotnet/aspnet:7.0.2-jammy-amd64
 MAINTAINER  jeff@neonforge.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME
