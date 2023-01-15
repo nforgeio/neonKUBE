@@ -67,7 +67,7 @@ namespace Neon.Kube
         /// The URI for the cluster manifest (<see cref="ClusterManifest"/>) JSON file for the current
         /// neonKUBE cluster version.
         /// </summary>
-        public const string NeonClusterManifestUri = NeonKubeStageBucketUri + "/cluster-manifests/neonkube-" + KubeVersions.NeonKube + ".json";
+        public const string NeonClusterManifestUri = $"{NeonKubeStageBucketUri}/manifests/neonkube-{KubeVersions.NeonKube}.json";
 
         /// <summary>
         /// Returns the URI for the cluster manifest for a specific neonKUBE version.
