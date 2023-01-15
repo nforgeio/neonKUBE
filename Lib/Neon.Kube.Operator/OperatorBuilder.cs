@@ -29,6 +29,7 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Diagnostics;
 
+using AsyncKeyedLock;
 using k8s.Models;
 using k8s;
 using Neon.Kube.Resources.Cluster;
@@ -74,7 +75,11 @@ namespace Neon.Kube.Operator
             Services.AddSingleton<IFinalizerBuilder, FinalizerBuilder>();
             Services.AddTransient(typeof(IFinalizerManager<>), typeof(FinalizerManager<>));
             Services.AddScoped(typeof(IResourceCache<>), typeof(ResourceCache<>));
-            Services.AddScoped(typeof(ILockProvider<>), typeof(LockProvider<>));
+            Services.AddSingleton(new AsyncKeyedLocker<string>(o =>
+            {
+                o.PoolSize = 20;
+                o.PoolInitialFill = 1;
+            }));
             Services.AddHostedService<ResourceControllerManager>();
 
             Services.AddRouting();
