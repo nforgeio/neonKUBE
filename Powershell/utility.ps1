@@ -515,7 +515,7 @@ function DeleteFolder
 
 	if (Test-Path $Path) 
 	{ 
-		$result = Remove-Item -Recurse $Path 
+		Remove-Item -Recurse $Path | Out-Null
 	} 
 }
 

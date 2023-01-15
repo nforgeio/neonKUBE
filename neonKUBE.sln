@@ -138,6 +138,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Github", "Github", "{D9006A
 		buildenv.ps1 = buildenv.ps1
 		Directory.Build.props = Directory.Build.props
 		docfx.json = docfx.json
+		global.json = global.json
 		LICENSE = LICENSE
 		nuget.config = nuget.config
 		README.md = README.md

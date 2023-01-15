@@ -98,17 +98,33 @@ function UtcDate
 }
 
 #------------------------------------------------------------------------------
-# Returns the current Git branch, date, and commit formatted as a Docker image tag
-# along with an optional dirty branch indicator.
+# Returns the .NET runtime base container reference to be used when building
+# our container images, like:
+#
+#		mcr.microsoft.com/dotnet/aspnet:7.0.2-jammy-amd64
+#
+# This accepts a single parameter specifying the path to the [global.json] file
+# used to control which .NET SDK we're using to build the container binaries.
+# This uses the [neon-build dotnet-version] command to identify the runtime
+# version and inject that into the base container name returned.
 
-function ImageTag
+function Get-DotnetBaseImage
 {
-	$branch = GitBranch $env:NK_ROOT
-	$date   = UtcDate
-	$commit = git log -1 --pretty=%h
-	$tag    = "$branch-$date-$commit"
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$globalJsonPath
+    )
 
-	return $tag
+	# NOTE: This command writes the SDK version to the first output line and
+	#       the runtime version to the second line.
+
+	$command  = "neon-build dotnet-version " + '"' + $globalJsonPath + '"'
+	$response = Invoke-CaptureStreams $command
+	$lines    = $response.stdout -split '\r?\n'
+	$runtime  = $lines[1].Trim()
+
+	return "mcr.microsoft.com/dotnet/aspnet:$runtime-jammy-amd64"
 }
 
 #------------------------------------------------------------------------------
