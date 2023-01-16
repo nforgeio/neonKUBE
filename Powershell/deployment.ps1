@@ -488,3 +488,97 @@ function Remove-FromS3
 
     [Neon.Deployment.AwsCli]::S3Remove($targetUri, $recursive, $include, $exclude)
 }
+
+#------------------------------------------------------------------------------
+# Code signs an executable file with a code signing token.
+#
+# ARGUMENTS:
+#
+#   targetPath          - Specifies the path to the file being signed.
+#   provider            - Specifies the certificate provider, like: "eToken Base Cryptographic Provider"
+#   thumbprint          - Specifies the certificate's SHA1 thumbprint.</param>
+#   certBase64          - Specifies the base64 encoded public certificate (multi-line values are allowed).
+#   container           - Specifies the certificate container, like: "Sectigo_20220830143311"
+#   timestampUri        - pecifies the URI for the certificate timestamp service, like: http://timestamp.sectigo.com
+#   password            - Specifies the certificate password.
+#
+# REMARKS:
+#
+# WARNING! Be very careful when using this function with Extended Validation (EV) code signing 
+#          USB tokens.  Using an incorrect password can brick EV tokens since thay typically 
+#          allow only a very limited number of signing attempts with invalid passwords.
+#
+# This method uses the Windows version of <b>signtool.exe</b> embedded into the
+# the <b>Neon.Deployment</b> library and to perform the code signing and this 
+# tool runs only on Windows.
+
+function Sign-Program
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$targetPath,
+        [Parameter(Position=1, Mandatory=$true)]
+        [string]$provider,
+        [Parameter(Position=2, Mandatory=$true)]
+        [string]$thumprint,
+        [Parameter(Position=3, Mandatory=$true)]
+        [string]$certBase64,
+        [Parameter(Position=4, Mandatory=$true)]
+        [string]$container,
+        [Parameter(Position=5, Mandatory=$true)]
+        [string]$timestampUri,
+        [Parameter(Position=6, Mandatory=$true)]
+        [string]$password
+    )
+
+    [Neon.Deployment.CodeSigner]::SignProgram($targetPath, $provider, $thumprint, $certBase64, $container, $timestampUri, $password)
+}
+
+#------------------------------------------------------------------------------
+# Determines whether a code signing token is available on the current machine,
+# using the token information and password passed.
+#
+# ARGUMENTS:
+#
+#   provider            - Specifies the certificate provider, like: "eToken Base Cryptographic Provider"
+#   thumbprint          - Specifies the certificate's SHA1 thumbprint.</param>
+#   certBase64          - Specifies the base64 encoded public certificate (multi-line values are allowed).
+#   container           - Specifies the certificate container, like: "Sectigo_20220830143311"
+#   timestampUri        - pecifies the URI for the certificate timestamp service, like: http://timestamp.sectigo.com
+#   password            - Specifies the certificate password.
+#
+# REMARKS:
+#
+# WARNING! Be very careful when using this function with Extended Validation (EV) code signing 
+#          USB tokens.  Using an incorrect password can brick EV tokens since thay typically 
+#          allow only a very limited number of signing attempts with invalid passwords.
+#
+# This method uses the Windows version of <b>signtool.exe</b> embedded into the
+# the <b>Neon.Deployment</b> library and to perform the code signing and this 
+# tool runs only on Windows.
+#
+# RETURNS:
+#
+#   [$true] when the current machine is able to sign code using the parameters passed.
+
+function Sign-IsReady
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$provider,
+        [Parameter(Position=1, Mandatory=$true)]
+        [string]$thumprint,
+        [Parameter(Position=2, Mandatory=$true)]
+        [string]$certBase64,
+        [Parameter(Position=3, Mandatory=$true)]
+        [string]$container,
+        [Parameter(Position=4, Mandatory=$true)]
+        [string]$timestampUri,
+        [Parameter(Position=6, Mandatory=$true)]
+        [string]$password
+    )
+
+    return [Neon.Deployment.CodeSigner]::IsReady($targetPath, $provider, $thumprint, $certBase64, $container, $timestampUri, $password)
+}
