@@ -21,7 +21,7 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using Neon.BuildInfo;
 using Neon.Common;
 using Neon.Net;
 
@@ -46,30 +46,17 @@ namespace Neon.Kube
         /// </para>
         /// <list type="table">
         /// <item>
-        ///     <term><b>-alpha[.FEATURE][.##]</b></term>
+        ///     <term><b>-alpha[.##]</b></term>
         ///     <description>
         ///     <para>
         ///     Used for internal releases that are not meant to be consumed by the
-        ///     public.  FEATURE optionally specifies the feature being worked on and
-        ///     is typically set the name of the feature as specified in the GitHub
-        ///     feature branch; i.e. <b>FOO</b> from the feature branch <b>feature-FOO</b>.
-        ///     </para>
-        ///     <para>
-        ///     Individual developers may also set <b>FEATURE</b> to one of their private
-        ///     branches while work is in progress.
+        ///     public.
         ///     </para>
         ///     <para>
         ///     The <b>.##</b> part is optional and can be used when it's necessary to
-        ///     retain artifacts like container and node images for multiple internal
-        ///     feature releases.  This must include two digits so a leading "0" will
-        ///     be required for small numbers.
+        ///     retain artifacts like container and node images for multiple pre-releases.  
+        ///     This must include two digits so a leading "0" will be required for small numbers.
         ///     </para>
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>-master</b></term>
-        ///     <description>
-        ///     This is used for code in the <b>master</b> branch to avoid overwriting already published node/desktop images.
         ///     </description>
         /// </item>
         /// <item>
@@ -78,12 +65,12 @@ namespace Neon.Kube
         ///     <para>
         ///     This is used for public preview releases where NEONFORGE is not making
         ///     any short or long term support promises.  We may remove, change, or break
-        ///     features included in this release in subsequent releases.
+        ///     features included in this release for subsequent releases.
         ///     </para>
         ///     <para>
         ///     The <b>.##</b> part is optional and can be used when it's necessary to
         ///     retain artifacts like container and node images for multiple internal
-        ///     feature releases.  This must include two digits so a leading "0" will
+        ///     pre-releases.  This must include two digits so a leading "0" will
         ///     be required for small numbers.
         ///     </para>
         ///     </description>
@@ -94,13 +81,12 @@ namespace Neon.Kube
         ///     <para>
         ///     This is used for public preview releases where NEONFORGE is not making
         ///     any short or long term support promises.  We may remove, change, or break
-        ///     features included in this release in subsequent releases.
+        ///     features included in this release for subsequent releases.
         ///     </para>
         ///     <para>
         ///     The <b>.##</b> part is optional and can be used when it's necessary to
-        ///     retain artifacts like container and node images for multiple internal
-        ///     feature releases.  This must include two digits so a leading "0" will
-        ///     be required for small numbers.
+        ///     retain artifacts like container and node images for multiple pre-releases.
+        ///     This must include two digits so a leading "0" will be required for small numbers.
         ///     </para>
         ///     </description>
         /// </item>
@@ -115,22 +101,39 @@ namespace Neon.Kube
         ///     </para>
         ///     <para>
         ///     The <b>.##</b> part is optional and can be used when it's necessary to
-        ///     retain artifacts like container and node images for multiple internal
-        ///     feature releases.  This must include two digits so a leading "0" will
-        ///     be required for small numbers.
+        ///     retain artifacts like container and node images for multiple pre-releases.
+        ///     This must include two digits so a leading "0" will be required for small numbers.
         ///     </para>
         ///     </description>
         /// </item>
         /// <item>
         ///     <term><b>NONE</b></term>
         ///     <description>
-        ///     Generally available public releases do not include a prerelease part in
-        ///     their semantic version.
+        ///     Generally available non-preview public releases.
         ///     </description>
         /// </item>
         /// </list>
+        /// <para>
+        /// The neonCLOUD stage/publish tools will use this version as is when tagging
+        /// container images as well as node/desktop virtual machine images when publishing
+        /// <b>Neon.Kube</b> libraries build from a <b>release-*</b> branch.  Otherwise,
+        /// the tool will append the branch name to the release like:
+        /// </para>
+        /// <para>
+        /// 0.8.7-alpha.BRANCH
+        /// </para>
+        /// <note>
+        /// <b>IMPORTANT: </b>This convention allows multiple developers to work with their 
+        /// own versions of intermediate releases in parallel while avoiding merge conflicts 
+        /// caused by differing per-developer version numbers.
+        /// </note>
         /// </remarks>
         public const string NeonKube = "0.8.7-alpha";
+
+        /// <summary>
+        /// Returns the name of the branch from which this assembly was built.
+        /// </summary>
+        public const string BuildBranch = ThisAssembly.Git.Branch;
 
         /// <summary>
         /// Returns the prefix used for neonKUBE container tags.
@@ -138,10 +141,29 @@ namespace Neon.Kube
         public const string NeonKubeContainerImageTagPrefix = "neonkube-";
 
         /// <summary>
+        /// <para>
         /// Returns the container image tag for the current neonKUBE release.  This adds the
         /// <b>neonkube-</b> prefix to <see cref="NeonKube"/>.
+        /// </para>
+        /// <note>
+        /// This also includes the <b>.BRANCH</b> part when the assembly was built
+        /// from a non-release branch.
+        /// </note>
         /// </summary>
-        public const string NeonKubeContainerImageTag = NeonKubeContainerImageTagPrefix + NeonKube;
+        public static string NeonKubeContainerImageTag
+        {
+            get
+            {
+                var tag = NeonKubeContainerImageTagPrefix + NeonKube;
+
+                if (!BuildBranch.StartsWith("-release"))
+                {
+                    tag = $"{tag}.{BuildBranch}";
+                }
+
+                return tag;
+            }
+        } 
 
         /// <summary>
         /// The version of Kubernetes to be installed.

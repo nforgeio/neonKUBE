@@ -55,21 +55,26 @@ $publishAsPubic = $false
 #------------------------------------------------------------------------------
 # Global constants.
 
-# neonKUBE release Version.
+# neonKUBE cluster release version.
 
-$neonKUBE_Version = $(& "neon-build" read-version "$nkLib\Neon.Kube\KubeVersions.cs" NeonKube)
+$neonKUBE_Version = $(& neon-build read-version "$nkRoot\Lib\Neon.Kube\KubeVersions.cs" NeonKube)
 ThrowOnExitCode
 
-$neonKUBE_Tag = "neonkube-" + $neonKUBE_Version
+# neonKUBE container image tag.
+#
+# Note that we determine the currently checked-out Git branch for local neonKUBE 
+# repo.  If that's a release branch, then we'll just use the neonKUBE version,
+# otherwise, we'll append the branch name with a leading period to the tag.
+#
+# This helps to isolate container images between different branches so developers 
+# can work on different cluster images in parallel.
 
-# Override the common image tag if the [NEON_CONTAINER_TAG_OVERRIDE] is defined.\
-# This is used for development purposes.
+$neonKUBE_Tag   = "neonkube-" + $neonKUBE_Version
+$neonKubeBranch = GitBranch $env:NK_ROOT
 
-$tagOverride = $env:NEON_CONTAINER_TAG_OVERRIDE
-
-if (-not [System.String]::IsNullOrEmpty($tagOverride))
+if (-not $neonKubeBranch.StartsWith("release-"))
 {
-	$neonKUBE_Tag = $tagOverride
+	$neonKUBE_Tag = "$neonKUBE_Tag.$neonKubeBranch"
 }
 
 #------------------------------------------------------------------------------

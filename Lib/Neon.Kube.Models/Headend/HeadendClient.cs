@@ -43,7 +43,8 @@ namespace Neon.Kube.Models.Headend
             [FromQuery] string hostingEnvironment,
             [FromQuery] string version,
             [FromQuery] CpuArchitecture architecture,
-            [FromQuery] bool useStaged);
+            [FromQuery] bool useStaged,
+            [FromQuery] string branch);
 
         [HttpGet]
         [Route("image/desktop")]
@@ -51,7 +52,8 @@ namespace Neon.Kube.Models.Headend
             [FromQuery] string hostingEnvironment,
             [FromQuery] string version,
             [FromQuery] CpuArchitecture architecture,
-            [FromQuery] bool useStaged);
+            [FromQuery] bool useStaged,
+            [FromQuery] string branch);
 
         [HttpGet]
         [Route("image/node/azure")]

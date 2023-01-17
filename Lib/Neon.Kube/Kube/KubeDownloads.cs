@@ -22,7 +22,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-
+using Neon.BuildInfo;
 using Neon.Collections;
 using Neon.Common;
 using Neon.Kube.Clients;
@@ -124,6 +124,15 @@ namespace Neon.Kube
 
             if (!setupDebugMode)
             {
+                var bucketUri = useStaged ? NeonKubeStageBucketUri : NeonKubeReleaseBucketUri;
+                var branch    = ThisAssembly.Git.Branch;
+                var version   = KubeVersions.NeonKube;
+
+                if (!branch.StartsWith("release-"))
+                {
+                    version = $"{version}.{branch}";
+                }
+
                 //#############################################################
                 // #debug(jefflill): DELETE THIS!
                 //
@@ -165,15 +174,13 @@ namespace Neon.Kube
                         break;
                 }
 
-                var bucketUri = useStaged ? NeonKubeStageBucketUri : NeonKubeReleaseBucketUri;
-
-                return $"{bucketUri}/images/{hostingEnvironment.ToMemberString()}/node/neonkube-node-{KubeVersions.NeonKube}.{hostingEnvironment.ToMemberString()}.{architecture}.{extension}.gz.manifest";
+                return $"{bucketUri}/images/{hostingEnvironment.ToMemberString()}/node/neonkube-node-{version}.{hostingEnvironment.ToMemberString()}.{architecture}.{extension}.gz.manifest";
 
                 //#############################################################
 
                 using (var headendClient = HeadendClient.Create())
                 {
-                    return await headendClient.ClusterSetup.GetNodeImageManifestUriAsync(hostingEnvironment.ToMemberString(), KubeVersions.NeonKube, architecture, useStaged);
+                    return await headendClient.ClusterSetup.GetNodeImageManifestUriAsync(hostingEnvironment.ToMemberString(), version, architecture, useStaged, ThisAssembly.Git.Branch);
                 }
             }
 
@@ -207,6 +214,15 @@ namespace Neon.Kube
             CpuArchitecture     architecture = CpuArchitecture.amd64,
             bool                useStaged    = false)
         {
+            var bucketUri = useStaged ? NeonKubeStageBucketUri : NeonKubeReleaseBucketUri;
+            var branch    = ThisAssembly.Git.Branch;
+            var version   = KubeVersions.NeonKube;
+
+            if (!branch.StartsWith("release-"))
+            {
+                version = $"{version}.{branch}";
+            }
+
             //#################################################################
             // #debug(jefflill): DELETE THIS!
             //
@@ -248,15 +264,13 @@ namespace Neon.Kube
                     break;
             }
 
-            var bucketUri = useStaged ? NeonKubeStageBucketUri : NeonKubeReleaseBucketUri;
-
-            return $"{bucketUri}/images/{hostingEnvironment.ToMemberString()}/desktop/neonkube-desktop-{KubeVersions.NeonKube}.{hostingEnvironment.ToMemberString()}.{architecture}.{extension}.gz.manifest";
+            return $"{bucketUri}/images/{hostingEnvironment.ToMemberString()}/desktop/neonkube-desktop-{version}.{hostingEnvironment.ToMemberString()}.{architecture}.{extension}.gz.manifest";
 
             //#################################################################
 
             using (var headendClient = HeadendClient.Create())
             {
-                return await headendClient.ClusterSetup.GetNodeImageManifestUriAsync(hostingEnvironment.ToMemberString(), KubeVersions.NeonKube, architecture, useStaged);
+                return await headendClient.ClusterSetup.GetNodeImageManifestUriAsync(hostingEnvironment.ToMemberString(), KubeVersions.NeonKube, architecture, useStaged, ThisAssembly.Git.Branch);
             }
         }
     }

@@ -576,7 +576,7 @@ function Sign-IsReady
         [string]$container,
         [Parameter(Position=4, Mandatory=$true)]
         [string]$timestampUri,
-        [Parameter(Position=6, Mandatory=$true)]
+        [Parameter(Position=5, Mandatory=$true)]
         [string]$password
     )
 
