@@ -322,7 +322,6 @@ function Log-ImageBuild
 # Makes any text files that will be included in Docker images Linux safe by
 # converting CRLF line endings to LF and replacing TABs with spaces.
 
-unix-text --recursive $image_root\Dockerfile 
 unix-text --recursive $image_root\*.sh 
 unix-text --recursive $image_root\*.cfg 
 unix-text --recursive $image_root\*.js 
