@@ -496,7 +496,6 @@ function Remove-FromS3
 #
 #   targetPath          - Specifies the path to the file being signed.
 #   provider            - Specifies the certificate provider, like: "eToken Base Cryptographic Provider"
-#   thumbprint          - Specifies the certificate's SHA1 thumbprint.</param>
 #   certBase64          - Specifies the base64 encoded public certificate (multi-line values are allowed).
 #   container           - Specifies the certificate container, like: "Sectigo_20220830143311"
 #   timestampUri        - pecifies the URI for the certificate timestamp service, like: http://timestamp.sectigo.com
@@ -512,7 +511,7 @@ function Remove-FromS3
 # the <b>Neon.Deployment</b> library and to perform the code signing and this 
 # tool runs only on Windows.
 
-function Sign-Program
+function Sign-Binary
 {
     [CmdletBinding()]
     param (
@@ -521,18 +520,16 @@ function Sign-Program
         [Parameter(Position=1, Mandatory=$true)]
         [string]$provider,
         [Parameter(Position=2, Mandatory=$true)]
-        [string]$thumprint,
-        [Parameter(Position=3, Mandatory=$true)]
         [string]$certBase64,
-        [Parameter(Position=4, Mandatory=$true)]
+        [Parameter(Position=3, Mandatory=$true)]
         [string]$container,
-        [Parameter(Position=5, Mandatory=$true)]
+        [Parameter(Position=4, Mandatory=$true)]
         [string]$timestampUri,
-        [Parameter(Position=6, Mandatory=$true)]
+        [Parameter(Position=5, Mandatory=$true)]
         [string]$password
     )
 
-    [Neon.Deployment.CodeSigner]::SignProgram($targetPath, $provider, $thumprint, $certBase64, $container, $timestampUri, $password)
+    [Neon.Deployment.CodeSigner]::SignBinary($targetPath, $provider, $thumprint, $certBase64, $container, $timestampUri, $password)
 }
 
 #------------------------------------------------------------------------------
@@ -542,7 +539,6 @@ function Sign-Program
 # ARGUMENTS:
 #
 #   provider            - Specifies the certificate provider, like: "eToken Base Cryptographic Provider"
-#   thumbprint          - Specifies the certificate's SHA1 thumbprint.</param>
 #   certBase64          - Specifies the base64 encoded public certificate (multi-line values are allowed).
 #   container           - Specifies the certificate container, like: "Sectigo_20220830143311"
 #   timestampUri        - pecifies the URI for the certificate timestamp service, like: http://timestamp.sectigo.com
@@ -569,14 +565,12 @@ function Sign-IsReady
         [Parameter(Position=0, Mandatory=$true)]
         [string]$provider,
         [Parameter(Position=1, Mandatory=$true)]
-        [string]$thumprint,
-        [Parameter(Position=2, Mandatory=$true)]
         [string]$certBase64,
-        [Parameter(Position=3, Mandatory=$true)]
+        [Parameter(Position=2, Mandatory=$true)]
         [string]$container,
-        [Parameter(Position=4, Mandatory=$true)]
+        [Parameter(Position=3, Mandatory=$true)]
         [string]$timestampUri,
-        [Parameter(Position=5, Mandatory=$true)]
+        [Parameter(Position=4, Mandatory=$true)]
         [string]$password
     )
 
