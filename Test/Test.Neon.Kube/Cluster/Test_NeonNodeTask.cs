@@ -65,7 +65,7 @@ namespace TestKube
                 // Register a [ProfileClient] so tests will be able to pick
                 // up secrets and profile information from [neon-assistant].
 
-                NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfileClient());
+                NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfile());
             }
         }
 

@@ -48,21 +48,21 @@ if (-not [System.String]::IsNullOrEmpty($env:NEON_ASSISTANT_HOME))
 }
 
 #------------------------------------------------------------------------------
-# Returns a global [Neon.Deployment.MaintainerProfileClient] instance creating one if necessary.
+# Returns a global [Neon.Deployment.MaintainerProfile] instance creating one if necessary.
 # This can be used to query the [neon-assistant] installed on the workstation for
 # secret passwords, secret values, as well as profile values.  The client is thread-safe,
 # can be used multiple times, and does not need to be disposed.
 
 $global:__neonProfileClient = $null
 
-function Get-MaintainerProfileClient
+function Get-MaintainerProfile
 {
     if ($null -ne $global:__neonProfileClient)
     {
         return $global:__neonProfileClient
     }
 
-    $global:__neonProfileClient = New-Object "Neon.Deployment.MaintainerProfileClient"
+    $global:__neonProfileClient = New-Object "Neon.Deployment.MaintainerProfile"
 
     return $global:__neonProfileClient
 }
@@ -87,9 +87,9 @@ function Get-ProfileValue
         [bool]$nullOnNotFound = $false
     )
 
-    $client = Get-MaintainerProfileClient
+    $profile = Get-MaintainerProfile
 
-    return $client.GetProfileValue($name, $nullOnNotFound)
+    return $profile.GetProfileValue($name, $nullOnNotFound)
 }
 
 #------------------------------------------------------------------------------
@@ -117,9 +117,9 @@ function Get-SecretPassword
         [bool]$nullOnNotFound = $false
     )
 
-    $client = Get-MaintainerProfileClient
+    $profile = Get-MaintainerProfile
 
-    return $client.GetSecretPassword($name, $vault, $masterPassword, $nullOnNotFound)
+    return $profile.GetSecretPassword($name, $vault, $masterPassword, $nullOnNotFound)
 }
 
 #------------------------------------------------------------------------------
@@ -147,9 +147,9 @@ function Get-SecretValue
         [bool]$nullOnNotFound = $false
     )
 
-    $client = Get-MaintainerProfileClient
+    $profile = Get-MaintainerProfile
 
-    return $client.GetSecretValue($name, $vault, $masterPassword, $nullOnNotFound)
+    return $profile.GetSecretValue($name, $vault, $masterPassword, $nullOnNotFound)
 }
 
 #------------------------------------------------------------------------------
@@ -182,10 +182,10 @@ function Import-AwsCliCredentials
         return  # Already set
     }
 
-    $client = Get-MaintainerProfileClient
+    $profile = Get-MaintainerProfile
 
-    $env:AWS_ACCESS_KEY_ID     = $client.GetSecretPassword("$secretName[ACCESS_KEY_ID]", $vault, $masterPassword)
-    $env:AWS_SECRET_ACCESS_KEY = $client.GetSecretPassword("$secretName[SECRET_ACCESS_KEY]", $vault, $masterPassword)
+    $env:AWS_ACCESS_KEY_ID     = $profile.GetSecretPassword("$secretName[ACCESS_KEY_ID]", $vault, $masterPassword)
+    $env:AWS_SECRET_ACCESS_KEY = $profile.GetSecretPassword("$secretName[SECRET_ACCESS_KEY]", $vault, $masterPassword)
 }
 
 #------------------------------------------------------------------------------
@@ -228,9 +228,9 @@ function Import-GitHubCredentials
         return  # Already set
     }
 
-    $client = Get-MaintainerProfileClient
+    $profile = Get-MaintainerProfile
 
-    $env:GITHUB_PAT = $client.GetSecretPassword($name, $vault, $masterPassword)
+    $env:GITHUB_PAT = $profile.GetSecretPassword($name, $vault, $masterPassword)
 }
 
 #------------------------------------------------------------------------------

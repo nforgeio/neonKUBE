@@ -180,7 +180,7 @@ OPTIONS:
             // We need to inject an implementation for [PreprocessReader] so it will be able to
             // perform the lookups.
 
-            NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfileClient());
+            NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfile());
 
             // Handle the [--remove-templates] option.
 
