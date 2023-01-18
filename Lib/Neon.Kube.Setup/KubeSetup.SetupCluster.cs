@@ -229,7 +229,7 @@ namespace Neon.Kube.Setup
                             throw new Exception($"Node image is not stamped with the image version file: {KubeConst.ImageVersionPath}");
                         }
 
-                        if (imageVersion != SemanticVersion.Parse(KubeVersions.NeonKube))
+                        if (!imageVersion.ToString().StartsWith(KubeVersions.NeonKube))
                         {
                             throw new Exception($"Node image version [{imageVersion}] does not match the neonKUBE version [{KubeVersions.NeonKube}] implemented by the current build.");
                         }

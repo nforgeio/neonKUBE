@@ -133,7 +133,7 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the name of the branch from which this assembly was built.
         /// </summary>
-        public const string BuildBranch = ThisAssembly.Git.Branch;
+        public const string BuildBranch = BuildInfo.ThisAssembly.Git.Branch;
 
         /// <summary>
         /// Returns the prefix used for neonKUBE container tags.
