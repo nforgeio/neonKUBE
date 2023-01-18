@@ -120,8 +120,18 @@ OPTIONS:
 
                                   NOTE: This is required for [--debug]
 
-    --use-staged                - MAINTAINERS ONLY: Specifies that the staged image 
+    --use-staged[=branch]       - MAINTAINERS ONLY: Specifies that the staged image 
                                   should be used as opposed to the public release image.
+
+                                  [--use-staged] by itself will prepare the cluster using
+                                  the staged neonKUBE node image whose version is a 
+                                  combination of the neonKUBE version along with the 
+                                  name of the neonKUBE branch when the libraries were
+                                  built.
+
+                                  [--use-staged=branch] allows you to override the branch
+                                  so you can base your cluster off of a specific image
+                                  build.
 ";
 
         /// <inheritdoc/>
@@ -192,6 +202,12 @@ OPTIONS:
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
             var disablePending    = commandLine.HasOption("--disable-pending");
             var useStaged         = commandLine.HasOption("--use-staged");
+            var stageBranch       = commandLine.GetOption("--use-staged", KubeVersions.BuildBranch);
+
+            if (useStaged && string.IsNullOrEmpty(stageBranch))
+            {
+                stageBranch = KubeVersions.BuildBranch;
+            }
 
             if (!int.TryParse(maxParallelOption, out var maxParallel) || maxParallel <= 0)
             {
@@ -265,7 +281,7 @@ OPTIONS:
 
                 if (string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath))
                 {
-                    nodeImageUri = await KubeDownloads.GetNodeImageUriAsync(clusterDefinition.Hosting.Environment, useStaged: useStaged);
+                    nodeImageUri = await KubeDownloads.GetNodeImageUriAsync(clusterDefinition.Hosting.Environment, stageBranch: stageBranch);
                 }
             }
 
