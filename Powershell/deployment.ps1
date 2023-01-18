@@ -574,5 +574,5 @@ function Sign-IsReady
         [string]$password
     )
 
-    return [Neon.Deployment.CodeSigner]::IsReady($targetPath, $provider, $thumprint, $certBase64, $container, $timestampUri, $password)
+    return [Neon.Deployment.CodeSigner]::IsReady($targetPath, $provider, $certBase64, $container, $timestampUri, $password)
 }
