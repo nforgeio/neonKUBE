@@ -689,179 +689,175 @@ namespace Neon.Kube.Operator
                 {
                     await SyncContext.Clear;
 
-                    await lockProvider.WaitAsync(@event.Value.Uid());
-
                     ResourceControllerResult result = null;
 
                     var resource     = @event.Value;
                     var resourceName = resource.Metadata.Name;
 
-                    try
+                    await using (await lockProvider.WaitAsync(@event.Value.Uid()))
                     {
-                        var cachedEntity = resourceCache.Upsert(resource, out var modifiedEventType);
-
-                        if (modifiedEventType == ModifiedEventType.Finalizing)
+                        try
                         {
-                            @event.Type = WatchEventType.Modified;
-                        }
+                            var cachedEntity = resourceCache.Upsert(resource, out var modifiedEventType);
 
-                        switch (@event.Type)
-                        {
-                            case WatchEventType.Added:
+                            if (modifiedEventType == ModifiedEventType.Finalizing)
+                            {
+                                @event.Type = WatchEventType.Modified;
+                            }
 
-                                try
-                                {
-                                    metrics.ReconcileCounter?.Inc();
+                            switch (@event.Type)
+                            {
+                                case WatchEventType.Added:
 
-                                    result = await CreateController().ReconcileAsync(resource);
-
-                                }
-                                catch (Exception e)
-                                {
-                                    metrics.ReconcileErrorCounter.Inc();
-                                    logger.LogErrorEx(() => $"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Retrying... Attempt [{@event.Attempt}]");
-
-                                    if (@event.Attempt < options.ErrorMaxRetryCount)
+                                    try
                                     {
-                                        @event.Attempt += 1;
-                                        resourceCache.Remove(resource);
-                                        await eventQueue.RequeueAsync(@event, watchEventType: WatchEventType.Modified);
-                                        return;
+                                        metrics.ReconcileCounter?.Inc();
+
+                                        result = await CreateController().ReconcileAsync(resource);
+
                                     }
-                                }
+                                    catch (Exception e)
+                                    {
+                                        metrics.ReconcileErrorCounter.Inc();
+                                        logger.LogErrorEx(() => $"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Retrying... Attempt [{@event.Attempt}]");
 
-                                break;
-
-                            case WatchEventType.Deleted:
-
-                                try
-                                {
-                                    metrics.DeleteCounter?.Inc();
-                                    await CreateController().DeletedAsync(resource);
-
-                                    resourceCache.Remove(resource);
-                                }
-                                catch (Exception e)
-                                {
-                                    metrics.DeleteErrorCounter?.Inc();
-                                    logger.LogErrorEx(e);
-                                }
-
-                                break;
-
-                            case WatchEventType.Modified:
-
-                                switch (modifiedEventType)
-                                {
-                                    case ModifiedEventType.Other:
-
-                                        try
+                                        if (@event.Attempt < options.ErrorMaxRetryCount)
                                         {
-                                            metrics.ReconcileCounter?.Inc();
-
-                                            result = await CreateController().ReconcileAsync(resource);
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            metrics.ReconcileErrorCounter?.Inc();
-                                            logger.LogErrorEx(e);
-
-                                            if (@event.Attempt < options.ErrorMaxRetryCount)
-                                            {
-                                                logger.LogErrorEx(() => $"Event type [{modifiedEventType}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Retrying... Attempt [{@event.Attempt}]");
-
-                                                @event.Attempt += 1;
-                                                resourceCache.Remove(resource);
-                                                await eventQueue.RequeueAsync(@event, watchEventType: WatchEventType.Modified);
-                                                return;
-                                            }
-                                        }
-                                        break;
-
-                                    case ModifiedEventType.Finalizing:
-
-                                        try
-                                        {
-                                            metrics.FinalizeCounter?.Inc();
-
-                                            if (!resourceCache.IsFinalizing(resource))
-                                            {
-                                                resourceCache.AddFinalizer(resource);
-
-                                                await serviceProvider.GetRequiredService<IFinalizerManager<TEntity>>()
-                                                    .FinalizeAsync(resource);
-                                            }
-
-                                            resourceCache.RemoveFinalizer(resource);
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            metrics.FinalizeErrorCounter?.Inc();
-                                            logger.LogErrorEx(e);
-
-                                            resourceCache.RemoveFinalizer(resource);
-
-                                            if (@event.Attempt < options.ErrorMaxRetryCount)
-                                            {
-                                                logger.LogErrorEx(() => $"Event type [{modifiedEventType}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Retrying... Attempt [{@event.Attempt}]");
-
-                                                @event.Attempt += 1;
-                                                resourceCache.Remove(resource);
-                                                await eventQueue.RequeueAsync(@event, watchEventType: WatchEventType.Modified);
-                                                return;
-                                            }
-                                        }
-                                        break;
-
-                                    case ModifiedEventType.StatusUpdate:
-
-                                        if (statusGetter == null)
-                                        {
+                                            @event.Attempt += 1;
+                                            resourceCache.Remove(resource);
+                                            await eventQueue.RequeueAsync(@event, watchEventType: WatchEventType.Modified);
                                             return;
                                         }
+                                    }
 
-                                        var newStatus = statusGetter.Invoke(resource, Array.Empty<object>());
-                                        var newStatusJson = newStatus == null ? null : JsonSerializer.Serialize(newStatus);
+                                    break;
 
-                                        var oldStatus = statusGetter.Invoke(cachedEntity, Array.Empty<object>());
-                                        var oldStatusJson = oldStatus == null ? null : JsonSerializer.Serialize(oldStatus);
+                                case WatchEventType.Deleted:
 
-                                        if (newStatusJson != oldStatusJson)
-                                        {
+                                    try
+                                    {
+                                        metrics.DeleteCounter?.Inc();
+                                        await CreateController().DeletedAsync(resource);
+
+                                        resourceCache.Remove(resource);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        metrics.DeleteErrorCounter?.Inc();
+                                        logger.LogErrorEx(e);
+                                    }
+
+                                    break;
+
+                                case WatchEventType.Modified:
+
+                                    switch (modifiedEventType)
+                                    {
+                                        case ModifiedEventType.Other:
+
                                             try
                                             {
-                                                metrics.StatusModifyCounter?.Inc();
-                                                await CreateController().StatusModifiedAsync(resource);
+                                                metrics.ReconcileCounter?.Inc();
+
+                                                result = await CreateController().ReconcileAsync(resource);
                                             }
                                             catch (Exception e)
                                             {
-                                                metrics.StatusModifyErrorCounter?.Inc();
+                                                metrics.ReconcileErrorCounter?.Inc();
                                                 logger.LogErrorEx(e);
+
+                                                if (@event.Attempt < options.ErrorMaxRetryCount)
+                                                {
+                                                    logger.LogErrorEx(() => $"Event type [{modifiedEventType}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Retrying... Attempt [{@event.Attempt}]");
+
+                                                    @event.Attempt += 1;
+                                                    resourceCache.Remove(resource);
+                                                    await eventQueue.RequeueAsync(@event, watchEventType: WatchEventType.Modified);
+                                                    return;
+                                                }
                                             }
-                                        }
+                                            break;
 
-                                        break;
+                                        case ModifiedEventType.Finalizing:
 
-                                    case ModifiedEventType.FinalizerUpdate:
-                                    default:
-                                        
-                                        break;
-                                }
+                                            try
+                                            {
+                                                metrics.FinalizeCounter?.Inc();
 
-                                break;
+                                                if (!resourceCache.IsFinalizing(resource))
+                                                {
+                                                    resourceCache.AddFinalizer(resource);
+
+                                                    await serviceProvider.GetRequiredService<IFinalizerManager<TEntity>>()
+                                                        .FinalizeAsync(resource);
+                                                }
+
+                                                resourceCache.RemoveFinalizer(resource);
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                metrics.FinalizeErrorCounter?.Inc();
+                                                logger.LogErrorEx(e);
+
+                                                resourceCache.RemoveFinalizer(resource);
+
+                                                if (@event.Attempt < options.ErrorMaxRetryCount)
+                                                {
+                                                    logger.LogErrorEx(() => $"Event type [{modifiedEventType}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Retrying... Attempt [{@event.Attempt}]");
+
+                                                    @event.Attempt += 1;
+                                                    resourceCache.Remove(resource);
+                                                    await eventQueue.RequeueAsync(@event, watchEventType: WatchEventType.Modified);
+                                                    return;
+                                                }
+                                            }
+                                            break;
+
+                                        case ModifiedEventType.StatusUpdate:
+
+                                            if (statusGetter == null)
+                                            {
+                                                return;
+                                            }
+
+                                            var newStatus = statusGetter.Invoke(resource, Array.Empty<object>());
+                                            var newStatusJson = newStatus == null ? null : JsonSerializer.Serialize(newStatus);
+
+                                            var oldStatus = statusGetter.Invoke(cachedEntity, Array.Empty<object>());
+                                            var oldStatusJson = oldStatus == null ? null : JsonSerializer.Serialize(oldStatus);
+
+                                            if (newStatusJson != oldStatusJson)
+                                            {
+                                                try
+                                                {
+                                                    metrics.StatusModifyCounter?.Inc();
+                                                    await CreateController().StatusModifiedAsync(resource);
+                                                }
+                                                catch (Exception e)
+                                                {
+                                                    metrics.StatusModifyErrorCounter?.Inc();
+                                                    logger.LogErrorEx(e);
+                                                }
+                                            }
+
+                                            break;
+
+                                        case ModifiedEventType.FinalizerUpdate:
+                                        default:
+
+                                            break;
+                                    }
+
+                                    break;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            logger.LogCriticalEx(e);
+                            logger.LogCriticalEx("Cannot recover from exception within watch loop.  Terminating process.");
+                            Environment.Exit(1);
                         }
                     }
-                    catch (Exception e)
-                    {
-                        logger.LogCriticalEx(e);
-                        logger.LogCriticalEx("Cannot recover from exception within watch loop.  Terminating process.");
-                        Environment.Exit(1);
-                    }
-                    finally
-                    {
-                        lockProvider.Release(resource.Uid());
-                    }
-
 
                     switch (result)
                     {

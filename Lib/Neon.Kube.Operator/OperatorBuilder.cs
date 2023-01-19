@@ -26,6 +26,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.ObjectPool;
 
 using Neon.Diagnostics;
 
@@ -73,8 +74,8 @@ namespace Neon.Kube.Operator
             Services.AddSingleton(componentRegister);
             Services.AddSingleton<IFinalizerBuilder, FinalizerBuilder>();
             Services.AddTransient(typeof(IFinalizerManager<>), typeof(FinalizerManager<>));
-            Services.AddScoped(typeof(IResourceCache<>), typeof(ResourceCache<>));
-            Services.AddScoped(typeof(ILockProvider<>), typeof(LockProvider<>));
+            Services.AddSingleton(typeof(IResourceCache<>), typeof(ResourceCache<>));
+            Services.AddSingleton(typeof(ILockProvider<>), typeof(LockProvider<>));
             Services.AddHostedService<ResourceControllerManager>();
 
             Services.AddRouting();
