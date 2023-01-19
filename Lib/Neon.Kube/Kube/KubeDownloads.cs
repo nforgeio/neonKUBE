@@ -127,64 +127,6 @@ namespace Neon.Kube
             CpuArchitecture     architecture = CpuArchitecture.amd64,
             string              stageBranch  = null)
         {
-            //#############################################################
-            // #debug(jefflill): DELETE THIS!
-            //
-            // Delete this after the headend service has been redeployed with the changes for:
-            //
-            //      https://github.com/nforgeio/neonCLOUD/issues/323
-
-            var bucketUri = !string.IsNullOrEmpty(stageBranch) ? NeonKubeStageBucketUri : NeonKubeReleaseBucketUri;
-            var version   = KubeVersions.NeonKube;
-
-            if (!string.IsNullOrEmpty(stageBranch) && !stageBranch.StartsWith("release-"))
-            {
-                stageBranch ??= KubeVersions.BuildBranch;
-
-                if (!stageBranch.StartsWith("release-"))
-                {
-                    version = $"{version}.{stageBranch}";
-                }
-            }
-
-            var extension = string.Empty;
-
-            switch (hostingEnvironment)
-            {
-                case HostingEnvironment.HyperV:
-
-                    extension = "vhdx";
-                    break;
-
-                case HostingEnvironment.XenServer:
-
-                    extension = "xva";
-                    break;
-
-                default:
-
-                    Covenant.Assert(false, $"[{nameof(hostingEnvironment)}={hostingEnvironment}] is not available from this method.");
-                    break;
-            }
-
-            switch (architecture)
-            {
-                case CpuArchitecture.amd64:
-
-                    // Supported.
-
-                    break;
-
-                default:
-
-                    Covenant.Assert(false, $"[{nameof(architecture)}={architecture}] is not supported.");
-                    break;
-            }
-
-            return $"{bucketUri}/images/{hostingEnvironment.ToMemberString()}/node/neonkube-node-{version}.{hostingEnvironment.ToMemberString()}.{architecture}.{extension}.gz.manifest";
-
-            //#############################################################
-
             using (var headendClient = HeadendClient.Create())
             {
                 return await headendClient.ClusterSetup.GetNodeImageManifestUriAsync(hostingEnvironment.ToMemberString(), version, architecture, stageBranch);
@@ -228,59 +170,6 @@ namespace Neon.Kube
             CpuArchitecture     architecture = CpuArchitecture.amd64,
             string              stageBranch  = null)
         {
-            //#################################################################
-            // #debug(jefflill): DELETE THIS!
-            //
-            // Delete this after the headend service has been redeployed with the changes for:
-            //
-            //      https://github.com/nforgeio/neonCLOUD/issues/323
-
-            var bucketUri = !string.IsNullOrEmpty(stageBranch) ? NeonKubeStageBucketUri : NeonKubeReleaseBucketUri;
-            var version   = KubeVersions.NeonKube;
-
-            if (!string.IsNullOrEmpty(stageBranch) && !stageBranch.StartsWith("release-"))
-            {
-                version = $"{version}.{stageBranch}";
-            }
-
-            var extension = string.Empty;
-
-            switch (hostingEnvironment)
-            {
-                case HostingEnvironment.HyperV:
-
-                    extension = "vhdx";
-                    break;
-
-                case HostingEnvironment.XenServer:
-
-                    extension = "xva";
-                    break;
-
-                default:
-
-                    Covenant.Assert(false, $"[{nameof(hostingEnvironment)}={hostingEnvironment}] is not available from this method.");
-                    break;
-            }
-
-            switch (architecture)
-            {
-                case CpuArchitecture.amd64:
-
-                    // Supported.
-
-                    break;
-
-                default:
-
-                    Covenant.Assert(false, $"[{nameof(architecture)}={architecture}] is not supported.");
-                    break;
-            }
-
-            return $"{bucketUri}/images/{hostingEnvironment.ToMemberString()}/desktop/neonkube-desktop-{version}.{hostingEnvironment.ToMemberString()}.{architecture}.{extension}.gz.manifest";
-
-            //#################################################################
-
             using (var headendClient = HeadendClient.Create())
             {
                 return await headendClient.ClusterSetup.GetNodeImageManifestUriAsync(hostingEnvironment.ToMemberString(), KubeVersions.NeonKube, architecture, stageBranch);
