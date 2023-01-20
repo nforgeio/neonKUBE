@@ -1607,23 +1607,38 @@ done
 ");
                     var scriptString = helmChartScript.ToString();
 
-                    await NeonHelper.WaitForAsync(
-                            async () =>
-                            {
-                                try
-                                {
-                                    SudoCommand(CommandBundle.FromScript(scriptString), RunOptions.FaultOnError).EnsureSuccess();
+                    try
+                    {
 
-                                    return await Task.FromResult(true);
-                                }
-                                catch
+                        await NeonHelper.WaitForAsync(
+                                async () =>
                                 {
-                                    return await Task.FromResult(false);
-                                }
-                            },
-                            timeout: TimeSpan.FromSeconds(300),
-                            pollInterval: TimeSpan.FromSeconds(1),
-                            cancellationToken: controller.CancellationToken);
+                                    try
+                                    {
+                                        SudoCommand(CommandBundle.FromScript(scriptString), RunOptions.FaultOnError).EnsureSuccess();
+
+                                        return await Task.FromResult(true);
+                                    }
+                                    catch
+                                    {
+                                        return await Task.FromResult(false);
+                                    }
+                                },
+                                timeout: TimeSpan.FromSeconds(300),
+                                pollInterval: TimeSpan.FromSeconds(1),
+                                cancellationToken: controller.CancellationToken);
+                    }
+                    catch(Exception e)
+                    {
+                        controller.LogProgressError($"Failed to install helm chart {@namespace}/{releaseName}.");
+                        controller.LogProgressError(e.Message);
+
+                        var status = SudoCommand($"helm status {releaseName} --namespace {@namespace} --show-desc", RunOptions.FaultOnError).EnsureSuccess();
+
+                        controller.LogProgressError(status.AllText);
+
+                        throw;
+                    }
                 });
         }
     }

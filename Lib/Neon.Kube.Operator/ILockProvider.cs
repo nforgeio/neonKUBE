@@ -42,7 +42,7 @@ namespace Neon.Kube.Operator
         /// </summary>
         /// <param name="entityId"></param>
         /// <returns></returns>
-        Task WaitAsync(string entityId);
+        Task<IAsyncDisposable> WaitAsync(string entityId);
 
         /// <summary>
         /// Releases a lock on a specific resource.

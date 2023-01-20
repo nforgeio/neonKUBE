@@ -25,6 +25,7 @@ using System.Threading.Tasks;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.ObjectPool;
 
 using Neon.Diagnostics;
 using Neon.Tasks;
@@ -41,7 +42,21 @@ namespace Neon.Kube.Operator
     internal class LockProvider<TEntity> : ILockProvider<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
     {
+        private static readonly ObjectPool<SemaphoreSlim> semaphorePool = new DefaultObjectPool<SemaphoreSlim>(new SemaphoreSlimPooledObjectPolicy(), 20);
+        private bool isDisposed;
+
         static readonly ConcurrentDictionary<string, SemaphoreSlim> lockDictionary = new ConcurrentDictionary<string, SemaphoreSlim>();
+
+        /// <inheritdoc/>
+        public ValueTask DisposeAsync()
+        {
+            if (isDisposed)
+                return ValueTask.CompletedTask;
+
+            isDisposed = true;
+
+            return ValueTask.CompletedTask;
+        }
 
         /// <inheritdoc/>
         public void Release(string entityId)
@@ -51,16 +66,60 @@ namespace Neon.Kube.Operator
             if (lockDictionary.TryGetValue(entityId, out semaphore))
             {
                 semaphore.Release();
+                semaphorePool.Return(semaphore);
                 lockDictionary.TryRemove(entityId, out _);
             }
         }
 
         /// <inheritdoc/>
-        public async Task WaitAsync(string entityId)
+        public async Task<IAsyncDisposable> WaitAsync(string entityId)
         {
-            var semaphore = lockDictionary.GetOrAdd(entityId, new SemaphoreSlim(1, 1));
+            if (isDisposed)
+                throw new ObjectDisposedException(nameof(LockProvider<TEntity>));
+
+
+            var semaphore = lockDictionary.GetOrAdd(entityId, semaphorePool.Get());
 
             await semaphore.WaitAsync();
+
+            return new SafeSemaphoreRelease(semaphore, this);
+        }
+
+        private struct SafeSemaphoreRelease : IAsyncDisposable, IDisposable
+        {
+            private SemaphoreSlim semaphore;
+
+            public SafeSemaphoreRelease(SemaphoreSlim semaphore, LockProvider<TEntity> lockProvider)
+            {
+                this.semaphore = semaphore;
+            }
+
+            public ValueTask DisposeAsync()
+            {
+                semaphore.Release();
+                semaphorePool.Return(semaphore);
+
+                return ValueTask.CompletedTask;
+            }
+
+            public void Dispose()
+            {
+                semaphore.Release();
+                semaphorePool.Return(semaphore);
+            }
+        }
+
+        private class SemaphoreSlimPooledObjectPolicy : PooledObjectPolicy<SemaphoreSlim>
+        {
+            public override SemaphoreSlim Create()
+            {
+                return new SemaphoreSlim(1, 1);
+            }
+
+            public override bool Return(SemaphoreSlim obj)
+            {
+                return true;
+            }
         }
     }
 }
