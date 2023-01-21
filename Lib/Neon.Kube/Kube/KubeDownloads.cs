@@ -131,7 +131,7 @@ namespace Neon.Kube
         {
             using (var headendClient = HeadendClient.Create())
             {
-                return await headendClient.ClusterSetup.GetNodeImageManifestUriAsync(hostingEnvironment.ToMemberString(), version, architecture, stageBranch);
+                return await headendClient.ClusterSetup.GetNodeImageManifestUriAsync(hostingEnvironment.ToMemberString(), KubeVersions.NeonKube, architecture, stageBranch);
             }
         }
 

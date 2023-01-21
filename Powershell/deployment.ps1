@@ -201,13 +201,13 @@ function Remove-AwsCliCredentials
 }
 
 #------------------------------------------------------------------------------
-# Retrieves the GITHUB_PAT (personal access token) from from 1Password 
-# and sets the GITHUB_PAT environment variable used by the GitHub-CLI
-# as well as the [Neon.Deployment.GitHub] class.
+# Retrieves the GITHUB[accesstoken] from 1Password and sets the GITHUB_PAT 
+# environment variable used by the GitHub-CLI as well as the [Neon.Deployment.GitHub]
+# class.
 #
 # ARGUMENTS:
 #
-#   name            - Optionally overrides the default secret name (GITHUB_PAT)
+#   name            - Optionally overrides the default secret name (default: GITHUB)
 #   vault           - Optionally overrides the default vault
 #   masterPassword  - Optionally specifies the master 1Password (for automation)
 
@@ -216,7 +216,7 @@ function Import-GitHubCredentials
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=$false)]
-        [string]$name = "GITHUB_PAT",
+        [string]$name = "GITHUB",
         [Parameter(Position=1, Mandatory=$false)]
         [string]$vault = $null,
         [Parameter(Position=2, Mandatory=$false)]
@@ -230,7 +230,7 @@ function Import-GitHubCredentials
 
     $profile = Get-MaintainerProfile
 
-    $env:GITHUB_PAT = $profile.GetSecretPassword($name, $vault, $masterPassword)
+    $env:GITHUB_PAT = $profile.GetSecretPassword("$name[accesstoken]", $vault, $masterPassword)
 }
 
 #------------------------------------------------------------------------------
