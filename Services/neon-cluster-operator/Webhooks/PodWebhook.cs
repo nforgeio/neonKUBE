@@ -28,6 +28,7 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Operator;
+using Neon.Kube.Operator.Webhook;
 
 using k8s;
 using k8s.Models;

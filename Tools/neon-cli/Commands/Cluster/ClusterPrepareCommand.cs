@@ -281,7 +281,7 @@ OPTIONS:
 
                 if (string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath))
                 {
-                    nodeImageUri = await KubeDownloads.GetNodeImageUriAsync(clusterDefinition.Hosting.Environment, stageBranch: stageBranch);
+                    nodeImageUri = await KubeDownloads.GetNodeImageUriAsync(clusterDefinition.Hosting.Environment, KubeVersions.NeonKube, stageBranch: stageBranch);
                 }
             }
 

@@ -28,6 +28,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 using k8s.Models;
 using k8s;
+using Neon.Kube.Operator.Builder;
 
 namespace Neon.Kube.Operator
 {
@@ -39,12 +40,38 @@ namespace Neon.Kube.Operator
         /// <summary>
         /// Adds Kubernetes operator to the service collection.
         /// </summary>
-        /// <param name="services"></param>
+        /// <param name="services">The <see cref="IServiceCollection"/></param>
+        /// <param name="options">Optional action to configure </param>
         /// <returns></returns>
         public static IOperatorBuilder AddKubernetesOperator(
-            this IServiceCollection services)
+            this IServiceCollection services,
+            Action<OperatorSettings> options = null)
         {
-            return new OperatorBuilder(services).AddOperatorBase();
+            var settings = new OperatorSettings();
+            if (options!= null)
+            {
+                options.Invoke(settings);
+            }
+
+            return AddKubernetesOperator(services, settings);
+        }
+
+        /// <summary>
+        /// Adds Kubernetes operator to the service collection.
+        /// </summary>
+        /// <param name="services">The <see cref="IServiceCollection"/></param>
+        /// <param name="settings">Optional options</param>
+        /// <returns></returns>
+        public static IOperatorBuilder AddKubernetesOperator(
+            this IServiceCollection services,
+            OperatorSettings settings)
+        {
+            if (settings == null)
+            {
+                settings = new OperatorSettings();
+            }
+
+            return new OperatorBuilder(services).AddOperatorBase(settings);
         }
     }
 }

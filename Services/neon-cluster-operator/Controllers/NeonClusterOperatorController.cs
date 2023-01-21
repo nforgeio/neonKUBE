@@ -38,7 +38,6 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Clients;
-using Neon.Kube.Operator;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Retry;
@@ -63,6 +62,9 @@ using Quartz;
 
 using Task = System.Threading.Tasks.Task;
 using Metrics = Prometheus.Metrics;
+using Neon.Kube.Operator.Finalizer;
+using Neon.Kube.Operator.ResourceManager;
+using Neon.Kube.Operator.Controller;
 
 namespace NeonClusterOperator
 {

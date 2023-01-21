@@ -39,7 +39,6 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Glauth;
-using Neon.Kube.Operator;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Retry;
@@ -58,6 +57,9 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 using Prometheus;
+using Neon.Kube.Operator.Finalizer;
+using Neon.Kube.Operator.ResourceManager;
+using Neon.Kube.Operator.Controller;
 
 namespace NeonClusterOperator
 {

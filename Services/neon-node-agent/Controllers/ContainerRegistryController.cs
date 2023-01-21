@@ -33,7 +33,6 @@ using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
-using Neon.Kube.Operator;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Retry;
@@ -45,6 +44,8 @@ using k8s.Models;
 using Newtonsoft.Json;
 using Prometheus;
 using Tomlyn;
+using Neon.Kube.Operator.ResourceManager;
+using Neon.Kube.Operator.Controller;
 
 namespace NeonNodeAgent
 {

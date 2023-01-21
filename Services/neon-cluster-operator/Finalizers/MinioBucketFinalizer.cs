@@ -27,7 +27,6 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Diagnostics;
 using Neon.Kube;
-using Neon.Kube.Operator;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Minio;
 using Neon.Tasks;
@@ -36,6 +35,7 @@ using k8s;
 using k8s.Models;
 
 using Minio;
+using Neon.Kube.Operator.Finalizer;
 
 namespace NeonClusterOperator
 {

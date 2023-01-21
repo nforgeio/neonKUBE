@@ -33,6 +33,7 @@ using Neon.Common;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Operator;
+using Neon.Kube.Operator.Entities;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Kube.Resources.Dex;

@@ -76,8 +76,11 @@ namespace NeonNodeAgent
             services.AddSingleton<ILogger>(Program.Service.Logger)
                 .AddSingleton(Service.K8s);
 
-            services.AddKubernetesOperator()
-                .AddController<ContainerRegistryController, V1NeonContainerRegistry>(
+            services.AddKubernetesOperator(options =>
+            {
+                options.AssemblyScanningEnabled = false;
+            })
+                .AddController<ContainerRegistryController>(
                     leaderConfig: new LeaderElectionConfig(
                         k8s:           Service.K8s,
                         @namespace:    KubeNamespace.NeonSystem,
@@ -85,7 +88,7 @@ namespace NeonNodeAgent
                         identity:      Pod.Name,
                         metricsPrefix: $"{typeof(ContainerRegistryController).Name}_{typeof(V1NeonContainerRegistry).Name}".ToLower()))
 
-                .AddController<NodeTaskController, V1NeonNodeTask>(
+                .AddController<NodeTaskController>(
                     leaderConfig:
                         new LeaderElectionConfig(
                         k8s:           Service.K8s,
