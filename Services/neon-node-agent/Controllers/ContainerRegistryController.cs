@@ -33,6 +33,9 @@ using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Operator.Attributes;
+using Neon.Kube.Operator.ResourceManager;
+using Neon.Kube.Operator.Controller;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Retry;
@@ -44,8 +47,6 @@ using k8s.Models;
 using Newtonsoft.Json;
 using Prometheus;
 using Tomlyn;
-using Neon.Kube.Operator.ResourceManager;
-using Neon.Kube.Operator.Controller;
 
 namespace NeonNodeAgent
 {
@@ -94,6 +95,7 @@ namespace NeonNodeAgent
     /// Node tasks on the host node will be simulated in this case by simply doing nothing.
     /// </note>
     /// </remarks>
+    [OperatorBuilderIgnore]
     public class ContainerRegistryController : IOperatorController<V1NeonContainerRegistry>
     {
         //---------------------------------------------------------------------

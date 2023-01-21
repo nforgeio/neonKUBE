@@ -76,10 +76,7 @@ namespace NeonNodeAgent
             services.AddSingleton<ILogger>(Program.Service.Logger)
                 .AddSingleton(Service.K8s);
 
-            services.AddKubernetesOperator(options =>
-            {
-                options.AssemblyScanningEnabled = false;
-            })
+            services.AddKubernetesOperator()
                 .AddController<ContainerRegistryController>(
                     leaderConfig: new LeaderElectionConfig(
                         k8s:           Service.K8s,
