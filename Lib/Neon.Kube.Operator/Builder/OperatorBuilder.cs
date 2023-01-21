@@ -95,7 +95,7 @@ namespace Neon.Kube.Operator.Builder
 
                 foreach (var type in types)
                 {
-                    switch (type.GetInterfaces().Where(i => i.GetCustomAttributes<OperatorComponentAttribute>().Any()).Select(i => i.GetCustomAttribute<OperatorComponentAttribute>()).Single().ComponentType)
+                    switch (type.GetInterfaces().Where(i => i.GetCustomAttributes<OperatorComponentAttribute>().Any()).Select(i => i.GetCustomAttribute<OperatorComponentAttribute>()).FirstOrDefault().ComponentType)
                     {
                         case OperatorComponentType.Controller:
 
