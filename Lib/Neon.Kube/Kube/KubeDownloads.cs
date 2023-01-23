@@ -95,7 +95,6 @@ namespace Neon.Kube
         /// Returns the URI of the download manifest for a neonKUBE node image.
         /// </summary>
         /// <param name="hostingEnvironment">Identifies the hosting environment.</param>
-        /// <param name="version">Specifies the neonKUBE version.</param>
         /// <param name="architecture">Specifies the target CPU architecture.</param>
         /// <param name="stageBranch">
         /// To obtain the URI for a staged node image, pass this as the name of the
@@ -125,7 +124,6 @@ namespace Neon.Kube
         /// </remarks>
         public static async Task<string> GetNodeImageUriAsync(
             HostingEnvironment  hostingEnvironment, 
-            string              version,
             CpuArchitecture     architecture = CpuArchitecture.amd64,
             string              stageBranch  = null)
         {
