@@ -188,7 +188,7 @@ OPTIONS:
             {
                 Console.WriteLine("Removing cached virtual machine templates.");
 
-                foreach (var fileName in Directory.GetFiles(KubeHelper.NodeImageFolder, "*.*", SearchOption.TopDirectoryOnly))
+                foreach (var fileName in Directory.GetFiles(KubeHelper.VmImageFolder, "*.*", SearchOption.TopDirectoryOnly))
                 {
                     File.Delete(fileName);
                 }
