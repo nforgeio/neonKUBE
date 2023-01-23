@@ -570,7 +570,7 @@ namespace Neon.Kube.Hosting.XenServer
                     var driveTemplateUri = new Uri(nodeImageUri);
 
                     driveTemplateName = Path.GetFileNameWithoutExtension(driveTemplateUri.Segments.Last());
-                    driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
+                    driveTemplatePath = Path.Combine(KubeHelper.VmImageFolder, driveTemplateName);
 
                     await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
                         (progressType, progress) =>
