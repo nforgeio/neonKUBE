@@ -177,11 +177,6 @@ namespace Neon.Kube
         public const string ImagePrebuiltDesktopPath = "/etc/neonkube/prebuilt-desktop";
 
         /// <summary>
-        /// The minimum supported XenServer/XCP-ng hypervisor host version.
-        /// </summary>
-        public static readonly SemanticVersion MinXenServerVersion = SemanticVersion.Parse("8.2.0");
-
-        /// <summary>
         /// The number of IP addresses reserved by cloud deployments at the beginning of the 
         /// node subnet by the cloud provider and also for future neonKUBE features.
         /// This typically includes the cloud default gateway and DNS forwarding IPs as well
