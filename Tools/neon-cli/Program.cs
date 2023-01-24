@@ -496,7 +496,7 @@ NOTE: Command line arguments and options may include references to
                                 commandWords += word;
                             }
 
-                            Console.Error.WriteLine($"*** ERROR: [{commandWords}] command does not support [{option.Key}].");
+                            Console.Error.WriteLine($"*** ERROR: [{commandWords}] command does not support the [{option.Key}] option.");
                             Program.Exit(1);
                         }
                     }

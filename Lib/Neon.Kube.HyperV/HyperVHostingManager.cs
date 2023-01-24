@@ -939,7 +939,7 @@ namespace Neon.Kube.Hosting.HyperV
 
                 // Create a hashset with the names of the nodes that map to deployed Hyper-V
                 // virtual machines.  Wre're also going to create a dictionary mapping the
-                // mapping existing virtual machine names to the machine information.
+                // existing virtual machine names to the machine information.
 
                 var existingNodes    = new HashSet<string>();
                 var existingMachines = new Dictionary<string, VirtualMachine>(StringComparer.InvariantCultureIgnoreCase);
