@@ -132,6 +132,7 @@ OPTIONS:
                                   [--use-staged=branch] allows you to override the branch
                                   so you can base your cluster off of a specific image
                                   build.
+
 ";
 
         /// <inheritdoc/>
@@ -203,11 +204,6 @@ OPTIONS:
             var disablePending    = commandLine.HasOption("--disable-pending");
             var useStaged         = commandLine.HasOption("--use-staged");
             var stageBranch       = commandLine.GetOption("--use-staged", KubeVersions.BuildBranch);
-
-            if (useStaged && string.IsNullOrEmpty(stageBranch))
-            {
-                stageBranch = KubeVersions.BuildBranch;
-            }
 
             if (!int.TryParse(maxParallelOption, out var maxParallel) || maxParallel <= 0)
             {
