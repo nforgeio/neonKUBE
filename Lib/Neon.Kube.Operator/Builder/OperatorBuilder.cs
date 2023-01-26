@@ -82,7 +82,7 @@ namespace Neon.Kube.Operator.Builder
             Services.AddSingleton(componentRegister);
             Services.AddSingleton<IFinalizerBuilder, FinalizerBuilder>();
             Services.AddTransient(typeof(IFinalizerManager<>), typeof(FinalizerManager<>));
-            Services.AddScoped(typeof(IResourceCache<>), typeof(ResourceCache<>));
+            Services.AddSingleton(typeof(IResourceCache<>), typeof(ResourceCache<>));
             Services.AddSingleton(new AsyncKeyedLocker<string>(o =>
             {
                 o.PoolSize = 20;
