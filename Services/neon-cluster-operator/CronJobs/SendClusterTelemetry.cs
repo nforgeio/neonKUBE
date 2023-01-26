@@ -48,7 +48,7 @@ namespace NeonClusterOperator
     /// </summary>
     public class SendClusterTelemetry : CronJob, IJob
     {
-        private ILogger logger;
+        private static readonly ILogger logger = TelemetryHub.CreateLogger<SendClusterTelemetry>();
 
         /// <summary>
         /// Constructor.
@@ -56,7 +56,6 @@ namespace NeonClusterOperator
         public SendClusterTelemetry()
             : base(typeof(SendClusterTelemetry))
         {
-            logger = TelemetryHub.CreateLogger<SendClusterTelemetry>();
         }
 
         /// <inheritdoc/>
