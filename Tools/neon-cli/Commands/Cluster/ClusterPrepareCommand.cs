@@ -132,6 +132,7 @@ OPTIONS:
                                   [--use-staged=branch] allows you to override the branch
                                   so you can base your cluster off of a specific image
                                   build.
+
 ";
 
         /// <inheritdoc/>
@@ -188,7 +189,7 @@ OPTIONS:
             {
                 Console.WriteLine("Removing cached virtual machine templates.");
 
-                foreach (var fileName in Directory.GetFiles(KubeHelper.NodeImageFolder, "*.*", SearchOption.TopDirectoryOnly))
+                foreach (var fileName in Directory.GetFiles(KubeHelper.VmImageFolder, "*.*", SearchOption.TopDirectoryOnly))
                 {
                     File.Delete(fileName);
                 }
@@ -203,11 +204,6 @@ OPTIONS:
             var disablePending    = commandLine.HasOption("--disable-pending");
             var useStaged         = commandLine.HasOption("--use-staged");
             var stageBranch       = commandLine.GetOption("--use-staged", KubeVersions.BuildBranch);
-
-            if (useStaged && string.IsNullOrEmpty(stageBranch))
-            {
-                stageBranch = KubeVersions.BuildBranch;
-            }
 
             if (!int.TryParse(maxParallelOption, out var maxParallel) || maxParallel <= 0)
             {
@@ -281,7 +277,7 @@ OPTIONS:
 
                 if (string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath))
                 {
-                    nodeImageUri = await KubeDownloads.GetNodeImageUriAsync(clusterDefinition.Hosting.Environment, KubeVersions.NeonKube, stageBranch: stageBranch);
+                    nodeImageUri = await KubeDownloads.GetNodeImageUriAsync(clusterDefinition.Hosting.Environment, stageBranch: stageBranch);
                 }
             }
 

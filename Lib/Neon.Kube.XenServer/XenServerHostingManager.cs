@@ -570,7 +570,7 @@ namespace Neon.Kube.Hosting.XenServer
                     var driveTemplateUri = new Uri(nodeImageUri);
 
                     driveTemplateName = Path.GetFileNameWithoutExtension(driveTemplateUri.Segments.Last());
-                    driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
+                    driveTemplatePath = Path.Combine(KubeHelper.VmImageFolder, driveTemplateName);
 
                     await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
                         (progressType, progress) =>
@@ -747,9 +747,9 @@ namespace Neon.Kube.Hosting.XenServer
             var xenClient = xenSshProxy.Metadata;
             var hostInfo  = xenClient.GetHostInfo();
 
-            if (hostInfo.Version < KubeConst.MinXenServerVersion)
+            if (hostInfo.Version < KubeVersions.MinXenServerVersion)
             {
-                throw new NotSupportedException($"neonKUBE cannot provision a cluster on a XenServer/XCP-ng host older than [v{KubeConst.MinXenServerVersion}].  [{hostInfo.Params["name-label"]}] is running version [{hostInfo.Version}]. ");
+                throw new NotSupportedException($"neonKUBE cannot provision a cluster on a XenServer/XCP-ng host older than [v{KubeVersions.MinXenServerVersion}].  [{hostInfo.Params["name-label"]}] is running version [{hostInfo.Version}]. ");
             }
 
             foreach (var node in GetHostedNodes(xenClient))

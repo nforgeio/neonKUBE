@@ -306,8 +306,7 @@ try
     # Save the publish version to [$/build/nuget/version.text] so release tools can
     # determine the current release.
 
-    New-Item -ItemType Directory -Force -Path "$nkRoot\build\nuget" | Out-Null
-
+    [System.IO.Directory]::CreateDirectory("$nkRoot\build\nuget") | Out-Null
     [System.IO.File]::WriteAllText("$nkRoot\build\nuget\version.txt", $neonkubeVersion)
 
     #--------------------------------------------------------------------------

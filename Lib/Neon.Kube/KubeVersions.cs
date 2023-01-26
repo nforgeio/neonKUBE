@@ -282,5 +282,25 @@ namespace Neon.Kube
         /// The version of busybox image to be installed.
         /// </summary>
         public const string Busybox = "1.32.0";
+
+        /// <summary>
+        /// The minimum supported XenServer/XCP-ng hypervisor host version.
+        /// </summary>
+        public static readonly SemanticVersion MinXenServerVersion = SemanticVersion.Parse("8.2.0");
+
+        /// <summary>
+        /// Ensures that the XenServer version passed is supported for building
+        /// neonKUBE virtual machines images.  Currently only <b>8.2.*</b> versions
+        /// are supported.
+        /// </summary>
+        /// <param name="version">The XenServer version being checked.</param>
+        /// <exception cref="NotSupportedException">Thrown for unsupported versions.</exception>
+        public static void CheckXenServerVersionForImageBuilding(SemanticVersion version)
+        {
+            if (version.Major != MinXenServerVersion.Major || version.Minor != MinXenServerVersion.Minor)
+            {
+                throw new NotSupportedException($"XenServer version [{version}] is not supported for building neonKUBE VM images.  Only versions like [{MinXenServerVersion.Major}.{MinXenServerVersion.Minor}.*] are allowed.");
+            }
+        }
     }
 }
