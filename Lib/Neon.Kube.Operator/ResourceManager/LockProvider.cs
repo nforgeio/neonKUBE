@@ -34,9 +34,6 @@ using Neon.Tasks;
 using k8s;
 using k8s.Models;
 
-using KellermanSoftware.CompareNetObjects;
-using OpenTelemetry.Resources;
-
 namespace Neon.Kube.Operator.ResourceManager
 {
     internal class LockProvider<TEntity> : ILockProvider<TEntity>
@@ -66,8 +63,11 @@ namespace Neon.Kube.Operator.ResourceManager
             if (lockDictionary.TryGetValue(entityId, out semaphore))
             {
                 semaphore.Release();
-                semaphorePool.Return(semaphore);
-                lockDictionary.TryRemove(entityId, out _);
+                if (semaphore.CurrentCount > 0)
+                {
+                    semaphorePool.Return(semaphore);
+                    lockDictionary.TryRemove(entityId, out _);
+                }
             }
         }
 
@@ -82,43 +82,46 @@ namespace Neon.Kube.Operator.ResourceManager
 
             await semaphore.WaitAsync();
 
-            return new SafeSemaphoreRelease(semaphore, this);
+            return new SafeSemaphoreRelease(entityId, this);
         }
 
         private struct SafeSemaphoreRelease : IAsyncDisposable, IDisposable
         {
-            private SemaphoreSlim semaphore;
+            private string entityId;
+            private LockProvider<TEntity> lockProvider;
 
-            public SafeSemaphoreRelease(SemaphoreSlim semaphore, LockProvider<TEntity> lockProvider)
+            public SafeSemaphoreRelease(string entityId, LockProvider<TEntity> lockProvider)
             {
-                this.semaphore = semaphore;
+                this.entityId = entityId;
+                this.lockProvider = lockProvider;
             }
 
             public ValueTask DisposeAsync()
             {
-                semaphore.Release();
-                semaphorePool.Return(semaphore);
+                lockProvider.Release(entityId);
 
                 return ValueTask.CompletedTask;
             }
 
             public void Dispose()
             {
-                semaphore.Release();
-                semaphorePool.Return(semaphore);
+                lockProvider.Release(entityId);
             }
         }
 
         private class SemaphoreSlimPooledObjectPolicy : PooledObjectPolicy<SemaphoreSlim>
         {
+            /// <inheritdoc/>
             public override SemaphoreSlim Create()
             {
                 return new SemaphoreSlim(1, 1);
             }
 
-            public override bool Return(SemaphoreSlim obj)
+            /// <inheritdoc/>
+            public override bool Return(SemaphoreSlim semaphore)
             {
-                return true;
+                // Don't return items to the pool that are locked.
+                return semaphore.CurrentCount == 1;
             }
         }
     }

@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:	    Test_Crds.cs
+// FILE:	    Test_CustomResources.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -42,7 +42,7 @@ using Neon.Xunit;
 
 using Xunit;
 
-namespace TestKubeOperator
+namespace Test.Neon.Kube.Operator
 {
     /// <summary>
     /// Custom Resource tests.
