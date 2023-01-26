@@ -302,9 +302,15 @@ namespace Neon.Kube.Hosting.HyperV
             }
 
             var typedController = (SetupController<NodeDefinition>)controller;
+            var createVmLabel   = "create virtual machine";
+
+            if (cluster.Definition.Nodes.Count() > 1)
+            {
+                createVmLabel += "(s)";
+            }
 
             controller.AddGlobalStep("configure hyper-v", async controller => await PrepareHyperVAsync(typedController));
-            controller.AddNodeStep("provision virtual machine(s)", (controller, node) => ProvisionVM(typedController, node));
+            controller.AddNodeStep(createVmLabel, (controller, node) => ProvisionVM(typedController, node));
         }
 
         /// <inheritdoc/>
