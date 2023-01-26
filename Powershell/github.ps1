@@ -143,8 +143,8 @@ function Get-GitHubUser
 #
 # REMARKS:
 #
-# NOTE: This requires that the current user have a GITHUB_PAT available in their
-#       1Password user folder.
+# NOTE: This requires that the current user have a GITHUB[accessto0ken] available 
+#       in their 1Password user vault.
 #
 # You can use the [appendLabel] parameter to append the body to an existing
 # issue as a new comment.  Pass [appendLabel] as the issue label that will
@@ -1046,7 +1046,7 @@ function Invoke-ActionWorkflow
 
             $tempGuid      = [System.Guid]::NewGuid().ToString("d")
             $tempInputPath = [System.IO.Path]::Combine($env:TMP, "$tempGuid.inputs.json")
-            
+
             [System.IO.File]::WriteAllText($tempInputPath, $inputJson)
 
             try

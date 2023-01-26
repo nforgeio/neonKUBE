@@ -29,7 +29,10 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
-using Neon.Kube.Operator;
+using Neon.Kube.Operator.Attributes;
+using Neon.Kube.Operator.ResourceManager;
+using Neon.Kube.Operator.Controller;
+using Neon.Kube.Operator.Util;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Retry;
@@ -62,6 +65,7 @@ namespace NeonNodeAgent
     /// and empty output and error streams.
     /// </note>
     /// </remarks>
+    [OperatorBuilderIgnore]
     public class NodeTaskController : IOperatorController<V1NeonNodeTask>
     {
         //---------------------------------------------------------------------

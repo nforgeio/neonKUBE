@@ -30,12 +30,12 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 using Neon.Diagnostics;
-
-using k8s.Models;
-using k8s;
 using Neon.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore;
+using Neon.Kube.Operator.Builder;
+using Neon.Kube.Operator.Webhook;
+using Neon.Kube.Operator.Webhook.Ngrok;
+
+using k8s;
 
 namespace Neon.Kube.Operator
 {
@@ -59,8 +59,8 @@ namespace Neon.Kube.Operator
                 {
                     await SyncContext.Clear;
 
-                    var k8s    = (IKubernetes)app.ApplicationServices.GetRequiredService<IKubernetes>();
-                    var logger = (ILogger)app.ApplicationServices.GetRequiredService<ILogger>();
+                    var k8s = app.ApplicationServices.GetRequiredService<IKubernetes>();
+                    var logger = app.ApplicationServices.GetRequiredService<ILogger>();
                     NgrokWebhookTunnel tunnel = null;
                     try
                     {

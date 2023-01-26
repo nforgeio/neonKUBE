@@ -289,7 +289,7 @@ try
         $versionerKey    = Get-SecretValue "NUGET_VERSIONER_KEY" "group-devops"
         $nugetFeedName   = "nc-nuget-devfeed"
         $nugetFeedSource = "https://nuget.pkg.github.com/nforgeio/index.json"
-        $nugetFeedApiKey = Get-SecretPassword "GITHUB_PAT" user-$env:NC_USER
+        $nugetFeedApiKey = Get-SecretPassword "GITHUB[accesstoken]" user-$env:NC_USER
 
         # Get the nuget versioner API key from the environment and convert it into a base-64 string.
 
@@ -306,8 +306,7 @@ try
     # Save the publish version to [$/build/nuget/version.text] so release tools can
     # determine the current release.
 
-    New-Item -ItemType Directory -Force -Path "$nkRoot\build\nuget"
-
+    [System.IO.Directory]::CreateDirectory("$nkRoot\build\nuget") | Out-Null
     [System.IO.File]::WriteAllText("$nkRoot\build\nuget\version.txt", $neonkubeVersion)
 
     #--------------------------------------------------------------------------

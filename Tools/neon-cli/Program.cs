@@ -325,7 +325,7 @@ NOTE: Command line arguments and options may include references to
             // Register a [ProfileClient] so commands will be able to pick
             // up secrets and profile information from [neon-assistant].
 
-            NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfileClient());
+            NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfile());
 
             // Fetch the paths to the [kubectl] and [helm] binaries.  Note that these
             // will download them when they're not already present.
@@ -352,7 +352,7 @@ NOTE: Command line arguments and options may include references to
                 //
                 // This is required by: CommandLine.Preprocess()
 
-                NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfileClient());
+                NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfile());
 
                 CommandLine = new CommandLine(args);
 
@@ -496,7 +496,7 @@ NOTE: Command line arguments and options may include references to
                                 commandWords += word;
                             }
 
-                            Console.Error.WriteLine($"*** ERROR: [{commandWords}] command does not support [{option.Key}].");
+                            Console.Error.WriteLine($"*** ERROR: [{commandWords}] command does not support the [{option.Key}] option.");
                             Program.Exit(1);
                         }
                     }

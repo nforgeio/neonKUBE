@@ -2005,7 +2005,7 @@ namespace Neon.Kube.Hosting.Aws
             // ALPHA RELEASES
             // --------------
             // We'll use the local AMI from the current NEONFORGE AWS account, 
-            // matching the tags applied by the [neon-image} tool.
+            // matching the tags applied by the [neon-image] tool.
             //
             // PRODUCTION RELEASES
             // -------------------

@@ -274,7 +274,7 @@ namespace Neon.Kube.Hosting.HyperV
                             var driveTemplateUri = new Uri(nodeImageUri);
 
                             driveTemplateName = Path.GetFileNameWithoutExtension(driveTemplateUri.Segments.Last());
-                            driveTemplatePath = Path.Combine(KubeHelper.NodeImageFolder, driveTemplateName);
+                            driveTemplatePath = Path.Combine(KubeHelper.VmImageFolder, driveTemplateName);
 
                             await KubeHelper.DownloadNodeImageAsync(nodeImageUri, driveTemplatePath,
                                 (progressType, progress) =>
@@ -302,9 +302,15 @@ namespace Neon.Kube.Hosting.HyperV
             }
 
             var typedController = (SetupController<NodeDefinition>)controller;
+            var createVmLabel   = "create virtual machine";
+
+            if (cluster.Definition.Nodes.Count() > 1)
+            {
+                createVmLabel += "(s)";
+            }
 
             controller.AddGlobalStep("configure hyper-v", async controller => await PrepareHyperVAsync(typedController));
-            controller.AddNodeStep("provision virtual machine(s)", (controller, node) => ProvisionVM(typedController, node));
+            controller.AddNodeStep(createVmLabel, (controller, node) => ProvisionVM(typedController, node));
         }
 
         /// <inheritdoc/>
@@ -939,7 +945,7 @@ namespace Neon.Kube.Hosting.HyperV
 
                 // Create a hashset with the names of the nodes that map to deployed Hyper-V
                 // virtual machines.  Wre're also going to create a dictionary mapping the
-                // mapping existing virtual machine names to the machine information.
+                // existing virtual machine names to the machine information.
 
                 var existingNodes    = new HashSet<string>();
                 var existingMachines = new Dictionary<string, VirtualMachine>(StringComparer.InvariantCultureIgnoreCase);

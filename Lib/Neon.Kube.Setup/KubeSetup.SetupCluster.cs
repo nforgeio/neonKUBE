@@ -229,7 +229,7 @@ namespace Neon.Kube.Setup
                             throw new Exception($"Node image is not stamped with the image version file: {KubeConst.ImageVersionPath}");
                         }
 
-                        if (imageVersion != SemanticVersion.Parse(KubeVersions.NeonKube))
+                        if (!imageVersion.ToString().StartsWith(KubeVersions.NeonKube))
                         {
                             throw new Exception($"Node image version [{imageVersion}] does not match the neonKUBE version [{KubeVersions.NeonKube}] implemented by the current build.");
                         }
@@ -245,9 +245,7 @@ namespace Neon.Kube.Setup
             // We need to do this so the the package cache will be running
             // when the remaining nodes are configured.
 
-            var configureControlPlaneStepLabel = cluster.Definition.ControlNodes.Count() > 1 ? "setup first control-plane node" : "setup control-plane node";
-
-            controller.AddNodeStep(configureControlPlaneStepLabel,
+            controller.AddNodeStep("setup control-plane",
                 (controller, node) =>
                 {
                     node.SetupNode(controller, KubeSetup.ClusterManifest);

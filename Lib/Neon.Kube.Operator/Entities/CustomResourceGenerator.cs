@@ -17,10 +17,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Rest.Serialization;
@@ -41,16 +45,8 @@ using Newtonsoft.Json.Serialization;
 using NJsonSchema;
 using NJsonSchema.Generation;
 using NJsonSchema.Generation.TypeMappers;
-using System.Threading;
-using System.IO.Abstractions;
-using System.IO;
-using Neon.IO;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Xml.Linq;
-using System.Linq.Expressions;
 
-namespace Neon.Kube.Operator
+namespace Neon.Kube.Operator.Entities
 {
     /// <summary>
     /// A tool for generating Kubernetes Custom Resources.

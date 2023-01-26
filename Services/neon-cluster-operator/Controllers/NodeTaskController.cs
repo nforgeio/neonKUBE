@@ -35,7 +35,6 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
-using Neon.Kube.Operator;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Retry;
@@ -51,6 +50,7 @@ using Newtonsoft.Json;
 using OpenTelemetry.Trace;
 
 using Prometheus;
+using Neon.Kube.Operator.Controller;
 
 namespace NeonClusterOperator
 {

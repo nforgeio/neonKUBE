@@ -48,21 +48,21 @@ if (-not [System.String]::IsNullOrEmpty($env:NEON_ASSISTANT_HOME))
 }
 
 #------------------------------------------------------------------------------
-# Returns a global [Neon.Deployment.MaintainerProfileClient] instance creating one if necessary.
+# Returns a global [Neon.Deployment.MaintainerProfile] instance creating one if necessary.
 # This can be used to query the [neon-assistant] installed on the workstation for
 # secret passwords, secret values, as well as profile values.  The client is thread-safe,
 # can be used multiple times, and does not need to be disposed.
 
 $global:__neonProfileClient = $null
 
-function Get-MaintainerProfileClient
+function Get-MaintainerProfile
 {
     if ($null -ne $global:__neonProfileClient)
     {
         return $global:__neonProfileClient
     }
 
-    $global:__neonProfileClient = New-Object "Neon.Deployment.MaintainerProfileClient"
+    $global:__neonProfileClient = New-Object "Neon.Deployment.MaintainerProfile"
 
     return $global:__neonProfileClient
 }
@@ -87,9 +87,9 @@ function Get-ProfileValue
         [bool]$nullOnNotFound = $false
     )
 
-    $client = Get-MaintainerProfileClient
+    $profile = Get-MaintainerProfile
 
-    return $client.GetProfileValue($name, $nullOnNotFound)
+    return $profile.GetProfileValue($name, $nullOnNotFound)
 }
 
 #------------------------------------------------------------------------------
@@ -117,9 +117,9 @@ function Get-SecretPassword
         [bool]$nullOnNotFound = $false
     )
 
-    $client = Get-MaintainerProfileClient
+    $profile = Get-MaintainerProfile
 
-    return $client.GetSecretPassword($name, $vault, $masterPassword, $nullOnNotFound)
+    return $profile.GetSecretPassword($name, $vault, $masterPassword, $nullOnNotFound)
 }
 
 #------------------------------------------------------------------------------
@@ -147,9 +147,9 @@ function Get-SecretValue
         [bool]$nullOnNotFound = $false
     )
 
-    $client = Get-MaintainerProfileClient
+    $profile = Get-MaintainerProfile
 
-    return $client.GetSecretValue($name, $vault, $masterPassword, $nullOnNotFound)
+    return $profile.GetSecretValue($name, $vault, $masterPassword, $nullOnNotFound)
 }
 
 #------------------------------------------------------------------------------
@@ -182,10 +182,10 @@ function Import-AwsCliCredentials
         return  # Already set
     }
 
-    $client = Get-MaintainerProfileClient
+    $profile = Get-MaintainerProfile
 
-    $env:AWS_ACCESS_KEY_ID     = $client.GetSecretPassword("$secretName[ACCESS_KEY_ID]", $vault, $masterPassword)
-    $env:AWS_SECRET_ACCESS_KEY = $client.GetSecretPassword("$secretName[SECRET_ACCESS_KEY]", $vault, $masterPassword)
+    $env:AWS_ACCESS_KEY_ID     = $profile.GetSecretPassword("$secretName[ACCESS_KEY_ID]", $vault, $masterPassword)
+    $env:AWS_SECRET_ACCESS_KEY = $profile.GetSecretPassword("$secretName[SECRET_ACCESS_KEY]", $vault, $masterPassword)
 }
 
 #------------------------------------------------------------------------------
@@ -201,13 +201,13 @@ function Remove-AwsCliCredentials
 }
 
 #------------------------------------------------------------------------------
-# Retrieves the GITHUB_PAT (personal access token) from from 1Password 
-# and sets the GITHUB_PAT environment variable used by the GitHub-CLI
-# as well as the [Neon.Deployment.GitHub] class.
+# Retrieves the GITHUB[accesstoken] from 1Password and sets the GITHUB_PAT 
+# environment variable used by the GitHub-CLI as well as the [Neon.Deployment.GitHub]
+# class.
 #
 # ARGUMENTS:
 #
-#   name            - Optionally overrides the default secret name (GITHUB_PAT)
+#   name            - Optionally overrides the default secret name (default: GITHUB)
 #   vault           - Optionally overrides the default vault
 #   masterPassword  - Optionally specifies the master 1Password (for automation)
 
@@ -216,7 +216,7 @@ function Import-GitHubCredentials
     [CmdletBinding()]
     param (
         [Parameter(Position=0, Mandatory=$false)]
-        [string]$name = "GITHUB_PAT",
+        [string]$name = "GITHUB",
         [Parameter(Position=1, Mandatory=$false)]
         [string]$vault = $null,
         [Parameter(Position=2, Mandatory=$false)]
@@ -228,9 +228,9 @@ function Import-GitHubCredentials
         return  # Already set
     }
 
-    $client = Get-MaintainerProfileClient
+    $profile = Get-MaintainerProfile
 
-    $env:GITHUB_PAT = $client.GetSecretPassword($name, $vault, $masterPassword)
+    $env:GITHUB_PAT = $profile.GetSecretPassword("$name[accesstoken]", $vault, $masterPassword)
 }
 
 #------------------------------------------------------------------------------
@@ -487,4 +487,92 @@ function Remove-FromS3
     )
 
     [Neon.Deployment.AwsCli]::S3Remove($targetUri, $recursive, $include, $exclude)
+}
+
+#------------------------------------------------------------------------------
+# Code signs an executable file with a code signing token.
+#
+# ARGUMENTS:
+#
+#   targetPath          - Specifies the path to the file being signed.
+#   provider            - Specifies the certificate provider, like: "eToken Base Cryptographic Provider"
+#   certBase64          - Specifies the base64 encoded public certificate (multi-line values are allowed).
+#   container           - Specifies the certificate container, like: "Sectigo_20220830143311"
+#   timestampUri        - pecifies the URI for the certificate timestamp service, like: http://timestamp.sectigo.com
+#   password            - Specifies the certificate password.
+#
+# REMARKS:
+#
+# WARNING! Be very careful when using this function with Extended Validation (EV) code signing 
+#          USB tokens.  Using an incorrect password can brick EV tokens since thay typically 
+#          allow only a very limited number of signing attempts with invalid passwords.
+#
+# This method uses the Windows version of <b>signtool.exe</b> embedded into the
+# the <b>Neon.Deployment</b> library and to perform the code signing and this 
+# tool runs only on Windows.
+
+function Sign-Binary
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$targetPath,
+        [Parameter(Position=1, Mandatory=$true)]
+        [string]$provider,
+        [Parameter(Position=2, Mandatory=$true)]
+        [string]$certBase64,
+        [Parameter(Position=3, Mandatory=$true)]
+        [string]$container,
+        [Parameter(Position=4, Mandatory=$true)]
+        [string]$timestampUri,
+        [Parameter(Position=5, Mandatory=$true)]
+        [string]$password
+    )
+
+    [Neon.Deployment.CodeSigner]::SignBinary($targetPath, $provider, $thumprint, $certBase64, $container, $timestampUri, $password)
+}
+
+#------------------------------------------------------------------------------
+# Determines whether a code signing token is available on the current machine,
+# using the token information and password passed.
+#
+# ARGUMENTS:
+#
+#   provider            - Specifies the certificate provider, like: "eToken Base Cryptographic Provider"
+#   certBase64          - Specifies the base64 encoded public certificate (multi-line values are allowed).
+#   container           - Specifies the certificate container, like: "Sectigo_20220830143311"
+#   timestampUri        - pecifies the URI for the certificate timestamp service, like: http://timestamp.sectigo.com
+#   password            - Specifies the certificate password.
+#
+# REMARKS:
+#
+# WARNING! Be very careful when using this function with Extended Validation (EV) code signing 
+#          USB tokens.  Using an incorrect password can brick EV tokens since thay typically 
+#          allow only a very limited number of signing attempts with invalid passwords.
+#
+# This method uses the Windows version of <b>signtool.exe</b> embedded into the
+# the <b>Neon.Deployment</b> library and to perform the code signing and this 
+# tool runs only on Windows.
+#
+# RETURNS:
+#
+#   [$true] when the current machine is able to sign code using the parameters passed.
+
+function Sign-IsReady
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$provider,
+        [Parameter(Position=1, Mandatory=$true)]
+        [string]$certBase64,
+        [Parameter(Position=2, Mandatory=$true)]
+        [string]$container,
+        [Parameter(Position=3, Mandatory=$true)]
+        [string]$timestampUri,
+        [Parameter(Position=4, Mandatory=$true)]
+        [string]$password
+    )
+
+    return [Neon.Deployment.CodeSigner]::IsReady($targetPath, $provider, $certBase64, $container, $timestampUri, $password)
 }

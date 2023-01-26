@@ -89,18 +89,6 @@ namespace NeonClusterOperator
                 .AddSingleton(Service.HarborClient);
 
             services.AddKubernetesOperator()
-                .AddController<GlauthController, V1Secret>()
-                .AddController<MinioBucketController, V1MinioBucket>()
-                .AddController<NeonClusterOperatorController, V1NeonClusterOperator>()
-                .AddController<NeonContainerRegistryController, V1NeonContainerRegistry>()
-                .AddController<NeonDashboardController, V1NeonDashboard>()
-                .AddController<NeonSsoClientController, V1NeonSsoClient>()
-                .AddController<NodeTaskController, V1NeonNodeTask>()
-                .AddFinalizer<NeonContainerRegistryFinalizer, V1NeonContainerRegistry>()
-                .AddFinalizer<NeonSsoClientFinalizer, V1NeonSsoClient>()
-                .AddFinalizer<MinioBucketFinalizer, V1MinioBucket>()
-                .AddMutatingWebhook<PodWebhook, V1Pod>()
-                .AddValidatingWebhook<NeonSsoConnectorValidatingWebhook, V1NeonSsoConnector>()
                 .AddNgrokTunnnel(hostname: Service.GetEnvironmentVariable("NGROK_HOSTNAME", def: "127.0.0.1", redact: false),
                     port: Service.Port,
                     ngrokDirectory: Service.GetEnvironmentVariable("NGROK_DIRECTORY", def: "C:/bin", redact: false),

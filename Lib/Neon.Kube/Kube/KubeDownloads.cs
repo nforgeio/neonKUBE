@@ -23,11 +23,16 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
+using Neon.BuildInfo;
 using Neon.Collections;
 using Neon.Common;
 using Neon.Kube.Clients;
 using Neon.Kube.ClusterDef;
 using Neon.Net;
+using Neon.Tasks;
+
+using Renci.SshNet;
+using YamlDotNet.Core;
 
 namespace Neon.Kube
 {
@@ -52,16 +57,20 @@ namespace Neon.Kube
         public static readonly string HelmWindowsUri = $"https://get.helm.sh/helm-v{KubeVersions.Helm}-windows-amd64.zip";
 
         /// <summary>
-        /// The URI for the public AWS S3 bucket where we persist cluster VM images 
-        /// and other things.
+        /// The URI for the public AWS S3 bucket for public neonKUBE releases
         /// </summary>
-        public const string NeonPublicBucketUri = "https://neon-public.s3.us-west-2.amazonaws.com";
+        public const string NeonKubeReleaseBucketUri = "https://neonkube-release.s3.us-west-2.amazonaws.com";
+
+        /// <summary>
+        /// The URI for the public AWS S3 bucket for public neonKUBE releases
+        /// </summary>
+        public const string NeonKubeStageBucketUri = "https://neonkube-stage.s3.us-west-2.amazonaws.com";
 
         /// <summary>
         /// The URI for the cluster manifest (<see cref="ClusterManifest"/>) JSON file for the current
         /// neonKUBE cluster version.
         /// </summary>
-        public const string NeonClusterManifestUri = NeonHelper.NeonPublicBucketUri + "/cluster-manifests/neonkube-" + KubeVersions.NeonKube + ".json";
+        public const string NeonClusterManifestUri = $"{NeonKubeStageBucketUri}/manifests/neonkube-{KubeVersions.NeonKube}.json";
 
         /// <summary>
         /// Returns the URI for the cluster manifest for a specific neonKUBE version.
@@ -72,7 +81,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(version));
 
-            return $"{NeonHelper.NeonPublicBucketUri}/cluster-manifests/neonkube-{version}.json";
+            return $"{NeonKubeStageBucketUri}/cluster-manifests/neonkube-{version}.json";
         }
 
         /// <summary>
@@ -85,69 +94,164 @@ namespace Neon.Kube
         /// </summary>
         public const string PrivateNodeImagesRepo = "nforgeio/neonKUBE-images-dev";
 
-        /// <summary>
-        /// Returns the default URI to be used for downloading the prepared neonKUBE node virtual machine image 
-        /// for the current neonKUBE cluster version.  This is the base image we'll use for provisioning cluster
-        /// virtual machines.
-        /// </summary>
-        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
-        /// <param name="setupDebugMode">Optionally indicates that we'll be provisioning in debug mode.</param>
-        /// <param name="baseImageName">
-        /// Specifies the base image file name (but not the bucket and path) when <paramref name="setupDebugMode"/><c>==true</c>.
-        /// For example: <b>ubuntu-22.04.1.hyperv.amd64.vhdx.gz.manifest</b>
-        /// </param>
-        /// <param name="architecture">The target CPU architecture.</param>
-        /// <returns>The download URI or <c>null</c>.</returns>
-        public static async Task<string> GetNodeImageUriAsync(
-            HostingEnvironment  hostingEnvironment, 
-            bool                setupDebugMode = false, 
-            string              baseImageName  = null,
-            CpuArchitecture     architecture   = CpuArchitecture.amd64)
-        {
-            if (setupDebugMode && string.IsNullOrEmpty(baseImageName))
-            {
-                throw new NotSupportedException($"[{KubeSetupProperty.BaseImageName}] must be passed when [{nameof(setupDebugMode)}=true].");
-            }
+        //############################################################################################
+        // $debug(jefflill): DELETE THIS AND ANY CALLS BELOW TO THESE AFTER DEPLOYING HEADEND SERVICE!
 
-            if (!setupDebugMode)
-            {
-                using (var headendClient = HeadendClient.Create())
-                {
-                    return await headendClient.ClusterSetup.GetNodeImageManifestUriAsync(hostingEnvironment.ToMemberString(), KubeVersions.NeonKube, architecture);
-                }
-            }
+        private static string GetNodeImageUri(
+            HostingEnvironment  hostingEnvironment,
+            CpuArchitecture     architecture = CpuArchitecture.amd64,
+            string              stageBranch  = null)
+        {
+            var version   = KubeVersions.NeonKube;
+            var extension = string.Empty;
 
             switch (hostingEnvironment)
             {
                 case HostingEnvironment.HyperV:
 
-                    return $"{NeonHelper.NeonPublicBucketUri}/vm-images/hyperv/base/{baseImageName}";
+                    extension = "vhdx";
+                    break;
 
                 case HostingEnvironment.XenServer:
 
-                    return $"{NeonHelper.NeonPublicBucketUri}/vm-images/xenserver/base/{baseImageName}";
+                    extension = "xva";
+                    break;
 
                 default:
 
-                    throw new NotImplementedException($"Node images are not available for the [{hostingEnvironment}] environment.");
+                    Covenant.Assert(false, $"[{nameof(architecture)}={architecture}] is not supported.");
+                    break;
+            }
+
+            if (!string.IsNullOrEmpty(stageBranch) && !stageBranch.StartsWith("release-"))
+            {
+                version = $"{version}.{stageBranch}";
+            }
+
+            return $"{KubeDownloads.NeonKubeStageBucketUri}/images/{hostingEnvironment.ToMemberString()}/node/neonkube-node-{version}.{hostingEnvironment.ToMemberString()}.{architecture}.{extension}.gz.manifest";
+        }
+
+        private static string GetDesktopImageUri(
+            HostingEnvironment  hostingEnvironment,
+            CpuArchitecture     architecture = CpuArchitecture.amd64,
+            string              stageBranch  = null)
+        {
+            var version   = KubeVersions.NeonKube;
+            var extension = string.Empty;
+
+            switch (hostingEnvironment)
+            {
+                case HostingEnvironment.HyperV:
+
+                    extension = "vhdx";
+                    break;
+
+                default:
+
+                    Covenant.Assert(false, $"[{nameof(architecture)}={architecture}] is not supported.");
+                    break;
+            }
+
+            if (!string.IsNullOrEmpty(stageBranch) && !stageBranch.StartsWith("release-"))
+            {
+                version = $"{version}.{stageBranch}";
+            }
+
+            return $"{KubeDownloads.NeonKubeStageBucketUri}/images/{hostingEnvironment.ToMemberString()}/desktop/neonkube-desktop-{version}.{hostingEnvironment.ToMemberString()}.{architecture}.{extension}.gz.manifest";
+        }
+
+        //############################################################################################
+
+        /// <summary>
+        /// Returns the URI of the download manifest for a neonKUBE node image.
+        /// </summary>
+        /// <param name="hostingEnvironment">Identifies the hosting environment.</param>
+        /// <param name="architecture">Specifies the target CPU architecture.</param>
+        /// <param name="stageBranch">
+        /// To obtain the URI for a staged node image, pass this as the name of the
+        /// branch from which neonKUBE libraries were built.
+        /// </param>
+        /// <returns>The action result.</returns>
+        /// <remarks>
+        /// <para>
+        /// When <paramref name="stageBranch"/> is <c>null</c>, the URI for the published node
+        /// image will be returned.
+        /// </para>
+        /// <para>
+        /// Otherwise, <paramref name="stageBranch"/> should be passed as the name of the branch
+        /// from which the <b>Neon.Kube</b> libraries were built.  In this case, this
+        /// method will return a URI to the staged node image also build from that branch.
+        /// </para>
+        /// <para>
+        /// For non-release branches, this method will append a dot and the branch name
+        /// to <see cref="KubeVersions.NeonKube"/> and include that in the URI.  This allows
+        /// us to have multiple development versions of any given image for development and 
+        /// testing purposes.  For release branches, the URI returned will reference the staged 
+        /// node image including the <see cref="KubeVersions.NeonKube"/> without any branch part.
+        /// </para>
+        /// <note>
+        /// Release branch names always start with: <b>"release-"</b>
+        /// </note>
+        /// </remarks>
+        public static async Task<string> GetNodeImageUriAsync(
+            HostingEnvironment  hostingEnvironment, 
+            CpuArchitecture     architecture = CpuArchitecture.amd64,
+            string              stageBranch  = null)
+        {
+            await SyncContext.Clear;
+
+            return GetNodeImageUri(hostingEnvironment, architecture, stageBranch);
+
+            using (var headendClient = HeadendClient.Create())
+            {
+                return await headendClient.ClusterSetup.GetNodeImageManifestUriAsync(hostingEnvironment.ToMemberString(), KubeVersions.NeonKube, architecture, stageBranch);
             }
         }
 
         /// <summary>
-        /// Returns the default URI to be used for downloading the ready-to-go neonKUBE virtual machine image 
-        /// for the current neonKUBE cluster version.  This image includes a fully deployed neon-desktop built-in
-        /// single node cluster.
+        /// Returns the URI of the download manifest for a neonKUBE desktop image.
         /// </summary>
-        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
-        /// <param name="architecture">The target CPU architecture.</param>
-        /// <returns>The download URI or <c>null</c>.</returns>
+        /// <param name="hostingEnvironment">Identifies the hosting environment.</param>
+        /// <param name="architecture">Specifies the target CPU architecture.</param>
+        /// <param name="stageBranch">
+        /// To obtain the URI for a staged desktop image, pass this as the name of the
+        /// branch from which neonKUBE libraries were built.
+        /// </param>
+        /// <returns>The action result.</returns>
+        /// <remarks>
+        /// <para>
+        /// When <paramref name="stageBranch"/> is <c>null</c>, the URI for the published node
+        /// image will be returned.
+        /// </para>
+        /// <para>
+        /// Otherwise, <paramref name="stageBranch"/> should be passed as the name of the branch
+        /// from which the <b>Neon.Kube</b> libraries were built.  In this case, this
+        /// method will return a URI to the staged desktop image also build from that branch.
+        /// </para>
+        /// <para>
+        /// For non-release branches, this method will append a dot and the branch name
+        /// to <see cref="KubeVersions.NeonKube"/> and include that in the URI.  This allows
+        /// us to have multiple development versions of any given image for development and 
+        /// testing purposes.  For release branches, the URI returned will reference the 
+        /// staged desktop image including the <see cref="KubeVersions.NeonKube"/> without
+        /// any branch part.
+        /// </para>
+        /// <note>
+        /// Release branch names always start with: <b>"release-"</b>
+        /// </note>
+        /// </remarks>
         public static async Task<string> GetDesktopImageUriAsync(
             HostingEnvironment  hostingEnvironment,
-            CpuArchitecture     architecture = CpuArchitecture.amd64)
+            CpuArchitecture     architecture = CpuArchitecture.amd64,
+            string              stageBranch  = null)
         {
+            await SyncContext.Clear;
+
+            return GetDesktopImageUri(hostingEnvironment, architecture, stageBranch);
+
             using (var headendClient = HeadendClient.Create())
             {
-                return await headendClient.ClusterSetup.GetNodeImageManifestUriAsync(hostingEnvironment.ToMemberString(), KubeVersions.NeonKube, architecture);
+                return await headendClient.ClusterSetup.GetNodeImageManifestUriAsync(hostingEnvironment.ToMemberString(), KubeVersions.NeonKube, architecture, stageBranch);
             }
         }
     }

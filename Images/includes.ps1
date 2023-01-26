@@ -55,21 +55,26 @@ $publishAsPubic = $false
 #------------------------------------------------------------------------------
 # Global constants.
 
-# neonKUBE release Version.
+# neonKUBE cluster release version.
 
-$neonKUBE_Version = $(& "neon-build" read-version "$nkLib\Neon.Kube\KubeVersions.cs" NeonKube)
+$neonKUBE_Version = $(& neon-build read-version "$nkRoot\Lib\Neon.Kube\KubeVersions.cs" NeonKube)
 ThrowOnExitCode
 
-$neonKUBE_Tag = "neonkube-" + $neonKUBE_Version
+# neonKUBE container image tag.
+#
+# Note that we determine the currently checked-out Git branch for local neonKUBE 
+# repo.  If that's a release branch, then we'll just use the neonKUBE version,
+# otherwise, we'll append the branch name with a leading period to the tag.
+#
+# This helps to isolate container images between different branches so developers 
+# can work on different cluster images in parallel.
 
-# Override the common image tag if the [NEON_CONTAINER_TAG_OVERRIDE] is defined.\
-# This is used for development purposes.
+$neonKUBE_Tag   = "neonkube-" + $neonKUBE_Version
+$neonKubeBranch = GitBranch $env:NK_ROOT
 
-$tagOverride = $env:NEON_CONTAINER_TAG_OVERRIDE
-
-if (-not [System.String]::IsNullOrEmpty($tagOverride))
+if (-not $neonKubeBranch.StartsWith("release-"))
 {
-	$neonKUBE_Tag = $tagOverride
+	$neonKUBE_Tag = "$neonKUBE_Tag.$neonKubeBranch"
 }
 
 #------------------------------------------------------------------------------
@@ -98,17 +103,33 @@ function UtcDate
 }
 
 #------------------------------------------------------------------------------
-# Returns the current Git branch, date, and commit formatted as a Docker image tag
-# along with an optional dirty branch indicator.
+# Returns the .NET runtime base container reference to be used when building
+# our container images, like:
+#
+#		mcr.microsoft.com/dotnet/aspnet:7.0.2-jammy-amd64
+#
+# This accepts a single parameter specifying the path to the [global.json] file
+# used to control which .NET SDK we're using to build the container binaries.
+# This uses the [neon-build dotnet-version] command to identify the runtime
+# version and inject that into the base container name returned.
 
-function ImageTag
+function Get-DotnetBaseImage
 {
-	$branch = GitBranch $env:NK_ROOT
-	$date   = UtcDate
-	$commit = git log -1 --pretty=%h
-	$tag    = "$branch-$date-$commit"
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]$globalJsonPath
+    )
 
-	return $tag
+	# NOTE: This command writes the SDK version to the first output line and
+	#       the runtime version to the second line.
+
+	$command  = "neon-build dotnet-version " + '"' + $globalJsonPath + '"'
+	$response = Invoke-CaptureStreams $command
+	$lines    = $response.stdout -split '\r?\n'
+	$runtime  = $lines[1].Trim()
+
+	return "mcr.microsoft.com/dotnet/aspnet:$runtime-jammy-amd64"
 }
 
 #------------------------------------------------------------------------------
@@ -301,7 +322,6 @@ function Log-ImageBuild
 # Makes any text files that will be included in Docker images Linux safe by
 # converting CRLF line endings to LF and replacing TABs with spaces.
 
-unix-text --recursive $image_root\Dockerfile 
 unix-text --recursive $image_root\*.sh 
 unix-text --recursive $image_root\*.cfg 
 unix-text --recursive $image_root\*.js 

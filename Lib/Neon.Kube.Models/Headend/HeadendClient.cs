@@ -42,14 +42,16 @@ namespace Neon.Kube.Models.Headend
         string GetNodeImageManifestUriAsync(
             [FromQuery] string hostingEnvironment,
             [FromQuery] string version,
-            [FromQuery] CpuArchitecture architecture);
+            [FromQuery] CpuArchitecture architecture,
+            [FromQuery] string stageBranch);
 
         [HttpGet]
         [Route("image/desktop")]
         string GetDesktopImageManifestUriAsync(
             [FromQuery] string hostingEnvironment,
             [FromQuery] string version,
-            [FromQuery] CpuArchitecture architecture);
+            [FromQuery] CpuArchitecture architecture,
+            [FromQuery] string stageBranch);
 
         [HttpGet]
         [Route("image/node/azure")]

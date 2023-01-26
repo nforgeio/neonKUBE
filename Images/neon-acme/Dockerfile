@@ -16,7 +16,8 @@
 # limitations under the License.
 
 ARG         ORGANIZATION
-FROM        mcr.microsoft.com/dotnet/aspnet:7.0-jammy-amd64
+ARG         BASE_IMAGE
+FROM        $BASE_IMAGE
 MAINTAINER  marcus@neonforge.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME
@@ -51,4 +52,3 @@ RUN chmod 700 /*.sh \
     && sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/gai.conf
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
-

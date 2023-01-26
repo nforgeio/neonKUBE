@@ -30,7 +30,6 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Oauth2Proxy;
-using Neon.Kube.Operator;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Tasks;
@@ -40,6 +39,7 @@ using k8s.Models;
 
 using Minio;
 using Dex;
+using Neon.Kube.Operator.Finalizer;
 
 namespace NeonClusterOperator
 {

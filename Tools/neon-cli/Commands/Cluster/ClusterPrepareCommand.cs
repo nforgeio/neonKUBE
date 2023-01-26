@@ -120,8 +120,19 @@ OPTIONS:
 
                                   NOTE: This is required for [--debug]
 
-    --private-image             - Specifies that the private node image should be deployed.
-                                  Only NEONFORGE maintainers should use this.
+    --use-staged[=branch]       - MAINTAINERS ONLY: Specifies that the staged image 
+                                  should be used as opposed to the public release image.
+
+                                  [--use-staged] by itself will prepare the cluster using
+                                  the staged neonKUBE node image whose version is a 
+                                  combination of the neonKUBE version along with the 
+                                  name of the neonKUBE branch when the libraries were
+                                  built.
+
+                                  [--use-staged=branch] allows you to override the branch
+                                  so you can base your cluster off of a specific image
+                                  build.
+
 ";
 
         /// <inheritdoc/>
@@ -140,7 +151,7 @@ OPTIONS:
             "--debug",
             "--quiet",
             "--base-image-name",
-            "--private-image"
+            "--use-staged"
         };
 
         /// <inheritdoc/>
@@ -170,7 +181,7 @@ OPTIONS:
             // We need to inject an implementation for [PreprocessReader] so it will be able to
             // perform the lookups.
 
-            NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfileClient());
+            NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfile());
 
             // Handle the [--remove-templates] option.
 
@@ -178,7 +189,7 @@ OPTIONS:
             {
                 Console.WriteLine("Removing cached virtual machine templates.");
 
-                foreach (var fileName in Directory.GetFiles(KubeHelper.NodeImageFolder, "*.*", SearchOption.TopDirectoryOnly))
+                foreach (var fileName in Directory.GetFiles(KubeHelper.VmImageFolder, "*.*", SearchOption.TopDirectoryOnly))
                 {
                     File.Delete(fileName);
                 }
@@ -191,7 +202,8 @@ OPTIONS:
             var baseImageName     = commandLine.GetOption("--base-image-name");
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
             var disablePending    = commandLine.HasOption("--disable-pending");
-            var privateImage      = commandLine.HasOption("--private-image");
+            var useStaged         = commandLine.HasOption("--use-staged");
+            var stageBranch       = commandLine.GetOption("--use-staged", KubeVersions.BuildBranch);
 
             if (!int.TryParse(maxParallelOption, out var maxParallel) || maxParallel <= 0)
             {
@@ -231,7 +243,7 @@ OPTIONS:
             // Do a quick sanity check to ensure that the hosting environment has no conflicts
             // as well as enough resources (memory, disk,...) to actually host the cluster.
 
-            using (var cluster = new ClusterProxy(clusterDefinition, new HostingManagerFactory(), !privateImage))
+            using (var cluster = new ClusterProxy(clusterDefinition, new HostingManagerFactory(), !useStaged))
             {
                 var status = await cluster.GetResourceAvailabilityAsync();
 
@@ -265,7 +277,7 @@ OPTIONS:
 
                 if (string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath))
                 {
-                    nodeImageUri = await KubeDownloads.GetNodeImageUriAsync(clusterDefinition.Hosting.Environment);
+                    nodeImageUri = await KubeDownloads.GetNodeImageUriAsync(clusterDefinition.Hosting.Environment, stageBranch: stageBranch);
                 }
             }
 
@@ -304,7 +316,7 @@ OPTIONS:
 
             var controller = KubeSetup.CreateClusterPrepareController(
                 clusterDefinition, 
-                cloudMarketplace: !privateImage,
+                cloudMarketplace: !useStaged,
                 options:          prepareOptions);
 
             controller.DisablePendingTasks = disablePending;
