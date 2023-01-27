@@ -44,6 +44,7 @@ using Neon.Kube.Operator.ResourceManager;
 using Neon.Kube.Operator.Util;
 using Neon.Tasks;
 
+using AsyncKeyedLock;
 using k8s;
 using k8s.Autorest;
 using k8s.LeaderElection;
@@ -696,13 +697,13 @@ namespace Neon.Kube.Operator.ResourceManager
                 {
                     await SyncContext.Clear;
 
+                    ResourceControllerResult result = null;
+
+                    var resource     = @event.Value;
+                    var resourceName = resource.Metadata.Name;
+
                     using (await lockProvider.LockAsync(@event.Value.Uid(), cancellationToken).ConfigureAwait(false))
                     {
-                        ResourceControllerResult result = null;
-
-                        var resource     = @event.Value;
-                        var resourceName = resource.Metadata.Name;
-
                         try
                         {
                             var cachedEntity = resourceCache.Upsert(resource, out var modifiedEventType);
