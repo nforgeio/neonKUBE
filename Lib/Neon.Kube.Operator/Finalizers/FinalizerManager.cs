@@ -25,12 +25,13 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube.Operator.Builder;
+using Neon.Tasks;
 
 using k8s;
 using k8s.Models;
-using Neon.Common;
 
 namespace Neon.Kube.Operator.Finalizer
 {
@@ -41,19 +42,17 @@ namespace Neon.Kube.Operator.Finalizer
         private readonly ILogger logger;
         private readonly ComponentRegister componentRegister;
         private readonly IFinalizerBuilder finalizerInstanceBuilder;
-        private readonly SemaphoreSlim semaphoreSlim;
-
+        
         public FinalizerManager(
             IKubernetes client,
             ILogger logger,
             ComponentRegister componentRegister,
             IFinalizerBuilder finalizerInstanceBuilder)
         {
-            this.client = client;
-            this.logger = logger;
-            this.componentRegister = componentRegister;
+            this.client                   = client;
+            this.logger                   = logger;
+            this.componentRegister        = componentRegister;
             this.finalizerInstanceBuilder = finalizerInstanceBuilder;
-            semaphoreSlim = new SemaphoreSlim(1);
         }
 
         /// <inheritdoc/>
@@ -64,6 +63,8 @@ namespace Neon.Kube.Operator.Finalizer
         /// <inheritdoc/>
         public async Task RegisterAllFinalizersAsync(TEntity entity)
         {
+            await SyncContext.Clear;
+
             await Task.WhenAll(
                 finalizerInstanceBuilder.BuildFinalizers<TEntity>()
                     .Select(f => RegisterFinalizerInternalAsync(entity, f)));
@@ -73,6 +74,8 @@ namespace Neon.Kube.Operator.Finalizer
         public async Task RemoveFinalizerAsync<TFinalizer>(TEntity entity)
             where TFinalizer : IResourceFinalizer<TEntity>
         {
+            await SyncContext.Clear;
+
             var finalizer = finalizerInstanceBuilder.BuildFinalizer<TEntity, TFinalizer>();
 
             if (entity.RemoveFinalizer(finalizer.Identifier))
@@ -81,11 +84,12 @@ namespace Neon.Kube.Operator.Finalizer
             }
         }
 
-        private async Task FinalizeInternalAsync(IResourceFinalizer<TEntity> finalizer, TEntity entity)
+        private async Task FinalizeInternalAsync(IResourceFinalizer<TEntity> finalizer, TEntity entity, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             try
             {
-                await semaphoreSlim.WaitAsync();
                 await finalizer.FinalizeAsync(entity);
                 await RemoveFinalizerAsync(entity, finalizer);
             }
@@ -93,10 +97,6 @@ namespace Neon.Kube.Operator.Finalizer
             {
                 logger.LogErrorEx(e);
                 throw;
-            }
-            finally
-            {
-                semaphoreSlim.Release();
             }
         }
 

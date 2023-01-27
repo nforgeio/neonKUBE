@@ -182,6 +182,7 @@ namespace Neon.Kube.Operator.ResourceManager
         private IKubernetes                                  k8s;
         private IServiceProvider                             serviceProvider;
         private IResourceCache<TEntity>                      resourceCache;
+        private IFinalizerManager<TEntity>                   finalizerManager;
         private AsyncKeyedLocker<string>                     lockProvider;
         private string                                       resourceNamespace;
         private Type                                         controllerType;
@@ -259,11 +260,12 @@ namespace Neon.Kube.Operator.ResourceManager
         {
             Covenant.Requires<ArgumentNullException>(serviceProvider != null, nameof(serviceProvider));
 
-            this.k8s             = serviceProvider.GetRequiredService<IKubernetes>();
-            this.logger          = serviceProvider.GetService<ILogger>() ?? TelemetryHub.CreateLogger($"Neon.Kube.Operator.ResourceManager({typeof(TEntity).Name})");
-            this.resourceCache   = serviceProvider.GetRequiredService<IResourceCache<TEntity>>();
-            this.lockProvider    = serviceProvider.GetRequiredService<AsyncKeyedLocker<string>>();
-
+            this.k8s              = serviceProvider.GetRequiredService<IKubernetes>();
+            this.logger           = serviceProvider.GetService<ILogger>() ?? TelemetryHub.CreateLogger($"Neon.Kube.Operator.ResourceManager({typeof(TEntity).Name})");
+            this.resourceCache    = serviceProvider.GetRequiredService<IResourceCache<TEntity>>();
+            this.finalizerManager = serviceProvider.GetRequiredService<IFinalizerManager<TEntity>>();
+            this.lockProvider     = serviceProvider.GetRequiredService<AsyncKeyedLocker<string>>();
+            
             if (leaderConfig != null && string.IsNullOrEmpty(leaderConfig.MetricsPrefix))
             {
                 leaderConfig.SetCounters($"{typeof(TController).Name}_{typeof(TEntity).Name}".ToLower());
@@ -796,8 +798,7 @@ namespace Neon.Kube.Operator.ResourceManager
                                                 {
                                                     resourceCache.AddFinalizer(resource);
 
-                                                    await serviceProvider.GetRequiredService<IFinalizerManager<TEntity>>()
-                                                        .FinalizeAsync(resource);
+                                                    await finalizerManager.FinalizeAsync(resource);
                                                 }
 
                                                 resourceCache.RemoveFinalizer(resource);

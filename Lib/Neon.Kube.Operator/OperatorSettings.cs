@@ -48,12 +48,25 @@ namespace Neon.Kube.Operator
         public bool AssemblyScanningEnabled { get; set; } = true;
 
         /// <summary>
+        /// The size of the pool to use for async locks.
+        /// </summary>
+        public int LockPoolSize { get; set; } = 20;
+
+        /// <summary>
+        /// The number of items to fill the lock pool with during initialization.
+        /// </summary>
+        public int LockPoolInitialFill { get; set; } = 1;
+
+        /// <summary>
         /// Validates the option properties.
         /// </summary>
         /// <exception cref="ValidationException">Thrown when any of the properties are invalid.</exception>
         public void Validate()
         {
-            
+            if (LockPoolInitialFill > LockPoolSize)
+            {
+                throw new ValidationException($"{nameof(LockPoolInitialFill)} can't be larger than {nameof(LockPoolSize)}");
+            }
         }
     }
 }
