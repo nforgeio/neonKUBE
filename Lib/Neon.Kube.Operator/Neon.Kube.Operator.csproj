@@ -34,6 +34,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="AsyncKeyedLock" Version="6.1.0" />
 		<PackageReference Include="CompareNETObjects" Version="4.78.0" />
 		<PackageReference Include="KubernetesClient" Version="9.0.38" />
 		<PackageReference Include="Localtunnel" Version="1.0.5" />

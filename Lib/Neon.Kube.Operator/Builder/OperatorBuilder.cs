@@ -36,6 +36,7 @@ using Neon.Kube.Operator.ResourceManager;
 using Neon.Kube.Operator.Webhook;
 using Neon.Kube.Operator.Webhook.Ngrok;
 
+using AsyncKeyedLock;
 using k8s.Models;
 using k8s;
 using Microsoft.AspNetCore.Components;
@@ -82,8 +83,12 @@ namespace Neon.Kube.Operator.Builder
             Services.AddSingleton<IFinalizerBuilder, FinalizerBuilder>();
             Services.AddTransient(typeof(IFinalizerManager<>), typeof(FinalizerManager<>));
             Services.AddSingleton(typeof(IResourceCache<>), typeof(ResourceCache<>));
-            Services.AddSingleton(typeof(ILockProvider<>), typeof(LockProvider<>));
-
+            Services.AddSingleton(new AsyncKeyedLocker<string>(o =>
+            {
+                o.PoolSize = 20;
+                o.PoolInitialFill = 1;
+            }));
+            
             if (settings.AssemblyScanningEnabled)
             {
                 var types = AppDomain.CurrentDomain.GetAssemblies()

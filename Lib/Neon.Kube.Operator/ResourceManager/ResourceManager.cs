@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    ResourceManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -44,6 +44,7 @@ using Neon.Kube.Operator.ResourceManager;
 using Neon.Kube.Operator.Util;
 using Neon.Tasks;
 
+using AsyncKeyedLock;
 using k8s;
 using k8s.Autorest;
 using k8s.LeaderElection;
@@ -181,7 +182,7 @@ namespace Neon.Kube.Operator.ResourceManager
         private IKubernetes                                  k8s;
         private IServiceProvider                             serviceProvider;
         private IResourceCache<TEntity>                      resourceCache;
-        private ILockProvider<TEntity>                       lockProvider;
+        private AsyncKeyedLocker<string>                     lockProvider;
         private string                                       resourceNamespace;
         private Type                                         controllerType;
         private Func<TEntity, bool>                          filter;
@@ -261,7 +262,7 @@ namespace Neon.Kube.Operator.ResourceManager
             this.k8s             = serviceProvider.GetRequiredService<IKubernetes>();
             this.logger          = serviceProvider.GetService<ILogger>() ?? TelemetryHub.CreateLogger($"Neon.Kube.Operator.ResourceManager({typeof(TEntity).Name})");
             this.resourceCache   = serviceProvider.GetRequiredService<IResourceCache<TEntity>>();
-            this.lockProvider    = serviceProvider.GetRequiredService<ILockProvider<TEntity>>();
+            this.lockProvider    = serviceProvider.GetRequiredService<AsyncKeyedLocker<string>>();
 
             if (leaderConfig != null && string.IsNullOrEmpty(leaderConfig.MetricsPrefix))
             {
@@ -701,7 +702,7 @@ namespace Neon.Kube.Operator.ResourceManager
                     var resource     = @event.Value;
                     var resourceName = resource.Metadata.Name;
 
-                    await using (await lockProvider.WaitAsync(@event.Value.Uid()))
+                    using (await lockProvider.LockAsync(@event.Value.Uid(), cancellationToken).ConfigureAwait(false))
                     {
                         try
                         {

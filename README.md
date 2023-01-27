@@ -1,5 +1,7 @@
 ﻿# neonKUBE: An open source Kubernetes distribution
 
+[![Slack](https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white)](https://communityinviter.com/apps/neonforge/neonforge)
+
 ---
 
 **neonSDK:** A new home for general purpose libraries.
