@@ -211,7 +211,7 @@ namespace Neon.Kube
         /// <summary>
         /// The size of the OS disk used for base images.
         /// </summary>
-        public const int BaseDiskDizeGiB = 10;
+        public const int BaseDiskSizeGiB = 10;
 
         /// <summary>
         /// <para>
