@@ -61,6 +61,11 @@ namespace Neon.Kube.ClusterDef
         {
             var driveSizeGiB = driveSizeBytes / ByteUnits.GibiBytes;
 
+            if (driveSizeGiB < KubeConst.MinNodeDiskSizeGiB)
+            {
+                driveSizeGiB = KubeConst.MinNodeDiskSizeGiB;
+            }
+
             switch (storageType)
             {
                 case AzureStorageType.StandardHDD:

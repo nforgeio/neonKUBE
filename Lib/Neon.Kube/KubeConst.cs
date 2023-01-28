@@ -140,7 +140,7 @@ namespace Neon.Kube
         /// <b>$/etc/hosts</b> section name used by neonKUBE applications for persisting
         /// DNS host entries via <see cref="NetHelper.ModifyLocalHosts(string, Dictionary{string, System.Net.IPAddress})"/>.
         /// </summary>
-        public const string EtcHostsSectionName = "Added by NEONKUBE";
+        public const string EtcHostsSectionName = "Added for NEONKUBE";
 
         /// <summary>
         /// <para>
@@ -218,6 +218,11 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         public const int MinNodeDiskSizeGiB = 32;
+
+        /// <summary>
+        /// The maximum support cluster node disk size in GiB.
+        /// </summary>
+        public const int MaxNodeDiskSizeGiB = 16 * 1024;
 
         /// <summary>
         /// Returns the URL to the neonKUBE GitHub repository.
