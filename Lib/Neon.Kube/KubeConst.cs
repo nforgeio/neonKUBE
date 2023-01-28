@@ -209,6 +209,11 @@ namespace Neon.Kube
         public const string NeonKubeImageTag = "neonkube-" + KubeVersions.NeonKube;
 
         /// <summary>
+        /// The size of the OS disk used for base images.
+        /// </summary>
+        public const int BaseDiskDizeGiB = 10;
+
+        /// <summary>
         /// <para>
         /// The minimum supported cluster node disk size in GiB.
         /// </para>
@@ -217,7 +222,7 @@ namespace Neon.Kube
         /// Hyper-V and XenServer Ubuntu images.
         /// </note>
         /// </summary>
-        public const int MinNodeDiskSizeGiB = 32;
+        public const int MinNodeDiskSizeGiB = 48;
 
         /// <summary>
         /// The maximum support cluster node disk size in GiB.
