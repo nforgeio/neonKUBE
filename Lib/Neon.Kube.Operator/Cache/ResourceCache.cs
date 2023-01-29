@@ -40,16 +40,14 @@ namespace Neon.Kube.Operator.Cache
     internal class ResourceCache<TEntity> : IResourceCache<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
     {
-        private readonly ILogger logger;
+        private static readonly ILogger logger = TelemetryHub.CreateLogger<ResourceCache<TEntity>>();
+
         private readonly ConcurrentDictionary<string, TEntity>  cache;
         private readonly ConcurrentDictionary<string, TEntity>  finalizingCache;
         private readonly CompareLogic                           comparelogLogic;
 
-        public ResourceCache(
-            ILogger logger) 
+        public ResourceCache() 
         {
-            this.logger = logger;
-
             cache           = new ConcurrentDictionary<string, TEntity>();
             finalizingCache = new ConcurrentDictionary<string, TEntity>();
 

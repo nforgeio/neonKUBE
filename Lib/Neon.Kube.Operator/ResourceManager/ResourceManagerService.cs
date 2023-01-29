@@ -43,23 +43,24 @@ using k8s;
 using k8s.Autorest;
 using k8s.LeaderElection;
 using k8s.Models;
+using IdentityModel;
+using Neon.Kube.Operator.Cache;
 
 namespace Neon.Kube.Operator.ResourceManager
 {
     internal class ResourceControllerManager : IHostedService
     {
+        private static readonly ILogger logger = TelemetryHub.CreateLogger<ResourceControllerManager>();
+
         private ComponentRegister componentRegister;
         private IServiceProvider  serviceProvider;
-        private ILogger           logger;
         
         public ResourceControllerManager(
             ComponentRegister componentRegister,
-            IServiceProvider  serviceProvider,
-            ILogger           logger)
+            IServiceProvider  serviceProvider)
         {
             this.componentRegister = componentRegister;
             this.serviceProvider   = serviceProvider;
-            this.logger            = logger;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)

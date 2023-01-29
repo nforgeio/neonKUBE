@@ -32,25 +32,25 @@ using Neon.Tasks;
 
 using k8s;
 using k8s.Models;
+using Neon.Kube.Operator.Cache;
 
 namespace Neon.Kube.Operator.Finalizer
 {
     internal class FinalizerManager<TEntity> : IFinalizerManager<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
     {
+        private static readonly ILogger logger = TelemetryHub.CreateLogger<FinalizerManager<TEntity>>();
+
         private readonly IKubernetes client;
-        private readonly ILogger logger;
         private readonly ComponentRegister componentRegister;
         private readonly IFinalizerBuilder finalizerInstanceBuilder;
         
         public FinalizerManager(
             IKubernetes client,
-            ILogger logger,
             ComponentRegister componentRegister,
             IFinalizerBuilder finalizerInstanceBuilder)
         {
             this.client                   = client;
-            this.logger                   = logger;
             this.componentRegister        = componentRegister;
             this.finalizerInstanceBuilder = finalizerInstanceBuilder;
         }

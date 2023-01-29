@@ -1,0 +1,98 @@
+﻿// FILE:	    TestOperatorFixture.cs
+// CONTRIBUTOR: Marcus Bowyer
+// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
+
+using Microsoft.Extensions.Hosting;
+
+using Neon.Xunit;
+
+using k8s;
+using k8s.Models;
+using k8s.KubeConfigModels;
+
+namespace Neon.Kube.Operator.Xunit
+{
+    /// <summary>
+    /// A test fixture used for testing Kubernetes Operators.
+    /// </summary>
+    public class TestOperatorFixture : TestFixture
+    {
+        /// <summary>
+        /// The operator under test.
+        /// </summary>
+        public ITestOperator Operator { get; set; }
+
+        /// <summary>
+        /// Kubernetes client used for interacting with the API server.
+        /// </summary>
+        public IKubernetes KubernetesClient { get; private set; }
+
+        /// <summary>
+        /// The kubernetes configuration for the test api server.
+        /// </summary>
+        public KubernetesClientConfiguration KubernetesClientConfiguration { get; private set; }
+
+        /// <summary>
+        /// The API server resource collection.
+        /// </summary>
+        public List<ResourceObject> Resources => testApiServerHost.Cluster.Resources;
+        
+        private ITestApiServerHost testApiServerHost;
+        private bool started;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public TestOperatorFixture()
+        {
+            this.testApiServerHost = new TestApiServerBuilder()
+                .Build();
+
+            this.KubernetesClientConfiguration = KubernetesClientConfiguration.BuildConfigFromConfigObject(testApiServerHost.KubeConfig);
+
+            this.KubernetesClient = new Kubernetes(KubernetesClientConfiguration, new KubernetesRetryHandler());
+            this.Operator = new TestOperator(KubernetesClientConfiguration);
+        }
+
+        /// <summary>
+        /// Start the test fixture.
+        /// </summary>
+        /// <returns></returns>
+        public TestFixtureStatus Start()
+        {
+            if (started) 
+            {
+                return TestFixtureStatus.AlreadyRunning;
+            }
+
+            testApiServerHost.Start();
+
+            Operator.Start();
+
+            started = true;
+
+            return TestFixtureStatus.Started;
+        }
+
+    }
+}

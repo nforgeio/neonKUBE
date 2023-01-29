@@ -15,6 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using k8s;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -38,6 +39,11 @@ namespace Neon.Kube.Operator
         public OperatorSettings()
         {
         }
+
+        /// <summary>
+        /// The Kubernetes client configuration.
+        /// </summary>
+        public KubernetesClientConfiguration KubernetesClientConfiguration { get; set; }
 
         /// <summary>
         /// <para>

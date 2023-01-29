@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    V1TestResource.cs
-// CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+//-----------------------------------------------------------------------------
+// FILE:	    V1TestChildResource.cs
+// CONTRIBUTOR: Marcus Bowyer
+// COPYRIGHT:	Copyright � 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ namespace Test.Neon.Kube.Operator
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
     [EntityScope(EntityScope.Cluster)]
-    public class V1TestResource : IKubernetesObject<V1ObjectMeta>, ISpec<TestSpec>, IValidate
+    public class V1TestChildResource : IKubernetesObject<V1ObjectMeta>, ISpec<ChildTestSpec>, IValidate
     {
         /// <summary>
         /// Object API group.
@@ -50,17 +50,17 @@ namespace Test.Neon.Kube.Operator
         /// <summary>
         /// Object API kind.
         /// </summary>
-        public const string KubeKind = "NeonTestObject";
+        public const string KubeKind = "TestChildResource";
 
         /// <summary>
         /// Object plural name.
         /// </summary>
-        public const string KubePlural = "neontestobjects";
+        public const string KubePlural = "testchildresources";
 
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public V1TestResource()
+        public V1TestChildResource()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
             Kind = KubeKind;
@@ -93,13 +93,13 @@ namespace Test.Neon.Kube.Operator
         /// Gets or sets specification of the desired behavior of the
         /// Tenant.
         /// </summary>
-        public TestSpec Spec { get; set; }
+        public ChildTestSpec Spec { get; set; }
 
         /// <summary>
         /// Gets or sets specification of the desired behavior of the
         /// Tenant.
         /// </summary>
-        public TestStatus Status { get; set; }
+        public ChildTestStatus Status { get; set; }
 
         /// <summary>
         /// Validate the object.
@@ -113,7 +113,7 @@ namespace Test.Neon.Kube.Operator
     /// <summary>
     /// The node execute task specification.
     /// </summary>
-    public class TestSpec
+    public class ChildTestSpec
     {
         /// <summary>
         /// A test string.
@@ -124,7 +124,7 @@ namespace Test.Neon.Kube.Operator
     /// <summary>
     /// The node execute task specification.
     /// </summary>
-    public class TestStatus
+    public class ChildTestStatus
     {
         /// <summary>
         /// A test string.
