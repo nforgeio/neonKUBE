@@ -104,7 +104,7 @@ namespace NeonNodeAgent
         /// <summary>
         /// Used to serialize the contents of a login file.
         /// </summary>
-        private class LoginData
+        internal class LoginData
         {
             [JsonProperty(PropertyName = "location", Required = Required.Always)]
             public string Location { get; set; }
@@ -119,7 +119,7 @@ namespace NeonNodeAgent
         /// <summary>
         /// Represents a container registry login file as described here: https://github.com/nforgeio/neonKUBE/issues/1591
         /// </summary>
-        private class LoginFile
+        internal class LoginFile
         {
             //-----------------------------------------------------------------
             // Static members
