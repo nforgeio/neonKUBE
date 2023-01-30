@@ -48,13 +48,16 @@ namespace Test.Neon.Kube.Operator
             this.fixture = fixture;
             fixture.Operator.AddController<TestResourceController>();
             fixture.Operator.AddController<TestDatabaseController>();
+            fixture.RegisterType<V1TestChildResource>();
+            fixture.RegisterType<V1StatefulSet>();
+            fixture.RegisterType<V1Service>();
             fixture.Start();
         }
 
         [Fact]
         public async Task CreateTestObjectAsync()
         {
-            fixture.RegisterType<V1TestChildResource>();
+            fixture.ClearResources();
 
             var controller = fixture.Operator.GetController<TestResourceController>();
 
@@ -67,13 +70,14 @@ namespace Test.Neon.Kube.Operator
             await controller.ReconcileAsync(resource);
 
             Assert.Contains(fixture.Resources, r => r.Metadata.Name == "child-object");
+
+            Assert.Single(fixture.Resources);
         }
 
         [Fact]
         public async Task CreateStatefulSetAsync()
         {
-            fixture.RegisterType<V1StatefulSet>();
-            fixture.RegisterType<V1Service>();
+            fixture.ClearResources();
 
             var controller = fixture.Operator.GetController<TestDatabaseController>();
 
@@ -96,6 +100,8 @@ namespace Test.Neon.Kube.Operator
 
             var statefulsets = fixture.Resources.OfType<V1StatefulSet>();
             var services = fixture.Resources.OfType<V1Service>();
+
+            Assert.Equal(2, fixture.Resources.Count);
 
             // verify statefulset
             Assert.Contains(statefulsets, r => r.Metadata.Name == resource.Name());

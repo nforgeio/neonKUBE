@@ -101,7 +101,13 @@ namespace Neon.Kube.Operator.Xunit
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
             var key = $"{typeMetadata.Group}/{typeMetadata.ApiVersion}/{typeMetadata.PluralName}";
-            testApiServerHost.Cluster.Types.Add(key, typeof(T));
+            testApiServerHost.Cluster.Types.TryAdd(key, typeof(T));
+        }
+
+        /// <inheritdoc/>
+        public void ClearResources()
+        {
+            testApiServerHost.Cluster.Resources.Clear();
         }
     }
 }

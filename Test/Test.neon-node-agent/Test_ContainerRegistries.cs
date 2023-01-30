@@ -15,17 +15,52 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Moq;
+using Neon.Kube.Operator.Xunit;
+using Neon.Kube.Resources.Cluster;
 using NeonNodeAgent;
+
+using k8s;
+using k8s.Models;
+
+using Moq;
 
 namespace TestNeonNodeAgent
 {
-    public class Test_ContainerRegistries
+    public class Test_ContainerRegistries : IClassFixture<TestOperatorFixture>
     {
-        [Fact]
-        public void Test1()
-        {
+        private TestOperatorFixture fixture;
 
+        public Test_ContainerRegistries(TestOperatorFixture fixture)
+        {
+            this.fixture = fixture;
+            fixture.Operator.AddController<ContainerRegistryController>();
+            fixture.Start();
+        }
+
+        [Fact]
+        public async void Test1()
+        {
+            fixture.ClearResources();
+
+            var controller = fixture.Operator.GetController<ContainerRegistryController>();
+
+            var containerRegistry = new V1NeonContainerRegistry()
+            {
+                Metadata = new V1ObjectMeta()
+                {
+                    Name = "test"
+                },
+                Spec = new V1NeonContainerRegistry.RegistrySpec()
+                {
+                    Username = "user",
+                    Password = "password",
+                    Location = "docker.io",
+                    SearchOrder = -1
+                }
+            };
+
+            fixture.Resources.Add(containerRegistry);
+            await controller.IdleAsync();
         }
     }
 }
