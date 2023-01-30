@@ -79,7 +79,7 @@ namespace Neon.Kube.Operator.Xunit
         public IOperatorBuilder AddController<T>()
             where T : class
         {
-            return Builder.AddController<T>();
+            return Builder.AddController<T>(leaderElectionDisabled: true);
         }
 
         /// <inheritdoc/>

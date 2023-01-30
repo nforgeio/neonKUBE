@@ -22,6 +22,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
 
+using k8s;
+using k8s.Models;
+
 namespace Neon.Kube.Operator.Xunit
 {
     /// <summary>
@@ -32,7 +35,12 @@ namespace Neon.Kube.Operator.Xunit
         /// <summary>
         /// The resources contained by the API server.
         /// </summary>
-        List<ResourceObject> Resources { get; }
+        List<IKubernetesObject<V1ObjectMeta>> Resources { get; }
+
+        /// <summary>
+        /// The types that the API server recognises.
+        /// </summary>
+        Dictionary<string, Type> Types { get; }
 
         /// <summary>
         /// No op.
@@ -48,6 +56,16 @@ namespace Neon.Kube.Operator.Xunit
         /// <param name="version"></param>
         /// <param name="plural"></param>
         /// <param name="resource"></param>
-        void AddResource(string group, string version, string plural, ResourceObject resource);
+        void AddResource(string group, string version, string plural, object resource);
+
+        /// <summary>
+        /// Adds a resource to the API server's resource collection.
+        /// </summary>
+        /// <param name="group"></param>
+        /// <param name="version"></param>
+        /// <param name="plural"></param>
+        /// <param name="resource"></param>
+        void AddResource<T>(string group, string version, string plural, T resource)
+            where T : IKubernetesObject<V1ObjectMeta>;
     }
 }

@@ -27,6 +27,7 @@ using Microsoft.Extensions.Hosting;
 
 using k8s;
 using k8s.KubeConfigModels;
+using System.Text.Json.Serialization;
 
 namespace Neon.Kube.Operator.Xunit
 {
@@ -35,6 +36,7 @@ namespace Neon.Kube.Operator.Xunit
     /// </summary>
     public class TestApiServerStartup
     {
+        
         /// <summary>
         /// Configures depdendency injection.
         /// </summary>
@@ -47,6 +49,14 @@ namespace Neon.Kube.Operator.Xunit
                     options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
                 });
             services.AddSingleton<ITestApiServer, TestApiServer>();
+            var serializeOptions = new JsonSerializerOptions()
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
+
+            serializeOptions.Converters.Add(new JsonStringEnumMemberConverter());
+
+            services.AddSingleton(serializeOptions);
         }
 
         /// <summary>

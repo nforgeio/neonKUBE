@@ -27,6 +27,8 @@ using Neon.Kube.Operator.Builder;
 
 using k8s.KubeConfigModels;
 using k8s;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 
 namespace Neon.Kube.Operator.Xunit
 {

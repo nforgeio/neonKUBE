@@ -15,7 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -48,12 +47,15 @@ namespace Test.Neon.Kube.Operator
         { 
             this.fixture = fixture;
             fixture.Operator.AddController<TestResourceController>();
+            fixture.Operator.AddController<TestDatabaseController>();
             fixture.Start();
         }
 
         [Fact]
         public async Task CreateTestObjectAsync()
         {
+            fixture.RegisterType<V1TestChildResource>();
+
             var controller = fixture.Operator.GetController<TestResourceController>();
 
             var resource = new V1TestResource();
@@ -65,6 +67,40 @@ namespace Test.Neon.Kube.Operator
             await controller.ReconcileAsync(resource);
 
             Assert.Contains(fixture.Resources, r => r.Metadata.Name == "child-object");
+        }
+
+        [Fact]
+        public async Task CreateStatefulSetAsync()
+        {
+            fixture.RegisterType<V1StatefulSet>();
+            fixture.RegisterType<V1Service>();
+
+            var controller = fixture.Operator.GetController<TestDatabaseController>();
+
+            var resource = new V1TestDatabase()
+            {
+                Metadata = new V1ObjectMeta()
+                {
+                    Name = "test-database",
+                    NamespaceProperty = "test"
+                },
+                Spec = new TestDatabaseSpec()
+                {
+                    Image = "foo/bar:latest",
+                    Servers = 3,
+                    VolumeSize = "1Gi"
+                }
+            };
+
+            await controller.ReconcileAsync(resource);
+
+            Assert.Contains(fixture.Resources, r => r.Metadata.Name == resource.Name());
+
+            var statefulset = fixture.Resources.OfType<V1StatefulSet>().Single();
+
+            Assert.Equal(resource.Spec.Servers, statefulset.Spec.Replicas);
+
+            Assert.Single(fixture.Resources.OfType<V1Service>());
         }
     }
 }

@@ -27,6 +27,8 @@ using Neon.Tasks;
 
 using k8s;
 using k8s.Models;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace Neon.Kube.Operator.Xunit
 {
@@ -34,17 +36,23 @@ namespace Neon.Kube.Operator.Xunit
     /// Generic resource API controller.
     /// </summary>
     [Route("api/{version}/{plural}")]
+    [Route("api/{version}/namespaces/{namespace}/{plural}")]
     public class ResourceApiController : Microsoft.AspNetCore.Mvc.Controller
     {
         private readonly ITestApiServer testApiServer;
+        private readonly JsonSerializerOptions jsonSerializerOptions;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="testApiServer"></param>
-        public ResourceApiController(ITestApiServer testApiServer)
+        /// <param name="jsonSerializerOptions"></param>
+        public ResourceApiController(
+            ITestApiServer testApiServer,
+            JsonSerializerOptions jsonSerializerOptions)
         {
             this.testApiServer = testApiServer;
+            this.jsonSerializerOptions = jsonSerializerOptions;
         }
 
         /// <summary>
@@ -60,18 +68,35 @@ namespace Neon.Kube.Operator.Xunit
         public string Plural { get; set; }
 
         /// <summary>
+        /// The namespace name of the <see cref="IKubernetesObject"/>.
+        /// </summary>
+        [FromRoute]
+        public string Namespace { get; set; }
+
+        /// <summary>
         /// Creates a resource and stores it in <see cref="TestApiServer.Resources"/>
         /// </summary>
         /// <param name="resource"></param>
         /// <returns>An action result containing the resource.</returns>
         [HttpPost]
-        public async Task<ActionResult<ResourceObject>> CreateAsync(ResourceObject resource)
+        public async Task<ActionResult<ResourceObject>> CreateAsync([FromBody] object resource)
         {
             await SyncContext.Clear;
 
-            testApiServer.AddResource(string.Empty, Version, Plural, resource);
+            var key = $"{string.Empty}/{Version}/{Plural}";
+            if (testApiServer.Types.TryGetValue(key, out Type type))
+            {
+                var typeMetadata = type.GetKubernetesTypeMetadata();
 
-            return Ok(resource);
+                var s = JsonSerializer.Serialize(resource);
+                var instance = JsonSerializer.Deserialize(s, type, jsonSerializerOptions);
+
+                testApiServer.AddResource(string.Empty, Version, Plural, instance);
+
+                return Ok(resource);
+            }
+
+            return NotFound();
         }
     }
 }

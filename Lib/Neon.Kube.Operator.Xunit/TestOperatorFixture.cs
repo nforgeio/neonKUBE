@@ -55,7 +55,7 @@ namespace Neon.Kube.Operator.Xunit
         /// <summary>
         /// The API server resource collection.
         /// </summary>
-        public List<ResourceObject> Resources => testApiServerHost.Cluster.Resources;
+        public List<IKubernetesObject<V1ObjectMeta>> Resources => testApiServerHost.Cluster.Resources;
         
         private ITestApiServerHost testApiServerHost;
         private bool started;
@@ -94,5 +94,14 @@ namespace Neon.Kube.Operator.Xunit
             return TestFixtureStatus.Started;
         }
 
+        /// <inheritdoc/>
+        public void RegisterType<T>()
+            where T : IKubernetesObject<V1ObjectMeta>
+        {
+            var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
+
+            var key = $"{typeMetadata.Group}/{typeMetadata.ApiVersion}/{typeMetadata.PluralName}";
+            testApiServerHost.Cluster.Types.Add(key, typeof(T));
+        }
     }
 }

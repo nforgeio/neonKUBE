@@ -19,7 +19,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-
+using k8s;
+using k8s.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
@@ -29,7 +30,10 @@ namespace Neon.Kube.Operator.Xunit
     public class TestApiServer : ITestApiServer
     {
         /// <inheritdoc/>
-        public List<ResourceObject> Resources { get; } = new List<ResourceObject>();
+        public List<IKubernetesObject<V1ObjectMeta>> Resources { get; } = new List<IKubernetesObject<V1ObjectMeta>>();
+
+        /// <inheritdoc/>
+        public Dictionary<string, Type> Types { get; } = new Dictionary<string, Type>();
 
         /// <summary>
         /// Constructor.
@@ -51,7 +55,14 @@ namespace Neon.Kube.Operator.Xunit
         }
 
         /// <inheritdoc/>
-        public virtual void AddResource(string group, string version, string plural, ResourceObject resource)
+        public virtual void AddResource(string group, string version, string plural, object resource)
+        {
+            Resources.Add((IKubernetesObject<V1ObjectMeta>)resource);
+        }
+
+        /// <inheritdoc/>
+        public virtual void AddResource<T>(string group, string version, string plural, T resource)
+            where T : IKubernetesObject<V1ObjectMeta>
         {
             Resources.Add(resource);
         }

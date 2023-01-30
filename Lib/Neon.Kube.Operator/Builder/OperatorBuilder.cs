@@ -72,7 +72,7 @@ namespace Neon.Kube.Operator.Builder
             if (!Services.Any(x => x.ServiceType == typeof(IKubernetes)))
             {
                 var k8s = new Kubernetes(
-                    settings.KubernetesClientConfiguration ?? KubernetesClientConfiguration.BuildDefaultConfig(),
+                    settings.KubernetesClientConfiguration,
                     new KubernetesRetryHandler());
                 Services.AddSingleton<IKubernetes>(k8s);
             }
