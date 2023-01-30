@@ -169,7 +169,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Release", "Doc\Release\Rele
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Operator.Xunit", "Lib\Neon.Kube.Operator.Xunit\Neon.Kube.Operator.Xunit.csproj", "{969BD3D6-6F3F-4E7D-99E3-24A8B35DA92A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Kube.Operator.Templates", "Lib\Neon.Kube.Operator.Templates\Neon.Kube.Operator.Templates.csproj", "{3671750E-E1FF-49EB-B352-9F20BC1C88D3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Operator.Templates", "Lib\Neon.Kube.Operator.Templates\Neon.Kube.Operator.Templates.csproj", "{3671750E-E1FF-49EB-B352-9F20BC1C88D3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
