@@ -5,13 +5,13 @@
     <OutputType>Library</OutputType>
     <Configurations>Debug;Release</Configurations>
     <Version>10000.0.2236-dev-master</Version>
-    <Description>Test Framework for Neon.Kube.Operator.</Description>
+    <Description>Xunit SDK for the Neon.Kube.Operator Kubernetes Operator SDK.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Operator.Testing/README.md</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Operator.Xunit/README.md</PackageProjectUrl>
     <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
     <PackageIcon>nuget-icon.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>kubernetes</PackageTags>
+    <PackageTags>kubernetes operator xunit test testing sdk neonkube</PackageTags>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
   </PropertyGroup>
 
