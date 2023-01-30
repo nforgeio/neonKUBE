@@ -46,7 +46,7 @@ using Newtonsoft.Json.Serialization;
 namespace Neon.Kube.Operator.Util
 {
     /// <summary>
-    /// Useful utilities for the <b>KubeOps</b> operator SDK.
+    /// Useful utilities for the operator SDK.
     /// </summary>
     public static class OperatorHelper
     {

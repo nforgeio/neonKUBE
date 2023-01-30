@@ -98,11 +98,11 @@ namespace Neon.Kube.Operator.ResourceManager
     /// </note>
     /// <para><b>OPERATOR LIFECYCLE</b></para>
     /// <para>
-    /// Kubernetes operators work by watching cluster resources via the API server.  The KubeOps Operator SDK
+    /// Kubernetes operators work by watching cluster resources via the API server.  The Operator SDK
     /// starts watching the resource specified by <typeparamref name="TEntity"/> and raises the
     /// controller events as they are received, handling any failures seamlessly.  The <see cref="ResourceManager{TResource, TController}"/> 
     /// class helps keep track of the existing resources as well reducing the complexity of determining why
-    /// an event was raised.  KubeOps also periodically raises reconciled events even when nothing has 
+    /// an event was raised. Operator SDK also periodically raises reconciled events even when nothing has 
     /// changed.  This appears to happen once a minute.
     /// </para>
     /// <para>
@@ -125,7 +125,7 @@ namespace Neon.Kube.Operator.ResourceManager
     /// </note>
     /// <para>
     /// After the resource manager has all of the resources, it will start calling your reconciled
-    /// handler for every event raised by KUbeOps and start calling your deleted and status modified
+    /// handler for every event raised by the operator and start calling your deleted and status modified
     /// handlers for changes.
     /// </para>
     /// <para>
@@ -147,7 +147,7 @@ namespace Neon.Kube.Operator.ResourceManager
     /// operators step on each other's toes when the operator has multiple replicas running.
     /// </para>
     /// <para>
-    /// The <b>KubeOps</b> SDK and other operator SDKs allow operators to indicate that only a single
+    /// The Operator SDK and other operator SDKs allow operators to indicate that only a single
     /// replica in the cluster should be allowed to process changes to custom resources.  This uses
     /// Kubernetes leases and works well for simple operators that manage only a single resource or 
     /// perhaps a handful of resources that are not also managed by other operators.
@@ -353,7 +353,7 @@ namespace Neon.Kube.Operator.ResourceManager
         }
 
         /// <summary>
-        /// Ensures that the controller has been started before KubeOps.
+        /// Ensures that the controller has been started before the operator.
         /// </summary>
         /// <exception cref="InvalidOperationException">
         /// Thrown when Operator is running before <see cref="StartAsync()"/> is called for this controller.
@@ -551,62 +551,6 @@ namespace Neon.Kube.Operator.ResourceManager
         {
             return (IOperatorController<TEntity>)ActivatorUtilities.CreateInstance(serviceProvider, controllerType);
         }
-
-        //---------------------------------------------------------------------
-        // $todo(jefflill): At least support dependency injection when constructing the controller.
-        //
-        //      https://github.com/nforgeio/neonKUBE/issues/1589
-        //
-        // For some reason, KubeOps does not seem to send RECONCILE events when no changes
-        // have been detected, even though we return a [ResourceControllerResult] with a
-        // delay.  We're also not seeing any RECONCILE event when the operator starts and
-        // there are no resources.  This used to work before we upgraded to KubeOps v7.0.0-preview2.
-        //
-        // NOTE: It's very possible that the old KubeOps behavior was invalid and the current
-        //       behavior actually is correct.
-        //
-        // This completely breaks our logic where we expect to see an IDLE event after
-        // all of the existing resources have been discovered or when no resources were
-        // discovered.
-        //
-        // We're going to work around this with a pretty horrible hack for the time being:
-        //
-        //      1. We're going to use the [nextNoChangeReconcileUtc] field to track
-        //         when the next IDLE event should be raised.  This will default
-        //         to the current time plus 1 minute when the resource manager is 
-        //         constructed.  This gives KubeOps a chance to discover existing
-        //         resources before we start raising IDLE events.
-        //
-        //      2. After RECONCILE events are handled by the operator's controller,
-        //         we'll reset the [nextNoChangeReconcileUtc] property to be the current
-        //         time plus the [reconciledNoChangeInterval].
-        //
-        //      3. The [NoChangeLoop()] method below loops watching for when [nextNoChangeReconcileUtc]
-        //         indicates that an IDLE RECONCILE event should be raised.  The loop
-        //         will instantiate an instance of the controller, hardcoding the [IKubernetes]
-        //         constructor parameter for now, rather than supporting real dependency
-        //         injection.  We'll then call [ReconcileAsync()] ourselves.
-        //
-        //         The loop uses [mutex] to ensure that only controller event handler is
-        //         called at a time, so this should be thread/task safe.
-        //
-        //      4. We're only going to do this for RECONCILE events right now: our
-        //         operators aren't currently monitoring DELETED or STATUS-MODIFIED
-        //         events and I suspect that KubeOps is probably doing the correct
-        //         thing for these anyway.
-        //
-        // PROBLEM:
-        //
-        // This hack can result in a problem when KubeOps is not able to watch the resource
-        // for some reason.  The problem is that if this continutes for the first 1 minute
-        // delay, then the loop below will tragger an IDLE RECONCILE event with no including
-        // no items, and then the operator could react by deleting any existing related physical
-        // resources, which would be REALLY BAD.
-        //
-        // To mitigate this, I'm going to special case the first IDLE reconcile to query the
-        // custom resources and only trigger the IDLE reconcile when the query succeeded and
-        // no items were returned.  Otherwise KubeOps may be having trouble communicating with 
-        // Kubernetes or when there are items, we should expect KubeOps to reconcile those for us.
 
         /// <summary>
         /// This loop handles raising of <see cref="IOperatorController{TEntity}.IdleAsync()"/> 

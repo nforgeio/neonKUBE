@@ -36,7 +36,6 @@ using Neon.Kube.Operator.Controller;
 using Neon.Kube.Resources.Cluster;
 
 using Xunit;
-using KellermanSoftware.CompareNetObjects;
 
 namespace Test.Neon.Kube.Operator
 {

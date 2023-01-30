@@ -54,9 +54,6 @@ namespace NeonNodeAgent
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task Main(string[] args)
         {
-            // Intercept and handle KubeOps [generator] commands executed by the 
-            // KubeOps MSBUILD tasks.
-
             try
             {
                 Service = new Service(KubeService.NeonNodeAgent);

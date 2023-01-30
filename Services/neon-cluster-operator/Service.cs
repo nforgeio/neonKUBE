@@ -105,7 +105,7 @@ namespace NeonClusterOperator
     /// <item>
     ///     <term><b>WATCHER_MAX_RETRY_INTERVAL</b></term>
     ///     <description>
-    ///     <b>timespan:</b> Specifies the maximum time the KubeOps resource watcher will wait
+    ///     <b>timespan:</b> Specifies the maximum time the resource watcher will wait
     ///     after a watch failure.  This defaults to <b>15 seconds</b>.
     ///     </description>
     /// </item>
@@ -203,11 +203,6 @@ namespace NeonClusterOperator
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
-            //-----------------------------------------------------------------
-            // Start the controllers: these need to be started before starting KubeOps
-            
-            KubeHelper.InitializeJson();
-
             K8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig(), new KubernetesRetryHandler());
             
             LogContext.SetCurrentLogProvider(TelemetryHub.LoggerFactory);

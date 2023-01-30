@@ -41,31 +41,4 @@
 		<Folder Include="config.gitignore\" />
 	</ItemGroup>
 
-	<!--  CRD generation settings. -->
-
-	<PropertyGroup>
-		<KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
-		<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
-	</PropertyGroup>
-
-	<!-- 
-	This target removes any existing generated CRDs to avoid having old ones accumulate and
-	cause problems.
-	-->
-
-	<Target Name="PurgeCRDs" BeforeTargets="GenerateAfterBuild">
-		<Message Importance="high" Text="Purge CRDs" />
-		<Exec Command="neon-build rm &quot;$(ProjectDir)config.gitignore\crds\*&quot;" />
-	</Target>
-
-	<!-- 
-    The KubeOps config file generator doesn't rebuild the files when the config output
-    directory already exists.  We're going to delete this folder to ensure that these
-    files are always regenerated.
-    -->
-
-	<Target Name="RemoveConfig">
-		<RemoveDir Directories="$(ProjectDir)config.gitignore" />
-	</Target>
-
 </Project>

@@ -223,6 +223,7 @@ try
         SetVersion Neon.Kube.HyperV               $neonkubeVersion
         SetVersion Neon.Kube.Models               $neonkubeVersion
         SetVersion Neon.Kube.Operator             $neonkubeVersion
+        SetVersion Neon.Kube.Operator.Xunit       $neonkubeVersion
         SetVersion Neon.Kube.ResourceDefinitions  $neonkubeVersion
         SetVersion Neon.Kube.Resources            $neonkubeVersion
         SetVersion Neon.Kube.Setup                $neonkubeVersion
@@ -244,6 +245,7 @@ try
         Publish Neon.Kube.HyperV                  $neonkubeVersion
         Publish Neon.Kube.Models                  $neonkubeVersion
         Publish Neon.Kube.Operator                $neonkubeVersion
+        Publish Neon.Kube.Operator.Xunit          $neonkubeVersion
         Publish Neon.Kube.ResourceDefinitions     $neonkubeVersion
         Publish Neon.Kube.Resources               $neonkubeVersion
         Publish Neon.Kube.Setup                   $neonkubeVersion

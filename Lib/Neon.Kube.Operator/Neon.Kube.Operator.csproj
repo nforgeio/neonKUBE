@@ -20,19 +20,6 @@
 		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
 	</ItemGroup>
 
-	<PropertyGroup>
-		<!-- 
-		We need to prevent the KubeOps build targets from trying to call the non-existent
-		program entry point (due to this assembly being a Library) to generate the CRDs
-		and other installation related files.
-		-->
-		<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
-		<KubeOpsSkipCrds>true</KubeOpsSkipCrds>
-		<KubeOpsSkipRbac>true</KubeOpsSkipRbac>
-		<KubeOpsSkipOperator>true</KubeOpsSkipOperator>
-		<KubeOpsSkipInstaller>true</KubeOpsSkipInstaller>
-	</PropertyGroup>
-
 	<ItemGroup>
 		<PackageReference Include="AsyncKeyedLock" Version="6.1.1" />
 		<PackageReference Include="CompareNETObjects" Version="4.78.0" />

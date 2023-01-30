@@ -86,7 +86,7 @@ namespace NeonNodeAgent
     /// <item>
     ///     <term><b>WATCHER_MAX_RETRY_INTERVAL</b></term>
     ///     <description>
-    ///     <b>timespan:</b> Specifies the maximum time the KubeOps resource watcher will wait
+    ///     <b>timespan:</b> Specifies the maximum time the Operator resource watcher will wait
     ///     after a watch failure.  This defaults to <b>15 seconds</b>.
     ///     </description>
     /// </item>
@@ -206,11 +206,6 @@ namespace NeonNodeAgent
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
-            //-----------------------------------------------------------------
-            // Start the controllers: these need to be started before starting KubeOps
-
-            KubeHelper.InitializeJson(); 
-            
             K8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig(), new KubernetesRetryHandler());
 
             await WatchClusterInfoAsync();
@@ -248,47 +243,6 @@ namespace NeonNodeAgent
             await StartedAsync();
 
             _ = webHost.RunAsync();
-
-            //-----------------------------------------------------------------
-            // Start KubeOps.
-
-            // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1599
-            //
-            // We're temporarily using our poor man's operator
-
-#if DISABLED
-            _ = Host.CreateDefaultBuilder()
-                    .ConfigureHostOptions(
-                        options =>
-                        {
-                            // Ensure that the processor terminator and ASP.NET shutdown times match.
-
-                            options.ShutdownTimeout = ProcessTerminator.DefaultMinShutdownTime;
-                        })
-                    .ConfigureAppConfiguration(
-                        (hostingContext, config) =>
-                        {
-                            // $note(jefflill): 
-                            //
-                            // The .NET runtime watches the entire file system for configuration
-                            // changes which can cause real problems on Linux.  We're working around
-                            // this by removing all configuration sources which we aren't using
-                            // anyway for Kubernetes apps.
-                            //
-                            // https://github.com/nforgeio/neonKUBE/issues/1390
-
-                            config.Sources.Clear();
-                        })
-                    .ConfigureLogging(
-                        logging =>
-                        {
-                            logging.ClearProviders();
-                            logging.AddProvider(base.TelemetryHub);
-                        })
-                    .ConfigureWebHostDefaults(builder => builder.UseStartup<Startup>())
-                    .Build()
-                    .RunOperatorAsync(Array.Empty<string>());
-#endif
 
             // Handle termination gracefully.
 

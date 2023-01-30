@@ -17,15 +17,9 @@
 		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
 	</ItemGroup>
 
-	<PropertyGroup>
-		<!-- Write generated installation YAML to an git-ignored folder -->
-		<KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
-		<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
-	</PropertyGroup>
-
-    <ItemGroup>
-        <Protobuf Include="Protos/**/*.proto" OutputDir="$(ProjectDir)" GrpcServices="Client" />
-    </ItemGroup>
+  <ItemGroup>
+    <Protobuf Include="Protos/**/*.proto" OutputDir="$(ProjectDir)" GrpcServices="Client" />
+  </ItemGroup>
 
 	<ItemGroup>
 		<EmbeddedResource Include="Resources\cluster-manifest.json" />
@@ -87,34 +81,6 @@
 	<Target Name="ClusterManifest" BeforeTargets="CoreCompile">
 		<Exec Command="neon-build download-const-uri &quot;%NK_ROOT%\Lib\Neon.Kube\bin\$(Configuration)\net7.0\Neon.Kube.dll&quot; Neon.Kube.KubeDownloads NeonClusterManifestUri &quot;$(ProjectDir)Resources\cluster-manifest.json" />
 	</Target>
-
-	<!--  CRD generation settings. -->
-	
-	<PropertyGroup>
-		<KubeOpsConfigRoot>config.gitignore</KubeOpsConfigRoot>
-		<KubeOpsSkipDockerfile>true</KubeOpsSkipDockerfile>
-	</PropertyGroup>
-
-	<!-- 
-    The KubeOps config file generator doesn't rebuild the files when the config output
-    directory already exists.  We're going to delete this folder to ensure that these
-    files are always regenerated.
-    -->
-
-	<!--<Target Name="RemoveConfig" BeforeTargets="BeforeBuild">
-		<Message Importance="high" Text="Purge CRDs from: $(ProjectDir)config.gitignore" />
-		<Exec Command="neon-build rmdir &quot;$(ProjectDir)config.gitignore&quot;" />
-	</Target>-->
-
-	<!--
-    This target publishes all generated CRDs to [$/Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/crds/*].
-  
-    NOTE: This does not copy any other deployment related files to [$/Lib/Neon.Kube.Setup].  We'll edit deployment,
-  	      RBAC and other files in place there, like we do for all other charts.
-  
-    NOTE: [GenerateAfterBuild] is the KubeOps build target that generates the CRDs and other Kubernetes manifest 
-          and kustomization files.
-    -->
 
 	<Target Name="PublishCRDs" AfterTargets="GenerateAfterBuild">
 		<Message Importance="high" Text="Publish CRDs to: Neon.Kube.Setup" />
