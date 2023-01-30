@@ -36,6 +36,7 @@ using Neon.Kube.Operator.Controller;
 using Neon.Kube.Resources.Cluster;
 
 using Xunit;
+using KellermanSoftware.CompareNetObjects;
 
 namespace Test.Neon.Kube.Operator
 {
@@ -94,13 +95,15 @@ namespace Test.Neon.Kube.Operator
 
             await controller.ReconcileAsync(resource);
 
-            Assert.Contains(fixture.Resources, r => r.Metadata.Name == resource.Name());
+            var statefulsets = fixture.Resources.OfType<V1StatefulSet>();
+            var services = fixture.Resources.OfType<V1Service>();
 
-            var statefulset = fixture.Resources.OfType<V1StatefulSet>().Single();
+            // verify statefulset
+            Assert.Contains(statefulsets, r => r.Metadata.Name == resource.Name());
+            Assert.Equal(resource.Spec.Servers, statefulsets.Single().Spec.Replicas);
 
-            Assert.Equal(resource.Spec.Servers, statefulset.Spec.Replicas);
-
-            Assert.Single(fixture.Resources.OfType<V1Service>());
+            // verify service
+            Assert.Contains(services, r => r.Metadata.Name == resource.Name());
         }
     }
 }
