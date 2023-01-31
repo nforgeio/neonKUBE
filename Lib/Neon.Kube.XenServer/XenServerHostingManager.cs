@@ -814,9 +814,7 @@ namespace Neon.Kube.Hosting.XenServer
                     node.WaitForBoot();
 
                     // Extend the primary partition and file system to fill 
-                    // the virtual disk.  Note that we're not going to do
-                    // this if the specified disk size is less than or equal
-                    // to the node template's disk size (that would fail).
+                    // the virtual disk.
                     //
                     // Note that there should only be one unpartitioned disk
                     // at this point: the OS disk.
@@ -824,24 +822,21 @@ namespace Neon.Kube.Hosting.XenServer
                     var partitionedDisks = node.ListPartitionedDisks();
                     var osDisk           = partitionedDisks.Single();
 
-                    if (osDiskBytes > KubeConst.MinNodeDiskSizeGiB)
+                    node.Status = $"resize: OS disk";
+
+                    var response = node.SudoCommand($"growpart {osDisk} 2", RunOptions.None);
+
+                    // Ignore errors reported when the partition is already at its
+                    // maximum size and cannot be grown:
+                    //
+                    //      https://github.com/nforgeio/neonKUBE/issues/1352
+
+                    if (!response.Success && !response.AllText.Contains("NOCHANGE:"))
                     {
-                        node.Status = $"resize: OS disk";
-
-                        var response = node.SudoCommand($"growpart {osDisk} 2", RunOptions.None);
-
-                        // Ignore errors reported when the partition is already at its
-                        // maximum size and cannot be grown:
-                        //
-                        //      https://github.com/nforgeio/neonKUBE/issues/1352
-
-                        if (!response.Success && !response.AllText.Contains("NOCHANGE:"))
-                        {
-                            response.EnsureSuccess();
-                        }
-
-                        node.SudoCommand($"resize2fs {osDisk}2", RunOptions.FaultOnError);
+                        response.EnsureSuccess();
                     }
+
+                    node.SudoCommand($"resize2fs {osDisk}2", RunOptions.FaultOnError);
                 }
                 finally
                 {
