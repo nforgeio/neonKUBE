@@ -140,7 +140,7 @@ namespace Neon.Kube
         /// <b>$/etc/hosts</b> section name used by neonKUBE applications for persisting
         /// DNS host entries via <see cref="NetHelper.ModifyLocalHosts(string, Dictionary{string, System.Net.IPAddress})"/>.
         /// </summary>
-        public const string EtcHostsSectionName = "Added by NEONKUBE";
+        public const string EtcHostsSectionName = "Added for NEONKUBE";
 
         /// <summary>
         /// <para>
@@ -209,6 +209,11 @@ namespace Neon.Kube
         public const string NeonKubeImageTag = "neonkube-" + KubeVersions.NeonKube;
 
         /// <summary>
+        /// The size of the OS disk used for base images.
+        /// </summary>
+        public const int BaseDiskSizeGiB = 10;
+
+        /// <summary>
         /// <para>
         /// The minimum supported cluster node disk size in GiB.
         /// </para>
@@ -217,7 +222,12 @@ namespace Neon.Kube
         /// Hyper-V and XenServer Ubuntu images.
         /// </note>
         /// </summary>
-        public const int MinNodeDiskSizeGiB = 32;
+        public const int MinNodeDiskSizeGiB = 48;
+
+        /// <summary>
+        /// The maximum support cluster node disk size in GiB.
+        /// </summary>
+        public const int MaxNodeDiskSizeGiB = 16 * 1024;
 
         /// <summary>
         /// Returns the URL to the neonKUBE GitHub repository.

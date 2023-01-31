@@ -46,4 +46,5 @@
 		<None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
 		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
 	</ItemGroup>
+	
 </Project>

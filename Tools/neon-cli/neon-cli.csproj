@@ -15,7 +15,6 @@
 		<PublishSingleFile>false</PublishSingleFile>
 		<SelfContained>true</SelfContained>
 		<PublishTrimmed>false</PublishTrimmed>
-		<TrimMode>partial</TrimMode>
 		<PublishReadyToRun>true</PublishReadyToRun>
 	</PropertyGroup>
 
