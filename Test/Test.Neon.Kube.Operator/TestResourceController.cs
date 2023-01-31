@@ -49,7 +49,7 @@ using System.Xml.Linq;
 
 namespace Test.Neon.Kube.Operator
 {
-    public class TestResourceController : IOperatorController<V1TestResource>
+    public class TestResourceController : IResourceController<V1TestResource>
     {
         //---------------------------------------------------------------------
         // Instance members

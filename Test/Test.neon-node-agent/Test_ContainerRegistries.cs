@@ -15,6 +15,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+
+using Microsoft.Extensions.DependencyInjection;
+
 using Neon.Kube.Operator.Xunit;
 using Neon.Kube.Resources.Cluster;
 using NeonNodeAgent;
@@ -23,6 +27,8 @@ using k8s;
 using k8s.Models;
 
 using Moq;
+
+using Neon.Kube;
 
 namespace TestNeonNodeAgent
 {
@@ -33,6 +39,11 @@ namespace TestNeonNodeAgent
         public Test_ContainerRegistries(TestOperatorFixture fixture)
         {
             this.fixture = fixture;
+
+            var service = new Service(KubeService.NeonNodeAgent);
+            service.SetEnvironmentVariable("CONTAINERREGISTRY_RELOGIN_INTERVAL", TimeSpan.FromHours(1).ToString());
+            service.SetConfigFile(ContainerRegistryController.configMountPath, "");
+            fixture.Operator.Services.AddSingleton(service);
             fixture.Operator.AddController<ContainerRegistryController>();
             fixture.Start();
         }
@@ -41,6 +52,7 @@ namespace TestNeonNodeAgent
         public async void Test1()
         {
             fixture.ClearResources();
+            fixture.RegisterType<V1NeonContainerRegistry>();
 
             var controller = fixture.Operator.GetController<ContainerRegistryController>();
 
@@ -60,7 +72,10 @@ namespace TestNeonNodeAgent
             };
 
             fixture.Resources.Add(containerRegistry);
+
             await controller.IdleAsync();
+
+            Assert.True(true);
         }
     }
 }

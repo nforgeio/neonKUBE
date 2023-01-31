@@ -51,7 +51,7 @@ namespace Neon.Kube.Operator
     public static class OperatorBuilderExtensions
     {
         /// <summary>
-        /// Adds a <see cref="IOperatorController{TEntity}"/> to the Operator.
+        /// Adds a <see cref="IResourceController{TEntity}"/> to the Operator.
         /// </summary>
         /// <typeparam name="TImplementation"></typeparam>
         /// <param name="builder"></param>
@@ -72,7 +72,7 @@ namespace Neon.Kube.Operator
                 .Where(
                     t =>
                         t.IsConstructedGenericType &&
-                        t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IOperatorController<>)))
+                        t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IResourceController<>)))
                 .Select(i => i.GenericTypeArguments[0]);
 
             var genericRegistrationMethod = builder
@@ -89,7 +89,6 @@ namespace Neon.Kube.Operator
                 {
                     @namespace,
                     options,
-                    null,
                     leaderConfig,
                     leaderElectionDisabled
                 });

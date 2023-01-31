@@ -51,7 +51,9 @@ namespace Neon.Kube.Operator.Xunit
             services.AddSingleton<ITestApiServer, TestApiServer>();
             var serializeOptions = new JsonSerializerOptions()
             {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                IncludeFields = true,
+                PropertyNameCaseInsensitive = true,
             };
 
             serializeOptions.Converters.Add(new JsonStringEnumMemberConverter());

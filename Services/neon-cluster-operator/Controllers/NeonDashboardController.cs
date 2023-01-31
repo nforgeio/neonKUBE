@@ -67,7 +67,7 @@ namespace NeonClusterOperator
     /// Manages <see cref="V1NeonDashboard"/> resources.
     /// </para>
     /// </summary>
-    public class NeonDashboardController : IOperatorController<V1NeonDashboard>
+    public class NeonDashboardController : IResourceController<V1NeonDashboard>
     {
         //---------------------------------------------------------------------
         // Static members

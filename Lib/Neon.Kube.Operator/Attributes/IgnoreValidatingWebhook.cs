@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    OperatorBuilderIgnoreAttribute.cs
+// FILE:	    IgnoreValidatingWebhookAttribute.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -23,12 +23,12 @@ namespace Neon.Kube.Operator.Attributes
     /// Used to exclude a component from assembly scanning when building the operator.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    public class OperatorBuilderIgnoreAttribute : Attribute
+    public class IgnoreValidatingWebhookAttribute : Attribute
     {
         /// <summary>
         /// Constructor
         /// </summary>
-        public OperatorBuilderIgnoreAttribute()
+        public IgnoreValidatingWebhookAttribute()
         {
         }
     }

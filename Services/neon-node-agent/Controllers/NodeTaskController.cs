@@ -65,8 +65,8 @@ namespace NeonNodeAgent
     /// and empty output and error streams.
     /// </note>
     /// </remarks>
-    [OperatorBuilderIgnore]
-    public class NodeTaskController : IOperatorController<V1NeonNodeTask>
+    [IgnoreController]
+    public class NodeTaskController : IResourceController<V1NeonNodeTask>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -324,7 +324,7 @@ rm $0
                 await ExecuteTaskAsync(nodeTask);
             }
 
-            return null;
+            return ResourceControllerResult.Ok();
         }
 
         /// <summary>

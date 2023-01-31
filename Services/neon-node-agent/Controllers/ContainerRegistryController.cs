@@ -95,8 +95,8 @@ namespace NeonNodeAgent
     /// Node tasks on the host node will be simulated in this case by simply doing nothing.
     /// </note>
     /// </remarks>
-    [OperatorBuilderIgnore]
-    public class ContainerRegistryController : IOperatorController<V1NeonContainerRegistry>
+    [IgnoreController]
+    public class ContainerRegistryController : IResourceController<V1NeonContainerRegistry>
     {
         //---------------------------------------------------------------------
         // Local types
@@ -258,7 +258,8 @@ namespace NeonNodeAgent
         private const string podmanPath = "/usr/bin/podman";
 
         private static readonly ILogger     log             = TelemetryHub.CreateLogger<ContainerRegistryController>();
-        private static readonly string      configMountPath = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
+        internal static readonly string     configMountPath = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
+        private static readonly string      metricsPrefix   = Program.Service?.MetricsPrefix ?? string.Empty;
         private static TimeSpan             reloginInterval;
         private static TimeSpan             reloginMaxRandomInterval;
 
@@ -269,8 +270,8 @@ namespace NeonNodeAgent
 
         // Metrics counters
 
-        private static readonly Counter configUpdateCounter = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_node_updated", "Number of node config updates.");
-        private static readonly Counter loginErrorCounter   = Metrics.CreateCounter($"{Program.Service.MetricsPrefix}containerregistry_login_error", "Number of failed container registry logins.");
+        private static readonly Counter configUpdateCounter = Metrics.CreateCounter($"{metricsPrefix}containerregistry_node_updated", "Number of node config updates.");
+        private static readonly Counter loginErrorCounter   = Metrics.CreateCounter($"{metricsPrefix}containerregistry_login_error", "Number of failed container registry logins.");
 
         /// <summary>
         /// Static constructor.
@@ -300,6 +301,7 @@ namespace NeonNodeAgent
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task StartAsync(IServiceProvider serviceProvider)
         {
+            var service = serviceProvider.GetRequiredService<Service>();
             if (NeonHelper.IsLinux)
             {
                 // Ensure that the [/var/run/neonkube/container-registries] folder exists on the node.
@@ -341,7 +343,7 @@ rm $0
 
             // Load the configuration settings.
 
-            reloginInterval          = Program.Service.Environment.Get("CONTAINERREGISTRY_RELOGIN_INTERVAL", TimeSpan.FromHours(24));
+            reloginInterval          = service.Environment.Get("CONTAINERREGISTRY_RELOGIN_INTERVAL", TimeSpan.FromHours(24));
             reloginMaxRandomInterval = reloginInterval.Divide(4);
         }
         
@@ -349,15 +351,20 @@ rm $0
         // Instance members
 
         private readonly IKubernetes k8s;
+        private readonly Service     service;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ContainerRegistryController(IKubernetes k8s)
+        public ContainerRegistryController(
+            IKubernetes k8s,
+            Service service)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
+            Covenant.Requires(service != null, nameof(service));
 
-            this.k8s = k8s;
+            this.k8s     = k8s;
+            this.service = service;
         }
 
         /// <inheritdoc/>
@@ -440,7 +447,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                 // Read and parse the current configuration file to create list of the existing
                 // configured upstream registries.
 
-                var currentConfigText = File.ReadAllText(configMountPath);
+                var currentConfigText = File.ReadAllText(service.GetConfigFilePath(configMountPath));
                 var currentConfig     = Toml.Parse(currentConfigText);
                 var existingLocations = new List<string>();
 
@@ -464,7 +471,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                 {
                     configUpdateCounter.Inc();
 
-                    File.WriteAllText(configMountPath, newConfigText);
+                    File.WriteAllText(service.GetConfigFilePath(configMountPath), newConfigText);
                     (await Node.ExecuteCaptureAsync("pkill", new object[] { "-HUP", "crio" })).EnsureSuccess();
 
                     // Wait a few seconds to give CRI-O a chance to reload its config.  This will

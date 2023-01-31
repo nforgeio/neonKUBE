@@ -47,6 +47,7 @@ using OpenTelemetry.Trace;
 
 using Task = System.Threading.Tasks.Task;
 using Metrics = Prometheus.Metrics;
+using Neon.Kube.Operator.ResourceManager;
 
 namespace NeonClusterOperator
 {
@@ -87,6 +88,7 @@ namespace NeonClusterOperator
                 .AddSingleton(Service.DexClient)
                 .AddSingleton(Service.HeadendClient)
                 .AddSingleton(Service.HarborClient);
+
 
             services.AddKubernetesOperator()
                 .AddNgrokTunnnel(hostname: Service.GetEnvironmentVariable("NGROK_HOSTNAME", def: "127.0.0.1", redact: false),

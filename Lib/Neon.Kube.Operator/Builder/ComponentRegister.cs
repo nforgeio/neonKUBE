@@ -54,7 +54,7 @@ namespace Neon.Kube.Operator.Builder
             ValidatingWebhookRegistrations = new HashSet<ValidatingWebhookRegistration>();
         }
         public void RegisterController<TController, TEntity>()
-            where TController : class, IOperatorController<TEntity>
+            where TController : class, IResourceController<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
             ControllerRegistrations.Add(new ControllerRegistration(typeof(TController), typeof(TEntity)));

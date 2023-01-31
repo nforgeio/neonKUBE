@@ -29,19 +29,18 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.ObjectPool;
 
 using Neon.Diagnostics;
-using Neon.Kube.Operator.Finalizer;
+using Neon.Kube.Operator.Attributes;
 using Neon.Kube.Operator.Cache;
 using Neon.Kube.Operator.Controller;
+using Neon.Kube.Operator.Finalizer;
 using Neon.Kube.Operator.ResourceManager;
 using Neon.Kube.Operator.Webhook;
 using Neon.Kube.Operator.Webhook.Ngrok;
 
 using AsyncKeyedLock;
+
 using k8s.Models;
 using k8s;
-using Microsoft.AspNetCore.Components;
-using Neon.BuildInfo;
-using Neon.Kube.Operator.Attributes;
 
 namespace Neon.Kube.Operator.Builder
 {
@@ -77,6 +76,7 @@ namespace Neon.Kube.Operator.Builder
                 Services.AddSingleton<IKubernetes>(k8s);
             }
 
+            Services.AddSingleton(settings.ResourceManagerOptions);
             Services.AddSingleton(componentRegister);
             Services.AddSingleton<IFinalizerBuilder, FinalizerBuilder>();
             Services.AddSingleton(typeof(IFinalizerManager<>), typeof(FinalizerManager<>));
@@ -93,7 +93,10 @@ namespace Neon.Kube.Operator.Builder
                     .SelectMany(s => s.GetTypes())
                     .Where(
                         t => t.GetInterfaces().Any(i => i.GetCustomAttributes<OperatorComponentAttribute>().Any())
-                            & t.GetCustomAttribute<OperatorBuilderIgnoreAttribute>() == null
+                            & t.GetCustomAttribute<IgnoreControllerAttribute>() == null
+                            & t.GetCustomAttribute<IgnoreFinalizerAttribute>() == null
+                            & t.GetCustomAttribute<IgnoreMutatingWebhookAttribute>() == null
+                            & t.GetCustomAttribute<IgnoreValidatingWebhookAttribute>() == null
                     );
 
                 foreach (var type in types)
@@ -176,17 +179,15 @@ namespace Neon.Kube.Operator.Builder
         public IOperatorBuilder AddController<TImplementation, TEntity>(
             string @namespace = null,
             ResourceManagerOptions options = null,
-            Func<TEntity, bool> filter = null,
             LeaderElectionConfig leaderConfig = null,
             bool leaderElectionDisabled = false)
-            where TImplementation : class, IOperatorController<TEntity>
+            where TImplementation : class, IResourceController<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
             var resourceManager = new ResourceManager<TEntity, TImplementation>(
                 serviceProvider: Services.BuildServiceProvider(),
                 @namespace: @namespace,
                 options: options,
-                filter: filter,
                 leaderConfig: leaderConfig,
                 leaderElectionDisabled: leaderElectionDisabled);
 

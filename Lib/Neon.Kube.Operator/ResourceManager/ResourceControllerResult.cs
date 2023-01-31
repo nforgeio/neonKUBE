@@ -30,6 +30,7 @@ namespace Neon.Kube.Operator.ResourceManager
     /// </summary>
     public abstract class ResourceControllerResult
     {
+        internal ResourceControllerResult() { }
         internal ResourceControllerResult(TimeSpan delay)
         {
             RequeueDelay = delay;
@@ -50,6 +51,16 @@ namespace Neon.Kube.Operator.ResourceManager
         /// Type of the event to be queued.
         /// </summary>
         public WatchEventType? EventType { get; }
+
+        /// <summary>
+        /// Create a <see cref="ResourceControllerResult"/> that requeues a resource
+        /// with a given delay. When the event fires (after the delay) the resource
+        /// cache is consulted and the new <see cref="WatchEventType"/> is calculated.
+        /// Based on this new calculation, the new event triggers the according function.
+        /// </summary>
+        /// <returns>The <see cref="ResourceControllerResult"/> with the configured delay.</returns>
+        public static ResourceControllerResult Ok()
+            => null;
 
         /// <summary>
         /// Create a <see cref="ResourceControllerResult"/> that requeues a resource

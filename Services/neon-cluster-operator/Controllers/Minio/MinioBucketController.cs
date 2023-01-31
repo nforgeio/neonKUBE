@@ -66,7 +66,7 @@ namespace NeonClusterOperator
     /// <summary>
     /// Manages MinioBucket LDAP database.
     /// </summary>
-    public class MinioBucketController : IOperatorController<V1MinioBucket>
+    public class MinioBucketController : IResourceController<V1MinioBucket>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -124,7 +124,7 @@ namespace NeonClusterOperator
                 Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("resource", nameof(V1MinioBucket)));
 
                 await finalizerManager.RegisterAllFinalizersAsync(resource);
-
+                
                 try
                 {
                     minioClient = await GetMinioClientAsync(resource);

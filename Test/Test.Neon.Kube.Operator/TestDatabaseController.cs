@@ -50,7 +50,7 @@ using Amazon.Runtime.Internal.Transform;
 
 namespace Test.Neon.Kube.Operator
 {
-    public class TestDatabaseController : IOperatorController<V1TestDatabase>
+    public class TestDatabaseController : IResourceController<V1TestDatabase>
     {
         //---------------------------------------------------------------------
         // Instance members

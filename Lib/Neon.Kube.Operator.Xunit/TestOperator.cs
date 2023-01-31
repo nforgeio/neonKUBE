@@ -37,10 +37,6 @@ namespace Neon.Kube.Operator.Xunit
     /// <inheritdoc/>
     public class TestOperator : ITestOperator
     {
-        ///public IServiceCollection ITestOperator.Services { get; }
-        //public IOperatorBuilder ITestOperator.Operator { get; }
-
-
         private IHost host { get; set; }
         private IHostBuilder hostBuilder { get; set; }
 
@@ -64,15 +60,6 @@ namespace Neon.Kube.Operator.Xunit
                 options.AssemblyScanningEnabled = false;
                 options.KubernetesClientConfiguration = k8sConfig;
             });
-
-            this.hostBuilder = new HostBuilder()
-                .ConfigureServices(services =>
-                {
-                    foreach (var s in Services)
-                    {
-                        services.Add(s);
-                    }
-                });
         }
 
         /// <inheritdoc/>
@@ -112,6 +99,14 @@ namespace Neon.Kube.Operator.Xunit
         /// <inheritdoc/>
         public async Task StartAsync()
         {
+            this.hostBuilder = new HostBuilder()
+                .ConfigureServices(services =>
+                {
+                    foreach (var s in Services)
+                    {
+                        services.Add(s);
+                    }
+                });
             this.host = hostBuilder.Build();
             await host.StartAsync();
         }
@@ -119,8 +114,16 @@ namespace Neon.Kube.Operator.Xunit
         /// <inheritdoc/>
         public void Start()
         {
+            this.hostBuilder = new HostBuilder()
+                .ConfigureServices(services =>
+                {
+                    foreach (var s in Services)
+                    {
+                        services.Add(s);
+                    }
+                });
             this.host = hostBuilder.Build();
-            host.Start();
+            this.host.Start();
         }
 
         /// <inheritdoc/>

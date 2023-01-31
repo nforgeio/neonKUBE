@@ -72,7 +72,7 @@ namespace NeonClusterOperator
     /// Configures Neon SSO using <see cref="V1NeonSsoClient"/>.
     /// </para>
     /// </summary>
-    public class NeonSsoClientController : IOperatorController<V1NeonSsoClient>
+    public class NeonSsoClientController : IResourceController<V1NeonSsoClient>
     {
         //---------------------------------------------------------------------
         // Static members

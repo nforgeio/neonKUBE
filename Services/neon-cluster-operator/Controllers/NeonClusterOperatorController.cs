@@ -84,7 +84,7 @@ namespace NeonClusterOperator
     /// removing tasks that don't belong to an existing node.
     /// </para>
     /// </remarks>
-    public class NeonClusterOperatorController : IOperatorController<V1NeonClusterOperator>
+    public class NeonClusterOperatorController : IResourceController<V1NeonClusterOperator>
     {
         //---------------------------------------------------------------------
         // Static members

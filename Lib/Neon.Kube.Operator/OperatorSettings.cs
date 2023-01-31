@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using k8s;
+using Neon.Kube.Operator.ResourceManager;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -62,6 +63,11 @@ namespace Neon.Kube.Operator
         /// The number of items to fill the lock pool with during initialization.
         /// </summary>
         public int LockPoolInitialFill { get; set; } = 1;
+
+        /// <summary>
+        /// Default resource manager options that will be applied to controllers unless overridden.
+        /// </summary>
+        public ResourceManagerOptions ResourceManagerOptions { get; set; } = new ResourceManagerOptions();
 
         /// <summary>
         /// Validates the option properties.

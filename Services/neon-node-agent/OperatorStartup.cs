@@ -38,6 +38,7 @@ using OpenTelemetry;
 using OpenTelemetry.Instrumentation;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Neon.Kube.Operator.ResourceManager;
 
 namespace NeonNodeAgent
 {
@@ -74,6 +75,7 @@ namespace NeonNodeAgent
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<ILogger>(Program.Service.Logger)
+                .AddSingleton(Service)
                 .AddSingleton(Service.K8s);
 
             services.AddKubernetesOperator()

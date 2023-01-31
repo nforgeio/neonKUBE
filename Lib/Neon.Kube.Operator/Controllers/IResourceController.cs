@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IOperatorController.cs
+// FILE:	    IResourceController.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -51,9 +51,17 @@ namespace Neon.Kube.Operator.Controller
     /// </summary>
     /// <typeparam name="TEntity">Specifies the Kubernetes entity being managed.</typeparam>
     [OperatorComponent(OperatorComponentType.Controller)]
-    public interface IOperatorController<TEntity>
+    public interface IResourceController<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        /// <summary>
+        /// An optional filter.
+        /// </summary>
+        public bool Filter(TEntity resource)
+        {
+            return true;
+        }
+
         /// <summary>
         /// Starts the controller.
         /// </summary>
@@ -113,18 +121,18 @@ namespace Neon.Kube.Operator.Controller
         /// Called when the instance has a <see cref="LeaderElector"/> and this instance has
         /// assumed leadership.
         /// </summary>
-        public async Task OnPromotionAsync()
+        public Task OnPromotionAsync()
         {
-            await Task.CompletedTask;
+            return Task.CompletedTask;
         }
 
         /// <summary>
         /// Called when the instance has a <see cref="LeaderElector"/> this instance has
         /// been demoted.
         /// </summary>
-        public async Task OnDemotionAsync()
+        public Task OnDemotionAsync()
         {
-            await Task.CompletedTask;
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -132,9 +140,9 @@ namespace Neon.Kube.Operator.Controller
         /// been elected.
         /// </summary>
         /// <param name="identity">Identifies the new leader.</param>
-        public async Task OnNewLeaderAsync(string identity)
+        public Task OnNewLeaderAsync(string identity)
         {
-            await Task.CompletedTask;
+            return Task.CompletedTask;
         }
     }
 }

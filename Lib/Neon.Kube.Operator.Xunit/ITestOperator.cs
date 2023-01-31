@@ -53,7 +53,7 @@ namespace Neon.Kube.Operator.Xunit
         void Start();
 
         /// <summary>
-        /// Adds an <see cref="IOperatorController{TEntity}"/> to the test operator.
+        /// Adds an <see cref="IResourceController{TEntity}"/> to the test operator.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
@@ -91,7 +91,7 @@ namespace Neon.Kube.Operator.Xunit
         IOperatorBuilder AddNgrokTunnnel();
 
         /// <summary>
-        /// Gets a <see cref="IOperatorController{TEntity}"/> from the operator.
+        /// Gets a <see cref="IResourceController{TEntity}"/> from the operator.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>

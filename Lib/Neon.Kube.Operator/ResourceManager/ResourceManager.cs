@@ -51,6 +51,7 @@ using k8s.LeaderElection;
 using k8s.Models;
 
 using Prometheus;
+using System.Resources;
 
 // $todo(jefflill):
 //
@@ -79,8 +80,8 @@ namespace Neon.Kube.Operator.ResourceManager
     /// (passing any custom settings as parameters) and then call <see cref="StartAsync()"/>.
     /// </para>
     /// <para>
-    /// After the resource manager starts, your controller's <see cref="IOperatorController{TEntity}.ReconcileAsync(TEntity)"/>, 
-    /// <see cref="IOperatorController{TEntity}.DeletedAsync(TEntity)"/>, and <see cref="IOperatorController{TEntity}.StatusModifiedAsync(TEntity)"/> 
+    /// After the resource manager starts, your controller's <see cref="IResourceController{TEntity}.ReconcileAsync(TEntity)"/>, 
+    /// <see cref="IResourceController{TEntity}.DeletedAsync(TEntity)"/>, and <see cref="IResourceController{TEntity}.StatusModifiedAsync(TEntity)"/> 
     /// methods will be called as related resource related events are received.
     /// </para>
     /// <para>
@@ -171,7 +172,7 @@ namespace Neon.Kube.Operator.ResourceManager
     /// </remarks>
     public sealed class ResourceManager<TEntity, TController> : IDisposable
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
-        where TController : IOperatorController<TEntity>
+        where TController : IResourceController<TEntity>
     {
         private bool                                         isDisposed   = false;
         private bool                                         stopIdleLoop = false;
@@ -206,18 +207,6 @@ namespace Neon.Kube.Operator.ResourceManager
         /// Optionally specifies options that customize the resource manager's behavior.  Reasonable
         /// defaults will be used when this isn't specified.
         /// </param>
-        /// <param name="filter">
-        /// <para>
-        /// Optionally specifies a predicate to be use for filtering the resources to be managed.
-        /// This can be useful for situations where multiple operator instances will partition
-        /// and handle the resources amongst themselves.  A good example is a node based operator
-        /// that handles only the resources associated with the node.
-        /// </para>
-        /// <para>
-        /// Your filter should examine the resource passed and return <c>true</c> when the resource
-        /// should be managed by this resource manager.  The default filter always returns <c>true</c>.
-        /// </para>
-        /// </param>
         /// <param name="leaderConfig">
         /// Optionally specifies the <see cref="LeaderElectionConfig"/> to be used to control
         /// whether only a single entity is managing a specific resource kind at a time.  See
@@ -230,7 +219,6 @@ namespace Neon.Kube.Operator.ResourceManager
             IServiceProvider        serviceProvider,
             string                  @namespace             = null,
             ResourceManagerOptions  options                = null,
-            Func<TEntity, bool>     filter                 = null,
             LeaderElectionConfig    leaderConfig           = null,
             bool                    leaderElectionDisabled = false)
         {
@@ -239,14 +227,12 @@ namespace Neon.Kube.Operator.ResourceManager
             
             this.serviceProvider        = serviceProvider;
             this.resourceNamespace      = @namespace;
-            this.options                = options ?? new ResourceManagerOptions();
-            this.filter                 = filter ?? new Func<TEntity, bool>(resource => true);
+            this.options                = options ?? serviceProvider.GetRequiredService<ResourceManagerOptions>();
             this.leaderConfig           = leaderConfig;
             this.leaderElectionDisabled = leaderElectionDisabled;
             this.metrics                = new ResourceManagerMetrics<TEntity, TController>();
-
+            
             this.options.Validate();
-
 
             this.controllerType = typeof(TController);
             var entityType      = typeof(TEntity);
@@ -547,13 +533,13 @@ namespace Neon.Kube.Operator.ResourceManager
         /// Creates a controller instance.
         /// </summary>
         /// <returns>The controller.</returns>
-        private IOperatorController<TEntity> CreateController()
+        private IResourceController<TEntity> CreateController()
         {
-            return (IOperatorController<TEntity>)ActivatorUtilities.CreateInstance(serviceProvider, controllerType);
+            return (IResourceController<TEntity>)ActivatorUtilities.CreateInstance(serviceProvider, controllerType);
         }
 
         /// <summary>
-        /// This loop handles raising of <see cref="IOperatorController{TEntity}.IdleAsync()"/> 
+        /// This loop handles raising of <see cref="IResourceController{TEntity}.IdleAsync()"/> 
         /// events when there's been no changes to any of the monitored resources.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -849,7 +835,7 @@ namespace Neon.Kube.Operator.ResourceManager
 
                     resourceCache.Compare(resource, out var modifiedEventType);
 
-                    if (!filter(resource))
+                    if (!CreateController().Filter(resource))
                     {
                         return;
                     }

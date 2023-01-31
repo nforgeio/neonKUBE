@@ -56,10 +56,9 @@ namespace Neon.Kube.Operator
         IOperatorBuilder AddController<TImplementation, TEntity>(
             string @namespace = null,
             ResourceManagerOptions options = null,
-            Func<TEntity, bool> filter = null,
             LeaderElectionConfig leaderConfig = null,
             bool leaderElectionDisabled = false)
-            where TImplementation : class, IOperatorController<TEntity>
+            where TImplementation : class, IResourceController<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>, new();
 
         /// <summary>

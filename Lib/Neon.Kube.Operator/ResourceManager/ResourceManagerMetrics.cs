@@ -47,7 +47,7 @@ namespace Neon.Kube.Operator.ResourceManager
     /// </summary>
     public class ResourceManagerMetrics<TEntity, TController>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
-        where TController : IOperatorController<TEntity>
+        where TController : IResourceController<TEntity>
     {
         private static string metricsPrefix;
 

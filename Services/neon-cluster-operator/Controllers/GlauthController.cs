@@ -63,7 +63,7 @@ namespace NeonClusterOperator
     /// <summary>
     /// Manages Glauth LDAP database.
     /// </summary>
-    public class GlauthController : IOperatorController<V1Secret>
+    public class GlauthController : IResourceController<V1Secret>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -115,6 +115,16 @@ namespace NeonClusterOperator
             Covenant.Requires(k8s != null, nameof(k8s));
 
             this.k8s = k8s;
+        }
+
+        /// <summary>
+        /// Filter out secrets that we aren't interested in.
+        /// </summary>
+        /// <param name="resource"></param>
+        /// <returns></returns>
+        public bool Filter(V1Secret resource)
+        {
+            return (resource.Name() == "glauth-users" || resource.Name() == "glauth-groups");
         }
 
         /// <summary>
