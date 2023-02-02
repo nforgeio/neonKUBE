@@ -45,7 +45,7 @@ namespace Neon.Kube.Resources.Istio
     public enum TLSMode
     {
         /// <summary>
-        /// The SNI string presented by the client will be used as the match criterion in a VirtualService 
+        /// The SNI string presented by the client will be used as the match criterion in a V1VirtualService 
         /// TLS route to determine the destination service from the service registry.
         /// </summary>
         [EnumMember(Value = "PASSTHROUGH")]
@@ -65,7 +65,7 @@ namespace Neon.Kube.Resources.Istio
 
         /// <summary>
         /// <para>
-        /// Similar to the passthrough mode, except servers with this TLS mode do not require an associated VirtualService 
+        /// Similar to the passthrough mode, except servers with this TLS mode do not require an associated V1VirtualService 
         /// to map from the SNI value to service in the registry. The destination details such as the service/subset/port 
         /// are encoded in the SNI value. The proxy will forward to the upstream (Envoy) cluster (a group of endpoints) 
         /// specified by the SNI value. This server is typically used to provide connectivity between services in disparate 

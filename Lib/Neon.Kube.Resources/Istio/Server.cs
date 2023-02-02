@@ -62,7 +62,7 @@ namespace Neon.Kube.Resources.Istio
         /// One or more hosts exposed by this gateway. While typically applicable to HTTP services, it can also be used for TCP services 
         /// using TLS with SNI. A host is specified as a dnsName with an optional namespace/ prefix. The dnsName should be specified using 
         /// FQDN format, optionally including a wildcard character in the left-most component (e.g., prod/*.example.com). Set the dnsName 
-        /// to * to select all VirtualService hosts from the specified namespace (e.g.,prod/*).
+        /// to * to select all V1VirtualService hosts from the specified namespace (e.g.,prod/*).
         /// </para>
         /// <para>
         /// The namespace can be set to * or ., representing any or the current namespace, respectively. For example, */foo.example.com 
@@ -71,14 +71,14 @@ namespace Neon.Kube.Resources.Istio
         /// DestinationRule in the selected namespace will also be used.
         /// </para>
         /// <para>
-        /// A VirtualService must be bound to the gateway and must have one or more hosts that match the hosts specified in a server. 
+        /// A V1VirtualService must be bound to the gateway and must have one or more hosts that match the hosts specified in a server. 
         /// The match could be an exact match or a suffix match with the server’s hosts. For example, if the server’s hosts specifies 
-        /// *.example.com, a VirtualService with hosts dev.example.com or prod.example.com will match. However, a VirtualService with 
+        /// *.example.com, a V1VirtualService with hosts dev.example.com or prod.example.com will match. However, a V1VirtualService with 
         /// host example.com or newexample.com will not match.
         /// </para>
         /// <para>
         /// NOTE: Only virtual services exported to the gateway’s namespace (e.g., exportTo value of *) can be referenced. Private 
-        /// configurations (e.g., exportTo set to .) will not be available. Refer to the exportTo setting in VirtualService, DestinationRule, 
+        /// configurations (e.g., exportTo set to .) will not be available. Refer to the exportTo setting in V1VirtualService, DestinationRule, 
         /// and ServiceEntry configurations for details.</para>
         /// </summary>
         [JsonProperty(PropertyName = "hosts", Required = Required.Always)]

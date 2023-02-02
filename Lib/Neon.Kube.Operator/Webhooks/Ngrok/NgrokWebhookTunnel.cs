@@ -83,7 +83,6 @@ namespace Neon.Kube.Operator.Webhook.Ngrok
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="logger"></param>
         /// <param name="k8s"></param>
         /// <param name="componentRegister"></param>
         /// <param name="serviceProvider"></param>
@@ -94,19 +93,18 @@ namespace Neon.Kube.Operator.Webhook.Ngrok
             ComponentRegister componentRegister,
             IServiceProvider serviceProvider,
             string ngrokdirectory = null,
-            string ngrokAuthToken = null,
-            ILogger logger = null)
+            string ngrokAuthToken = null)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
             Covenant.Requires(componentRegister != null, nameof(componentRegister));
             Covenant.Requires(serviceProvider != null, nameof(serviceProvider));
 
-            this.logger = logger ?? TelemetryHub.LoggerFactory.CreateLogger(GetType().Name);
-            this.k8s = k8s;
+            this.k8s               = k8s;
             this.componentRegister = componentRegister;
-            this.serviceProvider = serviceProvider;
-            this.ngrokdirectory = ngrokdirectory;
-            this.ngrokAuthToken = ngrokAuthToken;
+            this.serviceProvider   = serviceProvider;
+            this.ngrokdirectory    = ngrokdirectory;
+            this.ngrokAuthToken    = ngrokAuthToken;
+            this.logger            = serviceProvider.GetService<ILogger>();
 
             ngrokManager = new NgrokManager();
 
@@ -116,6 +114,8 @@ namespace Neon.Kube.Operator.Webhook.Ngrok
             };
 
             tunnelNname = NeonHelper.CreateBase36Uuid();
+
+
         }
 
         /// <inheritdoc/>
@@ -127,7 +127,7 @@ namespace Neon.Kube.Operator.Webhook.Ngrok
             }
             catch (Exception e)
             {
-                logger.LogErrorEx(e);
+                logger?.LogErrorEx(e);
             }
         }
 
@@ -238,7 +238,7 @@ namespace Neon.Kube.Operator.Webhook.Ngrok
             }
             catch (Exception e)
             {
-                logger.LogErrorEx(e);
+                logger?.LogErrorEx(e);
                 Tunnel = null;
                 return;
             }
@@ -253,7 +253,7 @@ namespace Neon.Kube.Operator.Webhook.Ngrok
             }
             catch (Exception e)
             {
-                logger.LogErrorEx(e);
+                logger?.LogErrorEx(e);
             }
 
             return Task.CompletedTask;

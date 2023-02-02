@@ -39,20 +39,21 @@ namespace Neon.Kube.Operator.Finalizer
     internal class FinalizerManager<TEntity> : IFinalizerManager<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
     {
-        private static readonly ILogger logger = TelemetryHub.CreateLogger<FinalizerManager<TEntity>>();
-
-        private readonly IKubernetes client;
+        private readonly ILogger           logger;
+        private readonly IKubernetes       client;
         private readonly ComponentRegister componentRegister;
         private readonly IFinalizerBuilder finalizerInstanceBuilder;
         
         public FinalizerManager(
-            IKubernetes client,
+            IKubernetes       client,
             ComponentRegister componentRegister,
-            IFinalizerBuilder finalizerInstanceBuilder)
+            IFinalizerBuilder finalizerInstanceBuilder,
+            ILogger           logger = null)
         {
             this.client                   = client;
             this.componentRegister        = componentRegister;
             this.finalizerInstanceBuilder = finalizerInstanceBuilder;
+            this.logger                   = logger;
         }
 
         /// <inheritdoc/>
@@ -95,7 +96,7 @@ namespace Neon.Kube.Operator.Finalizer
             }
             catch (Exception e)
             {
-                logger.LogErrorEx(e);
+                logger?.LogErrorEx(e);
                 throw;
             }
         }
@@ -127,7 +128,7 @@ namespace Neon.Kube.Operator.Finalizer
                         }
                         catch (Exception e)
                         {
-                            logger.LogErrorEx(e);
+                            logger?.LogErrorEx(e);
                         }
 
                         return false;
@@ -148,7 +149,7 @@ namespace Neon.Kube.Operator.Finalizer
                     entityName = $"{entity.Namespace()}/{entity.Name()}";
                 }
 
-                logger.LogErrorEx(e);
+                logger?.LogErrorEx(e);
 
                 throw new Exception($"Timed out while trying to remove finalizer [{finalizer.Identifier}] from entity [{entityName}]");
             }
@@ -197,7 +198,7 @@ namespace Neon.Kube.Operator.Finalizer
             }
             catch (Exception e)
             {
-                logger.LogErrorEx(e);
+                logger?.LogErrorEx(e);
             }
         }
     }

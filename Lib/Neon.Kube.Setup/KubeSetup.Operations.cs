@@ -518,7 +518,7 @@ apiServer:
     service-account-key-file: /etc/kubernetes/pki/sa.key
     service-account-signing-key-file: /etc/kubernetes/pki/sa.key
     oidc-issuer-url: https://{ClusterHost.Sso}.{cluster.Definition.Domain}
-    oidc-client-id: neon-sso
+    oidc-client-id: {ClusterConst.NeonSsoClientId}
     oidc-username-claim: email
     oidc-groups-claim: groups
     oidc-username-prefix: ""-""
@@ -4557,9 +4557,9 @@ $@"- name: StorageType
 
                     var values = new Dictionary<string, object>();
 
-                    values.Add("image.registry", "ghcr.io/neonkube-dev");
-                    values.Add("image.tag", "neonkube-0.8.5-alpha.feature-sso");
-                    values.Add("image.pullPolicy", "Always");
+                    values.Add("image.registry", KubeConst.LocalClusterRegistry);
+                    values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
+                    values.Add("image.pullPolicy", "IfNotPresent");
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add("resource.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
                     values.Add("resource.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
@@ -4589,7 +4589,6 @@ $@"- name: StorageType
                             k8s.WaitForCustomResourceDefinitionAsync<V1NeonContainerRegistry>(),
                             k8s.WaitForCustomResourceDefinitionAsync<V1NeonDashboard>(),
                             k8s.WaitForCustomResourceDefinitionAsync<V1NeonNodeTask>(),
-                            k8s.WaitForCustomResourceDefinitionAsync<V1NeonSsoConnector>(),
                             k8s.WaitForCustomResourceDefinitionAsync<V1NeonSsoClient>()
                         });
                 });
@@ -5473,7 +5472,7 @@ $@"- name: StorageType
                     values.Add("cluster.domain", cluster.Definition.Domain);
                     values.Add("config.cookieSecret", NeonHelper.ToBase64(NeonHelper.GetCryptoRandomPassword(24)));
                     values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
-                    values.Add("client.id", "neon-sso");
+                    values.Add("client.id", ClusterConst.NeonSsoClientId);
                     values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
@@ -49,4 +49,6 @@
     <ProjectReference Include="..\..\Lib\Neon.Kube.Xunit\Neon.Kube.Xunit.csproj" />
     <ProjectReference Include="..\..\Services\neon-node-agent\neon-node-agent.csproj" />
   </ItemGroup>
+
+  
 </Project>

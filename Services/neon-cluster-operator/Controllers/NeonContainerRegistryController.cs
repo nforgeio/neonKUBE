@@ -128,7 +128,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("customresource", nameof(V1NeonContainerRegistry)));
 
@@ -145,7 +145,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("delete", attributes => attributes.Add("customresource", nameof(V1NeonContainerRegistry)));
 
@@ -184,7 +184,7 @@ namespace NeonClusterOperator
 
         private async Task CreateNeonLocalRegistryAsync()
         {
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 log.LogInformationEx(() => $"Upserting registry: [registry.neon.local]");
 

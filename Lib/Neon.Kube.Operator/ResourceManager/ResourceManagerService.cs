@@ -50,7 +50,7 @@ namespace Neon.Kube.Operator.ResourceManager
 {
     internal class ResourceControllerManager : IHostedService
     {
-        private static readonly ILogger logger = TelemetryHub.CreateLogger<ResourceControllerManager>();
+        private readonly ILogger logger;
 
         private ComponentRegister componentRegister;
         private IServiceProvider  serviceProvider;
@@ -61,6 +61,7 @@ namespace Neon.Kube.Operator.ResourceManager
         {
             this.componentRegister = componentRegister;
             this.serviceProvider   = serviceProvider;
+            this.logger            = serviceProvider.GetService<ILogger>();
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -84,37 +85,41 @@ namespace Neon.Kube.Operator.ResourceManager
                 }
                 catch (Exception e)
                 {
-                    logger.LogErrorEx(e);
+                    logger?.LogErrorEx(e);
                 }
             }
 
+
             foreach (var ct in componentRegister.ControllerRegistrations)
             {
-                try
+                using (var scope = serviceProvider.CreateScope())
                 {
-                    (Type controllerType, Type entityType) = ct;
-
-                    logger.LogInformationEx(() => $"Registering controller [{controllerType.Name}].");
-
-                    var controller = serviceProvider.GetRequiredService(controllerType);
-
-                    var methods = controllerType
-                        .GetMethods(BindingFlags.Static | BindingFlags.Public);
-
-                    var startMethod = methods
-                        .FirstOrDefault(m => m.Name == "StartAsync");
-
-                    if (startMethod != null)
+                    try
                     {
-                        var task = (Task)startMethod.Invoke(controller, new object[] { serviceProvider });
-                        await task;
-                    }
+                        (Type controllerType, Type entityType) = ct;
 
-                    logger.LogInformationEx(() => $"Registered controller [{controllerType.Name}]");
-                }
-                catch (Exception e)
-                {
-                    logger.LogErrorEx(e);
+                        logger?.LogInformationEx(() => $"Registering controller [{controllerType.Name}].");
+
+                        var controller = ActivatorUtilities.CreateInstance(scope.ServiceProvider, controllerType);
+
+                        var methods = controllerType
+                            .GetMethods(BindingFlags.Static | BindingFlags.Public);
+
+                        var startMethod = methods
+                            .FirstOrDefault(m => m.Name == "StartAsync");
+
+                        if (startMethod != null)
+                        {
+                            var task = (Task)startMethod.Invoke(controller, new object[] { serviceProvider });
+                            await task;
+                        }
+
+                        logger?.LogInformationEx(() => $"Registered controller [{controllerType.Name}]");
+                    }
+                    catch (Exception e)
+                    {
+                        logger?.LogErrorEx(e);
+                    }
                 }
             }
         }

@@ -80,7 +80,7 @@ namespace NeonClusterOperator
         /// <inheritdoc/>
         public async Task<MutationResult> CreateAsync(V1Pod entity, bool dryRun)
         {
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 Logger?.LogInformationEx(() => $"Received request for pod {entity.Namespace()}/{entity.Name()}");
 
@@ -105,7 +105,7 @@ namespace NeonClusterOperator
         /// <inheritdoc/>
         public async Task<MutationResult> UpdateAsync(V1Pod entity, V1Pod oldEntity, bool dryRun)
         {
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 Logger?.LogInformationEx(() => $"Received request for pod {entity.Namespace()}/{entity.Name()}");
 

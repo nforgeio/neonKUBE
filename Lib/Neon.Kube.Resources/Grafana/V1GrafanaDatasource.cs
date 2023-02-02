@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Delegate.cs
+// FILE:	    V1GrafanaDatasource.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -26,42 +26,29 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
+using Neon.JsonConverters;
+
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources.Istio
+namespace Neon.Kube.Resources.Grafana
 {
     /// <summary>
-    /// Describes the delegate V1VirtualService.
+    /// Grafana dashboard data source.
     /// </summary>
-    public class Delegate : IValidate
+    public class V1GrafanaDatasource
     {
         /// <summary>
-        /// Initializes a new instance of the Delegate class.
+        /// The data source name.
         /// </summary>
-        public Delegate()
-        {
-        }
-
-        /// <summary>
-        /// Name specifies the name of the delegate V1VirtualService.
-        /// </summary>
-        [JsonProperty(PropertyName = "name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "datasourceName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public string Name { get; set; }
+        public string DatasourceName { get; set; }
 
         /// <summary>
-        /// Namespace specifies the namespace where the delegate V1VirtualService resides. By default, it is same to the root’s.
+        /// The input name.
         /// </summary>
-        [JsonProperty(PropertyName = "namespace", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "inputName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public string Namespace { get; set; }
-
-        /// <summary>
-        /// Validate the object.
-        /// </summary>
-        /// <exception cref="ValidationException">Thrown if validation fails.</exception>
-        public virtual void Validate()
-        {
-        }
+        public string InputName { get; set; }
     }
 }

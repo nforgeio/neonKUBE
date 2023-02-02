@@ -40,8 +40,7 @@ namespace Neon.Kube.Operator.Cache
     internal class ResourceCache<TEntity> : IResourceCache<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
     {
-        private static readonly ILogger logger = TelemetryHub.CreateLogger<ResourceCache<TEntity>>();
-
+        private readonly ILogger                                logger;
         private readonly ConcurrentDictionary<string, TEntity>  cache;
         private readonly ConcurrentDictionary<string, TEntity>  finalizingCache;
         private readonly CompareLogic                           comparelogLogic;
@@ -60,6 +59,8 @@ namespace Neon.Kube.Operator.Cache
                     "ManagedFields"
                 }
             });
+
+            this.logger = logger;
         }
 
         public void Clear()
@@ -146,7 +147,7 @@ namespace Neon.Kube.Operator.Cache
                 if (entity.DeletionTimestamp() != null
                     && entity.Finalizers().Count > 0)
                 {
-                    logger.LogDebugEx(() => "Resource is being finalized.");
+                    logger?.LogDebugEx(() => "Resource is being finalized.");
 
                     return ModifiedEventType.Finalizing;
                 }
@@ -159,20 +160,20 @@ namespace Neon.Kube.Operator.Cache
 
             if (comparison.AreEqual)
             {
-                logger.LogDebugEx(() => "No changes detected.");
+                logger?.LogDebugEx(() => "No changes detected.");
                 return ModifiedEventType.NoChanges;
             }
 
             if (comparison.Differences.All(d => d.PropertyName.Split('.')[0] == "Status"))
             {
-                logger.LogDebugEx(() => "Status update detected.");
+                logger?.LogDebugEx(() => "Status update detected.");
 
                 return ModifiedEventType.StatusUpdate;
             }
 
             if (comparison.Differences.All(d => d.ParentPropertyName == "Metadata.Finalizers" || d.PropertyName == "Metadata.Finalizers"))
             {
-                logger.LogDebugEx(() => "Finalizer update detected.");
+                logger?.LogDebugEx(() => "Finalizer update detected.");
 
                 return ModifiedEventType.FinalizerUpdate;
             }
@@ -180,12 +181,12 @@ namespace Neon.Kube.Operator.Cache
             if (entity.DeletionTimestamp() != null
                 && entity.Finalizers().Count > 0)
             {
-                logger.LogDebugEx(() => "Resource is being finalized.");
+                logger?.LogDebugEx(() => "Resource is being finalized.");
 
                 return ModifiedEventType.Finalizing;
             }
 
-            logger.LogDebugEx(() => "'other' change detected.");
+            logger?.LogDebugEx(() => "'other' change detected.");
 
             return ModifiedEventType.Other;
         }

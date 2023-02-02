@@ -86,7 +86,7 @@ namespace NeonClusterOperator
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task StartAsync(IServiceProvider serviceProvider)
         {
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("start", attributes => attributes.Add("customresource", nameof(V1Secret)));
 
@@ -143,7 +143,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("resource", nameof(V1Secret)));
 
@@ -175,7 +175,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 log.LogInformationEx(() => $"DELETED: {resource.Name()}");
             }
@@ -207,14 +207,14 @@ namespace NeonClusterOperator
 
         private async Task UpdateGlauthUsersAsync(V1Secret resource)
         {
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 await using var conn = new NpgsqlConnection(connectionString);
                 await conn.OpenAsync();
 
                 foreach (var user in resource.Data.Keys)
                 {
-                    using (var userActivity = TelemetryHub.ActivitySource.StartActivity("AddUser"))
+                    using (var userActivity = TelemetryHub.ActivitySource?.StartActivity("AddUser"))
                     {
                         var userData     = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(resource.Data[user]));
                         var name         = userData.Name;
@@ -239,7 +239,7 @@ namespace NeonClusterOperator
 
                         if (userData.Capabilities != null)
                         {
-                            using (var userCapabilityActivity = TelemetryHub.ActivitySource.StartActivity("AddUserCapabilities"))
+                            using (var userCapabilityActivity = TelemetryHub.ActivitySource?.StartActivity("AddUserCapabilities"))
                             {
                                 foreach (var capability in userData.Capabilities)
                                 {
@@ -271,14 +271,14 @@ namespace NeonClusterOperator
 
         private async Task UpdateGlauthGroupsAsync(V1Secret resource)
         {
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 await using var conn = new NpgsqlConnection(connectionString);
                 await conn.OpenAsync();
 
                 foreach (var key in resource.Data.Keys)
                 {
-                    using (var groupActivity = TelemetryHub.ActivitySource.StartActivity("AddGroup"))
+                    using (var groupActivity = TelemetryHub.ActivitySource?.StartActivity("AddGroup"))
                     {
                         var group = NeonHelper.YamlDeserialize<GlauthGroup>(Encoding.UTF8.GetString(resource.Data[key]));
 

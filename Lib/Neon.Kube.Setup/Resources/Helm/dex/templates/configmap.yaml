@@ -21,5 +21,32 @@ data:
       dir: /srv/dex/web
       issuer: SSO Login - {{ .Values.cluster.name }}
       theme: dark
+    connectors:
+    - type: ldap
+      # Required field for connector id.
+      id: ldap
+      # Required field for connector name.
+      name: LDAP
+      config:
+        host: {{ .Values.config.ldap.host }}
+        insecureNoSSL: true
+        insecureSkipVerify: true
+        rootCA: /etc/certs/ca.crt
+        bindDN: {{ .Values.config.ldap.bindDN }}
+        bindPW: {{ .Values.secrets.ldap }}
+        usernamePrompt: {{ .Values.config.ldap.usernamePrompt }}
+        userSearch:
+          baseDN: {{ .Values.config.ldap.userSearch.baseDN }}
+          filter: "{{ .Values.config.ldap.userSearch.filter }}"
+          username: {{ .Values.config.ldap.userSearch.username }}
+          idAttr: {{ .Values.config.ldap.userSearch.idAttr }}
+          emailAttr: {{ .Values.config.ldap.userSearch.emailAttr }}
+          nameAttr: {{ .Values.config.ldap.userSearch.nameAttr }}
+        groupSearch:
+          baseDN: {{ .Values.config.ldap.groupSearch.baseDN }}
+          filter: "{{ .Values.config.ldap.groupSearch.filter }}"
+          userMatchers:
+          {{- toYaml .Values.config.ldap.groupSearch.userMatchers | nindent 12 }}
+          nameAttr: {{ .Values.config.ldap.groupSearch.nameAttr }}
     oauth2:
       skipApprovalScreen: true

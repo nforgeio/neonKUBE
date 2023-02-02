@@ -81,10 +81,10 @@ namespace Neon.Kube.Resources.Istio
 
         /// <summary>
         /// <para>
-        /// Delegate is used to specify the particular VirtualService which can be used to define delegate HTTPRoute.
+        /// Delegate is used to specify the particular V1VirtualService which can be used to define delegate HTTPRoute.
         /// </para>
         /// <para>
-        /// It can be set only when Route and Redirect are empty, and the route rules of the delegate VirtualService will be merged with that in the current one.
+        /// It can be set only when Route and Redirect are empty, and the route rules of the delegate V1VirtualService will be merged with that in the current one.
         /// </para>
         /// </summary>
         /// <remarks>

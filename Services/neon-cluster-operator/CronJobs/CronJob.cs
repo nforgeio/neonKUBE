@@ -88,7 +88,7 @@ namespace NeonClusterOperator
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(cronSchedule), nameof(cronSchedule));
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("add-to-scheduler");
 
@@ -127,7 +127,7 @@ namespace NeonClusterOperator
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task DeleteFromSchedulerAsync(IScheduler scheduler)
         {
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("delete-from-scheduler");
 

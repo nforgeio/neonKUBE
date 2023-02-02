@@ -5,7 +5,7 @@
 		<OutputType>Library</OutputType>
 		<Configurations>Debug;Release</Configurations>
 		<Version>10000.0.2236-dev-master</Version>
-		<Description>Kubernetes Operator SDK.</Description>
+		<Description>A Kubernetes Operator SDK.</Description>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Operator/README.md</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>

@@ -83,5 +83,11 @@ namespace Neon.Kube.Resources.Prometheus
         /// </summary>
         [DefaultValue(null)]
         public string Params { get; set; }
+
+        /// <summary>
+        /// Whether to honor labels from the source.
+        /// </summary>
+        [DefaultValue(null)]
+        public bool? HonorLabels { get; set; }
     }
 }

@@ -59,9 +59,11 @@ namespace Neon.Kube.Operator
                 {
                     await SyncContext.Clear;
 
-                    var k8s = app.ApplicationServices.GetRequiredService<IKubernetes>();
-                    var logger = app.ApplicationServices.GetRequiredService<ILogger>();
+                    var k8s    = app.ApplicationServices.GetRequiredService<IKubernetes>();
+                    var logger = app.ApplicationServices.GetService<ILogger>();
+
                     NgrokWebhookTunnel tunnel = null;
+
                     try
                     {
                         tunnel = app.ApplicationServices.GetServices<IHostedService>()
@@ -78,7 +80,7 @@ namespace Neon.Kube.Operator
                         {
                             (Type mutatorType, Type entityType) = webhook;
 
-                            logger.LogInformationEx(() => $"Registering mutating webhook [{mutatorType.Name}].");
+                            logger?.LogInformationEx(() => $"Registering mutating webhook [{mutatorType.Name}].");
 
                             var mutator = app.ApplicationServices.GetRequiredService(mutatorType);
 
@@ -87,7 +89,7 @@ namespace Neon.Kube.Operator
                                 .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
                                 .First(m => m.Name == "Register");
 
-                            registerMethod.Invoke(mutator, new object[] { endpoints });
+                            registerMethod.Invoke(mutator, new object[] { endpoints, logger });
 
                             if (tunnel == null)
                             {
@@ -101,7 +103,7 @@ namespace Neon.Kube.Operator
                         }
                         catch (Exception e)
                         {
-                            logger.LogErrorEx(e);
+                            logger?.LogErrorEx(e);
                         }
                     }
 
@@ -111,7 +113,7 @@ namespace Neon.Kube.Operator
                         {
                             (Type validatorType, Type entityType) = webhook;
 
-                            logger.LogInformationEx(() => $"Registering validating webhook [{validatorType.Name}].");
+                            logger?.LogInformationEx(() => $"Registering validating webhook [{validatorType.Name}].");
 
                             var validator = app.ApplicationServices.GetRequiredService(validatorType);
 
@@ -120,7 +122,7 @@ namespace Neon.Kube.Operator
                                 .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
                                 .First(m => m.Name == "Register");
 
-                            registerMethod.Invoke(validator, new object[] { endpoints });
+                            registerMethod.Invoke(validator, new object[] { endpoints, logger });
 
                             if (tunnel == null)
                             {
@@ -134,7 +136,7 @@ namespace Neon.Kube.Operator
                         }
                         catch (Exception e)
                         {
-                            logger.LogErrorEx(e);
+                            logger?.LogErrorEx(e);
                         }
                     }
                 });

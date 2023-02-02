@@ -26,8 +26,6 @@ using NeonNodeAgent;
 using k8s;
 using k8s.Models;
 
-using Moq;
-
 using Neon.Kube;
 
 namespace TestNeonNodeAgent

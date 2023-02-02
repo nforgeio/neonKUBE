@@ -68,7 +68,7 @@ namespace NeonClusterOperator
         {
             Covenant.Requires<ArgumentNullException>(context != null, nameof(context));
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckRegistryImages)));
 
@@ -135,7 +135,7 @@ fi
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(projectName), nameof(projectName));
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckRegistryImages)));
 

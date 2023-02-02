@@ -68,7 +68,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 logger.LogInformationEx(() => $"Finalizing {resource.Name()}");
 
@@ -89,7 +89,7 @@ namespace NeonClusterOperator
 
         private async Task<MinioClient> GetMinioClientAsync(V1MinioBucket resource)
         {
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 var tenant = await k8s.CustomObjects.ReadNamespacedCustomObjectAsync<V1MinioTenant>(resource.Namespace(), resource.Spec.Tenant);
                 var minioEndpoint = $"{tenant.Name()}.{tenant.Namespace()}";

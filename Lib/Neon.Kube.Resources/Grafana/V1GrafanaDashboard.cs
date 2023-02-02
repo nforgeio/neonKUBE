@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    V1VirtualService.cs
+// FILE:	    V1GrafanaDashboard.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -25,43 +25,45 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
+using Neon.JsonConverters;
+
 using Newtonsoft.Json;
 
-namespace Neon.Kube.Resources.Istio
+namespace Neon.Kube.Resources.Grafana
 {
     /// <summary>
-    /// 
+    /// Grafana.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
-    public class VirtualService : IKubernetesObject<V1ObjectMeta>, ISpec<V1VirtualServiceSpec>, IValidate
+    public class V1GrafanaDashboard : IKubernetesObject<V1ObjectMeta>, ISpec<V1GrafanaDashboardSpec>, IValidate
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeApiVersion = "v1beta1";
+        public const string KubeApiVersion = "v1alpha1";
 
         /// <summary>
         /// The Kubernetes named schema this object is based on.
         /// </summary>
-        public const string KubeKind = "VirtualService";
+        public const string KubeKind = "GrafanaDashboard";
 
         /// <summary>
         /// The Group this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeGroup = "networking.istio.io";
+        public const string KubeGroup = "integreatly.org";
 
         /// <summary>
         /// The plural name of the entity.
         /// </summary>
-        public const string KubePlural = "virtualservices";
+        public const string KubePlural = "grafanadashboards";
 
         /// <summary>
-        /// Initializes a new instance of the VirtualService class.
+        /// Initializes a new instance of the Grafana class.
         /// </summary>
-        public VirtualService()
+        public V1GrafanaDashboard()
         {
-            ApiVersion = "networking.istio.io/v1beta1";
-            Kind       = "VirtualService";
+            ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
+            Kind       = KubeKind;
         }
 
         /// <summary>
@@ -91,11 +93,11 @@ namespace Neon.Kube.Resources.Istio
         public V1ObjectMeta Metadata { get; set; }
 
         /// <summary>
-        /// Gets or sets specification of the desired behavior of the
-        /// VirtualService.
+        /// Gets or sets specification of the desired behavior of Grafana.
         /// </summary>
         [JsonProperty(PropertyName = "spec")]
-        public V1VirtualServiceSpec Spec { get; set; }
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonGenericConverter<dynamic>))]
+        public V1GrafanaDashboardSpec Spec { get; set; }
 
         /// <summary>
         /// Validate the object.

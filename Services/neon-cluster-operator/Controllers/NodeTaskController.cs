@@ -195,7 +195,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("status-modified", attributes => attributes.Add("customresource", nameof(V1NeonNodeTask)));
 
@@ -222,7 +222,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 Dictionary<string, int> expirations = new Dictionary<string, int>();
 
@@ -252,7 +252,7 @@ namespace NeonClusterOperator
 
                 if (expirations.Any(exp => exp.Value < 90))
                 {
-                    using (var nodeTaskActivity = TelemetryHub.ActivitySource.StartActivity("CreateUpdateCertNodeTask"))
+                    using (var nodeTaskActivity = TelemetryHub.ActivitySource?.StartActivity("CreateUpdateCertNodeTask"))
                     {
                         var nodeTask = new V1NeonNodeTask()
                         {

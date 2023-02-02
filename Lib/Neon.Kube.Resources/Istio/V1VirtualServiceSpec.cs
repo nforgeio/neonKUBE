@@ -44,8 +44,8 @@ namespace Neon.Kube.Resources.Istio
         /// would be derived based on the underlying platform.
         /// </para>
         /// <para>
-        /// A single VirtualService can be used to describe all the traffic properties of the corresponding hosts, including those for multiple
-        /// HTTP and TCP ports. Alternatively, the traffic properties of a host can be defined using more than one VirtualService, with certain 
+        /// A single V1VirtualService can be used to describe all the traffic properties of the corresponding hosts, including those for multiple
+        /// HTTP and TCP ports. Alternatively, the traffic properties of a host can be defined using more than one V1VirtualService, with certain 
         /// caveats. Refer to the Operations Guide for details.
         /// </para>
         /// <para>
@@ -59,7 +59,7 @@ namespace Neon.Kube.Resources.Istio
         /// be referred to using their alphanumeric names.IP addresses are allowed only for services defined via the Gateway.
         /// </para>
         /// <note>
-        /// This must be empty for a delegate VirtualService.
+        /// This must be empty for a delegate V1VirtualService.
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "hosts", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -69,7 +69,7 @@ namespace Neon.Kube.Resources.Istio
         /// <summary>
         /// The names of gateways and sidecars that should apply these routes. Gateways in other namespaces may be referred to by 
         /// &lt;gateway namespace&gt;/&lt;gateway name&gt;; specifying a gateway with no namespace qualifier is the same as specifying the 
-        /// VirtualService’s namespace. A single VirtualService is used for sidecars inside the mesh as well as for one or more gateways. The 
+        /// V1VirtualService’s namespace. A single V1VirtualService is used for sidecars inside the mesh as well as for one or more gateways. The 
         /// selection condition imposed by this field can be overridden using the source field in the match conditions of protocol-specific routes. 
         /// The reserved word mesh is used to imply all the sidecars in the mesh. When this field is omitted, the default gateway (mesh) will be used,
         /// which would apply the rule to all sidecars in the mesh. If a list of gateway names is provided, the rules will apply only to the gateways. 

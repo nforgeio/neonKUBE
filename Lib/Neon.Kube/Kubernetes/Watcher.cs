@@ -80,7 +80,7 @@ namespace Neon.Kube
         public Watcher(IKubernetes k8s, ILogger logger = null)
         {
             this.k8s     = k8s;
-            this.logger  = logger ?? TelemetryHub.LoggerFactory.CreateLogger(GetType().Name);
+            this.logger  = logger;
             eventChannel = Channel.CreateUnbounded<WatchEvent<T>>();
         }
 

@@ -57,8 +57,8 @@ namespace Neon.Kube.Operator.Finalizer
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
             return componentRegister.FinalizerRegistrations
-                .Where(r => r.EntityType.IsEquivalentTo(typeof(TEntity)))
-                .Select(r => (IResourceFinalizer<TEntity>)services.GetRequiredService(r.FinalizerType));
+                    .Where(r => r.EntityType.IsEquivalentTo(typeof(TEntity)))
+                    .Select(r => (IResourceFinalizer<TEntity>)services.GetRequiredService(r.FinalizerType));
         }
     }
 

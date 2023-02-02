@@ -126,11 +126,11 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 // Ignore all events when the controller hasn't been started.
 
-                await finalizerManager.RegisterAllFinalizersAsync(resource);
+                await finalizerManager.RegisterFinalizerAsync<NeonSsoClientFinalizer>(resource);
 
                 await UpsertClientAsync(resource);
 
@@ -145,7 +145,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 // Ignore all events when the controller hasn't been started.
 
@@ -201,7 +201,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 var client = new Dex.Client()
                 {
@@ -230,7 +230,7 @@ namespace NeonClusterOperator
 
                 if (createClientResp.AlreadyExists)
                 {
-                    using (var upsertActivity = TelemetryHub.ActivitySource.StartActivity("UpdateClient"))
+                    using (var upsertActivity = TelemetryHub.ActivitySource?.StartActivity("UpdateClient"))
                     {
                         var updateClientRequest = new UpdateClientReq()
                         {

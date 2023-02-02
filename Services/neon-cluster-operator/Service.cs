@@ -307,22 +307,35 @@ namespace NeonClusterOperator
                 {
                     options.Filter = (httpcontext) =>
                     {
-                        Logger.LogDebugEx(() => NeonHelper.JsonSerialize(httpcontext));
+                        if (GetEnvironmentVariable("LOG_LEVEL").ToLower() == "trace")
+                        {
+                            return true;
+                        }
+
+                        // filter out leader election since it's really chatty
+                        if (httpcontext.RequestUri.Host == "10.253.0.1"
+                        & httpcontext.RequestUri.AbsolutePath.StartsWith("/apis/coordination.k8s.io"))
+                        {
+                            return false;
+                        }
+
                         return true;
                     };
                 });
-            builder.AddAspNetCoreInstrumentation();
-            builder.AddGrpcCoreInstrumentation();
-            builder.AddNpgsql();
-            builder.AddQuartzInstrumentation();
-            builder.AddOtlpExporter(
-                options =>
-                {
-                    options.ExportProcessorType         = ExportProcessorType.Batch;
-                    options.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>();
-                    options.Endpoint                    = new Uri(NeonHelper.NeonKubeOtelCollectorUri);
-                    options.Protocol                    = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
-                });
+
+            builder.AddAspNetCoreInstrumentation()
+                .AddGrpcCoreInstrumentation()
+                .AddNpgsql()
+                .AddQuartzInstrumentation()
+                .AddOtlpExporter(
+                    options =>
+                    {
+                        options.ExportProcessorType         = ExportProcessorType.Batch;
+                        options.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>();
+                        options.Endpoint                    = new Uri(NeonHelper.NeonKubeOtelCollectorUri);
+                        options.Protocol                    = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
+                    });
+
             return true;
         }
 

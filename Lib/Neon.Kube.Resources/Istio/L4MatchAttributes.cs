@@ -61,7 +61,7 @@ namespace Neon.Kube.Resources.Istio
 
         /// <summary>
         /// <para>
-        /// One or more labels that constrain the applicability of a rule to workloads with the given labels. If the VirtualService has a list of gateways 
+        /// One or more labels that constrain the applicability of a rule to workloads with the given labels. If the V1VirtualService has a list of gateways 
         /// specified in the top-level gateways field, it should include the reserved gateway mesh in order for this field to be applicable.
         /// </para>
         /// </summary>
@@ -71,7 +71,7 @@ namespace Neon.Kube.Resources.Istio
 
         /// <summary>
         /// <para>
-        /// Names of gateways where the rule should be applied. Gateway names in the top-level gateways field of the VirtualService (if any) 
+        /// Names of gateways where the rule should be applied. Gateway names in the top-level gateways field of the V1VirtualService (if any) 
         /// are overridden. The gateway match is independent of sourceLabels.
         /// </para>
         /// </summary>
@@ -81,7 +81,7 @@ namespace Neon.Kube.Resources.Istio
 
         /// <summary>
         /// <para>
-        /// Source namespace constraining the applicability of a rule to workloads in that namespace. If the VirtualService has a list of gateways 
+        /// Source namespace constraining the applicability of a rule to workloads in that namespace. If the V1VirtualService has a list of gateways 
         /// specified in the top-level gateways field, it must include the reserved gateway mesh for this field to be applicable.
         /// </para>
         /// </summary>

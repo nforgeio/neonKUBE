@@ -479,47 +479,6 @@ namespace Neon.Kube.Setup
                         hostAddress = IPAddress.Parse(cluster.HostingManager.GetClusterAddresses().First());
                     }
 
-                    // For the built-in desktop cluster, add these records to both the
-                    // node's local [/etc/hosts] file as well as the host file for the
-                    // local workstation:
-                    //
-                    //      ADDRESS     desktop.neoncluster.io
-                    //      ADDRESS     *.desktop.neoncluster.io
-
-                    if (options.DesktopReadyToGo)
-                    {
-                        controller.SetGlobalStepStatus($"configure: node local DNS");
-
-                        var node                = cluster.Nodes.Single();
-                        var sbHosts             = new StringBuilder(node.DownloadText("/etc/hosts"));
-                        var desktopServiceProxy = controller.Get<DesktopServiceProxy>(KubeSetupProperty.DesktopServiceProxy);
-
-                        sbHosts.AppendLineLinux($"{hostAddress} {hostName}");
-                        sbHosts.AppendLineLinux($"{hostAddress} *.{hostName}");
-
-                        node.UploadText("/etc/hosts", sbHosts, permissions: "644");
-
-                        controller.SetGlobalStepStatus($"configure: workstation local DNS");
-
-                        var sections    = desktopServiceProxy.ListLocalHostsSections();
-                        var neonSection = sections.FirstOrDefault(section => section.Name.Equals(KubeConst.EtcHostsSectionName, StringComparison.InvariantCultureIgnoreCase));
-                        var hostEntries = neonSection != null ? neonSection.HostEntries : new Dictionary<string, IPAddress>();
-
-                        hostEntries[hostName]        = hostAddress;
-                        hostEntries[$"*.{hostName}"] = hostAddress;
-
-                        desktopServiceProxy.ModifyLocalHosts(KubeConst.EtcHostsSectionName, hostEntries);
-
-                        // Wait for the new local cluster DNS record to become active.
-
-                        await NeonHelper.WaitForAsync(
-                            async () =>
-                            {
-                                return (await Dns.GetHostAddressesAsync(hostName)).Count() > 0;
-                            },
-                            timeout: TimeSpan.FromSeconds(120));
-                    }
-
                     clusterLogin.SshPassword = null;    // We're no longer allowing SSH password authentication so we can clear this.
                     clusterLogin.Save();
                 });

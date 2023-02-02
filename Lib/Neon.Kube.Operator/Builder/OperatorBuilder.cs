@@ -71,15 +71,15 @@ namespace Neon.Kube.Operator.Builder
             if (!Services.Any(x => x.ServiceType == typeof(IKubernetes)))
             {
                 var k8s = new Kubernetes(
-                    settings.KubernetesClientConfiguration,
+                    settings.KubernetesClientConfiguration ?? KubernetesClientConfiguration.BuildDefaultConfig(),
                     new KubernetesRetryHandler());
                 Services.AddSingleton<IKubernetes>(k8s);
             }
 
             Services.AddSingleton(settings.ResourceManagerOptions);
             Services.AddSingleton(componentRegister);
-            Services.AddSingleton<IFinalizerBuilder, FinalizerBuilder>();
-            Services.AddSingleton(typeof(IFinalizerManager<>), typeof(FinalizerManager<>));
+            Services.AddTransient<IFinalizerBuilder, FinalizerBuilder>();
+            Services.AddTransient(typeof(IFinalizerManager<>), typeof(FinalizerManager<>));
             Services.AddSingleton(typeof(IResourceCache<>), typeof(ResourceCache<>));
             Services.AddSingleton(new AsyncKeyedLocker<string>(o =>
             {
@@ -105,31 +105,37 @@ namespace Neon.Kube.Operator.Builder
                     {
                         case OperatorComponentType.Controller:
 
-                            var regMethod = typeof(OperatorBuilderExtensions).GetMethod(nameof(OperatorBuilderExtensions.AddController));
-                            var args = new object[regMethod.GetParameters().Count()];
-                            args[0] = this;
-                            regMethod.MakeGenericMethod(type).Invoke(null, args);
+                            var controllerRegMethod = typeof(OperatorBuilderExtensions).GetMethod(nameof(OperatorBuilderExtensions.AddController));
+                            var controllerArgs = new object[controllerRegMethod.GetParameters().Count()];
+                            controllerArgs[0] = this;
+                            controllerRegMethod.MakeGenericMethod(type).Invoke(null, controllerArgs);
 
                             break;
 
                         case OperatorComponentType.Finalizer:
 
-                            regMethod = typeof(OperatorBuilderExtensions).GetMethod(nameof(OperatorBuilderExtensions.AddFinalizer));
-                            regMethod.MakeGenericMethod(type).Invoke(null, new object[] { this });
+                            var finalizerRegMethod = typeof(OperatorBuilderExtensions).GetMethod(nameof(OperatorBuilderExtensions.AddFinalizer));
+                            var finalizerRegArgs = new object[finalizerRegMethod.GetParameters().Count()];
+                            finalizerRegArgs[0] = this;
+                            finalizerRegMethod.MakeGenericMethod(type).Invoke(null, finalizerRegArgs);
 
                             break;
 
                         case OperatorComponentType.MutationWebhook:
 
-                            regMethod = typeof(OperatorBuilderExtensions).GetMethod(nameof(OperatorBuilderExtensions.AddMutatingWebhook));
-                            regMethod.MakeGenericMethod(type).Invoke(null, new object[] { this });
+                            var mutatingWebhookRegMethod = typeof(OperatorBuilderExtensions).GetMethod(nameof(OperatorBuilderExtensions.AddMutatingWebhook));
+                            var mutatingWebhookRegArgs = new object[mutatingWebhookRegMethod.GetParameters().Count()];
+                            mutatingWebhookRegArgs[0] = this;
+                            mutatingWebhookRegMethod.MakeGenericMethod(type).Invoke(null, mutatingWebhookRegArgs);
 
                             break;
 
                         case OperatorComponentType.ValidationWebhook:
 
-                            regMethod = typeof(OperatorBuilderExtensions).GetMethod(nameof(OperatorBuilderExtensions.AddValidatingWebhook));
-                            regMethod.MakeGenericMethod(type).Invoke(null, new object[] { this });
+                            var validatingWebhookRegMethod = typeof(OperatorBuilderExtensions).GetMethod(nameof(OperatorBuilderExtensions.AddValidatingWebhook));
+                            var validatingWebhookRegArgs = new object[validatingWebhookRegMethod.GetParameters().Count()];
+                            validatingWebhookRegArgs[0] = this;
+                            validatingWebhookRegMethod.MakeGenericMethod(type).Invoke(null, validatingWebhookRegArgs);
 
                             break;
                     }
@@ -184,14 +190,15 @@ namespace Neon.Kube.Operator.Builder
             where TImplementation : class, IResourceController<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
-            var resourceManager = new ResourceManager<TEntity, TImplementation>(
-                serviceProvider: Services.BuildServiceProvider(),
-                @namespace: @namespace,
-                options: options,
-                leaderConfig: leaderConfig,
-                leaderElectionDisabled: leaderElectionDisabled);
-
-            Services.AddSingleton(resourceManager);
+            Services.TryAddSingleton<ResourceManager<TEntity, TImplementation>>(services =>
+            {
+                return new ResourceManager<TEntity, TImplementation>(
+                    serviceProvider: services,
+                    @namespace: @namespace,
+                    options: options,
+                    leaderConfig: leaderConfig,
+                    leaderElectionDisabled: leaderElectionDisabled);
+            });
             componentRegister.RegisterResourceManager<ResourceManager<TEntity, TImplementation>>();
 
             Services.TryAddScoped<TImplementation>();
@@ -219,8 +226,7 @@ namespace Neon.Kube.Operator.Builder
                     componentRegister,
                     services,
                     ngrokDirectory,
-                    ngrokAuthToken,
-                    services.GetService<ILogger>())
+                    ngrokAuthToken)
                 {
                     Host = hostname,
                     Port = port

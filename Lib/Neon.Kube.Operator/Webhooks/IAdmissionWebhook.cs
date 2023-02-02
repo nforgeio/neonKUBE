@@ -27,6 +27,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
@@ -65,7 +66,7 @@ namespace Neon.Kube.Operator.Webhook
         /// <inheritdoc cref="Create"/>
         Task<TResult> CreateAsync(TEntity newEntity, bool dryRun)
         {
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 return Task.FromResult(Create(newEntity, dryRun));
             }
@@ -83,7 +84,7 @@ namespace Neon.Kube.Operator.Webhook
         /// <inheritdoc cref="Update"/>
         Task<TResult> UpdateAsync(TEntity oldEntity, TEntity newEntity, bool dryRun)
         {
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 return Task.FromResult(Update(oldEntity, newEntity, dryRun));
             }
@@ -100,7 +101,7 @@ namespace Neon.Kube.Operator.Webhook
         /// <inheritdoc cref="Delete"/>
         Task<TResult> DeleteAsync(TEntity oldEntity, bool dryRun)
         {
-            using (var activity = TelemetryHub.ActivitySource.StartActivity())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 return Task.FromResult(Delete(oldEntity, dryRun));
             }
@@ -114,24 +115,23 @@ namespace Neon.Kube.Operator.Webhook
         /// Registers the webhook endpoints.
         /// </summary>
         /// <param name="endpoints"></param>
+        /// <param name="logger"></param>
         /// <returns></returns>
-        internal void Register(IEndpointRouteBuilder endpoints)
+        internal void Register(IEndpointRouteBuilder endpoints, ILogger logger = null)
         {
-            var logger = TelemetryHub.LoggerFactory.CreateLogger(GetType().Name);
-
-            logger.LogInformationEx(() => $"Registered webhook at [{Endpoint}]");
+            logger?.LogInformationEx(() => $"Registered webhook at [{Endpoint}]");
 
             endpoints.MapPost(
                 Endpoint,
                 async context =>
                 {
-                    using (var activity = TelemetryHub.ActivitySource.StartActivity())
+                    using (var activity = TelemetryHub.ActivitySource?.StartActivity())
                     {
                         try
                         {
                             if (!context.Request.HasJsonContentType())
                             {
-                                logger.LogErrorEx(() => "Admission request has no json content type.");
+                                logger?.LogErrorEx(() => "Admission request has no json content type.");
                                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
                                 return;
                             }
@@ -142,7 +142,7 @@ namespace Neon.Kube.Operator.Webhook
 
                             if (review.Request == null)
                             {
-                                logger.LogErrorEx(() => "The admission request contained no request object.");
+                                logger?.LogErrorEx(() => "The admission request contained no request object.");
                                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
                                 await context.Response.WriteAsync("The request must contain AdmissionRequest information.");
                                 return;
@@ -161,7 +161,7 @@ namespace Neon.Kube.Operator.Webhook
                                 var @object = KubernetesJson.Deserialize<TEntity>(KubernetesJson.Serialize(review.Request.Object));
                                 var oldObject = KubernetesJson.Deserialize<TEntity>(KubernetesJson.Serialize(review.Request.OldObject));
 
-                                logger.LogInformationEx(() => @$"Admission with method ""{review.Request.Operation}"".");
+                                logger?.LogInformationEx(() => @$"Admission with method ""{review.Request.Operation}"".");
 
                                 TResult result;
                                 switch (review.Request.Operation)
@@ -191,7 +191,7 @@ namespace Neon.Kube.Operator.Webhook
                             }
                             catch (Exception ex)
                             {
-                                logger.LogErrorEx(ex, "An error happened during admission.");
+                                logger?.LogErrorEx(ex, "An error happened during admission.");
                                 response = new AdmissionResponse()
                                 {
                                     Allowed = false,
@@ -206,7 +206,7 @@ namespace Neon.Kube.Operator.Webhook
                             review.Response = response;
                             review.Response.Uid = review.Request.Uid;
 
-                            logger.LogInformationEx(() =>
+                            logger?.LogInformationEx(() =>
                                 @$"AdmissionHook ""{Name}"" did return ""{review.Response?.Allowed}"" for ""{review.Request.Operation}"".");
 
                             review.Request = null;
@@ -215,7 +215,7 @@ namespace Neon.Kube.Operator.Webhook
                         }
                         catch (Exception e)
                         {
-                            logger.LogErrorEx(e);
+                            logger?.LogErrorEx(e);
                         }
                     }
                 });
