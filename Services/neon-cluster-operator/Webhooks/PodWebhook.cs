@@ -55,8 +55,7 @@ namespace NeonClusterOperator
         scope: "*")]
     public class PodWebhook : IMutatingWebhook<V1Pod>
     {
-        /// <inheritdoc/>
-        public ILogger Logger { get; set; }
+        private ILogger<IMutatingWebhook<V1Pod>> logger { get; set; }
 
         private bool modified = false;
 
@@ -71,10 +70,10 @@ namespace NeonClusterOperator
         /// Constructor.
         /// </summary>
         /// <param name="logger"></param>
-        public PodWebhook(ILogger logger)
+        public PodWebhook(ILogger<IMutatingWebhook<V1Pod>> logger)
             : base()
         {
-            this.Logger = logger;
+            this.logger = logger;
         }
 
         /// <inheritdoc/>
@@ -82,11 +81,11 @@ namespace NeonClusterOperator
         {
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                Logger?.LogInformationEx(() => $"Received request for pod {entity.Namespace()}/{entity.Name()}");
+                logger?.LogInformationEx(() => $"Received request for pod {entity.Namespace()}/{entity.Name()}");
 
                 if (!entity.Metadata.Namespace().StartsWith("neon-"))
                 {
-                    Logger?.LogInformationEx(() => $"Pod not in neon- namespace.");
+                    logger?.LogInformationEx(() => $"Pod not in neon- namespace.");
 
                     return MutationResult.NoChanges();
                 }
@@ -107,11 +106,11 @@ namespace NeonClusterOperator
         {
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                Logger?.LogInformationEx(() => $"Received request for pod {entity.Namespace()}/{entity.Name()}");
+                logger?.LogInformationEx(() => $"Received request for pod {entity.Namespace()}/{entity.Name()}");
 
                 if (!entity.Metadata.Namespace().StartsWith("neon-"))
                 {
-                    Logger?.LogInformationEx(() => $"Pod not in neon- namespace.");
+                    logger?.LogInformationEx(() => $"Pod not in neon- namespace.");
 
                     return MutationResult.NoChanges();
                 }
@@ -139,14 +138,14 @@ namespace NeonClusterOperator
                     if (entity.Metadata.Labels != null
                         && entity.Metadata.Labels.ContainsKey("goharbor.io/operator-version"))
                     {
-                        Logger?.LogInformationEx(() => $"Setting priority class for harbor pod.");
+                        logger?.LogInformationEx(() => $"Setting priority class for harbor pod.");
 
                         entity.Spec.PriorityClassName = PriorityClass.NeonStorage.Name;
                         entity.Spec.Priority = null;
                     }
                     else
                     {
-                        Logger?.LogInformationEx(() => $"Setting default priority class to neon-min.");
+                        logger?.LogInformationEx(() => $"Setting default priority class to neon-min.");
 
                         entity.Spec.PriorityClassName = PriorityClass.NeonMin.Name;
                         entity.Spec.Priority = null;
@@ -155,7 +154,7 @@ namespace NeonClusterOperator
             }
             catch (Exception e) 
             {
-                Logger?.LogErrorEx(e);
+                logger?.LogErrorEx(e);
             }
         }
     }

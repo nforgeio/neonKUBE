@@ -36,7 +36,7 @@ namespace Neon.Kube.Resources.Istio
         /// <summary>
         /// The Kubernetes named schema this object is based on.
         /// </summary>
-        public const string KubeKind = "V1VirtualService";
+        public const string KubeKind = "VirtualService";
 
         /// <summary>
         /// The Group this Kubernetes type belongs to.
@@ -54,7 +54,7 @@ namespace Neon.Kube.Resources.Istio
         public V1VirtualService()
         {
             ApiVersion = "networking.istio.io/v1beta1";
-            Kind       = "V1VirtualService";
+            Kind       = "VirtualService";
         }
 
         /// <summary>

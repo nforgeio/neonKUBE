@@ -115,10 +115,12 @@ namespace Neon.Kube.Operator.Webhook
         /// Registers the webhook endpoints.
         /// </summary>
         /// <param name="endpoints"></param>
-        /// <param name="logger"></param>
+        /// <param name="loggerFactory"></param>
         /// <returns></returns>
-        internal void Register(IEndpointRouteBuilder endpoints, ILogger logger = null)
+        internal void Register(IEndpointRouteBuilder endpoints, ILoggerFactory loggerFactory = null)
         {
+            var logger = loggerFactory?.CreateLogger<IAdmissionWebhook<TEntity, TResult>>();
+
             logger?.LogInformationEx(() => $"Registered webhook at [{Endpoint}]");
 
             endpoints.MapPost(

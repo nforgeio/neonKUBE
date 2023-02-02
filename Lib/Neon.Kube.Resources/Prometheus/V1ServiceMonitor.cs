@@ -100,7 +100,6 @@ namespace Neon.Kube.Resources.Prometheus
         /// ServiceMonitor.
         /// </summary>
         [JsonProperty(PropertyName = "spec")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(JsonGenericConverter<dynamic>))]
         public V1ServiceMonitorSpec Spec { get; set; }
 
         /// <summary>

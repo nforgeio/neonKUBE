@@ -60,7 +60,7 @@ namespace Neon.Kube.Operator
                     await SyncContext.Clear;
 
                     var k8s    = app.ApplicationServices.GetRequiredService<IKubernetes>();
-                    var logger = app.ApplicationServices.GetService<ILogger>();
+                    var logger = app.ApplicationServices.GetService<ILoggerFactory>()?.CreateLogger(nameof(ApplicationBuilderExtensions));
 
                     NgrokWebhookTunnel tunnel = null;
 
@@ -89,7 +89,7 @@ namespace Neon.Kube.Operator
                                 .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
                                 .First(m => m.Name == "Register");
 
-                            registerMethod.Invoke(mutator, new object[] { endpoints, logger });
+                            registerMethod.Invoke(mutator, new object[] { endpoints, app.ApplicationServices.GetService<ILoggerFactory>() });
 
                             if (tunnel == null)
                             {
@@ -98,7 +98,7 @@ namespace Neon.Kube.Operator
                                     .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
                                     .First(m => m.Name == "Create");
 
-                                createMethod.Invoke(mutator, new object[] { k8s });
+                                createMethod.Invoke(mutator, new object[] { k8s, app.ApplicationServices.GetService<ILoggerFactory>() });
                             }
                         }
                         catch (Exception e)
@@ -122,7 +122,7 @@ namespace Neon.Kube.Operator
                                 .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
                                 .First(m => m.Name == "Register");
 
-                            registerMethod.Invoke(validator, new object[] { endpoints, logger });
+                            registerMethod.Invoke(validator, new object[] { endpoints, app.ApplicationServices.GetService<ILoggerFactory>() });
 
                             if (tunnel == null)
                             {
@@ -131,7 +131,7 @@ namespace Neon.Kube.Operator
                                     .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
                                     .First(m => m.Name == "Create");
 
-                                createMethod.Invoke(validator, new object[] { k8s });
+                                createMethod.Invoke(validator, new object[] { k8s, app.ApplicationServices.GetService<ILoggerFactory>() });
                             }
                         }
                         catch (Exception e)

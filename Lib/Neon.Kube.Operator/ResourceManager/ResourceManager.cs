@@ -173,29 +173,29 @@ namespace Neon.Kube.Operator.ResourceManager
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         where TController : IResourceController<TEntity>
     {
-        private bool                                         isDisposed   = false;
-        private bool                                         stopIdleLoop = false;
-        private AsyncReentrantMutex                          mutex        = new AsyncReentrantMutex();
-        private bool                                         started      = false;
-        private ResourceManagerOptions                       options;
-        private ResourceManagerMetrics<TEntity, TController> metrics;
-        private IKubernetes                                  k8s;
-        private IServiceProvider                             serviceProvider;
-        private IResourceCache<TEntity>                      resourceCache;
-        private IFinalizerManager<TEntity>                   finalizerManager;
-        private AsyncKeyedLocker<string>                     lockProvider;
-        private string                                       resourceNamespace;
-        private Type                                         controllerType;
-        private ILogger                                      logger;
-        private DateTime                                     nextIdleReconcileUtc;
-        private LeaderElectionConfig                         leaderConfig;
-        private bool                                         leaderElectionDisabled;
-        private LeaderElector                                leaderElector;
-        private Task                                         leaderTask;
-        private Task                                         idleLoopTask;
-        private Task                                         watcherTask;
-        private CancellationTokenSource                      watcherTcs;
-        private EventQueue<TEntity>                          eventQueue;
+        private bool                                           isDisposed   = false;
+        private bool                                           stopIdleLoop = false;
+        private AsyncReentrantMutex                            mutex        = new AsyncReentrantMutex();
+        private bool                                           started      = false;
+        private ResourceManagerOptions                         options;
+        private ResourceManagerMetrics<TEntity, TController>   metrics;
+        private IKubernetes                                    k8s;
+        private IServiceProvider                               serviceProvider;
+        private IResourceCache<TEntity>                        resourceCache;
+        private IFinalizerManager<TEntity>                     finalizerManager;
+        private AsyncKeyedLocker<string>                       lockProvider;
+        private string                                         resourceNamespace;
+        private Type                                           controllerType;
+        private ILogger<ResourceManager<TEntity, TController>> logger;
+        private DateTime                                       nextIdleReconcileUtc;
+        private LeaderElectionConfig                           leaderConfig;
+        private bool                                           leaderElectionDisabled;
+        private LeaderElector                                  leaderElector;
+        private Task                                           leaderTask;
+        private Task                                           idleLoopTask;
+        private Task                                           watcherTask;
+        private CancellationTokenSource                        watcherTcs;
+        private EventQueue<TEntity>                            eventQueue;
 
         /// <summary>
         /// Default constructor.
@@ -229,7 +229,8 @@ namespace Neon.Kube.Operator.ResourceManager
             this.leaderConfig           = leaderConfig;
             this.leaderElectionDisabled = leaderElectionDisabled;
             this.metrics                = new ResourceManagerMetrics<TEntity, TController>();
-
+            this.logger                 = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger<ResourceManager<TEntity, TController>>();
+            
             this.options.Validate();
 
             this.controllerType = typeof(TController);
@@ -245,7 +246,6 @@ namespace Neon.Kube.Operator.ResourceManager
             Covenant.Requires<ArgumentNullException>(serviceProvider != null, nameof(serviceProvider));
 
             this.k8s              = serviceProvider.GetRequiredService<IKubernetes>();
-            this.logger           = serviceProvider.GetService<ILogger>();
             this.resourceCache    = serviceProvider.GetRequiredService<IResourceCache<TEntity>>();
             this.finalizerManager = serviceProvider.GetRequiredService<IFinalizerManager<TEntity>>();
             this.lockProvider     = serviceProvider.GetRequiredService<AsyncKeyedLocker<string>>();

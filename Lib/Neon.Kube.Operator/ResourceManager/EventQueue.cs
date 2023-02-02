@@ -52,7 +52,7 @@ namespace Neon.Kube.Operator.ResourceManager
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         private readonly IKubernetes                                                            k8s;
-        private readonly ILogger                                                                logger;
+        private readonly ILogger<EventQueue<TEntity>>                                           logger;
         private readonly ResourceManagerOptions                                                 options;
         private readonly ConcurrentDictionary<WatchEvent<TEntity>, CancellationTokenSource>     queue;
         private readonly Func<WatchEvent<TEntity>, Task>                                        eventHandler;
@@ -68,12 +68,12 @@ namespace Neon.Kube.Operator.ResourceManager
             IKubernetes                         k8s,
             ResourceManagerOptions              options,
             Func<WatchEvent<TEntity>, Task>     eventHandler,
-            ILogger                             logger = null)
+            ILoggerFactory                      loggerFactory = null)
         {
             this.k8s          = k8s;
             this.options      = options;
             this.eventHandler = eventHandler;
-            this.logger       = logger;
+            this.logger       = loggerFactory?.CreateLogger<EventQueue<TEntity>>();
             this.queue        = new ConcurrentDictionary<WatchEvent<TEntity>, CancellationTokenSource>();
         }
 

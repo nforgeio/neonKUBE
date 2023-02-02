@@ -50,11 +50,6 @@ namespace Neon.Kube.Operator.Webhook
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
     {
         /// <summary>
-        /// Logger.
-        /// </summary>
-        public ILogger Logger { get; set; }
-
-        /// <summary>
         /// The namespace selector.
         /// </summary>
         public V1LabelSelector NamespaceSelector => null;
@@ -190,9 +185,11 @@ namespace Neon.Kube.Operator.Webhook
             return response;
         }
 
-        internal async Task Create(IKubernetes k8s)
+        internal async Task Create(IKubernetes k8s, ILoggerFactory loggerFactory = null)
         {
-            Logger?.LogInformationEx(() => $"Checking for webhook {this.GetType().Name}.");
+            var logger = loggerFactory?.CreateLogger<IMutatingWebhook<TEntity>>();
+
+            logger?.LogInformationEx(() => $"Checking for webhook {this.GetType().Name}.");
 
             try
             {
@@ -201,21 +198,21 @@ namespace Neon.Kube.Operator.Webhook
                 webhook.Webhooks = WebhookConfiguration.Webhooks;
                 await k8s.AdmissionregistrationV1.ReplaceMutatingWebhookConfigurationAsync(webhook, webhook.Name());
 
-                Logger?.LogInformationEx(() => $"Webhook {this.GetType().Name} updated.");
+                logger?.LogInformationEx(() => $"Webhook {this.GetType().Name} updated.");
             }
             catch (HttpOperationException e) 
             {
-                Logger?.LogInformationEx(() => $"Webhook {this.GetType().Name} not found, creating.");
+                logger?.LogInformationEx(() => $"Webhook {this.GetType().Name} not found, creating.");
 
                 if (e.Response.StatusCode == System.Net.HttpStatusCode.NotFound) 
                 {
                     await k8s.AdmissionregistrationV1.CreateMutatingWebhookConfigurationAsync(WebhookConfiguration);
 
-                    Logger?.LogInformationEx(() => $"Webhook {this.GetType().Name} created.");
+                    logger?.LogInformationEx(() => $"Webhook {this.GetType().Name} created.");
                 }
                 else 
                 {
-                    Logger?.LogErrorEx(e);
+                    logger?.LogErrorEx(e);
 
                     throw e;
                 }

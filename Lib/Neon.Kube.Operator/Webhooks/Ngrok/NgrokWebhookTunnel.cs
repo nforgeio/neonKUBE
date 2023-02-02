@@ -104,7 +104,7 @@ namespace Neon.Kube.Operator.Webhook.Ngrok
             this.serviceProvider   = serviceProvider;
             this.ngrokdirectory    = ngrokdirectory;
             this.ngrokAuthToken    = ngrokAuthToken;
-            this.logger            = serviceProvider.GetService<ILogger>();
+            this.logger            = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger<NgrokWebhookTunnel>();
 
             ngrokManager = new NgrokManager();
 
@@ -179,7 +179,7 @@ namespace Neon.Kube.Operator.Webhook.Ngrok
                                     .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
                                     .First(m => m.Name == "Create");
 
-                    await (Task)createMethod.Invoke(mutator, new object[] { k8s });
+                    await (Task)createMethod.Invoke(mutator, new object[] { k8s, serviceProvider.GetService<ILoggerFactory>() });
 
                     var property = typeof(IMutatingWebhook<>)
                                 .MakeGenericType(mutatingWebhookRegistration.EntityType)
@@ -212,7 +212,7 @@ namespace Neon.Kube.Operator.Webhook.Ngrok
                                     .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
                                     .First(m => m.Name == "Create");
 
-                    await (Task)createMethod.Invoke(validator, new object[] { k8s });
+                    await (Task)createMethod.Invoke(validator, new object[] { k8s, serviceProvider.GetService<ILoggerFactory>() });
 
                     var property = typeof(IValidatingWebhook<>)
                                 .MakeGenericType(validatingWebhookRegistration.EntityType)

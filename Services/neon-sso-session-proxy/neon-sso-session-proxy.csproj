@@ -1,38 +1,38 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-	<PropertyGroup>
-		<TargetFramework>net7.0</TargetFramework>
-		<OutputType>Exe</OutputType>
-		<RootNamespace>NeonSsoProxy</RootNamespace>
-		<IsPackable>false</IsPackable>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<ServerGarbageCollection>true</ServerGarbageCollection>
-		<ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
-		<AssemblyName>neon-sso-session-proxy</AssemblyName>
-		<Configurations>Debug;Release</Configurations>
-	</PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <OutputType>Exe</OutputType>
+        <RootNamespace>NeonSsoProxy</RootNamespace>
+        <IsPackable>false</IsPackable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <ServerGarbageCollection>true</ServerGarbageCollection>
+        <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+        <AssemblyName>neon-sso-session-proxy</AssemblyName>
+        <Configurations>Debug;Release</Configurations>
+    </PropertyGroup>
 
-	<ItemGroup>
-		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
-		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
-	</ItemGroup>
+    <ItemGroup>
+        <Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+        <Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+    </ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="6.0.9" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2765-dev-master" />
-		<PackageReference Include="Neon.Service" Version="10000.0.2765-dev-master" />
-		<PackageReference Include="Neon.Web" Version="10000.0.2765-dev-master" />
-		<PackageReference Include="prometheus-net" Version="6.0.0" />
-		<PackageReference Include="prometheus-net.AspNetCore" Version="6.0.0" />
-		<PackageReference Include="prometheus-net.DotNetRuntime" Version="4.2.4" />
-		<PackageReference Include="Yarp.ReverseProxy" Version="1.1.1" />
-	</ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="6.0.9" />
+        <PackageReference Include="Neon.Common" Version="10000.0.2765-dev-master" />
+        <PackageReference Include="Neon.Service" Version="10000.0.2765-dev-master" />
+        <PackageReference Include="Neon.Web" Version="10000.0.2765-dev-master" />
+        <PackageReference Include="prometheus-net" Version="6.0.0" />
+        <PackageReference Include="prometheus-net.AspNetCore" Version="6.0.0" />
+        <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.2.4" />
+        <PackageReference Include="Yarp.ReverseProxy" Version="1.1.1" />
+    </ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
-		<ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
-		<ProjectReference Include="..\..\Lib\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
-		<ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
-	</ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
+        <ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
+        <ProjectReference Include="..\..\Lib\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
+        <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
+    </ItemGroup>
 
 </Project>

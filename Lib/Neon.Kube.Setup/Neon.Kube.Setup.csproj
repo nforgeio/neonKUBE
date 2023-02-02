@@ -1,178 +1,178 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<TargetFramework>net7.0</TargetFramework>
-		<OutputType>Library</OutputType>
-		<RootNamespace>Neon.Kube.Setup</RootNamespace>
-		<Version>10000.0.2236-dev-master</Version>
-		<Description>INTERNAL USE ONLY: Core library used by neonKUBE related tooling.</Description>
-		<PackageLicenseFile>LICENSE</PackageLicenseFile>
-		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
-		<IsPackable>true</IsPackable>
-		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Setup/README.md</PackageProjectUrl>
-		<RepositoryType>git</RepositoryType>
-		<RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
-		<Configurations>Debug;Release</Configurations>
-		<PackageIcon>nuget-icon.png</PackageIcon>
-		<PackageTags>kubernetes</PackageTags>
-		<NoDefaultExcludes>true</NoDefaultExcludes>
-	</PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <OutputType>Library</OutputType>
+        <RootNamespace>Neon.Kube.Setup</RootNamespace>
+        <Version>10000.0.2236-dev-master</Version>
+        <Description>INTERNAL USE ONLY: Core library used by neonKUBE related tooling.</Description>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
+        <IsPackable>true</IsPackable>
+        <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Setup/README.md</PackageProjectUrl>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
+        <Configurations>Debug;Release</Configurations>
+        <PackageIcon>nuget-icon.png</PackageIcon>
+        <PackageTags>kubernetes</PackageTags>
+        <NoDefaultExcludes>true</NoDefaultExcludes>
+    </PropertyGroup>
 
-	<ItemGroup>
-		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
-		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
-	</ItemGroup>
+    <ItemGroup>
+        <Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+        <Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+    </ItemGroup>
 
-	<ItemGroup>
-		<EmbeddedResource Include="ClusterDefinitions\neon-desktop.hyperv.cluster.yaml" />
-		<EmbeddedResource Include="Resources/**/*" />
-	</ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Include="ClusterDefinitions\neon-desktop.hyperv.cluster.yaml" />
+        <EmbeddedResource Include="Resources/**/*" />
+    </ItemGroup>
 
-	<ItemGroup>
-		<None Remove="Resources\Helm\calico\templates\service-controller.yaml" />
-		<None Remove="Resources\Helm\calico\templates\service-node.yaml" />
-		<None Remove="Resources\Helm\calico\templates\servicemonitor-controller.yaml" />
-		<None Remove="Resources\Helm\calico\templates\servicemonitor-node.yaml" />
-		<None Remove="Resources\Helm\cert-manager\crds\certificates.yaml" />
-		<None Remove="Resources\Helm\cert-manager\crds\challenges.yaml" />
-		<None Remove="Resources\Helm\cert-manager\crds\clusterissuers.yaml" />
-		<None Remove="Resources\Helm\cert-manager\crds\issuers.yaml" />
-		<None Remove="Resources\Helm\cert-manager\crds\orders.yaml" />
-		<None Remove="Resources\Helm\cert-manager\templates\cainjector-deployment - Copy.yaml" />
-		<None Remove="Resources\Helm\cert-manager\templates\grafana-dashboard.yaml" />
-		<None Remove="Resources\Helm\crd-cluster\crds\grafanadashboards.yaml" />
-		<None Remove="Resources\Helm\crd-cluster\crds\grafanadatasources.yaml" />
-		<None Remove="Resources\Helm\dex\templates\ldap-connector.yaml" />
-		<None Remove="Resources\Helm\grafana-agent\crds\monitoring.grafana.com_integrations.yaml" />
-		<None Remove="Resources\Helm\grafana-agent\templates\grafana-dashboard.yaml" />
-		<None Remove="Resources\Helm\grafana-agent\templates\neon-dashboard.yaml" />
-		<None Remove="Resources\Helm\grafana\templates\datasource-loki.yaml" />
-		<None Remove="Resources\Helm\grafana\templates\datasource-mimir.yaml" />
-		<None Remove="Resources\Helm\harbor\assets\registry-config.yaml" />
-		<None Remove="Resources\Helm\harbor\templates\buckets.yaml" />
-		<None Remove="Resources\Helm\harbor\templates\core.yaml" />
-		<None Remove="Resources\Helm\harbor\templates\harbor.yaml" />
-		<None Remove="Resources\Helm\harbor\templates\jobservice.yaml" />
-		<None Remove="Resources\Helm\harbor\templates\notaryserver.yaml" />
-		<None Remove="Resources\Helm\harbor\templates\notarysigner.yaml" />
-		<None Remove="Resources\Helm\harbor\templates\portal.yaml" />
-		<None Remove="Resources\Helm\harbor\templates\registry.yaml" />
-		<None Remove="Resources\Helm\harbor\templates\registrycontroller.yaml" />
-		<None Remove="Resources\Helm\harbor\templates\trivy.yaml" />
-		<None Remove="Resources\Helm\kiali\templates\service-operator.yaml" />
-		<None Remove="Resources\Helm\kiali\templates\servicemonitor-operator.yaml" />
-		<None Remove="Resources\Helm\kiali\templates\servicemonitor.yaml" />
-		<None Remove="Resources\Helm\kube-state-metrics\templates\grafana-dashboard.yaml" />
-		<None Remove="Resources\Helm\loki\templates\buckets.yaml" />
-		<None Remove="Resources\Helm\loki\templates\service.yaml" />
-		<None Remove="Resources\Helm\loki\templates\virtualservice.yaml" />
-		<None Remove="Resources\Helm\memcached\templates\dashboard.yaml" />
-		<None Remove="Resources\Helm\memcached\templates\_affinities.tpl" />
-		<None Remove="Resources\Helm\memcached\templates\_capabilities.tpl" />
-		<None Remove="Resources\Helm\memcached\templates\_images.tpl" />
-		<None Remove="Resources\Helm\memcached\templates\_labels.tpl" />
-		<None Remove="Resources\Helm\memcached\templates\_names.tpl" />
-		<None Remove="Resources\Helm\memcached\templates\_tplvalues.tpl" />
-		<None Remove="Resources\Helm\memcached\templates\_warnings.tpl" />
-		<None Remove="Resources\Helm\metrics-server\templates\rbac - Copy (2).yaml" />
-		<None Remove="Resources\Helm\metrics-server\templates\rbac - Copy (3).yaml" />
-		<None Remove="Resources\Helm\metrics-server\templates\rbac - Copy (4).yaml" />
-		<None Remove="Resources\Helm\metrics-server\templates\rbac - Copy (5).yaml" />
-		<None Remove="Resources\Helm\metrics-server\templates\rbac - Copy.yaml" />
-		<None Remove="Resources\Helm\metrics-server\templates\serviceMonitor.yaml" />
-		<None Remove="Resources\Helm\metrics-server\_helpers.tpl" />
-		<None Remove="Resources\Helm\mimir\templates\alertmanager\alertmanager-dashboard-resources.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\alertmanager\alertmanager-dashboard.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\buckets.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\compactor\compactor-dashboard-resources.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\compactor\compactor-dashboard.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\config-dashboard.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\datasource-mimir-alertmanager.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\envoyfilter.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\overrides-exporter\overrides-dashboard.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\querier\queries-dashboard.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\reads-dashboard.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\reads-networking-dashboard.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\reads-resources-dashboard.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\rollout-progress-dashboard.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\ruler\ruler-dashboard.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\scaling-dashboard.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\secret-alertmanager.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\service.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\slow-queries-dashboard.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\store-gateway\object-storage-dashboard.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\tenants-dashboard.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\top-tenants-dashboard.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\virtualService.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\writes-dashboard.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\writes-networking-dashboard.yaml" />
-		<None Remove="Resources\Helm\mimir\templates\writes-resources-dashboard.yaml" />
-		<None Remove="Resources\Helm\minio\templates\console-config-env.yaml" />
-		<None Remove="Resources\Helm\minio\templates\grafana-dashboard.yaml" />
-		<None Remove="Resources\Helm\minio\templates\tenant-service.yaml" />
-		<None Remove="Resources\Helm\neon-cluster-operator\.helmignore" />
-		<None Remove="Resources\Helm\neon-cluster-operator\Chart.yaml" />
-		<None Remove="Resources\Helm\neon-cluster-operator\templates\configmap.yaml" />
-		<None Remove="Resources\Helm\neon-cluster-operator\templates\daemonset.yaml" />
-		<None Remove="Resources\Helm\neon-cluster-operator\templates\service.yaml" />
-		<None Remove="Resources\Helm\neon-cluster-operator\templates\serviceaccount.yaml" />
-		<None Remove="Resources\Helm\neon-cluster-operator\templates\servicemonitor.yaml" />
-		<None Remove="Resources\Helm\neon-cluster-operator\templates\_helpers.tpl" />
-		<None Remove="Resources\Helm\neon-cluster-operator\values.yaml" />
-		<None Remove="Resources\Helm\neon-dashboard\templates\clusterrole.yaml" />
-		<None Remove="Resources\Helm\neon-dashboard\templates\clusterrolebinding.yaml" />
-		<None Remove="Resources\Helm\neon-dashboard\templates\secret.yaml" />
-		<None Remove="Resources\Helm\neon-node-agent\.helmignore" />
-		<None Remove="Resources\Helm\neon-node-agent\Chart.yaml" />
-		<None Remove="Resources\Helm\neon-node-agent\templates\configmap.yaml" />
-		<None Remove="Resources\Helm\neon-node-agent\templates\daemonset.yaml" />
-		<None Remove="Resources\Helm\neon-node-agent\templates\rbac.yaml" />
-		<None Remove="Resources\Helm\neon-node-agent\templates\service.yaml" />
-		<None Remove="Resources\Helm\neon-node-agent\templates\serviceaccount.yaml" />
-		<None Remove="Resources\Helm\neon-node-agent\templates\servicemonitor.yaml" />
-		<None Remove="Resources\Helm\neon-node-agent\templates\_helpers.tpl" />
-		<None Remove="Resources\Helm\neon-node-agent\values.yaml" />
-		<None Remove="Resources\Helm\oauth2-proxy\templates\_config-render.tpl" />
-		<None Remove="Resources\Helm\postgres-operator\templates\certificate.yaml" />
-		<None Remove="Resources\Helm\postgres-operator\templates\configmap-metric-exporter.yaml" />
-		<None Remove="Resources\Helm\postgres-operator\templates\healthcheck-role.yaml" />
-		<None Remove="Resources\Helm\postgres-operator\templates\healthcheck-rolebinding.yaml" />
-		<None Remove="Resources\Helm\postgres-operator\templates\neon-system-db.yaml" />
-		<None Remove="Resources\Helm\postgres-operator\templates\servicemonitor.yaml" />
-		<None Remove="Resources\Helm\redis-ha\templates\grafana-dashboard.yaml" />
-		<None Remove="Resources\Helm\tempo\templates\buckets.yaml" />
-		<None Remove="Resources\Helm\tempo\templates\service.yaml" />
-		<None Remove="Resources\Helm\tempo\templates\virtualservice.yaml" />
-	</ItemGroup>
+    <ItemGroup>
+        <None Remove="Resources\Helm\calico\templates\service-controller.yaml" />
+        <None Remove="Resources\Helm\calico\templates\service-node.yaml" />
+        <None Remove="Resources\Helm\calico\templates\servicemonitor-controller.yaml" />
+        <None Remove="Resources\Helm\calico\templates\servicemonitor-node.yaml" />
+        <None Remove="Resources\Helm\cert-manager\crds\certificates.yaml" />
+        <None Remove="Resources\Helm\cert-manager\crds\challenges.yaml" />
+        <None Remove="Resources\Helm\cert-manager\crds\clusterissuers.yaml" />
+        <None Remove="Resources\Helm\cert-manager\crds\issuers.yaml" />
+        <None Remove="Resources\Helm\cert-manager\crds\orders.yaml" />
+        <None Remove="Resources\Helm\cert-manager\templates\cainjector-deployment - Copy.yaml" />
+        <None Remove="Resources\Helm\cert-manager\templates\grafana-dashboard.yaml" />
+        <None Remove="Resources\Helm\crd-cluster\crds\grafanadashboards.yaml" />
+        <None Remove="Resources\Helm\crd-cluster\crds\grafanadatasources.yaml" />
+        <None Remove="Resources\Helm\dex\templates\ldap-connector.yaml" />
+        <None Remove="Resources\Helm\grafana-agent\crds\monitoring.grafana.com_integrations.yaml" />
+        <None Remove="Resources\Helm\grafana-agent\templates\grafana-dashboard.yaml" />
+        <None Remove="Resources\Helm\grafana-agent\templates\neon-dashboard.yaml" />
+        <None Remove="Resources\Helm\grafana\templates\datasource-loki.yaml" />
+        <None Remove="Resources\Helm\grafana\templates\datasource-mimir.yaml" />
+        <None Remove="Resources\Helm\harbor\assets\registry-config.yaml" />
+        <None Remove="Resources\Helm\harbor\templates\buckets.yaml" />
+        <None Remove="Resources\Helm\harbor\templates\core.yaml" />
+        <None Remove="Resources\Helm\harbor\templates\harbor.yaml" />
+        <None Remove="Resources\Helm\harbor\templates\jobservice.yaml" />
+        <None Remove="Resources\Helm\harbor\templates\notaryserver.yaml" />
+        <None Remove="Resources\Helm\harbor\templates\notarysigner.yaml" />
+        <None Remove="Resources\Helm\harbor\templates\portal.yaml" />
+        <None Remove="Resources\Helm\harbor\templates\registry.yaml" />
+        <None Remove="Resources\Helm\harbor\templates\registrycontroller.yaml" />
+        <None Remove="Resources\Helm\harbor\templates\trivy.yaml" />
+        <None Remove="Resources\Helm\kiali\templates\service-operator.yaml" />
+        <None Remove="Resources\Helm\kiali\templates\servicemonitor-operator.yaml" />
+        <None Remove="Resources\Helm\kiali\templates\servicemonitor.yaml" />
+        <None Remove="Resources\Helm\kube-state-metrics\templates\grafana-dashboard.yaml" />
+        <None Remove="Resources\Helm\loki\templates\buckets.yaml" />
+        <None Remove="Resources\Helm\loki\templates\service.yaml" />
+        <None Remove="Resources\Helm\loki\templates\virtualservice.yaml" />
+        <None Remove="Resources\Helm\memcached\templates\dashboard.yaml" />
+        <None Remove="Resources\Helm\memcached\templates\_affinities.tpl" />
+        <None Remove="Resources\Helm\memcached\templates\_capabilities.tpl" />
+        <None Remove="Resources\Helm\memcached\templates\_images.tpl" />
+        <None Remove="Resources\Helm\memcached\templates\_labels.tpl" />
+        <None Remove="Resources\Helm\memcached\templates\_names.tpl" />
+        <None Remove="Resources\Helm\memcached\templates\_tplvalues.tpl" />
+        <None Remove="Resources\Helm\memcached\templates\_warnings.tpl" />
+        <None Remove="Resources\Helm\metrics-server\templates\rbac - Copy (2).yaml" />
+        <None Remove="Resources\Helm\metrics-server\templates\rbac - Copy (3).yaml" />
+        <None Remove="Resources\Helm\metrics-server\templates\rbac - Copy (4).yaml" />
+        <None Remove="Resources\Helm\metrics-server\templates\rbac - Copy (5).yaml" />
+        <None Remove="Resources\Helm\metrics-server\templates\rbac - Copy.yaml" />
+        <None Remove="Resources\Helm\metrics-server\templates\serviceMonitor.yaml" />
+        <None Remove="Resources\Helm\metrics-server\_helpers.tpl" />
+        <None Remove="Resources\Helm\mimir\templates\alertmanager\alertmanager-dashboard-resources.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\alertmanager\alertmanager-dashboard.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\buckets.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\compactor\compactor-dashboard-resources.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\compactor\compactor-dashboard.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\config-dashboard.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\datasource-mimir-alertmanager.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\envoyfilter.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\overrides-exporter\overrides-dashboard.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\querier\queries-dashboard.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\reads-dashboard.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\reads-networking-dashboard.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\reads-resources-dashboard.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\rollout-progress-dashboard.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\ruler\ruler-dashboard.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\scaling-dashboard.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\secret-alertmanager.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\service.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\slow-queries-dashboard.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\store-gateway\object-storage-dashboard.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\tenants-dashboard.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\top-tenants-dashboard.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\virtualService.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\writes-dashboard.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\writes-networking-dashboard.yaml" />
+        <None Remove="Resources\Helm\mimir\templates\writes-resources-dashboard.yaml" />
+        <None Remove="Resources\Helm\minio\templates\console-config-env.yaml" />
+        <None Remove="Resources\Helm\minio\templates\grafana-dashboard.yaml" />
+        <None Remove="Resources\Helm\minio\templates\tenant-service.yaml" />
+        <None Remove="Resources\Helm\neon-cluster-operator\.helmignore" />
+        <None Remove="Resources\Helm\neon-cluster-operator\Chart.yaml" />
+        <None Remove="Resources\Helm\neon-cluster-operator\templates\configmap.yaml" />
+        <None Remove="Resources\Helm\neon-cluster-operator\templates\daemonset.yaml" />
+        <None Remove="Resources\Helm\neon-cluster-operator\templates\service.yaml" />
+        <None Remove="Resources\Helm\neon-cluster-operator\templates\serviceaccount.yaml" />
+        <None Remove="Resources\Helm\neon-cluster-operator\templates\servicemonitor.yaml" />
+        <None Remove="Resources\Helm\neon-cluster-operator\templates\_helpers.tpl" />
+        <None Remove="Resources\Helm\neon-cluster-operator\values.yaml" />
+        <None Remove="Resources\Helm\neon-dashboard\templates\clusterrole.yaml" />
+        <None Remove="Resources\Helm\neon-dashboard\templates\clusterrolebinding.yaml" />
+        <None Remove="Resources\Helm\neon-dashboard\templates\secret.yaml" />
+        <None Remove="Resources\Helm\neon-node-agent\.helmignore" />
+        <None Remove="Resources\Helm\neon-node-agent\Chart.yaml" />
+        <None Remove="Resources\Helm\neon-node-agent\templates\configmap.yaml" />
+        <None Remove="Resources\Helm\neon-node-agent\templates\daemonset.yaml" />
+        <None Remove="Resources\Helm\neon-node-agent\templates\rbac.yaml" />
+        <None Remove="Resources\Helm\neon-node-agent\templates\service.yaml" />
+        <None Remove="Resources\Helm\neon-node-agent\templates\serviceaccount.yaml" />
+        <None Remove="Resources\Helm\neon-node-agent\templates\servicemonitor.yaml" />
+        <None Remove="Resources\Helm\neon-node-agent\templates\_helpers.tpl" />
+        <None Remove="Resources\Helm\neon-node-agent\values.yaml" />
+        <None Remove="Resources\Helm\oauth2-proxy\templates\_config-render.tpl" />
+        <None Remove="Resources\Helm\postgres-operator\templates\certificate.yaml" />
+        <None Remove="Resources\Helm\postgres-operator\templates\configmap-metric-exporter.yaml" />
+        <None Remove="Resources\Helm\postgres-operator\templates\healthcheck-role.yaml" />
+        <None Remove="Resources\Helm\postgres-operator\templates\healthcheck-rolebinding.yaml" />
+        <None Remove="Resources\Helm\postgres-operator\templates\neon-system-db.yaml" />
+        <None Remove="Resources\Helm\postgres-operator\templates\servicemonitor.yaml" />
+        <None Remove="Resources\Helm\redis-ha\templates\grafana-dashboard.yaml" />
+        <None Remove="Resources\Helm\tempo\templates\buckets.yaml" />
+        <None Remove="Resources\Helm\tempo\templates\service.yaml" />
+        <None Remove="Resources\Helm\tempo\templates\virtualservice.yaml" />
+    </ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
-		<ProjectReference Include="..\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
-		<ProjectReference Include="..\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
-		<ProjectReference Include="..\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
-		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
-	</ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
+        <ProjectReference Include="..\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
+        <ProjectReference Include="..\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
+        <ProjectReference Include="..\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
+        <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
+    </ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="Minio" Version="4.0.6" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2765-dev-master" />
-		<PackageReference Include="Neon.Cryptography" Version="10000.0.2765-dev-master" />
-		<PackageReference Include="Neon.Postgres" Version="10000.0.2765-dev-master" />
-		<PackageReference Include="Samboy063.Tomlet" Version="5.0.0" />
-		<PackageReference Include="Tomlyn" Version="0.15.0" />
-		<PackageReference Include="Npgsql" Version="6.0.7" />
-	</ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Minio" Version="4.0.6" />
+        <PackageReference Include="Neon.Common" Version="10000.0.2765-dev-master" />
+        <PackageReference Include="Neon.Cryptography" Version="10000.0.2765-dev-master" />
+        <PackageReference Include="Neon.Postgres" Version="10000.0.2765-dev-master" />
+        <PackageReference Include="Samboy063.Tomlet" Version="5.0.0" />
+        <PackageReference Include="Tomlyn" Version="0.15.0" />
+        <PackageReference Include="Npgsql" Version="6.0.7" />
+    </ItemGroup>
 
-	<ItemGroup>
-		<Folder Include="Resources\Helm\crd-cluster\templates\" />
-	</ItemGroup>
+    <ItemGroup>
+        <Folder Include="Resources\Helm\crd-cluster\templates\" />
+    </ItemGroup>
 
-	<ItemGroup>
-		<None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
-		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
-	</ItemGroup>
-	
-	<!--
+    <ItemGroup>
+        <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+    <!--
 	The [ClusterManifest] build target executes a [neon-build download-const-uri] command to
 	download the cluster manifest JSON file for the current cluster version.  The manifest
 	will be generated during image builds in neonCLOUD and uploaded to S3.
@@ -190,8 +190,8 @@
 	manifest file which is checked into git and won't change very often.
 	-->
 
-	<Target Name="ClusterManifest" BeforeTargets="CoreCompile">
-		<Exec Command="neon-build download-const-uri &quot;%NK_ROOT%\Lib\Neon.Kube\bin\$(Configuration)\net7.0\Neon.Kube.dll&quot; Neon.Kube.KubeDownloads NeonClusterManifestUri &quot;$(ProjectDir)Resources\cluster-manifest.json" />
-	</Target>
+    <Target Name="ClusterManifest" BeforeTargets="CoreCompile">
+        <Exec Command="neon-build download-const-uri &quot;%NK_ROOT%\Lib\Neon.Kube\bin\$(Configuration)\net7.0\Neon.Kube.dll&quot; Neon.Kube.KubeDownloads NeonClusterManifestUri &quot;$(ProjectDir)Resources\cluster-manifest.json" />
+    </Target>
 
 </Project>

@@ -39,21 +39,19 @@ namespace Neon.Kube.Operator.Finalizer
     internal class FinalizerManager<TEntity> : IFinalizerManager<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
     {
-        private readonly ILogger           logger;
-        private readonly IKubernetes       client;
-        private readonly ComponentRegister componentRegister;
-        private readonly IFinalizerBuilder finalizerInstanceBuilder;
+        private readonly ILogger<FinalizerManager<TEntity>> logger;
+        private readonly IKubernetes                        client;
+        private readonly IFinalizerBuilder                  finalizerInstanceBuilder;
         
         public FinalizerManager(
             IKubernetes       client,
             ComponentRegister componentRegister,
             IFinalizerBuilder finalizerInstanceBuilder,
-            ILogger           logger = null)
+            ILoggerFactory    loggerFactory = null)
         {
             this.client                   = client;
-            this.componentRegister        = componentRegister;
             this.finalizerInstanceBuilder = finalizerInstanceBuilder;
-            this.logger                   = logger;
+            this.logger                   = loggerFactory?.CreateLogger<FinalizerManager<TEntity>>();
         }
 
         /// <inheritdoc/>

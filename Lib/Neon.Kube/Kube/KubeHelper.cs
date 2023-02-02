@@ -3161,7 +3161,7 @@ TCPKeepAlive yes
 
             var uuid = NeonHelper.CreateBase36Uuid();
 
-            return $"{deployment}-{uuid.Substring(0, 10)}-{uuid.Substring(uuid.Length - 5, 5)}";
+            return $"{deployment}-{uuid.Substring(0, 10)}-{uuid.Substring(uuid.Length - 5, 5)}".ToLowerInvariant();
         }
 
         /// <summary>

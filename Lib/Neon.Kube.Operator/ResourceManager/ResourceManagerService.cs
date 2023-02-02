@@ -45,12 +45,13 @@ using k8s.LeaderElection;
 using k8s.Models;
 using IdentityModel;
 using Neon.Kube.Operator.Cache;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Neon.Kube.Operator.ResourceManager
 {
     internal class ResourceControllerManager : IHostedService
     {
-        private readonly ILogger logger;
+        private readonly ILogger<ResourceControllerManager> logger;
 
         private ComponentRegister componentRegister;
         private IServiceProvider  serviceProvider;
@@ -61,7 +62,8 @@ namespace Neon.Kube.Operator.ResourceManager
         {
             this.componentRegister = componentRegister;
             this.serviceProvider   = serviceProvider;
-            this.logger            = serviceProvider.GetService<ILogger>();
+
+            this.logger            = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger<ResourceControllerManager>();
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)

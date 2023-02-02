@@ -96,7 +96,6 @@ namespace Neon.Kube.Resources.Grafana
         /// Gets or sets specification of the desired behavior of Grafana.
         /// </summary>
         [JsonProperty(PropertyName = "spec")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(JsonGenericConverter<dynamic>))]
         public V1GrafanaDashboardSpec Spec { get; set; }
 
         /// <summary>

@@ -83,18 +83,13 @@ namespace NeonClusterOperator
         /// <param name="services">The service collection.</param>
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<ILogger>(Program.Service.Logger)
+            services.AddSingleton<ILoggerFactory>(TelemetryHub.LoggerFactory)
                 .AddSingleton(Service.K8s)
                 .AddSingleton(Service.DexClient)
                 .AddSingleton(Service.HeadendClient)
                 .AddSingleton(Service.HarborClient);
 
-            services.AddKubernetesOperator(options =>
-            {
-                options.AssemblyScanningEnabled = false;
-            })
-                .AddController<MinioBucketController>()
-                .AddFinalizer<MinioBucketFinalizer>()
+            services.AddKubernetesOperator()
                 .AddNgrokTunnnel(hostname: Service.GetEnvironmentVariable("NGROK_HOSTNAME", def: "127.0.0.1", redact: false),
                     port: Service.Port,
                     ngrokDirectory: Service.GetEnvironmentVariable("NGROK_DIRECTORY", def: "C:/bin", redact: false),

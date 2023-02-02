@@ -53,7 +53,7 @@ namespace Neon.Kube.Operator.Util
             if (NeonHelper.IsDevWorkstation)
             {
                 Namespace = "default";
-                Name = KubeHelper.GetEmulatedPodName("neon-node-agent");
+                Name = KubeHelper.GetEmulatedPodName(Environment.MachineName);
             }
             else
             {

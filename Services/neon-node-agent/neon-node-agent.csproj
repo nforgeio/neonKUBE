@@ -1,44 +1,44 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<TargetFramework>net7.0</TargetFramework>
-		<OutputType>Exe</OutputType>
-		<RootNamespace>NeonNodeAgent</RootNamespace>
-		<IsPackable>false</IsPackable>
-		<ServerGarbageCollection>true</ServerGarbageCollection>
-		<ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
-		<AssemblyName>neon-node-agent</AssemblyName>
-		<Configurations>Debug;Release</Configurations>
-	</PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <OutputType>Exe</OutputType>
+        <RootNamespace>NeonNodeAgent</RootNamespace>
+        <IsPackable>false</IsPackable>
+        <ServerGarbageCollection>true</ServerGarbageCollection>
+        <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+        <AssemblyName>neon-node-agent</AssemblyName>
+        <Configurations>Debug;Release</Configurations>
+    </PropertyGroup>
 
-	<ItemGroup>
-		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
-		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
-	</ItemGroup>
+    <ItemGroup>
+        <Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+        <Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+    </ItemGroup>
 
-	<ItemGroup>
-		<Compile Remove="Resources\**" />
-		<EmbeddedResource Remove="Resources\**" />
-		<None Remove="Resources\**" />
-	</ItemGroup>
+    <ItemGroup>
+        <Compile Remove="Resources\**" />
+        <EmbeddedResource Remove="Resources\**" />
+        <None Remove="Resources\**" />
+    </ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="Neon.Common" Version="10000.0.2765-dev-master" />
-		<PackageReference Include="Neon.Cryptography" Version="10000.0.2765-dev-master" />
-		<PackageReference Include="Neon.Service" Version="10000.0.2765-dev-master" />
-		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.9" />
-		<PackageReference Include="Tomlyn" Version="0.15.0" />
-	</ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Neon.Common" Version="10000.0.2765-dev-master" />
+        <PackageReference Include="Neon.Cryptography" Version="10000.0.2765-dev-master" />
+        <PackageReference Include="Neon.Service" Version="10000.0.2765-dev-master" />
+        <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.9" />
+        <PackageReference Include="Tomlyn" Version="0.15.0" />
+    </ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
-		<ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
-		<ProjectReference Include="..\..\Lib\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
-		<ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
-	</ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
+        <ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
+        <ProjectReference Include="..\..\Lib\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
+        <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
+    </ItemGroup>
 
-	<ItemGroup>
-		<Folder Include="config.gitignore\" />
-	</ItemGroup>
+    <ItemGroup>
+        <Folder Include="config.gitignore\" />
+    </ItemGroup>
 
 </Project>

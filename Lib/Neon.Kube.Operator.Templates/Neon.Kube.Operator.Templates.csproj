@@ -1,32 +1,32 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
-    <Version>10000.0.2236-dev-master</Version>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Operator.Templates/README.md</PackageProjectUrl>
-    <PackageTags>kubernetes operator sdk neonkube template templates</PackageTags>
-    <Description>Kubernetes Operator SDK templates.</Description>
-    <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
-    <PackageIcon>nuget-icon.png</PackageIcon>
-    <RepositoryType>git</RepositoryType>
-    <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
-    <IsPackable>true</IsPackable>
-    <PackageType>Template</PackageType>
-    <PackageId>Neon.Kube.Operator.Templates</PackageId>
-    <IncludeContentInPack>true</IncludeContentInPack>
-    <IncludeBuildOutput>false</IncludeBuildOutput>
-    <ContentTargetFolders>content</ContentTargetFolders>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.0</TargetFrameworks>
+        <Version>10000.0.2236-dev-master</Version>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Operator.Templates/README.md</PackageProjectUrl>
+        <PackageTags>kubernetes operator sdk neonkube template templates</PackageTags>
+        <Description>Kubernetes Operator SDK templates.</Description>
+        <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
+        <PackageIcon>nuget-icon.png</PackageIcon>
+        <RepositoryType>git</RepositoryType>
+        <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
+        <IsPackable>true</IsPackable>
+        <PackageType>Template</PackageType>
+        <PackageId>Neon.Kube.Operator.Templates</PackageId>
+        <IncludeContentInPack>true</IncludeContentInPack>
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+        <ContentTargetFolders>content</ContentTargetFolders>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Content Include="OperatorTemplate\**\*" Exclude="OperatorTemplate\**\bin\**;OperatorTemplate\**\obj\**" />
-    <Compile Remove="**\*" />
-  </ItemGroup>
+    <ItemGroup>
+        <Content Include="OperatorTemplate\**\*" Exclude="OperatorTemplate\**\bin\**;OperatorTemplate\**\obj\**" />
+        <Compile Remove="**\*" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
-    <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
-  </ItemGroup>
+    <ItemGroup>
+        <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+    </ItemGroup>
 
 </Project>
