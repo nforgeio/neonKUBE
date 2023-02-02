@@ -287,9 +287,11 @@ namespace Neon.Kube
         {
             get
             {
-                Directory.CreateDirectory(NeonHelper.UserHomeFolder);
+                var neonKubeHomeFolder = Path.Combine(NeonHelper.UserHomeFolder, ".neonkube");
+
+                Directory.CreateDirectory(neonKubeHomeFolder);
                 
-                return NeonHelper.UserHomeFolder;
+                return neonKubeHomeFolder;
             }
         }
 
