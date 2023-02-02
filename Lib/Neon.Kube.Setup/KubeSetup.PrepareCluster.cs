@@ -498,26 +498,6 @@ namespace Neon.Kube.Setup
                         sbHosts.AppendLineLinux($"{hostAddress} *.{hostName}");
 
                         node.UploadText("/etc/hosts", sbHosts, permissions: "644");
-
-                        controller.SetGlobalStepStatus($"configure: workstation local DNS");
-
-                        var sections    = desktopServiceProxy.ListLocalHostsSections();
-                        var neonSection = sections.FirstOrDefault(section => section.Name.Equals(KubeConst.EtcHostsSectionName, StringComparison.InvariantCultureIgnoreCase));
-                        var hostEntries = neonSection != null ? neonSection.HostEntries : new Dictionary<string, IPAddress>();
-
-                        hostEntries[hostName]        = hostAddress;
-                        hostEntries[$"*.{hostName}"] = hostAddress;
-
-                        desktopServiceProxy.ModifyLocalHosts(KubeConst.EtcHostsSectionName, hostEntries);
-
-                        // Wait for the new local cluster DNS record to become active.
-
-                        await NeonHelper.WaitForAsync(
-                            async () =>
-                            {
-                                return (await Dns.GetHostAddressesAsync(hostName)).Count() > 0;
-                            },
-                            timeout: TimeSpan.FromSeconds(120));
                     }
 
                     clusterLogin.SshPassword = null;    // We're no longer allowing SSH password authentication so we can clear this.

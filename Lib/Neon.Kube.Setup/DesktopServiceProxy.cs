@@ -126,54 +126,6 @@ namespace Neon.Kube.Setup
         }
 
         /// <summary>
-        /// <para>
-        /// Used to modify the <b>$/etc/hosts</b> file used by the DNS resolver for testing, debugging 
-        /// and possibly other purposes.
-        /// </para>
-        /// <note>
-        /// <b>WARNING:</b> Modifying the <b>hosts</b> file will impact all processes
-        /// on the system, not just the current process.
-        /// </note>
-        /// </summary>
-        /// <param name="section">
-        /// <para>
-        /// Specifies the string to use to delimit the host names section.  This is required and
-        /// must be a non-empty string consisting of up to 63 non-control ASCII characters.  Section
-        /// names are case sensitive.
-        /// </para>
-        /// </param>
-        /// <param name="hostEntries">A dictionary mapping the hostnames to an IP address or <c>null</c>.</param>
-        /// <remarks>
-        /// <note>
-        /// This method requires elevated administrative privileges.
-        /// </note>
-        /// <para>
-        /// This method adds or removes a temporary section of host entry definitions
-        /// delimited by special comment lines.  When <paramref name="hostEntries"/> is 
-        /// non-null and non-empty, the section will be added or updated.  Otherwise, the
-        /// section will be removed.
-        /// </para>
-        /// <para>
-        /// You can remove all host sections by passing both <paramref name="hostEntries"/> 
-        /// and <paramref name="section"/> as <c>null</c>.
-        /// </para>
-        /// </remarks>
-        public void ModifyLocalHosts(string section, Dictionary<string, IPAddress> hostEntries = null)
-        {
-            if (isAdmin)
-            {
-                NetHelper.ModifyLocalHosts(section, hostEntries);
-            }
-            else
-            {
-                var request = new GrpcModifyLocalHostsRequest(section, hostEntries);
-                var reply   = desktopService.ModifyLocalHosts(request).Result;
-
-                reply.Error.EnsureSuccess();
-            }
-        }
-
-        /// <summary>
         /// Lists the names of the local host sections.
         /// </summary>
         /// <returns>The section names converted to uppercase.</returns>
