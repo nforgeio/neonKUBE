@@ -1887,7 +1887,6 @@ mountFolder=${{1}}
 # https://github.com/nforgeio/neonKUBE/issues/980
 
 sleep 10
-
 {changePasswordScript}
 #------------------------------------------------------------------------------
 # Configure the network.
