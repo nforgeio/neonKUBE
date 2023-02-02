@@ -46,7 +46,7 @@ namespace Neon.Kube.Operator.Cache
         private readonly ConcurrentDictionary<string, TEntity>  finalizingCache;
         private readonly CompareLogic                           comparelogLogic;
 
-        public ResourceCache() 
+        public ResourceCache(ILogger logger = null) 
         {
             cache           = new ConcurrentDictionary<string, TEntity>();
             finalizingCache = new ConcurrentDictionary<string, TEntity>();
