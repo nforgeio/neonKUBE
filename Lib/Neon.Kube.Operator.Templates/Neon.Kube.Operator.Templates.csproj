@@ -33,4 +33,9 @@
         <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
     </ItemGroup>
 
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+        <Exec Command="dotnet pack --no-build &quot;$(ProjectName).csproj&quot; -o $(OutDir)" />
+        <Exec Command="dotnet new install --force $(OutDir)$(ProjectName).$(PackageVersion).nupkg " />
+    </Target>
+
 </Project>
