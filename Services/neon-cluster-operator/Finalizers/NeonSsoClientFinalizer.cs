@@ -48,27 +48,27 @@ namespace NeonClusterOperator
     /// </summary>
     public class NeonSsoClientFinalizer : IResourceFinalizer<V1NeonSsoClient>
     {
-        private ILogger logger;
-        private IKubernetes k8s;
-        private Dex.Dex.DexClient dexClient;
+        private readonly IKubernetes                     k8s;
+        private readonly ILogger<NeonSsoClientFinalizer> logger;
+        private readonly Dex.Dex.DexClient               dexClient;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="logger">The logger.</param>
         /// <param name="k8s">The Kubernetes client.</param>
+        /// <param name="logger">The logger.</param>
         /// <param name="dexClient">The Dex client.</param>
         public NeonSsoClientFinalizer(
-            ILogger logger,
-            IKubernetes k8s,
-            Dex.Dex.DexClient dexClient)
+            ILogger<NeonSsoClientFinalizer> logger,
+            IKubernetes                     k8s,
+            Dex.Dex.DexClient               dexClient)
         {
-            Covenant.Requires(logger != null, nameof(logger));
             Covenant.Requires(k8s != null, nameof(k8s));
+            Covenant.Requires(logger != null, nameof(logger));
             Covenant.Requires(dexClient != null, nameof(dexClient));
 
-            this.logger    = logger;
             this.k8s       = k8s;
+            this.logger    = logger;
             this.dexClient = dexClient;
         }
 

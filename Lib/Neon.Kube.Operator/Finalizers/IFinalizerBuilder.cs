@@ -30,10 +30,10 @@ namespace Neon.Kube.Operator.Finalizer
 {
     internal interface IFinalizerBuilder
     {
-        public IEnumerable<IResourceFinalizer<TEntity>> BuildFinalizers<TEntity>()
+        public IEnumerable<IResourceFinalizer<TEntity>> BuildFinalizers<TEntity>(IServiceProvider serviceProvider)
             where TEntity : IKubernetesObject<V1ObjectMeta>, new();
 
-        IResourceFinalizer<TEntity> BuildFinalizer<TEntity, TFinalizer>()
+        IResourceFinalizer<TEntity> BuildFinalizer<TEntity, TFinalizer>(IServiceProvider serviceProvider)
             where TEntity : IKubernetesObject<V1ObjectMeta>, new();
     }
 }

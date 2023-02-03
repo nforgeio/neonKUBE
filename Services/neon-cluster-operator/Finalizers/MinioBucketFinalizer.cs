@@ -44,17 +44,17 @@ namespace NeonClusterOperator
     /// </summary>
     public class MinioBucketFinalizer : IResourceFinalizer<V1MinioBucket>
     {
-        private ILogger logger;
-        private IKubernetes k8s;
+        private readonly IKubernetes                   k8s;
+        private readonly ILogger<MinioBucketFinalizer> logger;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="logger">The logger.</param>
         /// <param name="k8s">The Kubernetes client.</param>
+        /// <param name="logger">The logger.</param>
         public MinioBucketFinalizer(
-            ILogger logger,
-            IKubernetes k8s)
+            IKubernetes k8s,
+            ILogger<MinioBucketFinalizer> logger)
         {
             Covenant.Requires(logger != null, nameof(logger));
             Covenant.Requires(k8s != null, nameof(k8s));

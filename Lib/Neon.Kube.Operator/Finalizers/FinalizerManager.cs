@@ -42,22 +42,25 @@ namespace Neon.Kube.Operator.Finalizer
         private readonly ILogger<FinalizerManager<TEntity>> logger;
         private readonly IKubernetes                        client;
         private readonly IFinalizerBuilder                  finalizerInstanceBuilder;
+        private readonly IServiceProvider                   serviceProvider;
         
         public FinalizerManager(
             IKubernetes       client,
             ComponentRegister componentRegister,
             IFinalizerBuilder finalizerInstanceBuilder,
+            IServiceProvider  serviceProvider,
             ILoggerFactory    loggerFactory = null)
         {
             this.client                   = client;
             this.finalizerInstanceBuilder = finalizerInstanceBuilder;
+            this.serviceProvider          = serviceProvider; 
             this.logger                   = loggerFactory?.CreateLogger<FinalizerManager<TEntity>>();
         }
 
         /// <inheritdoc/>
         public Task RegisterFinalizerAsync<TFinalizer>(TEntity entity)
             where TFinalizer : IResourceFinalizer<TEntity>
-            => RegisterFinalizerInternalAsync(entity, finalizerInstanceBuilder.BuildFinalizer<TEntity, TFinalizer>());
+            => RegisterFinalizerInternalAsync(entity, finalizerInstanceBuilder.BuildFinalizer<TEntity, TFinalizer>(serviceProvider.CreateScope().ServiceProvider));
 
         /// <inheritdoc/>
         public async Task RegisterAllFinalizersAsync(TEntity entity)
@@ -65,7 +68,7 @@ namespace Neon.Kube.Operator.Finalizer
             await SyncContext.Clear;
 
             await Task.WhenAll(
-                finalizerInstanceBuilder.BuildFinalizers<TEntity>()
+                finalizerInstanceBuilder.BuildFinalizers<TEntity>(serviceProvider.CreateScope().ServiceProvider)
                     .Select(f => RegisterFinalizerInternalAsync(entity, f)));
         }
 
@@ -75,7 +78,7 @@ namespace Neon.Kube.Operator.Finalizer
         {
             await SyncContext.Clear;
 
-            var finalizer = finalizerInstanceBuilder.BuildFinalizer<TEntity, TFinalizer>();
+            var finalizer = finalizerInstanceBuilder.BuildFinalizer<TEntity, TFinalizer>(serviceProvider.CreateScope().ServiceProvider);
 
             if (entity.RemoveFinalizer(finalizer.Identifier))
             {
@@ -155,11 +158,11 @@ namespace Neon.Kube.Operator.Finalizer
         }
 
         /// <inheritdoc/>
-        async Task IFinalizerManager<TEntity>.FinalizeAsync(TEntity entity)
+        async Task IFinalizerManager<TEntity>.FinalizeAsync(TEntity entity, IServiceScope scope)
         {
             var tasks = new List<Task>();
 
-            foreach (var finalizer in finalizerInstanceBuilder.BuildFinalizers<TEntity>())
+            foreach (var finalizer in finalizerInstanceBuilder.BuildFinalizers<TEntity>(scope.ServiceProvider))
             {
                 if (entity.HasFinalizer(finalizer.Identifier))
                 {

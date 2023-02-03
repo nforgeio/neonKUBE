@@ -75,8 +75,6 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly ILogger log = TelemetryHub.CreateLogger<NodeTaskController>();
-
         /// <summary>
         /// Static constructor.
         /// </summary>
@@ -87,16 +85,21 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Instance members
 
-        private readonly IKubernetes k8s;
+        private readonly IKubernetes                 k8s;
+        private readonly ILogger<NodeTaskController> logger;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public NodeTaskController(IKubernetes k8s)
+        public NodeTaskController(
+            IKubernetes k8s,
+            ILogger<NodeTaskController> logger)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
+            Covenant.Requires(logger != null, nameof(logger));
 
-            this.k8s = k8s;
+            this.k8s    = k8s;
+            this.logger = logger;
         }
 
         /// <summary>
@@ -107,7 +110,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx("[IDLE]");
+            logger?.LogInformationEx("[IDLE]");
 
             // We're going to handle this by looking at each node task and checking
             // to see whether the target node actually exists.  Rather than listing
@@ -131,7 +134,7 @@ namespace NeonClusterOperator
                     }
                     else
                     {
-                        log.LogInformationEx(deleteMessage);
+                        logger?.LogInformationEx(deleteMessage);
 
                         try
                         {
@@ -139,7 +142,7 @@ namespace NeonClusterOperator
                         }
                         catch (Exception e)
                         {
-                            log.LogErrorEx(e);
+                            logger?.LogErrorEx(e);
                         }
 
                         continue;
@@ -164,19 +167,19 @@ namespace NeonClusterOperator
                     }
                     else
                     {
-                        log.LogErrorEx(e);
+                        logger?.LogErrorEx(e);
                         continue;
                     }
                 }
                 catch (Exception e)
                 {
-                    log.LogErrorEx(e);
+                    logger?.LogErrorEx(e);
                     continue;
                 }
 
                 if (!nodeExists)
                 {
-                    log.LogInformationEx(deleteMessage);
+                    logger?.LogInformationEx(deleteMessage);
 
                     try
                     {
@@ -184,7 +187,7 @@ namespace NeonClusterOperator
                     }
                     catch (Exception e)
                     {
-                        log.LogErrorEx(e);
+                        logger?.LogErrorEx(e);
                     }
                 }
             }

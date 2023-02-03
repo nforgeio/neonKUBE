@@ -68,16 +68,7 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly ILogger log = TelemetryHub.CreateLogger<GlauthController>();
-
         private static string connectionString;
-
-        /// <summary>
-        /// Static constructor.
-        /// </summary>
-        static GlauthController()
-        {
-        }
 
         /// <summary>
         /// Starts the controller.
@@ -90,6 +81,8 @@ namespace NeonClusterOperator
             {
                 Tracer.CurrentSpan?.AddEvent("start", attributes => attributes.Add("customresource", nameof(V1Secret)));
 
+                var logger = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger<GlauthController>();
+
                 var k8s = serviceProvider.GetRequiredService<IKubernetes>();
 
                 var secret = await k8s.CoreV1.ReadNamespacedSecretAsync("neon-admin.neon-system-db.credentials.postgresql", KubeNamespace.NeonSystem);
@@ -98,23 +91,28 @@ namespace NeonClusterOperator
 
                 connectionString = $"Host={KubeService.NeonSystemDb}.{KubeNamespace.NeonSystem};Username={KubeConst.NeonSystemDbAdminUser};Password={password};Database=glauth";
 
-                log.LogInformationEx($"ConnectionString: [{connectionString}]");
+                logger?.LogDebugEx(() => $"ConnectionString: [{connectionString}]");
             }
         }
 
         //---------------------------------------------------------------------
         // Instance members
 
-        private readonly IKubernetes k8s;
+        private readonly IKubernetes               k8s;
+        private readonly ILogger<GlauthController> logger;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public GlauthController(IKubernetes k8s)
+        public GlauthController(
+            IKubernetes k8s, 
+            ILogger<GlauthController> logger)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
+            Covenant.Requires(logger != null, nameof(logger));
 
-            this.k8s = k8s;
+            this.k8s    = k8s;
+            this.logger = logger;
         }
 
         /// <summary>
@@ -135,7 +133,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx("[IDLE]");
+            logger?.LogInformationEx("[IDLE]");
         }
 
         /// <inheritdoc/>
@@ -164,7 +162,7 @@ namespace NeonClusterOperator
 
                 }
 
-                log.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
+                logger?.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
 
                 return null;
             }
@@ -177,7 +175,7 @@ namespace NeonClusterOperator
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                log.LogInformationEx(() => $"DELETED: {resource.Name()}");
+                logger?.LogInformationEx(() => $"DELETED: {resource.Name()}");
             }
         }
 
@@ -186,7 +184,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx(() => $"PROMOTED");
+            logger?.LogInformationEx(() => $"PROMOTED");
         }
 
         /// <inheritdoc/>
@@ -194,7 +192,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx(() => $"DEMOTED");
+            logger?.LogInformationEx(() => $"DEMOTED");
         }
 
         /// <inheritdoc/>
@@ -202,7 +200,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx(() => $"NEW LEADER: {identity}");
+            logger?.LogInformationEx(() => $"NEW LEADER: {identity}");
         }
 
         private async Task UpdateGlauthUsersAsync(V1Secret resource)

@@ -72,8 +72,6 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly ILogger log = TelemetryHub.CreateLogger<NeonDashboardController>();
-
         /// <summary>
         /// Static constructor.
         /// </summary>
@@ -84,19 +82,23 @@ namespace NeonClusterOperator
 
         private readonly IKubernetes k8s;
         private readonly IFinalizerManager<V1NeonDashboard> finalizerManager;
+        private readonly ILogger<NeonDashboardController>   logger;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public NeonDashboardController(
             IKubernetes k8s,
-            IFinalizerManager<V1NeonDashboard> manager)
+            IFinalizerManager<V1NeonDashboard> manager,
+            ILogger<NeonDashboardController> logger)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
             Covenant.Requires(manager != null, nameof(manager));
+            Covenant.Requires(logger != null, nameof(logger));
 
             this.k8s              = k8s;
             this.finalizerManager = manager;
+            this.logger           = logger;
         }
 
         /// <summary>
@@ -107,7 +109,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx("[IDLE]");
+            logger?.LogInformationEx("[IDLE]");
         }
 
         /// <inheritdoc/>
@@ -121,7 +123,7 @@ namespace NeonClusterOperator
 
                 await finalizerManager.RegisterAllFinalizersAsync(resource);
 
-                log.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
+                logger?.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
 
                 return null;
             }
@@ -137,7 +139,7 @@ namespace NeonClusterOperator
 
                 // Ignore all events when the controller hasn't been started.
 
-                log.LogInformationEx(() => $"DELETED: {resource.Name()}");
+                logger?.LogInformationEx(() => $"DELETED: {resource.Name()}");
             }
         }
 
@@ -146,7 +148,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx(() => $"PROMOTED");
+            logger?.LogInformationEx(() => $"PROMOTED");
         }
 
         /// <inheritdoc/>
@@ -154,7 +156,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx(() => $"DEMOTED");
+            logger?.LogInformationEx(() => $"DEMOTED");
         }
 
         /// <inheritdoc/>
@@ -162,7 +164,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx(() => $"NEW LEADER: {identity}");
+            logger?.LogInformationEx(() => $"NEW LEADER: {identity}");
         }
     }
 }

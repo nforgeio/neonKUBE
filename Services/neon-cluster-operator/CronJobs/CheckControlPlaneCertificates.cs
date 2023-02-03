@@ -22,6 +22,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Logging;
+
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
@@ -30,7 +32,6 @@ using Neon.Kube.Resources.Cluster;
 
 using k8s;
 using k8s.Models;
-
 
 using OpenTelemetry;
 using OpenTelemetry.Resources;
@@ -47,6 +48,8 @@ namespace NeonClusterOperator
     /// </summary>
     public class CheckControlPlaneCertificates : CronJob, IJob
     {
+        private static readonly ILogger logger = TelemetryHub.CreateLogger<CheckControlPlaneCertificates>();
+
         /// <summary>
         /// Constructor.
         /// </summary>

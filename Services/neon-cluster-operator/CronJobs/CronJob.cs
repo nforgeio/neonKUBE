@@ -23,6 +23,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Logging;
+
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
@@ -43,6 +45,8 @@ namespace NeonClusterOperator
     /// </summary>
     public class CronJob
     {
+        private static readonly ILogger logger = TelemetryHub.CreateLogger<CronJob>();
+
         /// <summary>
         /// The name of the cron job.
         /// </summary>

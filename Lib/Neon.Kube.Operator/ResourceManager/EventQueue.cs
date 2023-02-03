@@ -63,7 +63,7 @@ namespace Neon.Kube.Operator.ResourceManager
         /// <param name="k8s"></param>
         /// <param name="options"></param>
         /// <param name="eventHandler"></param>
-        /// <param name="logger"></param>
+        /// <param name="loggerFactory"></param>
         public EventQueue(
             IKubernetes                         k8s,
             ResourceManagerOptions              options,

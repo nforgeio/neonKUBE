@@ -637,18 +637,19 @@ namespace Neon.Kube.Operator.ResourceManager
                 {
                     await SyncContext.Clear;
 
-                    ResourceControllerResult result = null;
+                    ResourceControllerResult result            = null;
+                    ModifiedEventType        modifiedEventType = ModifiedEventType.Other;
 
                     var resource     = @event.Value;
                     var resourceName = resource.Metadata.Name;
-
+                    
                     using (await lockProvider.LockAsync(@event.Value.Uid(), cancellationToken).ConfigureAwait(false))
                     {
                         try
                         {
                             using (var scope = serviceProvider.CreateScope())
                             {
-                                var cachedEntity = resourceCache.Upsert(resource, out var modifiedEventType);
+                                var cachedEntity = resourceCache.Upsert(resource, out modifiedEventType);
 
                                 if (modifiedEventType == ModifiedEventType.Finalizing)
                                 {
@@ -737,7 +738,7 @@ namespace Neon.Kube.Operator.ResourceManager
                                                     {
                                                         resourceCache.AddFinalizer(resource);
 
-                                                        await finalizerManager.FinalizeAsync(resource);
+                                                        await finalizerManager.FinalizeAsync(resource, scope);
                                                     }
 
                                                     resourceCache.RemoveFinalizer(resource);
@@ -808,30 +809,34 @@ namespace Neon.Kube.Operator.ResourceManager
                         }
                     }
 
-                    switch (result)
+                    if (@event.Type < WatchEventType.Deleted
+                        && modifiedEventType == ModifiedEventType.Other)
                     {
-                        case null:
-                            logger?.LogInformationEx(() =>
-                                $@"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] successfully reconciled. Requeue not requested.");
-                            return;
-                        case RequeueEventResult requeue:
-                            var specificQueueTypeRequested = requeue.EventType.HasValue;
-                            var requestedQueueType = requeue.EventType ?? WatchEventType.Modified;
-
-                            if (specificQueueTypeRequested)
-                            {
+                        switch (result)
+                        {
+                            case null:
                                 logger?.LogInformationEx(() =>
-                                        $@"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] successfully reconciled. Requeue requested as type [{requestedQueueType}] with delay [{requeue}].");
-                            }
-                            else
-                            {
-                                logger?.LogInformationEx(() =>
-                                    $@"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] successfully reconciled. Requeue requested with delay [{requeue}].");
-                            }
+                                    $@"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] successfully reconciled. Requeue not requested.");
+                                return;
+                            case RequeueEventResult requeue:
+                                var specificQueueTypeRequested = requeue.EventType.HasValue;
+                                var requestedQueueType = requeue.EventType ?? WatchEventType.Modified;
 
-                            resourceCache.Remove(resource);
-                            await eventQueue.RequeueAsync(@event, requeue.RequeueDelay, requestedQueueType);
-                            break;
+                                if (specificQueueTypeRequested)
+                                {
+                                    logger?.LogInformationEx(() =>
+                                            $@"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] successfully reconciled. Requeue requested as type [{requestedQueueType}] with delay [{requeue}].");
+                                }
+                                else
+                                {
+                                    logger?.LogInformationEx(() =>
+                                        $@"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] successfully reconciled. Requeue requested with delay [{requeue}].");
+                                }
+
+                                resourceCache.Remove(resource);
+                                await eventQueue.RequeueAsync(@event, requeue.RequeueDelay, requestedQueueType);
+                                break;
+                        }
                     }
                 };
 

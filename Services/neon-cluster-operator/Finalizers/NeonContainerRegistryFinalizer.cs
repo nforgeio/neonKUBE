@@ -39,13 +39,14 @@ namespace NeonClusterOperator
     /// </summary>
     public class NeonContainerRegistryFinalizer : IResourceFinalizer<V1NeonContainerRegistry>
     {
-        private ILogger logger;
+        private readonly ILogger<NeonContainerRegistryFinalizer> logger;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="logger"></param>
-        public NeonContainerRegistryFinalizer(ILogger logger)
+        public NeonContainerRegistryFinalizer(
+            ILogger<NeonContainerRegistryFinalizer> logger)
         { 
             this.logger = logger;
         }

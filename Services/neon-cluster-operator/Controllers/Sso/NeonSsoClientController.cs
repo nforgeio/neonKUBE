@@ -91,22 +91,26 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Instance members
 
-        private readonly IKubernetes k8s;
+        private readonly IKubernetes                        k8s;
         private readonly IFinalizerManager<V1NeonSsoClient> finalizerManager;
+        private readonly ILogger<NeonSsoClientController>   logger;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public NeonSsoClientController(IKubernetes k8s,
-            IFinalizerManager<V1NeonSsoClient> manager,
-            Dex.Dex.DexClient dexClient)
+            IFinalizerManager<V1NeonSsoClient>     manager,
+            ILogger<NeonSsoClientController>       logger,
+            Dex.Dex.DexClient                      dexClient)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
             Covenant.Requires(manager != null, nameof(manager));
+            Covenant.Requires(logger != null, nameof(logger));
             Covenant.Requires(dexClient != null, nameof(dexClient));
 
             this.k8s              = k8s;
             this.finalizerManager = manager;
+            this.logger           = logger;
             this.dexClient        = dexClient;
         }
 
@@ -118,7 +122,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx("[IDLE]");
+            logger?.LogInformationEx("[IDLE]");
         }
 
         /// <inheritdoc/>
@@ -134,7 +138,7 @@ namespace NeonClusterOperator
 
                 await UpsertClientAsync(resource);
 
-                log.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
+                logger?.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
 
                 return null;
             }
@@ -169,7 +173,7 @@ namespace NeonClusterOperator
 
                 await k8s.CoreV1.ReplaceNamespacedConfigMapAsync(oauth2ProxyConfig, oauth2ProxyConfig.Name(), KubeNamespace.NeonSystem);
 
-                log.LogInformationEx(() => $"DELETED: {resource.Name()}");
+                logger?.LogInformationEx(() => $"DELETED: {resource.Name()}");
             }
         }
 
@@ -178,7 +182,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx(() => $"PROMOTED");
+            logger?.LogInformationEx(() => $"PROMOTED");
         }
 
         /// <inheritdoc/>
@@ -186,7 +190,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
             
-            log.LogInformationEx(() => $"DEMOTED");
+            logger?.LogInformationEx(() => $"DEMOTED");
         }
 
         /// <inheritdoc/>
@@ -194,7 +198,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx(() => $"NEW LEADER: {identity}");
+            logger?.LogInformationEx(() => $"NEW LEADER: {identity}");
         }
 
         private async Task UpsertClientAsync(V1NeonSsoClient resource)

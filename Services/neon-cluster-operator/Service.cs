@@ -70,9 +70,10 @@ using Newtonsoft.Json.Linq;
 using Npgsql;
 
 using OpenTelemetry;
+using OpenTelemetry.Instrumentation.Quartz;
+using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using OpenTelemetry.Instrumentation.Quartz;
 
 using Prometheus;
 
@@ -297,6 +298,24 @@ namespace NeonClusterOperator
             Terminator.ReadyToExit();
 
             return 0;
+        }
+
+        /// <inheritdoc/>
+        protected override bool OnLoggerConfg(OpenTelemetryLoggerOptions options)
+        {
+            if (NeonHelper.IsDevWorkstation)
+            {
+                options.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName: Name, serviceVersion: Version));
+
+                options.AddConsoleTextExporter(options =>
+                {
+                    options.Format = (record) => $"[{record.LogLevel}] {record.FormattedMessage}";
+                });
+
+                return true;
+            }
+
+            return false;
         }
 
         /// <inheritdoc/>

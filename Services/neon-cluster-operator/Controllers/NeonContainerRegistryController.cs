@@ -73,8 +73,6 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly ILogger log = TelemetryHub.CreateLogger<NeonContainerRegistryController>();
-
         /// <summary>
         /// Static constructor.
         /// </summary>
@@ -85,21 +83,24 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Instance members
 
-        private readonly IKubernetes k8s;
+        private readonly IKubernetes                                k8s;
         private readonly IFinalizerManager<V1NeonContainerRegistry> finalizerManager;
-
+        private readonly ILogger<NeonContainerRegistryController>   logger;
         /// <summary>
         /// Constructor.
         /// </summary>
         public NeonContainerRegistryController(
-            IKubernetes k8s,
-            IFinalizerManager<V1NeonContainerRegistry> manager)
+            IKubernetes                                k8s,
+            IFinalizerManager<V1NeonContainerRegistry> manager,
+            ILogger<NeonContainerRegistryController>   logger)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
             Covenant.Requires(manager != null, nameof(manager));
+            Covenant.Requires(logger != null, nameof(logger));
 
             this.k8s              = k8s;
             this.finalizerManager = manager;
+            this.logger           = logger;
         }
 
         /// <summary>
@@ -110,7 +111,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx("[IDLE]");
+            logger?.LogInformationEx("[IDLE]");
 
             try
             {
@@ -118,7 +119,7 @@ namespace NeonClusterOperator
             }
             catch (Exception e)
             {
-                log.LogErrorEx(e);
+                logger?.LogErrorEx(e);
                 await CreateNeonLocalRegistryAsync();
             }
         }
@@ -134,7 +135,7 @@ namespace NeonClusterOperator
 
                 await finalizerManager.RegisterAllFinalizersAsync(resource);
 
-                log.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
+                logger?.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
 
                 return null;
             }
@@ -154,7 +155,7 @@ namespace NeonClusterOperator
                     await CreateNeonLocalRegistryAsync();
                 }
 
-                log.LogInformationEx(() => $"DELETED: {resource.Name()}");
+                logger?.LogInformationEx(() => $"DELETED: {resource.Name()}");
             }
         }
 
@@ -163,7 +164,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx(() => $"PROMOTED");
+            logger?.LogInformationEx(() => $"PROMOTED");
         }
 
         /// <inheritdoc/>
@@ -171,7 +172,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx(() => $"DEMOTED");
+            logger?.LogInformationEx(() => $"DEMOTED");
         }
 
         /// <inheritdoc/>
@@ -179,14 +180,14 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx(() => $"NEW LEADER: {identity}");
+            logger?.LogInformationEx(() => $"NEW LEADER: {identity}");
         }
 
         private async Task CreateNeonLocalRegistryAsync()
         {
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                log.LogInformationEx(() => $"Upserting registry: [registry.neon.local]");
+                logger?.LogInformationEx(() => $"Upserting registry: [registry.neon.local]");
 
                 // todo(marcusbooyah): make this use robot accounts.
 

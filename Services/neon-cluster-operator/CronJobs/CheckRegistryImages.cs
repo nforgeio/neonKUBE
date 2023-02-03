@@ -23,6 +23,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Logging;
+
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
@@ -52,6 +54,8 @@ namespace NeonClusterOperator
     /// </summary>
     public class CheckRegistryImages : CronJob, IJob
     {
+        private static readonly ILogger logger = TelemetryHub.CreateLogger<CheckRegistryImages>();
+
         private HarborClient harborClient;
         private IKubernetes k8s;
 

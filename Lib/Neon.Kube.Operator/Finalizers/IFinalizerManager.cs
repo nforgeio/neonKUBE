@@ -21,6 +21,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using k8s.Models;
 using k8s;
 
@@ -58,6 +60,6 @@ namespace Neon.Kube.Operator.Finalizer
         Task RemoveFinalizerAsync<TFinalizer>(TEntity entity)
             where TFinalizer : IResourceFinalizer<TEntity>;
 
-        internal Task FinalizeAsync(TEntity entity);
+        internal Task FinalizeAsync(TEntity entity, IServiceScope scope);
     }
 }

@@ -33,32 +33,30 @@ namespace Neon.Kube.Operator.Finalizer
     internal class FinalizerBuilder : IFinalizerBuilder
     {
         private readonly ComponentRegister componentRegister;
-        private readonly IServiceProvider services;
 
-        public FinalizerBuilder(ComponentRegister componentRegister, IServiceProvider services)
+        public FinalizerBuilder(ComponentRegister componentRegister)
         {
             this.componentRegister = componentRegister;
-            this.services = services;
         }
 
         /// <inheritdoc/>
-        public IResourceFinalizer<TEntity> BuildFinalizer<TEntity, TFinalizer>()
+        public IResourceFinalizer<TEntity> BuildFinalizer<TEntity, TFinalizer>(IServiceProvider serviceProvider)
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
             return componentRegister.FinalizerRegistrations
                 .Where(r => r.EntityType.IsEquivalentTo(typeof(TEntity)))
                 .Where(r => r.FinalizerType.IsEquivalentTo(typeof(TFinalizer)))
-                .Select(r => (IResourceFinalizer<TEntity>)services.GetRequiredService(r.FinalizerType))
+                .Select(r => (IResourceFinalizer<TEntity>)serviceProvider.GetRequiredService(r.FinalizerType))
                 .Single();
         }
 
         /// <inheritdoc/>
-        public IEnumerable<IResourceFinalizer<TEntity>> BuildFinalizers<TEntity>()
+        public IEnumerable<IResourceFinalizer<TEntity>> BuildFinalizers<TEntity>(IServiceProvider serviceProvider)
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
             return componentRegister.FinalizerRegistrations
                     .Where(r => r.EntityType.IsEquivalentTo(typeof(TEntity)))
-                    .Select(r => (IResourceFinalizer<TEntity>)services.GetRequiredService(r.FinalizerType));
+                    .Select(r => (IResourceFinalizer<TEntity>)serviceProvider.GetRequiredService(r.FinalizerType));
         }
     }
 

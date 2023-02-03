@@ -70,7 +70,8 @@ namespace NeonClusterOperator
         /// Constructor.
         /// </summary>
         /// <param name="logger"></param>
-        public PodWebhook(ILogger<IMutatingWebhook<V1Pod>> logger)
+        public PodWebhook(
+            ILogger<IMutatingWebhook<V1Pod>> logger)
             : base()
         {
             this.logger = logger;

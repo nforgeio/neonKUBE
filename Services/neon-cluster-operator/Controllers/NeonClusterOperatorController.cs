@@ -89,8 +89,6 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly ILogger log = TelemetryHub.CreateLogger<NeonClusterOperatorController>();
-
         private static IScheduler                       scheduler;
         private static StdSchedulerFactory              schedulerFactory;
         private static bool                             initialized;
@@ -119,25 +117,29 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Instance members
 
-        private readonly IKubernetes k8s;
+        private readonly IKubernetes                              k8s;
         private readonly IFinalizerManager<V1NeonClusterOperator> finalizerManager;
+        private readonly ILogger<NeonClusterOperatorController>   logger;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public NeonClusterOperatorController(
-            IKubernetes k8s,
+            IKubernetes                              k8s,
             IFinalizerManager<V1NeonClusterOperator> manager,
-            HeadendClient headendClient,
-            HarborClient harborClient)
+            ILogger<NeonClusterOperatorController>   logger,
+            HeadendClient                            headendClient,
+            HarborClient                             harborClient)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
             Covenant.Requires(manager != null, nameof(manager));
+            Covenant.Requires(logger != null, nameof(logger));
             Covenant.Requires(headendClient != null, nameof(headendClient));
             Covenant.Requires(harborClient != null, nameof(harborClient));
 
             this.k8s              = k8s;
             this.finalizerManager = manager;
+            this.logger           = logger;
             this.headendClient    = headendClient;
             this.harborClient     = harborClient;
         }
@@ -150,7 +152,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx("[IDLE]");
+            logger?.LogInformationEx("[IDLE]");
 
             if (!initialized)
             {
@@ -234,7 +236,7 @@ namespace NeonClusterOperator
                         });
                 }
 
-                log.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
+                logger?.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
 
                 return null;
             }
@@ -255,7 +257,7 @@ namespace NeonClusterOperator
                     return;
                 }
                 
-                log.LogInformationEx(() => $"DELETED: {resource.Name()}");
+                logger?.LogInformationEx(() => $"DELETED: {resource.Name()}");
 
                 await ShutDownAsync();
             }
@@ -266,7 +268,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx(() => $"PROMOTED");
+            logger?.LogInformationEx(() => $"PROMOTED");
         }
 
         /// <inheritdoc/>
@@ -274,7 +276,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx(() => $"DEMOTED");
+            logger?.LogInformationEx(() => $"DEMOTED");
 
             await ShutDownAsync();
         }
@@ -284,7 +286,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx(() => $"NEW LEADER: {identity}");
+            logger?.LogInformationEx(() => $"NEW LEADER: {identity}");
         }
 
         private async Task InitializeSchedulerAsync()
@@ -293,7 +295,7 @@ namespace NeonClusterOperator
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                log.LogInformationEx(() => $"Initialize Scheduler");
+                logger?.LogInformationEx(() => $"Initialize Scheduler");
 
                 scheduler = await schedulerFactory.GetScheduler();
 
@@ -307,7 +309,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx(() => $"Shutdown Scheduler");
+            logger?.LogInformationEx(() => $"Shutdown Scheduler");
 
             await scheduler.Shutdown(waitForJobsToComplete: true);
 

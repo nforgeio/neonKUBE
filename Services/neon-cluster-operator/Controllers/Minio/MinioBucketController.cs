@@ -72,7 +72,6 @@ namespace NeonClusterOperator
         // Static members
 
 
-        private static readonly ILogger log = TelemetryHub.CreateLogger<MinioBucketController>();
         private const string MinioExe = "/mc";
         private MinioClient minioClient;
 
@@ -86,7 +85,8 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Instance members
 
-        private readonly IKubernetes k8s;
+        private readonly IKubernetes                      k8s;
+        private readonly ILogger<MinioBucketController>   logger;
         private readonly IFinalizerManager<V1MinioBucket> finalizerManager;
 
         /// <summary>
@@ -94,12 +94,15 @@ namespace NeonClusterOperator
         /// </summary>
         public MinioBucketController(
             IKubernetes k8s,
+            ILogger<MinioBucketController> logger,
             IFinalizerManager<V1MinioBucket> manager)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
+            Covenant.Requires(logger != null, nameof(logger));
             Covenant.Requires(manager != null, nameof(manager));
 
-            this.k8s = k8s;
+            this.k8s              = k8s;
+            this.logger           = logger;
             this.finalizerManager = manager;
         }
 
@@ -111,7 +114,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx("[IDLE]");
+            logger?.LogInformationEx("[IDLE]");
         }
 
         /// <inheritdoc/>
@@ -134,7 +137,7 @@ namespace NeonClusterOperator
 
                     if (exists)
                     {
-                        log.LogInformationEx(() => $"BUCKET [{resource.Name()}] already exists.");
+                        logger?.LogInformationEx(() => $"BUCKET [{resource.Name()}] already exists.");
                     }
                     else
                     {
@@ -152,7 +155,7 @@ namespace NeonClusterOperator
 
 
                         await minioClient.MakeBucketAsync(args);
-                        log.LogInformationEx(() => $"BUCKET [{resource.Name()}] created successfully.");
+                        logger?.LogInformationEx(() => $"BUCKET [{resource.Name()}] created successfully.");
                     }
 
                     await SetVersioningAsync(resource);
@@ -160,14 +163,14 @@ namespace NeonClusterOperator
                 }
                 catch (Exception e)
                 {
-                    log.LogErrorEx(e);
+                    logger?.LogErrorEx(e);
                 }
                 finally
                 {
                     minioClient.Dispose();
                 }
 
-                log.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
+                logger?.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
 
                 return null;
             }
@@ -183,7 +186,7 @@ namespace NeonClusterOperator
 
                 // Ignore all events when the controller hasn't been started.
 
-                log.LogInformationEx(() => $"DELETED: {resource.Name()}");
+                logger?.LogInformationEx(() => $"DELETED: {resource.Name()}");
             }
         }
 
@@ -192,7 +195,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx(() => $"PROMOTED");
+            logger?.LogInformationEx(() => $"PROMOTED");
         }
 
         /// <inheritdoc/>
@@ -200,7 +203,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx(() => $"DEMOTED");
+            logger?.LogInformationEx(() => $"DEMOTED");
         }
 
         /// <inheritdoc/>
@@ -208,7 +211,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            log.LogInformationEx(() => $"NEW LEADER: {identity}");
+            logger?.LogInformationEx(() => $"NEW LEADER: {identity}");
         }
 
         private async Task<MinioClient> GetMinioClientAsync(V1MinioBucket resource)
@@ -271,7 +274,7 @@ namespace NeonClusterOperator
         {
             try
             {
-                log.LogDebugEx(() => $"command: {MinioExe} {string.Join(" ", args)}");
+                logger?.LogDebugEx(() => $"command: {MinioExe} {string.Join(" ", args)}");
 
                 var response = await NeonHelper.ExecuteCaptureAsync(MinioExe,
                     args);
@@ -280,7 +283,7 @@ namespace NeonClusterOperator
             }
             catch (Exception e)
             {
-                log.LogErrorEx(e);
+                logger?.LogErrorEx(e);
             }
         }
 
@@ -290,7 +293,7 @@ namespace NeonClusterOperator
 
             if (versioning.Status != resource.Spec.Versioning.ToMemberString())
             {
-                log.LogInformationEx(() => $"BUCKET [{resource.Name()}] versioning needs to configured.");
+                logger?.LogInformationEx(() => $"BUCKET [{resource.Name()}] versioning needs to configured.");
 
                 var args = new SetVersioningArgs().WithBucket(resource.Name());
 
@@ -314,7 +317,7 @@ namespace NeonClusterOperator
 
                 await minioClient.SetVersioningAsync(args);
 
-                log.LogInformationEx(() => $"BUCKET [{resource.Name()}] versioning configured successfully.");
+                logger?.LogInformationEx(() => $"BUCKET [{resource.Name()}] versioning configured successfully.");
             }
         }
 
