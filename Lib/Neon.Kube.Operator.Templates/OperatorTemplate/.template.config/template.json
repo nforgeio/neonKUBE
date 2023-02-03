@@ -13,5 +13,22 @@
   },
   "sourceName": "OperatorTemplate",
   "defaultName": "Kubernetes Operator",
-  "preferNameDirectory": true
+  "preferNameDirectory": true,
+  "postActions": [
+    {
+      "description": "Adding Reference to Neon.Kube.Operator NuGet package",
+      "actionId": "B17581D1-C5C9-4489-8F0A-004BE667B814",
+      "continueOnError": false,
+      "manualInstructions": [
+        {
+          "text": "Manually add the reference to Neon.Kube.Operator to your project file"
+        }
+      ],
+      "args": {
+        "referenceType": "package",
+        "reference": "Neon.Kube.Operator",
+        "projectFileExtensions": ".csproj"
+      }
+    }
+  ]
 }

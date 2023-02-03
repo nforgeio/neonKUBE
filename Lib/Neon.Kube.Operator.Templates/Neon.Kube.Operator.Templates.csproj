@@ -25,6 +25,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <None Remove="OperatorTemplate\appsettings.json" />
+    </ItemGroup>
+
+    <ItemGroup>
         <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
         <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
     </ItemGroup>

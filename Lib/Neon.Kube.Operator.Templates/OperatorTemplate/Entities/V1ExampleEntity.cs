@@ -1,44 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Net.NetworkInformation;
-using System.Text;
-using k8s;
+﻿using k8s;
 using k8s.Models;
-
-using Neon.Kube.Operator;
 
 namespace OperatorTemplate
 {
-    /// <summary>
-    /// Used for unit testing Kubernetes clients.
-    /// </summary>
-    [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
-    [EntityScope(EntityScope.Cluster)]
-    public class V1ExampleEntity : IKubernetesObject<V1ObjectMeta>, ISpec<ExampleSpec>, IStatus<ExampleStatus>, IValidate
+    [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
+    public class V1ExampleEntity : IKubernetesObject<V1ObjectMeta>, ISpec<V1ExampleEntity.V1ExampleSpec>, IStatus<V1ExampleEntity.V1ExampleStatus>
     {
         /// <summary>
-        /// Object API group.
-        /// </summary>
-        public const string KubeGroup = "example.neonkube.io";
-
-        /// <summary>
-        /// Object API version.
+        /// The API version this Kubernetes type belongs to.
         /// </summary>
         public const string KubeApiVersion = "v1alpha1";
 
         /// <summary>
-        /// Object API kind.
+        /// The Kubernetes named schema this object is based on.
         /// </summary>
-        public const string KubeKind = "NeonExampleObject";
+        public const string KubeKind = "Example";
 
         /// <summary>
-        /// Object plural name.
+        /// The Group this Kubernetes type belongs to.
         /// </summary>
-        public const string KubePlural = "neonexampleobjects";
+        public const string KubeGroup = "example.neonkube.io";
 
         /// <summary>
-        /// Default constructor.
+        /// The plural name of the entity.
+        /// </summary>
+        public const string KubePlural = "examples";
+
+        /// <summary>
+        /// Constructor.
         /// </summary>
         public V1ExampleEntity()
         {
@@ -46,69 +35,25 @@ namespace OperatorTemplate
             Kind = KubeKind;
         }
 
-        /// <summary>
-        /// Gets or sets APIVersion defines the versioned schema of this
-        /// representation of an object. Servers should convert recognized
-        /// schemas to the latest internal value, and may reject unrecognized
-        /// values. More info:
-        /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
-        /// </summary>
+        /// <inheritdoc/>
         public string ApiVersion { get; set; }
-
-        /// <summary>
-        /// Gets or sets kind is a string value representing the REST resource
-        /// this object represents. Servers may infer this from the endpoint
-        /// the client submits requests to. Cannot be updated. In CamelCase.
-        /// More info:
-        /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
-        /// </summary>
+        /// <inheritdoc/>
         public string Kind { get; set; }
-
-        /// <summary>
-        /// Gets or sets standard object metadata.
-        /// </summary>
+        /// <inheritdoc/>
         public V1ObjectMeta Metadata { get; set; }
+        /// <inheritdoc/>
+        public V1ExampleSpec Spec { get; set; }
+        /// <inheritdoc/>
+        public V1ExampleStatus Status { get; set; }
 
-        /// <summary>
-        /// Gets or sets specification of the desired behavior of the
-        /// Tenant.
-        /// </summary>
-        public ExampleSpec Spec { get; set; }
-
-        /// <summary>
-        /// Gets or sets specification of the desired behavior of the
-        /// Tenant.
-        /// </summary>
-        public ExampleStatus Status { get; set; }
-
-        /// <summary>
-        /// Validate the object.
-        /// </summary>
-        /// <exception cref="ValidationException">Thrown if validation fails.</exception>
-        public virtual void Validate()
+        public class V1ExampleSpec
         {
+            public string Message { get; set; }
         }
-    }
 
-    /// <summary>
-    /// The node execute task specification.
-    /// </summary>
-    public class ExampleSpec
-    {
-        /// <summary>
-        /// A test string.
-        /// </summary>
-        public string Message { get; set; }
-    }
-
-    /// <summary>
-    /// The node execute task specification.
-    /// </summary>
-    public class ExampleStatus
-    {
-        /// <summary>
-        /// A test string.
-        /// </summary>
-        public string Message { get; set; }
+        public class V1ExampleStatus
+        {
+            public string Message { get; set; }
+        }
     }
 }
