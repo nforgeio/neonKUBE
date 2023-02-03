@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IgnoreFinalizerAttribute.cs
+// FILE:	    ControllerAttribute.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -23,13 +23,20 @@ namespace Neon.Kube.Operator.Attributes
     /// Used to exclude a component from assembly scanning when building the operator.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    public class IgnoreFinalizerAttribute : Attribute
+    public class ControllerAttribute : Attribute
     {
+        /// <summary>
+        /// Whether to ignore the controller when scanning assemblies.
+        /// </summary>
+        public bool Ignore { get; set; } = false;
+
         /// <summary>
         /// Constructor
         /// </summary>
-        public IgnoreFinalizerAttribute()
+        public ControllerAttribute(
+            bool ignore = false)
         {
+            this.Ignore = ignore;
         }
     }
 }

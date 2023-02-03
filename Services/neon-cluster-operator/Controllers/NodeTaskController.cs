@@ -51,6 +51,7 @@ using OpenTelemetry.Trace;
 
 using Prometheus;
 using Neon.Kube.Operator.Controller;
+using Neon.Kube.Operator.Rbac;
 
 namespace NeonClusterOperator
 {
@@ -70,6 +71,8 @@ namespace NeonClusterOperator
     /// removing tasks that don't belong to an existing node.
     /// </para>
     /// </remarks>
+    [Rbac<V1NeonNodeTask>(RbacVerb.All, EntityScope.Cluster)]
+    [Rbac<V1Node>(RbacVerb.All, EntityScope.Cluster)]
     public class NodeTaskController : IResourceController<V1NeonNodeTask>
     {
         //---------------------------------------------------------------------

@@ -38,9 +38,10 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
-using Neon.Kube.Operator.Finalizer;
-using Neon.Kube.Operator.ResourceManager;
 using Neon.Kube.Operator.Controller;
+using Neon.Kube.Operator.Finalizer;
+using Neon.Kube.Operator.Rbac;
+using Neon.Kube.Operator.ResourceManager;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Minio;
 using Neon.Retry;
@@ -66,6 +67,9 @@ namespace NeonClusterOperator
     /// <summary>
     /// Manages MinioBucket LDAP database.
     /// </summary>
+    [Rbac<V1MinioBucket>(RbacVerb.All)]
+    [Rbac<V1MinioTenant>(RbacVerb.All)]
+    [Rbac<V1Secret>(RbacVerb.Get)]
     public class MinioBucketController : IResourceController<V1MinioBucket>
     {
         //---------------------------------------------------------------------

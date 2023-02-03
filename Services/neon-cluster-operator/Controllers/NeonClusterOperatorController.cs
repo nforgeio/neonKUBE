@@ -38,6 +38,10 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Clients;
+using Neon.Kube.Operator.Finalizer;
+using Neon.Kube.Operator.ResourceManager;
+using Neon.Kube.Operator.Controller;
+using Neon.Kube.Operator.Rbac;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Retry;
@@ -62,9 +66,6 @@ using Quartz;
 
 using Task = System.Threading.Tasks.Task;
 using Metrics = Prometheus.Metrics;
-using Neon.Kube.Operator.Finalizer;
-using Neon.Kube.Operator.ResourceManager;
-using Neon.Kube.Operator.Controller;
 
 namespace NeonClusterOperator
 {
@@ -84,6 +85,13 @@ namespace NeonClusterOperator
     /// removing tasks that don't belong to an existing node.
     /// </para>
     /// </remarks>
+    [Rbac<V1NeonClusterOperator>(RbacVerb.All, EntityScope.Cluster)]
+    [Rbac<V1Node>(RbacVerb.All, EntityScope.Cluster)]
+    [Rbac<V1NeonNodeTask>(RbacVerb.All, EntityScope.Cluster)]
+    [Rbac<V1Secret>(RbacVerb.Get | RbacVerb.Update, EntityScope.Namespaced, KubeNamespace.NeonSystem)]
+    [Rbac<V1Secret>(RbacVerb.Get | RbacVerb.Update, EntityScope.Namespaced, KubeNamespace.NeonIngress)]
+    [Rbac<V1NeonContainerRegistry>(RbacVerb.All, EntityScope.Cluster)]
+    [Rbac<V1ConfigMap>(RbacVerb.Get, EntityScope.Namespaced, KubeNamespace.NeonStatus)]
     public class NeonClusterOperatorController : IResourceController<V1NeonClusterOperator>
     {
         //---------------------------------------------------------------------

@@ -93,10 +93,10 @@ namespace Neon.Kube.Operator.Builder
                     .SelectMany(s => s.GetTypes())
                     .Where(
                         t => t.GetInterfaces().Any(i => i.GetCustomAttributes<OperatorComponentAttribute>().Any())
-                            & t.GetCustomAttribute<IgnoreControllerAttribute>() == null
-                            & t.GetCustomAttribute<IgnoreFinalizerAttribute>() == null
-                            & t.GetCustomAttribute<IgnoreMutatingWebhookAttribute>() == null
-                            & t.GetCustomAttribute<IgnoreValidatingWebhookAttribute>() == null
+                            & t.GetCustomAttribute<ControllerAttribute>().Ignore == false
+                            & t.GetCustomAttribute<FinalizerAttribute>().Ignore == false
+                            & t.GetCustomAttribute<MutatingWebhookAttribute>().Ignore == false
+                            & t.GetCustomAttribute<ValidatingWebhookAttribute>().Ignore == false
                     );
 
                 foreach (var type in types)

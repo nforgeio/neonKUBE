@@ -39,9 +39,10 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Oauth2Proxy;
-using Neon.Kube.Operator.Finalizer;
-using Neon.Kube.Operator.ResourceManager;
 using Neon.Kube.Operator.Controller;
+using Neon.Kube.Operator.Finalizer;
+using Neon.Kube.Operator.Rbac;
+using Neon.Kube.Operator.ResourceManager;
 using Neon.Kube.Resources;
 using Neon.Retry;
 using Neon.Tasks;
@@ -64,7 +65,6 @@ using Grpc.Core;
 using Grpc.Net.Client;
 
 using Prometheus;
-
 namespace NeonClusterOperator
 {
     /// <summary>
@@ -72,6 +72,8 @@ namespace NeonClusterOperator
     /// Configures Neon SSO using <see cref="V1NeonSsoClient"/>.
     /// </para>
     /// </summary>
+    [Rbac<V1NeonSsoClient>(RbacVerb.All, EntityScope.Cluster)]
+    [Rbac<V1ConfigMap>(RbacVerb.Get | RbacVerb.Update, EntityScope.Namespaced, KubeNamespace.NeonSystem)]
     public class NeonSsoClientController : IResourceController<V1NeonSsoClient>
     {
         //---------------------------------------------------------------------

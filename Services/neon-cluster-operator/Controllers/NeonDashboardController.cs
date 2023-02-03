@@ -59,6 +59,7 @@ using Metrics = Prometheus.Metrics;
 using Neon.Kube.Operator.Finalizer;
 using Neon.Kube.Operator.ResourceManager;
 using Neon.Kube.Operator.Controller;
+using Neon.Kube.Operator.Rbac;
 
 namespace NeonClusterOperator
 {
@@ -67,6 +68,7 @@ namespace NeonClusterOperator
     /// Manages <see cref="V1NeonDashboard"/> resources.
     /// </para>
     /// </summary>
+    [Rbac<V1NeonDashboard>(RbacVerb.All, EntityScope.Cluster)]
     public class NeonDashboardController : IResourceController<V1NeonDashboard>
     {
         //---------------------------------------------------------------------

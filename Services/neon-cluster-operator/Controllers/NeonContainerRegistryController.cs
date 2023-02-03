@@ -39,6 +39,10 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Glauth;
+using Neon.Kube.Operator.Finalizer;
+using Neon.Kube.Operator.ResourceManager;
+using Neon.Kube.Operator.Controller;
+using Neon.Kube.Operator.Rbac;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Retry;
@@ -57,9 +61,6 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 using Prometheus;
-using Neon.Kube.Operator.Finalizer;
-using Neon.Kube.Operator.ResourceManager;
-using Neon.Kube.Operator.Controller;
 
 namespace NeonClusterOperator
 {
@@ -68,6 +69,8 @@ namespace NeonClusterOperator
     /// Configures Neon SSO using <see cref="V1NeonContainerRegistry"/>.
     /// </para>
     /// </summary>
+    [Rbac<V1NeonContainerRegistry>(RbacVerb.All, EntityScope.Cluster)]
+    [Rbac<V1Secret>(RbacVerb.Get, EntityScope.Namespaced, KubeNamespace.NeonSystem)]
     public class NeonContainerRegistryController : IResourceController<V1NeonContainerRegistry>
     {
         //---------------------------------------------------------------------

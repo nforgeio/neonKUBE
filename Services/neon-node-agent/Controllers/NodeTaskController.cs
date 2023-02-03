@@ -45,6 +45,7 @@ using k8s.Models;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Prometheus;
+using Neon.Kube.Operator.Rbac;
 
 namespace NeonNodeAgent
 {
@@ -65,7 +66,8 @@ namespace NeonNodeAgent
     /// and empty output and error streams.
     /// </note>
     /// </remarks>
-    [IgnoreController]
+    [Controller(ignore: true)]
+    [Rbac<V1NeonNodeTask>(RbacVerb.All)]
     public class NodeTaskController : IResourceController<V1NeonNodeTask>
     {
         //---------------------------------------------------------------------

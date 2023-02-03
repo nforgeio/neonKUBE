@@ -33,6 +33,8 @@ using Neon.Tasks;
 using k8s;
 using k8s.Models;
 using Neon.Kube.Operator.Cache;
+using System.Reflection;
+using Neon.Kube.Operator.Attributes;
 
 namespace Neon.Kube.Operator.Finalizer
 {
@@ -69,6 +71,7 @@ namespace Neon.Kube.Operator.Finalizer
 
             await Task.WhenAll(
                 finalizerInstanceBuilder.BuildFinalizers<TEntity>(serviceProvider.CreateScope().ServiceProvider)
+                    .Where(f => f.GetType().GetCustomAttribute<FinalizerAttribute>().RegisterWithAll == true)
                     .Select(f => RegisterFinalizerInternalAsync(entity, f)));
         }
 

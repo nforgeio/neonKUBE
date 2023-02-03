@@ -57,12 +57,16 @@ using OpenTelemetry.Trace;
 using Prometheus;
 
 using Npgsql;
+using Neon.Kube.Operator.Rbac;
+using Neon.Kube.Resources.Cluster;
+using Neon.Kube.Resources;
 
 namespace NeonClusterOperator
 {
     /// <summary>
     /// Manages Glauth LDAP database.
     /// </summary>
+    [Rbac<V1Secret>(RbacVerb.Get, EntityScope.Namespaced, KubeNamespace.NeonSystem)]
     public class GlauthController : IResourceController<V1Secret>
     {
         //---------------------------------------------------------------------

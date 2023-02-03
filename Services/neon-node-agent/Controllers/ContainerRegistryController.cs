@@ -47,6 +47,7 @@ using k8s.Models;
 using Newtonsoft.Json;
 using Prometheus;
 using Tomlyn;
+using Neon.Kube.Operator.Rbac;
 
 namespace NeonNodeAgent
 {
@@ -95,7 +96,8 @@ namespace NeonNodeAgent
     /// Node tasks on the host node will be simulated in this case by simply doing nothing.
     /// </note>
     /// </remarks>
-    [IgnoreController]
+    [Controller(ignore: true)]
+    [Rbac<V1NeonContainerRegistry>(RbacVerb.All)]
     public class ContainerRegistryController : IResourceController<V1NeonContainerRegistry>
     {
         //---------------------------------------------------------------------
