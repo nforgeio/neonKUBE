@@ -255,40 +255,6 @@ namespace NeonClusterOperator
 
             Logger.LogInformationEx(() => $"Listening on: {IPAddress.Any}:{Port}");
 
-#if DISABLED
-            _ = Host.CreateDefaultBuilder()
-                    .ConfigureHostOptions(
-                        options =>
-                        {
-                            // Ensure that the processor terminator and ASP.NET shutdown times match.
-
-                            options.ShutdownTimeout = ProcessTerminator.DefaultMinShutdownTime;
-                        })
-                    .ConfigureAppConfiguration(
-                        (hostingContext, config) =>
-                        {
-                            // $note(jefflill): 
-                            //
-                            // The .NET runtime watches the entire file system for configuration
-                            // changes which can cause real problems on Linux.  We're working around
-                            // this by removing all configuration sources which we aren't using
-                            // anyway for Kubernetes apps.
-                            //
-                            // https://github.com/nforgeio/neonKUBE/issues/1390
-
-                            config.Sources.Clear();
-                        })
-                    .ConfigureLogging(
-                        logging =>
-                        {
-                            logging.ClearProviders();
-                            logging.AddProvider(base.TelemetryHub);
-                        })
-                    .ConfigureWebHostDefaults(builder => builder.UseStartup<Startup>())
-                    .Build()
-                    .RunOperatorAsync(Array.Empty<string>());
-#endif
-
             // Indicate that the service is running.
 
             await StartedAsync();
