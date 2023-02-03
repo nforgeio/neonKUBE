@@ -213,7 +213,7 @@ namespace Neon.Kube.Hosting.HyperV
 
             controller.MaxParallel = 1; // We're only going to provision one VM at a time on the local Hyper-V.
 
-            controller.AddGlobalStep("initialize",
+            controller.AddGlobalStep("check hyper-v",
                 controller =>
                 {
                     var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
@@ -245,7 +245,7 @@ namespace Neon.Kube.Hosting.HyperV
 
                                 if (address != null && !address.InterfaceName.Equals(@switch.Name))
                                 {
-                                    throw new NeonKubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  The [{localHyperVOptions.NeonKubeInternalSubnet}] IP address is not assigned to this switch.");
+                                    throw new NeonKubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  The [{address}] IP address is not assigned to this switch.");
                                 }
 
                                 if (nat.Subnet != localHyperVOptions.NeonKubeInternalSubnet)
