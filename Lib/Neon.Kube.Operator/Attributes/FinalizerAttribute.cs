@@ -24,7 +24,7 @@ namespace Neon.Kube.Operator.Attributes
     /// <summary>
     /// Used to exclude a component from assembly scanning when building the operator.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
     public class FinalizerAttribute : Attribute
     {
         /// <summary>

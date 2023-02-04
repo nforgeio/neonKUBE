@@ -93,10 +93,6 @@ namespace Neon.Kube.Operator.Builder
                     .SelectMany(s => s.GetTypes())
                     .Where(
                         t => t.GetInterfaces().Any(i => i.GetCustomAttributes<OperatorComponentAttribute>().Any())
-                            & t.GetCustomAttribute<ControllerAttribute>().Ignore == false
-                            & t.GetCustomAttribute<FinalizerAttribute>().Ignore == false
-                            & t.GetCustomAttribute<MutatingWebhookAttribute>().Ignore == false
-                            & t.GetCustomAttribute<ValidatingWebhookAttribute>().Ignore == false
                     );
 
                 foreach (var type in types)
@@ -104,6 +100,11 @@ namespace Neon.Kube.Operator.Builder
                     switch (type.GetInterfaces().Where(i => i.GetCustomAttributes<OperatorComponentAttribute>().Any()).Select(i => i.GetCustomAttribute<OperatorComponentAttribute>()).FirstOrDefault().ComponentType)
                     {
                         case OperatorComponentType.Controller:
+
+                            if (type.GetCustomAttribute<ControllerAttribute>()?.Ignore == true)
+                            {
+                                break;
+                            }
 
                             var controllerRegMethod = typeof(OperatorBuilderExtensions).GetMethod(nameof(OperatorBuilderExtensions.AddController));
                             var controllerArgs = new object[controllerRegMethod.GetParameters().Count()];
@@ -114,6 +115,11 @@ namespace Neon.Kube.Operator.Builder
 
                         case OperatorComponentType.Finalizer:
 
+                            if (type.GetCustomAttribute<FinalizerAttribute>()?.Ignore == true)
+                            {
+                                break;
+                            }
+
                             var finalizerRegMethod = typeof(OperatorBuilderExtensions).GetMethod(nameof(OperatorBuilderExtensions.AddFinalizer));
                             var finalizerRegArgs = new object[finalizerRegMethod.GetParameters().Count()];
                             finalizerRegArgs[0] = this;
@@ -123,6 +129,11 @@ namespace Neon.Kube.Operator.Builder
 
                         case OperatorComponentType.MutationWebhook:
 
+                            if (type.GetCustomAttribute<MutatingWebhookAttribute>()?.Ignore == true)
+                            {
+                                break;
+                            }
+
                             var mutatingWebhookRegMethod = typeof(OperatorBuilderExtensions).GetMethod(nameof(OperatorBuilderExtensions.AddMutatingWebhook));
                             var mutatingWebhookRegArgs = new object[mutatingWebhookRegMethod.GetParameters().Count()];
                             mutatingWebhookRegArgs[0] = this;
@@ -131,6 +142,11 @@ namespace Neon.Kube.Operator.Builder
                             break;
 
                         case OperatorComponentType.ValidationWebhook:
+
+                            if (type.GetCustomAttribute<ValidatingWebhookAttribute>()?.Ignore == true)
+                            {
+                                break;
+                            }
 
                             var validatingWebhookRegMethod = typeof(OperatorBuilderExtensions).GetMethod(nameof(OperatorBuilderExtensions.AddValidatingWebhook));
                             var validatingWebhookRegArgs = new object[validatingWebhookRegMethod.GetParameters().Count()];

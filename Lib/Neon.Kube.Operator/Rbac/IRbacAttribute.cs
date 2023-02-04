@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    MutatingWebhookAttribute.cs
+// FILE:	    RbacAttribute.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -16,27 +16,21 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 
-namespace Neon.Kube.Operator.Attributes
+using Neon.Kube.Resources;
+
+using k8s;
+using k8s.Models;
+
+namespace Neon.Kube.Operator.Rbac
 {
-    /// <summary>
-    /// Used to exclude a component from assembly scanning when building the operator.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
-    public class MutatingWebhookAttribute : Attribute
+    public interface IRbacAttribute
     {
-        /// <summary>
-        /// Whether to ignore the mutating webhook when scanning assemblies.
-        /// </summary>
-        public bool Ignore { get; set; } = false;
+        RbacVerb Verbs { get; set; }
+        EntityScope Scope { get; set; }
 
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        public MutatingWebhookAttribute(
-            bool ignore = false)
-        {
-            this.Ignore = ignore;
-        }
+        string Namespace { get; set; }
+        Type GetEntityType();
     }
 }

@@ -32,6 +32,7 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.Kube.Operator.Attributes;
 using Neon.Kube.Operator.Builder;
 
 using k8s;
@@ -47,6 +48,7 @@ namespace Neon.Kube.Operator.Webhook
     /// </summary>
     /// <typeparam name="TEntity"></typeparam>
     [OperatorComponent(OperatorComponentType.ValidationWebhook)]
+    [ValidatingWebhook]
     public interface IValidatingWebhook<TEntity> : IAdmissionWebhook<TEntity, ValidationResult>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
     {

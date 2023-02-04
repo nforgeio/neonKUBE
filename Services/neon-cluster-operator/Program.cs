@@ -25,15 +25,16 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.IO;
 using Neon.Kube;
-using Neon.Kube.Operator;
 using Neon.Service;
 
 using k8s;
 using k8s.Models;
+using Neon.Kube.Operator;
 
 namespace NeonClusterOperator
 {

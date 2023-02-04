@@ -21,6 +21,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Neon.Kube.Operator.Attributes;
 using Neon.Kube.Operator.Builder;
 
 using k8s.Models;
@@ -33,6 +34,7 @@ namespace Neon.Kube.Operator.Finalizer
     /// </summary>
     /// <typeparam name="TEntity">The type of the k8s entity.</typeparam>
     [OperatorComponent(OperatorComponentType.Finalizer)]
+    [Finalizer]
     public interface IResourceFinalizer<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
     {

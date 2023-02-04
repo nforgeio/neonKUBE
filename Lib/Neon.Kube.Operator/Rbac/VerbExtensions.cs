@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    MutatingWebhookAttribute.cs
+// FILE:	    VerbExtensions.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -16,27 +16,36 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using k8s;
+using k8s.Models;
 
-namespace Neon.Kube.Operator.Attributes
+namespace Neon.Kube.Operator.Rbac
 {
-    /// <summary>
-    /// Used to exclude a component from assembly scanning when building the operator.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
-    public class MutatingWebhookAttribute : Attribute
+    public static class VerbExtensions
     {
-        /// <summary>
-        /// Whether to ignore the mutating webhook when scanning assemblies.
-        /// </summary>
-        public bool Ignore { get; set; } = false;
-
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        public MutatingWebhookAttribute(
-            bool ignore = false)
+        public static IList<string> ToStrings(this RbacVerb verb)
         {
-            this.Ignore = ignore;
+            var result = new List<string>();
+
+            if (verb == RbacVerb.None)
+            {
+                return result;
+            }
+
+            if (verb.HasFlag(RbacVerb.All))
+            {
+                result.Add("*");
+                return result;
+            }
+
+            foreach (var value in Enum.GetValues<RbacVerb>().Where(v => v != RbacVerb.None && v != RbacVerb.All))
+            {
+                result.Add(value.ToString().ToLower());
+            }
+
+            return result;
         }
     }
 }

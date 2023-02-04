@@ -29,7 +29,7 @@ namespace Neon.Kube.Operator.Rbac
     /// Used to exclude a component from assembly scanning when building the operator.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-    public class RbacAttribute<TEntity> : Attribute
+    public class RbacAttribute<TEntity> : Attribute, IRbacAttribute
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         /// <summary>
@@ -58,6 +58,11 @@ namespace Neon.Kube.Operator.Rbac
             this.Verbs     = verbs;
             this.Scope     = scope;
             this.Namespace = @namespace;
+        }
+
+        public Type GetEntityType()
+        {
+            return typeof(TEntity);
         }
     }
 }

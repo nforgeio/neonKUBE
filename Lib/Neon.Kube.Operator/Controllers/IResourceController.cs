@@ -43,6 +43,7 @@ using k8s.Autorest;
 using k8s.Models;
 
 using Prometheus;
+using Neon.Kube.Operator.Attributes;
 
 namespace Neon.Kube.Operator.Controller
 {
@@ -51,6 +52,7 @@ namespace Neon.Kube.Operator.Controller
     /// </summary>
     /// <typeparam name="TEntity">Specifies the Kubernetes entity being managed.</typeparam>
     [OperatorComponent(OperatorComponentType.Controller)]
+    [Controller]
     public interface IResourceController<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {

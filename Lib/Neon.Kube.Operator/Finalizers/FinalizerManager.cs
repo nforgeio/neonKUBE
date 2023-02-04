@@ -71,7 +71,10 @@ namespace Neon.Kube.Operator.Finalizer
 
             await Task.WhenAll(
                 finalizerInstanceBuilder.BuildFinalizers<TEntity>(serviceProvider.CreateScope().ServiceProvider)
-                    .Where(f => f.GetType().GetCustomAttribute<FinalizerAttribute>().RegisterWithAll == true)
+                    .Where(f => 
+                        (f.GetType().GetCustomAttribute<FinalizerAttribute>()?.RegisterWithAll == true)
+                        || (f.GetType().GetCustomAttribute<FinalizerAttribute>() == null) 
+                        )
                     .Select(f => RegisterFinalizerInternalAsync(entity, f)));
         }
 

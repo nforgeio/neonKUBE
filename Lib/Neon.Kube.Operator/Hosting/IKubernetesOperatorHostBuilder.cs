@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    MutatingWebhookAttribute.cs
+// FILE:	    IKubernetesOperatorBuilder.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -16,27 +16,28 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace Neon.Kube.Operator.Attributes
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+
+using Neon.Kube.Operator.Builder;
+
+using k8s.Models;
+using k8s;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
+
+namespace Neon.Kube.Operator
 {
-    /// <summary>
-    /// Used to exclude a component from assembly scanning when building the operator.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
-    public class MutatingWebhookAttribute : Attribute
+    public interface IKubernetesOperatorHostBuilder
     {
-        /// <summary>
-        /// Whether to ignore the mutating webhook when scanning assemblies.
-        /// </summary>
-        public bool Ignore { get; set; } = false;
-
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        public MutatingWebhookAttribute(
-            bool ignore = false)
-        {
-            this.Ignore = ignore;
-        }
+        void AddHostBuilder(IHostBuilder hostBuilder);
+        IKubernetesOperatorHost Build();
     }
 }
