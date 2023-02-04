@@ -42,7 +42,10 @@ namespace Neon.Kube.Operator.Rbac
 
             foreach (var value in Enum.GetValues<RbacVerb>().Where(v => v != RbacVerb.None && v != RbacVerb.All))
             {
-                result.Add(value.ToString().ToLower());
+                if (verb.HasFlag(value))
+                {
+                    result.Add(value.ToString().ToLower());
+                }
             }
 
             return result;

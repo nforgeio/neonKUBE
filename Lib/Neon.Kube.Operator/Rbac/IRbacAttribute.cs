@@ -32,5 +32,6 @@ namespace Neon.Kube.Operator.Rbac
 
         string Namespace { get; set; }
         Type GetEntityType();
+        KubernetesEntityAttribute GetKubernetesEntityAttribute();
     }
 }

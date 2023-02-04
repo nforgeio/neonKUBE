@@ -17,93 +17,101 @@ using k8s;
 using k8s.Models;
 using System.Data;
 using System.Xml.Linq;
+using Neon.Common;
+using YamlDotNet;
+using System.IdentityModel.Tokens.Jwt;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
+using Neon.BuildInfo;
+using System.Text.RegularExpressions;
 
 namespace Neon.Kube.Operator.Hosting.Commands.Generate
 {
     internal class GenerateRbacCommand : GenerateCommandBase
     {
+        ISerializer Serializer;
         private ComponentRegister componentRegister;
         public GenerateRbacCommand(ComponentRegister componentRegister) : base("rbac", "Generate RBAC yaml for the operator.")
         {
             this.componentRegister = componentRegister;
             Handler = CommandHandler.Create(() => HandleCommand());
+
+            Serializer = new SerializerBuilder()
+                        .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
+                        .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                        .Build();
         }
 
         private int HandleCommand()
         {
-            var types = AppDomain.CurrentDomain.GetAssemblies()
-                     .SelectMany(s => s.GetTypes())
-                     .Where(
-                         t => t.GetCustomAttributes()
-                         .Where(a => a.GetType().IsGenericType)
-                         .Any(a => a.GetType().GetGenericTypeDefinition().IsEquivalentTo(typeof(RbacAttribute<>)))
-                     );
+            var output = new StringBuilder();
 
-            var clusterRole = new V1ClusterRole()
-            {
-                Rules = new List<V1PolicyRule>()
-            };
-            var roles = new Dictionary<string, V1Role>();
+            var attributes = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(s => s.GetTypes())
+                .SelectMany(
+                    t => t.GetCustomAttributes()
+                    .Where(a => a.GetType().IsGenericType)
+                    .Where(a => a.GetType().GetGenericTypeDefinition().IsEquivalentTo(typeof(RbacAttribute<>))));
 
-            foreach (var type in types)
-            {
-                var attributes = (IEnumerable<IRbacAttribute>)type.GetCustomAttributes()
-                         .Where(a => a.GetType().IsGenericType)
-                         .Where(a => a.GetType().GetGenericTypeDefinition().IsEquivalentTo(typeof(RbacAttribute<>)));
-
-                var gs = ((IEnumerable<IRbacAttribute>)attributes)
-                    .GroupBy(g => g.Verbs)
+            var clusterRules = attributes.Where(attr => ((IRbacAttribute)attr).Scope == Resources.EntityScope.Cluster)
+                .GroupBy(attr => ((IRbacAttribute)attr).Verbs)
                     .Select(
                         group => (
                             Verbs: group.Key,
-                            EntityTypes: group.Select(g => g.GetEntityType()).ToList()))
+                            EntityTypes: group.Select(attr => ((IRbacAttribute)attr).GetKubernetesEntityAttribute()).ToList()))
 
                     .Select(
                         group => new V1PolicyRule
                         {
-                            ApiGroups = group.EntityTypes.Select(crd => ()crd.Group).Distinct().ToList(),
-                            Resources = group.Crds.Select(crd => crd.Plural).Distinct().ToList(),
-                            Verbs = group.Verbs.ConvertToStrings(),
+                            ApiGroups = group.EntityTypes.Select(entity => entity.Group).Distinct().ToList(),
+                            Resources = group.EntityTypes.Select(entity => entity.PluralName).Distinct().ToList(),
+                            Verbs = group.Verbs.ToStrings(),
                         });
 
-                foreach (var g in groups)
-                {
-                    var a = attributes.Where(a => a.Verbs == g.Key);
-                }
+            var operatorName = Regex.Replace(Assembly.GetEntryAssembly().GetName().Name, @"([a-z])([A-Z])", "$1-$2").ToLower();
 
-                foreach (IRbacAttribute attr in attributes)
-                {
-                    var entityType = attr.GetEntityType();
+            if (clusterRules.Any())
+            {
+                var cr = new V1ClusterRole().Initialize();
+                cr.Metadata.Name = operatorName;
+                cr.Rules = clusterRules.ToList();
 
-                    var typeMetadata = entityType.GetKubernetesTypeMetadata();
-
-                    var rule = new V1PolicyRule();
-                    rule.ApiGroups = new List<string>() { typeMetadata.Group };
-                    rule.Verbs = attr.Verbs.ToStrings();
-                    rule.Resources = new List<string>() { typeMetadata.PluralName };
-
-                    if (attr.Scope == Resources.EntityScope.Cluster)
-                    {
-                        clusterRole.Rules.Add(rule);
-                    }
-                    else
-                    {
-                        if (roles.Keys.Contains(attr.Namespace))
-                        {
-                            roles[attr.Namespace].Rules.Add(rule);
-                        }
-                        else
-                        {
-                            roles.Add(attr.Namespace, new V1Role() { Rules= new List<V1PolicyRule>() { rule } });
-                        }
-                    }
-                }
-
+                output.AppendLine(Serializer.Serialize(cr));
             }
 
-            foreach (var group in clusterRole.Rules.GroupBy())
+            foreach (var @namespace in attributes.Where(attr => ((IRbacAttribute)attr).Scope == Resources.EntityScope.Namespaced)
+                .Select(attr => ((IRbacAttribute)attr).Namespace)
+                .Distinct())
+            {
+                var namespaceRules = attributes.Where(attr =>
+                    ((IRbacAttribute)attr).Scope == Resources.EntityScope.Namespaced
+                    && ((IRbacAttribute)attr).Namespace == @namespace)
+                        .GroupBy(attr => ((IRbacAttribute)attr).Verbs)
+                        .Select(
+                            group => (
+                                Verbs: group.Key,
+                                EntityTypes: group.Select(attr => ((IRbacAttribute)attr).GetKubernetesEntityAttribute()).ToList()))
 
-            return HandleCommand("Generating RBAC");
+                        .Select(
+                            group => new V1PolicyRule
+                            {
+                                ApiGroups = group.EntityTypes.Select(entity => entity.Group).Distinct().ToList(),
+                                Resources = group.EntityTypes.Select(entity => entity.PluralName).Distinct().ToList(),
+                                Verbs = group.Verbs.ToStrings(),
+                            });
+
+                if (namespaceRules.Any())
+                {
+                    var nr = new V1Role().Initialize();
+                    nr.Metadata.Name = operatorName;
+                    nr.Metadata.NamespaceProperty = @namespace;
+                    nr.Rules = namespaceRules.ToList();
+
+                    output.AppendLine(Serializer.Serialize(nr));
+                }
+            }
+
+            return HandleCommand(output.ToString());
         }
     }
 }

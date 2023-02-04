@@ -6,6 +6,8 @@ using Neon.Kube.Operator.Controller;
 using Neon.Kube.Operator.Finalizer;
 using Neon.Kube.Operator.Rbac;
 using Neon.Kube.Operator.ResourceManager;
+using Neon.Kube.Resources.Istio;
+using Neon.Kube.Resources.Prometheus;
 using Neon.Tasks;
 using System;
 using System.Collections.Generic;
@@ -15,8 +17,12 @@ namespace TestOperator
 {
     [Rbac<V1ExampleEntity>(RbacVerb.All, Neon.Kube.Resources.EntityScope.Cluster)]
     [Rbac<V1Secret>(RbacVerb.List | RbacVerb.Create, Neon.Kube.Resources.EntityScope.Cluster)]
+    [Rbac<V1ServiceMonitor>(RbacVerb.List | RbacVerb.Create, Neon.Kube.Resources.EntityScope.Cluster)]
+    [Rbac<V1ServiceAccount>(RbacVerb.List | RbacVerb.Create, Neon.Kube.Resources.EntityScope.Cluster)]
     [Rbac<V1Node>(RbacVerb.Get | RbacVerb.Watch | RbacVerb.List, Neon.Kube.Resources.EntityScope.Namespaced, @namespace: "foo")]
     [Rbac<V1Pod>(RbacVerb.Get | RbacVerb.Watch, Neon.Kube.Resources.EntityScope.Namespaced, @namespace: "default")]
+    [Rbac<V1ConfigMap>(RbacVerb.Get | RbacVerb.Watch, Neon.Kube.Resources.EntityScope.Namespaced, @namespace: "default")]
+    [Rbac<V1VirtualService>(RbacVerb.Get | RbacVerb.Watch, Neon.Kube.Resources.EntityScope.Namespaced, @namespace: "testaroo")]
     public class ExampleController : IResourceController<V1ExampleEntity>
     {
         private readonly IKubernetes k8s;

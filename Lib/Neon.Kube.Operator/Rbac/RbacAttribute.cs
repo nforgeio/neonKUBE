@@ -64,5 +64,10 @@ namespace Neon.Kube.Operator.Rbac
         {
             return typeof(TEntity);
         }
+
+        public KubernetesEntityAttribute GetKubernetesEntityAttribute()
+        {
+            return GetEntityType().GetKubernetesTypeMetadata();
+        }
     }
 }
