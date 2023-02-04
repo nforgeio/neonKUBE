@@ -51,7 +51,20 @@ namespace Neon.Kube.Operator.Hosting.Commands.Generate
                          .Where(a => a.GetType().IsGenericType)
                          .Where(a => a.GetType().GetGenericTypeDefinition().IsEquivalentTo(typeof(RbacAttribute<>)));
 
-                var groups = ((IEnumerable<IRbacAttribute>)attributes).GroupBy(g => g.Verbs);
+                var gs = ((IEnumerable<IRbacAttribute>)attributes)
+                    .GroupBy(g => g.Verbs)
+                    .Select(
+                        group => (
+                            Verbs: group.Key,
+                            EntityTypes: group.Select(g => g.GetEntityType()).ToList()))
+
+                    .Select(
+                        group => new V1PolicyRule
+                        {
+                            ApiGroups = group.EntityTypes.Select(crd => ()crd.Group).Distinct().ToList(),
+                            Resources = group.Crds.Select(crd => crd.Plural).Distinct().ToList(),
+                            Verbs = group.Verbs.ConvertToStrings(),
+                        });
 
                 foreach (var g in groups)
                 {
