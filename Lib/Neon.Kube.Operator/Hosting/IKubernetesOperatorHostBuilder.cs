@@ -41,7 +41,10 @@ namespace Neon.Kube.Operator
     public interface IKubernetesOperatorHostBuilder
     {
         internal void AddHostBuilder(IHostBuilder hostBuilder);
-        
+        internal void AddOperatorSettings(OperatorSettings operatorSettings);
+        internal void AddCertManagerOptions(CertManagerOptions certManagerOptions);
+        internal void UseStartup<TStartup>();
+
         /// <summary>
         /// Build the host.
         /// </summary>

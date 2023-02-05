@@ -41,6 +41,10 @@ using AsyncKeyedLock;
 
 using k8s.Models;
 using k8s;
+using Neon.Common;
+using k8s.KubeConfigModels;
+using System.IO;
+using System.Diagnostics;
 
 namespace Neon.Kube.Operator.Builder
 {
@@ -66,13 +70,27 @@ namespace Neon.Kube.Operator.Builder
             componentRegister = new ComponentRegister();
         }
 
-        internal IOperatorBuilder AddOperatorBase(OperatorSettings settings)
+        internal IOperatorBuilder AddOperatorBase()
         {
+            var s = Services.BuildServiceProvider().GetService<OperatorSettings>();
+            var settings = (OperatorSettings)Services.Where(s => s.ServiceType == typeof(OperatorSettings)).Single().ImplementationInstance;
+
+            
+
             if (!Services.Any(x => x.ServiceType == typeof(IKubernetes)))
             {
+                var k8sClientConfig = settings.KubernetesClientConfiguration ?? KubernetesClientConfiguration.BuildDefaultConfig();
+
                 var k8s = new Kubernetes(
-                    settings.KubernetesClientConfiguration ?? KubernetesClientConfiguration.BuildDefaultConfig(),
+                    k8sClientConfig,
                     new KubernetesRetryHandler());
+
+                if (NeonHelper.IsDevWorkstation ||
+                    Debugger.IsAttached)
+                {
+                    k8s.HttpClient.DefaultRequestHeaders.Add("Impersonate-User", $"system:serviceaccount:{settings.Namespace}:{settings.Name}"); 
+                }
+
                 Services.AddSingleton<IKubernetes>(k8s);
             }
 

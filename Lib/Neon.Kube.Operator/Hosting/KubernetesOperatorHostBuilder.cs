@@ -41,6 +41,7 @@ namespace Neon.Kube.Operator
     {
         private KubernetesOperatorHost operatorHost;
         private IHostBuilder hostBuilder;
+        private CertManagerOptions certManagerOptions;
 
         /// <summary>
         /// Constructor.
@@ -59,8 +60,47 @@ namespace Neon.Kube.Operator
         /// <inheritdoc/>
         public IKubernetesOperatorHost Build()
         {
-            this.operatorHost.HostBuilder = this.hostBuilder;
+            this.operatorHost.HostBuilder = Host.CreateDefaultBuilder();
+            
+            this.operatorHost.HostBuilder.ConfigureWebHost(
+                webhost =>
+                    webhost.ConfigureServices(services =>
+                    {
+                        services.AddSingleton<OperatorSettings>(this.operatorHost.OperatorSettings);
+                    })
+                    .UseKestrel(options =>
+                    {
+                        options.ConfigureHttpsDefaults(o =>
+                        {
+                            o.ServerCertificateSelector = (context, dnsName) =>
+                            {
+                                return this.operatorHost.Certificate;
+                            };
+                        });
+                        options.Listen(this.operatorHost.OperatorSettings.ListenAddress, this.operatorHost.OperatorSettings.Port);
+                    })
+                    .UseStartup(this.operatorHost.StartupType)
+                );
+
             return operatorHost;
+        }
+
+        /// <inheritdoc/>
+        public void AddOperatorSettings(OperatorSettings operatorSettings)
+        {
+            this.operatorHost.OperatorSettings = operatorSettings;
+        }
+
+        /// <inheritdoc/>
+        public void AddCertManagerOptions(CertManagerOptions certManagerOptions)
+        {
+            this.operatorHost.CertManagerOptions = certManagerOptions;
+        }
+
+        /// <inheritdoc/>
+        public void UseStartup<TStartup>()
+        {
+            this.operatorHost.StartupType = typeof(TStartup);
         }
     }
 }

@@ -44,16 +44,9 @@ namespace Neon.Kube.Operator
         /// <param name="options">Optional action to configure </param>
         /// <returns></returns>
         public static IOperatorBuilder AddKubernetesOperator(
-            this IServiceCollection services,
-            Action<OperatorSettings> options = null)
+            this IServiceCollection services)
         {
-            var settings = new OperatorSettings();
-            if (options!= null)
-            {
-                options.Invoke(settings);
-            }
-
-            return AddKubernetesOperator(services, settings);
+            return new OperatorBuilder(services).AddOperatorBase();
         }
 
         /// <summary>
@@ -66,12 +59,7 @@ namespace Neon.Kube.Operator
             this IServiceCollection services,
             OperatorSettings settings)
         {
-            if (settings == null)
-            {
-                settings = new OperatorSettings();
-            }
-
-            return new OperatorBuilder(services).AddOperatorBase(settings);
+            return new OperatorBuilder(services).AddOperatorBase();
         }
     }
 }

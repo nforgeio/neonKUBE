@@ -12,22 +12,16 @@ namespace TestOperator
         {
             var k8s = KubernetesOperatorHost
                 .CreateDefaultBuilder(args)
-                .ConfigureHostDefaults(configure =>
+                .ConfigureOperator(configure =>
                 {
-                    configure.ConfigureWebHostDefaults(webbuilder =>
-                    {
-                        webbuilder.UseStartup<OperatorStartup>();
-                        webbuilder.UseKestrel(options =>
-                        {
-                            options.ListenAnyIP(1234);
-                        });
-                    });
-                    configure.ConfigureLogging(logging =>
-                    {
-                        logging.ClearProviders();
-                        logging.AddConsole();
-                    });
-                }).Build();
+                    configure.Port = 1234;
+                    configure.AssemblyScanningEnabled = true;
+                    configure.Name = "my-cool-operator";
+                    configure.Namespace = "default";
+                })
+                .ConfigureNeonKube()
+                .UseStartup<OperatorStartup>()
+                .Build();
 
             await k8s.RunAsync();
 

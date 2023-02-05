@@ -59,11 +59,13 @@ namespace Neon.Kube.Operator.Rbac
         public RbacRuleAttribute(
             RbacVerb verbs = RbacVerb.None,
             EntityScope scope = EntityScope.Namespaced,
-            string @namespace = null)
+            string @namespace = null,
+            string resourceNames = null)
         {
-            this.Verbs     = verbs;
-            this.Scope     = scope;
-            this.Namespace = @namespace;
+            this.Verbs         = verbs;
+            this.Scope         = scope;
+            this.Namespace     = @namespace;
+            this.ResourceNames = resourceNames;
         }
 
         /// <inheritdoc/>

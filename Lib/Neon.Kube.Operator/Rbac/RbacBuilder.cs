@@ -31,6 +31,7 @@ using k8s.Models;
 
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using Neon.Kube.Resources.CertManager;
 
 namespace Neon.Kube.Operator.Rbac
 {
@@ -69,7 +70,37 @@ namespace Neon.Kube.Operator.Rbac
                 .SelectMany(
                     t => t.GetCustomAttributes()
                     .Where(a => a.GetType().IsGenericType)
-                    .Where(a => a.GetType().GetGenericTypeDefinition().IsEquivalentTo(typeof(RbacRuleAttribute<>))));
+                    .Where(a => a.GetType().GetGenericTypeDefinition().IsEquivalentTo(typeof(RbacRuleAttribute<>)))).ToList();
+
+            attributes.Add(
+                    new RbacRuleAttribute<V1Lease>(
+                        verbs: RbacVerb.All,
+                        scope: Resources.EntityScope.Namespaced,
+                        @namespace: operatorSettings.Namespace
+                        ));
+
+            attributes.Add(
+                    new RbacRuleAttribute<V1CustomResourceDefinition>(
+                        verbs: RbacVerb.All,
+                        scope: Resources.EntityScope.Cluster
+                        ));
+
+            if (operatorSettings.certManagerEnabled)
+            {
+                attributes.Add(
+                    new RbacRuleAttribute<V1Certificate>(
+                        verbs: RbacVerb.All,
+                        scope: Resources.EntityScope.Namespaced,
+                        @namespace: operatorSettings.Namespace
+                        ));
+                attributes.Add(
+                    new RbacRuleAttribute<V1Secret>(
+                        verbs: RbacVerb.Watch,
+                        scope: Resources.EntityScope.Namespaced,
+                        @namespace: operatorSettings.Namespace,
+                        resourceNames: $"{operatorSettings.Name}-webhook-tls"
+                        ));
+            }
 
             var clusterRules = attributes.Where(attr => ((IRbacAttribute)attr).Scope == Resources.EntityScope.Cluster)
                 .GroupBy(attr => new
@@ -95,13 +126,13 @@ namespace Neon.Kube.Operator.Rbac
             if (clusterRules.Any())
             {
                 var clusterRole = new V1ClusterRole().Initialize();
-                clusterRole.Metadata.Name = $"{operatorSettings.Name}-{NeonHelper.CreateBase36Uuid()}";
+                clusterRole.Metadata.Name = operatorSettings.Name;
                 clusterRole.Rules = clusterRules.ToList();
 
                 ClusterRoles.Add(clusterRole);
 
                 var clusterRoleBinding = new V1ClusterRoleBinding().Initialize();
-                clusterRoleBinding.Metadata.Name = $"{operatorSettings.Name}-{NeonHelper.CreateBase36Uuid()}";
+                clusterRoleBinding.Metadata.Name = operatorSettings.Name;
                 clusterRoleBinding.RoleRef = new V1RoleRef(name: clusterRole.Metadata.Name, apiGroup: "rbac.authorization.k8s.io", kind: "ClusterRole");
                 clusterRoleBinding.Subjects = new List<V1Subject>()
                 {
@@ -141,14 +172,14 @@ namespace Neon.Kube.Operator.Rbac
                 if (namespaceRules.Any())
                 {
                     var namespacedRole = new V1Role().Initialize();
-                    namespacedRole.Metadata.Name = $"{operatorSettings.Name}-{NeonHelper.CreateBase36Uuid()}";
+                    namespacedRole.Metadata.Name = operatorSettings.Name;
                     namespacedRole.Metadata.NamespaceProperty = @namespace;
                     namespacedRole.Rules = namespaceRules.ToList();
 
                     Roles.Add(namespacedRole);
 
                     var roleBinding = new V1RoleBinding().Initialize();
-                    roleBinding.Metadata.Name = $"{operatorSettings.Name}-{NeonHelper.CreateBase36Uuid()}";
+                    roleBinding.Metadata.Name = operatorSettings.Name;
                     roleBinding.Metadata.NamespaceProperty = @namespace;
                     roleBinding.RoleRef = new V1RoleRef(name: namespacedRole.Metadata.Name, apiGroup: "rbac.authorization.k8s.io", kind: "Role");
                     roleBinding.Subjects = new List<V1Subject>()

@@ -23,6 +23,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -35,6 +36,8 @@ namespace Neon.Kube.Operator
     /// </summary>
     public class OperatorSettings
     {
+        internal bool certManagerEnabled { get; set; } = false;
+
         /// <summary>
         /// Default constructor.
         /// </summary>
@@ -43,14 +46,24 @@ namespace Neon.Kube.Operator
         }
 
         /// <summary>
-        /// The Operator name. This defaults to a Kubernetes safe version of the Assembly name.
+        /// The Operator name.
         /// </summary>
-        public string Name { get; set; } = Regex.Replace(Assembly.GetEntryAssembly().GetName().Name, @"([a-z])([A-Z])", "$1-$2").ToLower();
+        public string Name { get; set; }
 
         /// <summary>
         /// The Operator name. This defaults to a Kubernetes safe version of the Assembly name.
         /// </summary>
-        public string Namespace { get; set; } = "default";
+        public string Namespace { get; set; }
+
+        /// <summary>
+        /// The IP address to listen on.
+        /// </summary>
+        public IPAddress ListenAddress { get; set; } = IPAddress.Any;
+
+        /// <summary>
+        /// The port to listen on.
+        /// </summary>
+        public int Port { get; set; } = 443;
 
         /// <summary>
         /// The Kubernetes client configuration.

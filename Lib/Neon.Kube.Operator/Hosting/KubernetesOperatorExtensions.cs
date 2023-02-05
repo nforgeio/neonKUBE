@@ -32,6 +32,7 @@ using Neon.Kube.Operator.Builder;
 
 using k8s.Models;
 using k8s;
+using Microsoft.AspNetCore;
 
 namespace Neon.Kube.Operator
 {
@@ -56,6 +57,16 @@ namespace Neon.Kube.Operator
             return k8sBuilder;
         }
 
+        public static IKubernetesOperatorHostBuilder ConfigureOperator(this IKubernetesOperatorHostBuilder k8sBuilder, Action<OperatorSettings> configure = null)
+        {
+            var operatorSettings = new OperatorSettings();
+
+            configure?.Invoke(operatorSettings);
+            k8sBuilder.AddOperatorSettings(operatorSettings);
+
+            return k8sBuilder;
+        }
+
         /// <summary>
         /// Builds the host.
         /// </summary>
@@ -71,9 +82,41 @@ namespace Neon.Kube.Operator
         /// </summary>
         /// <param name="builder"></param>
         /// <returns></returns>
-        public static IKubernetesOperatorHostBuilder ConfigureNeonKube(this IKubernetesOperatorHostBuilder builder)
+        public static IKubernetesOperatorHostBuilder ConfigureNeonKube(this IKubernetesOperatorHostBuilder k8sBuilder)
         {
-            return builder;
+            k8sBuilder.ConfigureCertManager(configure =>
+            {
+                configure.Namespace = KubeNamespace.NeonIngress;
+                configure.CertificateDuration = TimeSpan.FromDays(90);
+                configure.IssuerRef = new Resources.CertManager.IssuerRef()
+                {
+                    Name = "cluster-selfsigned-issuer",
+                    Kind = "ClusterIssuer"
+                };
+            });
+
+            return k8sBuilder;
+        }
+
+        /// <summary>
+        /// Configures the host for deployment in NeonKUBE clusters.
+        /// </summary>
+        /// <param name="k8sBuilder"></param>
+        /// <returns></returns>
+        public static IKubernetesOperatorHostBuilder ConfigureCertManager(this IKubernetesOperatorHostBuilder k8sBuilder, Action<CertManagerOptions> configure)
+        {
+            var certManagerOptions = new CertManagerOptions();
+
+            configure?.Invoke(certManagerOptions);
+            k8sBuilder.AddCertManagerOptions(certManagerOptions);
+
+            return k8sBuilder;
+        }
+
+        public static IKubernetesOperatorHostBuilder UseStartup<TStartup>(this IKubernetesOperatorHostBuilder k8sBuilder)
+        {
+            k8sBuilder.UseStartup<TStartup>();
+            return k8sBuilder;
         }
     }
 }

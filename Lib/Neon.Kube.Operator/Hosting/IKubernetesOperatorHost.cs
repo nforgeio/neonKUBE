@@ -31,6 +31,7 @@ using Neon.Kube.Operator.Builder;
 
 using k8s.Models;
 using k8s;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Neon.Kube.Operator
 {
@@ -48,6 +49,27 @@ namespace Neon.Kube.Operator
         /// The host builder.
         /// </summary>
         IHostBuilder HostBuilder { get; set; }
+
+        /// <summary>
+        /// The Operator Settings.
+        /// </summary>
+        OperatorSettings OperatorSettings { get; set; }
+
+        /// <summary>
+        /// Cert Manager options.
+        /// </summary>
+        CertManagerOptions CertManagerOptions { get; set; }
+
+        /// <summary>
+        /// StartupType.
+        /// </summary>
+        Type StartupType { get; set; }
+
+        /// <summary>
+        /// SSL Cert.
+        /// </summary>
+
+        X509Certificate2 Certificate { get; set; }
 
         /// <summary>
         /// Run the Operator.

@@ -19,14 +19,9 @@ namespace TestOperator
     /// Example controller
     /// </summary>
     [RbacRule<V1ExampleEntity>(RbacVerb.All, Neon.Kube.Resources.EntityScope.Cluster)]
-    [RbacRule<V1Secret>(RbacVerb.List | RbacVerb.Create, Neon.Kube.Resources.EntityScope.Cluster)]
-    [RbacRule<V1ServiceMonitor>(RbacVerb.List, Neon.Kube.Resources.EntityScope.Cluster)]
     [RbacRule<V1ServiceAccount>(RbacVerb.List | RbacVerb.Create, Neon.Kube.Resources.EntityScope.Cluster)]
-    [RbacRule<V1Node>(RbacVerb.Get | RbacVerb.Watch | RbacVerb.List, Neon.Kube.Resources.EntityScope.Namespaced, Namespace = "foo", ResourceNames = "foo,testaroo,foobar")]
-    [RbacRule<V1Service>(RbacVerb.Get | RbacVerb.Watch | RbacVerb.List, Neon.Kube.Resources.EntityScope.Namespaced, Namespace = "foo", ResourceNames = "test,hi,baz")]
     [RbacRule<V1Pod>(RbacVerb.Get | RbacVerb.Watch | RbacVerb.Patch, Neon.Kube.Resources.EntityScope.Namespaced, @namespace: "default")]
     [RbacRule<V1ConfigMap>(RbacVerb.Get | RbacVerb.Watch, Neon.Kube.Resources.EntityScope.Namespaced, @namespace: "default")]
-    [RbacRule<V1VirtualService>(RbacVerb.Get | RbacVerb.Watch | RbacVerb.Delete, Neon.Kube.Resources.EntityScope.Namespaced, @namespace: "testaroo")]
     public class ExampleController : IResourceController<V1ExampleEntity>
     {
         private readonly IKubernetes k8s;
@@ -65,6 +60,11 @@ namespace TestOperator
             logger.LogInformation($"RECONCILED: {resource.Name()}");
 
             return ResourceControllerResult.Ok();
+        }
+
+        public async Task DeletedAsync(V1ExampleEntity resource)
+        {
+            logger.LogInformation($"DELETED: {resource.Name()}");
         }
     }
 }

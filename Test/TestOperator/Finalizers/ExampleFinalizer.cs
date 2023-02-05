@@ -24,6 +24,10 @@ namespace TestOperator
         {
             await SyncContext.Clear;
 
+            logger.LogInformation($"FINALIZING: {resource.Name()}");
+
+            await Task.Delay(5000);
+
             logger.LogInformation($"FINALIZED: {resource.Name()}");
         }
     }

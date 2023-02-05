@@ -373,7 +373,7 @@ namespace Neon.Kube.Operator.ResourceManager
             {
                 if (e.Response.StatusCode == HttpStatusCode.Forbidden)
                 {
-                    logger?.LogErrorEx("Cannot watch resource, please check RBAC rules for this service account.");
+                    logger?.LogErrorEx($"Cannot watch type {typeof(TEntity)}, please check RBAC rules for the controller.");
 
                     throw;
                 }
