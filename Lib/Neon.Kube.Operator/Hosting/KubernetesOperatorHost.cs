@@ -18,6 +18,8 @@
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
+using System.CommandLine.Builder;
+using System.CommandLine.Parsing;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -27,10 +29,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using System.CommandLine.Builder;
-using System.CommandLine.Parsing;
-using Neon.Kube.Operator.Hosting.Commands.Generate;
-using Neon.Kube.Operator.Generators;
+
+using Neon.Kube.Operator.Commands.Generate;
 
 namespace Neon.Kube.Operator
 {
@@ -39,12 +39,18 @@ namespace Neon.Kube.Operator
     /// </summary>
     public class KubernetesOperatorHost : IKubernetesOperatorHost
     {
+        /// <inheritdoc/>
         public IHost Host { get; set; }
+        
         /// <inheritdoc/>
         public IHostBuilder HostBuilder { get; set; }
 
         private string[] args { get; set; }
 
+        /// <summary>
+        /// Consructor.
+        /// </summary>
+        /// <param name="args"></param>
         public KubernetesOperatorHost(string[] args = null)
         {
             this.args = args;

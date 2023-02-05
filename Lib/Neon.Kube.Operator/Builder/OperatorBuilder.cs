@@ -76,6 +76,7 @@ namespace Neon.Kube.Operator.Builder
                 Services.AddSingleton<IKubernetes>(k8s);
             }
 
+            Services.AddSingleton<OperatorSettings>(settings);
             Services.AddSingleton(settings.ResourceManagerOptions);
             Services.AddSingleton(componentRegister);
             Services.AddSingleton<IFinalizerBuilder, FinalizerBuilder>();

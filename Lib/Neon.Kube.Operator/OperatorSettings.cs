@@ -24,6 +24,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -40,6 +41,16 @@ namespace Neon.Kube.Operator
         public OperatorSettings()
         {
         }
+
+        /// <summary>
+        /// The Operator name. This defaults to a Kubernetes safe version of the Assembly name.
+        /// </summary>
+        public string Name { get; set; } = Regex.Replace(Assembly.GetEntryAssembly().GetName().Name, @"([a-z])([A-Z])", "$1-$2").ToLower();
+
+        /// <summary>
+        /// The Operator name. This defaults to a Kubernetes safe version of the Assembly name.
+        /// </summary>
+        public string Namespace { get; set; } = "default";
 
         /// <summary>
         /// The Kubernetes client configuration.

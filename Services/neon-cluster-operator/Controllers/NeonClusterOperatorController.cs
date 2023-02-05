@@ -85,13 +85,13 @@ namespace NeonClusterOperator
     /// removing tasks that don't belong to an existing node.
     /// </para>
     /// </remarks>
-    [Rbac<V1NeonClusterOperator>(RbacVerb.All, EntityScope.Cluster)]
-    [Rbac<V1Node>(RbacVerb.All, EntityScope.Cluster)]
-    [Rbac<V1NeonNodeTask>(RbacVerb.All, EntityScope.Cluster)]
-    [Rbac<V1Secret>(RbacVerb.Get | RbacVerb.Update, EntityScope.Namespaced, KubeNamespace.NeonSystem)]
-    [Rbac<V1Secret>(RbacVerb.Get | RbacVerb.Update, EntityScope.Namespaced, KubeNamespace.NeonIngress)]
-    [Rbac<V1NeonContainerRegistry>(RbacVerb.All, EntityScope.Cluster)]
-    [Rbac<V1ConfigMap>(RbacVerb.Get, EntityScope.Namespaced, KubeNamespace.NeonStatus)]
+    [RbacRule<V1NeonClusterOperator>(RbacVerb.All, EntityScope.Cluster)]
+    [RbacRule<V1Node>(RbacVerb.All, EntityScope.Cluster)]
+    [RbacRule<V1NeonNodeTask>(RbacVerb.All, EntityScope.Cluster)]
+    [RbacRule<V1Secret>(RbacVerb.Get | RbacVerb.Update, EntityScope.Namespaced, KubeNamespace.NeonSystem)]
+    [RbacRule<V1Secret>(RbacVerb.Get | RbacVerb.Update, EntityScope.Namespaced, KubeNamespace.NeonIngress)]
+    [RbacRule<V1NeonContainerRegistry>(RbacVerb.All, EntityScope.Cluster)]
+    [RbacRule<V1ConfigMap>(RbacVerb.Get, EntityScope.Namespaced, KubeNamespace.NeonStatus)]
     public class NeonClusterOperatorController : IResourceController<V1NeonClusterOperator>
     {
         //---------------------------------------------------------------------

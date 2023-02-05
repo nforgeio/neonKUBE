@@ -68,7 +68,7 @@ namespace NeonClusterOperator
     /// Manages <see cref="V1NeonDashboard"/> resources.
     /// </para>
     /// </summary>
-    [Rbac<V1NeonDashboard>(RbacVerb.All, EntityScope.Cluster)]
+    [RbacRule<V1NeonDashboard>(RbacVerb.All, EntityScope.Cluster)]
     public class NeonDashboardController : IResourceController<V1NeonDashboard>
     {
         //---------------------------------------------------------------------

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IHostExtensions.cs
+// FILE:	    IKubernetesOperatorHost.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -35,14 +35,24 @@ using k8s;
 namespace Neon.Kube.Operator
 {
     /// <summary>
-    /// Kubernetes operator <see cref="IHost"/> extension methods.
+    /// Kubernetes Operator Host.
     /// </summary>
     public interface IKubernetesOperatorHost
     {
+        /// <summary>
+        /// The host for the operator.
+        /// </summary>
         IHost Host { get; set; }
-        public IHostBuilder HostBuilder { get; set; }
 
+        /// <summary>
+        /// The host builder.
+        /// </summary>
+        IHostBuilder HostBuilder { get; set; }
+
+        /// <summary>
+        /// Run the Operator.
+        /// </summary>
+        /// <returns></returns>
         Task RunAsync();
-
     }
 }

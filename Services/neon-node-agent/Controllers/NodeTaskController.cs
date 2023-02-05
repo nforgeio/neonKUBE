@@ -67,7 +67,7 @@ namespace NeonNodeAgent
     /// </note>
     /// </remarks>
     [Controller(ignore: true)]
-    [Rbac<V1NeonNodeTask>(RbacVerb.All)]
+    [RbacRule<V1NeonNodeTask>(RbacVerb.All)]
     public class NodeTaskController : IResourceController<V1NeonNodeTask>
     {
         //---------------------------------------------------------------------

@@ -3,6 +3,9 @@ using k8s.Models;
 
 namespace TestOperator
 {
+    /// <summary>
+    /// V1ExampleEntity
+    /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
     public class V1ExampleEntity : IKubernetesObject<V1ObjectMeta>, ISpec<V1ExampleEntity.V1ExampleSpec>, IStatus<V1ExampleEntity.V1ExampleStatus>
     {
@@ -46,11 +49,17 @@ namespace TestOperator
         /// <inheritdoc/>
         public V1ExampleStatus Status { get; set; }
 
+        /// <summary>
+        /// V1ExampleSpec
+        /// </summary>
         public class V1ExampleSpec
         {
             public string Message { get; set; }
         }
 
+        /// <summary>
+        /// V1ExampleStatus
+        /// </summary>
         public class V1ExampleStatus
         {
             public string Message { get; set; }

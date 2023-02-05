@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IKubernetesOperatorHostBuilder.cs
+// FILE:	    CommandBase.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -17,35 +17,23 @@
 
 using System;
 using System.Collections.Generic;
+using System.CommandLine;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
-
-using Neon.Kube.Operator.Builder;
-
-using k8s.Models;
-using k8s;
-
-namespace Neon.Kube.Operator
+namespace Neon.Kube.Operator.Commands
 {
-    /// <summary>
-    /// Kubernetes Operator host builder.
-    /// </summary>
-    public interface IKubernetesOperatorHostBuilder
+    internal class CommandBase : Command
     {
-        internal void AddHostBuilder(IHostBuilder hostBuilder);
-        
-        /// <summary>
-        /// Build the host.
-        /// </summary>
-        /// <returns></returns>
-        IKubernetesOperatorHost Build();
+        protected CommandBase(string name, string description) : base(name, description)
+        {
+        }
+
+        protected int HandleCommand(string message)
+        {
+            Console.WriteLine(message);
+            return 0;
+        }
     }
 }

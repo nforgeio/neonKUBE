@@ -71,8 +71,8 @@ namespace NeonClusterOperator
     /// removing tasks that don't belong to an existing node.
     /// </para>
     /// </remarks>
-    [Rbac<V1NeonNodeTask>(RbacVerb.All, EntityScope.Cluster)]
-    [Rbac<V1Node>(RbacVerb.All, EntityScope.Cluster)]
+    [RbacRule<V1NeonNodeTask>(RbacVerb.All, EntityScope.Cluster)]
+    [RbacRule<V1Node>(RbacVerb.All, EntityScope.Cluster)]
     public class NodeTaskController : IResourceController<V1NeonNodeTask>
     {
         //---------------------------------------------------------------------

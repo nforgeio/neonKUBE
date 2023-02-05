@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IHostExtensions.cs
+// FILE:	    KubernetesOperatorExtensions.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -40,6 +40,12 @@ namespace Neon.Kube.Operator
     /// </summary>
     public static class KubernetesOperatorExtensions
     {
+        /// <summary>
+        /// Configures defaults for the Kubernetes Host.
+        /// </summary>
+        /// <param name="k8sBuilder"></param>
+        /// <param name="configure"></param>
+        /// <returns></returns>
         public static IKubernetesOperatorHostBuilder ConfigureHostDefaults(this IKubernetesOperatorHostBuilder k8sBuilder, Action<IHostBuilder> configure)
         {
             var hostBuilder = Host.CreateDefaultBuilder();
@@ -50,12 +56,22 @@ namespace Neon.Kube.Operator
             return k8sBuilder;
         }
 
+        /// <summary>
+        /// Builds the host.
+        /// </summary>
+        /// <param name="k8sBuilder"></param>
+        /// <returns></returns>
         public static IKubernetesOperatorHost Build(this IKubernetesOperatorHostBuilder k8sBuilder)
         {
             return k8sBuilder.Build();
         }
 
-        public static IKubernetesOperatorHostBuilder AddNeonKube(this IKubernetesOperatorHostBuilder builder)
+        /// <summary>
+        /// Configures the host for deployment in NeonKUBE clusters.
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <returns></returns>
+        public static IKubernetesOperatorHostBuilder ConfigureNeonKube(this IKubernetesOperatorHostBuilder builder)
         {
             return builder;
         }

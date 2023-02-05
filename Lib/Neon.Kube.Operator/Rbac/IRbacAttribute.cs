@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    RbacAttribute.cs
+// FILE:	    IRbacAttribute.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -25,10 +25,11 @@ using k8s.Models;
 
 namespace Neon.Kube.Operator.Rbac
 {
-    public interface IRbacAttribute
+    internal interface IRbacAttribute
     {
         RbacVerb Verbs { get; set; }
         EntityScope Scope { get; set; }
+        string ResourceNames { get; set; }
 
         string Namespace { get; set; }
         Type GetEntityType();

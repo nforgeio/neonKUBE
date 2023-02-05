@@ -274,19 +274,25 @@ namespace Neon.Kube.ClusterDef
 
             var controlPlaneMemory = (decimal)clusterDefinition.ControlNodes.First().Vm.GetMemory(clusterDefinition);
 
-            if (EvictionHard == null || !EvictionHard.ContainsKey("memory.available"))
+            EvictionHard = EvictionHard ?? new Dictionary<string, string>();
+
+            if (!EvictionHard.ContainsKey("memory.available"))
             {
                 EvictionHard["memory.available"] = new ResourceQuantity(controlPlaneMemory * 0.05m, 0, ResourceQuantity.SuffixFormat.BinarySI) .CanonicalizeString();
             }
 
-            if (SystemReserved == null|| !SystemReserved.ContainsKey("memory"))
+            SystemReserved = SystemReserved ?? new Dictionary<string, string>();
+
+            if (!SystemReserved.ContainsKey("memory"))
             {
                 var evictionHard = new ResourceQuantity(EvictionHard["memory.available"]);
 
                 SystemReserved["memory"] = new ResourceQuantity((controlPlaneMemory * 0.05m) + evictionHard.ToDecimal(), 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
             }
 
-            if (KubeReserved == null|| !KubeReserved.ContainsKey("memory"))
+            KubeReserved = KubeReserved ?? new Dictionary<string, string>();
+
+            if (!KubeReserved.ContainsKey("memory"))
             {
                 KubeReserved["memory"] = new ResourceQuantity(controlPlaneMemory * 0.05m, 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
             }

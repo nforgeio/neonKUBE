@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    RbacAttribute.cs
+// FILE:	    RbacRuleAttribute.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -29,7 +29,7 @@ namespace Neon.Kube.Operator.Rbac
     /// Used to exclude a component from assembly scanning when building the operator.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-    public class RbacAttribute<TEntity> : Attribute, IRbacAttribute
+    public class RbacRuleAttribute<TEntity> : Attribute, IRbacAttribute
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         /// <summary>
@@ -48,9 +48,15 @@ namespace Neon.Kube.Operator.Rbac
         public string Namespace { get; set; } = null;
 
         /// <summary>
+        /// Comma separated list of resource names. When specified, requests can be restricted to individual 
+        /// instances of a resource
+        /// </summary>
+        public string ResourceNames { get; set; } = null;
+
+        /// <summary>
         /// Constructor
         /// </summary>
-        public RbacAttribute(
+        public RbacRuleAttribute(
             RbacVerb verbs = RbacVerb.None,
             EntityScope scope = EntityScope.Namespaced,
             string @namespace = null)
@@ -60,11 +66,13 @@ namespace Neon.Kube.Operator.Rbac
             this.Namespace = @namespace;
         }
 
+        /// <inheritdoc/>
         public Type GetEntityType()
         {
             return typeof(TEntity);
         }
 
+        /// <inheritdoc/>
         public KubernetesEntityAttribute GetKubernetesEntityAttribute()
         {
             return GetEntityType().GetKubernetesTypeMetadata();

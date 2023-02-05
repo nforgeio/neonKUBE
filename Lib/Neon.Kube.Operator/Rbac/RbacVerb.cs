@@ -18,9 +18,6 @@
 using System;
 using System.Collections.Generic;
 
-using k8s;
-using k8s.Models;
-
 namespace Neon.Kube.Operator.Rbac
 {
     /// <summary>

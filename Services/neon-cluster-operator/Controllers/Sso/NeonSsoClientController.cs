@@ -72,8 +72,8 @@ namespace NeonClusterOperator
     /// Configures Neon SSO using <see cref="V1NeonSsoClient"/>.
     /// </para>
     /// </summary>
-    [Rbac<V1NeonSsoClient>(RbacVerb.All, EntityScope.Cluster)]
-    [Rbac<V1ConfigMap>(RbacVerb.Get | RbacVerb.Update, EntityScope.Namespaced, KubeNamespace.NeonSystem)]
+    [RbacRule<V1NeonSsoClient>(RbacVerb.All, EntityScope.Cluster)]
+    [RbacRule<V1ConfigMap>(RbacVerb.Get | RbacVerb.Update, EntityScope.Namespaced, KubeNamespace.NeonSystem)]
     public class NeonSsoClientController : IResourceController<V1NeonSsoClient>
     {
         //---------------------------------------------------------------------

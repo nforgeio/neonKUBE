@@ -18,12 +18,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using k8s;
-using k8s.Models;
 
 namespace Neon.Kube.Operator.Rbac
 {
-    public static class VerbExtensions
+    internal static class VerbExtensions
     {
         public static IList<string> ToStrings(this RbacVerb verb)
         {
