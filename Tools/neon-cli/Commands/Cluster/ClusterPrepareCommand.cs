@@ -205,6 +205,11 @@ OPTIONS:
             var useStaged         = commandLine.HasOption("--use-staged");
             var stageBranch       = commandLine.GetOption("--use-staged", KubeVersions.BuildBranch);
 
+            if (useStaged && string.IsNullOrEmpty(stageBranch))
+            {
+                stageBranch = KubeVersions.BuildBranch;
+            }
+
             if (!int.TryParse(maxParallelOption, out var maxParallel) || maxParallel <= 0)
             {
                 Console.Error.WriteLine($"*** ERROR: [--max-parallel={maxParallelOption}] is not valid.");

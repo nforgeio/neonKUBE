@@ -346,7 +346,7 @@ namespace Neon.Kube.Hosting.XenServer
                 MaxParallel = this.MaxParallel
             };
 
-            xenController.AddGlobalStep("initialize",
+            xenController.AddGlobalStep("check xenserver",
                 controller =>
                 {
                     var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);

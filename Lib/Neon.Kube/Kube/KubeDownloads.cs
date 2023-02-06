@@ -180,7 +180,7 @@ namespace Neon.Kube
         /// <para>
         /// Otherwise, <paramref name="stageBranch"/> should be passed as the name of the branch
         /// from which the <b>Neon.Kube</b> libraries were built.  In this case, this
-        /// method will return a URI to the staged node image also build from that branch.
+        /// method will return a URI to the staged node image built from that branch.
         /// </para>
         /// <para>
         /// For non-release branches, this method will append a dot and the branch name
@@ -226,7 +226,7 @@ namespace Neon.Kube
         /// <para>
         /// Otherwise, <paramref name="stageBranch"/> should be passed as the name of the branch
         /// from which the <b>Neon.Kube</b> libraries were built.  In this case, this
-        /// method will return a URI to the staged desktop image also build from that branch.
+        /// method will return a URI to the staged desktop image built from that branch.
         /// </para>
         /// <para>
         /// For non-release branches, this method will append a dot and the branch name

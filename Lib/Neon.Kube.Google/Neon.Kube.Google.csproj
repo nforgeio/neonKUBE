@@ -1,39 +1,39 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
-        <OutputType>Library</OutputType>
-        <RootNamespace>Neon.Kube.Hosting.Google</RootNamespace>
-        <Version>10000.0.2236-dev-master</Version>
-        <Description>INTERNAL USE ONLY: neonKUBE hosting manager for Google Cloud.</Description>
-        <PackageLicenseFile>LICENSE</PackageLicenseFile>
-        <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
-        <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Google/README.md</PackageProjectUrl>
-        <RepositoryType>git</RepositoryType>
-        <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
-        <Configurations>Debug;Release</Configurations>
-        <PackageIcon>nuget-icon.png</PackageIcon>
-        <PackageTags>kubernetes</PackageTags>
-    </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<OutputType>Library</OutputType>
+		<RootNamespace>Neon.Kube.Hosting.Google</RootNamespace>
+		<Version>10000.0.2236-dev-master</Version>
+		<Description>INTERNAL USE ONLY: neonKUBE hosting manager for Google Cloud.</Description>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
+		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Google/README.md</PackageProjectUrl>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
+		<Configurations>Debug;Release</Configurations>
+		<PackageIcon>nuget-icon.png</PackageIcon>
+		<PackageTags>kubernetes</PackageTags>
+	</PropertyGroup>
 
-    <ItemGroup>
-        <Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
-        <Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
-    </ItemGroup>
+	<ItemGroup>
+		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+	</ItemGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
-        <ProjectReference Include="..\Neon.Kube.GrpcProto\Neon.Kube.GrpcProto.csproj" />
-        <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
-    </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
+		<ProjectReference Include="..\Neon.Kube.GrpcProto\Neon.Kube.GrpcProto.csproj" />
+		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
+	</ItemGroup>
 
-    <ItemGroup>
-        <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
-        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
-    </ItemGroup>
+	<ItemGroup>
+		<None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+	</ItemGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Neon.Common" Version="10000.0.2777-dev-master" />
-    </ItemGroup>
+	<ItemGroup>
+	  <PackageReference Include="Neon.Common" Version="10000.0.2785-dev-master" />
+	</ItemGroup>
 
 </Project>

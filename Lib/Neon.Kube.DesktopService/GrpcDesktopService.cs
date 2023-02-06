@@ -518,23 +518,6 @@ namespace Neon.Kube.DesktopService
         }
 
         /// <inheritdoc/>
-        public async Task<GrpcBaseReply> ModifyLocalHosts(GrpcModifyLocalHostsRequest request, CallContext context = default)
-        {
-            await SyncContext.Clear;
-
-            try
-            {
-                NetHelper.ModifyLocalHosts(request.Section, request.HostEntries);
-
-                return await Task.FromResult(new GrpcBaseReply());
-            }
-            catch (Exception e)
-            {
-                return new GrpcBaseReply(e);
-            }
-        }
-
-        /// <inheritdoc/>
         public async Task<GrpcListLocalHostsSectionsReply> ListLocalHostSections(GrpcListLocalHostsSectionsRequest request, CallContext context = default)
         {
             await SyncContext.Clear;

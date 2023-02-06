@@ -30,6 +30,7 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.Kube;
+using Neon.Kube.Hosting;
 
 namespace NeonCli
 {
@@ -94,6 +95,8 @@ USAGE:
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
+            HostingLoader.Initialize();
+
             var current = KubeHelper.CurrentContext;
             var logins  = new List<LoginInfo>();
 

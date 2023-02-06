@@ -1,49 +1,49 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
-        <OutputType>Library</OutputType>
-        <RootNamespace>Neon.Kube.Xunit</RootNamespace>
-        <PackageId>Neon.Kube.Xunit</PackageId>
-        <Version>10000.0.2236-dev-master</Version>
-        <Description>INTERNAL USE ONLY: Xunit extensions for neonKUBE</Description>
-        <PackageLicenseFile>LICENSE</PackageLicenseFile>
-        <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
-        <IsPackable>true</IsPackable>
-        <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Xunit/README.md</PackageProjectUrl>
-        <RepositoryType>git</RepositoryType>
-        <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
-        <Configurations>Debug;Release</Configurations>
-        <PackageIcon>nuget-icon.png</PackageIcon>
-        <PackageTags>xunit kubernetes</PackageTags>
-    </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<OutputType>Library</OutputType>
+		<RootNamespace>Neon.Kube.Xunit</RootNamespace>
+		<PackageId>Neon.Kube.Xunit</PackageId>
+		<Version>10000.0.2236-dev-master</Version>
+		<Description>INTERNAL USE ONLY: Xunit extensions for neonKUBE</Description>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
+		<IsPackable>true</IsPackable>
+		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Xunit/README.md</PackageProjectUrl>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
+		<Configurations>Debug;Release</Configurations>
+		<PackageIcon>nuget-icon.png</PackageIcon>
+		<PackageTags>xunit kubernetes</PackageTags>
+	</PropertyGroup>
 
-    <ItemGroup>
-        <Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
-        <Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
-    </ItemGroup>
+	<ItemGroup>
+		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+	</ItemGroup>
 
-    <ItemGroup>
-        <PackageReference Include="KubernetesClient" Version="9.0.38" />
-        <PackageReference Include="Neon.Common" Version="10000.0.2777-dev-master" />
-        <PackageReference Include="Neon.Deployment" Version="10000.0.2777-dev-master" />
-        <PackageReference Include="Neon.SSH" Version="10000.0.2777-dev-master" />
-        <PackageReference Include="Neon.Xunit" Version="10000.0.2777-dev-master" />
-        <PackageReference Include="xunit.extensibility.core" Version="2.4.2" />
-        <PackageReference Include="xunit.extensibility.execution" Version="2.4.2" />
-        <PackageReference Include="YamlDotNet" Version="12.0.2" />
-    </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="KubernetesClient" Version="9.0.38" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2785-dev-master" />
+		<PackageReference Include="Neon.Deployment" Version="10000.0.2785-dev-master" />
+		<PackageReference Include="Neon.SSH" Version="10000.0.2785-dev-master" />
+		<PackageReference Include="Neon.Xunit" Version="10000.0.2785-dev-master" />
+		<PackageReference Include="xunit.extensibility.core" Version="2.4.2" />
+		<PackageReference Include="xunit.extensibility.execution" Version="2.4.2" />
+		<PackageReference Include="YamlDotNet" Version="12.0.2" />
+	</ItemGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
-        <ProjectReference Include="..\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
-        <ProjectReference Include="..\Neon.Kube.Setup\Neon.Kube.Setup.csproj" />
-        <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
-    </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
+		<ProjectReference Include="..\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
+		<ProjectReference Include="..\Neon.Kube.Setup\Neon.Kube.Setup.csproj" />
+		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
+	</ItemGroup>
 
-    <ItemGroup>
-        <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
-        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
-    </ItemGroup>
+	<ItemGroup>
+		<None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+	</ItemGroup>
 
 </Project>

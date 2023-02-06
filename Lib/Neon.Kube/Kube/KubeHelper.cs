@@ -82,6 +82,8 @@ namespace Neon.Kube
         private static KubeClientConfig     cachedClientConfig;
         private static string               cachedInstallFolder;
         private static string               cachedToolsFolder;
+        private static string               cachedDevopmentFolder;
+        private static string               cachedNodeContainerImagesFolder;
         private static string               cachedPwshPath;
         private static IStaticDirectory     cachedResources;
         private static string               cachedVmImageFolder;
@@ -100,26 +102,28 @@ namespace Neon.Kube
         /// </summary>
         private static void ClearCachedItems()
         {
-            cachedConfig              = null;
-            cachedContext             = null;
-            cachedNeonKubeUserFolder  = null;
-            cachedRunFolder           = null;
-            cachedLogFolder           = null;
-            cachedLogDetailsFolder    = null;
-            cachedTempFolder          = null;
-            cachedLoginsFolder        = null;
-            cachedPasswordsFolder     = null;
-            cachedCacheFolder         = null;
-            cachedDesktopCommonFolder = null;
-            cachedDesktopFolder       = null;
-            cachedDesktopHypervFolder = null;
-            cachedClientConfig        = null;
-            cachedInstallFolder       = null;
-            cachedToolsFolder         = null;
-            cachedPwshPath            = null;
-            cachedResources           = null;
-            cachedVmImageFolder       = null;
-            cachedUserSshFolder       = null;
+            cachedConfig                    = null;
+            cachedContext                   = null;
+            cachedNeonKubeUserFolder        = null;
+            cachedRunFolder                 = null;
+            cachedLogFolder                 = null;
+            cachedLogDetailsFolder          = null;
+            cachedTempFolder                = null;
+            cachedLoginsFolder              = null;
+            cachedPasswordsFolder           = null;
+            cachedCacheFolder               = null;
+            cachedDesktopCommonFolder       = null;
+            cachedDesktopFolder             = null;
+            cachedDesktopHypervFolder       = null;
+            cachedClientConfig              = null;
+            cachedInstallFolder             = null;
+            cachedToolsFolder               = null;
+            cachedDevopmentFolder           = null;
+            cachedNodeContainerImagesFolder = null;
+            cachedPwshPath                  = null;
+            cachedResources                 = null;
+            cachedVmImageFolder             = null;
+            cachedUserSshFolder             = null;
         }
 
         /// <summary>
@@ -287,9 +291,11 @@ namespace Neon.Kube
         {
             get
             {
-                Directory.CreateDirectory(NeonHelper.UserHomeFolder);
+                var neonKubeHomeFolder = Path.Combine(NeonHelper.UserHomeFolder, ".neonkube");
+
+                Directory.CreateDirectory(neonKubeHomeFolder);
                 
-                return NeonHelper.UserHomeFolder;
+                return neonKubeHomeFolder;
             }
         }
 
@@ -667,6 +673,51 @@ namespace Neon.Kube
                 Directory.CreateDirectory(path);
 
                 return cachedToolsFolder = path;
+            }
+        }
+
+        /// <summary>
+        /// Returns the path the folder used by neonKUBE development tools, 
+        /// creating the folder if it doesn't already exist.
+        /// </summary>
+        /// <returns>The folder path.</returns>
+        public static string DevelopmentFolder
+        {
+            get
+            {
+                if (cachedDevopmentFolder != null)
+                {
+                    return cachedDevopmentFolder;
+                }
+
+                var path = Path.Combine(NeonHelper.UserHomeFolder, ".neonkube-dev");
+
+                Directory.CreateDirectory(path);
+
+                return cachedDevopmentFolder = path;
+            }
+        }
+
+        /// <summary>
+        /// Returns the path the folder used by neonKUBE development tools to
+        /// cache packed container image files used to prepare neonKUBE node
+        /// images, creating the folder if it doesn't already exist.
+        /// </summary>
+        /// <returns>The folder path.</returns>
+        public static string NodeContainerImagesFolder
+        {
+            get
+            {
+                if (cachedNodeContainerImagesFolder != null)
+                {
+                    return cachedNodeContainerImagesFolder;
+                }
+
+                var path = Path.Combine(DevelopmentFolder, "node-container-images");
+
+                Directory.CreateDirectory(path);
+
+                return cachedNodeContainerImagesFolder = path;
             }
         }
 
@@ -1887,7 +1938,6 @@ mountFolder=${{1}}
 # https://github.com/nforgeio/neonKUBE/issues/980
 
 sleep 10
-
 {changePasswordScript}
 #------------------------------------------------------------------------------
 # Configure the network.
