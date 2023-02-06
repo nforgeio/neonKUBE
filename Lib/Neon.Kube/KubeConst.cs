@@ -430,5 +430,11 @@ namespace Neon.Kube
         /// The maximum label length allowed.
         /// </summary>
         public const byte MaxLabelLength = 63;
+
+        /// <summary>
+        /// Returns the remote path on the virtual machine where the packed container
+        /// images file will be uploaded when creating a node image.
+        /// </summary>
+        public const string RemoteNodePackedImagePath = "/tmp/container-images.tar.gz";
     }
 }
