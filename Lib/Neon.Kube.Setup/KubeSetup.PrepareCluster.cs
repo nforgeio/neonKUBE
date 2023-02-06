@@ -480,19 +480,18 @@ namespace Neon.Kube.Setup
                     }
 
                     // For the built-in desktop cluster, add these records to both the
-                    // node's local [/etc/hosts] file as well as the host file for the
-                    // local workstation:
+                    // node's local [/etc/hosts] file.  Note that the node is named
+                    // "neon-desktop".
                     //
-                    //      ADDRESS     desktop.neoncluster.io
-                    //      ADDRESS     *.desktop.neoncluster.io
+                    //      ADDRESS     neon-desktop.neoncluster.io
+                    //      ADDRESS     *.neon-desktop.neoncluster.io
 
                     if (options.DesktopReadyToGo)
                     {
                         controller.SetGlobalStepStatus($"configure: node local DNS");
 
-                        var node                = cluster.Nodes.Single();
-                        var sbHosts             = new StringBuilder(node.DownloadText("/etc/hosts"));
-                        var desktopServiceProxy = controller.Get<DesktopServiceProxy>(KubeSetupProperty.DesktopServiceProxy);
+                        var node    = cluster.Nodes.Single();
+                        var sbHosts = new StringBuilder(node.DownloadText("/etc/hosts"));
 
                         sbHosts.AppendLineLinux($"{hostAddress} {hostName}");
                         sbHosts.AppendLineLinux($"{hostAddress} *.{hostName}");
