@@ -29,6 +29,7 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Operator;
 using Neon.Kube.Operator.Attributes;
 using Neon.Kube.Operator.ResourceManager;
 using Neon.Kube.Operator.Controller;
@@ -42,12 +43,6 @@ using Neon.Time;
 using k8s;
 using k8s.Models;
 
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Prometheus;
-using System.Xml.Linq;
-using Amazon.Runtime.Internal.Transform;
-using Neon.Kube.Operator;
 
 namespace Test.Neon.Kube.Operator
 {
