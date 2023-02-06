@@ -35,48 +35,39 @@ using k8s;
 using Neon.Common;
 using Neon.Kube.Resources.CertManager;
 
-namespace Neon.Kube.Operator
+namespace Neon.Kube.Operator.Xunit
 {
 
     /// <inheritdoc/>
-    public class KubernetesOperatorHostBuilder : IKubernetesOperatorHostBuilder
+    public class KubernetesOperatorTestHostBuilder : IKubernetesOperatorHostBuilder
     {
-        private KubernetesOperatorHost operatorHost;
+        internal IServiceCollection Services { get; set; }
+        
+        private KubernetesOperatorTestHost operatorHost;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public KubernetesOperatorHostBuilder(string[] args = null)
+        public KubernetesOperatorTestHostBuilder(string[] args = null)
         {
-            this.operatorHost = new KubernetesOperatorHost(args);
+            this.operatorHost = new KubernetesOperatorTestHost(args);
+            this.Services     = new ServiceCollection();
         }
 
         /// <inheritdoc/>
         public IKubernetesOperatorHost Build()
         {
             this.operatorHost.HostBuilder = Host.CreateDefaultBuilder();
-            
-            this.operatorHost.HostBuilder.ConfigureWebHost(
-                webhost =>
-                    webhost.ConfigureServices(services =>
-                    {
-                        services.AddSingleton<OperatorSettings>(this.operatorHost.OperatorSettings);
-                        services.AddSingleton<CertManagerOptions>(this.operatorHost.CertManagerOptions);
-                    })
-                    .UseKestrel(options =>
-                    {
-                        options.ConfigureEndpointDefaults(o =>
-                        {
-                            if (!NeonHelper.IsDevWorkstation)
-                            {
-                                o.UseHttps(this.operatorHost.Certificate);
-                            }
-                        });
-                        options.Listen(this.operatorHost.OperatorSettings.ListenAddress, this.operatorHost.OperatorSettings.Port);
-                    })
-                    .UseStartup(this.operatorHost.StartupType)
-                );
 
+            this.operatorHost.HostBuilder.ConfigureServices(services =>
+                    {
+                        foreach (var s in Services)
+                        {
+                            services.Add(s);
+                        }
+                    });
+
+            this.operatorHost.Host = this.operatorHost.HostBuilder.Build();
             return operatorHost;
         }
 

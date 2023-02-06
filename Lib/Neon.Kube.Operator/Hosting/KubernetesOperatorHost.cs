@@ -94,6 +94,69 @@ namespace Neon.Kube.Operator
         }
 
         /// <inheritdoc/>
+        public void Run()
+        {
+            if (CertManagerOptions != null)
+            {
+                OperatorSettings.certManagerEnabled = true;
+            }
+
+            if (args.Count() == 0)
+            {
+                Host = HostBuilder.Build();
+                logger = Host.Services.GetService<ILoggerFactory>()?.CreateLogger<KubernetesOperatorHost>();
+
+                if (NeonHelper.IsDevWorkstation ||
+                    Debugger.IsAttached)
+                {
+                    k8s = new Kubernetes(
+                        KubernetesClientConfiguration.BuildDefaultConfig(),
+                        new KubernetesRetryHandler());
+                    ConfigureRbacAsync().RunSynchronously();
+                }
+
+                k8s = Host.Services.GetRequiredService<IKubernetes>();
+
+                if (OperatorSettings.certManagerEnabled)
+                {
+                    CheckCertificateAsync().RunSynchronously();
+                }
+
+                Host.Start();
+
+                return;
+            }
+
+            HostBuilder.ConfigureServices(services =>
+            {
+                services.AddSingleton<OperatorSettings>(OperatorSettings);
+                services.AddSingleton<GenerateCommand>();
+                services.AddSingleton<GenerateCommandBase, GenerateRbacCommand>();
+            });
+
+            Host = HostBuilder.Build();
+
+            // Build the commands from what's registered in the DI container
+            var rootCommand = new RootCommand();
+            foreach (Command command in Host.Services.GetServices<GenerateCommand>())
+            {
+                rootCommand.AddCommand(command);
+            }
+
+            var generateCommand = Host.Services.GetService<GenerateCommand>();
+            foreach (Command command in Host.Services.GetServices<GenerateCommandBase>())
+            {
+                generateCommand.AddCommand(command);
+            }
+
+            var commandLineBuilder = new CommandLineBuilder(rootCommand);
+            Parser parser = commandLineBuilder.UseDefaults().Build();
+
+            // Invoke the command line parser which then invokes the respective command handlers
+            parser.Invoke(args);
+        }
+
+        /// <inheritdoc/>
         public async Task RunAsync()
         {
             if (CertManagerOptions != null)
@@ -117,9 +180,14 @@ namespace Neon.Kube.Operator
 
                 k8s    = Host.Services.GetRequiredService<IKubernetes>();
 
-                await CheckCertificateAsync();
+                if (OperatorSettings.certManagerEnabled)
+                {
+                    await CheckCertificateAsync();
+                }
 
                 await Host.RunAsync();
+
+                return;
             }
 
             HostBuilder.ConfigureServices(services =>
@@ -165,7 +233,7 @@ namespace Neon.Kube.Operator
                 {
                     Metadata = new V1ObjectMeta()
                     {
-                        Name = OperatorSettings.Name,
+                        Name              = OperatorSettings.Name,
                         NamespaceProperty = OperatorSettings.Namespace,
                         Labels = new Dictionary<string, string>()
                         {

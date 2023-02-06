@@ -32,10 +32,9 @@ using Neon.Kube.Operator.Webhook;
 
 using k8s;
 using k8s.Models;
+using Neon.Kube.Operator.Rbac;
 
-using Quartz.Logging;
-
-namespace NeonClusterOperator
+namespace TestOperator
 {
     /// <summary>
     /// Webhook to set priority classes on neon pods.
@@ -46,10 +45,11 @@ namespace NeonClusterOperator
         failurePolicy: "Ignore")]
     [WebhookRule(
         apiGroups: V1Pod.KubeGroup,
-        apiVersions: V1Pod.KubeApiVersion, 
-        operations: AdmissionOperations.Create | AdmissionOperations.Update, 
+        apiVersions: V1Pod.KubeApiVersion,
+        operations: AdmissionOperations.Create | AdmissionOperations.Update,
         resources: V1Pod.KubePluralName,
         scope: "*")]
+    [RbacRule<V1Pod>(Verbs = RbacVerb.All, Scope = Neon.Kube.Resources.EntityScope.Cluster)]
     public class PodWebhook : IMutatingWebhook<V1Pod>
     {
         private ILogger<IMutatingWebhook<V1Pod>> logger { get; set; }
@@ -150,7 +150,7 @@ namespace NeonClusterOperator
                     }
                 }
             }
-            catch (Exception e) 
+            catch (Exception e)
             {
                 logger?.LogErrorEx(e);
             }

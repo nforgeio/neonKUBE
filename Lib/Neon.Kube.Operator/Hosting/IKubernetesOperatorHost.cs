@@ -76,5 +76,11 @@ namespace Neon.Kube.Operator
         /// </summary>
         /// <returns></returns>
         Task RunAsync();
+
+        /// <summary>
+        /// Run the Operator.
+        /// </summary>
+        /// <returns></returns>
+        void Run();
     }
 }

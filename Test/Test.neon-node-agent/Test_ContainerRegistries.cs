@@ -38,10 +38,6 @@ namespace TestNeonNodeAgent
         {
             this.fixture = fixture;
 
-            var service = new Service(KubeService.NeonNodeAgent);
-            service.SetEnvironmentVariable("CONTAINERREGISTRY_RELOGIN_INTERVAL", TimeSpan.FromHours(1).ToString());
-            service.SetConfigFile(ContainerRegistryController.configMountPath, "");
-            fixture.Operator.Services.AddSingleton(service);
             fixture.Operator.AddController<ContainerRegistryController>();
             fixture.Start();
         }

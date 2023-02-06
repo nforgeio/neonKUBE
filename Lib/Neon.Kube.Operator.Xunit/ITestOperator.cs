@@ -36,11 +36,6 @@ namespace Neon.Kube.Operator.Xunit
     public interface ITestOperator
     {
         /// <summary>
-        /// The service collection.
-        /// </summary>
-        IServiceCollection Services { get; }
-        
-        /// <summary>
         /// Starts the operator.
         /// </summary>
         /// <returns></returns>

@@ -19,9 +19,6 @@ namespace TestOperator
     /// Example controller
     /// </summary>
     [RbacRule<V1ExampleEntity>(RbacVerb.All, Neon.Kube.Resources.EntityScope.Cluster)]
-    [RbacRule<V1ServiceAccount>(RbacVerb.List | RbacVerb.Create, Neon.Kube.Resources.EntityScope.Cluster)]
-    [RbacRule<V1Pod>(RbacVerb.Get | RbacVerb.Watch | RbacVerb.Patch, Neon.Kube.Resources.EntityScope.Namespaced, @namespace: "default")]
-    [RbacRule<V1ConfigMap>(RbacVerb.Get | RbacVerb.Watch, Neon.Kube.Resources.EntityScope.Namespaced, @namespace: "default")]
     public class ExampleController : IResourceController<V1ExampleEntity>
     {
         private readonly IKubernetes k8s;

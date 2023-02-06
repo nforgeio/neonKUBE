@@ -42,21 +42,11 @@ namespace Neon.Kube.Operator
     public static class KubernetesOperatorExtensions
     {
         /// <summary>
-        /// Configures defaults for the Kubernetes Host.
+        /// Configures the Kubernetes Operator.
         /// </summary>
         /// <param name="k8sBuilder"></param>
         /// <param name="configure"></param>
         /// <returns></returns>
-        public static IKubernetesOperatorHostBuilder ConfigureHostDefaults(this IKubernetesOperatorHostBuilder k8sBuilder, Action<IHostBuilder> configure)
-        {
-            var hostBuilder = Host.CreateDefaultBuilder();
-
-            configure?.Invoke(hostBuilder);
-            k8sBuilder.AddHostBuilder(hostBuilder);
-
-            return k8sBuilder;
-        }
-
         public static IKubernetesOperatorHostBuilder ConfigureOperator(this IKubernetesOperatorHostBuilder k8sBuilder, Action<OperatorSettings> configure = null)
         {
             var operatorSettings = new OperatorSettings();
@@ -80,13 +70,12 @@ namespace Neon.Kube.Operator
         /// <summary>
         /// Configures the host for deployment in NeonKUBE clusters.
         /// </summary>
-        /// <param name="builder"></param>
+        /// <param name="k8sBuilder"></param>
         /// <returns></returns>
         public static IKubernetesOperatorHostBuilder ConfigureNeonKube(this IKubernetesOperatorHostBuilder k8sBuilder)
         {
             k8sBuilder.ConfigureCertManager(configure =>
             {
-                configure.Namespace = KubeNamespace.NeonIngress;
                 configure.CertificateDuration = TimeSpan.FromDays(90);
                 configure.IssuerRef = new Resources.CertManager.IssuerRef()
                 {
@@ -102,8 +91,11 @@ namespace Neon.Kube.Operator
         /// Configures the host for deployment in NeonKUBE clusters.
         /// </summary>
         /// <param name="k8sBuilder"></param>
+        /// <param name="configure"></param>
         /// <returns></returns>
-        public static IKubernetesOperatorHostBuilder ConfigureCertManager(this IKubernetesOperatorHostBuilder k8sBuilder, Action<CertManagerOptions> configure)
+        public static IKubernetesOperatorHostBuilder ConfigureCertManager(
+            this IKubernetesOperatorHostBuilder k8sBuilder,
+            Action<CertManagerOptions> configure)
         {
             var certManagerOptions = new CertManagerOptions();
 
@@ -113,6 +105,12 @@ namespace Neon.Kube.Operator
             return k8sBuilder;
         }
 
+        /// <summary>
+        /// Configures the startup class to use.
+        /// </summary>
+        /// <typeparam name="TStartup"></typeparam>
+        /// <param name="k8sBuilder"></param>
+        /// <returns></returns>
         public static IKubernetesOperatorHostBuilder UseStartup<TStartup>(this IKubernetesOperatorHostBuilder k8sBuilder)
         {
             k8sBuilder.UseStartup<TStartup>();

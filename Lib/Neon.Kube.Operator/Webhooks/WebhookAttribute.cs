@@ -35,9 +35,6 @@ namespace Neon.Kube.Operator.Webhook
         /// Constructor.
         /// </summary>
         /// <param name="name"></param>
-        /// <param name="serviceName"></param>
-        /// <param name="namespace"></param>
-        /// <param name="certificate"></param>
         /// <param name="admissionReviewVersions"></param>
         /// <param name="failurePolicy"></param>
         /// <param name="sideEffects"></param>
@@ -48,9 +45,6 @@ namespace Neon.Kube.Operator.Webhook
         public WebhookAttribute(
             string name,
             string admissionReviewVersions,
-            string serviceName = null,
-            string @namespace = null,
-            string certificate = null,
             string failurePolicy = "Fail", 
             string sideEffects = "None", 
             int timeoutSeconds = 5,
@@ -59,9 +53,6 @@ namespace Neon.Kube.Operator.Webhook
             string url = null)
         {
             Name = name;
-            ServiceName = serviceName;
-            Namespace = @namespace;
-            Certificate = certificate;
             AdmissionReviewVersions = admissionReviewVersions.Split(',');
             FailurePolicy = failurePolicy;
             SideEffects = sideEffects;
@@ -76,21 +67,6 @@ namespace Neon.Kube.Operator.Webhook
         /// where "imagepolicy" is the name of the webhook, and kubernetes.io is the name of the organization. 
         /// </summary>
         public string Name { get; }
-
-        /// <summary>
-        /// The kubernetes service name for the webhook.
-        /// </summary>
-        public string ServiceName { get; }
-
-        /// <summary>
-        /// The namespace where the webhook is deployed.
-        /// </summary>
-        public string Namespace { get; }
-
-        /// <summary>
-        /// The certificate name. Formatted as namespace/name.
-        /// </summary>
-        public string Certificate { get; }
 
         /// <summary>
         /// <para>

@@ -41,7 +41,6 @@ namespace Neon.Kube.Operator
         /// Adds Kubernetes operator to the service collection.
         /// </summary>
         /// <param name="services">The <see cref="IServiceCollection"/></param>
-        /// <param name="options">Optional action to configure </param>
         /// <returns></returns>
         public static IOperatorBuilder AddKubernetesOperator(
             this IServiceCollection services)

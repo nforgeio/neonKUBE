@@ -37,16 +37,12 @@ namespace Neon.Kube.Operator.Xunit
     /// <inheritdoc/>
     public class TestOperator : ITestOperator
     {
-        private IHost host { get; set; }
-        private IHostBuilder hostBuilder { get; set; }
+        private KubernetesOperatorTestHost host { get; set; }
+        private KubernetesOperatorTestHostBuilder hostBuilder { get; set; }
 
         private KubernetesClientConfiguration k8sConfig { get; set; }
 
-        /// <inheritdoc/>
-        public IServiceCollection Services { get; }
-
-        /// <inheritdoc/>
-        public IOperatorBuilder Builder { get; }
+        private IOperatorBuilder operatorBuilder { get; set; }
 
         /// <summary>
         /// Constructor.
@@ -54,100 +50,97 @@ namespace Neon.Kube.Operator.Xunit
         /// <param name="k8sConfig"></param>
         public TestOperator(KubernetesClientConfiguration k8sConfig)
         {
-            this.Services = new ServiceCollection();
-            this.Builder = this.Services.AddKubernetesOperator(options =>
+            var operatorSettings = new OperatorSettings()
             {
-                options.AssemblyScanningEnabled = false;
-                options.KubernetesClientConfiguration = k8sConfig;
-            });
+                Port = 1234,
+                AssemblyScanningEnabled = false,
+                Name = "my-cool-operator",
+                Namespace = "default",
+                KubernetesClientConfiguration = k8sConfig
+            };
+
+            hostBuilder = (KubernetesOperatorTestHostBuilder)KubernetesOperatorTestHost
+                .CreateDefaultBuilder()
+                .ConfigureOperator(configure =>
+                {
+                    configure.AssemblyScanningEnabled = operatorSettings.AssemblyScanningEnabled;
+                    configure.KubernetesClientConfiguration = operatorSettings.KubernetesClientConfiguration;
+                });
+
+            hostBuilder.Services.AddSingleton(operatorSettings);
+
+            operatorBuilder = hostBuilder.Services.AddKubernetesOperator();
         }
 
         /// <inheritdoc/>
         public IOperatorBuilder AddController<T>()
             where T : class
         {
-            return Builder.AddController<T>(leaderElectionDisabled: true);
+            return operatorBuilder.AddController<T>(leaderElectionDisabled: true);
         }
 
         /// <inheritdoc/>
         public IOperatorBuilder AddFinalizer<T>()
             where T : class
         {
-            return Builder.AddFinalizer<T>();
+            return operatorBuilder.AddFinalizer<T>();
         }
 
         /// <inheritdoc/>
         public IOperatorBuilder AddMutatingWebhook<T>()
             where T : class
         {
-            return Builder.AddMutatingWebhook<T>();
+            return operatorBuilder.AddMutatingWebhook<T>();
         }
 
         /// <inheritdoc/>
         public IOperatorBuilder AddValidatingWebhook<T>()
             where T : class
         {
-            return Builder.AddValidatingWebhook<T>();
+            return operatorBuilder.AddValidatingWebhook<T>();
         }
 
         /// <inheritdoc/>
         public IOperatorBuilder AddNgrokTunnnel()
         {
-            return Builder.AddNgrokTunnnel();
+            return operatorBuilder.AddNgrokTunnnel();
         }
 
         /// <inheritdoc/>
         public async Task StartAsync()
         {
-            this.hostBuilder = new HostBuilder()
-                .ConfigureServices(services =>
-                {
-                    foreach (var s in Services)
-                    {
-                        services.Add(s);
-                    }
-                });
-            this.host = hostBuilder.Build();
-            await host.StartAsync();
+            await host.RunAsync();
         }
 
         /// <inheritdoc/>
         public void Start()
         {
-            this.hostBuilder = new HostBuilder()
-                .ConfigureServices(services =>
-                {
-                    foreach (var s in Services)
-                    {
-                        services.Add(s);
-                    }
-                });
-            this.host = hostBuilder.Build();
-            this.host.Start();
+            host = (KubernetesOperatorTestHost)hostBuilder.Build();
+            host.Host.Start();
         }
 
         /// <inheritdoc/>
         public T GetController<T>()
         {
-            return host.Services.GetService<T>();
+            return host.Host.Services.GetService<T>();
         }
 
         /// <inheritdoc/>
         public T GetFinalizer<T>()
         {
-            return host.Services.GetService<T>();
+            return host.Host.Services.GetService<T>();
         }
 
         /// <inheritdoc/>
         public T GetMutatingWebhook<T>()
         {
-            return host.Services.GetService<T>();
+            return host.Host.Services.GetService<T>();
         }
 
         /// <inheritdoc/>
         public T GetValidatingWebhook<T>()
         {
-            return host.Services.GetService<T>();
+            return host.Host.Services.GetService<T>();
         }
     }
 }

@@ -23,12 +23,19 @@ using System.Xml.Linq;
 
 namespace Neon.Kube.Operator.Builder
 {
+    /// <summary>
+    /// Cert manager related options.
+    /// </summary>
     public class CertManagerOptions
     {
-        public string Namespace { get; set; }
-
+        /// <summary>
+        /// How long the cert should be valid for.
+        /// </summary>
         public TimeSpan CertificateDuration { get; set; }
 
+        /// <summary>
+        /// The Issuer that should issue the cert.
+        /// </summary>
         public IssuerRef IssuerRef { get; set; }
     }
 }

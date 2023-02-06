@@ -72,18 +72,42 @@ namespace Neon.Kube.Operator.Rbac
                     .Where(a => a.GetType().IsGenericType)
                     .Where(a => a.GetType().GetGenericTypeDefinition().IsEquivalentTo(typeof(RbacRuleAttribute<>)))).ToList();
 
-            attributes.Add(
-                    new RbacRuleAttribute<V1Lease>(
-                        verbs: RbacVerb.All,
-                        scope: Resources.EntityScope.Namespaced,
-                        @namespace: operatorSettings.Namespace
-                        ));
+            if (operatorSettings.leaderElectionEnabled)
+            {
+                attributes.Add(
+                        new RbacRuleAttribute<V1Lease>(
+                            verbs: RbacVerb.All,
+                            scope: Resources.EntityScope.Namespaced,
+                            @namespace: operatorSettings.Namespace
+                            ));
+            }
 
-            attributes.Add(
-                    new RbacRuleAttribute<V1CustomResourceDefinition>(
-                        verbs: RbacVerb.All,
-                        scope: Resources.EntityScope.Cluster
-                        ));
+            if (operatorSettings.manageCustomResourceDefinitions)
+            {
+                attributes.Add(
+                        new RbacRuleAttribute<V1CustomResourceDefinition>(
+                            verbs: RbacVerb.All,
+                            scope: Resources.EntityScope.Cluster
+                            ));
+            }
+
+            if (operatorSettings.hasMutatingWebhooks)
+            {
+                attributes.Add(
+                        new RbacRuleAttribute<V1MutatingWebhookConfiguration>(
+                            verbs: RbacVerb.All,
+                            scope: Resources.EntityScope.Cluster
+                            ));
+            }
+
+            if (operatorSettings.hasValidatingWebhooks)
+            {
+                attributes.Add(
+                        new RbacRuleAttribute<V1ValidatingWebhookConfiguration>(
+                            verbs: RbacVerb.All,
+                            scope: Resources.EntityScope.Cluster
+                            ));
+            }
 
             if (operatorSettings.certManagerEnabled)
             {

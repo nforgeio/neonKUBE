@@ -59,9 +59,9 @@ namespace Neon.Kube.Operator
                 {
                     await SyncContext.Clear;
 
-                    var k8s    = app.ApplicationServices.GetRequiredService<IKubernetes>();
-                    var logger = app.ApplicationServices.GetService<ILoggerFactory>()?.CreateLogger(nameof(ApplicationBuilderExtensions));
-
+                    var k8s              = app.ApplicationServices.GetRequiredService<IKubernetes>();
+                    var operatorSettings = app.ApplicationServices.GetRequiredService<OperatorSettings>();
+                    var logger           = app.ApplicationServices.GetService<ILoggerFactory>()?.CreateLogger(nameof(ApplicationBuilderExtensions));
                     NgrokWebhookTunnel tunnel = null;
 
                     try
@@ -78,27 +78,32 @@ namespace Neon.Kube.Operator
                     {
                         try
                         {
-                            (Type mutatorType, Type entityType) = webhook;
-
-                            logger?.LogInformationEx(() => $"Registering mutating webhook [{mutatorType.Name}].");
-
-                            var mutator = app.ApplicationServices.GetRequiredService(mutatorType);
-
-                            var registerMethod = typeof(IAdmissionWebhook<,>)
-                                .MakeGenericType(entityType, typeof(MutationResult))
-                                .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
-                                .First(m => m.Name == "Register");
-
-                            registerMethod.Invoke(mutator, new object[] { endpoints, app.ApplicationServices.GetService<ILoggerFactory>() });
-
-                            if (tunnel == null)
+                            using (var scope = app.ApplicationServices.CreateScope())
                             {
-                                var createMethod = typeof(IMutatingWebhook<>)
-                                    .MakeGenericType(entityType)
-                                    .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
-                                    .First(m => m.Name == "Create");
+                                (Type mutatorType, Type entityType) = webhook;
 
-                                createMethod.Invoke(mutator, new object[] { k8s, app.ApplicationServices.GetService<ILoggerFactory>() });
+                                logger?.LogInformationEx(() => $"Registering mutating webhook [{mutatorType.Name}].");
+
+                                var mutator = scope.ServiceProvider.GetRequiredService(mutatorType);
+
+                                var registerMethod = typeof(IAdmissionWebhook<,>)
+                                    .MakeGenericType(entityType, typeof(MutationResult))
+                                    .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
+                                    .First(m => m.Name == "Register");
+
+                                registerMethod.Invoke(mutator, new object[] { endpoints, scope.ServiceProvider.GetService<ILoggerFactory>() });
+
+                                if (tunnel == null)
+                                {
+                                    var createMethod = typeof(IMutatingWebhook<>)
+                                        .MakeGenericType(entityType)
+                                        .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
+                                        .First(m => m.Name == "Create");
+
+                                    var task = (Task)createMethod.Invoke(mutator, new object[] { k8s, scope.ServiceProvider });
+
+                                    await task;
+                                }
                             }
                         }
                         catch (Exception e)
@@ -111,27 +116,32 @@ namespace Neon.Kube.Operator
                     {
                         try
                         {
-                            (Type validatorType, Type entityType) = webhook;
-
-                            logger?.LogInformationEx(() => $"Registering validating webhook [{validatorType.Name}].");
-
-                            var validator = app.ApplicationServices.GetRequiredService(validatorType);
-
-                            var registerMethod = typeof(IAdmissionWebhook<,>)
-                                .MakeGenericType(entityType, typeof(ValidationResult))
-                                .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
-                                .First(m => m.Name == "Register");
-
-                            registerMethod.Invoke(validator, new object[] { endpoints, app.ApplicationServices.GetService<ILoggerFactory>() });
-
-                            if (tunnel == null)
+                            using (var scope = app.ApplicationServices.CreateScope())
                             {
-                                var createMethod = typeof(IValidatingWebhook<>)
-                                    .MakeGenericType(entityType)
-                                    .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
-                                    .First(m => m.Name == "Create");
+                                (Type validatorType, Type entityType) = webhook;
 
-                                createMethod.Invoke(validator, new object[] { k8s, app.ApplicationServices.GetService<ILoggerFactory>() });
+                                logger?.LogInformationEx(() => $"Registering validating webhook [{validatorType.Name}].");
+
+                                var validator = scope.ServiceProvider.GetRequiredService(validatorType);
+
+                                var registerMethod = typeof(IAdmissionWebhook<,>)
+                                    .MakeGenericType(entityType, typeof(ValidationResult))
+                                    .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
+                                    .First(m => m.Name == "Register");
+
+                                registerMethod.Invoke(validator, new object[] { endpoints, scope.ServiceProvider.GetService<ILoggerFactory>() });
+
+                                if (tunnel == null)
+                                {
+                                    var createMethod = typeof(IValidatingWebhook<>)
+                                        .MakeGenericType(entityType)
+                                        .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
+                                        .First(m => m.Name == "Create");
+
+                                    var task = (Task)createMethod.Invoke(validator, new object[] { k8s, operatorSettings, scope.ServiceProvider.GetService<ILoggerFactory>() });
+
+                                    await task;
+                                }
                             }
                         }
                         catch (Exception e)

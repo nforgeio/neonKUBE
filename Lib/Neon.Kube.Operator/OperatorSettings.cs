@@ -37,6 +37,10 @@ namespace Neon.Kube.Operator
     public class OperatorSettings
     {
         internal bool certManagerEnabled { get; set; } = false;
+        internal bool leaderElectionEnabled { get; set; } = false;
+        internal bool manageCustomResourceDefinitions { get; set; } = true;
+        internal bool hasMutatingWebhooks { get; set; } = false;
+        internal bool hasValidatingWebhooks { get; set; } = false;
 
         /// <summary>
         /// Default constructor.

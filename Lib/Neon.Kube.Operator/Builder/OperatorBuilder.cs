@@ -60,6 +60,8 @@ namespace Neon.Kube.Operator.Builder
 
         private ComponentRegister componentRegister { get; }
 
+        private OperatorSettings operatorSettings { get; set; }
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -72,14 +74,11 @@ namespace Neon.Kube.Operator.Builder
 
         internal IOperatorBuilder AddOperatorBase()
         {
-            var s = Services.BuildServiceProvider().GetService<OperatorSettings>();
-            var settings = (OperatorSettings)Services.Where(s => s.ServiceType == typeof(OperatorSettings)).Single().ImplementationInstance;
-
-            
+            operatorSettings = (OperatorSettings)Services.Where(s => s.ServiceType == typeof(OperatorSettings)).Single().ImplementationInstance;
 
             if (!Services.Any(x => x.ServiceType == typeof(IKubernetes)))
             {
-                var k8sClientConfig = settings.KubernetesClientConfiguration ?? KubernetesClientConfiguration.BuildDefaultConfig();
+                var k8sClientConfig = operatorSettings.KubernetesClientConfiguration ?? KubernetesClientConfiguration.BuildDefaultConfig();
 
                 var k8s = new Kubernetes(
                     k8sClientConfig,
@@ -88,25 +87,25 @@ namespace Neon.Kube.Operator.Builder
                 if (NeonHelper.IsDevWorkstation ||
                     Debugger.IsAttached)
                 {
-                    k8s.HttpClient.DefaultRequestHeaders.Add("Impersonate-User", $"system:serviceaccount:{settings.Namespace}:{settings.Name}"); 
+                    k8s.HttpClient.DefaultRequestHeaders.Add("Impersonate-User", $"system:serviceaccount:{operatorSettings.Namespace}:{operatorSettings.Name}"); 
                 }
 
                 Services.AddSingleton<IKubernetes>(k8s);
             }
 
-            Services.AddSingleton<OperatorSettings>(settings);
-            Services.AddSingleton(settings.ResourceManagerOptions);
+            Services.AddSingleton<OperatorSettings>(operatorSettings);
+            Services.AddSingleton(operatorSettings.ResourceManagerOptions);
             Services.AddSingleton(componentRegister);
             Services.AddSingleton<IFinalizerBuilder, FinalizerBuilder>();
             Services.AddSingleton(typeof(IFinalizerManager<>), typeof(FinalizerManager<>));
             Services.AddSingleton(typeof(IResourceCache<>), typeof(ResourceCache<>));
             Services.AddSingleton(new AsyncKeyedLocker<string>(o =>
             {
-                o.PoolSize = settings.LockPoolSize;
-                o.PoolInitialFill = settings.LockPoolInitialFill;
+                o.PoolSize = operatorSettings.LockPoolSize;
+                o.PoolInitialFill = operatorSettings.LockPoolInitialFill;
             }));
 
-            if (settings.AssemblyScanningEnabled)
+            if (operatorSettings.AssemblyScanningEnabled)
             {
                 var types = AppDomain.CurrentDomain.GetAssemblies()
                     .SelectMany(s => s.GetTypes())
@@ -202,6 +201,8 @@ namespace Neon.Kube.Operator.Builder
             Services.TryAddScoped<TImplementation>();
             componentRegister.RegisterMutatingWebhook<TImplementation, TEntity>();
 
+            operatorSettings.hasMutatingWebhooks = true;
+
             return this;
         }
 
@@ -212,6 +213,8 @@ namespace Neon.Kube.Operator.Builder
         {
             Services.TryAddScoped<TImplementation>();
             componentRegister.RegisterValidatingWebhook<TImplementation, TEntity>();
+
+            operatorSettings.hasValidatingWebhooks = true;
 
             return this;
         }
@@ -238,6 +241,16 @@ namespace Neon.Kube.Operator.Builder
 
             Services.TryAddScoped<TImplementation>();
             componentRegister.RegisterController<TImplementation, TEntity>();
+
+            if (!leaderElectionDisabled)
+            {
+                operatorSettings.leaderElectionEnabled = true;
+            }
+
+            if (options?.ManageCustomResourceDefinitions == false)
+            {
+                operatorSettings.manageCustomResourceDefinitions = false;
+            }
 
             return this;
         }

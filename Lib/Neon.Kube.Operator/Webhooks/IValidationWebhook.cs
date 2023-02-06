@@ -39,7 +39,8 @@ using k8s;
 using k8s.Autorest;
 using k8s.KubeConfigModels;
 using k8s.Models;
-
+using Microsoft.AspNetCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Neon.Kube.Operator.Webhook
 {
@@ -62,69 +63,77 @@ namespace Neon.Kube.Operator.Webhook
         /// </summary>
         public V1LabelSelector ObjectSelector => null;
 
+
+
         /// <summary>
         /// The webhook configuration.
         /// </summary>
-        public V1ValidatingWebhookConfiguration WebhookConfiguration
-        { 
-            get
+        public V1ValidatingWebhookConfiguration WebhookConfiguration(
+            OperatorSettings   operatorSettings,
+            bool               useTunnel = false, 
+            string             tunnelUrl = null)
+        {
+            var hook = this.GetType().GetCustomAttribute<WebhookAttribute>();
+
+            var clientConfig = new Admissionregistrationv1WebhookClientConfig()
             {
-                var hook = this.GetType().GetCustomAttribute<WebhookAttribute>();
-
-                var webhookConfig = new V1ValidatingWebhookConfiguration()
+                Service = new Admissionregistrationv1ServiceReference()
                 {
-                    Metadata = new V1ObjectMeta()
-                    {
-                        Name = hook.Name,
-                        Annotations = new Dictionary<string, string>()
-                        {
-                            { "cert-manager.io/inject-ca-from", hook.Certificate }
-                        }
-                    },
-                    Webhooks = new List<V1ValidatingWebhook>()
-                    {
-                        new V1ValidatingWebhook()
-                        {
-                            Name = hook.Name,
-                            Rules = new List<V1RuleWithOperations>(),
-                            ClientConfig = new Admissionregistrationv1WebhookClientConfig()
-                            {
-                                Service = new Admissionregistrationv1ServiceReference()
-                                {
-                                    Name = hook.ServiceName,
-                                    NamespaceProperty = hook.Namespace,
-                                    Path = WebhookHelper.CreateEndpoint<TEntity>(this.GetType(), WebhookType.Validate)
-                                }
-                            },
-                            AdmissionReviewVersions = hook.AdmissionReviewVersions,
-                            FailurePolicy = hook.FailurePolicy,
-                            SideEffects = hook.SideEffects,
-                            TimeoutSeconds = hook.TimeoutSeconds,
-                            NamespaceSelector = NamespaceSelector,
-                            MatchPolicy = hook.MatchPolicy,
-                            ObjectSelector = ObjectSelector
-                        }
-                    }
-                };
-
-                var rules = this.GetType().GetCustomAttributes<WebhookRuleAttribute>();
-
-                foreach (var rule in rules)
-                {
-                    webhookConfig.Webhooks.FirstOrDefault().Rules.Add(
-                        new V1RuleWithOperations()
-                        {
-                            ApiGroups = rule.ApiGroups,
-                            ApiVersions = rule.ApiVersions,
-                            Operations = rule.Operations.ToList(),
-                            Resources = rule.Resources,
-                            Scope = rule.Scope
-                        }
-                    );
+                    Name              = operatorSettings.Name,
+                    NamespaceProperty = operatorSettings.Namespace,
+                    Path              = WebhookHelper.CreateEndpoint<TEntity>(this.GetType(), WebhookType.Mutate)
                 }
+            };
 
-                return webhookConfig;
+            if (useTunnel)
+            {
+                clientConfig.Service = null;
+                clientConfig.CaBundle = null;
+                clientConfig.Url = tunnelUrl.TrimEnd('/') + WebhookHelper.CreateEndpoint<TEntity>(this.GetType(), WebhookType.Validate);
             }
+
+            var webhookConfig = new V1ValidatingWebhookConfiguration().Initialize();
+            webhookConfig.Metadata.Name = hook.Name;
+
+            if (!useTunnel && operatorSettings.certManagerEnabled)
+            {
+                webhookConfig.Metadata.EnsureAnnotations().Add("cert-manager.io/inject-ca-from", $"{operatorSettings.Namespace}/{operatorSettings.Name}");
+            }
+
+            webhookConfig.Webhooks = new List<V1ValidatingWebhook>()
+            {
+                new V1ValidatingWebhook()
+                {
+                    Name = hook.Name,
+                    Rules = new List<V1RuleWithOperations>(),
+                    ClientConfig = clientConfig,
+                    AdmissionReviewVersions = hook.AdmissionReviewVersions,
+                    FailurePolicy = hook.FailurePolicy,
+                    SideEffects = hook.SideEffects,
+                    TimeoutSeconds = hook.TimeoutSeconds,
+                    NamespaceSelector = NamespaceSelector,
+                    MatchPolicy = hook.MatchPolicy,
+                    ObjectSelector = ObjectSelector,
+                }
+            };
+
+            var rules = this.GetType().GetCustomAttributes<WebhookRuleAttribute>();
+
+            foreach (var rule in rules)
+            {
+                webhookConfig.Webhooks.FirstOrDefault().Rules.Add(
+                    new V1RuleWithOperations()
+                    {
+                        ApiGroups = rule.ApiGroups,
+                        ApiVersions = rule.ApiVersions,
+                        Operations = rule.Operations.ToList(),
+                        Resources = rule.Resources,
+                        Scope = rule.Scope
+                    }
+                );
+            }
+
+            return webhookConfig;
         }
 
         /// <inheritdoc />
@@ -170,17 +179,26 @@ namespace Neon.Kube.Operator.Webhook
             return response;
         }
 
-        internal async Task Create(IKubernetes k8s, ILoggerFactory loggerFactory = null)
+        internal async Task Create(IKubernetes k8s, IServiceProvider serviceProvider)
         {
-            var logger = loggerFactory?.CreateLogger<IValidatingWebhook<TEntity>>();
+            var operatorSettings   = serviceProvider.GetRequiredService<OperatorSettings>();
+            var certManagerOptions = serviceProvider.GetService<CertManagerOptions>();
+            var logger             = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger<IValidatingWebhook<TEntity>>();
 
             logger?.LogInformationEx(() => $"Checking for webhook {this.GetType().Name}.");
 
+            bool useDevTunnel      = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("VS_TUNNEL_URL"));
+            string certificateName = operatorSettings.certManagerEnabled ? operatorSettings.Name : null;
+            var webhookConfig      = WebhookConfiguration(
+                                            operatorSettings: operatorSettings,
+                                            useTunnel: true, 
+                                            tunnelUrl: Environment.GetEnvironmentVariable("VS_TUNNEL_URL"));
+
             try
             {
-                var webhook = await k8s.AdmissionregistrationV1.ReadValidatingWebhookConfigurationAsync(WebhookConfiguration.Name());
+                var webhook = await k8s.AdmissionregistrationV1.ReadValidatingWebhookConfigurationAsync(webhookConfig.Name());
 
-                webhook.Webhooks = WebhookConfiguration.Webhooks;
+                webhook.Webhooks = webhookConfig.Webhooks;
                 await k8s.AdmissionregistrationV1.ReplaceValidatingWebhookConfigurationAsync(webhook, webhook.Name());
 
                 logger?.LogInformationEx(() => $"Webhook {this.GetType().Name} updated.");
@@ -191,7 +209,7 @@ namespace Neon.Kube.Operator.Webhook
 
                 if (e.Response.StatusCode == System.Net.HttpStatusCode.NotFound) 
                 {
-                    await k8s.AdmissionregistrationV1.CreateValidatingWebhookConfigurationAsync(WebhookConfiguration);
+                    await k8s.AdmissionregistrationV1.CreateValidatingWebhookConfigurationAsync(webhookConfig);
 
                     logger?.LogInformationEx(() => $"Webhook {this.GetType().Name} created.");
                 }
