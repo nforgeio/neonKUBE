@@ -46,7 +46,7 @@ using System.Security.Cryptography.X509Certificates;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// Handles updating of the <b>neon-desktop.neoncluster.io</b> certificate.
+    /// Handles updating of the <b>desktop.neoncluster.io</b> certificate.
     /// </summary>
     public class CheckNeonDesktopCertificate : CronJob, IJob
     {

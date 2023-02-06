@@ -483,8 +483,8 @@ namespace Neon.Kube.Setup
                     // node's local [/etc/hosts] file.  Note that the node is named
                     // "neon-desktop".
                     //
-                    //      ADDRESS     neon-desktop.neoncluster.io
-                    //      ADDRESS     *.neon-desktop.neoncluster.io
+                    //      ADDRESS     desktop.neoncluster.io
+                    //      ADDRESS     *.desktop.neoncluster.io
 
                     if (options.DesktopReadyToGo)
                     {
