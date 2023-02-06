@@ -47,6 +47,7 @@ using Newtonsoft.Json;
 using Prometheus;
 using System.Xml.Linq;
 using Amazon.Runtime.Internal.Transform;
+using Neon.Kube.Operator;
 
 namespace Test.Neon.Kube.Operator
 {
@@ -69,41 +70,38 @@ namespace Test.Neon.Kube.Operator
         /// <inheritdoc/>
         public async Task<ResourceControllerResult> ReconcileAsync(V1TestDatabase resource)
         {
-            var statefulSet = new V1StatefulSet()
+            var statefulSet = new V1StatefulSet().Initialize();
+            statefulSet.Metadata.Name = resource.Name();
+            statefulSet.Metadata.SetNamespace(resource.Namespace());
+            statefulSet.AddOwnerReference(resource.MakeOwnerReference());
+
+            statefulSet.Spec = new V1StatefulSetSpec()
             {
-                Metadata = new V1ObjectMeta()
+                Replicas = resource.Spec.Servers,
+                Template = new V1PodTemplateSpec()
                 {
-                    Name = resource.Name(),
-                    NamespaceProperty = resource.Namespace()
-                },
-                Spec = new V1StatefulSetSpec()
-                {
-                    Replicas = resource.Spec.Servers,
-                    Template = new V1PodTemplateSpec()
+                    Spec = new V1PodSpec()
                     {
-                        Spec = new V1PodSpec()
+                        Containers = new List<V1Container>()
                         {
-                            Containers = new List<V1Container>()
+                            new V1Container()
                             {
-                                new V1Container()
-                                {
-                                    Image = resource.Spec.Image,
-                                }
+                                Image = resource.Spec.Image,
                             }
                         }
-                    },
-                    VolumeClaimTemplates = new List<V1PersistentVolumeClaim>()
+                    }
+                },
+                VolumeClaimTemplates = new List<V1PersistentVolumeClaim>()
+                {
+                    new V1PersistentVolumeClaim()
                     {
-                        new V1PersistentVolumeClaim()
+                        Spec = new V1PersistentVolumeClaimSpec()
                         {
-                            Spec = new V1PersistentVolumeClaimSpec()
+                            Resources = new V1ResourceRequirements()
                             {
-                                Resources = new V1ResourceRequirements()
+                                Requests = new Dictionary<string, ResourceQuantity>()
                                 {
-                                    Requests = new Dictionary<string, ResourceQuantity>()
-                                    {
-                                        { "storage", new ResourceQuantity(resource.Spec.VolumeSize)}
-                                    }
+                                    { "storage", new ResourceQuantity(resource.Spec.VolumeSize)}
                                 }
                             }
                         }
@@ -113,23 +111,20 @@ namespace Test.Neon.Kube.Operator
 
             await k8s.AppsV1.CreateNamespacedStatefulSetAsync(statefulSet, statefulSet.Namespace());
 
-            var service = new V1Service()
+            var service = new V1Service().Initialize();
+            service.Metadata.Name = resource.Name();
+            service.Metadata.SetNamespace(resource.Namespace());
+            service.AddOwnerReference(resource.MakeOwnerReference());
+
+            service.Spec = new V1ServiceSpec()
             {
-                Metadata = new V1ObjectMeta()
+                Selector = new Dictionary<string, string>()
                 {
-                    Name = resource.Name(),
-                    NamespaceProperty = resource.Namespace()
+                    {"app.kubernetes.io/name", resource.Name() }
                 },
-                Spec = new V1ServiceSpec()
+                Ports = new List<V1ServicePort>()
                 {
-                    Selector = new Dictionary<string, string>()
-                    {
-                        {"app.kubernetes.io/name", resource.Name() }
-                    },
-                    Ports = new List<V1ServicePort>()
-                    {
-                        new V1ServicePort(80)
-                    }
+                    new V1ServicePort(80)
                 }
             };
 
