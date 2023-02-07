@@ -38,7 +38,7 @@ using KellermanSoftware.CompareNetObjects;
 namespace Neon.Kube.Operator.Cache
 {
     internal class ResourceCache<TEntity> : IResourceCache<TEntity>
-        where TEntity : IKubernetesObject<V1ObjectMeta>, new()
+        where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         private readonly ILogger<ResourceCache<TEntity>>        logger;
         private readonly ConcurrentDictionary<string, TEntity>  cache;
@@ -71,6 +71,12 @@ namespace Neon.Kube.Operator.Cache
         public TEntity Get(string id)
         {
             return cache.GetValueOrDefault(id);
+        }
+
+        public bool Get(string id, out TEntity result)
+        {
+            result = cache.GetValueOrDefault(id);
+            return result != null;
         }
 
         public void Compare(TEntity entity, out ModifiedEventType result)

@@ -17,6 +17,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -43,8 +45,6 @@ using k8s.Models;
 using k8s;
 using Neon.Common;
 using k8s.KubeConfigModels;
-using System.IO;
-using System.Diagnostics;
 
 namespace Neon.Kube.Operator.Builder
 {
@@ -119,14 +119,44 @@ namespace Neon.Kube.Operator.Builder
                     {
                         case OperatorComponentType.Controller:
 
-                            if (type.GetCustomAttribute<ControllerAttribute>()?.Ignore == true)
+                            var controllerRegMethod = typeof(OperatorBuilderExtensions).GetMethod(nameof(OperatorBuilderExtensions.AddController));
+                            var controllerArgs      = new object[controllerRegMethod.GetParameters().Count()];
+                            controllerArgs[0]       = this;
+
+                            var options = new ResourceManagerOptions();
+                            var controllerAttribute = type.GetCustomAttribute<ControllerAttribute>();
+
+                            if (controllerAttribute?.Ignore == true)
                             {
                                 break;
                             }
 
-                            var controllerRegMethod = typeof(OperatorBuilderExtensions).GetMethod(nameof(OperatorBuilderExtensions.AddController));
-                            var controllerArgs = new object[controllerRegMethod.GetParameters().Count()];
-                            controllerArgs[0] = this;
+                            if (controllerAttribute?.AutoRegisterFinalizers == false)
+                            {
+                                options.AutoRegisterFinalizers = false;
+                            }
+
+                            if (controllerAttribute?.ManageCustomResourceDefinitions == false)
+                            {
+                                options.ManageCustomResourceDefinitions = false;
+                            }
+
+                            var dependentResources = type.GetCustomAttributes()
+                                                            .Where(a => a.GetType().IsGenericType)
+                                                            .Where(a => a.GetType()
+                                                                    .GetGenericTypeDefinition()
+                                                                    .IsEquivalentTo(typeof(DependentResourceAttribute<>)))
+                                                            .Select(a => (IDependentResource)(a)).ToList();
+
+                            foreach (var dr in dependentResources)
+                            {
+                                if (!options.DependentResources.Any(t => t.GetEntityType() == dr.GetEntityType()))
+                                {
+                                    options.DependentResources.Add(dr);
+                                }
+                            }
+
+                            controllerArgs[2] = options;
                             controllerRegMethod.MakeGenericMethod(type).Invoke(null, controllerArgs);
 
                             break;
@@ -233,7 +263,7 @@ namespace Neon.Kube.Operator.Builder
                 return new ResourceManager<TEntity, TImplementation>(
                     serviceProvider: services,
                     @namespace: @namespace,
-                    options: options,
+                    options: options ?? operatorSettings.ResourceManagerOptions,
                     leaderConfig: leaderConfig,
                     leaderElectionDisabled: leaderElectionDisabled);
             });

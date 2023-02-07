@@ -33,12 +33,15 @@ using Microsoft.Extensions.Hosting;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.Kube.Operator.Attributes;
 using Neon.Tasks;
 
 using k8s;
 using k8s.Models;
 
 using Prometheus;
+using Neon.Kube.Resources;
+using Neon.Kube.Operator.Rbac;
 
 namespace Neon.Kube.Operator.ResourceManager
 {
@@ -66,6 +69,32 @@ namespace Neon.Kube.Operator.ResourceManager
         /// Specifies whether Kubernetes custom resources should be created.
         /// </summary>
         public bool ManageCustomResourceDefinitions { get; set; } = true;
+
+        /// <summary>
+        /// Optionally disable automatic finalizer registration. If enabled, all finalizers currently deployed by the operator
+        /// will be registered when a resource is reconciled.
+        /// </summary>
+        public bool AutoRegisterFinalizers { get; set; } = true;
+
+        /// <summary>
+        /// Specify dependent resource types and where to watch them.
+        /// </summary>
+        public List<IDependentResource> DependentResources { get; set; } = new List<IDependentResource>();
+
+        /// <summary>
+        /// Specify RbacRules.
+        /// </summary>
+        public List<IRbacRule> RbacRules { get; set; } = new List<IRbacRule>();
+
+        /// <summary>
+        /// Namespace to watch.
+        /// </summary>
+        public string WatchNamespace { get; set; } = null;
+
+        /// <summary>
+        /// The scope of the resource manager.
+        /// </summary>
+        public EntityScope Scope { get; set; } = EntityScope.Namespaced;
 
         /// <summary>
         /// Specifies the minimum timeout to before retrying after an error.  Timeouts will start

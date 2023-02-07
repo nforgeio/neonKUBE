@@ -29,7 +29,7 @@ namespace Neon.Kube.Operator.Rbac
     /// Used to exclude a component from assembly scanning when building the operator.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-    public class RbacRuleAttribute<TEntity> : Attribute, IRbacAttribute
+    public class RbacRuleAttribute<TEntity> : Attribute, IRbacRule
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         /// <summary>
@@ -43,11 +43,6 @@ namespace Neon.Kube.Operator.Rbac
         public EntityScope Scope { get; set; } = EntityScope.Namespaced;
 
         /// <summary>
-        /// The namespace for the attribute if <see cref="Scope"/> is <see cref="EntityScope.Namespaced"/>.
-        /// </summary>
-        public string Namespace { get; set; } = null;
-
-        /// <summary>
         /// Comma separated list of resource names. When specified, requests can be restricted to individual 
         /// instances of a resource
         /// </summary>
@@ -59,13 +54,23 @@ namespace Neon.Kube.Operator.Rbac
         public RbacRuleAttribute(
             RbacVerb verbs = RbacVerb.None,
             EntityScope scope = EntityScope.Namespaced,
-            string @namespace = null,
             string resourceNames = null)
         {
             this.Verbs         = verbs;
             this.Scope         = scope;
-            this.Namespace     = @namespace;
             this.ResourceNames = resourceNames;
+        }
+
+        /// <inheritdoc/>
+        public string Namespace()
+        {
+            return null;
+        }
+
+        /// <inheritdoc/>
+        public IEnumerable<string> Namespaces()
+        {
+            return null;
         }
 
         /// <inheritdoc/>

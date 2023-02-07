@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IRbacAttribute.cs
+// FILE:	    IResourceManager.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -17,22 +17,35 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.Contracts;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 
-using Neon.Kube.Resources;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+
+using Neon.Common;
+using Neon.Diagnostics;
+using Neon.IO;
+using Neon.Kube.Operator.Attributes;
+using Neon.Tasks;
 
 using k8s;
 using k8s.Models;
 
-namespace Neon.Kube.Operator.Rbac
-{
-    internal interface IRbacAttribute
-    {
-        RbacVerb Verbs { get; set; }
-        EntityScope Scope { get; set; }
-        string ResourceNames { get; set; }
+using Prometheus;
+using Neon.Kube.Resources;
 
-        string Namespace { get; set; }
-        Type GetEntityType();
-        KubernetesEntityAttribute GetKubernetesEntityAttribute();
+namespace Neon.Kube.Operator.ResourceManager
+{
+    internal interface IResourceManager
+    {
+        ResourceManagerOptions Options();
     }
 }

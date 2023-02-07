@@ -51,6 +51,7 @@ using k8s.LeaderElection;
 using k8s.Models;
 
 using Prometheus;
+using System.Diagnostics.Tracing;
 
 // $todo(jefflill):
 //
@@ -169,33 +170,34 @@ namespace Neon.Kube.Operator.ResourceManager
     /// </item>
     /// </list>
     /// </remarks>
-    public sealed class ResourceManager<TEntity, TController> : IDisposable
+    public sealed class ResourceManager<TEntity, TController> : IResourceManager, IDisposable
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         where TController : IResourceController<TEntity>
     {
-        private bool                                           isDisposed   = false;
-        private bool                                           stopIdleLoop = false;
-        private AsyncReentrantMutex                            mutex        = new AsyncReentrantMutex();
-        private bool                                           started      = false;
-        private ResourceManagerOptions                         options;
-        private ResourceManagerMetrics<TEntity, TController>   metrics;
-        private IKubernetes                                    k8s;
-        private IServiceProvider                               serviceProvider;
-        private IResourceCache<TEntity>                        resourceCache;
-        private IFinalizerManager<TEntity>                     finalizerManager;
-        private AsyncKeyedLocker<string>                       lockProvider;
-        private string                                         resourceNamespace;
-        private Type                                           controllerType;
-        private ILogger<ResourceManager<TEntity, TController>> logger;
-        private DateTime                                       nextIdleReconcileUtc;
-        private LeaderElectionConfig                           leaderConfig;
-        private bool                                           leaderElectionDisabled;
-        private LeaderElector                                  leaderElector;
-        private Task                                           leaderTask;
-        private Task                                           idleLoopTask;
-        private Task                                           watcherTask;
-        private CancellationTokenSource                        watcherTcs;
-        private EventQueue<TEntity>                            eventQueue;
+        private ResourceManagerOptions                          options;
+        private bool                                            isDisposed   = false;
+        private bool                                            stopIdleLoop = false;
+        private AsyncReentrantMutex                             mutex        = new AsyncReentrantMutex();
+        private bool                                            started      = false;
+        private ResourceManagerMetrics<TEntity, TController>    metrics;
+        private IKubernetes                                     k8s;
+        private IServiceProvider                                serviceProvider;
+        private IResourceCache<TEntity>                         resourceCache;
+        private IResourceCache<IKubernetesObject<V1ObjectMeta>> dependentResourceCache;
+        private IFinalizerManager<TEntity>                      finalizerManager;
+        private AsyncKeyedLocker<string>                        lockProvider;
+        private string                                          resourceNamespace;
+        private Type                                            controllerType;
+        private ILogger<ResourceManager<TEntity, TController>>  logger;
+        private DateTime                                        nextIdleReconcileUtc;
+        private LeaderElectionConfig                            leaderConfig;
+        private bool                                            leaderElectionDisabled;
+        private LeaderElector                                   leaderElector;
+        private Task                                            leaderTask;
+        private Task                                            idleLoopTask;
+        private Task                                            watcherTask;
+        private CancellationTokenSource                         watcherTcs;
+        private EventQueue<TEntity>                             eventQueue;
 
         /// <summary>
         /// Default constructor.
@@ -237,6 +239,12 @@ namespace Neon.Kube.Operator.ResourceManager
             var entityType      = typeof(TEntity);
         }
 
+        /// <inheritdoc/>
+        public ResourceManagerOptions Options()
+        {
+            return options;
+        }
+
         /// <summary>
         /// Starts the resource manager.
         /// </summary>
@@ -245,10 +253,11 @@ namespace Neon.Kube.Operator.ResourceManager
         {
             Covenant.Requires<ArgumentNullException>(serviceProvider != null, nameof(serviceProvider));
 
-            this.k8s              = serviceProvider.GetRequiredService<IKubernetes>();
-            this.resourceCache    = serviceProvider.GetRequiredService<IResourceCache<TEntity>>();
-            this.finalizerManager = serviceProvider.GetRequiredService<IFinalizerManager<TEntity>>();
-            this.lockProvider     = serviceProvider.GetRequiredService<AsyncKeyedLocker<string>>();
+            this.k8s                    = serviceProvider.GetRequiredService<IKubernetes>();
+            this.resourceCache          = serviceProvider.GetRequiredService<IResourceCache<TEntity>>();
+            this.dependentResourceCache = serviceProvider.GetRequiredService<IResourceCache<IKubernetesObject<V1ObjectMeta>>>();
+            this.finalizerManager       = serviceProvider.GetRequiredService<IFinalizerManager<TEntity>>();
+            this.lockProvider           = serviceProvider.GetRequiredService<AsyncKeyedLocker<string>>();
 
             if (leaderConfig != null && string.IsNullOrEmpty(leaderConfig.MetricsPrefix))
             {
@@ -398,7 +407,7 @@ namespace Neon.Kube.Operator.ResourceManager
                         await CreateOrReplaceCustomResourceDefinitionAsync();
                     }
 
-                    await EnsurePermissionsAsync();
+                    //await EnsurePermissionsAsync();
 
                     // Start the IDLE reconcile loop.
 
@@ -651,6 +660,11 @@ namespace Neon.Kube.Operator.ResourceManager
                             {
                                 var cachedEntity = resourceCache.Upsert(resource, out modifiedEventType);
 
+                                if (@event.Force)
+                                {
+                                    modifiedEventType = ModifiedEventType.Other;
+                                }
+
                                 if (modifiedEventType == ModifiedEventType.Finalizing)
                                 {
                                     @event.Type = WatchEventType.Modified;
@@ -663,6 +677,11 @@ namespace Neon.Kube.Operator.ResourceManager
                                         try
                                         {
                                             metrics.ReconcileCounter?.Inc();
+                                            
+                                            if (options.AutoRegisterFinalizers)
+                                            {
+                                                await finalizerManager.RegisterAllFinalizersAsync(resource);
+                                            }
 
                                             result = await CreateController(scope.ServiceProvider).ReconcileAsync(resource);
                                         }
@@ -917,6 +936,88 @@ namespace Neon.Kube.Operator.ResourceManager
                     }
                 };
 
+            var enqueueDependentAsync =
+                async (dynamic @event) =>
+                {
+                    await SyncContext.Clear;
+
+                    var resource = (IKubernetesObject<V1ObjectMeta>)@event.Value;
+                    var resourceName = resource.Metadata.Name;
+
+                    dependentResourceCache.Compare(resource, out var modifiedEventType);
+
+                    switch (@event.Type)
+                    {
+                        case WatchEventType.Deleted:
+
+                            foreach (var ownerRef in resource.Metadata.OwnerReferences)
+                            {
+                                if (resourceCache.Get(ownerRef.Uid, out TEntity owner))
+                                {
+                                    var newWatchEvent = new WatchEvent<TEntity>(WatchEventType.Modified, owner, force: true);
+
+                                    await eventQueue.DequeueAsync(newWatchEvent);
+                                    await eventQueue.EnqueueAsync(newWatchEvent);
+                                }
+                            }
+
+                            break;
+
+                        case WatchEventType.Modified:
+
+                            if (modifiedEventType == ModifiedEventType.NoChanges)
+                            {
+                                return;
+                            }
+
+                            foreach (var ownerRef in resource.Metadata.OwnerReferences)
+                            {
+                                if (resourceCache.Get(ownerRef.Uid, out TEntity owner))
+                                {
+                                    var newWatchEvent = new WatchEvent<TEntity>(WatchEventType.Modified, owner, force: true);
+
+                                    await eventQueue.DequeueAsync(newWatchEvent);
+                                    await eventQueue.EnqueueAsync(newWatchEvent);
+                                }
+                            }
+
+                            break;
+
+                        case WatchEventType.Bookmark:
+
+                            break;  // We don't care about these.
+
+                        case WatchEventType.Error:
+
+                            // I believe we're only going to see this for extreme scenarios, like:
+                            //
+                            //      1. The CRD we're watching was deleted and recreated.
+                            //      2. The watcher is so far behind that part of the
+                            //         history is no longer available.
+                            //
+                            // We're going to log this and terminate the application, expecting
+                            // that Kubernetes will reschedule it so we can start over.
+
+                            var stub = new TEntity();
+
+                            if (!string.IsNullOrEmpty(resourceNamespace))
+                            {
+                                logger?.LogCriticalEx(() => $"Critical error watching: [namespace={resourceNamespace}] {stub.ApiGroupAndVersion}/{stub.Kind}");
+                            }
+                            else
+                            {
+                                logger?.LogCriticalEx(() => $"Critical error watching: {stub.ApiGroupAndVersion}/{stub.Kind}");
+                            }
+
+                            logger?.LogCriticalEx("Terminating the pod so Kubernetes can reschedule it and we can restart the watch.");
+                            Environment.Exit(1);
+                            break;
+
+                        default:
+                            break;
+                    }
+                };
+
 
             this.eventQueue = new EventQueue<TEntity>(k8s, options, actionAsync);
 
@@ -925,7 +1026,51 @@ namespace Neon.Kube.Operator.ResourceManager
 
             try
             {
-                await k8s.WatchAsync<TEntity>(enqueueAsync, namespaceParameter: resourceNamespace, cancellationToken: cancellationToken);
+                var tasks = new List<Task>();
+
+                if (this.resourceNamespace != null)
+                {
+                    foreach (var ns in resourceNamespace.Split(',').ToList())
+                    {
+                        tasks.Add(k8s.WatchAsync<TEntity>(enqueueAsync, namespaceParameter: ns, cancellationToken: cancellationToken));
+                    }
+                }
+                else
+                {
+                    tasks.Add(k8s.WatchAsync<TEntity>(enqueueAsync, cancellationToken: cancellationToken));
+                }
+
+                foreach (var dependent in options.DependentResources)
+                {
+                    var watchMethod = typeof(KubernetesExtensions).GetMethod("WatchAsync").MakeGenericMethod(dependent.GetEntityType());
+                    var args = new object[watchMethod.GetParameters().Count()];
+
+                    args[0] = k8s;
+                    args[1] = enqueueDependentAsync;
+                    args[8] = cancellationToken;
+
+                    string dependentNamespace = null;
+                    if (dependent.Scope == Resources.EntityScope.Namespaced)
+                    {
+                        dependentNamespace = (dependent.Namespace() ?? options.WatchNamespace) ?? Pod.Namespace;
+                    }
+                    
+                    if (dependentNamespace != null)
+                    {
+                        foreach (var ns in dependentNamespace.Split(',').ToList())
+                        {
+                            args[2] = ns;
+
+                            tasks.Add((Task)watchMethod.Invoke(k8s, args));
+                        }
+                    }
+                    else
+                    {
+                        tasks.Add((Task)watchMethod.Invoke(k8s, args));
+                    }
+                }
+
+                await NeonHelper.WaitAllAsync(tasks);
             }
             catch (OperationCanceledException)
             {

@@ -29,6 +29,7 @@ using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Operator;
 using Neon.Kube.Operator.Webhook;
+using Neon.Kube.Resources;
 
 using k8s;
 using k8s.Models;
@@ -49,7 +50,7 @@ namespace TestOperator
         operations: AdmissionOperations.Create | AdmissionOperations.Update,
         resources: V1Pod.KubePluralName,
         scope: "*")]
-    [RbacRule<V1Pod>(Verbs = RbacVerb.All, Scope = Neon.Kube.Resources.EntityScope.Cluster)]
+    [RbacRule<V1Pod>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     public class PodWebhook : IMutatingWebhook<V1Pod>
     {
         private ILogger<IMutatingWebhook<V1Pod>> logger { get; set; }

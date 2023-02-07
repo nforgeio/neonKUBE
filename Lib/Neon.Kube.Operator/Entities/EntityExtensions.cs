@@ -23,6 +23,9 @@ using System.Linq;
 
 namespace Neon.Kube.Operator
 {
+    /// <summary>
+    /// Entity extension methods.
+    /// </summary>
     public static class EntityExtensions
     {
         /// <summary>

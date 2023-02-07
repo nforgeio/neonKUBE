@@ -73,7 +73,7 @@ namespace NeonClusterOperator
     /// </para>
     /// </summary>
     [RbacRule<V1NeonSsoClient>(RbacVerb.All, EntityScope.Cluster)]
-    [RbacRule<V1ConfigMap>(RbacVerb.Get | RbacVerb.Update, EntityScope.Namespaced, KubeNamespace.NeonSystem)]
+    [RbacRule<V1ConfigMap>(RbacVerb.Get | RbacVerb.Update, EntityScope.Namespaced)]
     public class NeonSsoClientController : IResourceController<V1NeonSsoClient>
     {
         //---------------------------------------------------------------------

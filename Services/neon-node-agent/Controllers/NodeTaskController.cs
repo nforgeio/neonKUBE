@@ -66,7 +66,7 @@ namespace NeonNodeAgent
     /// and empty output and error streams.
     /// </note>
     /// </remarks>
-    [Controller(ignore: true)]
+    [Controller(Ignore = true)]
     [RbacRule<V1NeonNodeTask>(RbacVerb.All)]
     public class NodeTaskController : IResourceController<V1NeonNodeTask>
     {

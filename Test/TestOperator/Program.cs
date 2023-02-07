@@ -8,6 +8,7 @@ namespace TestOperator
 {
     public static partial class Program
     {
+        public static string Namespace = null;
         public static async Task Main(string[] args)
         {
             var k8s = KubernetesOperatorHost
@@ -15,7 +16,7 @@ namespace TestOperator
                 .ConfigureOperator(configure =>
                 {
                     configure.Port = 1234;
-                    configure.AssemblyScanningEnabled = true;
+                    configure.AssemblyScanningEnabled = false;
                     configure.Name = "my-cool-operator";
                     configure.Namespace = "default";
                 })

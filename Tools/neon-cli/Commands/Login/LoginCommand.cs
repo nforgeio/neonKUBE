@@ -60,7 +60,9 @@ ARGUMENTS:
 ";
 
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "login" }; 
+        public override string[] Words => new string[] { "login" };
+        /// <inheritdoc/>
+        public override bool NeedsHostingManager => true;
 
         /// <inheritdoc/>
         public override void Help()

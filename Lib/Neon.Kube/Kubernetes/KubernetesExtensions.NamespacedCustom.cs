@@ -264,7 +264,7 @@ namespace Neon.Kube
             bool?                         watch = null,
             CancellationToken             cancellationToken = default(CancellationToken))
 
-            where T : IKubernetesObject, new()
+            where T : IKubernetesObject
         {
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 

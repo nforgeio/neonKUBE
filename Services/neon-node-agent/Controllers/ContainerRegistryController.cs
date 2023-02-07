@@ -96,7 +96,7 @@ namespace NeonNodeAgent
     /// Node tasks on the host node will be simulated in this case by simply doing nothing.
     /// </note>
     /// </remarks>
-    [Controller(ignore: true)]
+    [Controller(Ignore = true)]
     [RbacRule<V1NeonContainerRegistry>(RbacVerb.All)]
     public class ContainerRegistryController : IResourceController<V1NeonContainerRegistry>
     {

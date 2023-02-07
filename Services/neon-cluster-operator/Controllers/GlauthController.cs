@@ -66,7 +66,7 @@ namespace NeonClusterOperator
     /// <summary>
     /// Manages Glauth LDAP database.
     /// </summary>
-    [RbacRule<V1Secret>(RbacVerb.Get, EntityScope.Namespaced, KubeNamespace.NeonSystem)]
+    [RbacRule<V1Secret>(RbacVerb.Get, EntityScope.Namespaced)]
     public class GlauthController : IResourceController<V1Secret>
     {
         //---------------------------------------------------------------------

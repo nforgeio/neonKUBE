@@ -32,6 +32,9 @@ using k8s.Models;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using Neon.Kube.Resources.CertManager;
+using Neon.Kube.Operator.Builder;
+using Neon.Kube.Operator.ResourceManager;
+using System.Text.RegularExpressions;
 
 namespace Neon.Kube.Operator.Rbac
 {
@@ -45,11 +48,13 @@ namespace Neon.Kube.Operator.Rbac
         
         private IServiceProvider serviceProvider;
         private OperatorSettings operatorSettings;
+        private ComponentRegister componentRegister;
 
         public RbacBuilder(IServiceProvider serviceProvider) 
         {
             this.serviceProvider     = serviceProvider;
             this.operatorSettings    = serviceProvider.GetRequiredService<OperatorSettings>();
+            this.componentRegister   = serviceProvider.GetRequiredService<ComponentRegister>();
             this.ServiceAccounts     = new List<V1ServiceAccount>();
             this.ClusterRoles        = new List<V1ClusterRole>();
             this.ClusterRoleBindings = new List<V1ClusterRoleBinding>();
@@ -70,12 +75,14 @@ namespace Neon.Kube.Operator.Rbac
                 .SelectMany(
                     t => t.GetCustomAttributes()
                     .Where(a => a.GetType().IsGenericType)
-                    .Where(a => a.GetType().GetGenericTypeDefinition().IsEquivalentTo(typeof(RbacRuleAttribute<>)))).ToList();
+                    .Where(a => a.GetType().GetGenericTypeDefinition().IsEquivalentTo(typeof(RbacRuleAttribute<>))))
+                .Select(a => (IRbacRule)a)
+                .ToList();
 
             if (operatorSettings.leaderElectionEnabled)
             {
                 attributes.Add(
-                        new RbacRuleAttribute<V1Lease>(
+                        new RbacRule<V1Lease>(
                             verbs: RbacVerb.All,
                             scope: Resources.EntityScope.Namespaced,
                             @namespace: operatorSettings.Namespace
@@ -85,7 +92,7 @@ namespace Neon.Kube.Operator.Rbac
             if (operatorSettings.manageCustomResourceDefinitions)
             {
                 attributes.Add(
-                        new RbacRuleAttribute<V1CustomResourceDefinition>(
+                        new RbacRule<V1CustomResourceDefinition>(
                             verbs: RbacVerb.All,
                             scope: Resources.EntityScope.Cluster
                             ));
@@ -94,7 +101,7 @@ namespace Neon.Kube.Operator.Rbac
             if (operatorSettings.hasMutatingWebhooks)
             {
                 attributes.Add(
-                        new RbacRuleAttribute<V1MutatingWebhookConfiguration>(
+                        new RbacRule<V1MutatingWebhookConfiguration>(
                             verbs: RbacVerb.All,
                             scope: Resources.EntityScope.Cluster
                             ));
@@ -103,7 +110,7 @@ namespace Neon.Kube.Operator.Rbac
             if (operatorSettings.hasValidatingWebhooks)
             {
                 attributes.Add(
-                        new RbacRuleAttribute<V1ValidatingWebhookConfiguration>(
+                        new RbacRule<V1ValidatingWebhookConfiguration>(
                             verbs: RbacVerb.All,
                             scope: Resources.EntityScope.Cluster
                             ));
@@ -112,13 +119,13 @@ namespace Neon.Kube.Operator.Rbac
             if (operatorSettings.certManagerEnabled)
             {
                 attributes.Add(
-                    new RbacRuleAttribute<V1Certificate>(
+                    new RbacRule<V1Certificate>(
                         verbs: RbacVerb.All,
                         scope: Resources.EntityScope.Namespaced,
                         @namespace: operatorSettings.Namespace
                         ));
                 attributes.Add(
-                    new RbacRuleAttribute<V1Secret>(
+                    new RbacRule<V1Secret>(
                         verbs: RbacVerb.Watch,
                         scope: Resources.EntityScope.Namespaced,
                         @namespace: operatorSettings.Namespace,
@@ -126,17 +133,17 @@ namespace Neon.Kube.Operator.Rbac
                         ));
             }
 
-            var clusterRules = attributes.Where(attr => ((IRbacAttribute)attr).Scope == Resources.EntityScope.Cluster)
+            var clusterRules = attributes.Where(attr => attr.Scope == Resources.EntityScope.Cluster)
                 .GroupBy(attr => new
                 {
-                    ResourceNames = ((IRbacAttribute)attr).ResourceNames?.Split(',').Distinct(),
-                    Verbs = ((IRbacAttribute)attr).Verbs
+                    ResourceNames = attr.ResourceNames?.Split(',').Distinct(),
+                    Verbs = attr.Verbs
                 })
                 .Select(
                     group => (
                         Verbs: group.Key.Verbs,
                         ResourceNames: group.Key.ResourceNames,
-                        EntityTypes: group.Select(attr => ((IRbacAttribute)attr).GetKubernetesEntityAttribute()).ToList()))
+                        EntityTypes: group.Select(attr => attr.GetKubernetesEntityAttribute()).ToList()))
 
                 .Select(
                     group => new V1PolicyRule
@@ -166,23 +173,56 @@ namespace Neon.Kube.Operator.Rbac
                 ClusterRoleBindings.Add(clusterRoleBinding);
             }
 
-            foreach (var @namespace in attributes.Where(attr => ((IRbacAttribute)attr).Scope == Resources.EntityScope.Namespaced)
-                .Select(attr => ((IRbacAttribute)attr).Namespace)
-                .Distinct())
+            var namespaceRules = new Dictionary<string, List<V1PolicyRule>>();
+
+            namespaceRules[operatorSettings.Namespace] = attributes.Select(a => (IRbacRule)a).Where(attr =>
+                attr.Scope == Resources.EntityScope.Namespaced)
+                    .GroupBy(attr => new
+                    {
+                        ResourceNames = attr.ResourceNames?.Split(',').Distinct(),
+                        Verbs = attr.Verbs
+                    })
+                    .Select(
+                        group => (
+                            Verbs: group.Key.Verbs,
+                            ResourceNames: group.Key.ResourceNames,
+                            EntityTypes: group.Select(attr => attr.GetKubernetesEntityAttribute()).ToList()))
+
+                    .Select(
+                        group => new V1PolicyRule
+                        {
+                            ApiGroups = group.EntityTypes.Select(entity => entity.Group).Distinct().ToList(),
+                            Resources = group.EntityTypes.Select(entity => entity.PluralName).Distinct().ToList(),
+                            ResourceNames = group.ResourceNames?.Count() > 0 ? group.ResourceNames.ToList() : null,
+                            Verbs = group.Verbs.ToStrings(),
+                        }).ToList();
+
+            foreach (var reg in componentRegister.ResourceManagerRegistrations)
             {
-                var namespaceRules = attributes.Where(attr =>
-                    ((IRbacAttribute)attr).Scope == Resources.EntityScope.Namespaced
-                    && ((IRbacAttribute)attr).Namespace == @namespace)
+                var resourceManager = (IResourceManager)serviceProvider.GetRequiredService(reg);
+                var options = resourceManager.Options();
+
+                var namespaces = options.RbacRules
+                    .Where(r => r.Namespaces() != null)
+                    .SelectMany(r => r.Namespaces()).Distinct().ToList();
+
+                foreach (var @namespace in namespaces)
+                {
+                    namespaceRules[@namespace] = options.RbacRules
+                        .Select(r => (IRbacRule)r)
+                        .Where(attr =>
+                            attr.Scope == Resources.EntityScope.Namespaced
+                            && attr.Namespaces().Contains(@namespace))
                         .GroupBy(attr => new
                         {
-                            ResourceNames = ((IRbacAttribute)attr).ResourceNames?.Split(',').Distinct(),
-                            Verbs = ((IRbacAttribute)attr).Verbs
+                            ResourceNames = attr.ResourceNames?.Split(',').Distinct(),
+                            Verbs = attr.Verbs,
                         })
                         .Select(
                             group => (
                                 Verbs: group.Key.Verbs,
                                 ResourceNames: group.Key.ResourceNames,
-                                EntityTypes: group.Select(attr => ((IRbacAttribute)attr).GetKubernetesEntityAttribute()).ToList()))
+                                EntityTypes: group.Select(attr => attr.GetKubernetesEntityAttribute()).ToList()))
 
                         .Select(
                             group => new V1PolicyRule
@@ -191,14 +231,18 @@ namespace Neon.Kube.Operator.Rbac
                                 Resources = group.EntityTypes.Select(entity => entity.PluralName).Distinct().ToList(),
                                 ResourceNames = group.ResourceNames?.Count() > 0 ? group.ResourceNames.ToList() : null,
                                 Verbs = group.Verbs.ToStrings(),
-                            });
+                            }).ToList();
+                }
+            }
 
-                if (namespaceRules.Any())
+            if (namespaceRules.Keys.Any())
+            {
+                foreach (var @namespace in namespaceRules.Keys)
                 {
                     var namespacedRole = new V1Role().Initialize();
                     namespacedRole.Metadata.Name = operatorSettings.Name;
                     namespacedRole.Metadata.NamespaceProperty = @namespace;
-                    namespacedRole.Rules = namespaceRules.ToList();
+                    namespacedRole.Rules = namespaceRules[@namespace].ToList();
 
                     Roles.Add(namespacedRole);
 

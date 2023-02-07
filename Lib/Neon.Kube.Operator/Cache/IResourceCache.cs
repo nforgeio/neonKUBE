@@ -33,6 +33,7 @@ namespace Neon.Kube.Operator.Cache
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         TEntity Get(string id);
+        bool Get(string id, out TEntity result);
 
         void Compare(TEntity resource, out ModifiedEventType result);
 

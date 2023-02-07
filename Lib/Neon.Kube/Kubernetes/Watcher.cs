@@ -58,14 +58,42 @@ namespace Neon.Kube
         /// The number of attempts for reconciling the resource.
         /// </summary>
         public int Attempt { get; set; } = 0;
+
+        /// <summary>
+        /// Force a reconciliation for the resource.
+        /// </summary>
+        public bool Force { get; set; } = false;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public WatchEvent()
+        {
+
+        }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="value"></param>
+        /// <param name="attempt"></param>
+        /// <param name="force"></param>
+        public WatchEvent(WatchEventType type, T value, int attempt = 0, bool force = false)
+        {
+            Type    = type;
+            Value   = value; 
+            Attempt = attempt;
+            Force   = force;
+        }
     }
 
     /// <summary>
     /// A generic Kubernetes watcher.
     /// </summary>
     /// <typeparam name="T">Specifies the Kubernetes entity type being watched.</typeparam>
-    public sealed class Watcher<T> : IDisposable 
-        where T : IKubernetesObject<V1ObjectMeta>, new()
+    public sealed class Watcher<T> : IDisposable
+        where T : IKubernetesObject<V1ObjectMeta>
     {
         private string                  resourceVersion;
         private Channel<WatchEvent<T>>  eventChannel;

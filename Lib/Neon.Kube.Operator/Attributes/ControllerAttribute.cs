@@ -17,6 +17,8 @@
 
 using System;
 
+using Neon.Kube.Resources;
+
 namespace Neon.Kube.Operator.Attributes
 {
     /// <summary>
@@ -31,12 +33,26 @@ namespace Neon.Kube.Operator.Attributes
         public bool Ignore { get; set; } = false;
 
         /// <summary>
+        /// Optionally disable automatic finalizer registration. If enabled, all finalizers currently deployed by the operator
+        /// will be registered when a resource is reconciled.
+        /// </summary>
+        public bool AutoRegisterFinalizers { get; set; } = true;
+
+        /// <summary>
+        /// Specifies whether Kubernetes custom resources should be created.
+        /// </summary>
+        public bool ManageCustomResourceDefinitions { get; set; } = true;
+
+        /// <summary>
+        /// The scope of the controller.
+        /// </summary>
+        public EntityScope Scope { get; set; } = EntityScope.Namespaced;
+
+        /// <summary>
         /// Constructor
         /// </summary>
-        public ControllerAttribute(
-            bool ignore = false)
+        public ControllerAttribute()
         {
-            this.Ignore = ignore;
         }
     }
 }

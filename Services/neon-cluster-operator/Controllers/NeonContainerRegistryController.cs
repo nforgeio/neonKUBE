@@ -70,7 +70,7 @@ namespace NeonClusterOperator
     /// </para>
     /// </summary>
     [RbacRule<V1NeonContainerRegistry>(RbacVerb.All, EntityScope.Cluster)]
-    [RbacRule<V1Secret>(RbacVerb.Get, EntityScope.Namespaced, KubeNamespace.NeonSystem)]
+    [RbacRule<V1Secret>(RbacVerb.Get, EntityScope.Namespaced)]
     public class NeonContainerRegistryController : IResourceController<V1NeonContainerRegistry>
     {
         //---------------------------------------------------------------------
