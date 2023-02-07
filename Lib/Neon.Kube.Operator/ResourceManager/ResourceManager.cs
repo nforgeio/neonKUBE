@@ -51,7 +51,6 @@ using k8s.LeaderElection;
 using k8s.Models;
 
 using Prometheus;
-using System.Diagnostics.Tracing;
 
 // $todo(jefflill):
 //
@@ -965,19 +964,17 @@ namespace Neon.Kube.Operator.ResourceManager
 
                         case WatchEventType.Modified:
 
-                            if (modifiedEventType == ModifiedEventType.NoChanges)
+                            if (modifiedEventType == ModifiedEventType.Other)
                             {
-                                return;
-                            }
-
-                            foreach (var ownerRef in resource.Metadata.OwnerReferences)
-                            {
-                                if (resourceCache.Get(ownerRef.Uid, out TEntity owner))
+                                foreach (var ownerRef in resource.Metadata.OwnerReferences)
                                 {
-                                    var newWatchEvent = new WatchEvent<TEntity>(WatchEventType.Modified, owner, force: true);
+                                    if (resourceCache.Get(ownerRef.Uid, out TEntity owner))
+                                    {
+                                        var newWatchEvent = new WatchEvent<TEntity>(WatchEventType.Modified, owner, force: true);
 
-                                    await eventQueue.DequeueAsync(newWatchEvent);
-                                    await eventQueue.EnqueueAsync(newWatchEvent);
+                                        await eventQueue.DequeueAsync(newWatchEvent);
+                                        await eventQueue.EnqueueAsync(newWatchEvent);
+                                    }
                                 }
                             }
 
@@ -1017,7 +1014,6 @@ namespace Neon.Kube.Operator.ResourceManager
                             break;
                     }
                 };
-
 
             this.eventQueue = new EventQueue<TEntity>(k8s, options, actionAsync);
 
