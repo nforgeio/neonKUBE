@@ -334,7 +334,7 @@ try
         Write-Info "********************************************************************************"
         Write-Info ""
 
-        & "$msbuild" "$nkSolution" -t:restore -verbosity:quiet
+        & dotnet restore "$nkSolution"
 
         if (-not $?)
         {

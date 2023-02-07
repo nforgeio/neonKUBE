@@ -149,7 +149,7 @@ try
 
         dotnet restore
 
-        & "$msbuild" "$nkSolution" -t:restore -verbosity:minimal
+        & dotnet restore "$nkSolution"
 
         if (-not $?)
         {
