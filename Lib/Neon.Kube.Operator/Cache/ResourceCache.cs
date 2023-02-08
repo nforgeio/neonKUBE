@@ -117,6 +117,16 @@ namespace Neon.Kube.Operator.Cache
             }
         }
 
+        public void Upsert(TEntity entity)
+        {
+            var id = entity.Metadata.Uid;
+
+            cache.AddOrUpdate(
+                key: id,
+                addValueFactory: (id) => Clone(entity),
+                updateValueFactory: (key, oldEntity) => Clone(entity));
+        }
+
         public bool IsFinalizing(TEntity entity)
         {
             var id = entity.Metadata.Uid;

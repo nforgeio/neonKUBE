@@ -32,6 +32,7 @@ using Neon.Kube.Operator.Builder;
 using k8s.Models;
 using k8s;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.AspNetCore.Hosting;
 
 namespace Neon.Kube.Operator
 {
@@ -43,12 +44,12 @@ namespace Neon.Kube.Operator
         /// <summary>
         /// The host for the operator.
         /// </summary>
-        IHost Host { get; set; }
+        IWebHost Host { get; set; }
 
         /// <summary>
         /// The host builder.
         /// </summary>
-        IHostBuilder HostBuilder { get; set; }
+        IWebHostBuilder HostBuilder { get; set; }
 
         /// <summary>
         /// The Operator Settings.

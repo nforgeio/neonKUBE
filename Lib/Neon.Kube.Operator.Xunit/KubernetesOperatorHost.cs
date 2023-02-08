@@ -55,10 +55,10 @@ namespace Neon.Kube.Operator.Xunit
     public class KubernetesOperatorTestHost : IKubernetesOperatorHost
     {
         /// <inheritdoc/>
-        public IHost Host { get; set; }
+        public IWebHost Host { get; set; }
 
         /// <inheritdoc/>
-        public IHostBuilder HostBuilder { get; set; }
+        public IWebHostBuilder HostBuilder { get; set; }
 
         /// <inheritdoc/>
         public CertManagerOptions CertManagerOptions { get; set; }

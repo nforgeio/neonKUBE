@@ -83,7 +83,6 @@ namespace NeonClusterOperator
         // Instance members
 
         private readonly IKubernetes k8s;
-        private readonly IFinalizerManager<V1NeonDashboard> finalizerManager;
         private readonly ILogger<NeonDashboardController>   logger;
 
         /// <summary>
@@ -91,15 +90,12 @@ namespace NeonClusterOperator
         /// </summary>
         public NeonDashboardController(
             IKubernetes k8s,
-            IFinalizerManager<V1NeonDashboard> manager,
             ILogger<NeonDashboardController> logger)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
-            Covenant.Requires(manager != null, nameof(manager));
             Covenant.Requires(logger != null, nameof(logger));
 
             this.k8s              = k8s;
-            this.finalizerManager = manager;
             this.logger           = logger;
         }
 
@@ -122,8 +118,6 @@ namespace NeonClusterOperator
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("customresource", nameof(V1NeonDashboard)));
-
-                await finalizerManager.RegisterAllFinalizersAsync(resource);
 
                 logger?.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
 

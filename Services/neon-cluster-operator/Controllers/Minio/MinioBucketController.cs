@@ -67,8 +67,8 @@ namespace NeonClusterOperator
     /// <summary>
     /// Manages MinioBucket LDAP database.
     /// </summary>
-    [RbacRule<V1MinioBucket>(RbacVerb.All)]
-    [RbacRule<V1MinioTenant>(RbacVerb.All)]
+    [RbacRule<V1MinioBucket>(RbacVerb.All, Scope = EntityScope.Cluster)]
+    [RbacRule<V1MinioTenant>(RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1Secret>(RbacVerb.Get)]
     public class MinioBucketController : IResourceController<V1MinioBucket>
     {
@@ -91,23 +91,19 @@ namespace NeonClusterOperator
 
         private readonly IKubernetes                      k8s;
         private readonly ILogger<MinioBucketController>   logger;
-        private readonly IFinalizerManager<V1MinioBucket> finalizerManager;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public MinioBucketController(
             IKubernetes k8s,
-            ILogger<MinioBucketController> logger,
-            IFinalizerManager<V1MinioBucket> manager)
+            ILogger<MinioBucketController> logger)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
             Covenant.Requires(logger != null, nameof(logger));
-            Covenant.Requires(manager != null, nameof(manager));
 
             this.k8s              = k8s;
             this.logger           = logger;
-            this.finalizerManager = manager;
         }
 
         /// <summary>
@@ -129,9 +125,9 @@ namespace NeonClusterOperator
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("resource", nameof(V1MinioBucket)));
-
-                await finalizerManager.RegisterAllFinalizersAsync(resource);
                 
+                logger?.LogInformationEx(() => $"Reconciling {typeof(V1MinioBucket)} [{resource.Name()}].");
+
                 try
                 {
                     minioClient = await GetMinioClientAsync(resource);
@@ -168,6 +164,8 @@ namespace NeonClusterOperator
                 catch (Exception e)
                 {
                     logger?.LogErrorEx(e);
+
+                    throw;
                 }
                 finally
                 {

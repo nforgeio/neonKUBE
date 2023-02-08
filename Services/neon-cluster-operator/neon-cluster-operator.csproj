@@ -60,6 +60,13 @@
 		<Folder Include="config.gitignore\" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Update="Properties\launchSettings.json">
+	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+	    <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+	  </None>
+	</ItemGroup>
+
 	<!--
 	The [ClusterManifest] build target executes a [neon-build download-const-uri] command to
 	download the cluster manifest JSON file for the current cluster version.  The manifest

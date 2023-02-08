@@ -39,6 +39,7 @@ namespace Neon.Kube.Operator.Cache
 
         TEntity Upsert(TEntity resource, out ModifiedEventType result);
 
+        void Upsert(TEntity resource);
         void Upsert(IEnumerable<TEntity> resources);
 
         void Remove(TEntity resource);

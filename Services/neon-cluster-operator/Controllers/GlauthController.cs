@@ -60,12 +60,14 @@ using Npgsql;
 using Neon.Kube.Operator.Rbac;
 using Neon.Kube.Resources.Cluster;
 using Neon.Kube.Resources;
+using Neon.Kube.Operator.Attributes;
 
 namespace NeonClusterOperator
 {
     /// <summary>
     /// Manages Glauth LDAP database.
     /// </summary>
+    [Controller(ManageCustomResourceDefinitions = false)]
     [RbacRule<V1Secret>(RbacVerb.Get, EntityScope.Namespaced)]
     public class GlauthController : IResourceController<V1Secret>
     {
@@ -124,7 +126,7 @@ namespace NeonClusterOperator
         /// </summary>
         /// <param name="resource"></param>
         /// <returns></returns>
-        public bool Filter(V1Secret resource)
+        public static bool Filter(V1Secret resource)
         {
             return (resource.Name() == "glauth-users" || resource.Name() == "glauth-groups");
         }

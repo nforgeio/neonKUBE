@@ -116,5 +116,26 @@ namespace Neon.Kube.Operator
             k8sBuilder.UseStartup<TStartup>();
             return k8sBuilder;
         }
+
+        public static IKubernetesOperatorHostBuilder AddSingleton<TSingleton>(this IKubernetesOperatorHostBuilder k8sBuilder)
+        {
+            k8sBuilder.Services.AddSingleton(typeof(TSingleton));
+
+            return k8sBuilder;
+        }
+
+        public static IKubernetesOperatorHostBuilder AddSingleton<TSingleton>(this IKubernetesOperatorHostBuilder k8sBuilder, TSingleton instance)
+        {
+            k8sBuilder.Services.AddSingleton(typeof(TSingleton), instance);
+
+            return k8sBuilder;
+        }
+
+        public static IKubernetesOperatorHostBuilder AddSingleton(this IKubernetesOperatorHostBuilder k8sBuilder, Type type, object instance)
+        {
+            k8sBuilder.Services.AddSingleton(type, instance);
+
+            return k8sBuilder;
+        }
     }
 }

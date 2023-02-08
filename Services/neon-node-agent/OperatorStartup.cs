@@ -75,8 +75,7 @@ namespace NeonNodeAgent
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<ILogger>(Program.Service.Logger)
-                .AddSingleton(Service)
-                .AddSingleton(Service.K8s);
+                .AddSingleton(Service);
 
             services.AddKubernetesOperator()
                 .AddController<ContainerRegistryController>(

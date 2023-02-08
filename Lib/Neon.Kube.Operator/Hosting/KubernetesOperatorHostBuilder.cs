@@ -34,6 +34,7 @@ using k8s.Models;
 using k8s;
 using Neon.Common;
 using Neon.Kube.Resources.CertManager;
+using Neon.BuildInfo;
 
 namespace Neon.Kube.Operator
 {
@@ -43,25 +44,32 @@ namespace Neon.Kube.Operator
     {
         private KubernetesOperatorHost operatorHost;
 
+        public IServiceCollection Services { get; set; }
+
         /// <summary>
         /// Constructor.
         /// </summary>
         public KubernetesOperatorHostBuilder(string[] args = null)
         {
             this.operatorHost = new KubernetesOperatorHost(args);
+            this.Services     = new ServiceCollection();
         }
 
         /// <inheritdoc/>
         public IKubernetesOperatorHost Build()
         {
-            this.operatorHost.HostBuilder = Host.CreateDefaultBuilder();
-            
-            this.operatorHost.HostBuilder.ConfigureWebHost(
-                webhost =>
-                    webhost.ConfigureServices(services =>
+            this.operatorHost.HostBuilder = new WebHostBuilder();
+
+            this.operatorHost.HostBuilder
+                    .ConfigureServices(services =>
                     {
                         services.AddSingleton<OperatorSettings>(this.operatorHost.OperatorSettings);
                         services.AddSingleton<CertManagerOptions>(this.operatorHost.CertManagerOptions);
+
+                        foreach (var s in this.Services)
+                        {
+                            services.Add(s);
+                        }
                     })
                     .UseKestrel(options =>
                     {
@@ -74,8 +82,7 @@ namespace Neon.Kube.Operator
                         });
                         options.Listen(this.operatorHost.OperatorSettings.ListenAddress, this.operatorHost.OperatorSettings.Port);
                     })
-                    .UseStartup(this.operatorHost.StartupType)
-                );
+                    .UseStartup(this.operatorHost.StartupType);
 
             return operatorHost;
         }

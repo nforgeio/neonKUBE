@@ -55,10 +55,10 @@ namespace Neon.Kube.Operator
     public class KubernetesOperatorHost : IKubernetesOperatorHost
     {
         /// <inheritdoc/>
-        public IHost Host { get; set; }
+        public IWebHost Host { get; set; }
 
         /// <inheritdoc/>
-        public IHostBuilder HostBuilder { get; set; }
+        public IWebHostBuilder HostBuilder { get; set; }
 
         /// <inheritdoc/>
         public CertManagerOptions CertManagerOptions { get; set; }
@@ -101,7 +101,7 @@ namespace Neon.Kube.Operator
                 OperatorSettings.certManagerEnabled = true;
             }
 
-            if (args.Count() == 0)
+            if (args == null || args?.Count() == 0)
             {
                 Host = HostBuilder.Build();
                 logger = Host.Services.GetService<ILoggerFactory>()?.CreateLogger<KubernetesOperatorHost>();
@@ -164,7 +164,7 @@ namespace Neon.Kube.Operator
                 OperatorSettings.certManagerEnabled = true;
             }
 
-            if (args.Count() == 0) 
+            if (args == null || args?.Count() == 0) 
             {
                 Host   = HostBuilder.Build();
                 logger = Host.Services.GetService<ILoggerFactory>()?.CreateLogger<KubernetesOperatorHost>();

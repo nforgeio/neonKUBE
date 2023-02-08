@@ -125,7 +125,6 @@ namespace NeonClusterOperator
         // Instance members
 
         private readonly IKubernetes                              k8s;
-        private readonly IFinalizerManager<V1NeonClusterOperator> finalizerManager;
         private readonly ILogger<NeonClusterOperatorController>   logger;
 
         /// <summary>
@@ -133,19 +132,16 @@ namespace NeonClusterOperator
         /// </summary>
         public NeonClusterOperatorController(
             IKubernetes                              k8s,
-            IFinalizerManager<V1NeonClusterOperator> manager,
             ILogger<NeonClusterOperatorController>   logger,
             HeadendClient                            headendClient,
             HarborClient                             harborClient)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
-            Covenant.Requires(manager != null, nameof(manager));
             Covenant.Requires(logger != null, nameof(logger));
             Covenant.Requires(headendClient != null, nameof(headendClient));
             Covenant.Requires(harborClient != null, nameof(harborClient));
 
             this.k8s              = k8s;
-            this.finalizerManager = manager;
             this.logger           = logger;
             this.headendClient    = headendClient;
             this.harborClient     = harborClient;
@@ -182,8 +178,6 @@ namespace NeonClusterOperator
                 {
                     return null;
                 }
-
-                await finalizerManager.RegisterAllFinalizersAsync(resource);
 
                 if (!initialized)
                 {

@@ -209,8 +209,7 @@ namespace NeonNodeAgent
             K8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig(), new KubernetesRetryHandler());
 
             await WatchClusterInfoAsync();
-            await CheckCertificateAsync();
-
+            
             // Start the web service.
             var port = 443;
 
@@ -219,30 +218,27 @@ namespace NeonNodeAgent
                 port = 11006;
             }
 
-            webHost = new WebHostBuilder()
-                .ConfigureAppConfiguration(
-                    (hostingcontext, config) =>
-                    {
-                        config.Sources.Clear();
-                    })
-                .UseStartup<OperatorStartup>()
-                .UseKestrel(options => {
-                    options.ConfigureEndpointDefaults(o =>
-                    {
-                        o.UseHttps(Certificate);
-                    });
-                    options.Listen(IPAddress.Any, port);
+            var k8s = KubernetesOperatorHost
+               .CreateDefaultBuilder()
+               .ConfigureOperator(configure =>
+               {
+                   configure.Port = port;
+                   configure.AssemblyScanningEnabled = true;
+                   configure.Name = Name;
+                   configure.Namespace = KubeNamespace.NeonSystem;
+               })
+               .ConfigureNeonKube()
+               .AddSingleton(typeof(Service), this)
+               .UseStartup<OperatorStartup>()
+               .Build();
 
-                })
-                .ConfigureServices(services => services.AddSingleton(typeof(Service), this))
-                .UseStaticWebAssets()
-            .Build();
+            _ = k8s.RunAsync();
+
+            Logger.LogInformationEx(() => $"Listening on: {IPAddress.Any}:{port}");
 
             // Indicate that the service is running.
 
             await StartedAsync();
-
-            _ = webHost.RunAsync();
 
             // Handle termination gracefully.
 
@@ -289,77 +285,6 @@ namespace NeonNodeAgent
             },
             KubeNamespace.NeonStatus,
             fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
-        }
-
-        private async Task CheckCertificateAsync()
-        {
-            Logger.LogInformationEx(() => "Checking webhook certificate.");
-
-            var cert = await K8s.CustomObjects.ListNamespacedCustomObjectAsync<V1Certificate>(
-                KubeNamespace.NeonSystem,
-                labelSelector: $"{NeonLabel.ManagedBy}={Name}");
-
-            if (!cert.Items.Any())
-            {
-                Logger.LogInformationEx(() => "Webhook certificate does not exist, creating...");
-
-                var certificate = new V1Certificate()
-                {
-                    Metadata = new V1ObjectMeta()
-                    {
-                        Name = Name,
-                        NamespaceProperty = KubeNamespace.NeonSystem,
-                        Labels = new Dictionary<string, string>()
-                        {
-                            { NeonLabel.ManagedBy, Name }
-                        }
-                    },
-                    Spec = new V1CertificateSpec()
-                    {
-                        DnsNames = new List<string>()
-                    {
-                        "neon-node-agent",
-                        "neon-node-agent.neon-system",
-                        "neon-node-agent.neon-system.svc",
-                        "neon-node-agent.neon-system.svc.cluster.local",
-                    },
-                        Duration = "2160h0m0s",
-                        IssuerRef = new IssuerRef()
-                        {
-                            Name = "neon-system-selfsigned-issuer",
-                        },
-                        SecretName = $"{Name}-webhook-tls"
-                    }
-                };
-
-                await K8s.CustomObjects.UpsertNamespacedCustomObjectAsync(certificate, certificate.Namespace(), certificate.Name());
-
-                Logger.LogInformationEx(() => "Webhook certificate created.");
-            }
-
-            _ = K8s.WatchAsync<V1Secret>(
-                async (@event) =>
-                {
-                    await SyncContext.Clear;
-
-                    Certificate = X509Certificate2.CreateFromPem(
-                        Encoding.UTF8.GetString(@event.Value.Data["tls.crt"]),
-                        Encoding.UTF8.GetString(@event.Value.Data["tls.key"]));
-
-                    Logger.LogInformationEx("Updated webhook certificate");
-                },
-                KubeNamespace.NeonSystem,
-                fieldSelector: $"metadata.name={Name}-webhook-tls");
-
-            await NeonHelper.WaitForAsync(
-               async () =>
-               {
-                   await SyncContext.Clear;
-
-                   return Certificate != null;
-               },
-               timeout: TimeSpan.FromSeconds(300),
-               pollInterval: TimeSpan.FromMilliseconds(500));
         }
     }
 }

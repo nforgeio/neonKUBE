@@ -406,7 +406,7 @@ namespace Neon.Kube.Operator.ResourceManager
                         await CreateOrReplaceCustomResourceDefinitionAsync();
                     }
 
-                    //await EnsurePermissionsAsync();
+                    await EnsurePermissionsAsync();
 
                     // Start the IDLE reconcile loop.
 
@@ -661,6 +661,8 @@ namespace Neon.Kube.Operator.ResourceManager
 
                                 if (@event.Force)
                                 {
+                                    logger?.LogDebugEx(() => $"FORCING UPDATE. Event type [{modifiedEventType}] on resource [{resource.Kind}/{resource.Namespace()}/{resourceName}]");
+
                                     modifiedEventType = ModifiedEventType.Other;
                                 }
 
@@ -679,6 +681,8 @@ namespace Neon.Kube.Operator.ResourceManager
                                             
                                             if (options.AutoRegisterFinalizers)
                                             {
+                                                logger?.LogInformationEx(() => $"Registering finalizers for resource [{resource.Kind}/{resource.Namespace()}/{resourceName}]");
+                                                
                                                 await finalizerManager.RegisterAllFinalizersAsync(resource);
                                             }
 
@@ -868,14 +872,11 @@ namespace Neon.Kube.Operator.ResourceManager
 
                     resourceCache.Compare(resource, out var modifiedEventType);
 
-                    using (var scope = serviceProvider.CreateScope())
-                    {
-                        var controller = CreateController(scope.ServiceProvider);
+                    logger?.LogDebugEx(() => $"Resource {resource.Kind} {resource.Namespace()}/{resource.Name()} received {@event.Type}/{modifiedEventType} event.");
 
-                        if (!controller.Filter(resource))
-                        {
-                            return;
-                        }
+                    if (!(bool)controllerType.GetMethod("Filter").Invoke(null, new object[] { resource }))
+                    {
+                        return;
                     }
 
                     switch (@event.Type)
@@ -945,6 +946,13 @@ namespace Neon.Kube.Operator.ResourceManager
 
                     dependentResourceCache.Compare(resource, out var modifiedEventType);
 
+                    if (resource.Metadata.OwnerReferences.Any(r => resourceCache.Get(r.Uid, out _)))
+                    {
+                        dependentResourceCache.Upsert(resource);
+                    }
+
+                    logger?.LogDebugEx(() => $"Dependent resource {resource.Kind} {resource.Namespace()}/{resource.Name()} received {@event.Type}/{modifiedEventType} event.");
+
                     switch (@event.Type)
                     {
                         case WatchEventType.Deleted:
@@ -953,6 +961,8 @@ namespace Neon.Kube.Operator.ResourceManager
                             {
                                 if (resourceCache.Get(ownerRef.Uid, out TEntity owner))
                                 {
+                                    logger?.LogDebugEx(() => $"Dependent resource {resource.Kind} {resource.Namespace()}/{resource.Name()} queuing new event for {typeof(TEntity)} {owner.Namespace()}/{owner.Name()}.");
+                                    
                                     var newWatchEvent = new WatchEvent<TEntity>(WatchEventType.Modified, owner, force: true);
 
                                     await eventQueue.DequeueAsync(newWatchEvent);
@@ -970,6 +980,8 @@ namespace Neon.Kube.Operator.ResourceManager
                                 {
                                     if (resourceCache.Get(ownerRef.Uid, out TEntity owner))
                                     {
+                                        logger?.LogDebugEx(() => $"Dependent resource {resource.Kind} {resource.Namespace()}/{resource.Name()} queuing new event for {typeof(TEntity)} {owner.Namespace()}/{owner.Name()}.");
+
                                         var newWatchEvent = new WatchEvent<TEntity>(WatchEventType.Modified, owner, force: true);
 
                                         await eventQueue.DequeueAsync(newWatchEvent);

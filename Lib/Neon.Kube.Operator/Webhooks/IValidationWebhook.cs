@@ -85,7 +85,7 @@ namespace Neon.Kube.Operator.Webhook
                 }
             };
 
-            if (useTunnel)
+            if (useTunnel && !string.IsNullOrEmpty(tunnelUrl))
             {
                 clientConfig.Service = null;
                 clientConfig.CaBundle = null;

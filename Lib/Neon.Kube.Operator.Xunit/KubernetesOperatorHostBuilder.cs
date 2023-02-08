@@ -41,7 +41,7 @@ namespace Neon.Kube.Operator.Xunit
     /// <inheritdoc/>
     public class KubernetesOperatorTestHostBuilder : IKubernetesOperatorHostBuilder
     {
-        internal IServiceCollection Services { get; set; }
+        public IServiceCollection Services { get; set; }
         
         private KubernetesOperatorTestHost operatorHost;
 
@@ -57,7 +57,7 @@ namespace Neon.Kube.Operator.Xunit
         /// <inheritdoc/>
         public IKubernetesOperatorHost Build()
         {
-            this.operatorHost.HostBuilder = Host.CreateDefaultBuilder();
+            this.operatorHost.HostBuilder = new WebHostBuilder();
 
             this.operatorHost.HostBuilder.ConfigureServices(services =>
                     {

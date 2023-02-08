@@ -59,7 +59,7 @@ namespace Neon.Kube.Operator.Controller
         /// <summary>
         /// An optional filter.
         /// </summary>
-        public bool Filter(TEntity resource)
+        public static bool Filter(TEntity resource)
         {
             return true;
         }

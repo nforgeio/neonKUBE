@@ -84,9 +84,7 @@ namespace Neon.Kube.Operator.Rbac
                 attributes.Add(
                         new RbacRule<V1Lease>(
                             verbs: RbacVerb.All,
-                            scope: Resources.EntityScope.Namespaced,
-                            @namespace: operatorSettings.Namespace
-                            ));
+                            scope: Resources.EntityScope.Cluster));
             }
 
             if (operatorSettings.manageCustomResourceDefinitions)

@@ -23,6 +23,11 @@ namespace Neon.Kube
     public static class KubeService
     {
         /// <summary>
+        /// Mimir.
+        /// </summary>
+        public const string Mimir = "mimir";
+
+        /// <summary>
         /// Minio.
         /// </summary>
         public const string Minio = "minio";
