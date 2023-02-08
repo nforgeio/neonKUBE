@@ -50,17 +50,6 @@ namespace Neon.Kube.Operator.ResourceManager
     public interface IDependentResource
     {
         /// <summary>
-        /// Returns the namespace for the dependent resource.
-        /// </summary>
-        /// <returns></returns>
-        string Namespace();
-
-        /// <summary>
-        /// The scope of the dependent resource. This is either Namespaced or Cluster.
-        /// </summary>
-        EntityScope Scope { get; set; }
-
-        /// <summary>
         /// Gets the Entity <see cref="Type"/>
         /// </summary>
         /// <returns></returns>

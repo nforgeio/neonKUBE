@@ -55,27 +55,11 @@ namespace Neon.Kube.Operator.ResourceManager
     public class DependentResource<TEntity> : IDependentResource
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
-        /// <inheritdoc/>
-        public string WatchNamespace { get; set; } = null;
-        
-        /// <inheritdoc/>
-        public EntityScope Scope { get; set; } = EntityScope.Namespaced;
-
         /// <summary>
         /// Constructor
         /// </summary>
-        public DependentResource(
-            string watchNamespace = null,
-            EntityScope scope = EntityScope.Namespaced)
+        public DependentResource()
         {
-            this.WatchNamespace = watchNamespace;
-            this.Scope = scope;
-        }
-
-        /// <inheritdoc/>
-        public string Namespace()
-        {
-            return WatchNamespace;
         }
 
         /// <inheritdoc/>
