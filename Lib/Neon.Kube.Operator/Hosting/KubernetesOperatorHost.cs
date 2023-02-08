@@ -223,7 +223,7 @@ namespace Neon.Kube.Operator
         {
             logger?.LogInformationEx(() => "Checking webhook certificate.");
 
-            var cert = await k8s.CustomObjects.ListNamespacedCustomObjectAsync<V1Certificate>(OperatorSettings.Namespace, labelSelector: $"{NeonLabel.ManagedBy}={OperatorSettings.Name}");
+            var cert = await k8s.CustomObjects.ListNamespacedCustomObjectAsync<V1Certificate>(OperatorSettings.deployedNamespace, labelSelector: $"{NeonLabel.ManagedBy}={OperatorSettings.Name}");
 
             if (!cert.Items.Any())
             {
@@ -234,7 +234,7 @@ namespace Neon.Kube.Operator
                     Metadata = new V1ObjectMeta()
                     {
                         Name              = OperatorSettings.Name,
-                        NamespaceProperty = OperatorSettings.Namespace,
+                        NamespaceProperty = OperatorSettings.deployedNamespace,
                         Labels = new Dictionary<string, string>()
                         {
                             { NeonLabel.ManagedBy, OperatorSettings.Name }
@@ -245,9 +245,9 @@ namespace Neon.Kube.Operator
                         DnsNames = new List<string>()
                         {
                             $"{OperatorSettings.Name}",
-                            $"{OperatorSettings.Name}.{OperatorSettings.Namespace}",
-                            $"{OperatorSettings.Name}.{OperatorSettings.Namespace}.svc",
-                            $"{OperatorSettings.Name}.{OperatorSettings.Namespace}.svc.cluster.local",
+                            $"{OperatorSettings.Name}.{OperatorSettings.deployedNamespace}",
+                            $"{OperatorSettings.Name}.{OperatorSettings.deployedNamespace}.svc",
+                            $"{OperatorSettings.Name}.{OperatorSettings.deployedNamespace}.svc.cluster.local",
                         },
                         Duration = $"{CertManagerOptions.CertificateDuration.TotalHours}h{CertManagerOptions.CertificateDuration.Minutes}m{CertManagerOptions.CertificateDuration.Seconds}s",
                         IssuerRef = CertManagerOptions.IssuerRef,
@@ -271,7 +271,7 @@ namespace Neon.Kube.Operator
 
                     logger?.LogInformationEx("Updated webhook certificate");
                 },
-                OperatorSettings.Namespace,
+                OperatorSettings.deployedNamespace,
                 fieldSelector: $"metadata.name={OperatorSettings.Name}-webhook-tls");
 
             await NeonHelper.WaitForAsync(

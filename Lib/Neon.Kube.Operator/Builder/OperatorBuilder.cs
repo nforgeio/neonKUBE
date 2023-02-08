@@ -87,7 +87,7 @@ namespace Neon.Kube.Operator.Builder
                 if (NeonHelper.IsDevWorkstation ||
                     Debugger.IsAttached)
                 {
-                    k8s.HttpClient.DefaultRequestHeaders.Add("Impersonate-User", $"system:serviceaccount:{operatorSettings.Namespace}:{operatorSettings.Name}"); 
+                    k8s.HttpClient.DefaultRequestHeaders.Add("Impersonate-User", $"system:serviceaccount:{operatorSettings.deployedNamespace}:{operatorSettings.Name}"); 
                 }
 
                 Services.AddSingleton<IKubernetes>(k8s);
@@ -133,7 +133,7 @@ namespace Neon.Kube.Operator.Builder
 
                             if (controllerAttribute?.Scope == Resources.EntityScope.Namespaced)
                             {
-                                options.WatchNamespace = options.WatchNamespace ?? operatorSettings.Namespace;
+                                options.WatchNamespace = (options.WatchNamespace ?? operatorSettings.WatchNamespace) ?? operatorSettings.deployedNamespace;
                             }
 
                             if (controllerAttribute?.AutoRegisterFinalizers == false)

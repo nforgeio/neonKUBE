@@ -18,7 +18,6 @@ namespace TestOperator
                     configure.Port = 1234;
                     configure.AssemblyScanningEnabled = false;
                     configure.Name = "my-cool-operator";
-                    configure.Namespace = "default";
                 })
                 .ConfigureNeonKube()
                 .UseStartup<OperatorStartup>()

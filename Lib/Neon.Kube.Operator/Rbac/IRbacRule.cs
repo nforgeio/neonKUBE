@@ -46,7 +46,7 @@ namespace Neon.Kube.Operator.Rbac
         string ResourceNames { get; set; }
 
         /// <summary>
-        /// Gets the Namespace string that the rule applies to. This could be a comma-separated list.
+        /// Gets the WatchNamespace string that the rule applies to. This could be a comma-separated list.
         /// </summary>
         /// <returns></returns>
         string Namespace();

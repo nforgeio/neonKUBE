@@ -66,7 +66,7 @@ namespace Neon.Kube.Operator.Rbac
         {
             var serviceAccount = new V1ServiceAccount().Initialize();
             serviceAccount.Metadata.Name = operatorSettings.Name;
-            serviceAccount.Metadata.NamespaceProperty = operatorSettings.Namespace;
+            serviceAccount.Metadata.NamespaceProperty = operatorSettings.deployedNamespace;
 
             ServiceAccounts.Add(serviceAccount);
 
@@ -120,13 +120,13 @@ namespace Neon.Kube.Operator.Rbac
                     new RbacRule<V1Certificate>(
                         verbs: RbacVerb.All,
                         scope: Resources.EntityScope.Namespaced,
-                        @namespace: operatorSettings.Namespace
+                        @namespace: operatorSettings.deployedNamespace
                         ));
                 attributes.Add(
                     new RbacRule<V1Secret>(
                         verbs: RbacVerb.Watch,
                         scope: Resources.EntityScope.Namespaced,
-                        @namespace: operatorSettings.Namespace,
+                        @namespace: operatorSettings.deployedNamespace,
                         resourceNames: $"{operatorSettings.Name}-webhook-tls"
                         ));
             }
@@ -173,7 +173,7 @@ namespace Neon.Kube.Operator.Rbac
 
             var namespaceRules = new Dictionary<string, List<V1PolicyRule>>();
 
-            namespaceRules[operatorSettings.Namespace] = attributes.Select(a => (IRbacRule)a).Where(attr =>
+            namespaceRules[operatorSettings.deployedNamespace] = attributes.Select(a => (IRbacRule)a).Where(attr =>
                 attr.Scope == Resources.EntityScope.Namespaced)
                     .GroupBy(attr => new
                     {

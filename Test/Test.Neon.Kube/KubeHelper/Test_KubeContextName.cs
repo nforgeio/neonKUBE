@@ -97,9 +97,9 @@ namespace TestKube
             Assert.Throws<FormatException>(() => KubeContextName.Parse("user@"));                       // Missing cluster
             Assert.Throws<FormatException>(() => KubeContextName.Parse("user@/namespace"));             // Missing cluster
             Assert.Throws<FormatException>(() => KubeContextName.Parse($"user@{tooLong}/namespace"));   // Cluster is too long
-            Assert.Throws<FormatException>(() => KubeContextName.Parse($"user@cluster/{tooLong}"));     // Namespace is too long
+            Assert.Throws<FormatException>(() => KubeContextName.Parse($"user@cluster/{tooLong}"));     // WatchNamespace is too long
             Assert.Throws<FormatException>(() => KubeContextName.Parse("user@cluster_name/namespace")); // Cluster has bad character
-            Assert.Throws<FormatException>(() => KubeContextName.Parse("user@cluster/namespace_name")); // Namespace has bad character
+            Assert.Throws<FormatException>(() => KubeContextName.Parse("user@cluster/namespace_name")); // WatchNamespace has bad character
         }
 
         [Fact]
@@ -113,9 +113,9 @@ namespace TestKube
             Assert.Throws<FormatException>(() => KubeContextName.Parse(""));                            // Missing cluster
             Assert.Throws<FormatException>(() => KubeContextName.Parse("/namespace"));                  // Missing cluster
             Assert.Throws<FormatException>(() => KubeContextName.Parse($"{tooLong}/namespace"));        // Cluster is too long
-            Assert.Throws<FormatException>(() => KubeContextName.Parse($"cluster/{tooLong}"));          // Namespace is too long
+            Assert.Throws<FormatException>(() => KubeContextName.Parse($"cluster/{tooLong}"));          // WatchNamespace is too long
             Assert.Throws<FormatException>(() => KubeContextName.Parse("cluster_name/namespace"));      // Cluster has bad character
-            Assert.Throws<FormatException>(() => KubeContextName.Parse("cluster/namespace_name"));      // Namespace has bad character
+            Assert.Throws<FormatException>(() => KubeContextName.Parse("cluster/namespace_name"));      // WatchNamespace has bad character
         }
 
         [Fact]

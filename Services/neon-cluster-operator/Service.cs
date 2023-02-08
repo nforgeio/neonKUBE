@@ -240,7 +240,6 @@ namespace NeonClusterOperator
                    configure.Port = Port;
                    configure.AssemblyScanningEnabled = true;
                    configure.Name = Name;
-                   configure.Namespace = KubeNamespace.NeonSystem;
                })
                .ConfigureNeonKube()
                .AddSingleton(typeof(Service), this)

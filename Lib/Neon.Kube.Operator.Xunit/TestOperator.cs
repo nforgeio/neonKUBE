@@ -55,7 +55,7 @@ namespace Neon.Kube.Operator.Xunit
                 Port = 1234,
                 AssemblyScanningEnabled = false,
                 Name = "my-cool-operator",
-                Namespace = "default",
+                WatchNamespace = "default",
                 KubernetesClientConfiguration = k8sConfig
             };
 

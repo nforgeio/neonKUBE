@@ -77,7 +77,7 @@ namespace Neon.Kube.Operator.Webhook
                 Service = new Admissionregistrationv1ServiceReference()
                 {
                     Name              = operatorSettings.Name,
-                    NamespaceProperty = operatorSettings.Namespace,
+                    NamespaceProperty = operatorSettings.deployedNamespace,
                     Path              = WebhookHelper.CreateEndpoint<TEntity>(this.GetType(), WebhookType.Mutate)
                 }
             };
@@ -94,7 +94,7 @@ namespace Neon.Kube.Operator.Webhook
 
             if (!useTunnel && operatorSettings.certManagerEnabled)
             {
-                webhookConfig.Metadata.EnsureAnnotations().Add("cert-manager.io/inject-ca-from", $"{operatorSettings.Namespace}/{operatorSettings.Name}");
+                webhookConfig.Metadata.EnsureAnnotations().Add("cert-manager.io/inject-ca-from", $"{operatorSettings.deployedNamespace}/{operatorSettings.Name}");
             }
 
             webhookConfig.Webhooks = new List<V1MutatingWebhook>()
