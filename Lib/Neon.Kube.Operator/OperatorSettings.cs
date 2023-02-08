@@ -98,6 +98,26 @@ namespace Neon.Kube.Operator
         public ResourceManagerOptions ResourceManagerOptions { get; set; } = new ResourceManagerOptions();
 
         /// <summary>
+        /// The endpoint where the metrics will be exposed.
+        /// </summary>
+        public string MetricsEndpoint { get; set; } = "/metrics";
+
+        /// <summary>
+        /// The endpoint where the startup check will be exposed.
+        /// </summary>
+        public string StartupEndpooint { get; set; } = "/healthz";
+
+        /// <summary>
+        /// The endpoint where the Liveness check will be exposed.
+        /// </summary>
+        public string LivenessEndpooint { get; set; } = "/healthz";
+
+        /// <summary>
+        /// The endpoint where the Readiness check will be exposed.
+        /// </summary>
+        public string ReadinessEndpooint { get; set; } = "/ready";
+
+        /// <summary>
         /// Validates the option properties.
         /// </summary>
         /// <exception cref="ValidationException">Thrown when any of the properties are invalid.</exception>

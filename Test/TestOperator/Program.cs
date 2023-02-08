@@ -16,7 +16,7 @@ namespace TestOperator
                 .ConfigureOperator(configure =>
                 {
                     configure.Port = 1234;
-                    configure.AssemblyScanningEnabled = false;
+                    configure.AssemblyScanningEnabled = true;
                     configure.Name = "my-cool-operator";
                     configure.Namespace = "default";
                 })

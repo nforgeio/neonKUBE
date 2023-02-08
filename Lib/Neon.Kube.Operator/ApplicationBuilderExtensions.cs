@@ -23,6 +23,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -36,6 +37,8 @@ using Neon.Kube.Operator.Webhook;
 using Neon.Kube.Operator.Webhook.Ngrok;
 
 using k8s;
+
+using Prometheus;
 
 namespace Neon.Kube.Operator
 {
@@ -62,6 +65,33 @@ namespace Neon.Kube.Operator
                     var k8s              = app.ApplicationServices.GetRequiredService<IKubernetes>();
                     var operatorSettings = app.ApplicationServices.GetRequiredService<OperatorSettings>();
                     var logger           = app.ApplicationServices.GetService<ILoggerFactory>()?.CreateLogger(nameof(ApplicationBuilderExtensions));
+
+                    endpoints.MapMetrics(operatorSettings.MetricsEndpoint);
+
+                    endpoints.MapHealthChecks(operatorSettings.StartupEndpooint, new HealthCheckOptions()
+                    {
+                        Predicate = (healthCheck =>
+                        {
+                            return healthCheck.Tags.Contains(OperatorBuilder.StartupProbeTag);
+                        })
+                    });
+
+                    endpoints.MapHealthChecks(operatorSettings.LivenessEndpooint, new HealthCheckOptions()
+                    {
+                        Predicate = (healthCheck =>
+                        {
+                            return healthCheck.Tags.Contains(OperatorBuilder.LivenessProbeTag);
+                        })
+                    });
+
+                    endpoints.MapHealthChecks(operatorSettings.ReadinessEndpooint, new HealthCheckOptions()
+                    {
+                        Predicate = (healthCheck =>
+                        {
+                            return healthCheck.Tags.Contains(OperatorBuilder.ReadinessProbeTag);
+                        })
+                    });
+
                     NgrokWebhookTunnel tunnel = null;
 
                     try

@@ -9,6 +9,7 @@ using Neon.Kube.Operator.Rbac;
 using Neon.Kube.Operator.ResourceManager;
 
 using k8s.Models;
+using Microsoft.Extensions.Logging;
 
 namespace TestOperator
 {
@@ -37,16 +38,13 @@ namespace TestOperator
         /// <param name="services">The service collection.</param>
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddLogging()
-                .AddKubernetesOperator()
-                .AddController<ExampleController>(
-                    options: new Neon.Kube.Operator.ResourceManager.ResourceManagerOptions()
-                    {
-                        RbacRules = new List<IRbacRule>()
-                        {
-                            new RbacRule<V1DaemonSet>(verbs: RbacVerb.Watch, scope: Neon.Kube.Resources.EntityScope.Cluster),
-                        }
-                    });
+            services.AddLogging(c =>
+            {
+                c.SetMinimumLevel(LogLevel.Debug);
+                c.ClearProviders();
+                c.AddConsole();
+            })
+                .AddKubernetesOperator();
         }
 
         /// <summary>

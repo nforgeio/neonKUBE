@@ -115,5 +115,33 @@ namespace Neon.Kube.Operator
             string ngrokDirectory = null,
             string ngrokAuthToken = null,
             bool enabled = true);
+
+        /// <summary>
+        /// Add a startup check to the Operator.
+        /// </summary>
+        /// <typeparam name="TStartupCheck"></typeparam>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        IOperatorBuilder AddStartupCheck<TStartupCheck>(string name = null)
+            where TStartupCheck : class, IHealthCheck;
+
+        /// <summary>
+        /// Add a liveness check to the Operator.
+        /// </summary>
+        /// <typeparam name="TLivenessCheck"></typeparam>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        IOperatorBuilder AddLivenessCheck<TLivenessCheck>(string name = null)
+            where TLivenessCheck : class, IHealthCheck;
+
+        /// <summary>
+        /// Add a readiness check to the Operator.
+        /// </summary>
+        /// <typeparam name="TReadinessCheck"></typeparam>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        IOperatorBuilder AddReadinessCheck<TReadinessCheck>(string name = null)
+            where TReadinessCheck : class, IHealthCheck;
+
     }
 }
