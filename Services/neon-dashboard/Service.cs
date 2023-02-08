@@ -147,7 +147,7 @@ namespace NeonDashboard
 
             Kubernetes = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig(), new KubernetesRetryHandler());
 
-            var metricsHost = GetEnvironmentVariable("METRICS_HOST", "http://mimir-query-frontend.neon-monitor.svc.cluster.local:8080");
+            var metricsHost = GetEnvironmentVariable("METRICS_HOST", $"http://{KubeService.Mimir}.{KubeNamespace.NeonMonitor}");
             
             PrometheusClient = new PrometheusClient($"{metricsHost}/prometheus/");
 

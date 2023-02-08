@@ -122,12 +122,21 @@ namespace NeonDashboard
             {
                 await SyncContext.Clear;
 
-                var query = $@"sum(node_memory_MemTotal_bytes{{cluster=~""{NeonDashboardService.ClusterInfo.Name}""}}) - sum(node_memory_MemFree_bytes{{cluster=~""{NeonDashboardService.ClusterInfo.Name}""}})";
-                MemoryUsageBytes = await QueryRangeAsync(query, start, end, stepSize);
+                try
+                {
+                    var query = $@"sum(node_memory_MemTotal_bytes{{cluster=~""{NeonDashboardService.ClusterInfo.Name}""}}) - sum(node_memory_MemFree_bytes{{cluster=~""{NeonDashboardService.ClusterInfo.Name}""}})";
+                    MemoryUsageBytes = await QueryRangeAsync(query, start, end, stepSize);
 
-                NotifyStateChanged();
+                    NotifyStateChanged();
 
-                return MemoryUsageBytes;
+                    return MemoryUsageBytes;
+                }
+                catch (Exception e)
+                {
+                    Logger.LogErrorEx(NeonHelper.JsonSerialize(e));
+                }
+
+                return new PrometheusResponse<PrometheusMatrixResult>();
             }
 
             /// <summary>
@@ -138,22 +147,28 @@ namespace NeonDashboard
             {
                 await SyncContext.Clear;
 
-                var query = $@"sum(node_memory_MemTotal_bytes{{cluster=~""{NeonDashboardService.ClusterInfo.Name}""}})";
-                
-                var result = await QueryAsync(query);
-
-                if (result == null)
+                try
                 {
-                    return;
-                }
+                    var query = $@"sum(node_memory_MemTotal_bytes{{cluster=~""{NeonDashboardService.ClusterInfo.Name}""}})";
 
-                if (decimal.TryParse(result.Data.Result.First().Value.Value, out var memoryTotal)) 
+                    var result = await QueryAsync(query);
+
+                    if (result == null)
+                    {
+                        return;
+                    }
+
+                    if (decimal.TryParse(result.Data.Result.First().Value.Value, out var memoryTotal))
+                    {
+                        MemoryTotalBytes = memoryTotal;
+                    }
+                    NotifyStateChanged();
+
+                }
+                catch (Exception e) 
                 {
-                    MemoryTotalBytes = memoryTotal;
+                    Logger?.LogErrorEx(NeonHelper.JsonSerialize(e));
                 }
-
-                NotifyStateChanged();
-
                 return;
             }
 
