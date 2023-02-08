@@ -30,6 +30,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.ObjectPool;
 
+using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube.Operator.Attributes;
 using Neon.Kube.Operator.Cache;
@@ -43,8 +44,9 @@ using AsyncKeyedLock;
 
 using k8s.Models;
 using k8s;
-using Neon.Common;
 using k8s.KubeConfigModels;
+
+using Prometheus;
 
 namespace Neon.Kube.Operator.Builder
 {
@@ -55,6 +57,10 @@ namespace Neon.Kube.Operator.Builder
     /// </summary>
     public class OperatorBuilder : IOperatorBuilder
     {
+        internal static string StartupProbeTag = "startup";
+        internal static string LivenessProbeTag = "liveness";
+        internal static string ReadinessProbeTag = "readiness";
+
         /// <inheritdoc/>
         public IServiceCollection Services { get; }
 
@@ -211,6 +217,7 @@ namespace Neon.Kube.Operator.Builder
                 }
             }
 
+            Services.AddHealthChecks().ForwardToPrometheus();
             Services.AddHostedService<ResourceControllerManager>();
 
             Services.AddRouting();
@@ -313,6 +320,48 @@ namespace Neon.Kube.Operator.Builder
                     Host = hostname,
                     Port = port
                 });
+
+            return this;
+        }
+
+        /// <inheritdoc/>
+        public IOperatorBuilder AddStartupCheck<TStartupCheck>(string name = null)
+            where TStartupCheck : class, IHealthCheck
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                name = typeof(TStartupCheck).Name;
+            }
+
+            Services.AddHealthChecks().AddCheck<TStartupCheck>(name, HealthStatus.Unhealthy, new string[] { StartupProbeTag });
+
+            return this;
+        }
+
+        /// <inheritdoc/>
+        public IOperatorBuilder AddLivenessCheck<TLivenessCheck>(string name = null)
+            where TLivenessCheck : class, IHealthCheck
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                name = typeof(TLivenessCheck).Name;
+            }
+
+            Services.AddHealthChecks().AddCheck<TLivenessCheck>(name, HealthStatus.Unhealthy, new string[] { LivenessProbeTag });
+
+            return this;
+        }
+
+        /// <inheritdoc/>
+        public IOperatorBuilder AddReadinessCheck<TReadinessCheck>(string name = null)
+            where TReadinessCheck : class, IHealthCheck
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                name = typeof(TReadinessCheck).Name;
+            }
+
+            Services.AddHealthChecks().AddCheck<TReadinessCheck>(name, HealthStatus.Unhealthy, new string[] { ReadinessProbeTag });
 
             return this;
         }
