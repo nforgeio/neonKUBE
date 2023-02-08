@@ -42,17 +42,9 @@ namespace TestOperator
                 .AddController<ExampleController>(
                     options: new Neon.Kube.Operator.ResourceManager.ResourceManagerOptions()
                     {
-                        DependentResources = new List<Neon.Kube.Operator.ResourceManager.IDependentResource>()
-                        {
-                            new DependentResource<V1Pod>() {Scope = Neon.Kube.Resources.EntityScope.Namespaced}
-                        },
                         RbacRules = new List<IRbacRule>()
                         {
                             new RbacRule<V1DaemonSet>(verbs: RbacVerb.Watch, scope: Neon.Kube.Resources.EntityScope.Cluster),
-                            new RbacRule<V1StatefulSet>(verbs: RbacVerb.Get, scope: Neon.Kube.Resources.EntityScope.Namespaced, @namespace: "default,services,marcus"),
-                            new RbacRule<V1StatefulSet>(verbs: RbacVerb.Patch, scope: Neon.Kube.Resources.EntityScope.Namespaced, @namespace: "services"),
-                            new RbacRule<V1StatefulSet>(verbs: RbacVerb.List, scope: Neon.Kube.Resources.EntityScope.Namespaced, @namespace: "marcus"),
-                            new RbacRule<V1Deployment>(verbs: RbacVerb.Get, scope: Neon.Kube.Resources.EntityScope.Namespaced, @namespace: "default"),
                         }
                     });
         }

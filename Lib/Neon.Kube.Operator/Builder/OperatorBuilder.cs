@@ -131,6 +131,11 @@ namespace Neon.Kube.Operator.Builder
                                 break;
                             }
 
+                            if (controllerAttribute?.Scope == Resources.EntityScope.Namespaced)
+                            {
+                                options.WatchNamespace = options.WatchNamespace ?? operatorSettings.Namespace;
+                            }
+
                             if (controllerAttribute?.AutoRegisterFinalizers == false)
                             {
                                 options.AutoRegisterFinalizers = false;
@@ -262,7 +267,6 @@ namespace Neon.Kube.Operator.Builder
             {
                 return new ResourceManager<TEntity, TImplementation>(
                     serviceProvider: services,
-                    @namespace: @namespace,
                     options: options ?? operatorSettings.ResourceManagerOptions,
                     leaderConfig: leaderConfig,
                     leaderElectionDisabled: leaderElectionDisabled);

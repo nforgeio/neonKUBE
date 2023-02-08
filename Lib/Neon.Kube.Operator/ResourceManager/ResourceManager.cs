@@ -185,7 +185,7 @@ namespace Neon.Kube.Operator.ResourceManager
         private IResourceCache<IKubernetesObject<V1ObjectMeta>> dependentResourceCache;
         private IFinalizerManager<TEntity>                      finalizerManager;
         private AsyncKeyedLocker<string>                        lockProvider;
-        private string                                          resourceNamespace;
+        private List<string>                                    resourceNamespace;
         private Type                                            controllerType;
         private ILogger<ResourceManager<TEntity, TController>>  logger;
         private DateTime                                        nextIdleReconcileUtc;
@@ -216,22 +216,25 @@ namespace Neon.Kube.Operator.ResourceManager
         /// <param name="serviceProvider"></param>
         public ResourceManager(
             IServiceProvider        serviceProvider,
-            string                  @namespace             = null,
             ResourceManagerOptions  options                = null,
             LeaderElectionConfig    leaderConfig           = null,
             bool                    leaderElectionDisabled = false)
         {
-            Covenant.Requires<ArgumentException>(@namespace == null || @namespace != string.Empty, nameof(@namespace));
+            Covenant.Requires<ArgumentException>(options.WatchNamespace == null || options.WatchNamespace != string.Empty, nameof(options.WatchNamespace));
             Covenant.Requires<ArgumentException>(!(leaderConfig != null && leaderElectionDisabled == true), nameof(leaderElectionDisabled));
             
             this.serviceProvider        = serviceProvider;
-            this.resourceNamespace      = @namespace;
             this.options                = options ?? serviceProvider.GetRequiredService<ResourceManagerOptions>();
             this.leaderConfig           = leaderConfig;
             this.leaderElectionDisabled = leaderElectionDisabled;
             this.metrics                = new ResourceManagerMetrics<TEntity, TController>();
             this.logger                 = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger<ResourceManager<TEntity, TController>>();
             
+            if (options.WatchNamespace != null)
+            {
+                this.resourceNamespace = options.WatchNamespace.Split(',').ToList();
+            }
+
             this.options.Validate();
 
             this.controllerType = typeof(TController);
@@ -363,7 +366,7 @@ namespace Neon.Kube.Operator.ResourceManager
             HttpOperationResponse<object> resp;
             try
             {
-                if (string.IsNullOrEmpty(resourceNamespace))
+                if (resourceNamespace == null)
                 {
                     resp = await k8s.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync<TEntity>(
                         allowWatchBookmarks: true,
@@ -371,10 +374,13 @@ namespace Neon.Kube.Operator.ResourceManager
                 }
                 else
                 {
-                    resp = await k8s.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync<TEntity>(
-                    resourceNamespace,
-                    allowWatchBookmarks: true,
-                    watch: true);
+                    foreach (var @namespace in resourceNamespace)
+                    {
+                        resp = await k8s.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync<TEntity>(
+                        @namespace,
+                        allowWatchBookmarks: true,
+                        watch: true);
+                    }
                 }
             }
             catch (HttpOperationException e)
@@ -874,9 +880,14 @@ namespace Neon.Kube.Operator.ResourceManager
 
                     logger?.LogDebugEx(() => $"Resource {resource.Kind} {resource.Namespace()}/{resource.Name()} received {@event.Type}/{modifiedEventType} event.");
 
-                    if (!(bool)controllerType.GetMethod("Filter").Invoke(null, new object[] { resource }))
+                    var filterMethod = controllerType.GetMethod("Filter", BindingFlags.Static | BindingFlags.Public);
+
+                    if (filterMethod != null)
                     {
-                        return;
+                        if (!(bool)filterMethod.Invoke(null, new object[] { resource }))
+                        {
+                            return;
+                        }
                     }
 
                     switch (@event.Type)
@@ -918,9 +929,9 @@ namespace Neon.Kube.Operator.ResourceManager
 
                             var stub = new TEntity();
 
-                            if (!string.IsNullOrEmpty(resourceNamespace))
+                            if (!string.IsNullOrEmpty(resource.Namespace()))
                             {
-                                logger?.LogCriticalEx(() => $"Critical error watching: [namespace={resourceNamespace}] {stub.ApiGroupAndVersion}/{stub.Kind}");
+                                logger?.LogCriticalEx(() => $"Critical error watching: [namespace={resource.Namespace()}] {stub.ApiGroupAndVersion}/{stub.Kind}");
                             }
                             else
                             {
@@ -1009,9 +1020,9 @@ namespace Neon.Kube.Operator.ResourceManager
 
                             var stub = new TEntity();
 
-                            if (!string.IsNullOrEmpty(resourceNamespace))
+                            if (!string.IsNullOrEmpty(resource.Namespace()))
                             {
-                                logger?.LogCriticalEx(() => $"Critical error watching: [namespace={resourceNamespace}] {stub.ApiGroupAndVersion}/{stub.Kind}");
+                                logger?.LogCriticalEx(() => $"Critical error watching: [namespace={resource.Namespace()}] {stub.ApiGroupAndVersion}/{stub.Kind}");
                             }
                             else
                             {
@@ -1038,7 +1049,7 @@ namespace Neon.Kube.Operator.ResourceManager
 
                 if (this.resourceNamespace != null)
                 {
-                    foreach (var ns in resourceNamespace.Split(',').ToList())
+                    foreach (var ns in resourceNamespace)
                     {
                         tasks.Add(k8s.WatchAsync<TEntity>(enqueueAsync, namespaceParameter: ns, cancellationToken: cancellationToken));
                     }
@@ -1057,17 +1068,12 @@ namespace Neon.Kube.Operator.ResourceManager
                     args[1] = enqueueDependentAsync;
                     args[8] = cancellationToken;
 
-                    string dependentNamespace = null;
-                    if (dependent.Scope == Resources.EntityScope.Namespaced)
+
+                    if (this.resourceNamespace != null)
                     {
-                        dependentNamespace = (dependent.Namespace() ?? options.WatchNamespace) ?? Pod.Namespace;
-                    }
-                    
-                    if (dependentNamespace != null)
-                    {
-                        foreach (var ns in dependentNamespace.Split(',').ToList())
+                        foreach (var @namespace in this.resourceNamespace)
                         {
-                            args[2] = ns;
+                            args[2] = @namespace;
 
                             tasks.Add((Task)watchMethod.Invoke(k8s, args));
                         }

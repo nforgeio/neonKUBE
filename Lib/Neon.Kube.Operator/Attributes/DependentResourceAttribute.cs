@@ -33,20 +33,11 @@ namespace Neon.Kube.Operator.Attributes
     public class DependentResourceAttribute<TEntity> : Attribute, IDependentResource
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
-        /// <inheritdoc/>
-        public EntityScope Scope { get; set; } = EntityScope.Namespaced;
-
         /// <summary>
         /// Constructor
         /// </summary>
         public DependentResourceAttribute()
         {
-        }
-
-        /// <inheritdoc/>
-        public string Namespace()
-        {
-            return null;
         }
 
         /// <inheritdoc/>
