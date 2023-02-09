@@ -159,6 +159,8 @@ namespace Neon.Kube.Operator
         /// <inheritdoc/>
         public async Task RunAsync()
         {
+            OperatorSettings = OperatorSettings ?? new OperatorSettings();
+
             if (CertManagerOptions != null)
             {
                 OperatorSettings.certManagerEnabled = true;

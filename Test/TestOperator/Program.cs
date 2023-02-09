@@ -13,12 +13,6 @@ namespace TestOperator
         {
             var k8s = KubernetesOperatorHost
                 .CreateDefaultBuilder(args)
-                .ConfigureOperator(configure =>
-                {
-                    configure.Port = 1234;
-                    configure.AssemblyScanningEnabled = true;
-                    configure.Name = "my-cool-operator";
-                })
                 .ConfigureNeonKube()
                 .UseStartup<OperatorStartup>()
                 .Build();

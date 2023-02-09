@@ -71,18 +71,24 @@ namespace Neon.Kube.Operator
                             services.Add(s);
                         }
                     })
-                    .UseKestrel(options =>
-                    {
-                        options.ConfigureEndpointDefaults(o =>
-                        {
-                            if (!NeonHelper.IsDevWorkstation)
-                            {
-                                o.UseHttps(this.operatorHost.Certificate);
-                            }
-                        });
-                        options.Listen(this.operatorHost.OperatorSettings.ListenAddress, this.operatorHost.OperatorSettings.Port);
-                    })
                     .UseStartup(this.operatorHost.StartupType);
+
+            if (!NeonHelper.IsDevWorkstation)
+            {
+                this.operatorHost.HostBuilder.UseKestrel(options =>
+                {
+                    options.ConfigureEndpointDefaults(o =>
+                    {
+                        o.UseHttps(this.operatorHost.Certificate);
+                    });
+
+                    options.Listen(this.operatorHost.OperatorSettings.ListenAddress, this.operatorHost.OperatorSettings.Port);
+                });
+            }
+            else
+            {
+                this.operatorHost.HostBuilder.UseKestrel();
+            }
 
             return operatorHost;
         }

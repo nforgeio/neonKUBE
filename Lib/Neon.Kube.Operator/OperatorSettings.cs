@@ -19,6 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
+using System.Reflection;
+using System.Text.RegularExpressions;
 
 using Neon.Kube.Operator.ResourceManager;
 using Neon.Kube.Operator.Util;
@@ -50,7 +52,7 @@ namespace Neon.Kube.Operator
         /// <summary>
         /// The Operator name.
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; set; } = Regex.Replace(Assembly.GetEntryAssembly().GetName().Name, @"([a-z])([A-Z])", "$1-$2").ToLower();
 
         /// <summary>
         /// The Operator name. This defaults to a Kubernetes safe version of the Assembly name.
