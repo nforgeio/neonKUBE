@@ -65,7 +65,7 @@ namespace Neon.Kube.Operator.Xunit
                         {
                             services.Add(s);
                         }
-                    });
+                    }).UseStartup<TestKubernetesStartup>().UseKestrel();
 
             this.operatorHost.Host = this.operatorHost.HostBuilder.Build();
             return operatorHost;
