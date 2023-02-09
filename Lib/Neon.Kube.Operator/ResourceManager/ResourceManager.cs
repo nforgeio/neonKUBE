@@ -23,6 +23,7 @@ using System.Net;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -51,7 +52,6 @@ using k8s.LeaderElection;
 using k8s.Models;
 
 using Prometheus;
-using System.Text.RegularExpressions;
 
 // $todo(jefflill):
 //
