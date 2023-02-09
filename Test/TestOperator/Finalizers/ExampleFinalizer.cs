@@ -26,7 +26,7 @@ namespace TestOperator
 
             logger.LogInformation($"FINALIZING: {resource.Name()}");
 
-            await Task.Delay(5000);
+            await Task.Delay(1000);
 
             logger.LogInformation($"FINALIZED: {resource.Name()}");
         }

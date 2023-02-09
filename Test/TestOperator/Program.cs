@@ -13,6 +13,10 @@ namespace TestOperator
         {
             var k8s = KubernetesOperatorHost
                 .CreateDefaultBuilder(args)
+                .ConfigureOperator(o =>
+                {
+                    o.WatchNamespace = "default,services";
+                })
                 .ConfigureNeonKube()
                 .UseStartup<OperatorStartup>()
                 .Build();

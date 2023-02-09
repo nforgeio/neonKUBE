@@ -104,6 +104,7 @@ namespace Neon.Kube.Operator.Builder
             Services.AddSingleton(componentRegister);
             Services.AddSingleton<IFinalizerBuilder, FinalizerBuilder>();
             Services.AddSingleton(typeof(IFinalizerManager<>), typeof(FinalizerManager<>));
+            Services.AddSingleton(typeof(ICrdCache), typeof(CrdCache));
             Services.AddSingleton(typeof(IResourceCache<>), typeof(ResourceCache<>));
             Services.AddSingleton(new AsyncKeyedLocker<string>(o =>
             {
@@ -137,9 +138,9 @@ namespace Neon.Kube.Operator.Builder
                                 break;
                             }
 
-                            if (controllerAttribute?.Scope == Resources.EntityScope.Namespaced)
+                            if (operatorSettings.WatchNamespace != null)
                             {
-                                options.WatchNamespace = (options.WatchNamespace ?? operatorSettings.WatchNamespace) ?? operatorSettings.deployedNamespace;
+                                options.WatchNamespace = operatorSettings.WatchNamespace;
                             }
 
                             if (controllerAttribute?.AutoRegisterFinalizers == false)

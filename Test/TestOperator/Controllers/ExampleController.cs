@@ -20,8 +20,9 @@ namespace TestOperator
     /// <summary>
     /// Example controller
     /// </summary>
-    [Controller(AutoRegisterFinalizers = true, ManageCustomResourceDefinitions = true)]
     [RbacRule<V1ExampleEntity>(RbacVerb.All, EntityScope.Cluster)]
+    [RbacRule<V1ExampleClusterEntity>(RbacVerb.All, EntityScope.Cluster)]
+    [DependentResource<V1ExampleClusterEntity>]
     public class ExampleController : IResourceController<V1ExampleEntity>
     {
         private readonly IKubernetes k8s;
@@ -52,10 +53,6 @@ namespace TestOperator
         public async Task<ResourceControllerResult> ReconcileAsync(V1ExampleEntity resource)
         {
             await SyncContext.Clear;
-
-            logger.LogInformation($"RECONCILING: {resource.Namespace()}/{resource.Name()}");
-
-            await finalizerManager.RegisterAllFinalizersAsync(resource);
 
             logger.LogInformation($"RECONCILED: {resource.Namespace()}/{resource.Name()}");
 

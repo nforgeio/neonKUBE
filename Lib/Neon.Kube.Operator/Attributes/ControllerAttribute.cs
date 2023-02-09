@@ -44,11 +44,6 @@ namespace Neon.Kube.Operator.Attributes
         public bool ManageCustomResourceDefinitions { get; set; } = true;
 
         /// <summary>
-        /// The scope of the controller.
-        /// </summary>
-        public EntityScope Scope { get; set; } = EntityScope.Namespaced;
-
-        /// <summary>
         /// Constructor
         /// </summary>
         public ControllerAttribute()
