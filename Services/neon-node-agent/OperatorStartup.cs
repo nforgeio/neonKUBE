@@ -75,9 +75,8 @@ namespace NeonNodeAgent
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<ILogger>(Program.Service.Logger)
-                .AddSingleton(Service);
-
-            services.AddKubernetesOperator()
+                .AddSingleton(Service)
+                .AddKubernetesOperator()
                 .AddController<ContainerRegistryController>(
                     leaderConfig: new LeaderElectionConfig(
                         k8s:           Service.K8s,
@@ -85,7 +84,6 @@ namespace NeonNodeAgent
                         leaseName:     $"{Program.Service.Name}.containerregistry-{Node.Name}",
                         identity:      Pod.Name,
                         metricsPrefix: $"{typeof(ContainerRegistryController).Name}_{typeof(V1NeonContainerRegistry).Name}".ToLower()))
-
                 .AddController<NodeTaskController>(
                     leaderConfig:
                         new LeaderElectionConfig(
