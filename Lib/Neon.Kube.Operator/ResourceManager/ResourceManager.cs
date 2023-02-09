@@ -51,7 +51,6 @@ using k8s.LeaderElection;
 using k8s.Models;
 
 using Prometheus;
-using Octokit;
 
 // $todo(jefflill):
 //
