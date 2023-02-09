@@ -28,13 +28,11 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
+using Neon.Common;
 using Neon.Kube.Operator.Builder;
 
 using k8s.Models;
 using k8s;
-using Neon.Common;
-using Neon.Kube.Resources.CertManager;
-using Neon.BuildInfo;
 
 namespace Neon.Kube.Operator
 {
