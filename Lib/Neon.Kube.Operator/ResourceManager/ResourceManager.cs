@@ -51,6 +51,7 @@ using k8s.LeaderElection;
 using k8s.Models;
 
 using Prometheus;
+using Octokit;
 
 // $todo(jefflill):
 //
@@ -183,6 +184,7 @@ namespace Neon.Kube.Operator.ResourceManager
         private IServiceProvider                                serviceProvider;
         private IResourceCache<TEntity>                         resourceCache;
         private IResourceCache<IKubernetesObject<V1ObjectMeta>> dependentResourceCache;
+        private IResourceCache<V1CustomResourceDefinition>      crdCache;
         private IFinalizerManager<TEntity>                      finalizerManager;
         private AsyncKeyedLocker<string>                        lockProvider;
         private List<string>                                    resourceNamespace;
@@ -258,6 +260,7 @@ namespace Neon.Kube.Operator.ResourceManager
             this.k8s                    = serviceProvider.GetRequiredService<IKubernetes>();
             this.resourceCache          = serviceProvider.GetRequiredService<IResourceCache<TEntity>>();
             this.dependentResourceCache = serviceProvider.GetRequiredService<IResourceCache<IKubernetesObject<V1ObjectMeta>>>();
+            this.crdCache               = serviceProvider.GetRequiredService<IResourceCache<V1CustomResourceDefinition>>();
             this.finalizerManager       = serviceProvider.GetRequiredService<IFinalizerManager<TEntity>>();
             this.lockProvider           = serviceProvider.GetRequiredService<AsyncKeyedLocker<string>>();
 
@@ -364,6 +367,7 @@ namespace Neon.Kube.Operator.ResourceManager
         private async Task EnsurePermissionsAsync()
         {
             HttpOperationResponse<object> resp;
+
             try
             {
                 if (resourceNamespace == null)
@@ -642,7 +646,43 @@ namespace Neon.Kube.Operator.ResourceManager
 
             var entityType      = typeof(TEntity);
             var statusGetter    = entityType.GetProperty("Status")?.GetMethod;
+            var entityMetatdata = entityType.GetKubernetesTypeMetadata();
+            var crdName         = $"{entityMetatdata.PluralName}.{entityMetatdata.Group}";
 
+            _ = k8s.WatchAsync<V1CustomResourceDefinition>(async (@event) =>
+            {
+                await SyncContext.Clear;
+
+                crdCache.Upsert(@event.Value);   
+
+                logger?.LogInformationEx(() => $"Updated {typeof(TEntity)} CRD.");
+            },
+            fieldSelector: $"metadata.name={crdName}",
+            cancellationToken: cancellationToken);
+
+            crdCache.Upsert(await k8s.ApiextensionsV1.ReadCustomResourceDefinitionAsync(crdName));
+
+            if (options.DependentResources != null)
+            {
+                foreach (var dependent in options.DependentResources)
+                {
+                    entityMetatdata = dependent.GetKubernetesEntityAttribute();
+                    crdName = $"{entityMetatdata.PluralName}.{entityMetatdata.Group}";
+                    
+                    _ = k8s.WatchAsync<V1CustomResourceDefinition>(async (@event) =>
+                    {
+                        await SyncContext.Clear;
+
+                        crdCache.Upsert(@event.Value);
+
+                        logger?.LogInformationEx(() => $"Updated {dependent.GetEntityType()} CRD.");
+                    },
+                    fieldSelector: $"metadata.name={crdName}",
+                    cancellationToken: cancellationToken);
+
+                    crdCache.Upsert(await k8s.ApiextensionsV1.ReadCustomResourceDefinitionAsync(crdName));
+                }
+            }
             //-----------------------------------------------------------------
             // Our watcher handler action.
 

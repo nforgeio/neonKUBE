@@ -87,7 +87,7 @@ namespace Neon.Kube.Operator
 
 
         /// <inheritdoc/>
-        public static KubernetesOperatorHostBuilder CreateDefaultBuilder(string[] args = null)
+        public static IKubernetesOperatorHostBuilder CreateDefaultBuilder(string[] args = null)
         {
             var builder = new KubernetesOperatorHostBuilder(args);
             return builder;

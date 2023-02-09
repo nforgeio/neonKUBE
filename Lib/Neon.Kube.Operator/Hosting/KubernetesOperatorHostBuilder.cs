@@ -62,7 +62,11 @@ namespace Neon.Kube.Operator
                     .ConfigureServices(services =>
                     {
                         services.AddSingleton<OperatorSettings>(this.operatorHost.OperatorSettings);
-                        services.AddSingleton<CertManagerOptions>(this.operatorHost.CertManagerOptions);
+
+                        if (this.operatorHost.CertManagerOptions != null)
+                        {
+                            services.AddSingleton<CertManagerOptions>(this.operatorHost.CertManagerOptions);
+                        }
 
                         foreach (var s in this.Services)
                         {

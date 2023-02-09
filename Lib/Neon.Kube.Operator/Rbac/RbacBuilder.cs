@@ -95,6 +95,14 @@ namespace Neon.Kube.Operator.Rbac
                             scope: Resources.EntityScope.Cluster
                             ));
             }
+            else
+            {
+                attributes.Add(
+                        new RbacRule<V1CustomResourceDefinition>(
+                            verbs: RbacVerb.Get | RbacVerb.List | RbacVerb.Watch,
+                            scope: Resources.EntityScope.Cluster
+                            ));
+            }
 
             if (operatorSettings.hasMutatingWebhooks)
             {
