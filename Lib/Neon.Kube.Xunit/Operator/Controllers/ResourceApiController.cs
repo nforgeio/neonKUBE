@@ -30,7 +30,7 @@ using k8s.Models;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace Neon.Kube.Operator.Xunit
+namespace Neon.Kube.Xunit.Operator
 {
     /// <summary>
     /// Generic resource API controller.

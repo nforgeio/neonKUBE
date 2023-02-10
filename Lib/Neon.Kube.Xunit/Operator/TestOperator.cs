@@ -32,7 +32,7 @@ using Neon.Kube.Operator.Builder;
 
 using k8s;
 
-namespace Neon.Kube.Operator.Xunit
+namespace Neon.Kube.Xunit.Operator
 {
     /// <inheritdoc/>
     public class TestOperator : ITestOperator

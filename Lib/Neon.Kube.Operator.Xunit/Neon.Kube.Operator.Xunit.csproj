@@ -7,7 +7,7 @@
     <Version>10000.0.2236-dev-master</Version>
     <Description>Xunit SDK for the Neon.Kube.Operator Kubernetes Operator SDK.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Operator.Xunit/README.md</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Xunit.Operator/README.md</PackageProjectUrl>
     <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
     <PackageIcon>nuget-icon.png</PackageIcon>
     <RepositoryType>git</RepositoryType>

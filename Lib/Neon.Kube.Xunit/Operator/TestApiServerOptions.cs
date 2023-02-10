@@ -1,4 +1,4 @@
-﻿// FILE:	    ResourceObject.cs
+﻿// FILE:	    TestApiServerOptions.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -17,32 +17,22 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+
 using k8s;
+using k8s.KubeConfigModels;
 using k8s.Models;
 
-namespace Neon.Kube.Operator.Xunit
+namespace Neon.Kube.Xunit.Operator
 {
     /// <summary>
-    /// Generic resource.
+    /// Test API Server options.
     /// </summary>
-    public class ResourceObject : IKubernetesObject<V1ObjectMeta>
+    public class TestApiServerOptions
     {
-        /// <inheritdoc/>
-        [JsonPropertyName("apiVersion")] 
-        public string ApiVersion { get; set; }
-
-        /// <inheritdoc/>
-        [JsonPropertyName("kind")]
-        public string Kind { get; set; }
-
-        /// <inheritdoc/>
-        [JsonPropertyName("metadata")]
-        public V1ObjectMeta Metadata { get; set; }
-
-        //[JsonPropertyName("spec")]
-        //public T Spec { get; set; }
     }
 }

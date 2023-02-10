@@ -19,7 +19,7 @@ using System;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using Neon.Kube.Operator.Xunit;
+using Neon.Kube.Xunit.Operator;
 using Neon.Kube.Resources.Cluster;
 using NeonNodeAgent;
 

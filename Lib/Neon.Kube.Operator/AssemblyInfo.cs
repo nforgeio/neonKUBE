@@ -21,5 +21,5 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Test.Neon.Kube")]
 [assembly: InternalsVisibleTo("Test.Neon.Kube.Operator")]
-[assembly: InternalsVisibleTo("Neon.Kube.Operator.Xunit")]
+[assembly: InternalsVisibleTo("Neon.Kube.Xunit")]
 

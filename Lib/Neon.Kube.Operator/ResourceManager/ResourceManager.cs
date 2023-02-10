@@ -53,19 +53,6 @@ using k8s.Models;
 
 using Prometheus;
 
-// $todo(jefflill):
-//
-// We don't currently do anything with non-null [ResourceControllerResult] returned by [ReconcileAsync()].
-// I'm not entirely sure what the semantics for this are.  I assume that:
-//
-//      1. a subsequent DELETE will cancel a pending RECONCILE
-//      2. a subsequent ADD/UPDATE will cancel (or replace?) a pending RECONILE
-//      3. a subsequent MODIFY will cancel a pending RECONCILE
-//
-// Note also that DeletedAsync() and StatusModified() should also return an optional requeue result.
-//
-// I need to do some more research.  neonKUBE isn't currently depending on any of this.
-
 namespace Neon.Kube.Operator.ResourceManager
 {
     /// <summary>
@@ -203,7 +190,6 @@ namespace Neon.Kube.Operator.ResourceManager
         /// <summary>
         /// Default constructor.
         /// </summary>
-        /// <param name="namespace"></param>
         /// <param name="options">
         /// Optionally specifies options that customize the resource manager's behavior.  Reasonable
         /// defaults will be used when this isn't specified.
@@ -633,14 +619,6 @@ namespace Neon.Kube.Operator.ResourceManager
                             {
                                 try
                                 {
-                                    // $todo(jefflill):
-                                    //
-                                    // We're currently assuming that operator controllers all have a constructor
-                                    // that accepts a single [IKubernetes] parameter.  We should change this to
-                                    // doing actual dependency injection when we have the time.
-                                    //
-                                    //       https://github.com/nforgeio/neonKUBE/issues/1589
-
                                     using (var scope = serviceProvider.CreateScope())
                                     {
                                         await CreateController(scope.ServiceProvider).IdleAsync();

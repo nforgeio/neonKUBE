@@ -23,7 +23,7 @@ using Neon.Kube.Operator.Builder;
 using k8s;
 using k8s.KubeConfigModels;
 
-namespace Neon.Kube.Operator.Xunit
+namespace Neon.Kube.Xunit.Operator
 {
     /// <summary>
     /// Test API server <see cref="IHost"/>.
