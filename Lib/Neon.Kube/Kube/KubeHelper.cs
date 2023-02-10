@@ -3283,7 +3283,7 @@ TCPKeepAlive yes
                 throw new InvalidOperationException($"[NK_ROOT={nkRoot}] directory does not include the [neonKUBE.sln] file.");
             }
 
-            var versionsPath = Path.Combine(nkRoot, "Lib", "Neon.Kube", "KUbeVersions.cs");
+            var versionsPath = Path.Combine(nkRoot, "Lib", "Neon.Kube", "KubeVersions.cs");
 
             if (!File.Exists(versionsPath))
             {
