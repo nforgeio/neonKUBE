@@ -3294,12 +3294,6 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Regular expression used to extract the <b>NeonKube</b> version constant value from
-        /// the <b>$/neonKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file.
-        /// </summary>
-        private static readonly Regex VersionRegex = new Regex(@"^\s*public const string NeonKube = ""(?<version>.+)"";", RegexOptions.Multiline);
-
-        /// <summary>
         /// Returns the <see cref="KubeVersions.NeonKube"/> contant value extracted from the 
         /// <b>$/neonKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file.  Note that the
         /// <b>NK_ROOT</b> environment variable must reference the root of the <b>neonKUBE</b>
@@ -3313,9 +3307,10 @@ TCPKeepAlive yes
         /// </exception>
         public static SemanticVersion GetNeonKubeVersion()
         {
+            var versionRegex = new Regex(@"^\s*public const string NeonKube = ""(?<version>.+)"";", RegexOptions.Multiline);
             var versionsPath = GetKubeVersionsPath();
             var versionsText = File.ReadAllText(versionsPath);
-            var match        = VersionRegex.Match(versionsText);
+            var match        = versionRegex.Match(versionsText);
 
             if (!match.Success)
             {
@@ -3343,8 +3338,10 @@ TCPKeepAlive yes
 
             var versionsPath = GetKubeVersionsPath();
             var versionsText = File.ReadAllText(versionsPath);
+            var versionRegex = new Regex(@"public\s+const\s+string\s+NeonKube\s+="".+""\s+;");
+            var replaceText  = $"        public const string NeonKube = \"{version}\";";
 
-            versionsText = VersionRegex.Replace(versionsText, version.ToString());
+            versionsText = versionRegex.Replace(versionsText, replaceText);
 
             File.WriteAllText(versionsPath, versionsText, Encoding.UTF8);
 
