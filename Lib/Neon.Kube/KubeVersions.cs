@@ -128,7 +128,7 @@ namespace Neon.Kube
         /// caused by differing per-developer version numbers.
         /// </note>
         /// </remarks>
-        public const string NeonKube = "0.8.7-alpha";
+        public const string NeonKube = "0.8.0-alpha";
 
         /// <summary>
         /// Returns the name of the branch from which this assembly was built.
