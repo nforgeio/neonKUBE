@@ -1,4 +1,4 @@
-﻿// FILE:	    TestApiServerOptions.cs
+﻿// FILE:	    TestKubernetesStartup.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -14,25 +14,45 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+
 using System;
-using System.Collections.Generic;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using k8s;
 using k8s.KubeConfigModels;
-using k8s.Models;
+using System.Text.Json.Serialization;
 
-namespace Neon.Kube.Operator.Xunit
+namespace Neon.Kube.Xunit.Operator
 {
     /// <summary>
-    /// Test API Server options.
+    /// Startup class for the test API server.
     /// </summary>
-    public class TestApiServerOptions
+    public class TestKubernetesStartup
     {
+        
+        /// <summary>
+        /// Configures depdendency injection.
+        /// </summary>
+        /// <param name="services">The service collection.</param>
+        public void ConfigureServices(IServiceCollection services)
+        {
+            
+        }
+
+        /// <summary>
+        /// Configures the operator service controllers.
+        /// </summary>
+        /// <param name="app">Specifies the application builder.</param>
+        public void Configure(IApplicationBuilder app)
+        {
+            
+        }
     }
 }

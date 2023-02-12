@@ -31,7 +31,7 @@ using k8s.Models;
 
 using Neon.Kube;
 using Neon.Kube.Operator;
-using Neon.Kube.Operator.Xunit;
+using Neon.Kube.Xunit.Operator;
 using Neon.Kube.Operator.Controller;
 using Neon.Kube.Resources.Cluster;
 

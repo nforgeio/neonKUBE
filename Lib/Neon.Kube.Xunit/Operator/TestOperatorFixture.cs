@@ -30,7 +30,7 @@ using k8s;
 using k8s.Models;
 using k8s.KubeConfigModels;
 
-namespace Neon.Kube.Operator.Xunit
+namespace Neon.Kube.Xunit.Operator
 {
     /// <summary>
     /// A test fixture used for testing Kubernetes Operators.

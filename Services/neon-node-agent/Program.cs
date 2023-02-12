@@ -34,6 +34,7 @@ using Neon.Service;
 
 using k8s;
 using k8s.Models;
+using System.Xml.Linq;
 
 namespace NeonNodeAgent
 {
@@ -54,9 +55,26 @@ namespace NeonNodeAgent
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task Main(string[] args)
         {
+            Service = new Service(KubeService.NeonNodeAgent);
+
             try
             {
-                Service = new Service(KubeService.NeonNodeAgent);
+                if (!string.IsNullOrEmpty(args.FirstOrDefault()))
+                {
+                    await KubernetesOperatorHost
+                        .CreateDefaultBuilder(args)
+                        .ConfigureOperator(configure =>
+                        {
+                            configure.AssemblyScanningEnabled = true;
+                            configure.Name = Service.Name;
+                        })
+                       .ConfigureNeonKube()
+                       .AddSingleton(typeof(Service), Service)
+                       .UseStartup<OperatorStartup>()
+                       .Build().RunAsync();
+
+                    Environment.Exit(0);
+                }
 
                 Environment.Exit(await Service.RunAsync());
             }

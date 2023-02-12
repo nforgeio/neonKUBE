@@ -32,7 +32,7 @@ using Neon.Tasks;
 using k8s;
 using k8s.Models;
 
-namespace Neon.Kube.Operator.Xunit
+namespace Neon.Kube.Xunit.Operator
 {
     /// <summary>
     /// Generic resource API controller.

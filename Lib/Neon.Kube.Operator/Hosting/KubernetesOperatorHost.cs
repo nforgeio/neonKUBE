@@ -87,7 +87,7 @@ namespace Neon.Kube.Operator
 
 
         /// <inheritdoc/>
-        public static KubernetesOperatorHostBuilder CreateDefaultBuilder(string[] args = null)
+        public static IKubernetesOperatorHostBuilder CreateDefaultBuilder(string[] args = null)
         {
             var builder = new KubernetesOperatorHostBuilder(args);
             return builder;
@@ -129,7 +129,6 @@ namespace Neon.Kube.Operator
 
             HostBuilder.ConfigureServices(services =>
             {
-                services.AddSingleton<OperatorSettings>(OperatorSettings);
                 services.AddSingleton<GenerateCommand>();
                 services.AddSingleton<GenerateCommandBase, GenerateRbacCommand>();
             });
@@ -159,6 +158,8 @@ namespace Neon.Kube.Operator
         /// <inheritdoc/>
         public async Task RunAsync()
         {
+            OperatorSettings = OperatorSettings ?? new OperatorSettings();
+
             if (CertManagerOptions != null)
             {
                 OperatorSettings.certManagerEnabled = true;
@@ -192,7 +193,6 @@ namespace Neon.Kube.Operator
 
             HostBuilder.ConfigureServices(services =>
             {
-                services.AddSingleton<OperatorSettings>(OperatorSettings);
                 services.AddSingleton<GenerateCommand>();
                 services.AddSingleton<GenerateCommandBase, GenerateRbacCommand>();
             });
@@ -217,13 +217,15 @@ namespace Neon.Kube.Operator
 
             // Invoke the command line parser which then invokes the respective command handlers
             await parser.InvokeAsync(args);
+
+            return;
         }
 
         private async Task CheckCertificateAsync()
         {
             logger?.LogInformationEx(() => "Checking webhook certificate.");
 
-            var cert = await k8s.CustomObjects.ListNamespacedCustomObjectAsync<V1Certificate>(OperatorSettings.Namespace, labelSelector: $"{NeonLabel.ManagedBy}={OperatorSettings.Name}");
+            var cert = await k8s.CustomObjects.ListNamespacedCustomObjectAsync<V1Certificate>(OperatorSettings.deployedNamespace, labelSelector: $"{NeonLabel.ManagedBy}={OperatorSettings.Name}");
 
             if (!cert.Items.Any())
             {
@@ -234,7 +236,7 @@ namespace Neon.Kube.Operator
                     Metadata = new V1ObjectMeta()
                     {
                         Name              = OperatorSettings.Name,
-                        NamespaceProperty = OperatorSettings.Namespace,
+                        NamespaceProperty = OperatorSettings.deployedNamespace,
                         Labels = new Dictionary<string, string>()
                         {
                             { NeonLabel.ManagedBy, OperatorSettings.Name }
@@ -245,9 +247,9 @@ namespace Neon.Kube.Operator
                         DnsNames = new List<string>()
                         {
                             $"{OperatorSettings.Name}",
-                            $"{OperatorSettings.Name}.{OperatorSettings.Namespace}",
-                            $"{OperatorSettings.Name}.{OperatorSettings.Namespace}.svc",
-                            $"{OperatorSettings.Name}.{OperatorSettings.Namespace}.svc.cluster.local",
+                            $"{OperatorSettings.Name}.{OperatorSettings.deployedNamespace}",
+                            $"{OperatorSettings.Name}.{OperatorSettings.deployedNamespace}.svc",
+                            $"{OperatorSettings.Name}.{OperatorSettings.deployedNamespace}.svc.cluster.local",
                         },
                         Duration = $"{CertManagerOptions.CertificateDuration.TotalHours}h{CertManagerOptions.CertificateDuration.Minutes}m{CertManagerOptions.CertificateDuration.Seconds}s",
                         IssuerRef = CertManagerOptions.IssuerRef,
@@ -271,7 +273,7 @@ namespace Neon.Kube.Operator
 
                     logger?.LogInformationEx("Updated webhook certificate");
                 },
-                OperatorSettings.Namespace,
+                OperatorSettings.deployedNamespace,
                 fieldSelector: $"metadata.name={OperatorSettings.Name}-webhook-tls");
 
             await NeonHelper.WaitForAsync(

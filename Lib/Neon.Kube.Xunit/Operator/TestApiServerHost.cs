@@ -30,7 +30,7 @@ using k8s;
 using System.Text.Json.Serialization;
 using System.Text.Json;
 
-namespace Neon.Kube.Operator.Xunit
+namespace Neon.Kube.Xunit.Operator
 {
 
     /// <inheritdoc/>

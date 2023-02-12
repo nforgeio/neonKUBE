@@ -46,7 +46,6 @@ namespace Neon.Kube
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="k8s">The <see cref="IKubernetes"/> client to be used to communicate with th\e cluster.</param>
         /// <param name="namespace">Identifies the namespace where the lease will be hosted.</param>
         /// <param name="leaseName">
         /// Specifies the lease name used to manage elections.  Note that this must be a valid
@@ -84,7 +83,6 @@ namespace Neon.Kube
         /// when the counters passed were created.
         /// </param>
         public LeaderElectionConfig(
-            IKubernetes     k8s,
             string          @namespace,
             string          leaseName,
             string          identity,
@@ -94,7 +92,6 @@ namespace Neon.Kube
             string          metricsPrefix    = null,
             string[]        counterLabels    = null)
         {
-            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(leaseName), nameof(leaseName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(identity), nameof(identity));
@@ -129,7 +126,6 @@ namespace Neon.Kube
 
             // Initialize the properties.
 
-            this.K8s              = k8s;
             this.Namespace        = @namespace;
             this.LeaseName        = leaseName;
             this.LeaseRef         = $"{@namespace}/{leaseName}";

@@ -87,7 +87,7 @@ namespace Neon.Kube.Operator.ResourceManager
         public List<IRbacRule> RbacRules { get; set; } = new List<IRbacRule>();
 
         /// <summary>
-        /// Namespace to watch.
+        /// WatchNamespace to watch.
         /// </summary>
         public string WatchNamespace { get; set; } = null;
 

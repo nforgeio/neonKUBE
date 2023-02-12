@@ -1,4 +1,5 @@
-﻿// FILE:	    ResourceObject.cs
+﻿//-----------------------------------------------------------------------------
+// FILE:	    ICrdCache.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -16,33 +17,29 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net.Http;
-using System.Text.Json.Serialization;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
-using k8s;
+using Neon.Kube;
+using Neon.Kube.Operator.ResourceManager;
+
 using k8s.Models;
+using k8s;
 
-namespace Neon.Kube.Operator.Xunit
+namespace Neon.Kube.Operator.Cache
 {
-    /// <summary>
-    /// Generic resource.
-    /// </summary>
-    public class ResourceObject : IKubernetesObject<V1ObjectMeta>
+    internal interface ICrdCache
     {
-        /// <inheritdoc/>
-        [JsonPropertyName("apiVersion")] 
-        public string ApiVersion { get; set; }
+        V1CustomResourceDefinition Get(string id);
 
-        /// <inheritdoc/>
-        [JsonPropertyName("kind")]
-        public string Kind { get; set; }
+        V1CustomResourceDefinition Get<TEntity>()
+            where TEntity : IKubernetesObject<V1ObjectMeta>;
 
-        /// <inheritdoc/>
-        [JsonPropertyName("metadata")]
-        public V1ObjectMeta Metadata { get; set; }
+        void Upsert(V1CustomResourceDefinition resource);
 
-        //[JsonPropertyName("spec")]
-        //public T Spec { get; set; }
+        void Remove(V1CustomResourceDefinition resource);
+
+        void Clear();
     }
 }

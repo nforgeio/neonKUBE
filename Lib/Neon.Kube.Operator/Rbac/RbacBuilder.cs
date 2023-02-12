@@ -46,13 +46,16 @@ namespace Neon.Kube.Operator.Rbac
         public List<V1Role>               Roles { get; private set; }
         public List<V1RoleBinding>        RoleBindings { get; private set; }
         
-        private IServiceProvider serviceProvider;
-        private OperatorSettings operatorSettings;
+        private IServiceProvider  serviceProvider;
+        private OperatorSettings  operatorSettings;
         private ComponentRegister componentRegister;
-
-        public RbacBuilder(IServiceProvider serviceProvider) 
+        private string            @namespace;
+        public RbacBuilder(
+            IServiceProvider serviceProvider,
+            string @namespace = "default") 
         {
             this.serviceProvider     = serviceProvider;
+            this.@namespace          = @namespace;
             this.operatorSettings    = serviceProvider.GetRequiredService<OperatorSettings>();
             this.componentRegister   = serviceProvider.GetRequiredService<ComponentRegister>();
             this.ServiceAccounts     = new List<V1ServiceAccount>();
@@ -66,7 +69,7 @@ namespace Neon.Kube.Operator.Rbac
         {
             var serviceAccount = new V1ServiceAccount().Initialize();
             serviceAccount.Metadata.Name = operatorSettings.Name;
-            serviceAccount.Metadata.NamespaceProperty = operatorSettings.Namespace;
+            serviceAccount.Metadata.NamespaceProperty = @namespace;
 
             ServiceAccounts.Add(serviceAccount);
 
@@ -95,6 +98,14 @@ namespace Neon.Kube.Operator.Rbac
                             scope: Resources.EntityScope.Cluster
                             ));
             }
+            else
+            {
+                attributes.Add(
+                        new RbacRule<V1CustomResourceDefinition>(
+                            verbs: RbacVerb.Get | RbacVerb.List | RbacVerb.Watch,
+                            scope: Resources.EntityScope.Cluster
+                            ));
+            }
 
             if (operatorSettings.hasMutatingWebhooks)
             {
@@ -120,13 +131,13 @@ namespace Neon.Kube.Operator.Rbac
                     new RbacRule<V1Certificate>(
                         verbs: RbacVerb.All,
                         scope: Resources.EntityScope.Namespaced,
-                        @namespace: operatorSettings.Namespace
+                        @namespace: @namespace
                         ));
                 attributes.Add(
                     new RbacRule<V1Secret>(
                         verbs: RbacVerb.Watch,
                         scope: Resources.EntityScope.Namespaced,
-                        @namespace: operatorSettings.Namespace,
+                        @namespace: @namespace,
                         resourceNames: $"{operatorSettings.Name}-webhook-tls"
                         ));
             }
@@ -173,7 +184,7 @@ namespace Neon.Kube.Operator.Rbac
 
             var namespaceRules = new Dictionary<string, List<V1PolicyRule>>();
 
-            namespaceRules[operatorSettings.Namespace] = attributes.Select(a => (IRbacRule)a).Where(attr =>
+            namespaceRules[@namespace] = attributes.Where(attr =>
                 attr.Scope == Resources.EntityScope.Namespaced)
                     .GroupBy(attr => new
                     {

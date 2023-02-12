@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 using Neon.Kube.Resources;
 
@@ -50,7 +51,7 @@ namespace Neon.Kube.Operator.Rbac
         /// <summary>
         /// Comma separated list of namespaces to watch. 
         /// </summary>
-        public string WatchNamespace { get; set; } = null;
+        public string Namespace { get; set; } = null;
 
         /// <summary>
         /// Constructor
@@ -63,21 +64,19 @@ namespace Neon.Kube.Operator.Rbac
         {
             this.Verbs          = verbs;
             this.Scope          = scope;
-            this.WatchNamespace = @namespace;
+            this.Namespace      = @namespace;
             this.ResourceNames  = resourceNames;
-        }
 
-        /// <inheritdoc/>
-        public string Namespace()
-        {
-            return WatchNamespace;
+            if (typeof(TEntity).GetCustomAttribute<EntityScopeAttribute>()?.Scope == EntityScope.Cluster)
+            {
+                this.Scope = EntityScope.Cluster;
+            }
         }
 
         /// <inheritdoc/>
         public IEnumerable<string> Namespaces()
         {
-            var result = WatchNamespace?.Split(',');
-            return result;
+            return Namespace?.Split(',') ?? null;
         }
 
         /// <inheritdoc/>

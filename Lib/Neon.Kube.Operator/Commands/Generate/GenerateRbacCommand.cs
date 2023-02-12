@@ -25,31 +25,30 @@ using System.Threading.Tasks;
 
 using Neon.Kube.Operator.Rbac;
 
-using YamlDotNet;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
+using k8s;
 
 namespace Neon.Kube.Operator.Commands.Generate
 {
     internal class GenerateRbacCommand : GenerateCommandBase
     {
         private IServiceProvider serviceProvider { get; set; }
-        private ISerializer Serializer { get; set; }
 
         public GenerateRbacCommand(IServiceProvider serviceProvider) : base("rbac", "Generate RBAC yaml for the operator.")
         {
-            Handler = CommandHandler.Create(() => HandleCommand());
+            Handler = CommandHandler.Create<GenerateRbacCommandArgs>(HandleCommand);
+
+            this.AddOption(new Option<string>(new[] { "--namespace", "-n" })
+            {
+                Description = "The namespace that the operator is deployed.",
+                IsRequired = true
+            });
 
             this.serviceProvider = serviceProvider;
-            Serializer = new SerializerBuilder()
-                                        .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
-                                        .WithNamingConvention(CamelCaseNamingConvention.Instance)
-                                        .Build();
         }
 
-        private int HandleCommand()
+        private int HandleCommand(GenerateRbacCommandArgs args)
         {
-            var rbac = new RbacBuilder(serviceProvider);
+            var rbac = new RbacBuilder(serviceProvider, args.Namespace);
             rbac.Build();
 
             var output = new StringBuilder();
@@ -57,34 +56,39 @@ namespace Neon.Kube.Operator.Commands.Generate
             foreach (var sa in rbac.ServiceAccounts)
             {
                 output.AppendLine("---");
-                output.AppendLine(Serializer.Serialize(sa));
+                output.AppendLine(KubernetesYaml.Serialize(sa));
             }
 
             foreach (var cr in rbac.ClusterRoles)
             {
                 output.AppendLine("---");
-                output.AppendLine(Serializer.Serialize(cr));
+                output.AppendLine(KubernetesYaml.Serialize(cr));
             }
 
             foreach (var crb in rbac.ClusterRoleBindings)
             {
                 output.AppendLine("---");
-                output.AppendLine(Serializer.Serialize(crb));
+                output.AppendLine(KubernetesYaml.Serialize(crb));
             }
 
             foreach (var r in rbac.Roles)
             {
                 output.AppendLine("---");
-                output.AppendLine(Serializer.Serialize(r));
+                output.AppendLine(KubernetesYaml.Serialize(r));
             }
 
             foreach (var rb in rbac.RoleBindings)
             {
                 output.AppendLine("---");
-                output.AppendLine(Serializer.Serialize(rb));
+                output.AppendLine(KubernetesYaml.Serialize(rb));
             }
 
             return HandleCommand(output.ToString());
+        }
+
+        public class GenerateRbacCommandArgs
+        {
+            public string Namespace { get; set; }
         }
     }
 }

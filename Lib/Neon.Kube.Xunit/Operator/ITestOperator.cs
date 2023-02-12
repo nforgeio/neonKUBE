@@ -28,7 +28,7 @@ using Neon.Kube.Operator.Controller;
 using Neon.Kube.Operator.Finalizer;
 using Neon.Kube.Operator.Webhook;
 
-namespace Neon.Kube.Operator.Xunit
+namespace Neon.Kube.Xunit.Operator
 {
     /// <summary>
     /// The operator used for testing.

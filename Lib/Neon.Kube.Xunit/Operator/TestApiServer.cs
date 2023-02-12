@@ -24,7 +24,7 @@ using k8s.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
-namespace Neon.Kube.Operator.Xunit
+namespace Neon.Kube.Xunit.Operator
 {
     /// <inheritdoc/>
     public class TestApiServer : ITestApiServer

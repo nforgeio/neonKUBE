@@ -68,7 +68,11 @@ namespace NeonClusterOperator
     /// Manages Glauth LDAP database.
     /// </summary>
     [Controller(ManageCustomResourceDefinitions = false)]
-    [RbacRule<V1Secret>(RbacVerb.Get, EntityScope.Namespaced)]
+    [RbacRule<V1Secret>(
+        Verbs = RbacVerb.Get, 
+        Scope = EntityScope.Namespaced,
+        Namespace = KubeNamespace.NeonSystem,
+        ResourceNames = "neon-admin.neon-system-db.credentials.postgresql,glauth-users,glauth-groups")]
     public class GlauthController : IResourceController<V1Secret>
     {
         //---------------------------------------------------------------------
@@ -106,19 +110,22 @@ namespace NeonClusterOperator
 
         private readonly IKubernetes               k8s;
         private readonly ILogger<GlauthController> logger;
+        private readonly Service                   service;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public GlauthController(
             IKubernetes k8s, 
-            ILogger<GlauthController> logger)
+            ILogger<GlauthController> logger,
+            Service service)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
             Covenant.Requires(logger != null, nameof(logger));
 
-            this.k8s    = k8s;
-            this.logger = logger;
+            this.k8s     = k8s;
+            this.logger  = logger;
+            this.service = service;
         }
 
         /// <summary>
@@ -223,7 +230,7 @@ namespace NeonClusterOperator
                         var userData     = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(resource.Data[user]));
                         var name         = userData.Name;
                         var givenname    = userData.Name;
-                        var mail         = userData.Mail ?? $"{userData.Name}@{Program.Service.ClusterInfo.Domain}";
+                        var mail         = userData.Mail ?? $"{userData.Name}@{service.ClusterInfo.Domain}";
                         var uidnumber    = userData.UidNumber;
                         var primarygroup = userData.PrimaryGroup;
                         var passsha256   = CryptoHelper.ComputeSHA256String(userData.Password);

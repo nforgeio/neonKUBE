@@ -48,5 +48,16 @@ namespace Neon.Kube.Operator
                 blockOwnerDeletion: blockOwnerDeletion,
                 controller: controller);
         }
+
+        /// <summary>
+        /// Get the CRD name for the entity.
+        /// </summary>
+        /// <param name="entityType"></param>
+        /// <returns></returns>
+        public static string GetKubernetesCrdName(this Type entityType)
+        {
+            var entityMetatdata = entityType.GetKubernetesTypeMetadata();
+            return $"{entityMetatdata.PluralName}.{entityMetatdata.Group}";
+        }
     }
 }

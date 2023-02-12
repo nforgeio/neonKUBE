@@ -23,6 +23,7 @@ using System.Net;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -51,19 +52,6 @@ using k8s.LeaderElection;
 using k8s.Models;
 
 using Prometheus;
-
-// $todo(jefflill):
-//
-// We don't currently do anything with non-null [ResourceControllerResult] returned by [ReconcileAsync()].
-// I'm not entirely sure what the semantics for this are.  I assume that:
-//
-//      1. a subsequent DELETE will cancel a pending RECONCILE
-//      2. a subsequent ADD/UPDATE will cancel (or replace?) a pending RECONILE
-//      3. a subsequent MODIFY will cancel a pending RECONCILE
-//
-// Note also that DeletedAsync() and StatusModified() should also return an optional requeue result.
-//
-// I need to do some more research.  neonKUBE isn't currently depending on any of this.
 
 namespace Neon.Kube.Operator.ResourceManager
 {
@@ -183,9 +171,10 @@ namespace Neon.Kube.Operator.ResourceManager
         private IServiceProvider                                serviceProvider;
         private IResourceCache<TEntity>                         resourceCache;
         private IResourceCache<IKubernetesObject<V1ObjectMeta>> dependentResourceCache;
+        private ICrdCache                                       crdCache;
         private IFinalizerManager<TEntity>                      finalizerManager;
         private AsyncKeyedLocker<string>                        lockProvider;
-        private List<string>                                    resourceNamespace;
+        private List<string>                                    resourceNamespaces;
         private Type                                            controllerType;
         private ILogger<ResourceManager<TEntity, TController>>  logger;
         private DateTime                                        nextIdleReconcileUtc;
@@ -201,7 +190,6 @@ namespace Neon.Kube.Operator.ResourceManager
         /// <summary>
         /// Default constructor.
         /// </summary>
-        /// <param name="namespace"></param>
         /// <param name="options">
         /// Optionally specifies options that customize the resource manager's behavior.  Reasonable
         /// defaults will be used when this isn't specified.
@@ -232,7 +220,7 @@ namespace Neon.Kube.Operator.ResourceManager
             
             if (options.WatchNamespace != null)
             {
-                this.resourceNamespace = options.WatchNamespace.Split(',').ToList();
+                this.resourceNamespaces = Regex.Replace(options.WatchNamespace, @"\s+", "").Split(',').ToList();
             }
 
             this.options.Validate();
@@ -258,6 +246,7 @@ namespace Neon.Kube.Operator.ResourceManager
             this.k8s                    = serviceProvider.GetRequiredService<IKubernetes>();
             this.resourceCache          = serviceProvider.GetRequiredService<IResourceCache<TEntity>>();
             this.dependentResourceCache = serviceProvider.GetRequiredService<IResourceCache<IKubernetesObject<V1ObjectMeta>>>();
+            this.crdCache               = serviceProvider.GetRequiredService<ICrdCache>();
             this.finalizerManager       = serviceProvider.GetRequiredService<IFinalizerManager<TEntity>>();
             this.lockProvider           = serviceProvider.GetRequiredService<AsyncKeyedLocker<string>>();
 
@@ -270,7 +259,6 @@ namespace Neon.Kube.Operator.ResourceManager
             {
                 this.leaderConfig =
                     new LeaderElectionConfig(
-                        this.k8s,
                         @namespace: Pod.Namespace,
                         leaseName: $"{typeof(TController).Name}.{typeof(TEntity).GetKubernetesTypeMetadata().PluralName}".ToLower(),
                         identity: Pod.Name,
@@ -292,6 +280,7 @@ namespace Neon.Kube.Operator.ResourceManager
             if (leaderConfig != null)
             {
                 leaderElector = new LeaderElector(
+                    k8s,
                     leaderConfig, 
                     onStartedLeading: OnPromotion, 
                     onStoppedLeading: OnDemotion, 
@@ -364,9 +353,10 @@ namespace Neon.Kube.Operator.ResourceManager
         private async Task EnsurePermissionsAsync()
         {
             HttpOperationResponse<object> resp;
+
             try
             {
-                if (resourceNamespace == null)
+                if (resourceNamespaces == null)
                 {
                     resp = await k8s.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync<TEntity>(
                         allowWatchBookmarks: true,
@@ -374,7 +364,7 @@ namespace Neon.Kube.Operator.ResourceManager
                 }
                 else
                 {
-                    foreach (var @namespace in resourceNamespace)
+                    foreach (var @namespace in resourceNamespaces)
                     {
                         resp = await k8s.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync<TEntity>(
                         @namespace,
@@ -390,6 +380,45 @@ namespace Neon.Kube.Operator.ResourceManager
                     logger?.LogErrorEx($"Cannot watch type {typeof(TEntity)}, please check RBAC rules for the controller.");
 
                     throw;
+                }
+            }
+        }
+
+        private async Task StartCrdWatchersAsync(CancellationToken cancellationToken)
+        {
+            var crdName = typeof(TEntity).GetKubernetesCrdName();
+
+            _ = k8s.WatchAsync<V1CustomResourceDefinition>(async (@event) =>
+            {
+                await SyncContext.Clear;
+
+                crdCache.Upsert(@event.Value);
+
+                logger?.LogInformationEx(() => $"Updated {typeof(TEntity)} CRD.");
+            },
+            fieldSelector: $"metadata.name={crdName}",
+            cancellationToken: cancellationToken);
+
+            crdCache.Upsert(await k8s.ApiextensionsV1.ReadCustomResourceDefinitionAsync(crdName));
+
+            if (options.DependentResources != null)
+            {
+                foreach (var dependent in options.DependentResources)
+                {
+                    crdName = dependent.GetEntityType().GetKubernetesCrdName();
+
+                    _ = k8s.WatchAsync<V1CustomResourceDefinition>(async (@event) =>
+                    {
+                        await SyncContext.Clear;
+
+                        crdCache.Upsert(@event.Value);
+
+                        logger?.LogInformationEx(() => $"Updated {dependent.GetEntityType()} CRD.");
+                    },
+                    fieldSelector: $"metadata.name={crdName}",
+                    cancellationToken: cancellationToken);
+
+                    crdCache.Upsert(await k8s.ApiextensionsV1.ReadCustomResourceDefinitionAsync(crdName));
                 }
             }
         }
@@ -412,7 +441,10 @@ namespace Neon.Kube.Operator.ResourceManager
                         await CreateOrReplaceCustomResourceDefinitionAsync();
                     }
 
+                    watcherTcs = new CancellationTokenSource();
+
                     await EnsurePermissionsAsync();
+                    await StartCrdWatchersAsync(watcherTcs.Token);
 
                     // Start the IDLE reconcile loop.
 
@@ -422,7 +454,6 @@ namespace Neon.Kube.Operator.ResourceManager
 
                     // Start the watcher.
 
-                    watcherTcs  = new CancellationTokenSource();
                     watcherTask = WatchAsync(watcherTcs.Token);
 
                     // Inform the controller.
@@ -588,14 +619,6 @@ namespace Neon.Kube.Operator.ResourceManager
                             {
                                 try
                                 {
-                                    // $todo(jefflill):
-                                    //
-                                    // We're currently assuming that operator controllers all have a constructor
-                                    // that accepts a single [IKubernetes] parameter.  We should change this to
-                                    // doing actual dependency injection when we have the time.
-                                    //
-                                    //       https://github.com/nforgeio/neonKUBE/issues/1589
-
                                     using (var scope = serviceProvider.CreateScope())
                                     {
                                         await CreateController(scope.ServiceProvider).IdleAsync();
@@ -642,7 +665,7 @@ namespace Neon.Kube.Operator.ResourceManager
 
             var entityType      = typeof(TEntity);
             var statusGetter    = entityType.GetProperty("Status")?.GetMethod;
-
+            
             //-----------------------------------------------------------------
             // Our watcher handler action.
 
@@ -1047,9 +1070,10 @@ namespace Neon.Kube.Operator.ResourceManager
             {
                 var tasks = new List<Task>();
 
-                if (this.resourceNamespace != null)
+                if (this.resourceNamespaces != null
+                    && crdCache.Get(typeof(TEntity).GetKubernetesCrdName()).Spec.Scope != "Cluster")
                 {
-                    foreach (var ns in resourceNamespace)
+                    foreach (var ns in resourceNamespaces)
                     {
                         tasks.Add(k8s.WatchAsync<TEntity>(enqueueAsync, namespaceParameter: ns, cancellationToken: cancellationToken));
                     }
@@ -1068,10 +1092,10 @@ namespace Neon.Kube.Operator.ResourceManager
                     args[1] = enqueueDependentAsync;
                     args[8] = cancellationToken;
 
-
-                    if (this.resourceNamespace != null)
+                    if (this.resourceNamespaces != null
+                        && crdCache.Get(dependent.GetEntityType().GetKubernetesCrdName()).Spec.Scope != "Cluster")
                     {
-                        foreach (var @namespace in this.resourceNamespace)
+                        foreach (var @namespace in this.resourceNamespaces)
                         {
                             args[2] = @namespace;
 

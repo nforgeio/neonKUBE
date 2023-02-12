@@ -32,6 +32,7 @@ using Microsoft.Extensions.Hosting;
 
 using Neon.Diagnostics;
 using Neon.Kube.Operator.Commands.Generate;
+using Neon.Kube.Operator;
 using Neon.Kube.Operator.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Neon.Common;
@@ -47,7 +48,7 @@ using Neon.Kube.Operator.Rbac;
 using OpenTelemetry.Resources;
 using System.Diagnostics;
 
-namespace Neon.Kube.Operator.Xunit
+namespace Neon.Kube.Xunit.Operator
 {
     /// <summary>
     /// Kubernetes operator Host.

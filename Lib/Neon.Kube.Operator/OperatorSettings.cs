@@ -15,19 +15,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using k8s;
-using Neon.Kube.Operator.ResourceManager;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
+
+using Neon.Kube.Operator.ResourceManager;
+using Neon.Kube.Operator.Util;
+
+using k8s;
 
 namespace Neon.Kube.Operator
 {
@@ -42,6 +40,8 @@ namespace Neon.Kube.Operator
         internal bool hasMutatingWebhooks { get; set; } = false;
         internal bool hasValidatingWebhooks { get; set; } = false;
 
+        internal string deployedNamespace { get; set; } = Pod.Namespace;
+
         /// <summary>
         /// Default constructor.
         /// </summary>
@@ -52,12 +52,12 @@ namespace Neon.Kube.Operator
         /// <summary>
         /// The Operator name.
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; set; } = Regex.Replace(Assembly.GetEntryAssembly().GetName().Name, @"([a-z])([A-Z])", "$1-$2").ToLower();
 
         /// <summary>
         /// The Operator name. This defaults to a Kubernetes safe version of the Assembly name.
         /// </summary>
-        public string Namespace { get; set; }
+        public string WatchNamespace { get; set; } = Pod.Namespace;
 
         /// <summary>
         /// The IP address to listen on.

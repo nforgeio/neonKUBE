@@ -69,7 +69,6 @@
 
 bower_components/
 node_modules/
-wwwroot/
 
 ################################################################################
 # Custom rules added for this repository.
@@ -110,3 +109,4 @@ KubernetesWithRetry.cs
 /UpgradeLog.htm
 /ToolBin/nuget.config
 **/Protos/**/*.cs
+/services/neon-dashboard/wwwroot/css/index.css

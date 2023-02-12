@@ -50,7 +50,7 @@ namespace TestOperator
         operations: AdmissionOperations.Create | AdmissionOperations.Update,
         resources: V1Pod.KubePluralName,
         scope: "*")]
-    [RbacRule<V1Pod>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
+    [RbacRule<V1Pod>(Verbs = RbacVerb.All)]
     public class PodWebhook : IMutatingWebhook<V1Pod>
     {
         private ILogger<IMutatingWebhook<V1Pod>> logger { get; set; }

@@ -106,6 +106,7 @@ namespace Neon.Kube
         /// <summary>
         /// Constructor.
         /// </summary>
+        /// <param name="k8s">The <see cref="IKubernetes"/> client to be used to communicate with th\e cluster.</param>
         /// <param name="config">Specifies the elector configuration.</param>
         /// <param name="onStartedLeading">
         /// Optionally specifies the action to be called when the instance assumes 
@@ -119,17 +120,19 @@ namespace Neon.Kube
         /// Optionally specifies the action to be called when the instance is demoted.
         /// </param>
         public LeaderElector(
+            IKubernetes             k8s,
             LeaderElectionConfig    config,
             Action                  onStartedLeading = null,
             Action<string>          onNewLeader      = null,
             Action                  onStoppedLeading = null)
         {
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             Covenant.Requires<ArgumentNullException>(config != null, nameof(config));
 
             tcs = new CancellationTokenSource();
 
             leaderElector = new StockLeaderElector(
-                new StockLeaderElectionConfig(new StockLeaseLock(config.K8s, config.Namespace, config.LeaseName, config.Identity))
+                new StockLeaderElectionConfig(new StockLeaseLock(k8s, config.Namespace, config.LeaseName, config.Identity))
                 {
                     LeaseDuration = config.LeaseDuration,
                     RenewDeadline = config.RenewDeadline,

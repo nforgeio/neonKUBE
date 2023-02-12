@@ -28,13 +28,11 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
+using Neon.Common;
 using Neon.Kube.Operator.Builder;
 
 using k8s.Models;
 using k8s;
-using Neon.Common;
-using Neon.Kube.Resources.CertManager;
-using Neon.BuildInfo;
 
 namespace Neon.Kube.Operator
 {
@@ -64,7 +62,11 @@ namespace Neon.Kube.Operator
                     .ConfigureServices(services =>
                     {
                         services.AddSingleton<OperatorSettings>(this.operatorHost.OperatorSettings);
-                        services.AddSingleton<CertManagerOptions>(this.operatorHost.CertManagerOptions);
+
+                        if (this.operatorHost.CertManagerOptions != null)
+                        {
+                            services.AddSingleton<CertManagerOptions>(this.operatorHost.CertManagerOptions);
+                        }
 
                         foreach (var s in this.Services)
                         {
@@ -73,16 +75,18 @@ namespace Neon.Kube.Operator
                     })
                     .UseKestrel(options =>
                     {
-                        options.ConfigureEndpointDefaults(o =>
+                        if (!NeonHelper.IsDevWorkstation)
                         {
-                            if (!NeonHelper.IsDevWorkstation)
+                            options.ConfigureEndpointDefaults(o =>
                             {
                                 o.UseHttps(this.operatorHost.Certificate);
-                            }
-                        });
-                        options.Listen(this.operatorHost.OperatorSettings.ListenAddress, this.operatorHost.OperatorSettings.Port);
+                            });
+
+                            options.Listen(this.operatorHost.OperatorSettings.ListenAddress, this.operatorHost.OperatorSettings.Port);
+                        }
                     })
                     .UseStartup(this.operatorHost.StartupType);
+        
 
             return operatorHost;
         }

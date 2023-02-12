@@ -29,7 +29,7 @@ using k8s;
 using k8s.KubeConfigModels;
 using System.Text.Json.Serialization;
 
-namespace Neon.Kube.Operator.Xunit
+namespace Neon.Kube.Xunit.Operator
 {
     /// <summary>
     /// Startup class for the test API server.

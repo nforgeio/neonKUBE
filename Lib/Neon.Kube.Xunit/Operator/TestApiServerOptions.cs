@@ -1,4 +1,4 @@
-﻿// FILE:	    ITestApiServerHost.cs
+﻿// FILE:	    TestApiServerOptions.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -14,35 +14,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 
-using Neon.Kube.Operator;
-using Neon.Kube.Operator.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 using k8s;
 using k8s.KubeConfigModels;
+using k8s.Models;
 
-namespace Neon.Kube.Operator.Xunit
+namespace Neon.Kube.Xunit.Operator
 {
     /// <summary>
-    /// Test API server <see cref="IHost"/>.
+    /// Test API Server options.
     /// </summary>
-    public interface ITestApiServerHost : IHost
+    public class TestApiServerOptions
     {
-        /// <summary>
-        /// The k8s config for the test API server.
-        /// </summary>
-        K8SConfiguration KubeConfig { get; }
-
-        /// <summary>
-        /// The kubernetes client for interacting with the test API server.
-        /// </summary>
-        IKubernetes Client { get; }
-
-        /// <summary>
-        /// The test API server.
-        /// </summary>
-        ITestApiServer Cluster { get; }
     }
 }

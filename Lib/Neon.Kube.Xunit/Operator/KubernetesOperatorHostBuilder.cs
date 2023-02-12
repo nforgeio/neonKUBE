@@ -28,6 +28,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
+using Neon.Kube.Operator;
 using Neon.Kube.Operator.Builder;
 
 using k8s.Models;
@@ -35,7 +36,7 @@ using k8s;
 using Neon.Common;
 using Neon.Kube.Resources.CertManager;
 
-namespace Neon.Kube.Operator.Xunit
+namespace Neon.Kube.Xunit.Operator
 {
 
     /// <inheritdoc/>
@@ -65,7 +66,7 @@ namespace Neon.Kube.Operator.Xunit
                         {
                             services.Add(s);
                         }
-                    });
+                    }).UseStartup<TestKubernetesStartup>().UseKestrel();
 
             this.operatorHost.Host = this.operatorHost.HostBuilder.Build();
             return operatorHost;

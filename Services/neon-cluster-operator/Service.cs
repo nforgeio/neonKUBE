@@ -188,8 +188,7 @@ namespace NeonClusterOperator
         /// Constructor.
         /// </summary>
         /// <param name="name">The service name.</param>
-        /// <param name="serviceMap">Optionally specifies the service map.</param>
-        public Service(string name, ServiceMap serviceMap = null)
+        public Service(string name)
             : base(name, version: KubeVersions.NeonKube, new NeonServiceOptions() { MetricsPrefix = "neonclusteroperator" })
         {
             serializeOptions = new JsonSerializerOptions()
@@ -240,7 +239,6 @@ namespace NeonClusterOperator
                    configure.Port = Port;
                    configure.AssemblyScanningEnabled = true;
                    configure.Name = Name;
-                   configure.Namespace = KubeNamespace.NeonSystem;
                })
                .ConfigureNeonKube()
                .AddSingleton(typeof(Service), this)

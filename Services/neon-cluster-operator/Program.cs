@@ -30,11 +30,11 @@ using Microsoft.Extensions.Logging;
 using Neon.Common;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Operator;
 using Neon.Service;
 
 using k8s;
 using k8s.Models;
-using Neon.Kube.Operator;
 
 namespace NeonClusterOperator
 {
@@ -70,6 +70,23 @@ namespace NeonClusterOperator
                 // Start the operator service.
 
                 Service = new Service(KubeService.NeonClusterOperator);
+
+                if (!string.IsNullOrEmpty(args.FirstOrDefault()))
+                {
+                    await KubernetesOperatorHost
+                       .CreateDefaultBuilder(args)
+                       .ConfigureOperator(configure =>
+                       {
+                           configure.AssemblyScanningEnabled = true;
+                           configure.Name = Service.Name;
+                       })
+                       .ConfigureNeonKube()
+                       .AddSingleton<Service>(Service)
+                       .UseStartup<OperatorStartup>()
+                       .Build().RunAsync();
+
+                    Environment.Exit(0);
+                }
 
                 Environment.Exit(await Service.RunAsync());
             }
