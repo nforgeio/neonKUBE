@@ -176,17 +176,9 @@ namespace NeonNodeAgent
         public ClusterInfo ClusterInfo;
 
         /// <summary>
-        /// The TLS certificate.
-        /// </summary>
-        private X509Certificate2 Certificate;
-
-        /// <summary>
         /// Kubernetes client.
         /// </summary>
         public IKubernetes K8s;
-
-        // private fields
-        private IWebHost webHost;
 
         /// <summary>
         /// Constructor.

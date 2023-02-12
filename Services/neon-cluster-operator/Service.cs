@@ -150,11 +150,6 @@ namespace NeonClusterOperator
         public ClusterInfo ClusterInfo;
 
         /// <summary>
-        /// The TLS certificate.
-        /// </summary>
-        private X509Certificate2 Certificate;
-
-        /// <summary>
         /// Kubernetes client.
         /// </summary>
         public IKubernetes K8s;
@@ -180,7 +175,6 @@ namespace NeonClusterOperator
         public int Port { get; private set; } = 443;
 
         // private fields
-        private IWebHost webHost;
         private HttpClient harborHttpClient;
         private readonly JsonSerializerOptions serializeOptions;
 

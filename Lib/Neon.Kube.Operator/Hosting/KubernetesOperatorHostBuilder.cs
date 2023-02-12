@@ -42,6 +42,7 @@ namespace Neon.Kube.Operator
     {
         private KubernetesOperatorHost operatorHost;
 
+        /// <inheritdoc/>
         public IServiceCollection Services { get; set; }
 
         /// <summary>

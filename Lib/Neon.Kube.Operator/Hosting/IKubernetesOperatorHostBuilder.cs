@@ -44,6 +44,9 @@ namespace Neon.Kube.Operator
         internal void AddCertManagerOptions(CertManagerOptions certManagerOptions);
         internal void UseStartup<TStartup>();
 
+        /// <summary>
+        /// The service collection.
+        /// </summary>
         IServiceCollection Services { get; set; }
 
         /// <summary>

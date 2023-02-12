@@ -42,6 +42,9 @@ namespace Neon.Kube.Xunit.Operator
     /// <inheritdoc/>
     public class KubernetesOperatorTestHostBuilder : IKubernetesOperatorHostBuilder
     {
+        /// <summary>
+        /// The service collection.
+        /// </summary>
         public IServiceCollection Services { get; set; }
         
         private KubernetesOperatorTestHost operatorHost;

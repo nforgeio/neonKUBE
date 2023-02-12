@@ -117,6 +117,12 @@ namespace Neon.Kube.Operator
             return k8sBuilder;
         }
 
+        /// <summary>
+        /// Add a singleton to the service collection.
+        /// </summary>
+        /// <typeparam name="TSingleton"></typeparam>
+        /// <param name="k8sBuilder"></param>
+        /// <returns></returns>
         public static IKubernetesOperatorHostBuilder AddSingleton<TSingleton>(this IKubernetesOperatorHostBuilder k8sBuilder)
         {
             k8sBuilder.Services.AddSingleton(typeof(TSingleton));
@@ -124,6 +130,12 @@ namespace Neon.Kube.Operator
             return k8sBuilder;
         }
 
+        /// <summary>
+        /// Add a singleton to the service collection.
+        /// </summary>
+        /// <typeparam name="TSingleton"></typeparam>
+        /// <param name="k8sBuilder"></param>
+        /// <returns></returns>
         public static IKubernetesOperatorHostBuilder AddSingleton<TSingleton>(this IKubernetesOperatorHostBuilder k8sBuilder, TSingleton instance)
         {
             k8sBuilder.Services.AddSingleton(typeof(TSingleton), instance);
@@ -131,6 +143,11 @@ namespace Neon.Kube.Operator
             return k8sBuilder;
         }
 
+        /// <summary>
+        /// Add a singleton to the service collection.
+        /// </summary>
+        /// <param name="k8sBuilder"></param>
+        /// <returns></returns>
         public static IKubernetesOperatorHostBuilder AddSingleton(this IKubernetesOperatorHostBuilder k8sBuilder, Type type, object instance)
         {
             k8sBuilder.Services.AddSingleton(type, instance);
