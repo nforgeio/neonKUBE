@@ -259,7 +259,6 @@ namespace Neon.Kube.Operator.ResourceManager
             {
                 this.leaderConfig =
                     new LeaderElectionConfig(
-                        this.k8s,
                         @namespace: Pod.Namespace,
                         leaseName: $"{typeof(TController).Name}.{typeof(TEntity).GetKubernetesTypeMetadata().PluralName}".ToLower(),
                         identity: Pod.Name,
@@ -281,6 +280,7 @@ namespace Neon.Kube.Operator.ResourceManager
             if (leaderConfig != null)
             {
                 leaderElector = new LeaderElector(
+                    k8s,
                     leaderConfig, 
                     onStartedLeading: OnPromotion, 
                     onStoppedLeading: OnDemotion, 

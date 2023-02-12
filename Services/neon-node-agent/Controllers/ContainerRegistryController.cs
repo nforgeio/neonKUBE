@@ -97,7 +97,7 @@ namespace NeonNodeAgent
     /// </note>
     /// </remarks>
     [Controller(Ignore = true)]
-    [RbacRule<V1NeonContainerRegistry>(RbacVerb.All)]
+    [RbacRule<V1NeonContainerRegistry>(Verbs = RbacVerb.All)]
     public class ContainerRegistryController : IResourceController<V1NeonContainerRegistry>
     {
         //---------------------------------------------------------------------
@@ -260,7 +260,7 @@ namespace NeonNodeAgent
         private const string podmanPath = "/usr/bin/podman";
 
         private static readonly ILogger     log             = TelemetryHub.CreateLogger<ContainerRegistryController>();
-        internal static readonly string     configMountPath = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
+        internal static string              configMountPath { get; } = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
         private static readonly string      metricsPrefix   = Program.Service?.MetricsPrefix ?? string.Empty;
         private static TimeSpan             reloginInterval;
         private static TimeSpan             reloginMaxRandomInterval;
@@ -303,7 +303,6 @@ namespace NeonNodeAgent
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task StartAsync(IServiceProvider serviceProvider)
         {
-            var service = serviceProvider.GetRequiredService<Service>();
             if (NeonHelper.IsLinux)
             {
                 // Ensure that the [/var/run/neonkube/container-registries] folder exists on the node.
@@ -345,7 +344,12 @@ rm $0
 
             // Load the configuration settings.
 
-            reloginInterval          = service.Environment.Get("CONTAINERREGISTRY_RELOGIN_INTERVAL", TimeSpan.FromHours(24));
+            if (!TimeSpan.TryParse(Environment.GetEnvironmentVariable("CONTAINERREGISTRY_RELOGIN_INTERVAL"), out reloginInterval))
+            {
+                reloginInterval = TimeSpan.FromHours(24);
+            }
+
+            
             reloginMaxRandomInterval = reloginInterval.Divide(4);
         }
         
@@ -353,20 +357,16 @@ rm $0
         // Instance members
 
         private readonly IKubernetes k8s;
-        private readonly Service     service;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public ContainerRegistryController(
-            IKubernetes k8s,
-            Service service)
+            IKubernetes k8s)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
-            Covenant.Requires(service != null, nameof(service));
 
             this.k8s     = k8s;
-            this.service = service;
         }
 
         /// <inheritdoc/>
@@ -449,20 +449,25 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                 // Read and parse the current configuration file to create list of the existing
                 // configured upstream registries.
 
-                var currentConfigText = File.ReadAllText(service.GetConfigFilePath(configMountPath));
-                var currentConfig     = Toml.Parse(currentConfigText);
-                var existingLocations = new List<string>();
+                var currentConfigText = string.Empty;
 
-                foreach (var registryTable in currentConfig.Tables.Where(table => table.Name.Key.GetName() == "registry"))
+                if (File.Exists(configMountPath))
                 {
-                    var location = registryTable.Items.SingleOrDefault(key => key.Key.GetName() == "location")?.Value.GetValue();
+                    currentConfigText = File.ReadAllText(configMountPath);
+                    var currentConfig = Toml.Parse(currentConfigText);
+                    var existingLocations = new List<string>();
 
-                    if (!string.IsNullOrWhiteSpace(location))
+                    foreach (var registryTable in currentConfig.Tables.Where(table => table.Name.Key.GetName() == "registry"))
                     {
-                        existingLocations.Add(location);
+                        var location = registryTable.Items.SingleOrDefault(key => key.Key.GetName() == "location")?.Value.GetValue();
+
+                        if (!string.IsNullOrWhiteSpace(location))
+                        {
+                            existingLocations.Add(location);
+                        }
                     }
                 }
-
+               
                 // Convert the generated config to Linux line endings and then compare the new
                 // config against what's already configured on the host node.  We'll rewrite the
                 // host file and then signal CRI-O to reload its config when the files differ.
@@ -473,7 +478,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                 {
                     configUpdateCounter.Inc();
 
-                    File.WriteAllText(service.GetConfigFilePath(configMountPath), newConfigText);
+                    File.WriteAllText(configMountPath, newConfigText);
                     (await Node.ExecuteCaptureAsync("pkill", new object[] { "-HUP", "crio" })).EnsureSuccess();
 
                     // Wait a few seconds to give CRI-O a chance to reload its config.  This will

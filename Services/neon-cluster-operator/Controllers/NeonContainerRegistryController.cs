@@ -69,8 +69,8 @@ namespace NeonClusterOperator
     /// Configures Neon SSO using <see cref="V1NeonContainerRegistry"/>.
     /// </para>
     /// </summary>
-    [RbacRule<V1NeonContainerRegistry>(RbacVerb.All, EntityScope.Cluster)]
-    [RbacRule<V1Secret>(RbacVerb.Get, EntityScope.Namespaced)]
+    [RbacRule<V1NeonContainerRegistry>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
+    [RbacRule<V1Secret>(Verbs = RbacVerb.Get, Scope = EntityScope.Namespaced, Namespace = KubeNamespace.NeonSystem, ResourceNames = "glauth-users")]
     public class NeonContainerRegistryController : IResourceController<V1NeonContainerRegistry>
     {
         //---------------------------------------------------------------------

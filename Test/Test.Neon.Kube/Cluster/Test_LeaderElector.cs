@@ -90,8 +90,8 @@ namespace TestKube
             // Verify that the elector works without callback actions.
 
             var  leaseName = $"test-{NeonHelper.CreateBase36Uuid()}";
-            var  config    = new LeaderElectionConfig(fixture.K8s, @namespace: KubeNamespace.Default, leaseName: leaseName, identity: "instance-0");
-            var  elector   = new LeaderElector(config);
+            var  config    = new LeaderElectionConfig(@namespace: KubeNamespace.Default, leaseName: leaseName, identity: "instance-0");
+            var  elector   = new LeaderElector(fixture.K8s, config);
             Task electorTask;
 
             try
@@ -129,12 +129,13 @@ namespace TestKube
             var     leaseName = $"test-{NeonHelper.CreateBase36Uuid()}";
             bool    isLeading = false;
             string  leader    = null;
-            var     config    = new LeaderElectionConfig(fixture.K8s, @namespace: KubeNamespace.Default, leaseName: leaseName, identity: "instance-0");
+            var     config    = new LeaderElectionConfig(@namespace: KubeNamespace.Default, leaseName: leaseName, identity: "instance-0");
             Task    electorTask;
 
             try
             {
                 var elector = new LeaderElector(
+                    k8s:              fixture.K8s,
                     config:           config,
                     onStartedLeading: () => isLeading = true,
                     onStoppedLeading: () => isLeading = false,

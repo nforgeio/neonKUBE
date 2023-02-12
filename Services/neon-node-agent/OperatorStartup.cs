@@ -79,7 +79,6 @@ namespace NeonNodeAgent
                 .AddKubernetesOperator()
                 .AddController<ContainerRegistryController>(
                     leaderConfig: new LeaderElectionConfig(
-                        k8s:           Service.K8s,
                         @namespace:    KubeNamespace.NeonSystem,
                         leaseName:     $"{Program.Service.Name}.containerregistry-{Node.Name}",
                         identity:      Pod.Name,
@@ -87,7 +86,6 @@ namespace NeonNodeAgent
                 .AddController<NodeTaskController>(
                     leaderConfig:
                         new LeaderElectionConfig(
-                        k8s:           Service.K8s,
                         @namespace:    KubeNamespace.NeonSystem,
                         leaseName:     $"{Program.Service.Name}.nodetask-{Node.Name}",
                         identity:      Pod.Name,

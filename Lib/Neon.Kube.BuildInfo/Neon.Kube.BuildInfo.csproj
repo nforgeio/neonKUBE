@@ -1,10 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
         <OutputType>Library</OutputType>
         <RootNamespace>Neon.Kube.BuildInfo</RootNamespace>
-        <Version>3.0.0</Version>
+        <Version>10000.0.3469-dev-marcus-operator-rbac</Version>
         <Description>INTERNAL USE ONLY: neonKUBE build information</Description>
         <IsPackable>true</IsPackable>
         <PackageProjectUrl></PackageProjectUrl>

@@ -129,7 +129,6 @@ namespace Neon.Kube.Operator
 
             HostBuilder.ConfigureServices(services =>
             {
-                services.AddSingleton<OperatorSettings>(OperatorSettings);
                 services.AddSingleton<GenerateCommand>();
                 services.AddSingleton<GenerateCommandBase, GenerateRbacCommand>();
             });
@@ -194,7 +193,6 @@ namespace Neon.Kube.Operator
 
             HostBuilder.ConfigureServices(services =>
             {
-                services.AddSingleton<OperatorSettings>(OperatorSettings);
                 services.AddSingleton<GenerateCommand>();
                 services.AddSingleton<GenerateCommandBase, GenerateRbacCommand>();
             });
@@ -219,6 +217,8 @@ namespace Neon.Kube.Operator
 
             // Invoke the command line parser which then invokes the respective command handlers
             await parser.InvokeAsync(args);
+
+            return;
         }
 
         private async Task CheckCertificateAsync()

@@ -171,6 +171,13 @@ spec:
           key: password
     - name: LOG_LEVEL
       value: {{ .Values.metrics.logLevel }}
+    resources:
+      limits:
+        cpu: 100m
+        memory: {{ .Values.metrics.resources.limits.memory | default "128Mi" }}
+      requests:
+        cpu: 50m
+        memory: {{ .Values.metrics.resources.requests.memory | default "32Mi" }}
     volumeMounts:
     - name: queries
       mountPath: /etc/queries.yaml

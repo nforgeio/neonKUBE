@@ -67,9 +67,9 @@ namespace NeonClusterOperator
     /// <summary>
     /// Manages MinioBucket LDAP database.
     /// </summary>
-    [RbacRule<V1MinioBucket>(RbacVerb.All, Scope = EntityScope.Cluster)]
-    [RbacRule<V1MinioTenant>(RbacVerb.All, Scope = EntityScope.Cluster)]
-    [RbacRule<V1Secret>(RbacVerb.Get)]
+    [RbacRule<V1MinioBucket>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
+    [RbacRule<V1MinioTenant>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
+    [RbacRule<V1Secret>(Verbs = RbacVerb.Get)]
     public class MinioBucketController : IResourceController<V1MinioBucket>
     {
         //---------------------------------------------------------------------

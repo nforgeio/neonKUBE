@@ -16,9 +16,13 @@
 // limitations under the License.
 
 using System;
+using System.IO;
+using System.Threading.Tasks;
 
 using Microsoft.Extensions.DependencyInjection;
 
+using Neon.Common;
+using Neon.IO;
 using Neon.Kube.Xunit.Operator;
 using Neon.Kube.Resources.Cluster;
 using NeonNodeAgent;
@@ -27,6 +31,10 @@ using k8s;
 using k8s.Models;
 
 using Neon.Kube;
+
+using Telerik.JustMock;
+
+using Tomlyn;
 
 namespace TestNeonNodeAgent
 {
@@ -38,6 +46,13 @@ namespace TestNeonNodeAgent
         {
             this.fixture = fixture;
 
+            Mock.SetupStatic(typeof(Node), Behavior.CallOriginal, StaticConstructor.NonMocked);
+            Mock.Arrange(() => Node.ExecuteCaptureAsync("pkill", new object[] { "-HUP", "crio" }, null, null, null, null, null, null)).ReturnsAsync(new ExecuteResponse(0));
+
+
+            Mock.SetupStatic(typeof(Node), Behavior.CallOriginal, StaticConstructor.NonMocked);
+            Mock.Arrange(() => Task.Delay(TimeSpan.FromSeconds(15))).Returns(Task.CompletedTask);
+
             fixture.Operator.AddController<ContainerRegistryController>();
             fixture.Start();
         }
@@ -47,6 +62,16 @@ namespace TestNeonNodeAgent
         {
             fixture.ClearResources();
             fixture.RegisterType<V1NeonContainerRegistry>();
+
+            Mock.SetupStatic(typeof(NeonHelper), Behavior.CallOriginal, StaticConstructor.NonMocked);
+            Mock.Arrange(() => NeonHelper.IsLinux).Returns(true);
+
+            var tempFile = new TempFile();
+
+            Mock.SetupStatic(typeof(ContainerRegistryController), Behavior.Loose);
+            Mock.Arrange(() => ContainerRegistryController.configMountPath).Returns(tempFile.Path);
+
+            var linux = NeonHelper.IsLinux;
 
             var controller = fixture.Operator.GetController<ContainerRegistryController>();
 
@@ -67,9 +92,23 @@ namespace TestNeonNodeAgent
 
             fixture.Resources.Add(containerRegistry);
 
+            Mock.Arrange(() => Node.ExecuteCaptureAsync(
+                "/usr/bin/podman", 
+                new object[] 
+                { 
+                    "login", 
+                    containerRegistry.Spec.Location, 
+                    "--username", containerRegistry.Spec.Username, 
+                    "--password", containerRegistry.Spec.Password 
+                }, 
+                null, null, null, null, null, null)).ReturnsAsync(new ExecuteResponse(0));
+
             await controller.IdleAsync();
 
-            Assert.True(true);
+            var result = File.ReadAllText(tempFile.Path);
+            var currentConfig = Toml.Parse(result);
+
+            // todo(marcusbooyah): verify result
         }
     }
 }

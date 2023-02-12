@@ -1,10 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<RootNamespace>Neon.Kube.Hosting.Google</RootNamespace>
-		<Version>10000.0.2236-dev-master</Version>
+		<Version>10000.0.3469-dev-marcus-operator-rbac</Version>
 		<Description>INTERNAL USE ONLY: neonKUBE hosting manager for Google Cloud.</Description>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
@@ -33,7 +33,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Neon.Common" Version="10000.0.2794-dev-master" />
+	  <PackageReference Include="Neon.Common" Version="10000.0.2803-dev-master" />
 	</ItemGroup>
 
 </Project>

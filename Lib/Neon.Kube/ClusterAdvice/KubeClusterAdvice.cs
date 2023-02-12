@@ -139,6 +139,16 @@ namespace Neon.Kube
         public static string NeonSystemDb = "neon-system-db";
 
         /// <summary>
+        /// Identifies the neonKUBE cluster's system database pooler.
+        /// </summary>
+        public static string NeonSystemDbPooler = "neon-system-db-pooler";
+
+        /// <summary>
+        /// Identifies the neonKUBE cluster's system database metrics sidecar.
+        /// </summary>
+        public static string NeonSystemDbMetrics = "neon-system-db-metrics";
+
+        /// <summary>
         /// Identifies the neonKUBE cluster's <b>CoreDNS</b> service.
         /// </summary>
         public static string CoreDns = "coredns";

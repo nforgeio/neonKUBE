@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 using Neon.Kube.Resources;
 
@@ -43,6 +44,11 @@ namespace Neon.Kube.Operator.Rbac
         public EntityScope Scope { get; set; } = EntityScope.Namespaced;
 
         /// <summary>
+        /// Comma separated list of namespaces to watch. 
+        /// </summary>
+        public string Namespace { get; set; } = null;
+
+        /// <summary>
         /// Comma separated list of resource names. When specified, requests can be restricted to individual 
         /// instances of a resource
         /// </summary>
@@ -51,26 +57,14 @@ namespace Neon.Kube.Operator.Rbac
         /// <summary>
         /// Constructor
         /// </summary>
-        public RbacRuleAttribute(
-            RbacVerb verbs = RbacVerb.None,
-            EntityScope scope = EntityScope.Namespaced,
-            string resourceNames = null)
+        public RbacRuleAttribute()
         {
-            this.Verbs         = verbs;
-            this.Scope         = scope;
-            this.ResourceNames = resourceNames;
-        }
-
-        /// <inheritdoc/>
-        public string Namespace()
-        {
-            return null;
         }
 
         /// <inheritdoc/>
         public IEnumerable<string> Namespaces()
         {
-            return null;
+            return Namespace?.Split(',') ?? null;
         }
 
         /// <inheritdoc/>

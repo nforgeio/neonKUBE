@@ -65,6 +65,7 @@ using Grpc.Core;
 using Grpc.Net.Client;
 
 using Prometheus;
+
 namespace NeonClusterOperator
 {
     /// <summary>
@@ -72,8 +73,8 @@ namespace NeonClusterOperator
     /// Configures Neon SSO using <see cref="V1NeonSsoClient"/>.
     /// </para>
     /// </summary>
-    [RbacRule<V1NeonSsoClient>(RbacVerb.All, EntityScope.Cluster)]
-    [RbacRule<V1ConfigMap>(RbacVerb.Get | RbacVerb.Update, EntityScope.Namespaced)]
+    [RbacRule<V1NeonSsoClient>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
+    [RbacRule<V1ConfigMap>(Verbs = RbacVerb.Get | RbacVerb.Update, Scope = EntityScope.Namespaced, Namespace = KubeNamespace.NeonSystem, ResourceNames = "neon-sso-oauth2-proxy")]
     public class NeonSsoClientController : IResourceController<V1NeonSsoClient>
     {
         //---------------------------------------------------------------------

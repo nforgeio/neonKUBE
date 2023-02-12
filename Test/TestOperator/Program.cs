@@ -22,7 +22,6 @@ namespace TestOperator
                 .Build();
 
             await k8s.RunAsync();
-
         }
     }
 }

@@ -20,8 +20,8 @@ namespace TestOperator
     /// <summary>
     /// Example controller
     /// </summary>
-    [RbacRule<V1ExampleEntity>(RbacVerb.All, EntityScope.Cluster)]
-    [RbacRule<V1ExampleClusterEntity>(RbacVerb.All, EntityScope.Cluster)]
+    [RbacRule<V1ExampleEntity>(Verbs = RbacVerb.All)]
+    [RbacRule<V1ExampleClusterEntity>(Verbs = RbacVerb.All)]
     [DependentResource<V1ExampleClusterEntity>]
     public class ExampleController : IResourceController<V1ExampleEntity>
     {

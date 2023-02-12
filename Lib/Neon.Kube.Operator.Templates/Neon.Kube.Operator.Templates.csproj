@@ -1,8 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.0</TargetFrameworks>
-		<Version>10000.0.2236-dev-master</Version>
+		<Version>10000.0.3469-dev-marcus-operator-rbac</Version>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Operator.Templates/README.md</PackageProjectUrl>
 		<PackageTags>kubernetes operator sdk neonkube template templates</PackageTags>
