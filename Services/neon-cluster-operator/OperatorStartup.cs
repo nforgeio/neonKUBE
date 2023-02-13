@@ -85,9 +85,9 @@ namespace NeonClusterOperator
         {
             services.AddSingleton<ILoggerFactory>(TelemetryHub.LoggerFactory)
                 .AddSingleton(Service)
-                //.AddSingleton(Service.DexClient)
-                //.AddSingleton(Service.HeadendClient)
-                //.AddSingleton(Service.HarborClient)
+                .AddSingleton(Service.DexClient)
+                .AddSingleton(Service.HeadendClient)
+                .AddSingleton(Service.HarborClient)
                 .AddKubernetesOperator();
         }
 
