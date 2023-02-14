@@ -34,6 +34,7 @@ using k8s;
 using k8s.Models;
 
 using KellermanSoftware.CompareNetObjects;
+
 using Prometheus;
 
 namespace Neon.Kube.Operator.Cache
@@ -46,7 +47,7 @@ namespace Neon.Kube.Operator.Cache
         /// </summary>
         public static readonly Gauge CacheSize = Metrics.CreateGauge(
             $"neonkubeoperator_cache_{nameof(TEntity).ToLower().Split('.').Last()}_items_current",
-            "The number of items currently in the CRD cache."
+            "The number of items currently in the entity cache."
             );
 
         private readonly ILogger<ResourceCache<TEntity>>        logger;
@@ -111,9 +112,16 @@ namespace Neon.Kube.Operator.Cache
             result = CompareEntity(entity);
 
             cache.AddOrUpdate(
-                key: id, 
-                addValueFactory: (id) => Clone(entity), 
-                updateValueFactory: (key, oldEntity) => Clone(entity));
+                key: id,
+                addValueFactory: (id) =>
+                {
+                    CacheSize?.Inc();
+                    return Clone(entity);
+                },
+                updateValueFactory: (key, oldEntity) =>
+                {
+                    return Clone(entity);
+                });
 
             return entity;
 
@@ -129,8 +137,15 @@ namespace Neon.Kube.Operator.Cache
 
                 cache.AddOrUpdate(
                     key: id,
-                    addValueFactory: (id) => Clone(entity),
-                    updateValueFactory: (key, oldEntity) => Clone(entity));
+                    addValueFactory: (id) =>
+                    {
+                        CacheSize?.Inc();
+                        return Clone(entity);
+                    },
+                    updateValueFactory: (key, oldEntity) =>
+                    {
+                        return Clone(entity);
+                    });
             }
         }
 
