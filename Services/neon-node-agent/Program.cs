@@ -67,6 +67,7 @@ namespace NeonNodeAgent
                         {
                             configure.AssemblyScanningEnabled = true;
                             configure.Name = Service.Name;
+                            configure.Port = 11006;
                         })
                        .ConfigureNeonKube()
                        .AddSingleton(typeof(Service), Service)

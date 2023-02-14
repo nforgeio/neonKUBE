@@ -271,11 +271,13 @@ namespace Neon.Kube.Operator.Builder
             where TImplementation : class, IResourceController<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
+            options = options ?? operatorSettings.ResourceManagerOptions;
+
             Services.TryAddSingleton<ResourceManager<TEntity, TImplementation>>(services =>
             {
                 return new ResourceManager<TEntity, TImplementation>(
                     serviceProvider: services,
-                    options: options ?? operatorSettings.ResourceManagerOptions,
+                    options: options,
                     leaderConfig: leaderConfig,
                     leaderElectionDisabled: leaderElectionDisabled);
             });
@@ -289,9 +291,9 @@ namespace Neon.Kube.Operator.Builder
                 operatorSettings.leaderElectionEnabled = true;
             }
 
-            if (options?.ManageCustomResourceDefinitions == false)
+            if (options?.ManageCustomResourceDefinitions == true)
             {
-                operatorSettings.manageCustomResourceDefinitions = false;
+                operatorSettings.manageCustomResourceDefinitions = true;
             }
 
             return this;

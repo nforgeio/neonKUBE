@@ -35,6 +35,7 @@ using Neon.Service;
 
 using k8s;
 using k8s.Models;
+using Neon.Diagnostics;
 
 namespace NeonClusterOperator
 {
@@ -70,6 +71,8 @@ namespace NeonClusterOperator
                 // Start the operator service.
 
                 Service = new Service(KubeService.NeonClusterOperator);
+
+                Service.Logger.LogDebugEx(() => $"args: {NeonHelper.JsonSerialize(args)}");
 
                 if (!string.IsNullOrEmpty(args.FirstOrDefault()))
                 {

@@ -161,6 +161,7 @@ namespace Neon.Kube.Operator.ResourceManager
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         where TController : IResourceController<TEntity>
     {
+        private static IEnumerable<string>                      kubernetesTypes;
         private ResourceManagerOptions                          options;
         private bool                                            isDisposed   = false;
         private bool                                            stopIdleLoop = false;
@@ -186,6 +187,11 @@ namespace Neon.Kube.Operator.ResourceManager
         private Task                                            watcherTask;
         private CancellationTokenSource                         watcherTcs;
         private EventQueue<TEntity>                             eventQueue;
+
+        static ResourceManager()
+        {
+            kubernetesTypes = Assembly.GetAssembly(typeof(V1Pod)).DefinedTypes.Where(t => t.GetCustomAttribute<KubernetesEntityAttribute>() != null).Select(t => t.GetKubernetesCrdName());
+        }
 
         /// <summary>
         /// Default constructor.
@@ -382,11 +388,21 @@ namespace Neon.Kube.Operator.ResourceManager
                     throw;
                 }
             }
+            catch (Exception e)
+            {
+                logger?.LogErrorEx($"Cannot watch type {typeof(TEntity)}, please check RBAC rules for the controller.");
+            }
         }
 
         private async Task StartCrdWatchersAsync(CancellationToken cancellationToken)
         {
+            var crdMeta = typeof(TEntity).GetKubernetesTypeMetadata();
             var crdName = typeof(TEntity).GetKubernetesCrdName();
+
+            if (kubernetesTypes.Contains(crdName))
+            {
+                return;
+            }
 
             _ = k8s.WatchAsync<V1CustomResourceDefinition>(async (@event) =>
             {
@@ -429,7 +445,7 @@ namespace Neon.Kube.Operator.ResourceManager
         /// </summary>
         private void OnPromotion()
         {
-            logger?.LogInformationEx("PROMOTED");
+            logger?.LogInformationEx(() => $"{typeof(TController)}[{typeof(TEntity)}] PROMOTED");
 
             IsLeader = true;
 
@@ -472,7 +488,7 @@ namespace Neon.Kube.Operator.ResourceManager
         /// </summary>
         private void OnDemotion()
         {
-            logger?.LogInformationEx("DEMOTED");
+            logger?.LogInformationEx(() => $"{typeof(TController)}[{typeof(TEntity)}] DEMOTED");
 
             IsLeader = false;
 
@@ -522,7 +538,7 @@ namespace Neon.Kube.Operator.ResourceManager
             Task.Run(
                 async () =>
                 {
-                    logger?.LogInformationEx(() => $"LEADER-IS: {identity}");
+                    logger?.LogInformationEx(() => $"{typeof(TController)}[{typeof(TEntity)}] LEADER-IS: {identity}");
 
                     // Inform the controller.
 
@@ -1071,7 +1087,7 @@ namespace Neon.Kube.Operator.ResourceManager
                 var tasks = new List<Task>();
 
                 if (this.resourceNamespaces != null
-                    && crdCache.Get(typeof(TEntity).GetKubernetesCrdName()).Spec.Scope != "Cluster")
+                    && crdCache.Get(typeof(TEntity).GetKubernetesCrdName())?.Spec.Scope != "Cluster")
                 {
                     foreach (var ns in resourceNamespaces)
                     {
@@ -1093,7 +1109,7 @@ namespace Neon.Kube.Operator.ResourceManager
                     args[8] = cancellationToken;
 
                     if (this.resourceNamespaces != null
-                        && crdCache.Get(dependent.GetEntityType().GetKubernetesCrdName()).Spec.Scope != "Cluster")
+                        && crdCache.Get(dependent.GetEntityType().GetKubernetesCrdName())?.Spec.Scope != "Cluster")
                     {
                         foreach (var @namespace in this.resourceNamespaces)
                         {

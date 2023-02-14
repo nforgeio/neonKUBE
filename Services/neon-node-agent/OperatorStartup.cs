@@ -74,7 +74,7 @@ namespace NeonNodeAgent
         /// <param name="services">The service collection.</param>
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<ILogger>(Program.Service.Logger)
+            services.AddSingleton<ILoggerFactory>(TelemetryHub.LoggerFactory)
                 .AddSingleton(Service)
                 .AddKubernetesOperator()
                 .AddController<ContainerRegistryController>(

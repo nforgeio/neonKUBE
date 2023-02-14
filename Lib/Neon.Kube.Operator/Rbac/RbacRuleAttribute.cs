@@ -59,6 +59,10 @@ namespace Neon.Kube.Operator.Rbac
         /// </summary>
         public RbacRuleAttribute()
         {
+            if (typeof(TEntity).GetCustomAttribute<EntityScopeAttribute>()?.Scope == EntityScope.Cluster)
+            {
+                this.Scope = EntityScope.Cluster;
+            }
         }
 
         /// <inheritdoc/>

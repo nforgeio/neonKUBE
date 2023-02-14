@@ -226,6 +226,8 @@ namespace NeonClusterOperator
                 Port = 11005;
             }
 
+            Logger.LogInformationEx(() => $"Listening on: {IPAddress.Any}:{Port}");
+            
             var k8s = KubernetesOperatorHost
                .CreateDefaultBuilder()
                .ConfigureOperator(configure =>

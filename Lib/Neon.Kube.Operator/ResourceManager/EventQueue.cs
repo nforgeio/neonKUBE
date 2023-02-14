@@ -51,6 +51,14 @@ namespace Neon.Kube.Operator.ResourceManager
     internal class EventQueue<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        /// <summary>
+        /// The number of items currently in the queue for the given entity.
+        /// </summary>
+        public static readonly Gauge QueueSize = Metrics.CreateGauge(
+            $"neonkubeoperator_eventqueue_{nameof(TEntity).ToLower().Split('.').Last()}_items_current",
+            "The number of items currently in the queue for the given entity."
+            );
+
         private readonly IKubernetes                                                            k8s;
         private readonly ILogger<EventQueue<TEntity>>                                           logger;
         private readonly ResourceManagerOptions                                                 options;
@@ -136,7 +144,10 @@ namespace Neon.Kube.Operator.ResourceManager
 
             var cts = new CancellationTokenSource();
 
-            queue.TryAdd(@event, cts);
+            if (queue.TryAdd(@event, cts))
+            {
+                QueueSize?.Inc();
+            }
 
             _ = QueueAsync(@event, delay.Value, cts.Token);
         }
@@ -155,9 +166,12 @@ namespace Neon.Kube.Operator.ResourceManager
         {
             try
             {
-                var old = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).Single();
+                var old = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).FirstOrDefault();
 
-                await DequeueAsync(old);
+                if (old != null)
+                {
+                    await DequeueAsync(old);
+                }
             }
             catch (Exception e)
             {
@@ -190,7 +204,10 @@ namespace Neon.Kube.Operator.ResourceManager
                     queue[queuedEvent].Cancel();
                 }
 
-                queue.TryRemove(queuedEvent, out _);
+                if (queue.TryRemove(queuedEvent, out _))
+                {
+                    QueueSize?.Dec();
+                }
             }
         }
 
@@ -203,7 +220,7 @@ namespace Neon.Kube.Operator.ResourceManager
                 if (delay > TimeSpan.Zero)
                 {
                     logger?.LogDebugEx(() => $"Sleeping before executing event [{@event.Type}] for resource [{@event.Value.Kind}/{@event.Value.Name()}]");
-                 
+
                     await Task.Delay(delay, cancellationToken);
                 }
 
@@ -212,22 +229,14 @@ namespace Neon.Kube.Operator.ResourceManager
                 await eventHandler?.Invoke(@event);
 
                 logger?.LogDebugEx(() => $"Event [{@event.Type}] executed for resource [{@event.Value.Kind}/{@event.Value.Name()}]");
-
-                queue.TryRemove(@event, out _);
             }
-            catch (TaskCanceledException)
+            catch (Exception e)
             {
-                logger?.LogDebugEx($"Canceling task for [{@event.Type}] event on resource [{@event.Value.Kind}/{@event.Value.Name()}]");
-
-                var queuedEvent = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).FirstOrDefault();
-
-                if (queuedEvent != null)
-                {
-                    if (queue.TryRemove(queuedEvent, out _))
-                    {
-                        logger?.LogDebugEx($"Sucessfully canceled task for [{@event.Type}] event on resource [{@event.Value.Kind}/{@event.Value.Name()}]");
-                    }
-                }
+                logger?.LogErrorEx(() => e.Message);
+            }
+            finally
+            {
+                await DequeueAsync(@event);
             }
         }
 

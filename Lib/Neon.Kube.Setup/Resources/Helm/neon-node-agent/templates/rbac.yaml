@@ -92,7 +92,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: neon-node-agent
-  namespace: default
+  namespace: neon-system
 rules:
 - apiGroups:
   - cert-manager.io

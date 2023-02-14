@@ -192,30 +192,6 @@ namespace NeonClusterOperator
             }
         }
 
-        /// <inheritdoc/>
-        public async Task OnPromotionAsync()
-        {
-            await SyncContext.Clear;
-
-            logger?.LogInformationEx(() => $"PROMOTED");
-        }
-
-        /// <inheritdoc/>
-        public async Task OnDemotionAsync()
-        {
-            await SyncContext.Clear;
-
-            logger?.LogInformationEx(() => $"DEMOTED");
-        }
-
-        /// <inheritdoc/>
-        public async Task OnNewLeaderAsync(string identity)
-        {
-            await SyncContext.Clear;
-
-            logger?.LogInformationEx(() => $"NEW LEADER: {identity}");
-        }
-
         private async Task<MinioClient> GetMinioClientAsync(V1MinioBucket resource)
         {
             var tenant        = await k8s.CustomObjects.ReadNamespacedCustomObjectAsync<V1MinioTenant>(resource.Namespace(), resource.Spec.Tenant);

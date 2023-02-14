@@ -60,33 +60,45 @@ namespace Neon.Kube.Operator
             this.operatorHost.HostBuilder = new WebHostBuilder();
 
             this.operatorHost.HostBuilder
-                    .ConfigureServices(services =>
-                    {
-                        services.AddSingleton<OperatorSettings>(this.operatorHost.OperatorSettings);
+                .UseUrls()
+                .ConfigureServices(services =>
+                {
+                    services.AddSingleton<OperatorSettings>(this.operatorHost.OperatorSettings);
 
-                        if (this.operatorHost.CertManagerOptions != null)
-                        {
-                            services.AddSingleton<CertManagerOptions>(this.operatorHost.CertManagerOptions);
-                        }
-
-                        foreach (var s in this.Services)
-                        {
-                            services.Add(s);
-                        }
-                    })
-                    .UseKestrel(options =>
+                    if (this.operatorHost.CertManagerOptions != null)
                     {
-                        if (!NeonHelper.IsDevWorkstation)
+                        services.AddSingleton<CertManagerOptions>(this.operatorHost.CertManagerOptions);
+                    }
+
+                    foreach (var s in this.Services)
+                    {
+                        services.Add(s);
+                    }
+                })
+                .UseKestrel(options =>
+                {
+                    if (!NeonHelper.IsDevWorkstation)
+                    {
+                        options.ConfigureHttpsDefaults(o =>
                         {
-                            options.ConfigureEndpointDefaults(o =>
+                            o.ServerCertificateSelector = (connectionContext, name) =>
                             {
-                                o.UseHttps(this.operatorHost.Certificate);
+                                return this.operatorHost.Certificate;
+                            };
+                        });
+                        options.Listen(this.operatorHost.OperatorSettings.ListenAddress, this.operatorHost.OperatorSettings.Port, o =>
+                        {
+                            o.UseHttps(httpsOptions =>
+                            {
+                                httpsOptions.ServerCertificateSelector = (connectionContext, name) =>
+                                {
+                                    return this.operatorHost.Certificate;
+                                };
                             });
-
-                            options.Listen(this.operatorHost.OperatorSettings.ListenAddress, this.operatorHost.OperatorSettings.Port);
-                        }
-                    })
-                    .UseStartup(this.operatorHost.StartupType);
+                        });
+                    }
+                })
+                .UseStartup(this.operatorHost.StartupType);
         
 
             return operatorHost;

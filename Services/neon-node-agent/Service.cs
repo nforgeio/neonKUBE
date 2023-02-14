@@ -59,6 +59,7 @@ using Newtonsoft.Json.Linq;
 using Npgsql;
 
 using OpenTelemetry;
+using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
@@ -203,12 +204,9 @@ namespace NeonNodeAgent
             await WatchClusterInfoAsync();
             
             // Start the web service.
-            var port = 443;
 
-            if (NeonHelper.IsDevWorkstation)
-            {
-                port = 11006;
-            }
+            var port = 11006;
+
 
             var k8s = KubernetesOperatorHost
                .CreateDefaultBuilder()
@@ -260,6 +258,24 @@ namespace NeonNodeAgent
                     options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
                 });
             return true;
+        }
+
+        /// <inheritdoc/>
+        protected override bool OnLoggerConfg(OpenTelemetryLoggerOptions options)
+        {
+            if (NeonHelper.IsDevWorkstation || !string.IsNullOrEmpty(GetEnvironmentVariable("DEBUG")))
+            {
+                options.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName: Name, serviceVersion: Version));
+
+                options.AddConsoleTextExporter(options =>
+                {
+                    options.Format = (record) => $"[{record.LogLevel}][{record.CategoryName}] {record.FormattedMessage}";
+                });
+
+                return true;
+            }
+
+            return false;
         }
 
         private async Task WatchClusterInfoAsync()

@@ -66,9 +66,10 @@ namespace Neon.Kube.Operator.Webhook
         /// The webhook configuration.
         /// </summary>
         public V1MutatingWebhookConfiguration WebhookConfiguration(
-            OperatorSettings   operatorSettings,
-            bool               useTunnel = false, 
-            string             tunnelUrl = null)
+            OperatorSettings                   operatorSettings,
+            bool                               useTunnel = false, 
+            string                             tunnelUrl = null,
+            ILogger<IMutatingWebhook<TEntity>> logger = null)
         { 
             var hook = this.GetType().GetCustomAttribute<WebhookAttribute>();
 
@@ -84,6 +85,8 @@ namespace Neon.Kube.Operator.Webhook
 
             if (useTunnel && !string.IsNullOrEmpty(tunnelUrl))
             {
+                logger?.LogDebugEx(() => $"Configuring Webhook {this.GetType().Name} to use Dev Tunnel.");
+
                 clientConfig.Service = null;
                 clientConfig.CaBundle = null;
                 clientConfig.Url = tunnelUrl.TrimEnd('/') + WebhookHelper.CreateEndpoint<TEntity>(this.GetType(), WebhookType.Mutate);
@@ -94,7 +97,10 @@ namespace Neon.Kube.Operator.Webhook
 
             if (!useTunnel && operatorSettings.certManagerEnabled)
             {
-                webhookConfig.Metadata.EnsureAnnotations().Add("cert-manager.io/inject-ca-from", $"{operatorSettings.deployedNamespace}/{operatorSettings.Name}");
+                logger?.LogDebugEx(() => $"Not using tunnel for Webhook {this.GetType().Name}.");
+
+                webhookConfig.Metadata.Annotations = webhookConfig.Metadata.EnsureAnnotations();
+                webhookConfig.Metadata.Annotations.Add("cert-manager.io/inject-ca-from", $"{operatorSettings.deployedNamespace}/{operatorSettings.Name}");
             }
 
             webhookConfig.Webhooks = new List<V1MutatingWebhook>()
@@ -206,14 +212,18 @@ namespace Neon.Kube.Operator.Webhook
             string certificateName = operatorSettings.certManagerEnabled ? operatorSettings.Name : null;
             var webhookConfig      = WebhookConfiguration(
                                             operatorSettings: operatorSettings,
-                                            useTunnel: true, 
-                                            tunnelUrl: Environment.GetEnvironmentVariable("VS_TUNNEL_URL"));
+                                            useTunnel: NeonHelper.IsDevWorkstation, 
+                                            tunnelUrl: Environment.GetEnvironmentVariable("VS_TUNNEL_URL"),
+                                            logger: logger);
 
             try
             {
                 var webhook = await k8s.AdmissionregistrationV1.ReadMutatingWebhookConfigurationAsync(webhookConfig.Name());
                 
-                webhook.Webhooks = webhookConfig.Webhooks;
+                webhook.Webhooks             = webhookConfig.Webhooks;
+                webhook.Metadata.Annotations = webhookConfig.Metadata.Annotations;
+                webhook.Metadata.Labels      = webhookConfig.Metadata.Labels;
+
                 await k8s.AdmissionregistrationV1.ReplaceMutatingWebhookConfigurationAsync(webhook, webhook.Name());
 
                 logger?.LogInformationEx(() => $"Webhook {this.GetType().Name} updated.");

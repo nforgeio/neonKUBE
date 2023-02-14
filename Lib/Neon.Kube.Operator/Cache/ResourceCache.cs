@@ -34,12 +34,21 @@ using k8s;
 using k8s.Models;
 
 using KellermanSoftware.CompareNetObjects;
+using Prometheus;
 
 namespace Neon.Kube.Operator.Cache
 {
     internal class ResourceCache<TEntity> : IResourceCache<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        /// <summary>
+        /// The number of items currently in the CRD cache.
+        /// </summary>
+        public static readonly Gauge CacheSize = Metrics.CreateGauge(
+            $"neonkubeoperator_cache_{nameof(TEntity).ToLower().Split('.').Last()}_items_current",
+            "The number of items currently in the CRD cache."
+            );
+
         private readonly ILogger<ResourceCache<TEntity>>        logger;
         private readonly ConcurrentDictionary<string, TEntity>  cache;
         private readonly ConcurrentDictionary<string, TEntity>  finalizingCache;
@@ -66,6 +75,7 @@ namespace Neon.Kube.Operator.Cache
         public void Clear()
         {
             cache.Clear();
+            CacheSize?.DecTo(0);
         }
 
         public TEntity Get(string id)
@@ -86,12 +96,17 @@ namespace Neon.Kube.Operator.Cache
 
         public void Remove(TEntity entity)
         {
-            cache.TryRemove(entity.Metadata.Uid, out _);
+            if (cache.TryRemove(entity.Metadata.Uid, out _))
+            {
+                CacheSize?.Dec();
+            }
         }
 
         public TEntity Upsert(TEntity entity, out ModifiedEventType result)
         {
             var id = entity.Metadata.Uid;
+
+            logger?.LogDebugEx(() => $"Adding {typeof(TEntity)}/{id} to cache.");
 
             result = CompareEntity(entity);
 
@@ -110,6 +125,8 @@ namespace Neon.Kube.Operator.Cache
             {
                 var id = entity.Metadata.Uid;
 
+                logger?.LogDebugEx(() => $"Adding {typeof(TEntity)}/{id} to cache.");
+
                 cache.AddOrUpdate(
                     key: id,
                     addValueFactory: (id) => Clone(entity),
@@ -121,10 +138,19 @@ namespace Neon.Kube.Operator.Cache
         {
             var id = entity.Metadata.Uid;
 
+            logger?.LogDebugEx(() => $"Adding {typeof(TEntity)}/{id} to cache.");
+
             cache.AddOrUpdate(
                 key: id,
-                addValueFactory: (id) => Clone(entity),
-                updateValueFactory: (key, oldEntity) => Clone(entity));
+                addValueFactory: (id) =>
+                {
+                    CacheSize?.Inc();
+                    return Clone(entity);
+                },
+                updateValueFactory: (key, oldEntity) =>
+                {
+                    return Clone(entity);
+                });
         }
 
         public bool IsFinalizing(TEntity entity)

@@ -138,29 +138,5 @@ namespace NeonClusterOperator
                 logger?.LogInformationEx(() => $"DELETED: {resource.Name()}");
             }
         }
-
-        /// <inheritdoc/>
-        public async Task OnPromotionAsync()
-        {
-            await SyncContext.Clear;
-
-            logger?.LogInformationEx(() => $"PROMOTED");
-        }
-
-        /// <inheritdoc/>
-        public async Task OnDemotionAsync()
-        {
-            await SyncContext.Clear;
-
-            logger?.LogInformationEx(() => $"DEMOTED");
-        }
-
-        /// <inheritdoc/>
-        public async Task OnNewLeaderAsync(string identity)
-        {
-            await SyncContext.Clear;
-
-            logger?.LogInformationEx(() => $"NEW LEADER: {identity}");
-        }
     }
 }

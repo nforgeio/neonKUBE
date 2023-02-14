@@ -33,12 +33,20 @@ using Neon.Kube.Operator.ResourceManager;
 using k8s;
 using k8s.Models;
 
-using KellermanSoftware.CompareNetObjects;
+using Prometheus;
 
 namespace Neon.Kube.Operator.Cache
 {
     internal class CrdCache : ICrdCache
     {
+        /// <summary>
+        /// The number of items currently in the CRD cache.
+        /// </summary>
+        public static readonly Gauge CacheSize = Metrics.CreateGauge(
+            $"neonkubeoperator_cache_crds_items_current",
+            "The number of items currently in the CRD cache."
+            );
+
         private readonly ILogger<CrdCache>                                        logger;
         private readonly ConcurrentDictionary<string, V1CustomResourceDefinition> cache;
 
@@ -52,6 +60,7 @@ namespace Neon.Kube.Operator.Cache
         public void Clear()
         {
             cache.Clear();
+            CacheSize?.DecTo(0);
         }
 
         public V1CustomResourceDefinition Get(string id)
@@ -67,17 +76,29 @@ namespace Neon.Kube.Operator.Cache
 
         public void Remove(V1CustomResourceDefinition entity)
         {
-            cache.TryRemove(entity.Metadata.Name, out _);
+            if (cache.TryRemove(entity.Metadata.Name, out _))
+            {
+                CacheSize?.Dec();
+            }
         }
 
         public void Upsert(V1CustomResourceDefinition entity)
         {
             var id = entity.Metadata.Name;
 
+            logger?.LogDebugEx(() => $"Adding {id} to cache.");
+
             cache.AddOrUpdate(
                 key: id,
-                addValueFactory: (id) => Clone(entity),
-                updateValueFactory: (key, oldEntity) => Clone(entity));
+                addValueFactory: (id) => 
+                {
+                    CacheSize?.Inc();
+                    return Clone(entity);
+                },
+                updateValueFactory: (key, oldEntity) =>
+                {
+                    return Clone(entity);
+                });
         }
         private V1CustomResourceDefinition Clone(V1CustomResourceDefinition entity)
         {
