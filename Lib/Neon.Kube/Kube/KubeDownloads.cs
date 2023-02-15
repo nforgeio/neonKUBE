@@ -69,12 +69,12 @@ namespace Neon.Kube
         /// <summary>
         /// The name of the AWS bucket used for staged neonKUBE releases.
         /// </summary>
-        public const string NeonKubStageBucketName = "neonkube-stage";
+        public const string NeonKubeStageBucketName = "neonkube-stage";
 
         /// <summary>
         /// The URI for the public AWS S3 bucket for public neonKUBE releases
         /// </summary>
-        public const string NeonKubeStageBucketUri = $"https://{NeonKubStageBucketName}.s3.us-west-2.amazonaws.com";
+        public const string NeonKubeStageBucketUri = $"https://{NeonKubeStageBucketName}.s3.us-west-2.amazonaws.com";
 
         /// <summary>
         /// The URI for the cluster manifest (<see cref="ClusterManifest"/>) JSON file for the current
