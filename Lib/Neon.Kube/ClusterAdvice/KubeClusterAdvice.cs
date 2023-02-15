@@ -394,6 +394,11 @@ namespace Neon.Kube
         public static string MinioOperator = "minio-operator";
 
         /// <summary>
+        /// Identifies the neonKUBE cluster's <b>neon-acme</b> service.
+        /// </summary>
+        public static string NeonAcme = "neon-acme";
+
+        /// <summary>
         /// Identifies the neonKUBE cluster's <b>neon-cluster-operator</b> service.
         /// </summary>
         public static string NeonClusterOperator = "neon-cluster-operator";

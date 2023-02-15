@@ -27,6 +27,10 @@ spec:
             - --tls-cert-file=/tls/tls.crt
             - --tls-private-key-file=/tls/tls.key
           env:
+            - name: DOTNET_GCConserveMemory
+              value: {{ .Values.dotnetGcConserveMemory | default "7" | quote }}
+            - name: DOTNET_GCHeapHardLimit
+              value: {{ .Values.dotnetGcHeapHardLimit | default "0xf00000" | quote }}
             - name: GROUP_NAME
               value: "acme.neoncloud.io"
             - name: HEADEND_URL

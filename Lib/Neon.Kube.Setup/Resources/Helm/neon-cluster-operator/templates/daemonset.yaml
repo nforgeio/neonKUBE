@@ -30,6 +30,10 @@ spec:
       containers:
       - name: neon-cluster-operator
         env:
+        - name: DOTNET_GCConserveMemory
+          value: {{ .Values.dotnetGcConserveMemory | default "7" | quote }}
+        - name: DOTNET_GCHeapHardLimit
+          value: {{ .Values.dotnetGcHeapHardLimit | default "0x1e00000" | quote }}
         - name: LOG_LEVEL
           value: {{ .Values.logLevel }}
         - name: POD_NAMESPACE
