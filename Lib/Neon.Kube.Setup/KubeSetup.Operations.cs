@@ -2032,7 +2032,12 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         }
                     }
 
-                    await k8s.CustomObjects.UpsertClusterCustomObjectAsync<ClusterIssuer>(issuer, issuer.Name());
+                    controller.ThrowIfCancelled();
+                    await controlNode.InvokeIdempotentAsync("setup/neon-acme-issuer",
+                        async () =>
+                        {
+                            await k8s.CustomObjects.UpsertClusterCustomObjectAsync<ClusterIssuer>(issuer, issuer.Name());
+                        });
 
                     values.Add("image.registry", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
@@ -2042,7 +2047,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add("certificateRenewBefore", cluster.Definition.Network.AcmeOptions.CertificateRenewBefore);
                     values.Add("isNeonDesktop", cluster.Definition.IsDesktop);
                     values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 7 : 3);
-                    values.Add("dotnetGcHeapHardLimit", ((acmeAdvice.PodMemoryRequest ?? 20971520m) / 4).ToString("x"));
+
                     int i = 0;
 
                     foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelIngress, "true"))
@@ -4566,7 +4571,6 @@ $@"- name: StorageType
                     values.Add("resource.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
                     values.Add("resource.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
                     values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 7 : 3);
-                    values.Add("dotnetGcHeapHardLimit", ((serviceAdvice.PodMemoryRequest ?? 20971520m) / 4).ToString("x"));
                     values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
@@ -4755,7 +4759,6 @@ $@"- name: StorageType
                     values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
                     values.Add("resources.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
                     values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 7 : 3);
-                    values.Add("dotnetGcHeapHardLimit", ((serviceAdvice.PodMemoryRequest ?? 20971520m) / 4).ToString("x"));
 
                     await controlNode.InstallHelmChartAsync(controller, "neon-node-agent",
                         releaseName:  "neon-node-agent",
@@ -4809,7 +4812,6 @@ $@"- name: StorageType
                     values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 7 : 3);
-                    values.Add("dotnetGcHeapHardLimit", ((serviceAdvice.PodMemoryRequest ?? 20971520m) / 4).ToString("x"));
 
                     await controlNode.InstallHelmChartAsync(controller, "neon-dashboard",
                         releaseName:  "neon-dashboard",
@@ -5279,7 +5281,6 @@ $@"- name: StorageType
             values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
             values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
             values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 7 : 3);
-            values.Add("dotnetGcHeapHardLimit", ((serviceAdvice.PodMemoryRequest ?? 20971520m) / 4).ToString("x"));
 
             if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
             {

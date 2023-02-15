@@ -35,6 +35,7 @@ using Neon.Service;
 using k8s;
 using k8s.Models;
 using System.Xml.Linq;
+using Prometheus.DotNetRuntime;
 
 namespace NeonNodeAgent
 {
@@ -56,6 +57,18 @@ namespace NeonNodeAgent
         public static async Task Main(string[] args)
         {
             Service = new Service(KubeService.NeonNodeAgent);
+
+            if (!NeonHelper.IsDevWorkstation)
+            {
+                Service.MetricsOptions.Mode = MetricsMode.Scrape;
+                Service.MetricsOptions.GetCollector =
+                    () =>
+                    {
+                        return DotNetRuntimeStatsBuilder
+                            .Default()
+                            .StartCollecting();
+                    };
+            }
 
             try
             {

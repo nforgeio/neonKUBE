@@ -55,6 +55,8 @@ namespace NeonDashboard
                 if (!NeonHelper.IsDevWorkstation)
                 {
                     Service.MetricsOptions.Mode         = MetricsMode.Scrape;
+                    Service.MetricsOptions.Path         = "metrics/";
+                    Service.MetricsOptions.Port         = 9762;
                     Service.MetricsOptions.GetCollector =
                         () =>
                         {
@@ -62,7 +64,7 @@ namespace NeonDashboard
                                 .Default()
                                 .StartCollecting();
                         };
-                }
+                }   
 
                 Environment.Exit(await Service.RunAsync());
             }

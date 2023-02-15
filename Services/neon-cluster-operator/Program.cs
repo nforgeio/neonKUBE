@@ -36,6 +36,7 @@ using Neon.Service;
 using k8s;
 using k8s.Models;
 using Neon.Diagnostics;
+using Prometheus.DotNetRuntime;
 
 namespace NeonClusterOperator
 {
@@ -72,7 +73,19 @@ namespace NeonClusterOperator
 
                 Service = new Service(KubeService.NeonClusterOperator);
 
-                Service.Logger.LogDebugEx(() => $"args: {NeonHelper.JsonSerialize(args)}");
+                if (!NeonHelper.IsDevWorkstation)
+                {
+                    Service.MetricsOptions.Mode         = MetricsMode.Scrape;
+                    Service.MetricsOptions.Path         = "metrics/";
+                    Service.MetricsOptions.Port         = 9762;
+                    Service.MetricsOptions.GetCollector =
+                        () =>
+                        {
+                            return DotNetRuntimeStatsBuilder
+                                .Default()
+                                .StartCollecting();
+                        };
+                }
 
                 if (!string.IsNullOrEmpty(args.FirstOrDefault()))
                 {

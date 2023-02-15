@@ -40,8 +40,6 @@ spec:
           env:
             - name: DOTNET_GCConserveMemory
               value: {{ .Values.dotnetGcConserveMemory | default "7" | quote }}
-            - name: DOTNET_GCHeapHardLimit
-              value: {{ .Values.dotnetGcHeapHardLimit | default "0xf00000" | quote }}
             - name: COOKIE_CIPHER
               valueFrom:
                 secretKeyRef:

@@ -52,14 +52,19 @@ namespace NeonSsoSessionProxy
             {
                 Service = new Service(KubeService.NeonSsoSessionProxy);
 
-                Service.MetricsOptions.Mode         = MetricsMode.Scrape;
-                Service.MetricsOptions.GetCollector =
-                    () =>
-                    {
-                        return DotNetRuntimeStatsBuilder
-                            .Default()
-                            .StartCollecting();
-                    };
+                if (!NeonHelper.IsDevWorkstation)
+                {
+                    Service.MetricsOptions.Mode         = MetricsMode.Scrape;
+                    Service.MetricsOptions.Path         = "metrics/";
+                    Service.MetricsOptions.Port         = 9762;
+                    Service.MetricsOptions.GetCollector =
+                        () =>
+                        {
+                            return DotNetRuntimeStatsBuilder
+                                .Default()
+                                .StartCollecting();
+                        };
+                }   
 
                 Environment.Exit(await Service.RunAsync());
             }
