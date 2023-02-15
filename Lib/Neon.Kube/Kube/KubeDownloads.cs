@@ -57,14 +57,24 @@ namespace Neon.Kube
         public static readonly string HelmWindowsUri = $"https://get.helm.sh/helm-v{KubeVersions.Helm}-windows-amd64.zip";
 
         /// <summary>
-        /// The URI for the public AWS S3 bucket for public neonKUBE releases
+        /// The name of the AWS bucket used for published neonKUBE releases.
         /// </summary>
-        public const string NeonKubeReleaseBucketUri = "https://neonkube-release.s3.us-west-2.amazonaws.com";
+        public const string NeonKubeReleaseBucketName = "neonkube-release";
 
         /// <summary>
         /// The URI for the public AWS S3 bucket for public neonKUBE releases
         /// </summary>
-        public const string NeonKubeStageBucketUri = "https://neonkube-stage.s3.us-west-2.amazonaws.com";
+        public const string NeonKubeReleaseBucketUri = $"https://{NeonKubeReleaseBucketName}.s3.us-west-2.amazonaws.com";
+
+        /// <summary>
+        /// The name of the AWS bucket used for staged neonKUBE releases.
+        /// </summary>
+        public const string NeonKubStageBucketName = "neonkube-stage";
+
+        /// <summary>
+        /// The URI for the public AWS S3 bucket for public neonKUBE releases
+        /// </summary>
+        public const string NeonKubeStageBucketUri = $"https://{NeonKubStageBucketName}.s3.us-west-2.amazonaws.com";
 
         /// <summary>
         /// The URI for the cluster manifest (<see cref="ClusterManifest"/>) JSON file for the current
