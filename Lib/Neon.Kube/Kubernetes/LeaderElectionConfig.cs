@@ -75,6 +75,7 @@ namespace Neon.Kube
         /// <param name="retryPeriod">
         /// Optionally specifies the interval that <see cref="LeaderElector"/> instances should 
         /// wait before retrying any actions.  This defaults to <b>2 seconds</b>.
+        /// </param>
         public LeaderElectionConfig(
             string          @namespace,
             string          leaseName,
