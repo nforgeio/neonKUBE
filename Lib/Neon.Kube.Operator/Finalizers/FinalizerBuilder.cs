@@ -27,6 +27,7 @@ using Neon.Kube.Operator.Builder;
 
 using k8s.Models;
 using k8s;
+using Neon.BuildInfo;
 
 namespace Neon.Kube.Operator.Finalizer
 {

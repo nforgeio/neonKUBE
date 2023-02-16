@@ -40,6 +40,7 @@ using Neon.Kube;
 using Neon.Kube.Operator.Cache;
 using Neon.Kube.Operator.Controller;
 using Neon.Kube.Operator.Entities;
+using Neon.Kube.Operator.EventQueue;
 using Neon.Kube.Operator.Finalizer;
 using Neon.Kube.Operator.ResourceManager;
 using Neon.Kube.Operator.Util;
@@ -52,6 +53,7 @@ using k8s.LeaderElection;
 using k8s.Models;
 
 using Prometheus;
+using OpenTelemetry.Resources;
 
 namespace Neon.Kube.Operator.ResourceManager
 {
@@ -161,32 +163,33 @@ namespace Neon.Kube.Operator.ResourceManager
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         where TController : IResourceController<TEntity>
     {
-        private static IEnumerable<string>                      kubernetesTypes;
-        private ResourceManagerOptions                          options;
-        private bool                                            isDisposed   = false;
-        private bool                                            stopIdleLoop = false;
-        private AsyncReentrantMutex                             mutex        = new AsyncReentrantMutex();
-        private bool                                            started      = false;
-        private ResourceManagerMetrics<TEntity, TController>    metrics;
-        private IKubernetes                                     k8s;
-        private IServiceProvider                                serviceProvider;
-        private IResourceCache<TEntity>                         resourceCache;
-        private IResourceCache<IKubernetesObject<V1ObjectMeta>> dependentResourceCache;
-        private ICrdCache                                       crdCache;
-        private IFinalizerManager<TEntity>                      finalizerManager;
-        private AsyncKeyedLocker<string>                        lockProvider;
-        private List<string>                                    resourceNamespaces;
-        private Type                                            controllerType;
-        private ILogger<ResourceManager<TEntity, TController>>  logger;
-        private DateTime                                        nextIdleReconcileUtc;
-        private LeaderElectionConfig                            leaderConfig;
-        private bool                                            leaderElectionDisabled;
-        private LeaderElector                                   leaderElector;
-        private Task                                            leaderTask;
-        private Task                                            idleLoopTask;
-        private Task                                            watcherTask;
-        private CancellationTokenSource                         watcherTcs;
-        private EventQueue<TEntity>                             eventQueue;
+        private static IEnumerable<string>                               kubernetesTypes;
+        private ResourceManagerOptions                                   options;
+        private OperatorSettings                                         operatorSettings;
+        private bool                                                     isDisposed   = false;
+        private bool                                                     stopIdleLoop = false;
+        private AsyncReentrantMutex                                      mutex        = new AsyncReentrantMutex();
+        private bool                                                     started      = false;
+        private ResourceManagerMetrics<TEntity, TController>             metrics;
+        private IKubernetes                                              k8s;
+        private IServiceProvider                                         serviceProvider;
+        private IResourceCache<TEntity, TEntity>                         resourceCache;
+        private IResourceCache<TEntity, IKubernetesObject<V1ObjectMeta>> dependentResourceCache;
+        private ICrdCache                                                crdCache;
+        private IFinalizerManager<TEntity>                               finalizerManager;
+        private AsyncKeyedLocker<string>                                 lockProvider;
+        private List<string>                                             resourceNamespaces;
+        private Type                                                     controllerType;
+        private ILogger<ResourceManager<TEntity, TController>>           logger;
+        private DateTime                                                 nextIdleReconcileUtc;
+        private LeaderElectionConfig                                     leaderConfig;
+        private bool                                                     leaderElectionDisabled;
+        private LeaderElector                                            leaderElector;
+        private Task                                                     leaderTask;
+        private Task                                                     idleLoopTask;
+        private Task                                                     watcherTask;
+        private CancellationTokenSource                                  watcherTcs;
+        private EventQueue<TEntity>                                      eventQueue;
 
         static ResourceManager()
         {
@@ -219,9 +222,10 @@ namespace Neon.Kube.Operator.ResourceManager
             
             this.serviceProvider        = serviceProvider;
             this.options                = options ?? serviceProvider.GetRequiredService<ResourceManagerOptions>();
+            this.operatorSettings       = serviceProvider.GetRequiredService<OperatorSettings>();
             this.leaderConfig           = leaderConfig;
             this.leaderElectionDisabled = leaderElectionDisabled;
-            this.metrics                = new ResourceManagerMetrics<TEntity, TController>();
+            this.metrics                = serviceProvider.GetRequiredService<ResourceManagerMetrics<TEntity, TController>>();
             this.logger                 = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger<ResourceManager<TEntity, TController>>();
             
             if (options.WatchNamespace != null)
@@ -250,25 +254,23 @@ namespace Neon.Kube.Operator.ResourceManager
             Covenant.Requires<ArgumentNullException>(serviceProvider != null, nameof(serviceProvider));
 
             this.k8s                    = serviceProvider.GetRequiredService<IKubernetes>();
-            this.resourceCache          = serviceProvider.GetRequiredService<IResourceCache<TEntity>>();
-            this.dependentResourceCache = serviceProvider.GetRequiredService<IResourceCache<IKubernetesObject<V1ObjectMeta>>>();
+            this.resourceCache          = serviceProvider.GetRequiredService<IResourceCache<TEntity, TEntity>>();
+            this.dependentResourceCache = serviceProvider.GetRequiredService<IResourceCache<TEntity, IKubernetesObject<V1ObjectMeta>>>();
             this.crdCache               = serviceProvider.GetRequiredService<ICrdCache>();
             this.finalizerManager       = serviceProvider.GetRequiredService<IFinalizerManager<TEntity>>();
             this.lockProvider           = serviceProvider.GetRequiredService<AsyncKeyedLocker<string>>();
 
-            if (leaderConfig != null && string.IsNullOrEmpty(leaderConfig.MetricsPrefix))
-            {
-                leaderConfig.SetCounters($"{typeof(TController).Name}_{typeof(TEntity).Name}".ToLower());
-            }
-
             if (leaderConfig == null && !leaderElectionDisabled)
             {
-                this.leaderConfig =
+                using (var scope = serviceProvider.CreateScope())
+                {
+                    var controller = CreateController(scope.ServiceProvider);
+                    this.leaderConfig =
                     new LeaderElectionConfig(
-                        @namespace: Pod.Namespace,
-                        leaseName: $"{typeof(TController).Name}.{typeof(TEntity).GetKubernetesTypeMetadata().PluralName}".ToLower(),
-                        identity: Pod.Name,
-                        metricsPrefix: $"{typeof(TController).Name}_{typeof(TEntity).Name}".ToLower());
+                        @namespace: operatorSettings.DeployedNamespace,
+                        leaseName: controller.LeaseName,
+                        identity: Pod.Name);
+                }
             }
 
             if (started)
@@ -383,14 +385,15 @@ namespace Neon.Kube.Operator.ResourceManager
             {
                 if (e.Response.StatusCode == HttpStatusCode.Forbidden)
                 {
-                    logger?.LogErrorEx($"Cannot watch type {typeof(TEntity)}, please check RBAC rules for the controller.");
+                    logger?.LogErrorEx(() => $"Cannot watch type {typeof(TEntity)}, please check RBAC rules for the controller.");
 
                     throw;
                 }
             }
             catch (Exception e)
             {
-                logger?.LogErrorEx($"Cannot watch type {typeof(TEntity)}, please check RBAC rules for the controller.");
+                logger?.LogErrorEx(() => $"Cannot watch type {typeof(TEntity)}, please check RBAC rules for the controller.");
+                logger?.LogErrorEx(() => e.Message);
             }
         }
 
@@ -558,7 +561,7 @@ namespace Neon.Kube.Operator.ResourceManager
             {
                 try
                 {
-                    var generator = new CustomResourceGenerator();
+                    var generator = serviceProvider.GetRequiredService<CustomResourceGenerator>();
 
                     var crd = await generator.GenerateCustomResourceDefinitionAsync(typeof(TEntity));
 
@@ -637,7 +640,10 @@ namespace Neon.Kube.Operator.ResourceManager
                                 {
                                     using (var scope = serviceProvider.CreateScope())
                                     {
-                                        await CreateController(scope.ServiceProvider).IdleAsync();
+                                        using (metrics.IdleTimeSeconds.NewTimer())
+                                        {
+                                            await CreateController(scope.ServiceProvider).IdleAsync();
+                                        }
                                     }
                                 }
                                 catch (OperationCanceledException)
@@ -649,7 +655,7 @@ namespace Neon.Kube.Operator.ResourceManager
                                 }
                                 catch (Exception e)
                                 {
-                                    metrics.IdleErrorCounter?.Inc();
+                                    metrics.IdleErrorsTotal?.Inc();
                                     logger?.LogErrorEx(e);
                                 }
                             });
@@ -722,7 +728,7 @@ namespace Neon.Kube.Operator.ResourceManager
 
                                         try
                                         {
-                                            metrics.ReconcileCounter?.Inc();
+                                            metrics.ReconcileEventsTotal?.Inc();
                                             
                                             if (options.AutoRegisterFinalizers)
                                             {
@@ -731,11 +737,14 @@ namespace Neon.Kube.Operator.ResourceManager
                                                 await finalizerManager.RegisterAllFinalizersAsync(resource);
                                             }
 
-                                            result = await CreateController(scope.ServiceProvider).ReconcileAsync(resource);
+                                            using (metrics.ReconcileTimeSeconds.NewTimer())
+                                            {
+                                                result = await CreateController(scope.ServiceProvider).ReconcileAsync(resource);
+                                            }
                                         }
                                         catch (Exception e)
                                         {
-                                            metrics.ReconcileErrorCounter.Inc();
+                                            metrics.ReconcileErrorsTotal.Inc();
                                             logger?.LogErrorEx(() => $"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Retrying... Attempt [{@event.Attempt}]");
 
                                             if (@event.Attempt < options.ErrorMaxRetryCount)
@@ -753,14 +762,18 @@ namespace Neon.Kube.Operator.ResourceManager
 
                                         try
                                         {
-                                            metrics.DeleteCounter?.Inc();
-                                            await CreateController(scope.ServiceProvider).DeletedAsync(resource);
+                                            metrics.DeleteEventsTotal?.Inc();
+                                            
+                                            using (metrics.DeleteTimeSeconds.NewTimer())
+                                            {
+                                                await CreateController(scope.ServiceProvider).DeletedAsync(resource);
+                                            }
 
                                             resourceCache.Remove(resource);
                                         }
                                         catch (Exception e)
                                         {
-                                            metrics.DeleteErrorCounter?.Inc();
+                                            metrics.DeleteErrorsTotal?.Inc();
                                             logger?.LogErrorEx(e);
                                         }
 
@@ -774,13 +787,16 @@ namespace Neon.Kube.Operator.ResourceManager
 
                                                 try
                                                 {
-                                                    metrics.ReconcileCounter?.Inc();
+                                                    metrics.ReconcileEventsTotal?.Inc();
 
-                                                    result = await CreateController(scope.ServiceProvider).ReconcileAsync(resource);
+                                                    using (metrics.ReconcileTimeSeconds.NewTimer())
+                                                    {
+                                                        result = await CreateController(scope.ServiceProvider).ReconcileAsync(resource);
+                                                    }
                                                 }
                                                 catch (Exception e)
                                                 {
-                                                    metrics.ReconcileErrorCounter?.Inc();
+                                                    metrics.ReconcileErrorsTotal?.Inc();
                                                     logger?.LogErrorEx(e);
 
                                                     if (@event.Attempt < options.ErrorMaxRetryCount)
@@ -799,20 +815,23 @@ namespace Neon.Kube.Operator.ResourceManager
 
                                                 try
                                                 {
-                                                    metrics.FinalizeCounter?.Inc();
+                                                    metrics.FinalizeTotal?.Inc();
 
                                                     if (!resourceCache.IsFinalizing(resource))
                                                     {
                                                         resourceCache.AddFinalizer(resource);
 
-                                                        await finalizerManager.FinalizeAsync(resource, scope);
+                                                        using (metrics.FinalizeTimeSeconds.NewTimer())
+                                                        {
+                                                            await finalizerManager.FinalizeAsync(resource, scope);
+                                                        }
                                                     }
 
                                                     resourceCache.RemoveFinalizer(resource);
                                                 }
                                                 catch (Exception e)
                                                 {
-                                                    metrics.FinalizeErrorCounter?.Inc();
+                                                    metrics.FinalizeErrorsTotal?.Inc();
                                                     logger?.LogErrorEx(e);
 
                                                     resourceCache.RemoveFinalizer(resource);
@@ -846,12 +865,16 @@ namespace Neon.Kube.Operator.ResourceManager
                                                 {
                                                     try
                                                     {
-                                                        metrics.StatusModifyCounter?.Inc();
-                                                        await CreateController(scope.ServiceProvider).StatusModifiedAsync(resource);
+                                                        metrics.StatusModifiedTotal?.Inc();
+
+                                                        using (metrics.StatusModifiedTimeSeconds.NewTimer())
+                                                        {
+                                                            await CreateController(scope.ServiceProvider).StatusModifiedAsync(resource);
+                                                        }
                                                     }
                                                     catch (Exception e)
                                                     {
-                                                        metrics.StatusModifyErrorCounter?.Inc();
+                                                        metrics.StatusModifiedErrorsTotal?.Inc();
                                                         logger?.LogErrorEx(e);
                                                     }
                                                 }
@@ -919,14 +942,13 @@ namespace Neon.Kube.Operator.ResourceManager
 
                     logger?.LogDebugEx(() => $"Resource {resource.Kind} {resource.Namespace()}/{resource.Name()} received {@event.Type}/{modifiedEventType} event.");
 
-                    var filterMethod = controllerType.GetMethod("Filter", BindingFlags.Static | BindingFlags.Public);
-
-                    if (filterMethod != null)
+                    using (var scope = serviceProvider.CreateScope())
                     {
-                        if (!(bool)filterMethod.Invoke(null, new object[] { resource }))
+                        if (!CreateController(scope.ServiceProvider).Filter.Invoke(resource))
                         {
                             return;
                         }
+                        
                     }
 
                     switch (@event.Type)
@@ -1077,7 +1099,7 @@ namespace Neon.Kube.Operator.ResourceManager
                     }
                 };
 
-            this.eventQueue = new EventQueue<TEntity>(k8s, options, actionAsync);
+            this.eventQueue = new EventQueue<TEntity>(k8s, options, actionAsync, serviceProvider.GetRequiredService<EventQueueMetrics<TEntity>>());
 
             //-----------------------------------------------------------------
             // Start the watcher.

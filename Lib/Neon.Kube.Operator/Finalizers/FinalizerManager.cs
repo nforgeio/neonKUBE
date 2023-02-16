@@ -17,8 +17,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -27,36 +27,47 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.Kube.Operator.Attributes;
 using Neon.Kube.Operator.Builder;
 using Neon.Tasks;
 
 using k8s;
 using k8s.Models;
-using Neon.Kube.Operator.Cache;
-using System.Reflection;
-using Neon.Kube.Operator.Attributes;
+
+using Prometheus;
 
 namespace Neon.Kube.Operator.Finalizer
 {
     internal class FinalizerManager<TEntity> : IFinalizerManager<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
     {
-        private readonly ILogger<FinalizerManager<TEntity>> logger;
-        private readonly IKubernetes                        client;
-        private readonly IFinalizerBuilder                  finalizerInstanceBuilder;
-        private readonly IServiceProvider                   serviceProvider;
+        private readonly ILogger<FinalizerManager<TEntity>>    logger;
+        private readonly IKubernetes                           client;
+        private readonly IFinalizerBuilder                     finalizerInstanceBuilder;
+        private readonly IServiceProvider                      serviceProvider;
+        private readonly Dictionary<string, IFinalizerMetrics> metrics;
+        private readonly OperatorSettings                      operatorSettings;
         
         public FinalizerManager(
-            IKubernetes       client,
-            ComponentRegister componentRegister,
-            IFinalizerBuilder finalizerInstanceBuilder,
-            IServiceProvider  serviceProvider,
-            ILoggerFactory    loggerFactory = null)
+            IKubernetes               client,
+            ComponentRegister         componentRegister,
+            IFinalizerBuilder         finalizerInstanceBuilder,
+            IServiceProvider          serviceProvider,
+            OperatorSettings          operatorSettings,
+            ILoggerFactory            loggerFactory = null)
         {
             this.client                   = client;
             this.finalizerInstanceBuilder = finalizerInstanceBuilder;
             this.serviceProvider          = serviceProvider; 
+            this.operatorSettings         = operatorSettings;
             this.logger                   = loggerFactory?.CreateLogger<FinalizerManager<TEntity>>();
+            this.metrics                  = new Dictionary<string, IFinalizerMetrics>();
+            
+            foreach (var finalizer in finalizerInstanceBuilder.BuildFinalizers<TEntity>(serviceProvider.CreateScope().ServiceProvider))
+            {
+                var finalizerMetrics = new FinalizerMetrics<TEntity>(operatorSettings, finalizer.GetType());
+                metrics.Add(finalizer.Identifier, finalizerMetrics);
+            }
         }
 
         /// <inheritdoc/>
@@ -88,7 +99,12 @@ namespace Neon.Kube.Operator.Finalizer
 
             if (entity.RemoveFinalizer(finalizer.Identifier))
             {
-                await UpdateEntityAsync(entity);
+                using (metrics[finalizer.Identifier].RemovalTimeSeconds.NewTimer())
+                {
+                    await UpdateEntityAsync(entity);
+
+                    metrics[finalizer.Identifier].RemovalsTotal.Inc();
+                }
             }
         }
 
@@ -98,8 +114,17 @@ namespace Neon.Kube.Operator.Finalizer
 
             try
             {
-                await finalizer.FinalizeAsync(entity);
+                using (metrics[finalizer.Identifier].FinalizingCount.TrackInProgress())
+                {
+                    using (metrics[finalizer.Identifier].FinalizeTimeSeconds.NewTimer())
+                    {
+                        await finalizer.FinalizeAsync(entity);
+                    }
+                }
+
                 await RemoveFinalizerAsync(entity, finalizer);
+                
+                metrics[finalizer.Identifier].FinalizedTotal.Inc();
             }
             catch (Exception e)
             {
@@ -112,36 +137,41 @@ namespace Neon.Kube.Operator.Finalizer
         {
             try
             {
-                await NeonHelper.WaitForAsync(
-                    async () =>
-                    {
-                        try
+                using (metrics[finalizer.Identifier].RemovalTimeSeconds.NewTimer())
+                {
+                    await NeonHelper.WaitForAsync(
+                        async () =>
                         {
-                            if (string.IsNullOrEmpty(entity.Metadata.NamespaceProperty))
+                            try
                             {
-                                entity = await client.CustomObjects.ReadClusterCustomObjectAsync<TEntity>(entity.Name());
+                                if (string.IsNullOrEmpty(entity.Metadata.NamespaceProperty))
+                                {
+                                    entity = await client.CustomObjects.ReadClusterCustomObjectAsync<TEntity>(entity.Name());
+                                }
+                                else
+                                {
+                                    entity = await client.CustomObjects.ReadNamespacedCustomObjectAsync<TEntity>(entity.Namespace(), entity.Name());
+                                }
+
+                                if (entity.RemoveFinalizer(finalizer.Identifier))
+                                {
+                                    await UpdateEntityAsync(entity);
+                                }
+
+                                return true;
                             }
-                            else
+                            catch (Exception e)
                             {
-                                entity = await client.CustomObjects.ReadNamespacedCustomObjectAsync<TEntity>(entity.Namespace(), entity.Name());
+                                logger?.LogErrorEx(e);
                             }
 
-                            if (entity.RemoveFinalizer(finalizer.Identifier))
-                            {
-                                await UpdateEntityAsync(entity);
-                            }
+                            return false;
+                        },
+                        timeout: TimeSpan.FromSeconds(30),
+                        pollInterval: TimeSpan.FromSeconds(1));
+                }
 
-                            return true;
-                        }
-                        catch (Exception e)
-                        {
-                            logger?.LogErrorEx(e);
-                        }
-
-                        return false;
-                    },
-                    timeout: TimeSpan.FromSeconds(30),
-                    pollInterval: TimeSpan.FromSeconds(1));
+                metrics[finalizer.Identifier].RemovalsTotal.Inc();
             }
             catch (Exception e)
             {
@@ -182,9 +212,13 @@ namespace Neon.Kube.Operator.Finalizer
         private async Task RegisterFinalizerInternalAsync<TFinalizer>(TEntity entity, TFinalizer finalizer)
             where TFinalizer : IResourceFinalizer<TEntity>
         {
-            if (entity.AddFinalizer(finalizer.Identifier))
+            using (metrics[finalizer.Identifier].RegistrationTimeSeconds.NewTimer())
             {
-                await UpdateEntityAsync(entity);
+                if (entity.AddFinalizer(finalizer.Identifier))
+                {
+                    await UpdateEntityAsync(entity);
+                    metrics[finalizer.Identifier].RegistrationsTotal.Inc();
+                }
             }
         }
 

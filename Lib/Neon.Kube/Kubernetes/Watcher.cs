@@ -65,11 +65,16 @@ namespace Neon.Kube
         public bool Force { get; set; } = false;
 
         /// <summary>
+        /// The time the event was created.
+        /// </summary>
+        public DateTime CreatedAt { get; private set; }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         public WatchEvent()
         {
-
+            CreatedAt = DateTime.UtcNow;
         }
 
         /// <summary>
@@ -80,6 +85,7 @@ namespace Neon.Kube
         /// <param name="attempt"></param>
         /// <param name="force"></param>
         public WatchEvent(WatchEventType type, T value, int attempt = 0, bool force = false)
+            : base()
         {
             Type    = type;
             Value   = value; 

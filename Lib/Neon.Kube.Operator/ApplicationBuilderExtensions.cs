@@ -121,7 +121,7 @@ namespace Neon.Kube.Operator
                                     .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
                                     .First(m => m.Name == "Register");
 
-                                registerMethod.Invoke(mutator, new object[] { endpoints, scope.ServiceProvider.GetService<ILoggerFactory>() });
+                                registerMethod.Invoke(mutator, new object[] { endpoints, app.ApplicationServices });
 
                                 if (tunnel == null)
                                 {
@@ -159,7 +159,7 @@ namespace Neon.Kube.Operator
                                     .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
                                     .First(m => m.Name == "Register");
 
-                                registerMethod.Invoke(validator, new object[] { endpoints, scope.ServiceProvider.GetService<ILoggerFactory>() });
+                                registerMethod.Invoke(validator, new object[] { endpoints, app.ApplicationServices });
 
                                 if (tunnel == null)
                                 {

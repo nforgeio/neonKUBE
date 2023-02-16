@@ -34,51 +34,61 @@ using k8s;
 using k8s.Models;
 
 using Prometheus;
+using IdentityModel;
+using IdentityModel.OidcClient;
 
 namespace Neon.Kube.Operator.Cache
 {
     internal class CrdCache : ICrdCache
     {
-        /// <summary>
-        /// The number of items currently in the CRD cache.
-        /// </summary>
-        public static readonly Gauge CacheSize = Metrics.CreateGauge(
-            $"neonkubeoperator_cache_crds_items_current",
-            "The number of items currently in the CRD cache."
-            );
-
         private readonly ILogger<CrdCache>                                        logger;
         private readonly ConcurrentDictionary<string, V1CustomResourceDefinition> cache;
+        private readonly ResourceCacheMetrics<V1CustomResourceDefinition>         metrics;
 
-        public CrdCache(ILoggerFactory loggerFactory = null) 
+        public CrdCache(
+            ResourceCacheMetrics<V1CustomResourceDefinition> metrics,
+            ILoggerFactory loggerFactory = null) 
         {
             cache = new ConcurrentDictionary<string, V1CustomResourceDefinition>();
 
+            this.metrics = metrics;
             this.logger = loggerFactory?.CreateLogger<CrdCache>();
         }
 
         public void Clear()
         {
             cache.Clear();
-            CacheSize?.DecTo(0);
+            metrics.ItemsCount.DecTo(0);
         }
 
         public V1CustomResourceDefinition Get(string id)
         {
-            return cache.GetValueOrDefault(id);
+            var result = cache.GetValueOrDefault(id);
+            if (result == null)
+            {
+                metrics.HitsTotal.Inc();
+            }
+
+            return result;
         }
 
         public V1CustomResourceDefinition Get<TEntity>()
             where TEntity : IKubernetesObject<V1ObjectMeta>
         {
-            return cache.GetValueOrDefault(typeof(TEntity).GetKubernetesCrdName());
+            var result = cache.GetValueOrDefault(typeof(TEntity).GetKubernetesCrdName());
+            if (result == null)
+            {
+                metrics.HitsTotal.Inc();
+            }
+
+            return result;
         }
 
         public void Remove(V1CustomResourceDefinition entity)
         {
             if (cache.TryRemove(entity.Metadata.Name, out _))
             {
-                CacheSize?.Dec();
+                metrics.ItemsCount.Dec();
             }
         }
 
@@ -92,11 +102,13 @@ namespace Neon.Kube.Operator.Cache
                 key: id,
                 addValueFactory: (id) => 
                 {
-                    CacheSize?.Inc();
+                    metrics.ItemsCount.Inc();
+                    metrics.ItemsTotal.Inc();
                     return Clone(entity);
                 },
                 updateValueFactory: (key, oldEntity) =>
                 {
+                    metrics.HitsTotal.Inc();
                     return Clone(entity);
                 });
         }

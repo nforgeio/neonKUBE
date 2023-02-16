@@ -47,6 +47,8 @@ using k8s;
 using k8s.KubeConfigModels;
 
 using Prometheus;
+using Neon.Kube.Operator.EventQueue;
+using Neon.Kube.Operator.Entities;
 
 namespace Neon.Kube.Operator.Builder
 {
@@ -93,7 +95,7 @@ namespace Neon.Kube.Operator.Builder
                 if (NeonHelper.IsDevWorkstation ||
                     Debugger.IsAttached)
                 {
-                    k8s.HttpClient.DefaultRequestHeaders.Add("Impersonate-User", $"system:serviceaccount:{operatorSettings.deployedNamespace}:{operatorSettings.Name}"); 
+                    k8s.HttpClient.DefaultRequestHeaders.Add("Impersonate-User", $"system:serviceaccount:{operatorSettings.DeployedNamespace}:{operatorSettings.Name}"); 
                 }
 
                 Services.AddSingleton<IKubernetes>(k8s);
@@ -102,15 +104,23 @@ namespace Neon.Kube.Operator.Builder
             Services.AddSingleton<OperatorSettings>(operatorSettings);
             Services.AddSingleton(operatorSettings.ResourceManagerOptions);
             Services.AddSingleton(componentRegister);
+            Services.AddSingleton(typeof(EventQueueMetrics<>));
+            Services.AddSingleton(typeof(ResourceCacheMetrics<>));
+            Services.AddSingleton(typeof(ResourceManagerMetrics<,>));
             Services.AddSingleton<IFinalizerBuilder, FinalizerBuilder>();
             Services.AddSingleton(typeof(IFinalizerManager<>), typeof(FinalizerManager<>));
             Services.AddSingleton(typeof(ICrdCache), typeof(CrdCache));
-            Services.AddSingleton(typeof(IResourceCache<>), typeof(ResourceCache<>));
+            Services.AddSingleton(typeof(IResourceCache<,>), typeof(ResourceCache<,>));
             Services.AddSingleton(new AsyncKeyedLocker<string>(o =>
             {
                 o.PoolSize = operatorSettings.LockPoolSize;
                 o.PoolInitialFill = operatorSettings.LockPoolInitialFill;
             }));
+
+            if (operatorSettings.manageCustomResourceDefinitions)
+            {
+                Services.AddSingleton(typeof(CustomResourceGenerator));
+            }
 
             if (operatorSettings.AssemblyScanningEnabled)
             {

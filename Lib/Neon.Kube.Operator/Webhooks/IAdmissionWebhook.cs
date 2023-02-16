@@ -36,6 +36,7 @@ using Newtonsoft.Json;
 
 using k8s;
 using k8s.Models;
+using Prometheus;
 
 namespace Neon.Kube.Operator.Webhook
 {
@@ -115,11 +116,14 @@ namespace Neon.Kube.Operator.Webhook
         /// Registers the webhook endpoints.
         /// </summary>
         /// <param name="endpoints"></param>
-        /// <param name="loggerFactory"></param>
+        /// <param name="serviceProvider"></param>
         /// <returns></returns>
-        internal void Register(IEndpointRouteBuilder endpoints, ILoggerFactory loggerFactory = null)
+        internal void Register(
+            IEndpointRouteBuilder endpoints, 
+            IServiceProvider serviceProvider)
         {
-            var logger = loggerFactory?.CreateLogger<IAdmissionWebhook<TEntity, TResult>>();
+            var logger           = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger<IAdmissionWebhook<TEntity, TResult>>();
+            var metrics          = new WebhookMetrics<TEntity>(Endpoint);
 
             logger?.LogInformationEx(() => $"Registered webhook at [{Endpoint}]");
 
@@ -127,6 +131,9 @@ namespace Neon.Kube.Operator.Webhook
                 Endpoint,
                 async context =>
                 {
+                    using var inFlight = metrics.RequestsInFlight.TrackInProgress();
+                    using var timer    = metrics.LatencySeconds.NewTimer();
+
                     using (var activity = TelemetryHub.ActivitySource?.StartActivity())
                     {
                         try
@@ -212,6 +219,8 @@ namespace Neon.Kube.Operator.Webhook
                                 @$"AdmissionHook ""{Name}"" did return ""{review.Response?.Allowed}"" for ""{review.Request.Operation}"".");
 
                             review.Request = null;
+
+                            metrics.RequestsTotal.WithLabels(new string[] { Endpoint, response.Status.Code.ToString()}).Inc();
 
                             await context.Response.WriteAsJsonAsync(review);
                         }

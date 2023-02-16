@@ -39,26 +39,21 @@ using Prometheus;
 
 namespace Neon.Kube.Operator.Cache
 {
-    internal class ResourceCache<TEntity> : IResourceCache<TEntity>
+    internal class ResourceCache<TEntity, TValue> : IResourceCache<TEntity, TValue>
         where TEntity : IKubernetesObject<V1ObjectMeta>
+        where TValue : IKubernetesObject<V1ObjectMeta>
     {
-        /// <summary>
-        /// The number of items currently in the CRD cache.
-        /// </summary>
-        public static readonly Gauge CacheSize = Metrics.CreateGauge(
-            $"neonkubeoperator_cache_{nameof(TEntity).ToLower().Split('.').Last()}_items_current",
-            "The number of items currently in the entity cache."
-            );
-
-        private readonly ILogger<ResourceCache<TEntity>>        logger;
-        private readonly ConcurrentDictionary<string, TEntity>  cache;
-        private readonly ConcurrentDictionary<string, TEntity>  finalizingCache;
-        private readonly CompareLogic                           comparelogLogic;
-
-        public ResourceCache(ILoggerFactory loggerFactory = null) 
+        private readonly ILogger<ResourceCache<TEntity, TValue>> logger;
+        private readonly ConcurrentDictionary<string, TValue>    cache;
+        private readonly ConcurrentDictionary<string, TValue>    finalizingCache;
+        private readonly CompareLogic                            comparelogLogic;
+        private readonly ResourceCacheMetrics<TEntity>           metrics;
+        public ResourceCache(
+            ResourceCacheMetrics<TEntity> metrics,
+            ILoggerFactory loggerFactory = null) 
         {
-            cache           = new ConcurrentDictionary<string, TEntity>();
-            finalizingCache = new ConcurrentDictionary<string, TEntity>();
+            cache           = new ConcurrentDictionary<string, TValue>();
+            finalizingCache = new ConcurrentDictionary<string, TValue>();
 
             comparelogLogic = new CompareLogic(new ComparisonConfig()
             {
@@ -70,44 +65,58 @@ namespace Neon.Kube.Operator.Cache
                 }
             });
 
-            this.logger = loggerFactory?.CreateLogger<ResourceCache<TEntity>>();
+            this.metrics = metrics;
+            this.logger  = loggerFactory?.CreateLogger<ResourceCache<TEntity, TValue>>();
         }
 
         public void Clear()
         {
             cache.Clear();
-            CacheSize?.DecTo(0);
+            metrics.ItemsCount.DecTo(0);
         }
 
-        public TEntity Get(string id)
+        public TValue Get(string id)
         {
-            return cache.GetValueOrDefault(id);
+            var result = cache.GetValueOrDefault(id);
+            
+            if (result == null)
+            {
+                metrics.HitsTotal.Inc();
+            }
+
+            return result;
         }
 
-        public bool Get(string id, out TEntity result)
+        public bool Get(string id, out TValue result)
         {
             result = cache.GetValueOrDefault(id);
+
+            if (result == null)
+            {
+                metrics.HitsTotal.Inc();
+            }
+
             return result != null;
         }
 
-        public void Compare(TEntity entity, out ModifiedEventType result)
+        public void Compare(TValue entity, out ModifiedEventType result)
         {
             result = CompareEntity(entity);
         }
 
-        public void Remove(TEntity entity)
+        public void Remove(TValue entity)
         {
             if (cache.TryRemove(entity.Metadata.Uid, out _))
             {
-                CacheSize?.Dec();
+                metrics.ItemsCount.Dec();
             }
         }
 
-        public TEntity Upsert(TEntity entity, out ModifiedEventType result)
+        public TValue Upsert(TValue entity, out ModifiedEventType result)
         {
             var id = entity.Metadata.Uid;
 
-            logger?.LogDebugEx(() => $"Adding {typeof(TEntity)}/{id} to cache.");
+            logger?.LogDebugEx(() => $"Adding {typeof(TValue)}/{id} to cache.");
 
             result = CompareEntity(entity);
 
@@ -115,11 +124,13 @@ namespace Neon.Kube.Operator.Cache
                 key: id,
                 addValueFactory: (id) =>
                 {
-                    CacheSize?.Inc();
+                    metrics.ItemsCount.Inc();
+                    metrics.ItemsTotal.Inc();
                     return Clone(entity);
                 },
                 updateValueFactory: (key, oldEntity) =>
                 {
+                    metrics.HitsTotal.Inc();
                     return Clone(entity);
                 });
 
@@ -127,55 +138,59 @@ namespace Neon.Kube.Operator.Cache
 
         }
 
-        public void Upsert(IEnumerable<TEntity> entities)
+        public void Upsert(IEnumerable<TValue> entities)
         {
             foreach (var entity in entities)
             {
                 var id = entity.Metadata.Uid;
 
-                logger?.LogDebugEx(() => $"Adding {typeof(TEntity)}/{id} to cache.");
+                logger?.LogDebugEx(() => $"Adding {typeof(TValue)}/{id} to cache.");
 
                 cache.AddOrUpdate(
                     key: id,
                     addValueFactory: (id) =>
                     {
-                        CacheSize?.Inc();
+                        metrics.ItemsCount.Inc();
+                        metrics.ItemsTotal.Inc();
                         return Clone(entity);
                     },
                     updateValueFactory: (key, oldEntity) =>
                     {
+                        metrics.HitsTotal.Inc();
                         return Clone(entity);
                     });
             }
         }
 
-        public void Upsert(TEntity entity)
+        public void Upsert(TValue entity)
         {
             var id = entity.Metadata.Uid;
 
-            logger?.LogDebugEx(() => $"Adding {typeof(TEntity)}/{id} to cache.");
+            logger?.LogDebugEx(() => $"Adding {typeof(TValue)}/{id} to cache.");
 
             cache.AddOrUpdate(
                 key: id,
                 addValueFactory: (id) =>
                 {
-                    CacheSize?.Inc();
+                    metrics.ItemsCount.Inc();
+                    metrics.ItemsTotal.Inc();
                     return Clone(entity);
                 },
                 updateValueFactory: (key, oldEntity) =>
                 {
+                    metrics.HitsTotal.Inc(); 
                     return Clone(entity);
                 });
         }
 
-        public bool IsFinalizing(TEntity entity)
+        public bool IsFinalizing(TValue entity)
         {
             var id = entity.Metadata.Uid;
 
             return finalizingCache.ContainsKey(id);
         }
 
-        public void AddFinalizer(TEntity entity)
+        public void AddFinalizer(TValue entity)
         {
             var id = entity.Metadata.Uid;
 
@@ -185,17 +200,17 @@ namespace Neon.Kube.Operator.Cache
                     updateValueFactory: (key, oldEntity) => Clone(entity));
         }
 
-        public void RemoveFinalizer(TEntity entity)
+        public void RemoveFinalizer(TValue entity)
         {
             finalizingCache.TryRemove(entity.Metadata.Uid, out _);
         }
 
-        private TEntity Clone(TEntity entity)
+        private TValue Clone(TValue entity)
         {
-            return KubernetesJson.Deserialize<TEntity>(KubernetesJson.Serialize(entity));
+            return KubernetesJson.Deserialize<TValue>(KubernetesJson.Serialize(entity));
         }
 
-        public ModifiedEventType CompareEntity(TEntity entity)
+        public ModifiedEventType CompareEntity(TValue entity)
         {
             var id = entity.Metadata.Uid;
             

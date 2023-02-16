@@ -40,8 +40,6 @@ namespace Neon.Kube.Operator
         internal bool hasMutatingWebhooks { get; set; } = false;
         internal bool hasValidatingWebhooks { get; set; } = false;
 
-        internal string deployedNamespace { get; set; } = Pod.Namespace;
-
         /// <summary>
         /// Default constructor.
         /// </summary>
@@ -57,7 +55,12 @@ namespace Neon.Kube.Operator
         /// <summary>
         /// The Operator name. This defaults to a Kubernetes safe version of the Assembly name.
         /// </summary>
-        public string WatchNamespace { get; set; } = Pod.Namespace;
+        public string WatchNamespace { get; set; } = null;
+
+        /// <summary>
+        /// The namespace where the operator is deployed.
+        /// </summary>
+        public string DeployedNamespace { get; set; } = Pod.Namespace;
 
         /// <summary>
         /// The IP address to listen on.
