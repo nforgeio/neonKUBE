@@ -52,7 +52,7 @@ operator:
   image:
     registry: registry.neon.local/neonkube
     repository: grafana-operator-grafana-operator
-    tag: v4.5.1
+    tag: v4.9.0
     sha: ""
     pullPolicy: IfNotPresent
 
@@ -67,7 +67,7 @@ pluginsInit:
 image:
   registry: registry.neon.local/neonkube
   repository: grafana-grafana
-  tag: 9.1.0-ubuntu
+  tag: 9.3.6-ubuntu
   sha: ""
   pullPolicy: IfNotPresent
   ## Optionally specify an array of imagePullSecrets.
