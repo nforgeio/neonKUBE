@@ -46,8 +46,8 @@
 		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.9" />
 		<PackageReference Include="prometheus-net.DotNetRuntime" Version="4.2.4" />
 		<PackageReference Include="Quartz" Version="3.5.0" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2807-dev-master" />
-        <PackageReference Include="Neon.Service" Version="10000.0.2807-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2814-dev-jeff" />
+        <PackageReference Include="Neon.Service" Version="10000.0.2814-dev-jeff" />
     </ItemGroup>
 
 	<ItemGroup>
@@ -67,28 +67,6 @@
 	    <CopyToPublishDirectory>Never</CopyToPublishDirectory>
 	  </None>
 	</ItemGroup>
-
-	<!--
-	The [ClusterManifest] build target executes a [neon-build download-const-uri] command to
-	download the cluster manifest JSON file for the current cluster version.  The manifest
-	will be generated during image builds in neonCLOUD and uploaded to S3.
-  
-	The [neon-build download-const-uri] obtains the URI for the manifest from:
-  
-		assembly:   Neon.Kube.dll
-		constant:   Neon.Kube.NeonDownloads.NeonClusterManifestUri
-  
-	We'll be loading the [Neon.Kube.dll] assembly from that project's folder using the same
-	build configuration and target runtime as this project.  This is a bit fragile.
-  
-	Note that the [neon-build download-const-uri] doesn't fail if it couldn't download the
-	file so that developers will be able to work offline.  We'll just build with the existing
-	manifest file which is checked into git and won't change very often.
-	-->
-
-	<Target Name="ClusterManifest" BeforeTargets="CoreCompile">
-		<Exec Command="neon-build download-const-uri &quot;%NK_ROOT%\Lib\Neon.Kube\bin\$(Configuration)\net7.0\Neon.Kube.dll&quot; Neon.Kube.KubeDownloads NeonClusterManifestUri &quot;$(ProjectDir)Resources\cluster-manifest.json" />
-	</Target>
 
 	<Target Name="PublishCRDs" AfterTargets="GenerateAfterBuild">
 		<Message Importance="high" Text="Publish CRDs to: Neon.Kube.Setup" />

@@ -57,32 +57,30 @@ namespace Neon.Kube
         public static readonly string HelmWindowsUri = $"https://get.helm.sh/helm-v{KubeVersions.Helm}-windows-amd64.zip";
 
         /// <summary>
-        /// The URI for the public AWS S3 bucket for public neonKUBE releases
+        /// The name of the AWS bucket used for published neonKUBE releases.
         /// </summary>
-        public const string NeonKubeReleaseBucketUri = "https://neonkube-release.s3.us-west-2.amazonaws.com";
+        public const string NeonKubeReleaseBucketName = "neonkube-release";
 
         /// <summary>
         /// The URI for the public AWS S3 bucket for public neonKUBE releases
         /// </summary>
-        public const string NeonKubeStageBucketUri = "https://neonkube-stage.s3.us-west-2.amazonaws.com";
+        public const string NeonKubeReleaseBucketUri = $"https://{NeonKubeReleaseBucketName}.s3.us-west-2.amazonaws.com";
+
+        /// <summary>
+        /// The name of the AWS bucket used for staged neonKUBE releases.
+        /// </summary>
+        public const string NeonKubeStageBucketName = "neonkube-stage";
+
+        /// <summary>
+        /// The URI for the public AWS S3 bucket for public neonKUBE releases
+        /// </summary>
+        public const string NeonKubeStageBucketUri = $"https://{NeonKubeStageBucketName}.s3.us-west-2.amazonaws.com";
 
         /// <summary>
         /// The URI for the cluster manifest (<see cref="ClusterManifest"/>) JSON file for the current
         /// neonKUBE cluster version.
         /// </summary>
-        public const string NeonClusterManifestUri = $"{NeonKubeStageBucketUri}/manifests/neonkube-{KubeVersions.NeonKube}.json";
-
-        /// <summary>
-        /// Returns the URI for the cluster manifest for a specific neonKUBE version.
-        /// </summary>
-        /// <param name="version">The neonKUBE version.</param>
-        /// <returns>The manifest URI.</returns>
-        public static string GetNeonClusterManifestUri(string version)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(version));
-
-            return $"{NeonKubeStageBucketUri}/cluster-manifests/neonkube-{version}.json";
-        }
+        public static readonly string NeonClusterManifestUri = $"{NeonKubeStageBucketUri}/manifests/neonkube-{KubeVersions.NeonKubeWithBranchPart}.json";
 
         /// <summary>
         /// The GitHub repository path where public node images will be published.
