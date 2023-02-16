@@ -76,20 +76,7 @@ namespace NeonNodeAgent
         {
             services.AddSingleton<ILoggerFactory>(TelemetryHub.LoggerFactory)
                 .AddSingleton(Service)
-                .AddKubernetesOperator()
-                .AddController<ContainerRegistryController>(
-                    leaderConfig: new LeaderElectionConfig(
-                        @namespace:    KubeNamespace.NeonSystem,
-                        leaseName:     $"{Program.Service.Name}.containerregistry-{Node.Name}",
-                        identity:      Pod.Name,
-                        metricsPrefix: $"{typeof(ContainerRegistryController).Name}_{typeof(V1NeonContainerRegistry).Name}".ToLower()))
-                .AddController<NodeTaskController>(
-                    leaderConfig:
-                        new LeaderElectionConfig(
-                        @namespace:    KubeNamespace.NeonSystem,
-                        leaseName:     $"{Program.Service.Name}.nodetask-{Node.Name}",
-                        identity:      Pod.Name,
-                        metricsPrefix: $"{typeof(ContainerRegistryController).Name}_{typeof(V1NeonContainerRegistry).Name}".ToLower()));
+                .AddKubernetesOperator();
         }
 
         /// <summary>

@@ -232,9 +232,10 @@ namespace NeonClusterOperator
                .CreateDefaultBuilder()
                .ConfigureOperator(configure =>
                {
-                   configure.Port = Port;
+                   configure.Port                    = Port;
                    configure.AssemblyScanningEnabled = true;
-                   configure.Name = Name;
+                   configure.Name                    = Name;
+                   configure.DeployedNamespace       = KubeNamespace.NeonSystem;
                })
                .ConfigureNeonKube()
                .AddSingleton(typeof(Service), this)

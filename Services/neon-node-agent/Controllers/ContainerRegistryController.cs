@@ -96,10 +96,12 @@ namespace NeonNodeAgent
     /// Node tasks on the host node will be simulated in this case by simply doing nothing.
     /// </note>
     /// </remarks>
-    [Controller(Ignore = true)]
     [RbacRule<V1NeonContainerRegistry>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     public class ContainerRegistryController : IResourceController<V1NeonContainerRegistry>
     {
+        /// <inheritdoc/>
+        public string LeaseName { get; } = $"{Program.Service.Name}.containerregistry-{Node.Name}";
+
         //---------------------------------------------------------------------
         // Local types
 

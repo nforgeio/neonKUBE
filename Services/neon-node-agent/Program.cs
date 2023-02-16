@@ -58,17 +58,14 @@ namespace NeonNodeAgent
         {
             Service = new Service(KubeService.NeonNodeAgent);
 
-            if (!NeonHelper.IsDevWorkstation)
-            {
-                Service.MetricsOptions.Mode = MetricsMode.Scrape;
-                Service.MetricsOptions.GetCollector =
-                    () =>
-                    {
-                        return DotNetRuntimeStatsBuilder
-                            .Default()
-                            .StartCollecting();
-                    };
-            }
+            Service.MetricsOptions.Mode = MetricsMode.Scrape;
+            Service.MetricsOptions.GetCollector =
+                () =>
+                {
+                    return DotNetRuntimeStatsBuilder
+                        .Default()
+                        .StartCollecting();
+                };
 
             try
             {
