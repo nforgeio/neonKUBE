@@ -27,6 +27,8 @@ using Neon.Kube.Operator.Builder;
 
 using k8s.Models;
 using k8s;
+using Neon.BuildInfo;
+using Neon.Diagnostics;
 
 namespace Neon.Kube.Operator.Finalizer
 {
@@ -43,20 +45,26 @@ namespace Neon.Kube.Operator.Finalizer
         public IResourceFinalizer<TEntity> BuildFinalizer<TEntity, TFinalizer>(IServiceProvider serviceProvider)
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
-            return componentRegister.FinalizerRegistrations
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
+            {
+                return componentRegister.FinalizerRegistrations
                 .Where(r => r.EntityType.IsEquivalentTo(typeof(TEntity)))
                 .Where(r => r.FinalizerType.IsEquivalentTo(typeof(TFinalizer)))
                 .Select(r => (IResourceFinalizer<TEntity>)serviceProvider.GetRequiredService(r.FinalizerType))
                 .Single();
+            }
         }
 
         /// <inheritdoc/>
         public IEnumerable<IResourceFinalizer<TEntity>> BuildFinalizers<TEntity>(IServiceProvider serviceProvider)
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
-            return componentRegister.FinalizerRegistrations
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
+            {
+                return componentRegister.FinalizerRegistrations
                     .Where(r => r.EntityType.IsEquivalentTo(typeof(TEntity)))
                     .Select(r => (IResourceFinalizer<TEntity>)serviceProvider.GetRequiredService(r.FinalizerType));
+            }
         }
     }
 

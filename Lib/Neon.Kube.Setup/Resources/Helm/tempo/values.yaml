@@ -27,7 +27,7 @@ tempo:
     # -- Docker image repository
     repository: grafana-tempo
     # -- Overrides the image tag whose default is the chart's appVersion
-    tag: 1.4.1
+    tag: 2.0.0
     pullPolicy: IfNotPresent
   readinessProbe:
     httpGet:
@@ -492,10 +492,6 @@ queryFrontend:
   # -- Extra volumes for query-frontend deployment
   extraVolumes: []
 
-search:
-  # -- Enable Tempo search
-  enabled: true
-
 traces:
   jaeger:
     # -- Enable Tempo to ingest Jaeger GRPC traces
@@ -520,7 +516,6 @@ traces:
 
 config: |
   multitenancy_enabled: true
-  search_enabled: {{ .Values.search.enabled }}
   compactor:
     compaction:
       block_retention: {{ .Values.compactor.config.compaction.block_retention }}
@@ -640,7 +635,6 @@ config: |
         service: http
         timeout: 1000ms
         update_interval: 1m
-  metrics_generator_enabled: true
   metrics_generator:
     storage:
       path: /var/tempo/metrics

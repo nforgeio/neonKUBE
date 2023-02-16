@@ -43,6 +43,8 @@ namespace Neon.Kube
     /// </summary>
     public sealed class LeaderElectionConfig
     {
+        private static readonly string[] LabelNames = { "namespace", "lease_name", "lease_duration_seconds" };
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -74,23 +76,13 @@ namespace Neon.Kube
         /// Optionally specifies the interval that <see cref="LeaderElector"/> instances should 
         /// wait before retrying any actions.  This defaults to <b>2 seconds</b>.
         /// </param>
-        /// <param name="metricsPrefix">
-        /// Optionally specifies the metrics prefix. This defaults to <c>null</c>.
-        /// </param>
-        /// <param name="counterLabels">
-        /// Optionally specifies any label values to be included when the metrics counters 
-        /// are incremented.  The values in this array must match any label names defined
-        /// when the counters passed were created.
-        /// </param>
         public LeaderElectionConfig(
             string          @namespace,
             string          leaseName,
             string          identity,
             TimeSpan        leaseDuration    = default,
             TimeSpan        renewDeadline    = default,
-            TimeSpan        retryPeriod      = default,
-            string          metricsPrefix    = null,
-            string[]        counterLabels    = null)
+            TimeSpan        retryPeriod      = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(leaseName), nameof(leaseName));
@@ -116,14 +108,6 @@ namespace Neon.Kube
                 throw new ArgumentException($"[{nameof(leaseDuration)}={leaseDuration}] is not greater than [{nameof(renewDeadline)}={renewDeadline}].");
             }
 
-            if (!string.IsNullOrEmpty(metricsPrefix))
-            {
-                if (!metricsPrefix.EndsWith('_'))
-                {
-                    metricsPrefix += "_";
-                }
-            }
-
             // Initialize the properties.
 
             this.Namespace        = @namespace;
@@ -133,33 +117,29 @@ namespace Neon.Kube
             this.LeaseDuration    = leaseDuration;
             this.RenewDeadline    = renewDeadline;
             this.RetryPeriod      = retryPeriod;
-            this.MetricsPrefix    = metricsPrefix;
-            this.CounterLabels    = counterLabels;
+            
+            var labelValues = new string[] { @namespace, leaseName, leaseDuration.TotalSeconds.ToString() };
 
-            if (!string.IsNullOrEmpty(metricsPrefix))
-            {
-                this.PromotionCounter = Metrics.CreateCounter($"{metricsPrefix}promoted", "Leader promotions", labelNames: counterLabels);
-                this.DemotionCounter = Metrics.CreateCounter($"{metricsPrefix}demoted", "Leader demotions", labelNames: counterLabels);
-                this.NewLeaderCounter = Metrics.CreateCounter($"{metricsPrefix}new_leader", "Leadership changes", labelNames: counterLabels);
-            }
-        }
+            this.PromotionCounter = Metrics
+                .CreateCounter(
+                    name: $"leader_election_promoted_total",
+                    help: "Leader promotions",
+                    labelNames: LabelNames)
+                .WithLabels(labelValues);
 
-        public void SetCounters(string metricsPrefix)
-        {
-            Covenant.Requires<ArgumentNullException>(metricsPrefix != null, nameof(metricsPrefix));
+            this.DemotionCounter = Metrics
+                .CreateCounter(
+                    name: $"leader_election_demoted_total", 
+                    help: "Leader demotions", 
+                    labelNames: LabelNames)
+                .WithLabels(labelValues);
 
-            if (this.PromotionCounter != null
-                || this.DemotionCounter != null
-                || this.NewLeaderCounter != null)
-            {
-                throw new InvalidOperationException("Counters are already initialized.");
-            }
-
-            this.MetricsPrefix = metricsPrefix;
-
-            this.PromotionCounter = Metrics.CreateCounter($"{metricsPrefix}promoted", "Leader promotions", labelNames: this.CounterLabels);
-            this.DemotionCounter = Metrics.CreateCounter($"{metricsPrefix}demoted", "Leader demotions", labelNames: this.CounterLabels);
-            this.NewLeaderCounter = Metrics.CreateCounter($"{metricsPrefix}new_leader", "Leadership changes", labelNames: this.CounterLabels);
+            this.NewLeaderCounter = Metrics
+                .CreateCounter(
+                    name: $"leader_election_new_leader_total", 
+                    help: "Leadership changes", 
+                    labelNames: LabelNames)
+                .WithLabels(labelValues);
         }
 
         /// <summary>
@@ -194,11 +174,6 @@ namespace Neon.Kube
         public TimeSpan LeaseDuration { get; private set; }
 
         /// <summary>
-        /// The metrics prefix.
-        /// </summary>
-        public string MetricsPrefix { get; private set; }
-
-        /// <summary>
         /// Returns <see cref="LeaseDuration"/> rounded up to the nearest second
         /// and limited to the range supported by a 32-bit integer.
         /// </summary>
@@ -220,19 +195,19 @@ namespace Neon.Kube
         /// Returns the metrics counter to be incremented when the instance is 
         /// promoted to leader.  This may be <c>null</c>.
         /// </summary>
-        internal Counter PromotionCounter { get; private set; }
+        internal Counter.Child PromotionCounter { get; private set; }
 
         /// <summary>
         /// Returns the metrics counter to be incremented when the instance is 
         /// demoted from leader.  This may be <c>null</c>.
         /// </summary>
-        internal Counter DemotionCounter { get; private set; }
+        internal Counter.Child DemotionCounter { get; private set; }
 
         /// <summary>
         /// Returns the metrics counter to be incremented when a leadership
         /// change is detected.  This may be <c>null</c>.
         /// </summary>
-        internal Counter NewLeaderCounter { get; private set; }
+        internal Counter.Child NewLeaderCounter { get; private set; }
 
         /// <summary>
         /// Returns the label values to be used when incrementing any of the

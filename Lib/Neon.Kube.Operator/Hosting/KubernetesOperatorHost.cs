@@ -223,73 +223,76 @@ namespace Neon.Kube.Operator
 
         private async Task CheckCertificateAsync()
         {
-            logger?.LogInformationEx(() => "Checking webhook certificate.");
-
-            var cert = await k8s.CustomObjects.ListNamespacedCustomObjectAsync<V1Certificate>(OperatorSettings.deployedNamespace, labelSelector: $"{NeonLabel.ManagedBy}={OperatorSettings.Name}");
-
-            if (!cert.Items.Any())
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                logger?.LogInformationEx(() => "Webhook certificate does not exist, creating...");
+                logger?.LogInformationEx(() => "Checking webhook certificate.");
 
-                var certificate = new V1Certificate()
+                var cert = await k8s.CustomObjects.ListNamespacedCustomObjectAsync<V1Certificate>(OperatorSettings.DeployedNamespace, labelSelector: $"{NeonLabel.ManagedBy}={OperatorSettings.Name}");
+
+                if (!cert.Items.Any())
                 {
-                    Metadata = new V1ObjectMeta()
+                    logger?.LogInformationEx(() => "Webhook certificate does not exist, creating...");
+
+                    var certificate = new V1Certificate()
                     {
-                        Name              = OperatorSettings.Name,
-                        NamespaceProperty = OperatorSettings.deployedNamespace,
-                        Labels = new Dictionary<string, string>()
+                        Metadata = new V1ObjectMeta()
+                        {
+                            Name = OperatorSettings.Name,
+                            NamespaceProperty = OperatorSettings.DeployedNamespace,
+                            Labels = new Dictionary<string, string>()
                         {
                             { NeonLabel.ManagedBy, OperatorSettings.Name }
                         }
-                    },
-                    Spec = new V1CertificateSpec()
-                    {
-                        DnsNames = new List<string>()
+                        },
+                        Spec = new V1CertificateSpec()
+                        {
+                            DnsNames = new List<string>()
                         {
                             $"{OperatorSettings.Name}",
-                            $"{OperatorSettings.Name}.{OperatorSettings.deployedNamespace}",
-                            $"{OperatorSettings.Name}.{OperatorSettings.deployedNamespace}.svc",
-                            $"{OperatorSettings.Name}.{OperatorSettings.deployedNamespace}.svc.cluster.local",
+                            $"{OperatorSettings.Name}.{OperatorSettings.DeployedNamespace}",
+                            $"{OperatorSettings.Name}.{OperatorSettings.DeployedNamespace}.svc",
+                            $"{OperatorSettings.Name}.{OperatorSettings.DeployedNamespace}.svc.cluster.local",
                         },
-                        Duration = $"{CertManagerOptions.CertificateDuration.TotalHours}h{CertManagerOptions.CertificateDuration.Minutes}m{CertManagerOptions.CertificateDuration.Seconds}s",
-                        IssuerRef = CertManagerOptions.IssuerRef,
-                        SecretName = $"{OperatorSettings.Name}-webhook-tls"
-                    }
-                };
+                            Duration = $"{CertManagerOptions.CertificateDuration.TotalHours}h{CertManagerOptions.CertificateDuration.Minutes}m{CertManagerOptions.CertificateDuration.Seconds}s",
+                            IssuerRef = CertManagerOptions.IssuerRef,
+                            SecretName = $"{OperatorSettings.Name}-webhook-tls"
+                        }
+                    };
 
-                await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync(certificate, certificate.Namespace(), certificate.Name());
+                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync(certificate, certificate.Namespace(), certificate.Name());
 
-                logger?.LogInformationEx(() => "Webhook certificate created.");
+                    logger?.LogInformationEx(() => "Webhook certificate created.");
+                }
+
+                _ = k8s.WatchAsync<V1Secret>(
+                    async (@event) =>
+                    {
+                        await SyncContext.Clear;
+
+                        Certificate = X509Certificate2.CreateFromPem(
+                            Encoding.UTF8.GetString(@event.Value.Data["tls.crt"]),
+                            Encoding.UTF8.GetString(@event.Value.Data["tls.key"]));
+
+                        logger?.LogInformationEx("Updated webhook certificate");
+                    },
+                    OperatorSettings.DeployedNamespace,
+                    fieldSelector: $"metadata.name={OperatorSettings.Name}-webhook-tls");
+
+                await NeonHelper.WaitForAsync(
+                   async () =>
+                   {
+                       await SyncContext.Clear;
+
+                       return Certificate != null;
+                   },
+                   timeout: TimeSpan.FromSeconds(300),
+                   pollInterval: TimeSpan.FromMilliseconds(500));
             }
-
-            _ = k8s.WatchAsync<V1Secret>(
-                async (@event) =>
-                {
-                    await SyncContext.Clear;
-
-                    Certificate = X509Certificate2.CreateFromPem(
-                        Encoding.UTF8.GetString(@event.Value.Data["tls.crt"]),
-                        Encoding.UTF8.GetString(@event.Value.Data["tls.key"]));
-
-                    logger?.LogInformationEx("Updated webhook certificate");
-                },
-                OperatorSettings.deployedNamespace,
-                fieldSelector: $"metadata.name={OperatorSettings.Name}-webhook-tls");
-
-            await NeonHelper.WaitForAsync(
-               async () =>
-               {
-                   await SyncContext.Clear;
-
-                   return Certificate != null;
-               },
-               timeout: TimeSpan.FromSeconds(300),
-               pollInterval: TimeSpan.FromMilliseconds(500));
         }
 
         private async Task ConfigureRbacAsync()
         {
-            var rbac = new RbacBuilder(Host.Services);
+            var rbac = new RbacBuilder(Host.Services, @namespace: OperatorSettings.DeployedNamespace);
             rbac.Build();
 
             foreach (var sa in rbac.ServiceAccounts)

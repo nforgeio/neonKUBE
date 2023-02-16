@@ -34,6 +34,7 @@ using Microsoft.Extensions.Hosting;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.Kube.Operator.Attributes;
 using Neon.Kube.Operator.Builder;
 using Neon.Kube.Operator.ResourceManager;
 using Neon.Tasks;
@@ -43,7 +44,6 @@ using k8s.Autorest;
 using k8s.Models;
 
 using Prometheus;
-using Neon.Kube.Operator.Attributes;
 
 namespace Neon.Kube.Operator.Controller
 {
@@ -57,12 +57,20 @@ namespace Neon.Kube.Operator.Controller
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         /// <summary>
+        /// The lease name for the controller resource manager.
+        /// </summary>
+        string LeaseName
+        {
+            get
+            {
+                return $"{GetType().Name}.{typeof(TEntity).GetKubernetesTypeMetadata().PluralName}".ToLower();
+            }
+        }
+
+        /// <summary>
         /// An optional filter.
         /// </summary>
-        public static bool Filter(TEntity resource)
-        {
-            return true;
-        }
+        Func<TEntity, bool> Filter => (TEntity) => true;
 
         /// <summary>
         /// Starts the controller.

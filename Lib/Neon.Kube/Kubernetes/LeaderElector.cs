@@ -144,14 +144,7 @@ namespace Neon.Kube
             leaderElector.OnStartedLeading +=
                 () =>
                 {
-                    if (hasCounterLabels)
-                    {
-                        config.PromotionCounter?.WithLabels(config.CounterLabels).Inc();
-                    }
-                    else
-                    {
-                        config.PromotionCounter?.Inc();
-                    }
+                    config.PromotionCounter?.Inc();
 
                     onStartedLeading?.Invoke();
                 };
@@ -159,14 +152,7 @@ namespace Neon.Kube
             leaderElector.OnStoppedLeading +=
                 () =>
                 {
-                    if (hasCounterLabels)
-                    {
-                        config.NewLeaderCounter?.WithLabels(config.CounterLabels).Inc();
-                    }
-                    else
-                    {
-                        config.NewLeaderCounter?.Inc();
-                    }
+                    config.NewLeaderCounter.Inc();
 
                     onStoppedLeading?.Invoke();
                 };
@@ -174,14 +160,7 @@ namespace Neon.Kube
             leaderElector.OnNewLeader += 
                 identity =>
                 {
-                    if (hasCounterLabels)
-                    {
-                        config.NewLeaderCounter?.WithLabels(config.CounterLabels).Inc();
-                    }
-                    else
-                    {
-                        config.NewLeaderCounter?.Inc();
-                    }
+                    config.NewLeaderCounter?.Inc();
 
                     onNewLeader?.Invoke(identity);
                 };

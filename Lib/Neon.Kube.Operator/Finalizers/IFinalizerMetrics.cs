@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IResourceCache.cs
+// FILE:	    IFinalizerMetrics.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -16,40 +16,44 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
-using Neon.Kube;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+using Neon.Diagnostics;
+using Neon.Tasks;
 using Neon.Kube.Operator.ResourceManager;
 
-using k8s.Models;
 using k8s;
+using k8s.Models;
 
-namespace Neon.Kube.Operator.Cache
+using KellermanSoftware.CompareNetObjects;
+
+using Prometheus;
+using Microsoft.AspNetCore.Mvc;
+
+namespace Neon.Kube.Operator.Finalizer
 {
-    internal interface IResourceCache<TEntity, TValue>
-        where TValue : IKubernetesObject<V1ObjectMeta>
+    internal interface IFinalizerMetrics<TEntity> : IFinalizerMetrics
+        where TEntity : IKubernetesObject<V1ObjectMeta>
     {
-        TValue Get(string id);
-        bool Get(string id, out TValue result);
 
-        void Compare(TValue resource, out ModifiedEventType result);
+    }
 
-        TValue Upsert(TValue resource, out ModifiedEventType result);
-
-        void Upsert(TValue resource);
-        void Upsert(IEnumerable<TValue> resources);
-
-        void Remove(TValue resource);
-
-        void Clear();
-
-        bool IsFinalizing(TValue resource);
-
-        void AddFinalizer(TValue resource);
-
-        void RemoveFinalizer(TValue resource);
+    internal interface IFinalizerMetrics
+    {
+        ICounter RegistrationsTotal { get; }
+        IHistogram RegistrationTimeSeconds { get; }
+        ICounter RemovalsTotal { get; }
+        IHistogram RemovalTimeSeconds { get; }
+        IGauge FinalizingCount { get; }
+        ICounter FinalizedTotal { get; }
+        IHistogram FinalizeTimeSeconds { get; }
     }
 }

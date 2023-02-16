@@ -66,10 +66,12 @@ namespace NeonNodeAgent
     /// and empty output and error streams.
     /// </note>
     /// </remarks>
-    [Controller(Ignore = true)]
     [RbacRule<V1NeonNodeTask>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     public class NodeTaskController : IResourceController<V1NeonNodeTask>
     {
+        /// <inheritdoc/>
+        public string LeaseName { get; } = $"{Program.Service.Name}.nodetask-{Node.Name}";
+
         //---------------------------------------------------------------------
         // Static members
 

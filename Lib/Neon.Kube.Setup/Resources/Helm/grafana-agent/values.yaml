@@ -11,14 +11,14 @@ agent:
   image:
     registry: registry.neon.local/neonkube
     repository: grafana-agent
-    tag: v0.26.1
+    tag: v0.31.3
     pullPolicy: IfNotPresent
 
 operator:
   image:
     registry: registry.neon.local/neonkube
     repository: grafana-agent-operator
-    tag: v0.26.1
+    tag: v0.31.3
     pullPolicy: IfNotPresent
 
 configReloader:

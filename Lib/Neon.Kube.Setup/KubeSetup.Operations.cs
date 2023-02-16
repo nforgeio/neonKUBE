@@ -2484,6 +2484,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             var localPvAdvice          = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsLocalPvProvisioner);
             var snapshotOperatorAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsSnapshotOperator);
             var ndmOperatorAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsNdmOperator);
+            var ndmAdvice              = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsNdm);
             var webhookAdvice          = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.OpenEbsWebhook);
 
             controller.ThrowIfCancelled();
@@ -2526,6 +2527,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             values.Add($"openebsMonitoringAddon.deviceLocalPV.serviceMonitor.enabled", localPvAdvice.MetricsEnabled);
                             values.Add($"openebsMonitoringAddon.ndm.serviceMonitor.enabled", ndmOperatorAdvice.MetricsEnabled);
 
+                            values.Add($"ndm.resources.requests.memory", ToSiString(ndmAdvice.PodMemoryRequest));
+                            values.Add($"ndm.resources.limits.memory", ToSiString(ndmAdvice.PodMemoryLimit));
 
                             await controlNode.InstallHelmChartAsync(controller, "openebs",
                                 releaseName:  "openebs",

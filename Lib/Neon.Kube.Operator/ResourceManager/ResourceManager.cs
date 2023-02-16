@@ -40,6 +40,7 @@ using Neon.Kube;
 using Neon.Kube.Operator.Cache;
 using Neon.Kube.Operator.Controller;
 using Neon.Kube.Operator.Entities;
+using Neon.Kube.Operator.EventQueue;
 using Neon.Kube.Operator.Finalizer;
 using Neon.Kube.Operator.ResourceManager;
 using Neon.Kube.Operator.Util;
@@ -52,6 +53,8 @@ using k8s.LeaderElection;
 using k8s.Models;
 
 using Prometheus;
+using OpenTelemetry.Resources;
+using System.Runtime.InteropServices;
 
 namespace Neon.Kube.Operator.ResourceManager
 {
@@ -161,32 +164,33 @@ namespace Neon.Kube.Operator.ResourceManager
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         where TController : IResourceController<TEntity>
     {
-        private static IEnumerable<string>                      kubernetesTypes;
-        private ResourceManagerOptions                          options;
-        private bool                                            isDisposed   = false;
-        private bool                                            stopIdleLoop = false;
-        private AsyncReentrantMutex                             mutex        = new AsyncReentrantMutex();
-        private bool                                            started      = false;
-        private ResourceManagerMetrics<TEntity, TController>    metrics;
-        private IKubernetes                                     k8s;
-        private IServiceProvider                                serviceProvider;
-        private IResourceCache<TEntity>                         resourceCache;
-        private IResourceCache<IKubernetesObject<V1ObjectMeta>> dependentResourceCache;
-        private ICrdCache                                       crdCache;
-        private IFinalizerManager<TEntity>                      finalizerManager;
-        private AsyncKeyedLocker<string>                        lockProvider;
-        private List<string>                                    resourceNamespaces;
-        private Type                                            controllerType;
-        private ILogger<ResourceManager<TEntity, TController>>  logger;
-        private DateTime                                        nextIdleReconcileUtc;
-        private LeaderElectionConfig                            leaderConfig;
-        private bool                                            leaderElectionDisabled;
-        private LeaderElector                                   leaderElector;
-        private Task                                            leaderTask;
-        private Task                                            idleLoopTask;
-        private Task                                            watcherTask;
-        private CancellationTokenSource                         watcherTcs;
-        private EventQueue<TEntity>                             eventQueue;
+        private static IEnumerable<string>                               kubernetesTypes;
+        private ResourceManagerOptions                                   options;
+        private OperatorSettings                                         operatorSettings;
+        private bool                                                     isDisposed   = false;
+        private bool                                                     stopIdleLoop = false;
+        private AsyncReentrantMutex                                      mutex        = new AsyncReentrantMutex();
+        private bool                                                     started      = false;
+        private ResourceManagerMetrics<TEntity, TController>             metrics;
+        private IKubernetes                                              k8s;
+        private IServiceProvider                                         serviceProvider;
+        private IResourceCache<TEntity, TEntity>                         resourceCache;
+        private IResourceCache<TEntity, IKubernetesObject<V1ObjectMeta>> dependentResourceCache;
+        private ICrdCache                                                crdCache;
+        private IFinalizerManager<TEntity>                               finalizerManager;
+        private AsyncKeyedLocker<string>                                 lockProvider;
+        private List<string>                                             resourceNamespaces;
+        private Type                                                     controllerType;
+        private ILogger<ResourceManager<TEntity, TController>>           logger;
+        private DateTime                                                 nextIdleReconcileUtc;
+        private LeaderElectionConfig                                     leaderConfig;
+        private bool                                                     leaderElectionDisabled;
+        private LeaderElector                                            leaderElector;
+        private Task                                                     leaderTask;
+        private Task                                                     idleLoopTask;
+        private Task                                                     watcherTask;
+        private CancellationTokenSource                                  watcherTcs;
+        private EventQueue<TEntity>                                      eventQueue;
 
         static ResourceManager()
         {
@@ -219,9 +223,10 @@ namespace Neon.Kube.Operator.ResourceManager
             
             this.serviceProvider        = serviceProvider;
             this.options                = options ?? serviceProvider.GetRequiredService<ResourceManagerOptions>();
+            this.operatorSettings       = serviceProvider.GetRequiredService<OperatorSettings>();
             this.leaderConfig           = leaderConfig;
             this.leaderElectionDisabled = leaderElectionDisabled;
-            this.metrics                = new ResourceManagerMetrics<TEntity, TController>();
+            this.metrics                = serviceProvider.GetRequiredService<ResourceManagerMetrics<TEntity, TController>>();
             this.logger                 = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger<ResourceManager<TEntity, TController>>();
             
             if (options.WatchNamespace != null)
@@ -247,55 +252,58 @@ namespace Neon.Kube.Operator.ResourceManager
         /// <exception cref="InvalidOperationException">Thrown when the resource manager has already been started.</exception>
         public async Task StartAsync()
         {
-            Covenant.Requires<ArgumentNullException>(serviceProvider != null, nameof(serviceProvider));
+            await SyncContext.Clear;
 
-            this.k8s                    = serviceProvider.GetRequiredService<IKubernetes>();
-            this.resourceCache          = serviceProvider.GetRequiredService<IResourceCache<TEntity>>();
-            this.dependentResourceCache = serviceProvider.GetRequiredService<IResourceCache<IKubernetesObject<V1ObjectMeta>>>();
-            this.crdCache               = serviceProvider.GetRequiredService<ICrdCache>();
-            this.finalizerManager       = serviceProvider.GetRequiredService<IFinalizerManager<TEntity>>();
-            this.lockProvider           = serviceProvider.GetRequiredService<AsyncKeyedLocker<string>>();
-
-            if (leaderConfig != null && string.IsNullOrEmpty(leaderConfig.MetricsPrefix))
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                leaderConfig.SetCounters($"{typeof(TController).Name}_{typeof(TEntity).Name}".ToLower());
+                Covenant.Requires<ArgumentNullException>(serviceProvider != null, nameof(serviceProvider));
+
+                this.k8s = serviceProvider.GetRequiredService<IKubernetes>();
+                this.resourceCache = serviceProvider.GetRequiredService<IResourceCache<TEntity, TEntity>>();
+                this.dependentResourceCache = serviceProvider.GetRequiredService<IResourceCache<TEntity, IKubernetesObject<V1ObjectMeta>>>();
+                this.crdCache = serviceProvider.GetRequiredService<ICrdCache>();
+                this.finalizerManager = serviceProvider.GetRequiredService<IFinalizerManager<TEntity>>();
+                this.lockProvider = serviceProvider.GetRequiredService<AsyncKeyedLocker<string>>();
+
+                if (leaderConfig == null && !leaderElectionDisabled)
+                {
+                    using (var scope = serviceProvider.CreateScope())
+                    {
+                        var controller = CreateController(scope.ServiceProvider);
+                        this.leaderConfig =
+                        new LeaderElectionConfig(
+                            @namespace: operatorSettings.DeployedNamespace,
+                            leaseName: controller.LeaseName,
+                            identity: Pod.Name);
+                    }
+                }
+
+                if (started)
+                {
+                    throw new InvalidOperationException($"[{nameof(ResourceManager<TEntity, TController>)}] is already running.");
+                }
+
+                //-----------------------------------------------------------------
+                // Start the leader elector if enabled.
+
+                started = true;
+
+                // Start the leader elector when enabled.
+
+                if (leaderConfig != null)
+                {
+                    leaderElector = new LeaderElector(
+                        k8s,
+                        leaderConfig,
+                        onStartedLeading: OnPromotion,
+                        onStoppedLeading: OnDemotion,
+                        onNewLeader: OnNewLeader);
+
+                    leaderTask = leaderElector.RunAsync();
+                }
+
+                await Task.CompletedTask;
             }
-
-            if (leaderConfig == null && !leaderElectionDisabled)
-            {
-                this.leaderConfig =
-                    new LeaderElectionConfig(
-                        @namespace: Pod.Namespace,
-                        leaseName: $"{typeof(TController).Name}.{typeof(TEntity).GetKubernetesTypeMetadata().PluralName}".ToLower(),
-                        identity: Pod.Name,
-                        metricsPrefix: $"{typeof(TController).Name}_{typeof(TEntity).Name}".ToLower());
-            }
-
-            if (started)
-            {
-                throw new InvalidOperationException($"[{nameof(ResourceManager<TEntity, TController>)}] is already running.");
-            }
-
-            //-----------------------------------------------------------------
-            // Start the leader elector if enabled.
-
-            started           = true;
-
-            // Start the leader elector when enabled.
-
-            if (leaderConfig != null)
-            {
-                leaderElector = new LeaderElector(
-                    k8s,
-                    leaderConfig, 
-                    onStartedLeading: OnPromotion, 
-                    onStoppedLeading: OnDemotion, 
-                    onNewLeader:      OnNewLeader);
-
-                leaderTask = leaderElector.RunAsync();
-            }
-
-            await Task.CompletedTask;
         }
 
         /// <inheritdoc/>
@@ -358,83 +366,94 @@ namespace Neon.Kube.Operator.ResourceManager
 
         private async Task EnsurePermissionsAsync()
         {
-            HttpOperationResponse<object> resp;
+            await SyncContext.Clear;
 
-            try
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                if (resourceNamespaces == null)
+                HttpOperationResponse<object> resp;
+
+                try
                 {
-                    resp = await k8s.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync<TEntity>(
-                        allowWatchBookmarks: true,
-                        watch: true);
-                }
-                else
-                {
-                    foreach (var @namespace in resourceNamespaces)
+                    if (resourceNamespaces == null)
                     {
-                        resp = await k8s.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync<TEntity>(
-                        @namespace,
-                        allowWatchBookmarks: true,
-                        watch: true);
+                        resp = await k8s.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync<TEntity>(
+                            allowWatchBookmarks: true,
+                            watch: true);
+                    }
+                    else
+                    {
+                        foreach (var @namespace in resourceNamespaces)
+                        {
+                            resp = await k8s.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync<TEntity>(
+                            @namespace,
+                            allowWatchBookmarks: true,
+                            watch: true);
+                        }
                     }
                 }
-            }
-            catch (HttpOperationException e)
-            {
-                if (e.Response.StatusCode == HttpStatusCode.Forbidden)
+                catch (HttpOperationException e)
                 {
-                    logger?.LogErrorEx($"Cannot watch type {typeof(TEntity)}, please check RBAC rules for the controller.");
+                    if (e.Response.StatusCode == HttpStatusCode.Forbidden)
+                    {
+                        logger?.LogErrorEx(() => $"Cannot watch type {typeof(TEntity)}, please check RBAC rules for the controller.");
 
-                    throw;
+                        throw;
+                    }
                 }
-            }
-            catch (Exception e)
-            {
-                logger?.LogErrorEx($"Cannot watch type {typeof(TEntity)}, please check RBAC rules for the controller.");
+                catch (Exception e)
+                {
+                    logger?.LogErrorEx(() => $"Cannot watch type {typeof(TEntity)}, please check RBAC rules for the controller.");
+                    logger?.LogErrorEx(() => e.Message);
+                }
             }
         }
 
         private async Task StartCrdWatchersAsync(CancellationToken cancellationToken)
         {
-            var crdMeta = typeof(TEntity).GetKubernetesTypeMetadata();
-            var crdName = typeof(TEntity).GetKubernetesCrdName();
+            await SyncContext.Clear;
 
-            if (kubernetesTypes.Contains(crdName))
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                return;
-            }
+                var crdMeta = typeof(TEntity).GetKubernetesTypeMetadata();
+                var crdName = typeof(TEntity).GetKubernetesCrdName();
 
-            _ = k8s.WatchAsync<V1CustomResourceDefinition>(async (@event) =>
-            {
-                await SyncContext.Clear;
-
-                crdCache.Upsert(@event.Value);
-
-                logger?.LogInformationEx(() => $"Updated {typeof(TEntity)} CRD.");
-            },
-            fieldSelector: $"metadata.name={crdName}",
-            cancellationToken: cancellationToken);
-
-            crdCache.Upsert(await k8s.ApiextensionsV1.ReadCustomResourceDefinitionAsync(crdName));
-
-            if (options.DependentResources != null)
-            {
-                foreach (var dependent in options.DependentResources)
+                if (kubernetesTypes.Contains(crdName))
                 {
-                    crdName = dependent.GetEntityType().GetKubernetesCrdName();
+                    return;
+                }
 
-                    _ = k8s.WatchAsync<V1CustomResourceDefinition>(async (@event) =>
+                _ = k8s.WatchAsync<V1CustomResourceDefinition>(async (@event) =>
+                {
+                    await SyncContext.Clear;
+
+                    crdCache.Upsert(@event.Value);
+
+                    logger?.LogInformationEx(() => $"Updated {typeof(TEntity)} CRD.");
+                },
+                fieldSelector: $"metadata.name={crdName}",
+                cancellationToken: cancellationToken);
+
+                crdCache.Upsert(await k8s.ApiextensionsV1.ReadCustomResourceDefinitionAsync(crdName));
+
+                if (options.DependentResources != null)
+                {
+                    foreach (var dependent in options.DependentResources)
                     {
-                        await SyncContext.Clear;
+                        crdName = dependent.GetEntityType().GetKubernetesCrdName();
 
-                        crdCache.Upsert(@event.Value);
+                        _ = k8s.WatchAsync<V1CustomResourceDefinition>(async (@event) =>
+                        {
+                            await SyncContext.Clear;
 
-                        logger?.LogInformationEx(() => $"Updated {dependent.GetEntityType()} CRD.");
-                    },
-                    fieldSelector: $"metadata.name={crdName}",
-                    cancellationToken: cancellationToken);
+                            crdCache.Upsert(@event.Value);
 
-                    crdCache.Upsert(await k8s.ApiextensionsV1.ReadCustomResourceDefinitionAsync(crdName));
+                            logger?.LogInformationEx(() => $"Updated {dependent.GetEntityType()} CRD.");
+                        },
+                        fieldSelector: $"metadata.name={crdName}",
+                        cancellationToken: cancellationToken);
+
+                        crdCache.Upsert(await k8s.ApiextensionsV1.ReadCustomResourceDefinitionAsync(crdName));
+                    }
                 }
             }
         }
@@ -445,41 +464,44 @@ namespace Neon.Kube.Operator.ResourceManager
         /// </summary>
         private void OnPromotion()
         {
-            logger?.LogInformationEx(() => $"{typeof(TController)}[{typeof(TEntity)}] PROMOTED");
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
+            {
+                logger?.LogInformationEx(() => $"{typeof(TController)}[{typeof(TEntity)}] PROMOTED");
 
-            IsLeader = true;
+                IsLeader = true;
 
-            Task.Run(
-                async () =>
-                {
-                    if (options.ManageCustomResourceDefinitions)
+                Task.Run(
+                    async () =>
                     {
-                        await CreateOrReplaceCustomResourceDefinitionAsync();
-                    }
+                        if (options.ManageCustomResourceDefinitions)
+                        {
+                            await CreateOrReplaceCustomResourceDefinitionAsync();
+                        }
 
-                    watcherTcs = new CancellationTokenSource();
+                        watcherTcs = new CancellationTokenSource();
 
-                    await EnsurePermissionsAsync();
-                    await StartCrdWatchersAsync(watcherTcs.Token);
+                        await EnsurePermissionsAsync();
+                        await StartCrdWatchersAsync(watcherTcs.Token);
 
-                    // Start the IDLE reconcile loop.
+                        // Start the IDLE reconcile loop.
 
-                    stopIdleLoop         = false;
-                    nextIdleReconcileUtc = DateTime.UtcNow + options.IdleInterval;
-                    idleLoopTask         = IdleLoopAsync();
+                        stopIdleLoop = false;
+                        nextIdleReconcileUtc = DateTime.UtcNow + options.IdleInterval;
+                        idleLoopTask = IdleLoopAsync();
 
-                    // Start the watcher.
+                        // Start the watcher.
 
-                    watcherTask = WatchAsync(watcherTcs.Token);
+                        watcherTask = WatchAsync(watcherTcs.Token);
 
-                    // Inform the controller.
+                        // Inform the controller.
 
-                    using (var scope = serviceProvider.CreateScope())
-                    {
-                        await CreateController(scope.ServiceProvider).OnPromotionAsync();
-                    }
+                        using (var scope = serviceProvider.CreateScope())
+                        {
+                            await CreateController(scope.ServiceProvider).OnPromotionAsync();
+                        }
 
-                }).Wait();
+                    }).Wait();
+            }
         }
 
         /// <summary>
@@ -488,41 +510,44 @@ namespace Neon.Kube.Operator.ResourceManager
         /// </summary>
         private void OnDemotion()
         {
-            logger?.LogInformationEx(() => $"{typeof(TController)}[{typeof(TEntity)}] DEMOTED");
-
-            IsLeader = false;
-
-            try
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                Task.Run(
-                    async () =>
-                    {
-                        // Stop the IDLE loop.
+                logger?.LogInformationEx(() => $"{typeof(TController)}[{typeof(TEntity)}] DEMOTED");
 
-                        stopIdleLoop = true;
-                        await idleLoopTask;
+                IsLeader = false;
 
-                        // Stop the watcher.
-
-                        watcherTcs.Cancel();
-                        await watcherTask;
-
-                        // Inform the controller.
-
-                        using (var scope = serviceProvider.CreateScope())
+                try
+                {
+                    Task.Run(
+                        async () =>
                         {
-                            await CreateController(scope.ServiceProvider).OnDemotionAsync();
-                        }
+                            // Stop the IDLE loop.
 
-                    }).Wait();
-            }
-            finally
-            {
-                // Reset operator state.
+                            stopIdleLoop = true;
+                            await idleLoopTask;
 
-                stopIdleLoop = false;
-                idleLoopTask = null;
-                watcherTask  = null;
+                            // Stop the watcher.
+
+                            watcherTcs.Cancel();
+                            await watcherTask;
+
+                            // Inform the controller.
+
+                            using (var scope = serviceProvider.CreateScope())
+                            {
+                                await CreateController(scope.ServiceProvider).OnDemotionAsync();
+                            }
+
+                        }).Wait();
+                }
+                finally
+                {
+                    // Reset operator state.
+
+                    stopIdleLoop = false;
+                    idleLoopTask = null;
+                    watcherTask = null;
+                }
             }
         }
 
@@ -533,21 +558,24 @@ namespace Neon.Kube.Operator.ResourceManager
         /// <param name="identity">Identifies the new leader.</param>
         private void OnNewLeader(string identity)
         {
-            LeaderIdentity = identity;
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
+            {
+                LeaderIdentity = identity;
 
-            Task.Run(
-                async () =>
-                {
-                    logger?.LogInformationEx(() => $"{typeof(TController)}[{typeof(TEntity)}] LEADER-IS: {identity}");
-
-                    // Inform the controller.
-
-                    using (var scope = serviceProvider.CreateScope())
+                Task.Run(
+                    async () =>
                     {
-                        await CreateController(scope.ServiceProvider).OnNewLeaderAsync(identity);
-                    }
+                        logger?.LogInformationEx(() => $"{typeof(TController)}[{typeof(TEntity)}] LEADER-IS: {identity}");
 
-                }).Wait();
+                        // Inform the controller.
+
+                        using (var scope = serviceProvider.CreateScope())
+                        {
+                            await CreateController(scope.ServiceProvider).OnNewLeaderAsync(identity);
+                        }
+
+                    }).Wait();
+            }
         }
 
         private async Task CreateOrReplaceCustomResourceDefinitionAsync()
@@ -558,7 +586,7 @@ namespace Neon.Kube.Operator.ResourceManager
             {
                 try
                 {
-                    var generator = new CustomResourceGenerator();
+                    var generator = serviceProvider.GetRequiredService<CustomResourceGenerator>();
 
                     var crd = await generator.GenerateCustomResourceDefinitionAsync(typeof(TEntity));
 
@@ -627,17 +655,22 @@ namespace Neon.Kube.Operator.ResourceManager
 
                     if (IsLeader)
                     {
-                        // We're going to log and otherwise ignore any exceptions thrown by the 
-                        // operator's controller or from any members above called by the controller.
+                        using (var activity = TelemetryHub.ActivitySource?.StartActivity())
+                        {
+                            // We're going to log and otherwise ignore any exceptions thrown by the 
+                            // operator's controller or from any members above called by the controller.
 
-                        await mutex.ExecuteActionAsync(
+                            await mutex.ExecuteActionAsync(
                             async () =>
                             {
                                 try
                                 {
                                     using (var scope = serviceProvider.CreateScope())
                                     {
-                                        await CreateController(scope.ServiceProvider).IdleAsync();
+                                        using (metrics.IdleTimeSeconds.NewTimer())
+                                        {
+                                            await CreateController(scope.ServiceProvider).IdleAsync();
+                                        }
                                     }
                                 }
                                 catch (OperationCanceledException)
@@ -649,10 +682,11 @@ namespace Neon.Kube.Operator.ResourceManager
                                 }
                                 catch (Exception e)
                                 {
-                                    metrics.IdleErrorCounter?.Inc();
+                                    metrics.IdleErrorsTotal?.Inc();
                                     logger?.LogErrorEx(e);
                                 }
                             });
+                        }
                     }
 
                     nextIdleReconcileUtc = DateTime.UtcNow + options.IdleInterval;
@@ -690,219 +724,239 @@ namespace Neon.Kube.Operator.ResourceManager
                 {
                     await SyncContext.Clear;
 
-                    ResourceControllerResult result            = null;
-                    ModifiedEventType        modifiedEventType = ModifiedEventType.Other;
-
-                    var resource     = @event.Value;
-                    var resourceName = resource.Metadata.Name;
-                    
-                    using (await lockProvider.LockAsync(@event.Value.Uid(), cancellationToken).ConfigureAwait(false))
+                    using (var activity = TelemetryHub.ActivitySource?.StartActivity("handle-event"))
                     {
-                        try
+                        ResourceControllerResult result = null;
+                        ModifiedEventType modifiedEventType = ModifiedEventType.Other;
+
+                        var resource = @event.Value;
+                        var resourceName = resource.Metadata.Name;
+
+                        using (await lockProvider.LockAsync(@event.Value.Uid(), cancellationToken).ConfigureAwait(false))
                         {
-                            using (var scope = serviceProvider.CreateScope())
+                            try
                             {
-                                var cachedEntity = resourceCache.Upsert(resource, out modifiedEventType);
-
-                                if (@event.Force)
+                                using (var scope = serviceProvider.CreateScope())
                                 {
-                                    logger?.LogDebugEx(() => $"FORCING UPDATE. Event type [{modifiedEventType}] on resource [{resource.Kind}/{resource.Namespace()}/{resourceName}]");
+                                    var cachedEntity = resourceCache.Upsert(resource, out modifiedEventType);
 
-                                    modifiedEventType = ModifiedEventType.Other;
-                                }
+                                    if (@event.Force)
+                                    {
+                                        logger?.LogDebugEx(() => $"FORCING UPDATE. Event type [{modifiedEventType}] on resource [{resource.Kind}/{resource.Namespace()}/{resourceName}]");
 
-                                if (modifiedEventType == ModifiedEventType.Finalizing)
-                                {
-                                    @event.Type = WatchEventType.Modified;
-                                }
+                                        modifiedEventType = ModifiedEventType.Other;
+                                    }
 
-                                switch (@event.Type)
-                                {
-                                    case WatchEventType.Added:
+                                    if (modifiedEventType == ModifiedEventType.Finalizing)
+                                    {
+                                        @event.Type = WatchEventType.Modified;
+                                    }
 
-                                        try
-                                        {
-                                            metrics.ReconcileCounter?.Inc();
-                                            
-                                            if (options.AutoRegisterFinalizers)
+                                    switch (@event.Type)
+                                    {
+                                        case WatchEventType.Added:
+
+                                            try
                                             {
-                                                logger?.LogInformationEx(() => $"Registering finalizers for resource [{resource.Kind}/{resource.Namespace()}/{resourceName}]");
-                                                
-                                                await finalizerManager.RegisterAllFinalizersAsync(resource);
-                                            }
+                                                metrics.ReconcileEventsTotal?.Inc();
 
-                                            result = await CreateController(scope.ServiceProvider).ReconcileAsync(resource);
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            metrics.ReconcileErrorCounter.Inc();
-                                            logger?.LogErrorEx(() => $"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Retrying... Attempt [{@event.Attempt}]");
-
-                                            if (@event.Attempt < options.ErrorMaxRetryCount)
-                                            {
-                                                @event.Attempt += 1;
-                                                resourceCache.Remove(resource);
-                                                await eventQueue.RequeueAsync(@event, watchEventType: WatchEventType.Modified);
-                                                return;
-                                            }
-                                        }
-
-                                        break;
-
-                                    case WatchEventType.Deleted:
-
-                                        try
-                                        {
-                                            metrics.DeleteCounter?.Inc();
-                                            await CreateController(scope.ServiceProvider).DeletedAsync(resource);
-
-                                            resourceCache.Remove(resource);
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            metrics.DeleteErrorCounter?.Inc();
-                                            logger?.LogErrorEx(e);
-                                        }
-
-                                        break;
-
-                                    case WatchEventType.Modified:
-
-                                        switch (modifiedEventType)
-                                        {
-                                            case ModifiedEventType.Other:
-
-                                                try
+                                                if (options.AutoRegisterFinalizers)
                                                 {
-                                                    metrics.ReconcileCounter?.Inc();
+                                                    logger?.LogInformationEx(() => $"Registering finalizers for resource [{resource.Kind}/{resource.Namespace()}/{resourceName}]");
 
+                                                    await finalizerManager.RegisterAllFinalizersAsync(resource);
+                                                }
+
+                                                using (metrics.ReconcileTimeSeconds.NewTimer())
+                                                {
                                                     result = await CreateController(scope.ServiceProvider).ReconcileAsync(resource);
                                                 }
-                                                catch (Exception e)
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                metrics.ReconcileErrorsTotal.Inc();
+                                                logger?.LogErrorEx(() => $"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Retrying... Attempt [{@event.Attempt}]");
+
+                                                if (@event.Attempt < options.ErrorMaxRetryCount)
                                                 {
-                                                    metrics.ReconcileErrorCounter?.Inc();
-                                                    logger?.LogErrorEx(e);
-
-                                                    if (@event.Attempt < options.ErrorMaxRetryCount)
-                                                    {
-                                                        logger?.LogErrorEx(() => $"Event type [{modifiedEventType}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Retrying... Attempt [{@event.Attempt}]");
-
-                                                        @event.Attempt += 1;
-                                                        resourceCache.Remove(resource);
-                                                        await eventQueue.RequeueAsync(@event, watchEventType: WatchEventType.Modified);
-                                                        return;
-                                                    }
-                                                }
-                                                break;
-
-                                            case ModifiedEventType.Finalizing:
-
-                                                try
-                                                {
-                                                    metrics.FinalizeCounter?.Inc();
-
-                                                    if (!resourceCache.IsFinalizing(resource))
-                                                    {
-                                                        resourceCache.AddFinalizer(resource);
-
-                                                        await finalizerManager.FinalizeAsync(resource, scope);
-                                                    }
-
-                                                    resourceCache.RemoveFinalizer(resource);
-                                                }
-                                                catch (Exception e)
-                                                {
-                                                    metrics.FinalizeErrorCounter?.Inc();
-                                                    logger?.LogErrorEx(e);
-
-                                                    resourceCache.RemoveFinalizer(resource);
-
-                                                    if (@event.Attempt < options.ErrorMaxRetryCount)
-                                                    {
-                                                        logger?.LogErrorEx(() => $"Event type [{modifiedEventType}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Retrying... Attempt [{@event.Attempt}]");
-
-                                                        @event.Attempt += 1;
-                                                        resourceCache.Remove(resource);
-                                                        await eventQueue.RequeueAsync(@event, watchEventType: WatchEventType.Modified);
-                                                        return;
-                                                    }
-                                                }
-                                                break;
-
-                                            case ModifiedEventType.StatusUpdate:
-
-                                                if (statusGetter == null)
-                                                {
+                                                    @event.Attempt += 1;
+                                                    resourceCache.Remove(resource);
+                                                    await eventQueue.RequeueAsync(@event, watchEventType: WatchEventType.Modified);
                                                     return;
                                                 }
+                                            }
 
-                                                var newStatus = statusGetter.Invoke(resource, Array.Empty<object>());
-                                                var newStatusJson = newStatus == null ? null : JsonSerializer.Serialize(newStatus);
+                                            break;
 
-                                                var oldStatus = statusGetter.Invoke(cachedEntity, Array.Empty<object>());
-                                                var oldStatusJson = oldStatus == null ? null : JsonSerializer.Serialize(oldStatus);
+                                        case WatchEventType.Deleted:
 
-                                                if (newStatusJson != oldStatusJson)
+                                            try
+                                            {
+                                                metrics.DeleteEventsTotal?.Inc();
+
+                                                using (metrics.DeleteTimeSeconds.NewTimer())
                                                 {
+                                                    await CreateController(scope.ServiceProvider).DeletedAsync(resource);
+                                                }
+
+                                                resourceCache.Remove(resource);
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                metrics.DeleteErrorsTotal?.Inc();
+                                                logger?.LogErrorEx(e);
+                                            }
+
+                                            break;
+
+                                        case WatchEventType.Modified:
+
+                                            switch (modifiedEventType)
+                                            {
+                                                case ModifiedEventType.Other:
+
                                                     try
                                                     {
-                                                        metrics.StatusModifyCounter?.Inc();
-                                                        await CreateController(scope.ServiceProvider).StatusModifiedAsync(resource);
+                                                        metrics.ReconcileEventsTotal?.Inc();
+
+                                                        using (metrics.ReconcileTimeSeconds.NewTimer())
+                                                        {
+                                                            result = await CreateController(scope.ServiceProvider).ReconcileAsync(resource);
+                                                        }
                                                     }
                                                     catch (Exception e)
                                                     {
-                                                        metrics.StatusModifyErrorCounter?.Inc();
+                                                        metrics.ReconcileErrorsTotal?.Inc();
                                                         logger?.LogErrorEx(e);
+
+                                                        if (@event.Attempt < options.ErrorMaxRetryCount)
+                                                        {
+                                                            logger?.LogErrorEx(() => $"Event type [{modifiedEventType}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Retrying... Attempt [{@event.Attempt}]");
+
+                                                            @event.Attempt += 1;
+                                                            resourceCache.Remove(resource);
+                                                            await eventQueue.RequeueAsync(@event, watchEventType: WatchEventType.Modified);
+                                                            return;
+                                                        }
                                                     }
-                                                }
+                                                    break;
 
-                                                break;
+                                                case ModifiedEventType.Finalizing:
 
-                                            case ModifiedEventType.FinalizerUpdate:
-                                            default:
+                                                    try
+                                                    {
+                                                        metrics.FinalizeTotal?.Inc();
 
-                                                break;
-                                        }
+                                                        if (!resourceCache.IsFinalizing(resource))
+                                                        {
+                                                            resourceCache.AddFinalizer(resource);
 
-                                        break;
+                                                            using (metrics.FinalizeTimeSeconds.NewTimer())
+                                                            {
+                                                                await finalizerManager.FinalizeAsync(resource, scope);
+                                                            }
+                                                        }
+
+                                                        resourceCache.RemoveFinalizer(resource);
+                                                    }
+                                                    catch (Exception e)
+                                                    {
+                                                        metrics.FinalizeErrorsTotal?.Inc();
+                                                        logger?.LogErrorEx(e);
+
+                                                        resourceCache.RemoveFinalizer(resource);
+
+                                                        if (@event.Attempt < options.ErrorMaxRetryCount)
+                                                        {
+                                                            logger?.LogErrorEx(() => $"Event type [{modifiedEventType}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Retrying... Attempt [{@event.Attempt}]");
+
+                                                            @event.Attempt += 1;
+                                                            resourceCache.Remove(resource);
+                                                            await eventQueue.RequeueAsync(@event, watchEventType: WatchEventType.Modified);
+                                                            return;
+                                                        }
+                                                    }
+                                                    break;
+
+                                                case ModifiedEventType.StatusUpdate:
+
+                                                    if (statusGetter == null)
+                                                    {
+                                                        return;
+                                                    }
+
+                                                    var newStatus = statusGetter.Invoke(resource, Array.Empty<object>());
+                                                    var newStatusJson = newStatus == null ? null : JsonSerializer.Serialize(newStatus);
+
+                                                    var oldStatus = statusGetter.Invoke(cachedEntity, Array.Empty<object>());
+                                                    var oldStatusJson = oldStatus == null ? null : JsonSerializer.Serialize(oldStatus);
+
+                                                    if (newStatusJson != oldStatusJson)
+                                                    {
+                                                        try
+                                                        {
+                                                            metrics.StatusModifiedTotal?.Inc();
+
+                                                            using (metrics.StatusModifiedTimeSeconds.NewTimer())
+                                                            {
+                                                                await CreateController(scope.ServiceProvider).StatusModifiedAsync(resource);
+                                                            }
+                                                        }
+                                                        catch (Exception e)
+                                                        {
+                                                            metrics.StatusModifiedErrorsTotal?.Inc();
+                                                            logger?.LogErrorEx(e);
+                                                        }
+                                                    }
+
+                                                    break;
+
+                                                case ModifiedEventType.FinalizerUpdate:
+                                                default:
+
+                                                    break;
+                                            }
+
+                                            break;
+                                    }
                                 }
                             }
+                            catch (Exception e)
+                            {
+                                logger?.LogCriticalEx(e);
+                                logger?.LogCriticalEx("Cannot recover from exception within watch loop.  Terminating process.");
+                                Environment.Exit(1);
+                            }
                         }
-                        catch (Exception e)
+
+                        if (@event.Type < WatchEventType.Deleted
+                            && modifiedEventType == ModifiedEventType.Other)
                         {
-                            logger?.LogCriticalEx(e);
-                            logger?.LogCriticalEx("Cannot recover from exception within watch loop.  Terminating process.");
-                            Environment.Exit(1);
-                        }
-                    }
-
-                    if (@event.Type < WatchEventType.Deleted
-                        && modifiedEventType == ModifiedEventType.Other)
-                    {
-                        switch (result)
-                        {
-                            case null:
-                                logger?.LogInformationEx(() =>
-                                    $@"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] successfully reconciled. Requeue not requested.");
-                                return;
-                            case RequeueEventResult requeue:
-                                var specificQueueTypeRequested = requeue.EventType.HasValue;
-                                var requestedQueueType = requeue.EventType ?? WatchEventType.Modified;
-
-                                if (specificQueueTypeRequested)
-                                {
+                            switch (result)
+                            {
+                                case null:
                                     logger?.LogInformationEx(() =>
-                                            $@"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] successfully reconciled. Requeue requested as type [{requestedQueueType}] with delay [{requeue}].");
-                                }
-                                else
-                                {
-                                    logger?.LogInformationEx(() =>
-                                        $@"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] successfully reconciled. Requeue requested with delay [{requeue}].");
-                                }
+                                        $@"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] successfully reconciled. Requeue not requested.");
+                                    return;
+                                case RequeueEventResult requeue:
+                                    var specificQueueTypeRequested = requeue.EventType.HasValue;
+                                    var requestedQueueType = requeue.EventType ?? WatchEventType.Modified;
 
-                                resourceCache.Remove(resource);
-                                await eventQueue.RequeueAsync(@event, requeue.RequeueDelay, requestedQueueType);
-                                break;
+                                    if (specificQueueTypeRequested)
+                                    {
+                                        logger?.LogInformationEx(() =>
+                                                $@"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] successfully reconciled. Requeue requested as type [{requestedQueueType}] with delay [{requeue}].");
+                                    }
+                                    else
+                                    {
+                                        logger?.LogInformationEx(() =>
+                                            $@"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] successfully reconciled. Requeue requested with delay [{requeue}].");
+                                    }
+
+                                    resourceCache.Remove(resource);
+                                    await eventQueue.RequeueAsync(@event, requeue.RequeueDelay, requestedQueueType);
+                                    break;
+                            }
                         }
                     }
                 };
@@ -911,78 +965,79 @@ namespace Neon.Kube.Operator.ResourceManager
                 async (WatchEvent<TEntity> @event) =>
                 {
                     await SyncContext.Clear;
-
-                    var resource = @event.Value;
-                    var resourceName = resource.Metadata.Name;
-
-                    resourceCache.Compare(resource, out var modifiedEventType);
-
-                    logger?.LogDebugEx(() => $"Resource {resource.Kind} {resource.Namespace()}/{resource.Name()} received {@event.Type}/{modifiedEventType} event.");
-
-                    var filterMethod = controllerType.GetMethod("Filter", BindingFlags.Static | BindingFlags.Public);
-
-                    if (filterMethod != null)
+                    using (var activity = TelemetryHub.ActivitySource?.StartActivity("enqueue-event"))
                     {
-                        if (!(bool)filterMethod.Invoke(null, new object[] { resource }))
+                        var resource = @event.Value;
+                        var resourceName = resource.Metadata.Name;
+
+                        resourceCache.Compare(resource, out var modifiedEventType);
+
+                        logger?.LogDebugEx(() => $"Resource {resource.Kind} {resource.Namespace()}/{resource.Name()} received {@event.Type}/{modifiedEventType} event.");
+
+                        using (var scope = serviceProvider.CreateScope())
                         {
-                            return;
-                        }
-                    }
-
-                    switch (@event.Type)
-                    {
-                        case WatchEventType.Added:
-                        case WatchEventType.Deleted:
-
-                            await eventQueue.DequeueAsync(@event);
-                            await eventQueue.EnqueueAsync(@event);
-
-                            break;
-
-                        case WatchEventType.Modified:
-
-                            if (modifiedEventType == ModifiedEventType.NoChanges)
+                            if (!CreateController(scope.ServiceProvider).Filter.Invoke(resource))
                             {
                                 return;
                             }
 
-                            await eventQueue.DequeueAsync(@event);
-                            await eventQueue.EnqueueAsync(@event);
+                        }
 
-                            break;
+                        switch (@event.Type)
+                        {
+                            case WatchEventType.Added:
+                            case WatchEventType.Deleted:
 
-                        case WatchEventType.Bookmark:
+                                await eventQueue.DequeueAsync(@event);
+                                await eventQueue.EnqueueAsync(@event);
 
-                            break;  // We don't care about these.
+                                break;
 
-                        case WatchEventType.Error:
+                            case WatchEventType.Modified:
 
-                            // I believe we're only going to see this for extreme scenarios, like:
-                            //
-                            //      1. The CRD we're watching was deleted and recreated.
-                            //      2. The watcher is so far behind that part of the
-                            //         history is no longer available.
-                            //
-                            // We're going to log this and terminate the application, expecting
-                            // that Kubernetes will reschedule it so we can start over.
+                                if (modifiedEventType == ModifiedEventType.NoChanges)
+                                {
+                                    return;
+                                }
 
-                            var stub = new TEntity();
+                                await eventQueue.DequeueAsync(@event);
+                                await eventQueue.EnqueueAsync(@event);
 
-                            if (!string.IsNullOrEmpty(resource.Namespace()))
-                            {
-                                logger?.LogCriticalEx(() => $"Critical error watching: [namespace={resource.Namespace()}] {stub.ApiGroupAndVersion}/{stub.Kind}");
-                            }
-                            else
-                            {
-                                logger?.LogCriticalEx(() => $"Critical error watching: {stub.ApiGroupAndVersion}/{stub.Kind}");
-                            }
+                                break;
 
-                            logger?.LogCriticalEx("Terminating the pod so Kubernetes can reschedule it and we can restart the watch.");
-                            Environment.Exit(1);
-                            break;
+                            case WatchEventType.Bookmark:
 
-                        default:
-                            break;
+                                break;  // We don't care about these.
+
+                            case WatchEventType.Error:
+
+                                // I believe we're only going to see this for extreme scenarios, like:
+                                //
+                                //      1. The CRD we're watching was deleted and recreated.
+                                //      2. The watcher is so far behind that part of the
+                                //         history is no longer available.
+                                //
+                                // We're going to log this and terminate the application, expecting
+                                // that Kubernetes will reschedule it so we can start over.
+
+                                var stub = new TEntity();
+
+                                if (!string.IsNullOrEmpty(resource.Namespace()))
+                                {
+                                    logger?.LogCriticalEx(() => $"Critical error watching: [namespace={resource.Namespace()}] {stub.ApiGroupAndVersion}/{stub.Kind}");
+                                }
+                                else
+                                {
+                                    logger?.LogCriticalEx(() => $"Critical error watching: {stub.ApiGroupAndVersion}/{stub.Kind}");
+                                }
+
+                                logger?.LogCriticalEx("Terminating the pod so Kubernetes can reschedule it and we can restart the watch.");
+                                Environment.Exit(1);
+                                break;
+
+                            default:
+                                break;
+                        }
                     }
                 };
 
@@ -991,41 +1046,24 @@ namespace Neon.Kube.Operator.ResourceManager
                 {
                     await SyncContext.Clear;
 
-                    var resource = (IKubernetesObject<V1ObjectMeta>)@event.Value;
-                    var resourceName = resource.Metadata.Name;
-
-                    dependentResourceCache.Compare(resource, out var modifiedEventType);
-
-                    if (resource.Metadata.OwnerReferences.Any(r => resourceCache.Get(r.Uid, out _)))
+                    using (var activity = TelemetryHub.ActivitySource?.StartActivity("enqueue-dependent"))
                     {
-                        dependentResourceCache.Upsert(resource);
-                    }
+                        var resource = (IKubernetesObject<V1ObjectMeta>)@event.Value;
+                        var resourceName = resource.Metadata.Name;
 
-                    logger?.LogDebugEx(() => $"Dependent resource {resource.Kind} {resource.Namespace()}/{resource.Name()} received {@event.Type}/{modifiedEventType} event.");
+                        dependentResourceCache.Compare(resource, out var modifiedEventType);
 
-                    switch (@event.Type)
-                    {
-                        case WatchEventType.Deleted:
+                        if (resource.Metadata.OwnerReferences.Any(r => resourceCache.Get(r.Uid, out _)))
+                        {
+                            dependentResourceCache.Upsert(resource);
+                        }
 
-                            foreach (var ownerRef in resource.Metadata.OwnerReferences)
-                            {
-                                if (resourceCache.Get(ownerRef.Uid, out TEntity owner))
-                                {
-                                    logger?.LogDebugEx(() => $"Dependent resource {resource.Kind} {resource.Namespace()}/{resource.Name()} queuing new event for {typeof(TEntity)} {owner.Namespace()}/{owner.Name()}.");
-                                    
-                                    var newWatchEvent = new WatchEvent<TEntity>(WatchEventType.Modified, owner, force: true);
+                        logger?.LogDebugEx(() => $"Dependent resource {resource.Kind} {resource.Namespace()}/{resource.Name()} received {@event.Type}/{modifiedEventType} event.");
 
-                                    await eventQueue.DequeueAsync(newWatchEvent);
-                                    await eventQueue.EnqueueAsync(newWatchEvent);
-                                }
-                            }
+                        switch (@event.Type)
+                        {
+                            case WatchEventType.Deleted:
 
-                            break;
-
-                        case WatchEventType.Modified:
-
-                            if (modifiedEventType == ModifiedEventType.Other)
-                            {
                                 foreach (var ownerRef in resource.Metadata.OwnerReferences)
                                 {
                                     if (resourceCache.Get(ownerRef.Uid, out TEntity owner))
@@ -1038,103 +1076,126 @@ namespace Neon.Kube.Operator.ResourceManager
                                         await eventQueue.EnqueueAsync(newWatchEvent);
                                     }
                                 }
-                            }
 
-                            break;
+                                break;
 
-                        case WatchEventType.Bookmark:
+                            case WatchEventType.Modified:
 
-                            break;  // We don't care about these.
+                                if (modifiedEventType == ModifiedEventType.Other)
+                                {
+                                    foreach (var ownerRef in resource.Metadata.OwnerReferences)
+                                    {
+                                        if (resourceCache.Get(ownerRef.Uid, out TEntity owner))
+                                        {
+                                            logger?.LogDebugEx(() => $"Dependent resource {resource.Kind} {resource.Namespace()}/{resource.Name()} queuing new event for {typeof(TEntity)} {owner.Namespace()}/{owner.Name()}.");
 
-                        case WatchEventType.Error:
+                                            var newWatchEvent = new WatchEvent<TEntity>(WatchEventType.Modified, owner, force: true);
 
-                            // I believe we're only going to see this for extreme scenarios, like:
-                            //
-                            //      1. The CRD we're watching was deleted and recreated.
-                            //      2. The watcher is so far behind that part of the
-                            //         history is no longer available.
-                            //
-                            // We're going to log this and terminate the application, expecting
-                            // that Kubernetes will reschedule it so we can start over.
+                                            await eventQueue.DequeueAsync(newWatchEvent);
+                                            await eventQueue.EnqueueAsync(newWatchEvent);
+                                        }
+                                    }
+                                }
 
-                            var stub = new TEntity();
+                                break;
 
-                            if (!string.IsNullOrEmpty(resource.Namespace()))
-                            {
-                                logger?.LogCriticalEx(() => $"Critical error watching: [namespace={resource.Namespace()}] {stub.ApiGroupAndVersion}/{stub.Kind}");
-                            }
-                            else
-                            {
-                                logger?.LogCriticalEx(() => $"Critical error watching: {stub.ApiGroupAndVersion}/{stub.Kind}");
-                            }
+                            case WatchEventType.Bookmark:
 
-                            logger?.LogCriticalEx("Terminating the pod so Kubernetes can reschedule it and we can restart the watch.");
-                            Environment.Exit(1);
-                            break;
+                                break;  // We don't care about these.
 
-                        default:
-                            break;
+                            case WatchEventType.Error:
+
+                                // I believe we're only going to see this for extreme scenarios, like:
+                                //
+                                //      1. The CRD we're watching was deleted and recreated.
+                                //      2. The watcher is so far behind that part of the
+                                //         history is no longer available.
+                                //
+                                // We're going to log this and terminate the application, expecting
+                                // that Kubernetes will reschedule it so we can start over.
+
+                                var stub = new TEntity();
+
+                                if (!string.IsNullOrEmpty(resource.Namespace()))
+                                {
+                                    logger?.LogCriticalEx(() => $"Critical error watching: [namespace={resource.Namespace()}] {stub.ApiGroupAndVersion}/{stub.Kind}");
+                                }
+                                else
+                                {
+                                    logger?.LogCriticalEx(() => $"Critical error watching: {stub.ApiGroupAndVersion}/{stub.Kind}");
+                                }
+
+                                logger?.LogCriticalEx("Terminating the pod so Kubernetes can reschedule it and we can restart the watch.");
+                                Environment.Exit(1);
+                                break;
+
+                            default:
+                                break;
+                        }
                     }
                 };
 
-            this.eventQueue = new EventQueue<TEntity>(k8s, options, actionAsync);
+            this.eventQueue = new EventQueue<TEntity>(k8s, options, actionAsync, serviceProvider.GetRequiredService<EventQueueMetrics<TEntity>>());
 
             //-----------------------------------------------------------------
             // Start the watcher.
 
-            try
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity("start-watchers"))
             {
-                var tasks = new List<Task>();
-
-                if (this.resourceNamespaces != null
-                    && crdCache.Get(typeof(TEntity).GetKubernetesCrdName())?.Spec.Scope != "Cluster")
+                try
                 {
-                    foreach (var ns in resourceNamespaces)
-                    {
-                        tasks.Add(k8s.WatchAsync<TEntity>(enqueueAsync, namespaceParameter: ns, cancellationToken: cancellationToken));
-                    }
-                }
-                else
-                {
-                    tasks.Add(k8s.WatchAsync<TEntity>(enqueueAsync, cancellationToken: cancellationToken));
-                }
-
-                foreach (var dependent in options.DependentResources)
-                {
-                    var watchMethod = typeof(KubernetesExtensions).GetMethod("WatchAsync").MakeGenericMethod(dependent.GetEntityType());
-                    var args = new object[watchMethod.GetParameters().Count()];
-
-                    args[0] = k8s;
-                    args[1] = enqueueDependentAsync;
-                    args[8] = cancellationToken;
+                    var tasks = new List<Task>();
 
                     if (this.resourceNamespaces != null
-                        && crdCache.Get(dependent.GetEntityType().GetKubernetesCrdName())?.Spec.Scope != "Cluster")
+                        && crdCache.Get(typeof(TEntity).GetKubernetesCrdName())?.Spec.Scope != "Cluster")
                     {
-                        foreach (var @namespace in this.resourceNamespaces)
+                        foreach (var ns in resourceNamespaces)
                         {
-                            args[2] = @namespace;
-
-                            tasks.Add((Task)watchMethod.Invoke(k8s, args));
+                            tasks.Add(k8s.WatchAsync<TEntity>(enqueueAsync, namespaceParameter: ns, cancellationToken: cancellationToken));
                         }
                     }
                     else
                     {
-                        tasks.Add((Task)watchMethod.Invoke(k8s, args));
+                        tasks.Add(k8s.WatchAsync<TEntity>(enqueueAsync, cancellationToken: cancellationToken));
                     }
+
+                    foreach (var dependent in options.DependentResources)
+                    {
+                        var watchMethod = typeof(KubernetesExtensions).GetMethod("WatchAsync").MakeGenericMethod(dependent.GetEntityType());
+                        var args = new object[watchMethod.GetParameters().Count()];
+
+                        args[0] = k8s;
+                        args[1] = enqueueDependentAsync;
+                        args[8] = cancellationToken;
+
+                        if (this.resourceNamespaces != null
+                            && crdCache.Get(dependent.GetEntityType().GetKubernetesCrdName())?.Spec.Scope != "Cluster")
+                        {
+                            foreach (var @namespace in this.resourceNamespaces)
+                            {
+                                args[2] = @namespace;
+
+                                tasks.Add((Task)watchMethod.Invoke(k8s, args));
+                            }
+                        }
+                        else
+                        {
+                            tasks.Add((Task)watchMethod.Invoke(k8s, args));
+                        }
+                    }
+
+                    await NeonHelper.WaitAllAsync(tasks);
                 }
+                catch (OperationCanceledException)
+                {
+                    // This is thrown when the watcher is stopped due the operator being demoted.
 
-                await NeonHelper.WaitAllAsync(tasks);
-            }
-            catch (OperationCanceledException)
-            {
-                // This is thrown when the watcher is stopped due the operator being demoted.
-
-                return;
-            }
-            catch (HttpOperationException)
-            {
-                return;
+                    return;
+                }
+                catch (HttpOperationException)
+                {
+                    return;
+                }
             }
         }
     }

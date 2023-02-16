@@ -45,25 +45,135 @@ namespace Neon.Kube.Operator.ResourceManager
     /// <summary>
     /// Specifies metrics for a resource manager.  See the <see cref="ResourceManager{TResource, TController}"/>.
     /// </summary>
-    public class ResourceManagerMetrics<TEntity, TController>
+    internal class ResourceManagerMetrics<TEntity, TController>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         where TController : IResourceController<TEntity>
     {
-        private static string metricsPrefix;
+        private const string prefix = "operator_controller";
+
+        private static readonly string[] LabelNames = { "operator", "controller", "kind", "group", "version", };
 
         /// <summary>
         /// Default constructor.
         /// </summary>
         static ResourceManagerMetrics()
         {
-            metricsPrefix = $"{typeof(TController).Name}_{typeof(TEntity).Name}".ToLower();
         }
 
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ResourceManagerMetrics()
+        public ResourceManagerMetrics(
+            OperatorSettings operatorSettings)
         {
+            var crdMeta     = typeof(TEntity).GetKubernetesTypeMetadata();
+            var labelValues = new string[] { operatorSettings.Name, typeof(TController).Name.ToLower(), crdMeta.PluralName, crdMeta.Group, crdMeta.ApiVersion };
+
+            IdleCounter = Metrics
+                .CreateCounter(
+                    name: $"{prefix}_idle",
+                    help: "IDLE events handled by the controller.",
+                    labelNames: LabelNames)
+                .WithLabels(labelValues);
+
+            ReconcileEventsTotal = Metrics
+                .CreateCounter(
+                    name: $"{prefix}_reconcile",
+                    help: "Total number of reconciliations per controller.",
+                    labelNames: LabelNames)
+                .WithLabels(labelValues);
+
+            DeleteEventsTotal = Metrics
+                .CreateCounter(
+                    name: $"{prefix}_delete",
+                    help: "Total number of delete events per controller.",
+                    labelNames: LabelNames)
+                .WithLabels(labelValues);
+
+            StatusModifiedTotal = Metrics
+                .CreateCounter(
+                    name: $"{prefix}_statusmodify",
+                    help: "Total number of status updates handled by the controller.",
+                    labelNames: LabelNames)
+                .WithLabels(labelValues);
+
+            FinalizeTotal = Metrics
+                .CreateCounter(
+                    name: $"{prefix}_finalize",
+                    help: "Total number of finalize events handled by the controller.",
+                    labelNames: LabelNames)
+                .WithLabels(labelValues);
+
+            IdleErrorsTotal = Metrics
+                .CreateCounter(
+                    name: $"{prefix}_idle",
+                    help: "The number of errors that occured during idle.",
+                    labelNames: LabelNames)
+                .WithLabels(labelValues);
+
+            ReconcileErrorsTotal = Metrics
+                .CreateCounter(
+                    name: $"{prefix}_reconcile_errors",
+                    help: "The number of exceptions thrown while handling reconcile events.",
+                    labelNames: LabelNames)
+                .WithLabels(labelValues);
+
+            DeleteErrorsTotal = Metrics
+                .CreateCounter(
+                    name: $"{prefix}_delete_errors",
+                    help: "The number of exceptions thrown while handling delete events.",
+                    labelNames: LabelNames)
+                .WithLabels(labelValues);
+
+            StatusModifiedErrorsTotal = Metrics
+                .CreateCounter(
+                    name: $"{prefix}_statusmodified_errors",
+                    help: "The number of exceptions thrown while handling status updates.",
+                    labelNames: LabelNames)
+                .WithLabels(labelValues);
+
+            FinalizeErrorsTotal = Metrics
+                .CreateCounter(
+                    name: $"{prefix}_finalize_errors",
+                    help: "The number of exceptions thrown while handling finalize events.",
+                    labelNames: LabelNames)
+                .WithLabels(labelValues);
+
+            IdleTimeSeconds = Metrics
+                .CreateHistogram(
+                    name: $"{prefix}_idle_time_seconds",
+                    help: "How long in seconds the operator spent processing idle requests.",
+                    labelNames: LabelNames)
+                .WithLabels(labelValues);
+
+            ReconcileTimeSeconds = Metrics
+                .CreateHistogram(
+                    name: $"{prefix}_reconcile_time_seconds",
+                    help: "How long in seconds the operator spent reconciling resources.",
+                    labelNames: LabelNames)
+                .WithLabels(labelValues);
+
+            DeleteTimeSeconds = Metrics
+                .CreateHistogram(
+                    name: $"{prefix}_delete_time_seconds",
+                    help: "How long in seconds the operator spent deleting resources.",
+                    labelNames: LabelNames)
+                .WithLabels(labelValues);
+
+            StatusModifiedTimeSeconds = Metrics
+                .CreateHistogram(
+                    name: $"{prefix}_statusmodified_time_seconds",
+                    help: "How long in seconds the operator spent processing status updated requests.",
+                    labelNames: LabelNames)
+                .WithLabels(labelValues);
+
+            FinalizeTimeSeconds = Metrics
+                .CreateHistogram(
+                    name: $"{prefix}_finalize_time_seconds",
+                    help: "How long in seconds the operator spent finalizing resources.",
+                    labelNames: LabelNames)
+                .WithLabels(labelValues);
+
         }
 
         /// <summary>
@@ -80,7 +190,7 @@ namespace Neon.Kube.Operator.ResourceManager
         /// This may also be set to <c>null</c> to disable counting.
         /// </note>
         /// </summary>
-        public Counter IdleCounter { get; set; } = Metrics.CreateCounter($"{metricsPrefix}_idle", "IDLE events handled by the controller.");
+        public Counter.Child IdleCounter { get; private set; }
 
         /// <summary>
         /// <para>
@@ -96,7 +206,7 @@ namespace Neon.Kube.Operator.ResourceManager
         /// This may also be set to <c>null</c> to disable counting.
         /// </note>
         /// </summary>
-        public Counter ReconcileCounter { get; set; } = Metrics.CreateCounter($"{metricsPrefix}_reconcile", "RECONCILE events handled by the controller.");
+        public Counter.Child ReconcileEventsTotal { get; set; }
 
         /// <summary>
         /// <para>
@@ -112,7 +222,7 @@ namespace Neon.Kube.Operator.ResourceManager
         /// This may also be set to <c>null</c> to disable counting.
         /// </note>
         /// </summary>
-        public Counter DeleteCounter { get; set; } = Metrics.CreateCounter($"{metricsPrefix}_delete", "DELETE events handled by the controller.");
+        public Counter.Child DeleteEventsTotal { get; set; }
 
         /// <summary>
         /// <para>
@@ -128,7 +238,7 @@ namespace Neon.Kube.Operator.ResourceManager
         /// This may also be set to <c>null</c> to disable counting.
         /// </note>
         /// </summary>
-        public Counter StatusModifyCounter { get; set; } = Metrics.CreateCounter($"{metricsPrefix}_statusmodify", "STATUS-MODIFY events handled by the controller.");
+        public Counter.Child StatusModifiedTotal { get; set; }
 
         /// <summary>
         /// <para>
@@ -144,7 +254,7 @@ namespace Neon.Kube.Operator.ResourceManager
         /// This may also be set to <c>null</c> to disable counting.
         /// </note>
         /// </summary>
-        public Counter FinalizeCounter { get; set; } = Metrics.CreateCounter($"{metricsPrefix}_finalize", "FINALIZE events handled by the controller.");
+        public Counter.Child FinalizeTotal { get; set; }
 
         /// <summary>
         /// <para>
@@ -160,7 +270,7 @@ namespace Neon.Kube.Operator.ResourceManager
         /// This may also be set to <c>null</c> to disable counting.
         /// </note>
         /// </summary>
-        public Counter IdleErrorCounter { get; set; } = Metrics.CreateCounter($"{metricsPrefix}_idle", "IDLE events handled by the controller.");
+        public Counter.Child IdleErrorsTotal { get; set; }
 
         /// <summary>
         /// <para>
@@ -173,7 +283,7 @@ namespace Neon.Kube.Operator.ResourceManager
         /// to each loop.
         /// </para>
         /// </summary>
-        public Counter ReconcileErrorCounter { get; set; } = Metrics.CreateCounter($"{metricsPrefix}_reconcile_errors", "Exceptions thrown while handling RECONCILE events.");
+        public Counter.Child ReconcileErrorsTotal { get; set; }
 
         /// <summary>
         /// <para>
@@ -186,7 +296,7 @@ namespace Neon.Kube.Operator.ResourceManager
         /// to each loop.
         /// </para>
         /// </summary>
-        public Counter DeleteErrorCounter { get; set; } = Metrics.CreateCounter($"{metricsPrefix}_delete_errors", "Exceptions thrown while handling DELETE events.");
+        public Counter.Child DeleteErrorsTotal { get; set; }
 
         /// <summary>
         /// <para>
@@ -199,7 +309,7 @@ namespace Neon.Kube.Operator.ResourceManager
         /// to each loop.
         /// </para>
         /// </summary>
-        public Counter StatusModifyErrorCounter { get; set; } = Metrics.CreateCounter($"{metricsPrefix}_statusmodified_errors", "Exceptions thrown while handling STATUS-MODIFIED events.");
+        public Counter.Child StatusModifiedErrorsTotal { get; set; }
 
         /// <summary>
         /// <para>
@@ -212,6 +322,41 @@ namespace Neon.Kube.Operator.ResourceManager
         /// to each loop.
         /// </para>
         /// </summary>
-        public Counter FinalizeErrorCounter { get; set; } = Metrics.CreateCounter($"{metricsPrefix}_finalize_errors", "Exceptions thrown while handling FINALIZING events.");
+        public Counter.Child FinalizeErrorsTotal { get; set; }
+
+        /// <summary>
+        /// <para>
+        /// The time taken for IDLE calls.
+        /// </para>
+        /// </summary>
+        public Histogram.Child IdleTimeSeconds { get; set; }
+
+        /// <summary>
+        /// <para>
+        /// The time taken for RECONCILE calls.
+        /// </para>
+        /// </summary>
+        public Histogram.Child ReconcileTimeSeconds { get; set; }
+
+        /// <summary>
+        /// <para>
+        /// The time taken for DELETE calls.
+        /// </para>
+        /// </summary>
+        public Histogram.Child DeleteTimeSeconds { get; set; }
+
+        /// <summary>
+        /// <para>
+        /// The time taken for STATUS-MODIFIED calls.
+        /// </para>
+        /// </summary>
+        public Histogram.Child StatusModifiedTimeSeconds { get; set; }
+
+        /// <summary>
+        /// <para>
+        /// The time taken for FINALIZE calls.
+        /// </para>
+        /// </summary>
+        public Histogram.Child FinalizeTimeSeconds { get; set; }
     }
 }

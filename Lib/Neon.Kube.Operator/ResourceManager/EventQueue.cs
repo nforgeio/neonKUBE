@@ -37,6 +37,7 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Operator.EventQueue;
 using Neon.Tasks;
 
 using k8s;
@@ -44,26 +45,19 @@ using k8s.Autorest;
 using k8s.Models;
 
 using Prometheus;
-using OpenTelemetry.Resources;
 
 namespace Neon.Kube.Operator.ResourceManager
 {
     internal class EventQueue<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
-        /// <summary>
-        /// The number of items currently in the queue for the given entity.
-        /// </summary>
-        public static readonly Gauge QueueSize = Metrics.CreateGauge(
-            $"neonkubeoperator_eventqueue_{nameof(TEntity).ToLower().Split('.').Last()}_items_current",
-            "The number of items currently in the queue for the given entity."
-            );
-
         private readonly IKubernetes                                                            k8s;
         private readonly ILogger<EventQueue<TEntity>>                                           logger;
         private readonly ResourceManagerOptions                                                 options;
         private readonly ConcurrentDictionary<WatchEvent<TEntity>, CancellationTokenSource>     queue;
+        private readonly ConcurrentDictionary<string, DateTime>                                 currentEvents;
         private readonly Func<WatchEvent<TEntity>, Task>                                        eventHandler;
+        private readonly EventQueueMetrics<TEntity>                                             metrics;
 
         /// <summary>
         /// Constructor.
@@ -71,18 +65,35 @@ namespace Neon.Kube.Operator.ResourceManager
         /// <param name="k8s"></param>
         /// <param name="options"></param>
         /// <param name="eventHandler"></param>
+        /// <param name="metrics"></param>
         /// <param name="loggerFactory"></param>
         public EventQueue(
             IKubernetes                         k8s,
             ResourceManagerOptions              options,
             Func<WatchEvent<TEntity>, Task>     eventHandler,
+            EventQueueMetrics<TEntity>          metrics,
             ILoggerFactory                      loggerFactory = null)
         {
-            this.k8s          = k8s;
-            this.options      = options;
-            this.eventHandler = eventHandler;
-            this.logger       = loggerFactory?.CreateLogger<EventQueue<TEntity>>();
-            this.queue        = new ConcurrentDictionary<WatchEvent<TEntity>, CancellationTokenSource>();
+            this.k8s           = k8s;
+            this.options       = options;
+            this.eventHandler  = eventHandler;
+            this.metrics       = metrics;
+            this.logger        = loggerFactory?.CreateLogger<EventQueue<TEntity>>();
+            this.queue         = new ConcurrentDictionary<WatchEvent<TEntity>, CancellationTokenSource>();
+            this.currentEvents = new ConcurrentDictionary<string, DateTime>();
+
+            Metrics.DefaultRegistry.AddBeforeCollectCallback(async (cancel) =>
+            {
+                await SyncContext.Clear;
+
+                var values = currentEvents.Values.Select(v => (DateTime.UtcNow - v).TotalSeconds);
+                metrics.UnfinishedWorkSeconds.IncTo(values.Sum());
+
+                if (values.Count() > 0)
+                {
+                    metrics.LongestRunningProcessorSeconds.IncTo(values.Max());
+                }
+            });
         }
 
         /// <summary>
@@ -146,7 +157,10 @@ namespace Neon.Kube.Operator.ResourceManager
 
             if (queue.TryAdd(@event, cts))
             {
-                QueueSize?.Inc();
+                metrics.AddsTotal.Inc();
+                metrics.Depth.IncTo(queue.Count);
+
+                currentEvents.TryAdd(@event.Value.Uid(), DateTime.UtcNow);
             }
 
             _ = QueueAsync(@event, delay.Value, cts.Token);
@@ -206,7 +220,7 @@ namespace Neon.Kube.Operator.ResourceManager
 
                 if (queue.TryRemove(queuedEvent, out _))
                 {
-                    QueueSize?.Dec();
+                    metrics.Depth.Dec();
                 }
             }
         }
@@ -226,7 +240,14 @@ namespace Neon.Kube.Operator.ResourceManager
 
                 logger?.LogDebugEx(() => $"Executing event [{@event.Type}] for resource [{@event.Value.Kind}/{@event.Value.Name()}]");
 
-                await eventHandler?.Invoke(@event);
+                metrics.QueueDurationSeconds.Observe((DateTime.UtcNow - @event.CreatedAt).TotalSeconds);
+
+                using (var timer = metrics.WorkDurationSeconds.NewTimer())
+                {
+                    await eventHandler?.Invoke(@event);
+                }
+
+                currentEvents.Remove(@event.Value.Uid(), out _);
 
                 logger?.LogDebugEx(() => $"Event [{@event.Type}] executed for resource [{@event.Value.Kind}/{@event.Value.Name()}]");
             }

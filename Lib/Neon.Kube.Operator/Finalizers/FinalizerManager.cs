@@ -17,8 +17,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -27,55 +27,74 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.Kube.Operator.Attributes;
 using Neon.Kube.Operator.Builder;
 using Neon.Tasks;
 
 using k8s;
 using k8s.Models;
-using Neon.Kube.Operator.Cache;
-using System.Reflection;
-using Neon.Kube.Operator.Attributes;
+
+using Prometheus;
 
 namespace Neon.Kube.Operator.Finalizer
 {
     internal class FinalizerManager<TEntity> : IFinalizerManager<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
     {
-        private readonly ILogger<FinalizerManager<TEntity>> logger;
-        private readonly IKubernetes                        client;
-        private readonly IFinalizerBuilder                  finalizerInstanceBuilder;
-        private readonly IServiceProvider                   serviceProvider;
+        private readonly ILogger<FinalizerManager<TEntity>>    logger;
+        private readonly IKubernetes                           client;
+        private readonly IFinalizerBuilder                     finalizerInstanceBuilder;
+        private readonly IServiceProvider                      serviceProvider;
+        private readonly Dictionary<string, IFinalizerMetrics> metrics;
+        private readonly OperatorSettings                      operatorSettings;
         
         public FinalizerManager(
-            IKubernetes       client,
-            ComponentRegister componentRegister,
-            IFinalizerBuilder finalizerInstanceBuilder,
-            IServiceProvider  serviceProvider,
-            ILoggerFactory    loggerFactory = null)
+            IKubernetes               client,
+            ComponentRegister         componentRegister,
+            IFinalizerBuilder         finalizerInstanceBuilder,
+            IServiceProvider          serviceProvider,
+            OperatorSettings          operatorSettings,
+            ILoggerFactory            loggerFactory = null)
         {
             this.client                   = client;
             this.finalizerInstanceBuilder = finalizerInstanceBuilder;
             this.serviceProvider          = serviceProvider; 
+            this.operatorSettings         = operatorSettings;
             this.logger                   = loggerFactory?.CreateLogger<FinalizerManager<TEntity>>();
+            this.metrics                  = new Dictionary<string, IFinalizerMetrics>();
+            
+            foreach (var finalizer in finalizerInstanceBuilder.BuildFinalizers<TEntity>(serviceProvider.CreateScope().ServiceProvider))
+            {
+                var finalizerMetrics = new FinalizerMetrics<TEntity>(operatorSettings, finalizer.GetType());
+                metrics.Add(finalizer.Identifier, finalizerMetrics);
+            }
         }
 
         /// <inheritdoc/>
         public Task RegisterFinalizerAsync<TFinalizer>(TEntity entity)
             where TFinalizer : IResourceFinalizer<TEntity>
-            => RegisterFinalizerInternalAsync(entity, finalizerInstanceBuilder.BuildFinalizer<TEntity, TFinalizer>(serviceProvider.CreateScope().ServiceProvider));
+        {
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
+            {
+                return RegisterFinalizerInternalAsync(entity, finalizerInstanceBuilder.BuildFinalizer<TEntity, TFinalizer>(serviceProvider.CreateScope().ServiceProvider));
+            }
+        }
 
         /// <inheritdoc/>
         public async Task RegisterAllFinalizersAsync(TEntity entity)
         {
             await SyncContext.Clear;
 
-            await Task.WhenAll(
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
+            {
+                await Task.WhenAll(
                 finalizerInstanceBuilder.BuildFinalizers<TEntity>(serviceProvider.CreateScope().ServiceProvider)
-                    .Where(f => 
+                    .Where(f =>
                         (f.GetType().GetCustomAttribute<FinalizerAttribute>()?.RegisterWithAll == true)
-                        || (f.GetType().GetCustomAttribute<FinalizerAttribute>() == null) 
+                        || (f.GetType().GetCustomAttribute<FinalizerAttribute>() == null)
                         )
                     .Select(f => RegisterFinalizerInternalAsync(entity, f)));
+            }
         }
 
         /// <inheritdoc/>
@@ -84,11 +103,19 @@ namespace Neon.Kube.Operator.Finalizer
         {
             await SyncContext.Clear;
 
-            var finalizer = finalizerInstanceBuilder.BuildFinalizer<TEntity, TFinalizer>(serviceProvider.CreateScope().ServiceProvider);
-
-            if (entity.RemoveFinalizer(finalizer.Identifier))
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                await UpdateEntityAsync(entity);
+                var finalizer = finalizerInstanceBuilder.BuildFinalizer<TEntity, TFinalizer>(serviceProvider.CreateScope().ServiceProvider);
+
+                if (entity.RemoveFinalizer(finalizer.Identifier))
+                {
+                    using (metrics[finalizer.Identifier].RemovalTimeSeconds.NewTimer())
+                    {
+                        await UpdateEntityAsync(entity);
+
+                        metrics[finalizer.Identifier].RemovalsTotal.Inc();
+                    }
+                }
             }
         }
 
@@ -96,69 +123,89 @@ namespace Neon.Kube.Operator.Finalizer
         {
             await SyncContext.Clear;
 
-            try
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                await finalizer.FinalizeAsync(entity);
-                await RemoveFinalizerAsync(entity, finalizer);
-            }
-            catch (Exception e)
-            {
-                logger?.LogErrorEx(e);
-                throw;
+                try
+                {
+                    using (metrics[finalizer.Identifier].FinalizingCount.TrackInProgress())
+                    {
+                        using (metrics[finalizer.Identifier].FinalizeTimeSeconds.NewTimer())
+                        {
+                            await finalizer.FinalizeAsync(entity);
+                        }
+                    }
+
+                    await RemoveFinalizerAsync(entity, finalizer);
+
+                    metrics[finalizer.Identifier].FinalizedTotal.Inc();
+                }
+                catch (Exception e)
+                {
+                    logger?.LogErrorEx(e);
+                    throw;
+                }
             }
         }
 
         private async Task RemoveFinalizerAsync(TEntity entity, IResourceFinalizer<TEntity> finalizer)
         {
-            try
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                await NeonHelper.WaitForAsync(
-                    async () =>
+                try
+                {
+                    using (metrics[finalizer.Identifier].RemovalTimeSeconds.NewTimer())
                     {
-                        try
-                        {
-                            if (string.IsNullOrEmpty(entity.Metadata.NamespaceProperty))
+                        await NeonHelper.WaitForAsync(
+                            async () =>
                             {
-                                entity = await client.CustomObjects.ReadClusterCustomObjectAsync<TEntity>(entity.Name());
-                            }
-                            else
-                            {
-                                entity = await client.CustomObjects.ReadNamespacedCustomObjectAsync<TEntity>(entity.Namespace(), entity.Name());
-                            }
+                                try
+                                {
+                                    if (string.IsNullOrEmpty(entity.Metadata.NamespaceProperty))
+                                    {
+                                        entity = await client.CustomObjects.ReadClusterCustomObjectAsync<TEntity>(entity.Name());
+                                    }
+                                    else
+                                    {
+                                        entity = await client.CustomObjects.ReadNamespacedCustomObjectAsync<TEntity>(entity.Namespace(), entity.Name());
+                                    }
 
-                            if (entity.RemoveFinalizer(finalizer.Identifier))
-                            {
-                                await UpdateEntityAsync(entity);
-                            }
+                                    if (entity.RemoveFinalizer(finalizer.Identifier))
+                                    {
+                                        await UpdateEntityAsync(entity);
+                                    }
 
-                            return true;
-                        }
-                        catch (Exception e)
-                        {
-                            logger?.LogErrorEx(e);
-                        }
+                                    return true;
+                                }
+                                catch (Exception e)
+                                {
+                                    logger?.LogErrorEx(e);
+                                }
 
-                        return false;
-                    },
-                    timeout: TimeSpan.FromSeconds(30),
-                    pollInterval: TimeSpan.FromSeconds(1));
-            }
-            catch (Exception e)
-            {
-                string entityName;
+                                return false;
+                            },
+                            timeout: TimeSpan.FromSeconds(30),
+                            pollInterval: TimeSpan.FromSeconds(1));
+                    }
 
-                if (string.IsNullOrEmpty(entity.Metadata.NamespaceProperty))
-                {
-                    entityName = entity.Name();
+                    metrics[finalizer.Identifier].RemovalsTotal.Inc();
                 }
-                else
+                catch (Exception e)
                 {
-                    entityName = $"{entity.Namespace()}/{entity.Name()}";
+                    string entityName;
+
+                    if (string.IsNullOrEmpty(entity.Metadata.NamespaceProperty))
+                    {
+                        entityName = entity.Name();
+                    }
+                    else
+                    {
+                        entityName = $"{entity.Namespace()}/{entity.Name()}";
+                    }
+
+                    logger?.LogErrorEx(e);
+
+                    throw new Exception($"Timed out while trying to remove finalizer [{finalizer.Identifier}] from entity [{entityName}]");
                 }
-
-                logger?.LogErrorEx(e);
-
-                throw new Exception($"Timed out while trying to remove finalizer [{finalizer.Identifier}] from entity [{entityName}]");
             }
 
         }
@@ -166,46 +213,65 @@ namespace Neon.Kube.Operator.Finalizer
         /// <inheritdoc/>
         async Task IFinalizerManager<TEntity>.FinalizeAsync(TEntity entity, IServiceScope scope)
         {
-            var tasks = new List<Task>();
+            await SyncContext.Clear;
 
-            foreach (var finalizer in finalizerInstanceBuilder.BuildFinalizers<TEntity>(scope.ServiceProvider))
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                if (entity.HasFinalizer(finalizer.Identifier))
-                {
-                    tasks.Add(FinalizeInternalAsync(finalizer, entity));
-                }
-            }
+                var tasks = new List<Task>();
 
-            await Task.WhenAll(tasks);
+                foreach (var finalizer in finalizerInstanceBuilder.BuildFinalizers<TEntity>(scope.ServiceProvider))
+                {
+                    if (entity.HasFinalizer(finalizer.Identifier))
+                    {
+                        tasks.Add(FinalizeInternalAsync(finalizer, entity));
+                    }
+                }
+
+                await Task.WhenAll(tasks);
+            }
         }
 
         private async Task RegisterFinalizerInternalAsync<TFinalizer>(TEntity entity, TFinalizer finalizer)
             where TFinalizer : IResourceFinalizer<TEntity>
         {
-            if (entity.AddFinalizer(finalizer.Identifier))
+            await SyncContext.Clear;
+            
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                await UpdateEntityAsync(entity);
+                using (metrics[finalizer.Identifier].RegistrationTimeSeconds.NewTimer())
+                {
+                    if (entity.AddFinalizer(finalizer.Identifier))
+                    {
+                        await UpdateEntityAsync(entity);
+                        metrics[finalizer.Identifier].RegistrationsTotal.Inc();
+                    }
+                }
             }
         }
 
         private async Task UpdateEntityAsync(TEntity entity)
         {
-            try
-            {
-                var metadata = entity.GetKubernetesTypeMetadata();
+            await SyncContext.Clear;
 
-                if (string.IsNullOrEmpty(entity.Metadata.NamespaceProperty))
-                {
-                    await client.CustomObjects.ReplaceClusterCustomObjectAsync(entity, entity.Name());
-                }
-                else
-                {
-                    await client.CustomObjects.ReplaceNamespacedCustomObjectAsync(entity, entity.Namespace(), entity.Name());
-                }
-            }
-            catch (Exception e)
+            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                logger?.LogErrorEx(e);
+                try
+                {
+                    var metadata = entity.GetKubernetesTypeMetadata();
+
+                    if (string.IsNullOrEmpty(entity.Metadata.NamespaceProperty))
+                    {
+                        await client.CustomObjects.ReplaceClusterCustomObjectAsync(entity, entity.Name());
+                    }
+                    else
+                    {
+                        await client.CustomObjects.ReplaceNamespacedCustomObjectAsync(entity, entity.Namespace(), entity.Name());
+                    }
+                }
+                catch (Exception e)
+                {
+                    logger?.LogErrorEx(e);
+                }
             }
         }
     }

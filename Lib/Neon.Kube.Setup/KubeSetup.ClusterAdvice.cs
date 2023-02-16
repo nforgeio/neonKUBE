@@ -1138,6 +1138,9 @@ namespace Neon.Kube.Setup
         {
             var advice = new KubeServiceAdvice(KubeClusterAdvice.OpenEbsNdm);
 
+            advice.PodMemoryLimit = ByteUnits.Parse("128Mi");
+            advice.PodMemoryRequest = ByteUnits.Parse("16Mi");
+
             return advice;
         }
 

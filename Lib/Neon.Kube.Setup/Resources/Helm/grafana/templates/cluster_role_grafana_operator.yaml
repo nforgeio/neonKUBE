@@ -96,6 +96,26 @@ rules:
 - apiGroups:
   - integreatly.org
   resources:
+  - grafanafolders
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - integreatly.org
+  resources:
+  - grafanafolders/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - integreatly.org
+  resources:
   - grafananotificationchannels
   verbs:
   - create
@@ -150,6 +170,7 @@ rules:
   - route.openshift.io
   resources:
   - routes
+  - routes/custom-host
   verbs:
   - create
   - delete

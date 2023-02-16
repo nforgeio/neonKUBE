@@ -135,6 +135,7 @@ namespace Neon.Kube.Operator
         /// </summary>
         /// <typeparam name="TSingleton"></typeparam>
         /// <param name="k8sBuilder"></param>
+        /// <param name="instance"></param>
         /// <returns></returns>
         public static IKubernetesOperatorHostBuilder AddSingleton<TSingleton>(this IKubernetesOperatorHostBuilder k8sBuilder, TSingleton instance)
         {
@@ -147,6 +148,8 @@ namespace Neon.Kube.Operator
         /// Add a singleton to the service collection.
         /// </summary>
         /// <param name="k8sBuilder"></param>
+        /// <param name="type"></param>
+        /// <param name="instance"></param>
         /// <returns></returns>
         public static IKubernetesOperatorHostBuilder AddSingleton(this IKubernetesOperatorHostBuilder k8sBuilder, Type type, object instance)
         {

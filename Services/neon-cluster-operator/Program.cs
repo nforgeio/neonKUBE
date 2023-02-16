@@ -73,19 +73,16 @@ namespace NeonClusterOperator
 
                 Service = new Service(KubeService.NeonClusterOperator);
 
-                if (!NeonHelper.IsDevWorkstation)
-                {
-                    Service.MetricsOptions.Mode         = MetricsMode.Scrape;
-                    Service.MetricsOptions.Path         = "metrics/";
-                    Service.MetricsOptions.Port         = 9762;
-                    Service.MetricsOptions.GetCollector =
-                        () =>
-                        {
-                            return DotNetRuntimeStatsBuilder
-                                .Default()
-                                .StartCollecting();
-                        };
-                }
+                Service.MetricsOptions.Mode         = MetricsMode.Scrape;
+                Service.MetricsOptions.Path         = "metrics/";
+                Service.MetricsOptions.Port         = 9762;
+                Service.MetricsOptions.GetCollector =
+                    () =>
+                    {
+                        return DotNetRuntimeStatsBuilder
+                            .Default()
+                            .StartCollecting();
+                    };
 
                 if (!string.IsNullOrEmpty(args.FirstOrDefault()))
                 {
@@ -95,6 +92,7 @@ namespace NeonClusterOperator
                        {
                            configure.AssemblyScanningEnabled = true;
                            configure.Name = Service.Name;
+                           configure.DeployedNamespace = KubeNamespace.NeonSystem;
                        })
                        .ConfigureNeonKube()
                        .AddSingleton<Service>(Service)

@@ -75,6 +75,12 @@ namespace NeonClusterOperator
         ResourceNames = "neon-admin.neon-system-db.credentials.postgresql,glauth-users,glauth-groups")]
     public class GlauthController : IResourceController<V1Secret>
     {
+        /// <inheritdoc/>
+        public Func<V1Secret, bool> Filter => (resource) =>
+        {
+            return (resource.Name() == "glauth-users" || resource.Name() == "glauth-groups");
+        };
+
         //---------------------------------------------------------------------
         // Static members
 
@@ -126,16 +132,6 @@ namespace NeonClusterOperator
             this.k8s     = k8s;
             this.logger  = logger;
             this.service = service;
-        }
-
-        /// <summary>
-        /// Filter out secrets that we aren't interested in.
-        /// </summary>
-        /// <param name="resource"></param>
-        /// <returns></returns>
-        public static bool Filter(V1Secret resource)
-        {
-            return (resource.Name() == "glauth-users" || resource.Name() == "glauth-groups");
         }
 
         /// <summary>
