@@ -155,9 +155,9 @@
 
 	<ItemGroup>
 		<PackageReference Include="Minio" Version="4.0.6" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2819-dev-jeff" />
-		<PackageReference Include="Neon.Cryptography" Version="10000.0.2819-dev-jeff" />
-		<PackageReference Include="Neon.Postgres" Version="10000.0.2819-dev-jeff" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2836-dev-jeff" />
+		<PackageReference Include="Neon.Cryptography" Version="10000.0.2836-dev-jeff" />
+		<PackageReference Include="Neon.Postgres" Version="10000.0.2836-dev-jeff" />
 		<PackageReference Include="Samboy063.Tomlet" Version="5.0.0" />
 		<PackageReference Include="Tomlyn" Version="0.15.0" />
 		<PackageReference Include="Npgsql" Version="6.0.7" />
