@@ -263,7 +263,6 @@ namespace NeonNodeAgent
 
         private static readonly ILogger     log             = TelemetryHub.CreateLogger<ContainerRegistryController>();
         internal static string              configMountPath { get; } = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
-        private static readonly string      metricsPrefix   = Program.Service?.MetricsPrefix ?? string.Empty;
         private static TimeSpan             reloginInterval;
         private static TimeSpan             reloginMaxRandomInterval;
 
@@ -274,8 +273,8 @@ namespace NeonNodeAgent
 
         // Metrics counters
 
-        private static readonly Counter configUpdateCounter = Metrics.CreateCounter($"{metricsPrefix}containerregistry_node_updated", "Number of node config updates.");
-        private static readonly Counter loginErrorCounter   = Metrics.CreateCounter($"{metricsPrefix}containerregistry_login_error", "Number of failed container registry logins.");
+        private static readonly Counter configUpdateCounter = Metrics.CreateCounter("containerregistry_node_updated", "Number of node config updates.");
+        private static readonly Counter loginErrorCounter   = Metrics.CreateCounter("containerregistry_login_error", "Number of failed container registry logins.");
 
         /// <summary>
         /// Static constructor.

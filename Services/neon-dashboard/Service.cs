@@ -113,9 +113,9 @@ namespace NeonDashboard
         /// </summary>
         /// <param name="name">The service name.</param>
         public Service(string name)
-             : base(name, version: KubeVersions.NeonKube, new NeonServiceOptions() { MetricsPrefix = "neondashboard" })
+             : base(name, version: KubeVersions.NeonKube, new NeonServiceOptions())
         {
-            DashboardViewCounter = Metrics.CreateCounter($"{MetricsPrefix}external_dashboard_view", "External dashboard views.",
+            DashboardViewCounter = Metrics.CreateCounter("external_dashboard_view", "External dashboard views.",
                 new CounterConfiguration
                 {
                     LabelNames = new[] { "dashboard" }
