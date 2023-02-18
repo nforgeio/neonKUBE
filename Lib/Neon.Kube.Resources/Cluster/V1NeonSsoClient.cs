@@ -31,7 +31,7 @@ namespace Neon.Kube.Resources.Cluster
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
     [EntityScope(EntityScope.Cluster)]
-    public class V1NeonSsoClient : V1ScaleSpec, IKubernetesObject<V1ObjectMeta>, ISpec<V1SsoClientSpec>, IStatus<V1SsoClientStatus>
+    public class V1NeonSsoClient : IKubernetesObject<V1ObjectMeta>, ISpec<V1SsoClientSpec>, IStatus<V1SsoClientStatus>
     {
         /// <summary>
         /// Object API group.

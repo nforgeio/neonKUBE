@@ -22,7 +22,6 @@ using System.Text;
 
 using k8s;
 using k8s.Models;
-using static Neon.Kube.Resources.Minio.V1MinioBucket;
 
 namespace Neon.Kube.Resources.Minio
 {
@@ -31,7 +30,7 @@ namespace Neon.Kube.Resources.Minio
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
     [EntityScope(EntityScope.Namespaced)]
-    public class V1MinioBucket : IKubernetesObject<V1ObjectMeta>, ISpec<V1MinioBucket.V1MinioBucketSpec>, IStatus<V1MinioBucketStatus>
+    public class V1MinioBucket : IKubernetesObject<V1ObjectMeta>, ISpec<V1MinioBucket.V1MinioBucketSpec>, IStatus<V1MinioBucket.V1MinioBucketStatus>
     {
         /// <summary>
         /// Object API group.

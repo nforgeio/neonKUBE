@@ -83,11 +83,6 @@ namespace NeonClusterOperator
         private const string MinioExe = "/mc";
         private MinioClient minioClient;
 
-        public Func<V1MinioBucket, bool> Filter => (resource) =>
-        {
-            return true;
-        };
-
         /// <summary>
         /// Static constructor.
         /// </summary>

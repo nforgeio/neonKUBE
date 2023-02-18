@@ -139,12 +139,16 @@ namespace NeonClusterOperator
             {
                 // Ignore all events when the controller hasn't been started.
 
-                //await UpsertClientAsync(resource);
-
                 var patch = OperatorHelper.CreatePatch<V1NeonSsoClient>();
                 patch.Replace(path => path.Status, new V1SsoClientStatus());
-                patch.Replace(path => path.Status.State, "reconciled");
+                patch.Replace(path => path.Status.State, "reconciling");
+                await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonSsoClient>(OperatorHelper.ToV1Patch<V1NeonSsoClient>(patch), resource.Name());
 
+                await UpsertClientAsync(resource);
+
+
+                patch.Replace(path => path.Status, new V1SsoClientStatus());
+                patch.Replace(path => path.Status.State, "reconciled");
                 await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonSsoClient>(OperatorHelper.ToV1Patch<V1NeonSsoClient>(patch), resource.Name());
 
                 logger?.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
