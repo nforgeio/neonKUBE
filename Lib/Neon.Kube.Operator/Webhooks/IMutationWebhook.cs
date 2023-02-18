@@ -52,6 +52,7 @@ namespace Neon.Kube.Operator.Webhook
     public interface IMutatingWebhook<TEntity> : IAdmissionWebhook<TEntity, MutationResult>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
     {
+        private static JsonPatchDeltaFormatter Formatter = new JsonPatchDeltaFormatter();
         /// <summary>
         /// The namespace selector.
         /// </summary>
@@ -189,7 +190,7 @@ namespace Neon.Kube.Operator.Webhook
 
                 var node2 = JsonNode.Parse(KubernetesJson.Serialize(result.ModifiedObject));
 
-                var diff = node1.Diff(node2, new JsonPatchDeltaFormatter());
+                var diff = node1.Diff(node2, Formatter);
 
                 response.Patch = Convert.ToBase64String(Encoding.UTF8.GetBytes(KubernetesJson.Serialize(diff)));
                 response.PatchType = AdmissionResponse.JsonPatch;
