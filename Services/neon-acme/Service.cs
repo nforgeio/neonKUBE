@@ -110,9 +110,11 @@ namespace NeonAcme
             {
                 BaseAddress = new Uri(GetEnvironmentVariable("HEADEND_URL", "https://headend.neoncloud.io"))
             };
-            HeadendClient.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-                                                                                "Bearer",
-                                                                                GetEnvironmentVariable("NEONCLOUD_HEADEND_TOKEN"));
+
+            HeadendClient.HttpClient.DefaultRequestHeaders.Authorization = 
+                new AuthenticationHeaderValue(
+                    "Bearer",
+                    GetEnvironmentVariable("NEONCLOUD_HEADEND_TOKEN"));
 
             Kubernetes = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig(),new KubernetesRetryHandler());
             Resources  = new V1APIResourceList()
@@ -155,8 +157,8 @@ namespace NeonAcme
                         if (!NeonHelper.IsDevWorkstation)
                         {
                             listenOptions.UseHttps(X509Certificate2.CreateFromPem(
-                                                        File.ReadAllText(@"/tls/tls.crt"),
-                                                        File.ReadAllText(@"/tls/tls.key")));
+                                File.ReadAllText(@"/tls/tls.crt"),
+                                File.ReadAllText(@"/tls/tls.key")));
                         }
                     });
                 })
