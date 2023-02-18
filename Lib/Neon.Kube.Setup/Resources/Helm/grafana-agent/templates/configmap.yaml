@@ -301,7 +301,7 @@ data:
             policies:
               - type: probabilistic
                 probabilistic:
-                  sampling_percentage: 100
+                  sampling_percentage: 2
               - type: latency
                 latency:
                   threshold_ms: 100
