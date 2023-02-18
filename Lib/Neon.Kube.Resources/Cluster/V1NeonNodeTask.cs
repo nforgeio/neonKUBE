@@ -283,7 +283,7 @@ namespace Neon.Kube.Resources.Cluster
         /// <summary>
         /// The spec.
         /// </summary>
-        public TaskStatus Status { get; set; }
+        public TaskStatus Status { get; set; } = new TaskStatus();
 
         /// <summary>
         /// Verifies that the resource properties are valid.
