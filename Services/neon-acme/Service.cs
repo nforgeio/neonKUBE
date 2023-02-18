@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -34,17 +35,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
+using Neon.Net;
 using Neon.Service;
 using Neon.Kube;
 
 using k8s;
-
-using Prometheus;
-using Prometheus.DotNetRuntime;
 using k8s.Models;
-using System.Net.Http;
-using Microsoft.AspNetCore.Http;
-using Neon.Net;
+
+using OpenTelemetry.Trace;
+using OpenTelemetry;
 
 namespace NeonAcme
 {
@@ -81,7 +80,7 @@ namespace NeonAcme
         /// </summary>
         /// <param name="name">The service name.</param>
         public Service(string name)
-             : base(name, version: KubeVersions.NeonKube, new NeonServiceOptions() { MetricsPrefix = "neonacme" })
+             : base(name, version: KubeVersions.NeonKube)
         {
         }
 
@@ -178,6 +177,23 @@ namespace NeonAcme
             Terminator.ReadyToExit();
 
             return 0;
+        }
+
+        /// <inheritdoc/>
+        protected override bool OnTracerConfig(TracerProviderBuilder builder)
+        {
+            builder.AddHttpClientInstrumentation()
+                .AddAspNetCoreInstrumentation()
+                .AddOtlpExporter(
+                    options =>
+                    {
+                        options.ExportProcessorType = ExportProcessorType.Batch;
+                        options.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>();
+                        options.Endpoint = new Uri(NeonHelper.NeonKubeOtelCollectorUri);
+                        options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
+                    });
+
+            return true;
         }
     }
 }

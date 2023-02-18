@@ -67,7 +67,7 @@ namespace Neon.Kube
         /// <summary>
         /// The time the event was created.
         /// </summary>
-        public DateTime CreatedAt { get; private set; }
+        public DateTime CreatedAt { get; set; }
 
         /// <summary>
         /// Constructor.

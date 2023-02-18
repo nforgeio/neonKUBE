@@ -34,12 +34,20 @@ using Neon.Kube.Operator.Builder;
 using k8s.Models;
 using k8s;
 
+using Prometheus;
+using System.Diagnostics;
+
 namespace Neon.Kube.Operator
 {
 
     /// <inheritdoc/>
     public class KubernetesOperatorHostBuilder : IKubernetesOperatorHostBuilder
     {
+        /// <summary>
+        /// The SDK Version info Gauge.
+        /// </summary>
+        public static Gauge BuildInfo = Metrics.CreateGauge("operator_version_info", "Operator SDK Version", new string[] { "operator", "version" });
+
         private KubernetesOperatorHost operatorHost;
 
         /// <inheritdoc/>
@@ -57,10 +65,14 @@ namespace Neon.Kube.Operator
         /// <inheritdoc/>
         public IKubernetesOperatorHost Build()
         {
+            var version = GetType().Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? 
+                TraceContext.Version.ToString();
+
+            BuildInfo.WithLabels(new string[] { operatorHost.OperatorSettings.Name, version }).IncTo(1);
+
             this.operatorHost.HostBuilder = new WebHostBuilder();
 
             this.operatorHost.HostBuilder
-                .UseUrls()
                 .ConfigureServices(services =>
                 {
                     services.AddSingleton<OperatorSettings>(this.operatorHost.OperatorSettings);

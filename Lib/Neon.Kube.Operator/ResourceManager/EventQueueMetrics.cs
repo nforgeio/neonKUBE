@@ -39,26 +39,43 @@ using Prometheus;
 
 namespace Neon.Kube.Operator.EventQueue
 {
-    internal class EventQueueMetrics<TEntity>
+    internal class EventQueueMetrics<TEntity, TController>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         private const string prefix = "operator_eventqueue";
-        private static readonly string[] LabelNames = { "operator", "kind", "group", "version" };
+        private static readonly string[] LabelNames = { "operator", "controller", "kind", "group", "version" };
         public Counter.Child AddsTotal { get; private set; }
+        public Counter.Child RetriesTotal { get; private set; }
         public Gauge.Child Depth { get; private set; }
         public Histogram.Child QueueDurationSeconds { get; private set; }
         public Histogram.Child WorkDurationSeconds { get; private set; }
         public Gauge.Child UnfinishedWorkSeconds { get; private set; }
         public Gauge.Child LongestRunningProcessorSeconds { get; private set; }
+        public Gauge.Child ActiveWorkers { get; private set; }
+        public Gauge.Child MaxActiveWorkers { get; private set; }
         public EventQueueMetrics(OperatorSettings operatorSettings) 
         {
             var crdMeta     = typeof(TEntity).GetKubernetesTypeMetadata();
-            var labelValues = new string[] { operatorSettings.Name, crdMeta.PluralName, crdMeta.Group, crdMeta.ApiVersion };
+            var labelValues = new string[] 
+            { 
+                operatorSettings.Name, 
+                typeof(TController).Name.ToLower(), 
+                crdMeta.PluralName, 
+                crdMeta.Group, 
+                crdMeta.ApiVersion 
+            };
 
             AddsTotal = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_adds_total", 
-                    help: "The total number of queued items.", 
+                    name: $"{prefix}_adds_total",
+                    help: "The total number of queued items.",
+                    labelNames: LabelNames).
+                WithLabels(labelValues);
+
+            RetriesTotal = Metrics
+                .CreateCounter(
+                    name: $"{prefix}_retries_total",
+                    help: "The total number of retries.",
                     labelNames: LabelNames).
                 WithLabels(labelValues);
 
@@ -94,6 +111,20 @@ namespace Neon.Kube.Operator.EventQueue
                 .CreateGauge(
                     name: $"{prefix}_longest_running_processor_seconds",
                     help: "The amount of seconds that work is in progress without completing. Large values indicate stuck threads.",
+                    labelNames: LabelNames)
+                .WithLabels(labelValues);
+
+            ActiveWorkers = Metrics
+                .CreateGauge(
+                    name: $"{prefix}_active_workers",
+                    help: "The number of currently active reconcilers.",
+                    labelNames: LabelNames)
+                .WithLabels(labelValues);
+
+            MaxActiveWorkers = Metrics
+                .CreateGauge(
+                    name: $"{prefix}_max_active_workers",
+                    help: "Total number of reconciliations per controller.",
                     labelNames: LabelNames)
                 .WithLabels(labelValues);
 

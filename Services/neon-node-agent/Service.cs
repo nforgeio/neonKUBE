@@ -186,7 +186,7 @@ namespace NeonNodeAgent
         /// </summary>
         /// <param name="name">The service name.</param>
         public Service(string name)
-            : base(name, version: KubeVersions.NeonKube, new NeonServiceOptions() { MetricsPrefix = "neonnodeagent" })
+            : base(name, version: KubeVersions.NeonKube)
         {
         }
 
@@ -245,11 +245,24 @@ namespace NeonNodeAgent
                 {
                     options.Filter = (httpcontext) =>
                     {
+                        if (GetEnvironmentVariable("LOG_LEVEL").ToLower() == "trace")
+                        {
+                            return true;
+                        }
+
+                        // filter out leader election since it's really chatty
+                        if (httpcontext.RequestUri.Host == "10.253.0.1"
+                        & httpcontext.RequestUri.AbsolutePath.StartsWith("/apis/coordination.k8s.io"))
+                        {
+                            return false;
+                        }
+
                         return true;
                     };
-                });
-            builder.AddAspNetCoreInstrumentation();
-            builder.AddOtlpExporter(
+                })
+                .AddAspNetCoreInstrumentation()
+                .AddKubernetesOperatorInstrumentation()
+                .AddOtlpExporter(
                 options =>
                 {
                     options.ExportProcessorType = ExportProcessorType.Batch;

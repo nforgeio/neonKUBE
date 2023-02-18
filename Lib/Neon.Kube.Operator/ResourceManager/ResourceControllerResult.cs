@@ -39,7 +39,7 @@ namespace Neon.Kube.Operator.ResourceManager
         internal ResourceControllerResult(TimeSpan delay, WatchEventType eventType)
         {
             RequeueDelay = delay;
-            EventType = eventType;
+            EventType    = eventType;
         }
 
         /// <summary>

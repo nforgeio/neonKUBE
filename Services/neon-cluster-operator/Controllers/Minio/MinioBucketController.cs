@@ -60,14 +60,18 @@ using OpenTelemetry.Trace;
 using Prometheus;
 
 using Minio;
+using Minio.DataModel;
 using Minio.Exceptions;
+using Neon.Kube.Operator.Attributes;
+using Neon.Kube.Operator.Util;
+using Neon.Kube.Resources.Cluster;
 
 namespace NeonClusterOperator
 {
     /// <summary>
     /// Manages MinioBucket LDAP database.
     /// </summary>
-    [RbacRule<V1MinioBucket>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
+    [RbacRule<V1MinioBucket>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1MinioTenant>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1Secret>(Verbs = RbacVerb.Get)]
     public class MinioBucketController : IResourceController<V1MinioBucket>
@@ -78,6 +82,11 @@ namespace NeonClusterOperator
 
         private const string MinioExe = "/mc";
         private MinioClient minioClient;
+
+        public Func<V1MinioBucket, bool> Filter => (resource) =>
+        {
+            return true;
+        };
 
         /// <summary>
         /// Static constructor.
@@ -126,7 +135,13 @@ namespace NeonClusterOperator
             {
                 Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("resource", nameof(V1MinioBucket)));
                 
-                logger?.LogInformationEx(() => $"Reconciling {typeof(V1MinioBucket)} [{resource.Name()}].");
+                logger?.LogInformationEx(() => $"Reconciling {typeof(V1MinioBucket)} [{resource.Namespace()}/{resource.Name()}].");
+
+                var patch = OperatorHelper.CreatePatch<V1MinioBucket>();
+                patch.Replace(path => path.Status, new V1MinioBucket.V1MinioBucketStatus());
+                patch.Replace(path => path.Status.State, "reconciling");
+
+                await k8s.CustomObjects.PatchNamespacedCustomObjectStatusAsync<V1MinioBucket>(OperatorHelper.ToV1Patch<V1MinioBucket>(patch), resource.Namespace(), resource.Name());
 
                 try
                 {
@@ -171,6 +186,12 @@ namespace NeonClusterOperator
                 {
                     minioClient.Dispose();
                 }
+
+                patch = OperatorHelper.CreatePatch<V1MinioBucket>();
+                patch.Replace(path => path.Status, new V1MinioBucket.V1MinioBucketStatus());
+                patch.Replace(path => path.Status.State, "reconciled");
+
+                await k8s.CustomObjects.PatchNamespacedCustomObjectStatusAsync<V1MinioBucket>(OperatorHelper.ToV1Patch<V1MinioBucket>(patch), resource.Namespace(), resource.Name());
 
                 logger?.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
 

@@ -22,6 +22,8 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
+using NJsonSchema;
+
 namespace Neon.Kube.Resources.Cluster
 {
     /// <summary>
@@ -29,7 +31,7 @@ namespace Neon.Kube.Resources.Cluster
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
     [EntityScope(EntityScope.Cluster)]
-    public class V1NeonSsoClient : IKubernetesObject<V1ObjectMeta>, ISpec<V1SsoClientSpec>
+    public class V1NeonSsoClient : V1ScaleSpec, IKubernetesObject<V1ObjectMeta>, ISpec<V1SsoClientSpec>, IStatus<V1SsoClientStatus>
     {
         /// <summary>
         /// Object API group.
@@ -87,6 +89,11 @@ namespace Neon.Kube.Resources.Cluster
         /// The spec.
         /// </summary>
         public V1SsoClientSpec Spec { get; set; }
+
+        /// <summary>
+        /// The status.
+        /// </summary>
+        public V1SsoClientStatus Status { get; set; }
     }
 
     /// <summary>
@@ -133,5 +140,21 @@ namespace Neon.Kube.Resources.Cluster
         /// Logo used when displaying this client to the end user.
         /// </summary>
         public string LogoUrl { get; set; }
+    }
+
+    /// <summary>
+    /// The status.
+    /// </summary>
+    public class V1SsoClientStatus
+    {
+        /// <summary>
+        /// Conditions.
+        /// </summary>
+        public List<V1Condition> Conditions { get; set; } = new List<V1Condition>();
+
+        /// <summary>
+        /// The state.
+        /// </summary>
+        public string State { get; set; }
     }
 }

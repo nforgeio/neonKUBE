@@ -15,37 +15,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Parsing;
+using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
-
-using Neon.Diagnostics;
-using Neon.Kube.Operator.Commands.Generate;
-using Neon.Kube.Operator.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Neon.Common;
-using System.Net;
-using System.Security.Cryptography.X509Certificates;
-using k8s.Models;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
+using Neon.Common;
+using Neon.Diagnostics;
+using Neon.Kube.Operator.Builder;
+using Neon.Kube.Operator.Commands.Generate;
+using Neon.Kube.Operator.Rbac;
 using Neon.Kube.Resources.CertManager;
 using Neon.Tasks;
-using System.Xml.Linq;
+
 using k8s;
-using Neon.Kube.Operator.Rbac;
-using OpenTelemetry.Resources;
-using System.Diagnostics;
+using k8s.Models;
+
+using Prometheus;
 
 namespace Neon.Kube.Operator
 {
@@ -223,70 +221,81 @@ namespace Neon.Kube.Operator
 
         private async Task CheckCertificateAsync()
         {
-            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
+            using var activity = TraceContext.ActivitySource?.StartActivity();
+
+            logger?.LogInformationEx(() => "Checking webhook certificate.");
+
+            var cert = await k8s.CustomObjects.ListNamespacedCustomObjectAsync<V1Certificate>(OperatorSettings.DeployedNamespace, labelSelector: $"{NeonLabel.ManagedBy}={OperatorSettings.Name}");
+
+            if (!cert.Items.Any())
             {
-                logger?.LogInformationEx(() => "Checking webhook certificate.");
+                logger?.LogInformationEx(() => "Webhook certificate does not exist, creating...");
 
-                var cert = await k8s.CustomObjects.ListNamespacedCustomObjectAsync<V1Certificate>(OperatorSettings.DeployedNamespace, labelSelector: $"{NeonLabel.ManagedBy}={OperatorSettings.Name}");
-
-                if (!cert.Items.Any())
+                var certificate = new V1Certificate()
                 {
-                    logger?.LogInformationEx(() => "Webhook certificate does not exist, creating...");
-
-                    var certificate = new V1Certificate()
+                    Metadata = new V1ObjectMeta()
                     {
-                        Metadata = new V1ObjectMeta()
-                        {
-                            Name = OperatorSettings.Name,
-                            NamespaceProperty = OperatorSettings.DeployedNamespace,
-                            Labels = new Dictionary<string, string>()
-                        {
-                            { NeonLabel.ManagedBy, OperatorSettings.Name }
-                        }
-                        },
-                        Spec = new V1CertificateSpec()
-                        {
-                            DnsNames = new List<string>()
-                        {
-                            $"{OperatorSettings.Name}",
-                            $"{OperatorSettings.Name}.{OperatorSettings.DeployedNamespace}",
-                            $"{OperatorSettings.Name}.{OperatorSettings.DeployedNamespace}.svc",
-                            $"{OperatorSettings.Name}.{OperatorSettings.DeployedNamespace}.svc.cluster.local",
-                        },
-                            Duration = $"{CertManagerOptions.CertificateDuration.TotalHours}h{CertManagerOptions.CertificateDuration.Minutes}m{CertManagerOptions.CertificateDuration.Seconds}s",
-                            IssuerRef = CertManagerOptions.IssuerRef,
-                            SecretName = $"{OperatorSettings.Name}-webhook-tls"
-                        }
-                    };
+                        Name = OperatorSettings.Name,
+                        NamespaceProperty = OperatorSettings.DeployedNamespace,
+                        Labels = new Dictionary<string, string>()
+                    {
+                        { NeonLabel.ManagedBy, OperatorSettings.Name }
+                    }
+                    },
+                    Spec = new V1CertificateSpec()
+                    {
+                        DnsNames = new List<string>()
+                    {
+                        $"{OperatorSettings.Name}",
+                        $"{OperatorSettings.Name}.{OperatorSettings.DeployedNamespace}",
+                        $"{OperatorSettings.Name}.{OperatorSettings.DeployedNamespace}.svc",
+                        $"{OperatorSettings.Name}.{OperatorSettings.DeployedNamespace}.svc.cluster.local",
+                    },
+                        Duration = $"{CertManagerOptions.CertificateDuration.TotalHours}h{CertManagerOptions.CertificateDuration.Minutes}m{CertManagerOptions.CertificateDuration.Seconds}s",
+                        IssuerRef = CertManagerOptions.IssuerRef,
+                        SecretName = $"{OperatorSettings.Name}-webhook-tls"
+                    }
+                };
 
-                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync(certificate, certificate.Namespace(), certificate.Name());
+                await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync(certificate, certificate.Namespace(), certificate.Name());
 
-                    logger?.LogInformationEx(() => "Webhook certificate created.");
-                }
+                logger?.LogInformationEx(() => "Webhook certificate created.");
+            }
 
-                _ = k8s.WatchAsync<V1Secret>(
-                    async (@event) =>
+            _ = k8s.WatchAsync<V1Secret>(
+                async (@event) =>
+                {
+                    await SyncContext.Clear;
+
+                    using var activity = TraceContext.ActivitySource?.StartActivity("UpdatingWebhookCertificate");
+
+                    Certificate = X509Certificate2.CreateFromPem(
+                        Encoding.UTF8.GetString(@event.Value.Data["tls.crt"]),
+                        Encoding.UTF8.GetString(@event.Value.Data["tls.key"]));
+
+                    logger?.LogInformationEx("Updated webhook certificate");
+                },
+                OperatorSettings.DeployedNamespace,
+                fieldSelector: $"metadata.name={OperatorSettings.Name}-webhook-tls");
+
+            using (TraceContext.ActivitySource?.StartActivity("WaitForSecret", ActivityKind.Internal))
+            {
+                await NeonHelper.WaitForAsync(
+                    async () =>
                     {
                         await SyncContext.Clear;
 
-                        Certificate = X509Certificate2.CreateFromPem(
-                            Encoding.UTF8.GetString(@event.Value.Data["tls.crt"]),
-                            Encoding.UTF8.GetString(@event.Value.Data["tls.key"]));
+                        if (Certificate != null)
+                        {
+                            logger?.LogInformationEx(() => "Cert updated");
 
-                        logger?.LogInformationEx("Updated webhook certificate");
+                            return true;
+                        }
+
+                        return false;
                     },
-                    OperatorSettings.DeployedNamespace,
-                    fieldSelector: $"metadata.name={OperatorSettings.Name}-webhook-tls");
-
-                await NeonHelper.WaitForAsync(
-                   async () =>
-                   {
-                       await SyncContext.Clear;
-
-                       return Certificate != null;
-                   },
-                   timeout: TimeSpan.FromSeconds(300),
-                   pollInterval: TimeSpan.FromMilliseconds(500));
+                    timeout: TimeSpan.FromSeconds(300),
+                    pollInterval: TimeSpan.FromMilliseconds(500));
             }
         }
 

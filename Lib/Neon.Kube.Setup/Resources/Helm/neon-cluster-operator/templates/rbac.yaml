@@ -11,6 +11,7 @@ rules:
   - neonnodetasks/status
   - neoncontainerregistries
   - neonssoclients
+  - neonssoclients/status
   - neonssoconnectors
   - neondashboards
   verbs:
@@ -19,6 +20,7 @@ rules:
   - minio.neonkube.io
   resources:
   - miniobuckets
+  - miniobuckets/status
   verbs:
   - "*"
 - apiGroups:

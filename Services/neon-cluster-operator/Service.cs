@@ -169,11 +169,6 @@ namespace NeonClusterOperator
         /// </summary>
         public Dex.Dex.DexClient DexClient;
 
-        /// <summary>
-        /// The service port;
-        /// </summary>
-        public int Port { get; private set; } = 443;
-
         // private fields
         private HttpClient harborHttpClient;
         private readonly JsonSerializerOptions serializeOptions;
@@ -183,7 +178,7 @@ namespace NeonClusterOperator
         /// </summary>
         /// <param name="name">The service name.</param>
         public Service(string name)
-            : base(name, version: KubeVersions.NeonKube, new NeonServiceOptions() { MetricsPrefix = "neonclusteroperator" })
+            : base(name, version: KubeVersions.NeonKube)
         {
             serializeOptions = new JsonSerializerOptions()
             {
@@ -221,18 +216,10 @@ namespace NeonClusterOperator
 
             // Start the web service.
 
-            if (NeonHelper.IsDevWorkstation)
-            {
-                Port = 11005;
-            }
-
-            Logger.LogInformationEx(() => $"Listening on: {IPAddress.Any}:{Port}");
-            
             var k8s = KubernetesOperatorHost
                .CreateDefaultBuilder()
                .ConfigureOperator(configure =>
                {
-                   configure.Port                    = Port;
                    configure.AssemblyScanningEnabled = true;
                    configure.Name                    = Name;
                    configure.DeployedNamespace       = KubeNamespace.NeonSystem;
@@ -243,8 +230,6 @@ namespace NeonClusterOperator
                .Build();
 
             _ = k8s.RunAsync();
-
-            Logger.LogInformationEx(() => $"Listening on: {IPAddress.Any}:{Port}");
 
             // Indicate that the service is running.
 
@@ -297,10 +282,10 @@ namespace NeonClusterOperator
 
                         return true;
                     };
-                });
-
-            builder.AddAspNetCoreInstrumentation()
+                })
+                .AddAspNetCoreInstrumentation()
                 .AddGrpcCoreInstrumentation()
+                .AddKubernetesOperatorInstrumentation()
                 .AddNpgsql()
                 .AddQuartzInstrumentation()
                 .AddOtlpExporter(

@@ -15,6 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Net;
 using System;
@@ -43,6 +44,9 @@ using Prometheus.DotNetRuntime;
 
 using k8s;
 using k8s.Models;
+
+using OpenTelemetry.Trace;
+using OpenTelemetry;
 
 namespace NeonSsoSessionProxy
 {
@@ -80,7 +84,7 @@ namespace NeonSsoSessionProxy
         /// </summary>
         /// <param name="name">The service name.</param>
         public Service(string name)
-             : base(name, version: KubeVersions.NeonKube, new NeonServiceOptions() { MetricsPrefix = "neonssosessionproxy" })
+             : base(name, version: KubeVersions.NeonKube)
         {   
         }
 
@@ -198,6 +202,23 @@ namespace NeonSsoSessionProxy
             Terminator.ReadyToExit();
 
             return 0;
+        }
+
+        /// <inheritdoc/>
+        protected override bool OnTracerConfig(TracerProviderBuilder builder)
+        {
+            builder.AddHttpClientInstrumentation()
+                .AddAspNetCoreInstrumentation()
+                .AddOtlpExporter(
+                    options =>
+                    {
+                        options.ExportProcessorType = ExportProcessorType.Batch;
+                        options.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>();
+                        options.Endpoint = new Uri(NeonHelper.NeonKubeOtelCollectorUri);
+                        options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
+                    });
+
+            return true;
         }
 
         private async Task AddClientAsync(V1NeonSsoClient client)

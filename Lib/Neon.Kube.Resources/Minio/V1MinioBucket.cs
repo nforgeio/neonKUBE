@@ -22,6 +22,7 @@ using System.Text;
 
 using k8s;
 using k8s.Models;
+using static Neon.Kube.Resources.Minio.V1MinioBucket;
 
 namespace Neon.Kube.Resources.Minio
 {
@@ -30,7 +31,7 @@ namespace Neon.Kube.Resources.Minio
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
     [EntityScope(EntityScope.Namespaced)]
-    public class V1MinioBucket : IKubernetesObject<V1ObjectMeta>, ISpec<V1MinioBucket.V1MinioBucketSpec>
+    public class V1MinioBucket : IKubernetesObject<V1ObjectMeta>, ISpec<V1MinioBucket.V1MinioBucketSpec>, IStatus<V1MinioBucketStatus>
     {
         /// <summary>
         /// Object API group.
@@ -90,6 +91,11 @@ namespace Neon.Kube.Resources.Minio
         public V1MinioBucketSpec Spec { get; set; }
 
         /// <summary>
+        /// The status.
+        /// </summary>
+        public V1MinioBucketStatus Status { get; set; } = new V1MinioBucketStatus();
+
+        /// <summary>
         /// The node execute task specification.
         /// </summary>
         public class V1MinioBucketSpec
@@ -127,9 +133,14 @@ namespace Neon.Kube.Resources.Minio
         public class V1MinioBucketStatus
         {
             /// <summary>
-            /// <see cref="DateTime"/>.
+            /// Conditions.
             /// </summary>
-            public DateTime? Timestamp { get; set; }
+            public List<V1Condition> Conditions { get; set; } = new List<V1Condition>();
+
+            /// <summary>
+            /// The state.
+            /// </summary>
+            public string State { get; set; }
         }
     }
 

@@ -104,7 +104,7 @@ namespace Neon.Kube.Operator.Builder
             Services.AddSingleton<OperatorSettings>(operatorSettings);
             Services.AddSingleton(operatorSettings.ResourceManagerOptions);
             Services.AddSingleton(componentRegister);
-            Services.AddSingleton(typeof(EventQueueMetrics<>));
+            Services.AddSingleton(typeof(EventQueueMetrics<,>));
             Services.AddSingleton(typeof(ResourceCacheMetrics<>));
             Services.AddSingleton(typeof(ResourceManagerMetrics<,>));
             Services.AddSingleton<IFinalizerBuilder, FinalizerBuilder>();
@@ -140,7 +140,7 @@ namespace Neon.Kube.Operator.Builder
                             var controllerArgs      = new object[controllerRegMethod.GetParameters().Count()];
                             controllerArgs[0]       = this;
 
-                            var options = new ResourceManagerOptions();
+                            var options             = new ResourceManagerOptions();
                             var controllerAttribute = type.GetCustomAttribute<ControllerAttribute>();
 
                             if (controllerAttribute?.Ignore == true)
@@ -161,6 +161,13 @@ namespace Neon.Kube.Operator.Builder
                             if (controllerAttribute?.ManageCustomResourceDefinitions == false)
                             {
                                 options.ManageCustomResourceDefinitions = false;
+                            }
+
+                            if (controllerAttribute != null)
+                            {
+                                options.ErrorMinRequeueInterval = TimeSpan.FromSeconds(controllerAttribute.ErrorMinRequeueIntervalSeconds);
+                                options.ErrorMaxRequeueInterval = TimeSpan.FromSeconds(controllerAttribute.ErrorMaxRequeueIntervalSeconds);
+                                options.MaxConcurrentReconciles = controllerAttribute.MaxConcurrentReconciles;
                             }
 
                             var dependentResources = type.GetCustomAttributes()

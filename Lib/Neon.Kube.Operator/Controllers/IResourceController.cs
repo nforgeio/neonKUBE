@@ -154,5 +154,17 @@ namespace Neon.Kube.Operator.Controller
         {
             return Task.CompletedTask;
         }
+
+        /// <summary>
+        /// Called when an exception is thrown. This allows the Operator to define the retry policy.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="attempt"></param>
+        /// <param name="exception"></param>
+        /// <returns></returns>
+        public Task<ErrorPolicyResult> ErrorPolicyAsync(TEntity entity, int attempt, Exception exception)
+        {
+            return Task.FromResult(new ErrorPolicyResult());
+        }
     }
 }

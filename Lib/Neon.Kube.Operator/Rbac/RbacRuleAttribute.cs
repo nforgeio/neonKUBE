@@ -55,6 +55,11 @@ namespace Neon.Kube.Operator.Rbac
         public string ResourceNames { get; set; } = null;
 
         /// <summary>
+        /// Comma separated list of subresources.
+        /// </summary>
+        public string SubResources { get; set; } = null;
+
+        /// <summary>
         /// Constructor
         /// </summary>
         public RbacRuleAttribute()

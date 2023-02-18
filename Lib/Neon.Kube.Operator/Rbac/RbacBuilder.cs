@@ -145,21 +145,28 @@ namespace Neon.Kube.Operator.Rbac
             var clusterRules = attributes.Where(attr => attr.Scope == Resources.EntityScope.Cluster)
                 .GroupBy(attr => new
                 {
+                    ApiGroups     = attr.GetKubernetesEntityAttribute().Group,
                     ResourceNames = attr.ResourceNames?.Split(',').Distinct(),
-                    Verbs = attr.Verbs
+                    Verbs         = attr.Verbs,
+                    //SubResources  = attr.SubResources?.Split(",").Distinct().Select(sr => $"{attr.GetKubernetesEntityAttribute().PluralName}/{sr}") ??
+                    //                        new List<string>()
                 })
                 .Select(
                     group => (
                         Verbs: group.Key.Verbs,
                         ResourceNames: group.Key.ResourceNames,
-                        EntityTypes: group.Select(attr => attr.GetKubernetesEntityAttribute()).ToList()))
-
+                        //SubResources: group.Key.SubResources,
+                        EntityTypes: group.Select(attr => attr.GetKubernetesEntityAttribute()).ToList(),
+                        SubResources: group.SelectMany(attr => (
+                            attr.SubResources?.Split(",").Distinct().Select(sr => $"{attr.GetKubernetesEntityAttribute().PluralName}/{sr}")) ??
+                                new string[0])
+                        ))
                 .Select(
                     group => new V1PolicyRule
                     {
-                        ApiGroups = group.EntityTypes.Select(entity => entity.Group).Distinct().ToList(),
-                        Resources = group.EntityTypes.Select(entity => entity.PluralName).Distinct().ToList(),
-                        ResourceNames = group.ResourceNames?.Count() > 0 ? group.ResourceNames.ToList() : null,
+                        ApiGroups = group.EntityTypes.Select(entity => entity.Group).Distinct().OrderBy(x => x).ToList(),
+                        Resources = group.EntityTypes.SelectMany(entity => group.SubResources.Append(entity.PluralName)).Distinct().OrderBy(x => x).ToList(),
+                        ResourceNames = group.ResourceNames?.Count() > 0 ? group.ResourceNames.OrderBy(x => x).ToList() : null,
                         Verbs = group.Verbs.ToStrings(),
                     });
 

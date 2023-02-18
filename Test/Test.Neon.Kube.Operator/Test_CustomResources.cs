@@ -74,10 +74,9 @@ namespace Test.Neon.Kube.Operator
         [Fact]
         public async Task CanSerializeCustomResources()
         {
-            var generator = new CustomResourceGenerator(converters:
-                new List<Newtonsoft.Json.JsonConverter>() { new DexConnectorConverter() });
+            var generator = new CustomResourceGenerator();
 
-            var crd = await generator.GenerateCustomResourceDefinitionAsync(typeof(V1NeonSsoConnector));
+            var crd = await generator.GenerateCustomResourceDefinitionAsync(typeof(V1NeonSsoClient));
 
             var str = KubernetesJson.Serialize(crd);
             var yaml = KubernetesYaml.Serialize(crd);

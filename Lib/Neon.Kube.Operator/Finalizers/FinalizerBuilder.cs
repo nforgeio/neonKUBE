@@ -45,26 +45,20 @@ namespace Neon.Kube.Operator.Finalizer
         public IResourceFinalizer<TEntity> BuildFinalizer<TEntity, TFinalizer>(IServiceProvider serviceProvider)
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
-            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
-            {
-                return componentRegister.FinalizerRegistrations
+            return componentRegister.FinalizerRegistrations
                 .Where(r => r.EntityType.IsEquivalentTo(typeof(TEntity)))
                 .Where(r => r.FinalizerType.IsEquivalentTo(typeof(TFinalizer)))
                 .Select(r => (IResourceFinalizer<TEntity>)serviceProvider.GetRequiredService(r.FinalizerType))
                 .Single();
-            }
         }
 
         /// <inheritdoc/>
         public IEnumerable<IResourceFinalizer<TEntity>> BuildFinalizers<TEntity>(IServiceProvider serviceProvider)
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
-            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
-            {
-                return componentRegister.FinalizerRegistrations
-                    .Where(r => r.EntityType.IsEquivalentTo(typeof(TEntity)))
-                    .Select(r => (IResourceFinalizer<TEntity>)serviceProvider.GetRequiredService(r.FinalizerType));
-            }
+            return componentRegister.FinalizerRegistrations
+                .Where(r => r.EntityType.IsEquivalentTo(typeof(TEntity)))
+                .Select(r => (IResourceFinalizer<TEntity>)serviceProvider.GetRequiredService(r.FinalizerType));
         }
     }
 

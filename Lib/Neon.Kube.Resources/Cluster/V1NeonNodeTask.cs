@@ -165,7 +165,7 @@ namespace Neon.Kube.Resources.Cluster
     /// </remarks>
     [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
     [EntityScope(EntityScope.Cluster)]
-    public class V1NeonNodeTask : IKubernetesObject<V1ObjectMeta>, ISpec<V1NeonNodeTask.TaskSpec>
+    public class V1NeonNodeTask : IKubernetesObject<V1ObjectMeta>, ISpec<V1NeonNodeTask.TaskSpec>, IStatus<V1NeonNodeTask.TaskStatus>
     {
         /// <summary>
         /// Object API group.

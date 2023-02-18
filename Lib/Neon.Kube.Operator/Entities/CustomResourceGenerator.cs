@@ -45,6 +45,7 @@ using Newtonsoft.Json.Serialization;
 using NJsonSchema;
 using NJsonSchema.Generation;
 using NJsonSchema.Generation.TypeMappers;
+using Microsoft.OpenApi.Writers;
 
 namespace Neon.Kube.Operator.Entities
 {
@@ -120,6 +121,9 @@ namespace Neon.Kube.Operator.Entities
             var schema          = GenerateJsonSchema(resourceType);
             var pluralNameGroup = string.IsNullOrEmpty(entity.Group) ? entity.PluralName : $"{entity.PluralName}.{entity.Group}";
 
+            var implementsStatus = resourceType.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IStatus<>));
+            var scaleAttribute   = resourceType.GetCustomAttribute<ScaleAttribute>();
+
             var crd = new V1CustomResourceDefinition(
                             apiVersion: $"{V1CustomResourceDefinition.KubeGroup}/{V1CustomResourceDefinition.KubeApiVersion}",
                             kind: V1CustomResourceDefinition.KubeKind,
@@ -137,12 +141,27 @@ namespace Neon.Kube.Operator.Entities
                                         name: entity.ApiVersion,
                                         served: true,
                                         storage: true,
-                                        schema: new V1CustomResourceValidation(schema)),
+                                        schema: new V1CustomResourceValidation(schema),
+                                        subresources: new V1CustomResourceSubresources()
+                                        {
+                                            Status = implementsStatus ? new object() : null,
+                                            Scale  = scaleAttribute != null ? new V1CustomResourceSubresourceScale()
+                                            {
+                                                LabelSelectorPath = scaleAttribute.LabelSelectorPath,
+                                                SpecReplicasPath   = scaleAttribute.SpecReplicasPath,
+                                                StatusReplicasPath = scaleAttribute.StatusReplicasPath,
+                                            } : null
+                                        },
+                                        additionalPrinterColumns: resourceType.GetCustomAttributes<AdditionalPrinterColumnsAttribute>()
+                                                                                .Select(attr => (
+                                                                                    attr.ToV1CustomResourceColumnDefinition()
+                                                                                    )).ToList()),
                                 }));
 
             foreach (var version in crd.Spec.Versions)
             {
-                if (version.Schema.OpenAPIV3Schema.Properties.TryGetValue("metadata", out var metadata))
+                if (version.Schema.OpenAPIV3Schema.Properties != null
+                    && version.Schema.OpenAPIV3Schema.Properties.TryGetValue("metadata", out var metadata))
                 {
                     metadata.Description = null;
                 }

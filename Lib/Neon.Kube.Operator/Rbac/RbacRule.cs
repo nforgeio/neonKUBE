@@ -54,18 +54,25 @@ namespace Neon.Kube.Operator.Rbac
         public string Namespace { get; set; } = null;
 
         /// <summary>
+        /// Comma separated list of subresources. 
+        /// </summary>
+        public string SubResources { get; set; } = null;
+
+        /// <summary>
         /// Constructor
         /// </summary>
         public RbacRule(
             RbacVerb verbs = RbacVerb.None,
             EntityScope scope = EntityScope.Namespaced,
             string @namespace = null,
-            string resourceNames = null)
+            string resourceNames = null,
+            string subResources = null)
         {
             this.Verbs          = verbs;
             this.Scope          = scope;
             this.Namespace      = @namespace;
             this.ResourceNames  = resourceNames;
+            this.SubResources   = subResources;
 
             if (typeof(TEntity).GetCustomAttribute<EntityScopeAttribute>()?.Scope == EntityScope.Cluster)
             {

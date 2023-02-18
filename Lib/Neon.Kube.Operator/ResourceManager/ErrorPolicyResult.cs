@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TracerProviderBuilderExtensions.cs
+// FILE:	    ErrorPolicyResult.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -17,34 +17,42 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-using Neon.Diagnostics;
+using k8s;
 
-using OpenTelemetry.Trace;
-
-namespace Neon.Kube.Operator
+namespace Neon.Kube.Operator.ResourceManager
 {
     /// <summary>
-    /// Kubernetes Operator Tracing Instrumentation.
+    /// Describes a error policy result.
     /// </summary>
-    public static class TracerProviderBuilderExtensions
+    public class ErrorPolicyResult
     {
-        /// <summary>
-        /// Adds Kubernetes Operator to the tracing pipeline.
-        /// </summary>
-        /// <param name="builder"></param>
-        /// <returns></returns>
-        public static TracerProviderBuilder AddKubernetesOperatorInstrumentation(
-            this TracerProviderBuilder builder)
+        internal ErrorPolicyResult(
+            TimeSpan? delay = null,
+            WatchEventType eventType = WatchEventType.Modified,
+            bool requeue = true)
         {
-            builder.AddSource(TraceContext.ActivitySourceName);
-
-            return builder;
+            RequeueDelay = delay;
+            EventType    = eventType;
+            Requeue      = requeue;
         }
+
+        /// <summary>
+        /// Whether the item should be requeued.
+        /// </summary>
+        public bool Requeue { get; } = false;
+
+        /// <summary>
+        /// Time that should be waited for a requeue.
+        /// </summary>
+        public TimeSpan? RequeueDelay { get; }
+
+        /// <summary>
+        /// Type of the event to be queued.
+        /// </summary>
+        public WatchEventType? EventType { get; }
     }
 }

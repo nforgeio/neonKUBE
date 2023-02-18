@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    VerbExtensions.cs
+// FILE:	    TraceContext.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -17,36 +17,35 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace Neon.Kube.Operator.Rbac
+using Neon.Diagnostics;
+
+using OpenTelemetry.Trace;
+
+namespace Neon.Kube.Operator
 {
-    internal static class VerbExtensions
+    internal static class TraceContext
     {
-        public static IList<string> ToStrings(this RbacVerb verb)
+        internal static readonly AssemblyName AssemblyName = typeof(TracerProviderBuilderExtensions).Assembly.GetName();
+
+        internal static readonly string ActivitySourceName = AssemblyName.Name;
+
+        internal static readonly Version Version = AssemblyName.Version;
+
+        internal static ActivitySource ActivitySource => Cached.Source.Value;
+
+        static class Cached
         {
-            var result = new List<string>();
-
-            if (verb == RbacVerb.None)
+            internal static readonly Lazy<ActivitySource> Source = new Lazy<ActivitySource>(
+            () =>
             {
-                return result;
-            }
-
-            if (verb.HasFlag(RbacVerb.All))
-            {
-                result.Add("*");
-                return result;
-            }
-
-            foreach (var value in Enum.GetValues<RbacVerb>().Where(v => v != RbacVerb.None && v != RbacVerb.All))
-            {
-                if (verb.HasFlag(value))
-                {
-                    result.Add(value.ToString().ToLower());
-                }
-            }
-
-            return result.OrderBy(x => x).ToList();
+                return new ActivitySource(ActivitySourceName, Version.ToString());
+            });
         }
     }
 }

@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -67,10 +68,9 @@ namespace Neon.Kube.Operator.Webhook
         /// <inheritdoc cref="Create"/>
         Task<TResult> CreateAsync(TEntity newEntity, bool dryRun)
         {
-            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
-            {
-                return Task.FromResult(Create(newEntity, dryRun));
-            }
+            using var activity = TraceContext.ActivitySource?.StartActivity();
+
+            return Task.FromResult(Create(newEntity, dryRun));
         }
 
         /// <summary>
@@ -85,10 +85,9 @@ namespace Neon.Kube.Operator.Webhook
         /// <inheritdoc cref="Update"/>
         Task<TResult> UpdateAsync(TEntity oldEntity, TEntity newEntity, bool dryRun)
         {
-            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
-            {
-                return Task.FromResult(Update(oldEntity, newEntity, dryRun));
-            }
+            using var activity = TraceContext.ActivitySource?.StartActivity();
+
+            return Task.FromResult(Update(oldEntity, newEntity, dryRun));
         }
 
         /// <summary>
@@ -102,10 +101,9 @@ namespace Neon.Kube.Operator.Webhook
         /// <inheritdoc cref="Delete"/>
         Task<TResult> DeleteAsync(TEntity oldEntity, bool dryRun)
         {
-            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
-            {
-                return Task.FromResult(Delete(oldEntity, dryRun));
-            }
+            using var activity = TraceContext.ActivitySource?.StartActivity();
+
+            return Task.FromResult(Delete(oldEntity, dryRun));
         }
 
         internal AdmissionResponse TransformResult(
@@ -123,7 +121,8 @@ namespace Neon.Kube.Operator.Webhook
             IServiceProvider serviceProvider)
         {
             var logger           = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger<IAdmissionWebhook<TEntity, TResult>>();
-            var metrics          = new WebhookMetrics<TEntity>(Endpoint);
+            var operatorSettings = serviceProvider.GetRequiredService<OperatorSettings>();
+            var metrics          = new WebhookMetrics<TEntity>(operatorSettings.Name, Endpoint);
 
             logger?.LogInformationEx(() => $"Registered webhook at [{Endpoint}]");
 
@@ -131,103 +130,102 @@ namespace Neon.Kube.Operator.Webhook
                 Endpoint,
                 async context =>
                 {
+                    using var activity = Activity.Current;
+
                     using var inFlight = metrics.RequestsInFlight.TrackInProgress();
                     using var timer    = metrics.LatencySeconds.NewTimer();
 
-                    using (var activity = TelemetryHub.ActivitySource?.StartActivity())
+                    try
                     {
+                        if (!context.Request.HasJsonContentType())
+                        {
+                            logger?.LogErrorEx(() => "Admission request has no json content type.");
+                            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                            return;
+                        }
+
+                        using var reader = new StreamReader(context.Request.Body);
+
+                        var review = KubernetesJson.Deserialize<AdmissionReview<TEntity>>(await reader.ReadToEndAsync());
+
+                        if (review.Request == null)
+                        {
+                            logger?.LogErrorEx(() => "The admission request contained no request object.");
+                            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                            await context.Response.WriteAsync("The request must contain AdmissionRequest information.");
+                            return;
+                        }
+
+                        AdmissionResponse response;
                         try
                         {
-                            if (!context.Request.HasJsonContentType())
+                            if (context.RequestServices.GetRequiredService(GetType()) is not
+                                IAdmissionWebhook<TEntity, TResult>
+                                webhook)
                             {
-                                logger?.LogErrorEx(() => "Admission request has no json content type.");
-                                context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                                return;
+                                throw new Exception("Object is not a valid IAdmissionWebhook<TEntity, TResult>");
                             }
 
-                            using var reader = new StreamReader(context.Request.Body);
+                            var @object = KubernetesJson.Deserialize<TEntity>(KubernetesJson.Serialize(review.Request.Object));
+                            var oldObject = KubernetesJson.Deserialize<TEntity>(KubernetesJson.Serialize(review.Request.OldObject));
 
-                            var review = KubernetesJson.Deserialize<AdmissionReview<TEntity>>(await reader.ReadToEndAsync());
+                            logger?.LogInformationEx(() => @$"Admission with method ""{review.Request.Operation}"".");
 
-                            if (review.Request == null)
+                            TResult result;
+                            switch (review.Request.Operation)
                             {
-                                logger?.LogErrorEx(() => "The admission request contained no request object.");
-                                context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                                await context.Response.WriteAsync("The request must contain AdmissionRequest information.");
-                                return;
+                                case "CREATE":
+
+                                    result = await webhook.CreateAsync(@object, review.Request.DryRun);
+
+                                    break;
+
+                                case "UPDATE":
+
+                                    result = await webhook.UpdateAsync(oldObject, @object, review.Request.DryRun);
+                                    break;
+
+                                case "DELETE":
+
+                                    result = await webhook.DeleteAsync(@object, review.Request.DryRun);
+                                    break;
+
+                                default:
+                                    throw new InvalidOperationException();
                             }
 
-                            AdmissionResponse response;
-                            try
-                            {
-                                if (context.RequestServices.GetRequiredService(GetType()) is not
-                                    IAdmissionWebhook<TEntity, TResult>
-                                    webhook)
-                                {
-                                    throw new Exception("Object is not a valid IAdmissionWebhook<TEntity, TResult>");
-                                }
+                            response = TransformResult(result, review.Request);
 
-                                var @object = KubernetesJson.Deserialize<TEntity>(KubernetesJson.Serialize(review.Request.Object));
-                                var oldObject = KubernetesJson.Deserialize<TEntity>(KubernetesJson.Serialize(review.Request.OldObject));
-
-                                logger?.LogInformationEx(() => @$"Admission with method ""{review.Request.Operation}"".");
-
-                                TResult result;
-                                switch (review.Request.Operation)
-                                {
-                                    case "CREATE":
-
-                                        result = await webhook.CreateAsync(@object, review.Request.DryRun);
-
-                                        break;
-
-                                    case "UPDATE":
-
-                                        result = await webhook.UpdateAsync(oldObject, @object, review.Request.DryRun);
-                                        break;
-
-                                    case "DELETE":
-
-                                        result = await webhook.DeleteAsync(@object, review.Request.DryRun);
-                                        break;
-
-                                    default:
-                                        throw new InvalidOperationException();
-                                }
-
-                                response = TransformResult(result, review.Request);
-
-                            }
-                            catch (Exception ex)
-                            {
-                                logger?.LogErrorEx(ex, "An error happened during admission.");
-                                response = new AdmissionResponse()
-                                {
-                                    Allowed = false,
-                                    Status = new()
-                                    {
-                                        Code = StatusCodes.Status500InternalServerError,
-                                        Message = "There was an internal server error.",
-                                    },
-                                };
-                            }
-
-                            review.Response = response;
-                            review.Response.Uid = review.Request.Uid;
-
-                            logger?.LogInformationEx(() =>
-                                @$"AdmissionHook ""{Name}"" did return ""{review.Response?.Allowed}"" for ""{review.Request.Operation}"".");
-
-                            review.Request = null;
-
-                            metrics.RequestsTotal.WithLabels(new string[] { Endpoint, response.Status.Code.ToString()}).Inc();
-
-                            await context.Response.WriteAsJsonAsync(review);
                         }
-                        catch (Exception e)
+                        catch (Exception ex)
                         {
-                            logger?.LogErrorEx(e);
+                            logger?.LogErrorEx(ex, "An error happened during admission.");
+                            response = new AdmissionResponse()
+                            {
+                                Allowed = false,
+                                Status = new()
+                                {
+                                    Code = StatusCodes.Status500InternalServerError,
+                                    Message = "There was an internal server error.",
+                                },
+                            };
                         }
+
+                        review.Response = response;
+                        review.Response.Uid = review.Request.Uid;
+
+                        logger?.LogInformationEx(() =>
+                            @$"AdmissionHook ""{Name}"" did return ""{review.Response?.Allowed}"" for ""{review.Request.Operation}"".");
+
+                        review.Request = null;
+
+                        metrics.RequestsTotal.WithLabels(new string[] { operatorSettings.Name, Endpoint, response.Status?.Code.ToString()}).Inc();
+
+                        await context.Response.WriteAsJsonAsync(review);
+                    }
+                    catch (Exception e)
+                    {
+                        logger?.LogErrorEx(e);
                     }
                 });
         }

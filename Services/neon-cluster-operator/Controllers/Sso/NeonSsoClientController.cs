@@ -54,6 +54,8 @@ using k8s;
 using k8s.Autorest;
 using k8s.Models;
 
+using Neon.Kube.Operator.Attributes;
+using Neon.Kube.Operator.Util;
 using Neon.Kube.Resources.Cluster;
 
 using Newtonsoft.Json;
@@ -73,7 +75,7 @@ namespace NeonClusterOperator
     /// Configures Neon SSO using <see cref="V1NeonSsoClient"/>.
     /// </para>
     /// </summary>
-    [RbacRule<V1NeonSsoClient>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
+    [RbacRule<V1NeonSsoClient>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1ConfigMap>(Verbs = RbacVerb.Get | RbacVerb.Update, Scope = EntityScope.Namespaced, Namespace = KubeNamespace.NeonSystem, ResourceNames = "neon-sso-oauth2-proxy")]
     public class NeonSsoClientController : IResourceController<V1NeonSsoClient>
     {
@@ -137,9 +139,13 @@ namespace NeonClusterOperator
             {
                 // Ignore all events when the controller hasn't been started.
 
-                await finalizerManager.RegisterFinalizerAsync<NeonSsoClientFinalizer>(resource);
+                //await UpsertClientAsync(resource);
 
-                await UpsertClientAsync(resource);
+                var patch = OperatorHelper.CreatePatch<V1NeonSsoClient>();
+                patch.Replace(path => path.Status, new V1SsoClientStatus());
+                patch.Replace(path => path.Status.State, "reconciled");
+
+                await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonSsoClient>(OperatorHelper.ToV1Patch<V1NeonSsoClient>(patch), resource.Name());
 
                 logger?.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
 

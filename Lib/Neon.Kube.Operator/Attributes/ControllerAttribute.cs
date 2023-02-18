@@ -44,6 +44,21 @@ namespace Neon.Kube.Operator.Attributes
         public bool ManageCustomResourceDefinitions { get; set; } = true;
 
         /// <summary>
+        /// Specifies the <see cref="ResourceManager.ResourceManagerOptions.MaxConcurrentReconciles"/>.
+        /// </summary>
+        public int MaxConcurrentReconciles { get; set; } = 1;
+
+        /// <summary>
+        /// Specifies the <see cref="ResourceManager.ResourceManagerOptions.ErrorMinRequeueInterval"/>.
+        /// </summary>
+        public int ErrorMinRequeueIntervalSeconds { get; set; } = 10;
+
+        /// <summary>
+        /// Specifies the <see cref="ResourceManager.ResourceManagerOptions.ErrorMaxRequeueInterval"/>.
+        /// </summary>
+        public int ErrorMaxRequeueIntervalSeconds { get; set; } = 600;
+
+        /// <summary>
         /// Constructor
         /// </summary>
         public ControllerAttribute()

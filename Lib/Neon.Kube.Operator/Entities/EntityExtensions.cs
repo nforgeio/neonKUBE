@@ -15,11 +15,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using k8s.Models;
-using k8s;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Text.Json.JsonDiffPatch;
+using System.Text.Json.JsonDiffPatch.Diffs.Formatters;
+using System.Text.Json.Nodes;
+
+using k8s;
+using k8s.Models;
 
 namespace Neon.Kube.Operator
 {
@@ -28,6 +33,8 @@ namespace Neon.Kube.Operator
     /// </summary>
     public static class EntityExtensions
     {
+        private static JsonPatchDeltaFormatter JsonPatchDeltaFormatter = new JsonPatchDeltaFormatter();
+
         /// <summary>
         /// Makes an owner reference from a <see cref="IKubernetesObject{V1ObjectMeta}"/>
         /// </summary>
@@ -58,6 +65,23 @@ namespace Neon.Kube.Operator
         {
             var entityMetatdata = entityType.GetKubernetesTypeMetadata();
             return $"{entityMetatdata.PluralName}.{entityMetatdata.Group}";
+        }
+
+        /// <summary>
+        /// Creates a <see cref="V1Patch"/> given two objects.
+        /// </summary>
+        /// <param name="oldEntity"></param>
+        /// <param name="newEntity"></param>
+        /// <returns></returns>
+        public static V1Patch CreatePatch(this object oldEntity, object newEntity)
+        {
+            var node1 = JsonNode.Parse(KubernetesJson.Serialize(oldEntity));
+            var node2 = JsonNode.Parse(KubernetesJson.Serialize(newEntity));
+
+            var diff        = node1.Diff(node2, JsonPatchDeltaFormatter);
+            var patchString = Convert.ToBase64String(Encoding.UTF8.GetBytes(KubernetesJson.Serialize(diff)));
+
+            return new V1Patch(patchString, V1Patch.PatchType.JsonPatch);
         }
     }
 }

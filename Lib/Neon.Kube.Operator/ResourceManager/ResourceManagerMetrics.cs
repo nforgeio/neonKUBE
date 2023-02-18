@@ -71,70 +71,70 @@ namespace Neon.Kube.Operator.ResourceManager
 
             IdleCounter = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_idle",
+                    name: $"{prefix}_idle_total",
                     help: "IDLE events handled by the controller.",
                     labelNames: LabelNames)
                 .WithLabels(labelValues);
 
             ReconcileEventsTotal = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_reconcile",
+                    name: $"{prefix}_reconcile_total",
                     help: "Total number of reconciliations per controller.",
                     labelNames: LabelNames)
                 .WithLabels(labelValues);
 
             DeleteEventsTotal = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_delete",
+                    name: $"{prefix}_delete_total",
                     help: "Total number of delete events per controller.",
                     labelNames: LabelNames)
                 .WithLabels(labelValues);
 
             StatusModifiedTotal = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_statusmodify",
+                    name: $"{prefix}_statusmodify_total",
                     help: "Total number of status updates handled by the controller.",
                     labelNames: LabelNames)
                 .WithLabels(labelValues);
 
             FinalizeTotal = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_finalize",
+                    name: $"{prefix}_finalize_total",
                     help: "Total number of finalize events handled by the controller.",
                     labelNames: LabelNames)
                 .WithLabels(labelValues);
 
             IdleErrorsTotal = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_idle",
+                    name: $"{prefix}_idle_errors_total",
                     help: "The number of errors that occured during idle.",
                     labelNames: LabelNames)
                 .WithLabels(labelValues);
 
             ReconcileErrorsTotal = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_reconcile_errors",
+                    name: $"{prefix}_reconcile_errors_total",
                     help: "The number of exceptions thrown while handling reconcile events.",
                     labelNames: LabelNames)
                 .WithLabels(labelValues);
 
             DeleteErrorsTotal = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_delete_errors",
+                    name: $"{prefix}_delete_errors_total",
                     help: "The number of exceptions thrown while handling delete events.",
                     labelNames: LabelNames)
                 .WithLabels(labelValues);
 
             StatusModifiedErrorsTotal = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_statusmodified_errors",
+                    name: $"{prefix}_statusmodified_errors_total",
                     help: "The number of exceptions thrown while handling status updates.",
                     labelNames: LabelNames)
                 .WithLabels(labelValues);
 
             FinalizeErrorsTotal = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_finalize_errors",
+                    name: $"{prefix}_finalize_errors_total",
                     help: "The number of exceptions thrown while handling finalize events.",
                     labelNames: LabelNames)
                 .WithLabels(labelValues);
@@ -173,7 +173,6 @@ namespace Neon.Kube.Operator.ResourceManager
                     help: "How long in seconds the operator spent finalizing resources.",
                     labelNames: LabelNames)
                 .WithLabels(labelValues);
-
         }
 
         /// <summary>
@@ -358,5 +357,19 @@ namespace Neon.Kube.Operator.ResourceManager
         /// </para>
         /// </summary>
         public Histogram.Child FinalizeTimeSeconds { get; set; }
+
+        /// <summary>
+        /// <para>
+        /// The number of currently active reconcilers.
+        /// </para>
+        /// </summary>
+        public Gauge.Child ActiveReconciles { get; set; }
+
+        /// <summary>
+        /// <para>
+        /// The maximum number of concurrent reconcilers.
+        /// </para>
+        /// </summary>
+        public Gauge.Child MaxConcurrentReconciles { get; set; }
     }
 }

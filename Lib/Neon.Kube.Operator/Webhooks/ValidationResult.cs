@@ -41,7 +41,9 @@ namespace Neon.Kube.Operator.Webhook
         {
             return new ValidationResult()
             {
-                Warnings = warnings
+                Valid      = true,
+                StatusCode = StatusCodes.Status200OK,
+                Warnings   = warnings
             };
         }
 

@@ -41,9 +41,16 @@ namespace Neon.Kube.Operator.Webhook
         /// Utility method that creates a return value that indicates that no changes must be applied.
         /// </summary>
         /// <returns>A <see cref="MutationResult"/> with no changes.</returns>
-        public static MutationResult NoChanges()
+        public static MutationResult NoChanges(
+            int statusCode = StatusCodes.Status200OK,
+            string statusMessage = null)
         {
-            return new MutationResult();
+            return new MutationResult()
+            {
+                Valid         = true,
+                StatusCode    = StatusCodes.Status200OK,
+                StatusMessage = statusMessage
+            };
         }
 
         /// <summary>

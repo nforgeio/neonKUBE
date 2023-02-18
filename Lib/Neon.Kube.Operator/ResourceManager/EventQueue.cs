@@ -45,19 +45,26 @@ using k8s.Autorest;
 using k8s.Models;
 
 using Prometheus;
+using OpenTelemetry.Resources;
+using System.Threading.Channels;
+using System.ServiceModel.Channels;
+using static IdentityModel.OidcConstants;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Neon.Kube.Operator.ResourceManager
 {
-    internal class EventQueue<TEntity>
+    internal class EventQueue<TEntity, TController>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         private readonly IKubernetes                                                            k8s;
-        private readonly ILogger<EventQueue<TEntity>>                                           logger;
+        private readonly ILogger<EventQueue<TEntity, TController>>                              logger;
         private readonly ResourceManagerOptions                                                 options;
         private readonly ConcurrentDictionary<WatchEvent<TEntity>, CancellationTokenSource>     queue;
         private readonly ConcurrentDictionary<string, DateTime>                                 currentEvents;
         private readonly Func<WatchEvent<TEntity>, Task>                                        eventHandler;
-        private readonly EventQueueMetrics<TEntity>                                             metrics;
+        private readonly EventQueueMetrics<TEntity, TController>                                metrics;
+        private readonly Channel<string>                                                        eventChannel;
+        private readonly Task[]                                                                 consumerTasks;
 
         /// <summary>
         /// Constructor.
@@ -71,16 +78,20 @@ namespace Neon.Kube.Operator.ResourceManager
             IKubernetes                         k8s,
             ResourceManagerOptions              options,
             Func<WatchEvent<TEntity>, Task>     eventHandler,
-            EventQueueMetrics<TEntity>          metrics,
+            EventQueueMetrics<TEntity, TController>          metrics,
             ILoggerFactory                      loggerFactory = null)
         {
             this.k8s           = k8s;
             this.options       = options;
             this.eventHandler  = eventHandler;
             this.metrics       = metrics;
-            this.logger        = loggerFactory?.CreateLogger<EventQueue<TEntity>>();
+            this.logger        = loggerFactory?.CreateLogger<EventQueue<TEntity, TController>>();
             this.queue         = new ConcurrentDictionary<WatchEvent<TEntity>, CancellationTokenSource>();
             this.currentEvents = new ConcurrentDictionary<string, DateTime>();
+            this.eventChannel  = Channel.CreateUnbounded<string>();
+            this.consumerTasks = new Task[options.MaxConcurrentReconciles];
+
+            metrics.MaxActiveWorkers.IncTo(options.MaxConcurrentReconciles);
 
             Metrics.DefaultRegistry.AddBeforeCollectCallback(async (cancel) =>
             {
@@ -94,6 +105,63 @@ namespace Neon.Kube.Operator.ResourceManager
                     metrics.LongestRunningProcessorSeconds.IncTo(values.Max());
                 }
             });
+
+            _ = StartConsumersAsync();
+        }
+
+        private async Task StartConsumersAsync()
+        {
+            while (true)
+            {
+                for (int i = 0; i < consumerTasks.Length; i++)
+                {
+                    var task = consumerTasks[i];
+                    if (task == null || !task.Status.Equals(TaskStatus.Running))
+                    {
+                        consumerTasks[i] = ConsumerAsync();
+                    }
+                }
+
+                await Task.WhenAny(consumerTasks);
+            }
+        }
+
+        private async Task ConsumerAsync()
+        {
+            using var worker = metrics.ActiveWorkers.TrackInProgress();
+
+            while (await eventChannel.Reader.WaitToReadAsync())
+            {
+                if (eventChannel.Reader.TryRead(out var uid))
+                {
+                    var @event = queue.Keys.Where(key => key.Value.Uid() == uid).FirstOrDefault();
+
+                    try
+                    {
+                        currentEvents.TryAdd(uid, DateTime.UtcNow);
+
+                        metrics.QueueDurationSeconds.Observe((DateTime.UtcNow - @event.CreatedAt).TotalSeconds);
+
+                        if (@event == null ||
+                            @event.Value == null ||
+                            queue[@event].IsCancellationRequested)
+                        {
+                            return;
+                        }
+
+                        logger?.LogDebugEx(() => $"Executing event [{@event.Type}] for resource [{@event.Value.Kind}/{@event.Value.Name()}]");
+
+                        using (var timer = metrics.WorkDurationSeconds.NewTimer())
+                        {
+                            await eventHandler?.Invoke(@event);
+                        }
+                    }
+                    finally
+                    {
+                        currentEvents.Remove(uid, out _);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -119,12 +187,10 @@ namespace Neon.Kube.Operator.ResourceManager
         /// Requeue an event.
         /// </summary>
         /// <param name="event"></param>
-        /// <param name="delay"></param>
         /// <param name="watchEventType"></param>
         /// <returns></returns>
         public async Task EnqueueAsync(
             WatchEvent<TEntity>  @event,
-            TimeSpan?           delay          = null,
             WatchEventType?     watchEventType = null)
         {
             await SyncContext.Clear;
@@ -144,13 +210,6 @@ namespace Neon.Kube.Operator.ResourceManager
                 watchEventType = @event.Type;
             }
 
-            if (delay == null)
-            {
-                delay = GetDelay(@event.Attempt);
-
-                logger?.LogDebugEx(() => $"Event [{@event.Type}] delay for resource [{resource.Kind}/{resource.Name()}]: {delay}");
-            }
-
             @event.Type = watchEventType.Value;
 
             var cts = new CancellationTokenSource();
@@ -158,12 +217,10 @@ namespace Neon.Kube.Operator.ResourceManager
             if (queue.TryAdd(@event, cts))
             {
                 metrics.AddsTotal.Inc();
-                metrics.Depth.IncTo(queue.Count);
-
-                currentEvents.TryAdd(@event.Value.Uid(), DateTime.UtcNow);
+                metrics.Depth.Set(queue.Count);
             }
 
-            _ = QueueAsync(@event, delay.Value, cts.Token);
+            await eventChannel.Writer.WriteAsync(@event.Value.Uid());
         }
 
         /// <summary>
@@ -178,13 +235,34 @@ namespace Neon.Kube.Operator.ResourceManager
             TimeSpan?           delay          = null, 
             WatchEventType?     watchEventType = null)
         {
+            logger?.LogDebugEx(() => $"Requeuing resource [{@event.Value.Kind}/{@event.Value.Name()}]. Attempt [{@event.Attempt}]");
+
+            metrics.RetriesTotal.Inc();
+
             try
             {
+                var resource = @event.Value;
+
                 var old = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).FirstOrDefault();
 
                 if (old != null)
                 {
                     await DequeueAsync(old);
+                }
+
+                if (delay == null
+                    && @event.Attempt > 0)
+                {
+                    delay = GetDelay(@event.Attempt);
+
+                    logger?.LogDebugEx(() => $"Event [{@event.Type}] delay for resource [{resource.Kind}/{resource.Name()}]: {delay}");
+                }
+
+                if (delay > TimeSpan.Zero)
+                {
+                    _ = EnqueueAfterSleepAsync(@event, delay, watchEventType);
+
+                    return;
                 }
             }
             catch (Exception e)
@@ -192,7 +270,20 @@ namespace Neon.Kube.Operator.ResourceManager
                 logger?.LogDebugEx(e);
             }
 
-            await EnqueueAsync(@event, delay, watchEventType);
+            @event.CreatedAt = DateTime.UtcNow;
+
+            await EnqueueAsync(@event, watchEventType);
+        }
+
+        private async Task EnqueueAfterSleepAsync(WatchEvent<TEntity> @event, TimeSpan? delay, WatchEventType? watchEventType)
+        {
+            logger?.LogDebugEx(() => $"Sleeping before executing event [{@event.Type}] for resource [{@event.Value.Kind}/{@event.Value.Name()}]");
+
+            await Task.Delay(delay.Value);
+
+            @event.CreatedAt = DateTime.UtcNow;
+
+            await EnqueueAsync(@event, watchEventType);
         }
 
         /// <summary>
@@ -203,6 +294,8 @@ namespace Neon.Kube.Operator.ResourceManager
         public async Task DequeueAsync(WatchEvent<TEntity> @event)
         {
             await SyncContext.Clear;
+            
+            logger?.LogDebugEx(() => $"Dequeuing resource [{@event.Value.Kind}/{@event.Value.Name()}].");
 
             var queuedEvent = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).FirstOrDefault();
 
@@ -220,44 +313,8 @@ namespace Neon.Kube.Operator.ResourceManager
 
                 if (queue.TryRemove(queuedEvent, out _))
                 {
-                    metrics.Depth.Dec();
+                    metrics.Depth.Set(queue.Count);
                 }
-            }
-        }
-
-        private async Task QueueAsync(WatchEvent<TEntity> @event, TimeSpan delay, CancellationToken cancellationToken)
-        {
-            await SyncContext.Clear;
-
-            try
-            {
-                if (delay > TimeSpan.Zero)
-                {
-                    logger?.LogDebugEx(() => $"Sleeping before executing event [{@event.Type}] for resource [{@event.Value.Kind}/{@event.Value.Name()}]");
-
-                    await Task.Delay(delay, cancellationToken);
-                }
-
-                logger?.LogDebugEx(() => $"Executing event [{@event.Type}] for resource [{@event.Value.Kind}/{@event.Value.Name()}]");
-
-                metrics.QueueDurationSeconds.Observe((DateTime.UtcNow - @event.CreatedAt).TotalSeconds);
-
-                using (var timer = metrics.WorkDurationSeconds.NewTimer())
-                {
-                    await eventHandler?.Invoke(@event);
-                }
-
-                currentEvents.Remove(@event.Value.Uid(), out _);
-
-                logger?.LogDebugEx(() => $"Event [{@event.Type}] executed for resource [{@event.Value.Kind}/{@event.Value.Name()}]");
-            }
-            catch (Exception e)
-            {
-                logger?.LogErrorEx(() => e.Message);
-            }
-            finally
-            {
-                await DequeueAsync(@event);
             }
         }
 

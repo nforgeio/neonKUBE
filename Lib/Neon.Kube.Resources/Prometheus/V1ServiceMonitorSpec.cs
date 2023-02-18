@@ -74,29 +74,29 @@ namespace Neon.Kube.Resources.Prometheus
         /// <summary>
         /// SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
         /// </summary>
-        public int SampleLimit { get; set; }
+        public int? SampleLimit { get; set; }
 
         /// <summary>
         /// TargetLimit defines a limit on the number of scraped targets that will be accepted.	
         /// </summary>
-        public int TargetLimit { get; set; }
+        public int? TargetLimit { get; set; }
 
         /// <summary>
         /// Per-scrape limit on number of labels that will be accepted for a sample. 
         /// <note>Only valid in Prometheus versions 2.27.0 and newer.</note>
         /// </summary>
-        public int LabelLimit { get; set; }
+        public int? LabelLimit { get; set; }
 
         /// <summary>
         /// Per-scrape limit on length of labels name that will be accepted for a sample.
         /// <note>Only valid in Prometheus versions 2.27.0 and newer.</note>
         /// </summary>
-        public int LabelNameLengthLimit { get; set; }
+        public int? LabelNameLengthLimit { get; set; }
 
         /// <summary>
         /// Per-scrape limit on length of labels value that will be accepted for a sample. 
         /// <note>Only valid in Prometheus versions 2.27.0 and newer.</note>
         /// </summary>
-        public int LabelValueLengthLimit { get; set; }
+        public int? LabelValueLengthLimit { get; set; }
     }
 }

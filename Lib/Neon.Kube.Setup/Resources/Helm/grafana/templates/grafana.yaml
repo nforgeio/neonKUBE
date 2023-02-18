@@ -9,7 +9,7 @@ spec:
     server:
       root_url: "https://{{ .Values.neonkube.clusterDomain.grafana }}.{{ .Values.cluster.domain }}"
     feature_toggles:
-      enable: recordedQueries tempoSearch newNavigation persistNotifications serviceAccounts explore2Dashboard publicDashboards
+      enable: recordedQueries tempoSearch newNavigation persistNotifications serviceAccounts explore2Dashboard publicDashboards traceqlEditor traceToMetrics
     security:
       cookie_secure: true
       cookie_samesite: none

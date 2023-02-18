@@ -47,8 +47,6 @@ using k8s;
 using k8s.Models;
 
 using Prometheus;
-using Prometheus.DotNetRuntime;
-using System.Net.Http;
 
 using OpenTelemetry;
 using OpenTelemetry.Trace;
@@ -113,9 +111,9 @@ namespace NeonDashboard
         /// </summary>
         /// <param name="name">The service name.</param>
         public Service(string name)
-             : base(name, version: KubeVersions.NeonKube, new NeonServiceOptions() { MetricsPrefix = "neondashboard" })
+             : base(name, version: KubeVersions.NeonKube)
         {
-            DashboardViewCounter = Metrics.CreateCounter($"{MetricsPrefix}external_dashboard_view", "External dashboard views.",
+            DashboardViewCounter = Metrics.CreateCounter($"neondashboard_external_dashboard_view", "External dashboard views.",
                 new CounterConfiguration
                 {
                     LabelNames = new[] { "dashboard" }
@@ -252,24 +250,17 @@ namespace NeonDashboard
         /// <inheritdoc/>
         protected override bool OnTracerConfig(TracerProviderBuilder builder)
         {
-            builder.AddHttpClientInstrumentation(
-                options =>
-                {
-                    options.Filter = (httpcontext) =>
+            builder.AddHttpClientInstrumentation()
+                .AddAspNetCoreInstrumentation()
+                .AddOtlpExporter(
+                    options =>
                     {
-                        Logger.LogDebugEx(() => NeonHelper.JsonSerialize(httpcontext));
-                        return true;
-                    };
-                });
-            builder.AddAspNetCoreInstrumentation();
-            builder.AddOtlpExporter(
-                options =>
-                {
-                    options.ExportProcessorType = ExportProcessorType.Batch;
-                    options.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>();
-                    options.Endpoint = new Uri(NeonHelper.NeonKubeOtelCollectorUri);
-                    options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
-                });
+                        options.ExportProcessorType = ExportProcessorType.Batch;
+                        options.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>();
+                        options.Endpoint = new Uri(NeonHelper.NeonKubeOtelCollectorUri);
+                        options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
+                    });
+
             return true;
         }
 

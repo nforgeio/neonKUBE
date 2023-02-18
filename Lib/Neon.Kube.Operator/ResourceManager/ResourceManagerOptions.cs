@@ -101,7 +101,7 @@ namespace Neon.Kube.Operator.ResourceManager
         /// at <see cref="ErrorMinRequeueInterval"/> and increase to <see cref="ErrorMaxRequeueInterval"/>
         /// until the error is resolved.  This defaults to <b>15 seconds</b>.
         /// </summary>
-        public TimeSpan ErrorMinRequeueInterval { get; set; } = TimeSpan.FromSeconds(15);
+        public TimeSpan ErrorMinRequeueInterval { get; set; } = TimeSpan.FromSeconds(10);
 
         /// <summary>
         /// Specifies the maximum timeout to before retrying after an error.  Timeouts will start
@@ -111,10 +111,9 @@ namespace Neon.Kube.Operator.ResourceManager
         public TimeSpan ErrorMaxRequeueInterval { get; set; } = TimeSpan.FromMinutes(10);
 
         /// <summary>
-        /// Specifies the maximum number of attempts to retry after an error.
-        /// This defaults to <b>10</b>.
+        /// The maximum number of reconciles per resource manager.
         /// </summary>
-        public int ErrorMaxRetryCount { get; set; } = 10;
+        public int MaxConcurrentReconciles { get; set; } = 1;
 
         /// <summary>
         /// Validates the option properties.

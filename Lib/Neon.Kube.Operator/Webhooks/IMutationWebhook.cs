@@ -173,10 +173,8 @@ namespace Neon.Kube.Operator.Webhook
         {
             var response = new AdmissionResponse
             {
-                Allowed = result.Valid,
-                Status = result.StatusMessage == null
-                    ? null
-                    : new AdmissionResponse.Reason { Code = result.StatusCode ?? 0, Message = result.StatusMessage, },
+                Allowed  = result.Valid,
+                Status   = new AdmissionResponse.Reason { Code = result.StatusCode ?? 0, Message = result.StatusMessage, },
                 Warnings = result.Warnings.ToArray(),
             };
 
