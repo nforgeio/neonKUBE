@@ -273,14 +273,24 @@ namespace Neon.Kube
         public const string ClusterRegistryProjectName = "neon-internal";
 
         /// <summary>
+        /// Identifies the GitHub organization where we host published neonKUBE container images.
+        /// </summary>
+        public const string NeonKubeProdOrganization = "neonkube-release";
+
+        /// <summary>
+        /// Identifies the GitHub organization where we host staged neonKUBE container images.
+        /// </summary>
+        public const string NeonKubeDevOrganization = "neonkube-dev";
+
+        /// <summary>
         /// Identifies the production neonKUBE container image registry.
         /// </summary>
-        public const string NeonKubeProdRegistry = "ghcr.io/neonkube-release";
+        public const string NeonKubeProdRegistry = $"ghcr.io/{NeonKubeProdOrganization}";
 
         /// <summary>
         /// Identifies the development neonKUBE container image registry.
         /// </summary>
-        public const string NeonKubeDevRegistry = "ghcr.io/neonkube-dev";
+        public const string NeonKubeDevRegistry = $"ghcr.io/{NeonKubeDevOrganization}";
 
         /// <summary>
         /// Returns the appropriate public container neonKUBE registry to be used for the git 

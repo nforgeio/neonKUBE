@@ -175,20 +175,7 @@ namespace Neon.Kube
         /// from a non-release branch.
         /// </note>
         /// </summary>
-        public static string NeonKubeContainerImageTag
-        {
-            get
-            {
-                var tag = NeonKubeContainerImageTagPrefix + NeonKube;
-
-                if (!BuildBranch.StartsWith("-release"))
-                {
-                    tag = $"{tag}.{BuildBranch}";
-                }
-
-                return tag;
-            }
-        } 
+        public static string NeonKubeContainerImageTag => $"{NeonKubeContainerImageTagPrefix}{NeonKube}{BranchPart}";
 
         /// <summary>
         /// The version of Kubernetes to be installed.
