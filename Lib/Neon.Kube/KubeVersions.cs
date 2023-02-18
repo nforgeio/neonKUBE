@@ -35,6 +35,11 @@ namespace Neon.Kube
     public static class KubeVersions
     {
         /// <summary>
+        /// Returns the name of the branch from which this assembly was built.
+        /// </summary>
+        public const string BuildBranch = BuildInfo.ThisAssembly.Git.Branch;
+
+        /// <summary>
         /// The current neonKUBE version.
         /// </summary>
         /// <remarks>
@@ -131,9 +136,29 @@ namespace Neon.Kube
         public const string NeonKube = "0.8.7-alpha";
 
         /// <summary>
-        /// Returns the name of the branch from which this assembly was built.
+        /// Returns the branch part of the neonKUBE version.  This will be blank for release
+        /// branches whose names starts with <b>release-</b> and will be <b>.BRANCH</b> for
+        /// all other branches.
         /// </summary>
-        public const string BuildBranch = BuildInfo.ThisAssembly.Git.Branch;
+        public static string BranchPart
+        {
+            get
+            {
+                if (BuildBranch.StartsWith("release-"))
+                {
+                    return string.Empty;
+                }
+                else
+                {
+                    return $".{BuildBranch}";
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns the full neonKUBE release including the <see cref="BranchPart"/>, if any.
+        /// </summary>
+        public static readonly string NeonKubeWithBranchPart = $"{NeonKube}{BranchPart}";
 
         /// <summary>
         /// Returns the prefix used for neonKUBE container tags.
