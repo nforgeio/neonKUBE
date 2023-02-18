@@ -1851,7 +1851,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                             Name = "opencensus"
                                         }
                                     },
-                                    RandomSamplingPercentage = 2.0
+                                    RandomSamplingPercentage = 1.0
                                 }
                             }
                         }
@@ -1863,13 +1863,13 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     telemetry.Metadata.Name                                 = "neon-monitor-default";
                     telemetry.Metadata.NamespaceProperty                    = KubeNamespace.NeonMonitor;
-                    telemetry.Spec.Tracing.First().RandomSamplingPercentage = 2.0;
+                    telemetry.Spec.Tracing.First().RandomSamplingPercentage = 1.0;
 
                     await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<V1Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
 
                     telemetry.Metadata.Name                                 = "neon-system-default";
                     telemetry.Metadata.NamespaceProperty                    = KubeNamespace.NeonSystem;
-                    telemetry.Spec.Tracing.First().RandomSamplingPercentage = 2.0;
+                    telemetry.Spec.Tracing.First().RandomSamplingPercentage = 1.0;
 
                     await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<V1Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
                 });

@@ -12,7 +12,7 @@ spec:
     enablePrometheusMerge: false
     defaultConfig:
       tracing:
-        sampling: 100.0
+        sampling: 1.0
         openCensusAgent:
           address: grafana-agent-node.neon-monitor:4320
           context: ["W3C_TRACE_CONTEXT", "GRPC_BIN", "CLOUD_TRACE_CONTEXT", "B3"]
