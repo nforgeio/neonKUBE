@@ -1851,7 +1851,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                             Name = "opencensus"
                                         }
                                     },
-                                    RandomSamplingPercentage = 100.0
+                                    RandomSamplingPercentage = 2.0
                                 }
                             }
                         }
