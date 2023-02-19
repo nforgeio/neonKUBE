@@ -2046,7 +2046,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add("certficateDuration", cluster.Definition.Network.AcmeOptions.CertificateDuration);
                     values.Add("certificateRenewBefore", cluster.Definition.Network.AcmeOptions.CertificateRenewBefore);
                     values.Add("isNeonDesktop", cluster.Definition.IsDesktop);
-                    values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 7 : 3);
+                    values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 9 : 3);
 
                     int i = 0;
 
@@ -4573,7 +4573,7 @@ $@"- name: StorageType
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add("resource.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
                     values.Add("resource.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
-                    values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 7 : 3);
+                    values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 9 : 3);
                     values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
@@ -4761,7 +4761,7 @@ $@"- name: StorageType
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
                     values.Add("resources.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
-                    values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 7 : 3);
+                    values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 9 : 3);
 
                     await controlNode.InstallHelmChartAsync(controller, "neon-node-agent",
                         releaseName:  "neon-node-agent",
@@ -4814,7 +4814,7 @@ $@"- name: StorageType
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
-                    values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 7 : 3);
+                    values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 9 : 3);
 
                     await controlNode.InstallHelmChartAsync(controller, "neon-dashboard",
                         releaseName:  "neon-dashboard",
@@ -5283,7 +5283,7 @@ $@"- name: StorageType
             values.Add("secrets.cipherKey", AesCipher.GenerateKey(256));
             values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
             values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
-            values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 7 : 3);
+            values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 9 : 3);
 
             if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
             {
