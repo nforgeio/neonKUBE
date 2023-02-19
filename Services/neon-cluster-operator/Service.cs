@@ -201,6 +201,9 @@ namespace NeonClusterOperator
             
             LogContext.SetCurrentLogProvider(TelemetryHub.LoggerFactory);
 
+            await WatchClusterInfoAsync();
+            await WatchRootUserAsync();
+
             harborHttpClient = new HttpClient(new HttpClientHandler() { UseCookies = false });
             HarborClient = new HarborClient(harborHttpClient);
             HarborClient.BaseUrl = "http://registry-harbor-harbor-core.neon-system/api/v2.0";
@@ -210,9 +213,6 @@ namespace NeonClusterOperator
 
             var channel = GrpcChannel.ForAddress($"http://{KubeService.Dex}:5557");
             DexClient = new Dex.Dex.DexClient(channel);
-
-            await WatchClusterInfoAsync();
-            await WatchRootUserAsync();
 
             // Start the web service.
 
@@ -314,6 +314,16 @@ namespace NeonClusterOperator
             },
             KubeNamespace.NeonStatus,
             fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
+
+            // wait for cluster info to be set
+            await NeonHelper.WaitForAsync(async () =>
+            {
+                await SyncContext.Clear;
+
+                return (ClusterInfo != null);
+            },
+            timeout: TimeSpan.FromSeconds(60),
+            pollInterval: TimeSpan.FromMilliseconds(250));
         }
 
         private async Task WatchRootUserAsync()

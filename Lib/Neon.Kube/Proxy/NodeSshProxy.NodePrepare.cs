@@ -1044,12 +1044,14 @@ set -euo pipefail
 {KubeNodeFolder.Bin}/safe-apt-get update -q
 set +e                                                                                          # <--- HACK: disable error checks
 {KubeNodeFolder.Bin}/safe-apt-get install -yq podman -o Dpkg::Options::=""--force-overwrite""   # <--- HACK: ignore overwrite errors
+{KubeNodeFolder.Bin}/safe-apt-get install -yq skopeo
 ln -s /usr/bin/podman /bin/docker
 
 # Prevent the package manager from automatically upgrading these components.
 
 set +e      # Don't exit if the next command fails
-apt-mark hold podman
+apt-mark hold podman 
+apt-mark hold skopeo 
 ";
                     SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.Defaults | RunOptions.FaultOnError);
                 });

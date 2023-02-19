@@ -86,13 +86,23 @@ namespace NeonClusterOperator
                 var startTime = DateTime.UtcNow.AddSeconds(10);
 
                 var clusterManifestJson = Program.Resources.GetFile("/cluster-manifest.json").ReadAllText();
-                var clusterManifest = NeonHelper.JsonDeserialize<ClusterManifest>(clusterManifestJson);
+                var clusterManifest     = NeonHelper.JsonDeserialize<ClusterManifest>(clusterManifestJson);
 
                 var masters = await k8s.CoreV1.ListNodeAsync(labelSelector: "node-role.kubernetes.io/control-plane=");
 
                 foreach (var image in clusterManifest.ContainerImages)
                 {
-                    var node = masters.Items.SelectRandom(1).First();
+                    var tag       = image.InternalRef.Split(':').Last();
+                    var imageName = image.InternalRef.Split('/').Last().Split(':').First();
+
+                    if (await ImageExistsAsync(KubeConst.LocalClusterRegistryProject, imageName, tag))
+                    {
+                        continue;
+                    }
+
+                    var node    = masters.Items.SelectRandom(1).First();
+                    var tempDir = $"/tmp/{NeonHelper.CreateBase36Uuid()}";
+
                     var nodeTask = new V1NeonNodeTask()
                     {
                         Metadata = new V1ObjectMeta()
@@ -109,14 +119,16 @@ namespace NeonClusterOperator
                             Node = node.Name(),
                             StartAfterTimestamp = startTime,
                             BashScript = @$"
-podman push {image.InternalRef}
+podman save --format oci-dir --output {tempDir} {image.InternalRef}
 
 retVal=$?
 if [ $retVal -ne 0 ]; then
     podman pull {image.SourceRef}
-    podman tag {image.SourceRef} {image.InternalRef}
-    podman push {image.InternalRef}
+    podman save --format oci-dir --output {tempDir} {image.SourceRef}
 fi
+
+skopeo copy --retry-times 5 oci:{tempDir} docker://{image.InternalRef}
+rm -rf {tempDir}
 ",
                             CaptureOutput = true,
                             RetentionSeconds = (int)TimeSpan.FromHours(1).TotalSeconds
@@ -159,6 +171,36 @@ fi
                     });
                 }
             }
+        }
+        private async Task<bool> ImageExistsAsync(string projectName, string imageName, string tag)
+        {
+            var exists = false;
+
+            try
+            {
+                var result = await harborClient.ListTagsAsync(
+                    x_Request_Id: null,
+                    project_name: projectName,
+                    repository_name: imageName,
+                    reference: tag,
+                    q: null,
+                    sort: null,
+                    page: null,
+                    page_size: null,
+                    with_signature: null,
+                    with_immutable_status: null);
+
+                if (result.Count > 0)
+                {
+                    exists = true;
+                }
+            }
+            catch
+            {
+                // doesn't exist
+            }
+
+            return exists;
         }
     }
 }
