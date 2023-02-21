@@ -386,6 +386,7 @@ set -euo pipefail
             {
                 var moduleScript =
 @"
+set -x
 set -euo pipefail
 
 # Create the .conf file to load required modules during boot.
