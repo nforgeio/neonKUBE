@@ -4566,47 +4566,57 @@ $@"- name: StorageType
 
             var k8s = GetK8sClient(controller);
 
-            V1NeonClusterOperator clusterOperator = null;
-
-            _ = k8s.WatchAsync<V1NeonClusterOperator>(async (@event) =>
-            {
-                await SyncContext.Clear;
-
-                clusterOperator = @event.Value;
-            },
-            fieldSelector: $"metadata.name={KubeService.NeonClusterOperator}");
-
-            await NeonHelper.WaitForAsync(async () =>
-            {
-                await SyncContext.Clear;
-
-                return clusterOperator?.Status?.ContainerImages?.LastCompleted != null;
-            },
-            timeout:      TimeSpan.FromMinutes(10),
-            pollInterval: TimeSpan.FromMilliseconds(250));
-
-            await NeonHelper.WaitForAsync(async () =>
-            {
-                await SyncContext.Clear;
-
-                var labels = new Dictionary<string, string>
+            await controlNode.InvokeIdempotentAsync("setup/wait-harbor-image-push",
+                async () =>
                 {
+                    V1NeonClusterOperator clusterOperator = null;
+
+                    _ = k8s.WatchAsync<V1NeonClusterOperator>(async (@event) =>
+                    {
+                        await SyncContext.Clear;
+
+                        clusterOperator = @event.Value;
+                    },
+                    fieldSelector: $"metadata.name={KubeService.NeonClusterOperator}");
+
+                    // Wait for cron schedule to run.
+                    await NeonHelper.WaitForAsync(async () =>
+                    {
+                        await SyncContext.Clear;
+
+                        return clusterOperator?.Status?.ContainerImages?.LastCompleted != null;
+                    },
+                    timeout: TimeSpan.FromMinutes(10),
+                    pollInterval: TimeSpan.FromMilliseconds(250));
+
+                    // Wait for node tasks to complete.
+                    await NeonHelper.WaitForAsync(async () =>
+                    {
+                        await SyncContext.Clear;
+
+                        var labels = new Dictionary<string, string>
+                        {
                     { NeonLabel.ManagedBy, KubeService.NeonClusterOperator },
                     { NeonLabel.NodeTaskType, NeonNodeTaskType.ContainerImageSync }
-                };
-                var selector       = labels.Keys.Select(k => $"{k}={labels[k]}");
-                var selectorString = string.Join(",", selector.ToArray());
+                        };
+                        var selector = labels.Keys.Select(k => $"{k}={labels[k]}");
+                        var selectorString = string.Join(",", selector.ToArray());
 
-                var tasks = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>(
-                    labelSelector: selectorString);
+                        var tasks = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>(
+                            labelSelector: selectorString);
 
-                return !tasks.Items.Any(
-                    nt => nt.Status == null
-                    || nt.Status.Phase != V1NeonNodeTask.Phase.Success);
-            },
-            timeout:      TimeSpan.FromMinutes(10),
-            pollInterval: TimeSpan.FromSeconds(5));
+                        return !tasks.Items.Any(
+                            nt => nt.Status == null
+                            || nt.Status.Phase != V1NeonNodeTask.Phase.Success);
+                    },
+                    timeout: TimeSpan.FromMinutes(10),
+                    pollInterval: TimeSpan.FromSeconds(5));
 
+                    // Reset schedule to default value after completion.
+                    clusterOperator.Spec.Updates.ContainerImages.Schedule = "0 0 0 ? * *";
+
+                    await k8s.CustomObjects.UpsertClusterCustomObjectAsync(clusterOperator, clusterOperator.Name());
+                });
         }
 
         /// <summary>
