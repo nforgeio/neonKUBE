@@ -102,8 +102,7 @@ namespace NeonClusterOperator
                 }
 
                 var clusterOperator = await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonClusterOperator>(KubeService.NeonClusterOperator);
-
-                var patch = OperatorHelper.CreatePatch<V1NeonClusterOperator>();
+                var patch           = OperatorHelper.CreatePatch<V1NeonClusterOperator>();
 
                 if (clusterOperator.Status == null)
                 {
