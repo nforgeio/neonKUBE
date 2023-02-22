@@ -38,14 +38,8 @@ using Neon.IO;
 using Neon.Kube;
 using Neon.Tasks;
 using Neon.Kube.Operator.Builder;
+using Neon.Kube.Operator.Controller;
 
-using k8s;
-using k8s.Autorest;
-using k8s.LeaderElection;
-using k8s.Models;
-using IdentityModel;
-using Neon.Kube.Operator.Cache;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Neon.Kube.Operator.ResourceManager
 {
@@ -74,16 +68,9 @@ namespace Neon.Kube.Operator.ResourceManager
             {
                 try
                 {
-                    var resourceManager = serviceProvider.GetRequiredService(resourceManagerType);
+                    var resourceManager = (IResourceManager)serviceProvider.GetRequiredService(resourceManagerType);
 
-                    var methods = resourceManagerType
-                        .GetMethods(BindingFlags.Instance | BindingFlags.Public);
-
-                    var startMethod = methods
-                        .First(m => m.Name == "StartAsync");
-
-                    var task = (Task)startMethod.Invoke(resourceManager, null);
-                    await task;
+                    await resourceManager.StartAsync();
                 }
                 catch (Exception e)
                 {
@@ -102,19 +89,9 @@ namespace Neon.Kube.Operator.ResourceManager
 
                         logger?.LogInformationEx(() => $"Registering controller [{controllerType.Name}].");
 
-                        var controller = ActivatorUtilities.CreateInstance(scope.ServiceProvider, controllerType);
+                        var controller = (IResourceController)ActivatorUtilities.CreateInstance(scope.ServiceProvider, controllerType);
 
-                        var methods = controllerType
-                            .GetMethods(BindingFlags.Static | BindingFlags.Public);
-
-                        var startMethod = methods
-                            .FirstOrDefault(m => m.Name == "StartAsync");
-
-                        if (startMethod != null)
-                        {
-                            var task = (Task)startMethod.Invoke(controller, new object[] { serviceProvider });
-                            await task;
-                        }
+                        await controller.StartAsync(serviceProvider);
 
                         logger?.LogInformationEx(() => $"Registered controller [{controllerType.Name}]");
                     }

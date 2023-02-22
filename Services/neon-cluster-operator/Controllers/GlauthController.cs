@@ -39,9 +39,12 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Glauth;
+using Neon.Kube.Operator.Attributes;
 using Neon.Kube.Operator.ResourceManager;
 using Neon.Kube.Operator.Controller;
-using Neon.Retry;
+using Neon.Kube.Operator.Rbac;
+using Neon.Net;
+using Neon.Kube.Resources;
 using Neon.Tasks;
 using Neon.Time;
 
@@ -57,10 +60,6 @@ using OpenTelemetry.Trace;
 using Prometheus;
 
 using Npgsql;
-using Neon.Kube.Operator.Rbac;
-using Neon.Kube.Resources.Cluster;
-using Neon.Kube.Resources;
-using Neon.Kube.Operator.Attributes;
 
 namespace NeonClusterOperator
 {
@@ -73,6 +72,7 @@ namespace NeonClusterOperator
         Scope = EntityScope.Namespaced,
         Namespace = KubeNamespace.NeonSystem,
         ResourceNames = "neon-admin.neon-system-db.credentials.postgresql,glauth-users,glauth-groups")]
+    [RbacRule<V1Pod>(Verbs = RbacVerb.List)]
     public class GlauthController : IResourceController<V1Secret>
     {
         /// <inheritdoc/>
@@ -91,7 +91,7 @@ namespace NeonClusterOperator
         /// </summary>
         /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task StartAsync(IServiceProvider serviceProvider)
+        public async Task StartAsync(IServiceProvider serviceProvider)
         {
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
@@ -105,7 +105,23 @@ namespace NeonClusterOperator
 
                 var password = Encoding.UTF8.GetString(secret.Data["password"]);
 
-                connectionString = $"Host={KubeService.NeonSystemDb}.{KubeNamespace.NeonSystem};Username={KubeConst.NeonSystemDbAdminUser};Password={password};Database=glauth";
+                if (!NeonHelper.IsDevWorkstation)
+                {
+                    connectionString = $"Host={KubeService.NeonSystemDb}.{KubeNamespace.NeonSystem};Username={KubeConst.NeonSystemDbAdminUser};Password={password};Database=glauth";
+                }
+                else
+                {
+                    var port = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
+                    var pod  = (await k8s.CoreV1.ListNamespacedPodAsync(KubeNamespace.NeonSystem, labelSelector: "app=neon-system-db")).Items.First();
+
+                    connectionString = $"Host=localhost;Port={port};Username={KubeConst.NeonSystemDbAdminUser};Password={password};Database=glauth";
+
+                    service.PortForwardManager.StartPodPortForward(
+                        name:       pod.Name(), 
+                        @namespace: KubeNamespace.NeonSystem, 
+                        localPort:  port, 
+                        remotePort: 5432);
+                }
 
                 logger?.LogDebugEx(() => $"ConnectionString: [{connectionString}]");
             }

@@ -29,6 +29,10 @@ spec:
           env:
             - name: DOTNET_GCConserveMemory
               value: {{ .Values.dotnetGcConserveMemory | default "7" | quote }}
+            - name: DOTNET_GCHighMemPercent
+              value: {{ .Values.dotnetGcHighMemPercent | default "5A" | quote }}
+            - name: DOTNET_gcServer
+              value: {{ .Values.dotnetGcServer | default "1" | quote }}
             - name: GROUP_NAME
               value: "acme.neoncloud.io"
             - name: HEADEND_URL
@@ -69,7 +73,7 @@ spec:
               mountPath: /tls
               readOnly: true
           resources:
-            {}
+            {{- toYaml .Values.resources | nindent 12 }}
       volumes:
         - name: certs
           secret:

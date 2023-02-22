@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IResourceManager.cs
+// FILE:	    IStreamManager.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -16,37 +16,20 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Reflection;
+using System.Net;
+using System.Net.Sockets;
+using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-
-using Neon.Common;
-using Neon.Diagnostics;
-using Neon.IO;
-using Neon.Kube.Operator.Attributes;
-using Neon.Tasks;
-
-using k8s;
-using k8s.Models;
-
-using Prometheus;
-using Neon.Kube.Resources;
-
-namespace Neon.Kube.Operator.ResourceManager
+namespace Neon.Kube
 {
-    internal interface IResourceManager
+    internal interface IStreamManager
     {
-        ResourceManagerOptions Options();
-        Task StartAsync();
+        void Start(
+            TcpClient             localConnection, 
+            Func<Task<WebSocket>> remoteConnectionFactory, 
+            int                   remotePort, 
+            CancellationToken     cancellationToken);
     }
 }

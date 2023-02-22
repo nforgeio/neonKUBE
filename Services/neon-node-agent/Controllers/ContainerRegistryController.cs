@@ -303,7 +303,7 @@ namespace NeonNodeAgent
         /// </summary>
         /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task StartAsync(IServiceProvider serviceProvider)
+        public async Task StartAsync(IServiceProvider serviceProvider)
         {
             if (NeonHelper.IsLinux)
             {

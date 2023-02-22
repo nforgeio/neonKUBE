@@ -24,7 +24,7 @@ image:
 
 # Resource requests and limits
 
-resource:
+resources:
   limits:
     memory: 110Mi
   requests:

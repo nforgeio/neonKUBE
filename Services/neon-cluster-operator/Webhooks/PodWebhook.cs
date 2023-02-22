@@ -47,7 +47,7 @@ namespace NeonClusterOperator
     [WebhookRule(
         apiGroups: V1Pod.KubeGroup,
         apiVersions: V1Pod.KubeApiVersion, 
-        operations: AdmissionOperations.Create | AdmissionOperations.Update, 
+        operations: AdmissionOperations.Create, 
         resources: V1Pod.KubePluralName,
         scope: "*")]
     public class PodWebhook : IMutatingWebhook<V1Pod>
