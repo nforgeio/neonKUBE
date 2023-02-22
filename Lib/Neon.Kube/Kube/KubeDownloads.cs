@@ -57,6 +57,16 @@ namespace Neon.Kube
         public static readonly string HelmWindowsUri = $"https://get.helm.sh/helm-v{KubeVersions.Helm}-windows-amd64.zip";
 
         /// <summary>
+        /// The GitHub organization hosting neonKUBE releases container images.
+        /// </summary>
+        public const string NeonKubeReleasePackageOrg = "neonkube-release";
+
+        /// <summary>
+        /// The GitHub organization hosting neonKUBE staged container images.
+        /// </summary>
+        public const string NeonKubeStagePackageOrg = "neonkube-dev";
+
+        /// <summary>
         /// The name of the AWS bucket used for published neonKUBE releases.
         /// </summary>
         public const string NeonKubeReleaseBucketName = "neonkube-release";
