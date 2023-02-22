@@ -349,6 +349,9 @@ spec:
                     await CreateNamespacesAsync(controller, controlNode);
 
                     controller.ThrowIfCancelled();
+                    await WriteClusterInfoAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
                     await InstallCrdsAsync(controller, controlNode);
 
                     controller.ThrowIfCancelled();
@@ -413,9 +416,6 @@ spec:
 
                     controller.ThrowIfCancelled();
                     await InstallHarborAsync(controller, controlNode);
-
-                    controller.ThrowIfCancelled();
-                    await WriteClusterInfoAsync(controller, controlNode);
 
                     controller.ThrowIfCancelled();
                     await InstallMonitoringAsync(controller);
