@@ -429,6 +429,12 @@ spec:
                     controller.ThrowIfCancelled();
                     await InstallContainerRegistryResourcesAsync(controller, controlNode);
 
+                    if (controller.Get<bool>(KubeSetupProperty.DesktopImage, false))
+                    {
+                        controller.ThrowIfCancelled();
+                        await WaitForHarborImagePushAsync(controller, controlNode);
+                    }
+
                     // IMPORTANT!
                     //
                     // This must be the last cluster setup steps.
@@ -4546,6 +4552,64 @@ $@"- name: StorageType
         }
 
         /// <summary>
+        /// For neon desktop, wait for node images to be pushed to harbor.
+        /// </summary>
+        /// <param name="controller"></param>
+        /// <param name="controlNode"></param>
+        /// <returns></returns>
+        public static async Task WaitForHarborImagePushAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        {
+            await SyncContext.Clear;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
+
+            var k8s = GetK8sClient(controller);
+
+            V1NeonClusterOperator clusterOperator = null;
+
+            _ = k8s.WatchAsync<V1NeonClusterOperator>(async (@event) =>
+            {
+                await SyncContext.Clear;
+
+                clusterOperator = @event.Value;
+            },
+            fieldSelector: $"metadata.name={KubeService.NeonClusterOperator}");
+
+            await NeonHelper.WaitForAsync(async () =>
+            {
+                await SyncContext.Clear;
+
+                return clusterOperator?.Status?.ContainerImages?.LastCompleted != null;
+            },
+            timeout:      TimeSpan.FromMinutes(10),
+            pollInterval: TimeSpan.FromMilliseconds(250));
+
+            await NeonHelper.WaitForAsync(async () =>
+            {
+                await SyncContext.Clear;
+
+                var labels = new Dictionary<string, string>
+                {
+                    { NeonLabel.ManagedBy, KubeService.NeonClusterOperator },
+                    { NeonLabel.NodeTaskType, NeonNodeTaskType.ContainerImageSync }
+                };
+                var selector       = labels.Keys.Select(k => $"{k}={labels[k]}");
+                var selectorString = string.Join(",", selector.ToArray());
+
+                var tasks = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>(
+                    labelSelector: selectorString);
+
+                return !tasks.Items.Any(
+                    nt => nt.Status == null
+                    || nt.Status.Phase != V1NeonNodeTask.Phase.Success);
+            },
+            timeout:      TimeSpan.FromMinutes(10),
+            pollInterval: TimeSpan.FromSeconds(5));
+
+        }
+
+        /// <summary>
         /// Installs <b>neon-cluster-operator</b>.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -4629,7 +4693,7 @@ $@"- name: StorageType
                                 ContainerImages = new V1NeonClusterOperator.UpdateSpec()
                                 {
                                     Enabled = true,
-                                    Schedule = "0 0 0 ? * *"
+                                    Schedule = cluster.Definition.IsDesktop ? "0 * * ? * *" : "0 0 0 ? * *"
                                 },
                                 ControlPlaneCertificates = new V1NeonClusterOperator.UpdateSpec()
                                 {

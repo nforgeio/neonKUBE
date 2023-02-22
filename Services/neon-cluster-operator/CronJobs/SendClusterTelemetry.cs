@@ -27,7 +27,9 @@ using Microsoft.Extensions.Logging;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.Operator.Util;
 using Neon.Net;
+using Neon.Kube.Resources.Cluster;
 using Neon.Tasks;
 
 using k8s;
@@ -46,6 +48,7 @@ namespace NeonClusterOperator
     /// <summary>
     /// Handles checking for expired 
     /// </summary>
+    [DisallowConcurrentExecution]
     public class SendClusterTelemetry : CronJob, IJob
     {
         private static readonly ILogger logger = TelemetryHub.CreateLogger<SendClusterTelemetry>();
@@ -86,6 +89,20 @@ namespace NeonClusterOperator
                     await jsonClient.PostAsync("/telemetry/cluster", clusterTelemetry);
                 }
 
+                var clusterOperator = await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonClusterOperator>(KubeService.NeonClusterOperator);
+                var patch           = OperatorHelper.CreatePatch<V1NeonClusterOperator>();
+
+                if (clusterOperator.Status == null)
+                {
+                    patch.Replace(path => path.Status, new V1NeonClusterOperator.OperatorStatus());
+                }
+
+                patch.Replace(path => path.Status.Telemetry, new V1NeonClusterOperator.UpdateStatus());
+                patch.Replace(path => path.Status.Telemetry.LastCompleted, DateTime.UtcNow);
+
+                await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterOperator>(
+                    patch: OperatorHelper.ToV1Patch<V1NeonClusterOperator>(patch),
+                    name: clusterOperator.Name());
             }
         }
     }

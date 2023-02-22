@@ -28,6 +28,7 @@ using Microsoft.Extensions.Logging;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.Operator.Util;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 
@@ -52,6 +53,7 @@ namespace NeonClusterOperator
     /// <summary>
     /// Handles updating of Linux CA certificates on cluster nodes.
     /// </summary>
+    [DisallowConcurrentExecution]
     public class CheckRegistryImages : CronJob, IJob
     {
         private static readonly ILogger logger = TelemetryHub.CreateLogger<CheckRegistryImages>();
@@ -66,7 +68,7 @@ namespace NeonClusterOperator
             : base(typeof(CheckRegistryImages))
         {
         }
-        
+
         /// <inheritdoc/>
         public async Task Execute(IJobExecutionContext context)
         {
@@ -76,43 +78,55 @@ namespace NeonClusterOperator
             {
                 Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckRegistryImages)));
 
-                var dataMap   = context.MergedJobDataMap;
-                k8s           = (IKubernetes)dataMap["Kubernetes"];
-                harborClient  = (HarborClient)dataMap["HarborClient"];
+                var dataMap = context.MergedJobDataMap;
+                k8s = (IKubernetes)dataMap["Kubernetes"];
+                harborClient = (HarborClient)dataMap["HarborClient"];
 
                 await CheckProjectAsync(KubeConst.LocalClusterRegistryProject);
 
-                var nodes     = await k8s.CoreV1.ListNodeAsync();
+                var nodes = await k8s.CoreV1.ListNodeAsync();
                 var startTime = DateTime.UtcNow.AddSeconds(10);
 
                 var clusterManifestJson = Program.Resources.GetFile("/cluster-manifest.json").ReadAllText();
-                var clusterManifest     = NeonHelper.JsonDeserialize<ClusterManifest>(clusterManifestJson);
+                var clusterManifest = NeonHelper.JsonDeserialize<ClusterManifest>(clusterManifestJson);
 
                 var masters = await k8s.CoreV1.ListNodeAsync(labelSelector: "node-role.kubernetes.io/control-plane=");
 
                 foreach (var image in clusterManifest.ContainerImages)
                 {
-                    var tag       = image.InternalRef.Split(':').Last();
+                    var tag = image.InternalRef.Split(':').Last();
                     var imageName = image.InternalRef.Split('/').Last().Split(':').First();
+                    var node = masters.Items.SelectRandom(1).First();
+                    var tempDir = $"/tmp/{NeonHelper.CreateBase36Uuid()}";
+                    var labels = new Dictionary<string, string>
+                    {
+                        { NeonLabel.ManagedBy, KubeService.NeonClusterOperator },
+                        { NeonLabel.NodeTaskType, NeonNodeTaskType.ContainerImageSync },
+                        { "project", KubeConst.LocalClusterRegistryProject },
+                        { "image", imageName },
+                        { "tag", tag },
+                    };
 
                     if (await ImageExistsAsync(KubeConst.LocalClusterRegistryProject, imageName, tag))
                     {
+                        logger?.LogDebugEx(() => $"Image {KubeConst.LocalClusterRegistryProject}/{imageName}:{tag} exists.");
+
                         continue;
                     }
 
-                    var node    = masters.Items.SelectRandom(1).First();
-                    var tempDir = $"/tmp/{NeonHelper.CreateBase36Uuid()}";
+                    if (await TaskPendingAsync(labels))
+                    {
+                        logger?.LogDebugEx(() => $"Image {KubeConst.LocalClusterRegistryProject}/{imageName}:{tag} has node task pending.");
+
+                        continue;
+                    }
 
                     var nodeTask = new V1NeonNodeTask()
                     {
                         Metadata = new V1ObjectMeta()
                         {
                             Name = $"{NeonNodeTaskType.ContainerImageSync}-{NeonHelper.CreateBase36Uuid()}",
-                            Labels = new Dictionary<string, string>
-                            {
-                                { NeonLabel.ManagedBy, KubeService.NeonClusterOperator },
-                                { NeonLabel.NodeTaskType, NeonNodeTaskType.ContainerImageSync }
-                            }
+                            Labels = labels
                         },
                         Spec = new V1NeonNodeTask.TaskSpec()
                         {
@@ -139,6 +153,21 @@ rm -rf {tempDir}
 
                     startTime = startTime.AddSeconds(10);
                 }
+
+                var clusterOperator = await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonClusterOperator>(KubeService.NeonClusterOperator);
+                var patch           = OperatorHelper.CreatePatch<V1NeonClusterOperator>();
+
+                if (clusterOperator.Status == null)
+                {
+                    patch.Replace(path => path.Status, new V1NeonClusterOperator.OperatorStatus());
+                }
+
+                patch.Replace(path => path.Status.ContainerImages, new V1NeonClusterOperator.UpdateStatus());
+                patch.Replace(path => path.Status.ContainerImages.LastCompleted, DateTime.UtcNow);
+                
+                await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterOperator>(
+                    patch: OperatorHelper.ToV1Patch<V1NeonClusterOperator>(patch), 
+                    name: clusterOperator.Name());
             }
         }
 
@@ -201,6 +230,20 @@ rm -rf {tempDir}
             }
 
             return exists;
+        }
+
+        private async Task<bool> TaskPendingAsync(Dictionary<string, string> labels)
+        {
+            var selector       = labels.Keys.Select(k => $"{k}={labels[k]}");
+            var selectorString = string.Join(",", selector.ToArray());
+
+            var tasks = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>(
+                labelSelector: selectorString);
+
+            return tasks.Items.Any(nt => (
+                nt.Status == null
+                || nt.Status?.Phase <=  V1NeonNodeTask.Phase.Running
+                ));
         }
     }
 }
