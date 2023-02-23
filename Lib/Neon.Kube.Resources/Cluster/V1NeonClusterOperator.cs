@@ -18,6 +18,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json.Serialization;
+
+using Neon.JsonConverters;
 
 using k8s;
 using k8s.Models;
@@ -29,7 +32,7 @@ namespace Neon.Kube.Resources.Cluster
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
     [EntityScope(EntityScope.Cluster)]
-    public class V1NeonClusterOperator : IKubernetesObject<V1ObjectMeta>, ISpec<V1NeonClusterOperator.OperatorSpec>
+    public class V1NeonClusterOperator : IKubernetesObject<V1ObjectMeta>, ISpec<V1NeonClusterOperator.OperatorSpec>, IStatus<V1NeonClusterOperator.OperatorStatus>
     {
         /// <summary>
         /// Object API group.
@@ -110,14 +113,39 @@ namespace Neon.Kube.Resources.Cluster
         }
 
         /// <summary>
-        /// The node execute task status.
+        /// The status.
         /// </summary>
         public class OperatorStatus
         {
             /// <summary>
-            /// Testing <see cref="DateTime"/> .
+            /// Control plane certificate update spec.
             /// </summary>
-            public DateTime? Timestamp { get; set; }
+            public UpdateStatus ControlPlaneCertificates { get; set; } = new UpdateStatus();
+
+            /// <summary>
+            /// Node CA certificate update spec.
+            /// </summary>
+            public UpdateStatus NodeCaCertificates { get; set; } = new UpdateStatus();
+
+            /// <summary>
+            /// Update spec for security spec.
+            /// </summary>
+            public UpdateStatus SecurityPatches { get; set; } = new UpdateStatus();
+
+            /// <summary>
+            /// Update spec for container images.
+            /// </summary>
+            public UpdateStatus ContainerImages { get; set; } = new UpdateStatus();
+
+            /// <summary>
+            /// Update spec for telemetry.
+            /// </summary>
+            public UpdateStatus Telemetry { get; set; } = new UpdateStatus();
+
+            /// <summary>
+            /// When the Neon Desktop certificate should be updated.
+            /// </summary>
+            public UpdateStatus NeonDesktopCertificate { get; set; } = new UpdateStatus();
         }
 
         /// <summary>
@@ -194,6 +222,18 @@ namespace Neon.Kube.Resources.Cluster
             /// https://www.quartz-scheduler.net/documentation/quartz-3.x/tutorial/crontriggers.html#cron-expressions
             /// </remarks>
             public string Schedule { get; set; } = "0 0 0 ? * 1";
+        }
+
+        /// <summary>
+        /// Update status spec.
+        /// </summary>
+        public class UpdateStatus
+        {
+            /// <summary>
+            /// The time that the task last completed.
+            /// </summary>
+            [JsonConverter(typeof(JsonNullableDateTimeConverter))]
+            public DateTime? LastCompleted { get; set; }
         }
     }
 }

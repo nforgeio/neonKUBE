@@ -27,6 +27,7 @@ using Microsoft.Extensions.Logging;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.Operator.Util;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 
@@ -46,6 +47,7 @@ namespace NeonClusterOperator
     /// <summary>
     /// Handles checking for expired 
     /// </summary>
+    [DisallowConcurrentExecution]
     public class CheckControlPlaneCertificates : CronJob, IJob
     {
         private static readonly ILogger logger = TelemetryHub.CreateLogger<CheckControlPlaneCertificates>();
@@ -103,6 +105,21 @@ namespace NeonClusterOperator
 
                     startTime = startTime.AddHours(1);
                 }
+
+                var clusterOperator = await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonClusterOperator>(KubeService.NeonClusterOperator);
+                var patch           = OperatorHelper.CreatePatch<V1NeonClusterOperator>();
+
+                if (clusterOperator.Status == null)
+                {
+                    patch.Replace(path => path.Status, new V1NeonClusterOperator.OperatorStatus());
+                }
+
+                patch.Replace(path => path.Status.ControlPlaneCertificates, new V1NeonClusterOperator.UpdateStatus());
+                patch.Replace(path => path.Status.ControlPlaneCertificates.LastCompleted, DateTime.UtcNow);
+
+                await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterOperator>(
+                    patch: OperatorHelper.ToV1Patch<V1NeonClusterOperator>(patch),
+                    name: clusterOperator.Name());
             }
         }
     }

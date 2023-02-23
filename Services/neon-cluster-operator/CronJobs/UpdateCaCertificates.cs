@@ -28,6 +28,7 @@ using Microsoft.Extensions.Logging;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.Operator.Util;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 
@@ -47,6 +48,7 @@ namespace NeonClusterOperator
     /// <summary>
     /// Handles updating of Linux CA certificates on cluster nodes.
     /// </summary>
+    [DisallowConcurrentExecution]
     public class UpdateCaCertificates : CronJob, IJob
     {
         private static readonly ILogger logger = TelemetryHub.CreateLogger<UpdateCaCertificates>();
@@ -104,6 +106,21 @@ namespace NeonClusterOperator
 
                     startTime = startTime.AddMinutes(10);
                 }
+
+                var clusterOperator = await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonClusterOperator>(KubeService.NeonClusterOperator);
+                var patch           = OperatorHelper.CreatePatch<V1NeonClusterOperator>();
+
+                if (clusterOperator.Status == null)
+                {
+                    patch.Replace(path => path.Status, new V1NeonClusterOperator.OperatorStatus());
+                }
+
+                patch.Replace(path => path.Status.NodeCaCertificates, new V1NeonClusterOperator.UpdateStatus());
+                patch.Replace(path => path.Status.NodeCaCertificates.LastCompleted, DateTime.UtcNow);
+
+                await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterOperator>(
+                    patch: OperatorHelper.ToV1Patch<V1NeonClusterOperator>(patch),
+                    name: clusterOperator.Name());
             }
         }
     }

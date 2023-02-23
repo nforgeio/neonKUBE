@@ -54,9 +54,9 @@ RUN chmod 700 /*.sh \
 RUN apt-get update -y \
     && apt-get install -y curl \
     && apt-get clean \
-    && curl -4fsSL --retry 10 --retry-delay 30 https://dl.min.io/client/mc/release/linux-amd64/mc --output /mc \
-    && chown -R 1000:1000 /mc \
-    && chmod 774 /mc \
+    && curl -4fsSL --retry 10 --retry-delay 30 https://dl.min.io/client/mc/release/linux-amd64/mc --output /usr/local/bin/mc \
+    && chown -R 1000:1000 /usr/local/bin/mc \
+    && chmod 774 /usr/local/bin/mc \
     && mkdir /.mc \
     && chown -R 1000:1000 /.mc
 

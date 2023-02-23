@@ -25,14 +25,13 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Extensions.Logging;
-
-using JsonDiffPatch;
 
 using Neon.Common;
 using Neon.Diagnostics;
@@ -42,8 +41,10 @@ using Neon.Kube.Operator.Controller;
 using Neon.Kube.Operator.Finalizer;
 using Neon.Kube.Operator.Rbac;
 using Neon.Kube.Operator.ResourceManager;
+using Neon.Kube.Operator.Util;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Minio;
+using Neon.Net;
 using Neon.Retry;
 using Neon.Tasks;
 using Neon.Time;
@@ -62,9 +63,6 @@ using Prometheus;
 using Minio;
 using Minio.DataModel;
 using Minio.Exceptions;
-using Neon.Kube.Operator.Attributes;
-using Neon.Kube.Operator.Util;
-using Neon.Kube.Resources.Cluster;
 
 namespace NeonClusterOperator
 {
@@ -74,14 +72,15 @@ namespace NeonClusterOperator
     [RbacRule<V1MinioBucket>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1MinioTenant>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1Secret>(Verbs = RbacVerb.Get)]
+    [RbacRule<V1Pod>(Verbs = RbacVerb.List)]
     public class MinioBucketController : IResourceController<V1MinioBucket>
     {
         //---------------------------------------------------------------------
         // Static members
 
-
-        private const string MinioExe = "/mc";
-        private MinioClient minioClient;
+        private const string            MinioExe = "mc";
+        private MinioClient             minioClient;
+        private CancellationTokenSource portForwardCts;
 
         /// <summary>
         /// Static constructor.
@@ -95,19 +94,23 @@ namespace NeonClusterOperator
 
         private readonly IKubernetes                      k8s;
         private readonly ILogger<MinioBucketController>   logger;
+        private readonly Service                          service;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public MinioBucketController(
-            IKubernetes k8s,
-            ILogger<MinioBucketController> logger)
+            IKubernetes                    k8s,
+            ILogger<MinioBucketController> logger,
+            Service                        service)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
             Covenant.Requires(logger != null, nameof(logger));
+            Covenant.Requires(service != null, nameof(service));
 
             this.k8s              = k8s;
             this.logger           = logger;
+            this.service          = service;
         }
 
         /// <summary>
@@ -180,6 +183,7 @@ namespace NeonClusterOperator
                 finally
                 {
                     minioClient.Dispose();
+                    portForwardCts?.Cancel();
                 }
 
                 patch = OperatorHelper.CreatePatch<V1MinioBucket>();
@@ -210,16 +214,37 @@ namespace NeonClusterOperator
 
         private async Task<MinioClient> GetMinioClientAsync(V1MinioBucket resource)
         {
+            var minioClient = new MinioClient();
+
             var tenant        = await k8s.CustomObjects.ReadNamespacedCustomObjectAsync<V1MinioTenant>(resource.Namespace(), resource.Spec.Tenant);
             var minioEndpoint = $"{tenant.Name()}.{tenant.Namespace()}";
             var secretName    = ((JsonElement)(tenant.Spec)).GetProperty("credsSecret").GetProperty("name").GetString();
             var secret        = await k8s.CoreV1.ReadNamespacedSecretAsync(secretName, resource.Namespace());
             var accessKey     = Encoding.UTF8.GetString(secret.Data["accesskey"]);
             var secretKey     = Encoding.UTF8.GetString(secret.Data["secretkey"]);
-            var minioClient   = new MinioClient()
-                                  .WithEndpoint(minioEndpoint)
-                                  .WithCredentials(accessKey, secretKey)
-                                  .Build();
+
+            int port = 80;
+            if (NeonHelper.IsDevWorkstation) 
+            { 
+                var pod = (await k8s.CoreV1.ListNamespacedPodAsync(resource.Namespace(), labelSelector: $"v1.min.io/tenant={resource.Spec.Tenant}")).Items.First();
+
+                port           = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
+                portForwardCts = new CancellationTokenSource();
+
+                service.PortForwardManager.StartPodPortForward(
+                    name:              pod.Name(), 
+                    @namespace:        pod.Namespace(), 
+                    localPort:         port, 
+                    remotePort:        9000, 
+                    cancellationToken: portForwardCts.Token);
+
+                minioEndpoint = $"localhost";
+            }
+
+            minioClient
+                .WithEndpoint(minioEndpoint, port)
+                .WithCredentials(accessKey, secretKey)
+                .Build();
 
             await ExecuteMcCommandAsync(
                 new string[]
@@ -227,7 +252,7 @@ namespace NeonClusterOperator
                     "alias",
                     "set",
                     $"{GetTenantAlias(resource)}",
-                    $"http://{minioEndpoint}",
+                    $"http://{minioEndpoint}:{port}",
                     accessKey,
                     secretKey
                 });

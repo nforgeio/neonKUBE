@@ -142,6 +142,7 @@ namespace NeonClusterOperator
     /// </remarks>
     [RbacRule<V1ConfigMap>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1Secret>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
+    [RbacRule<V1Pod>(Verbs = RbacVerb.List, Scope = EntityScope.Namespaced, Namespace = KubeNamespace.NeonSystem)]
     public partial class Service : NeonService
     {
         /// <summary>
@@ -169,9 +170,15 @@ namespace NeonClusterOperator
         /// </summary>
         public Dex.Dex.DexClient DexClient;
 
+        /// <summary>
+        /// The port forward manager used for debugging in Visual Studio.
+        /// </summary>
+        public PortForwardManager PortForwardManager;
+
         // private fields
         private HttpClient harborHttpClient;
         private readonly JsonSerializerOptions serializeOptions;
+        private int dexPort = 5557;
 
         /// <summary>
         /// Constructor.
@@ -201,18 +208,17 @@ namespace NeonClusterOperator
             
             LogContext.SetCurrentLogProvider(TelemetryHub.LoggerFactory);
 
-            await WatchClusterInfoAsync();
-            await WatchRootUserAsync();
+            if (NeonHelper.IsDevWorkstation)
+            {
+                this.PortForwardManager = new PortForwardManager(K8s, TelemetryHub.LoggerFactory);
+            }
 
-            harborHttpClient = new HttpClient(new HttpClientHandler() { UseCookies = false });
-            HarborClient = new HarborClient(harborHttpClient);
-            HarborClient.BaseUrl = "http://registry-harbor-harbor-core.neon-system/api/v2.0";
+            await WatchClusterInfoAsync();
+            await ConfigureDexAsync();
+            await ConfigureHarborAsync();
 
             HeadendClient = HeadendClient.Create();
             HeadendClient.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", GetEnvironmentVariable("NEONCLOUD_HEADEND_TOKEN"));
-
-            var channel = GrpcChannel.ForAddress($"http://{KubeService.Dex}:5557");
-            DexClient = new Dex.Dex.DexClient(channel);
 
             // Start the web service.
 
@@ -322,22 +328,61 @@ namespace NeonClusterOperator
 
                 return (ClusterInfo != null);
             },
-            timeout: TimeSpan.FromSeconds(60),
+            timeout:      TimeSpan.FromSeconds(60),
             pollInterval: TimeSpan.FromMilliseconds(250));
         }
 
-        private async Task WatchRootUserAsync()
+        private async Task ConfigureDexAsync()
         {
             await SyncContext.Clear;
+
+            GrpcChannel channel;
+
+            if (!NeonHelper.IsDevWorkstation)
+            {
+                channel = GrpcChannel.ForAddress($"http://{KubeService.Dex}:{dexPort}");
+            }
+            else
+            {
+                var pod       = (await K8s.CoreV1.ListNamespacedPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=dex")).Items.First();
+                var localPort = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
+                
+                PortForwardManager.StartPodPortForward(
+                    name:       pod.Name(),
+                    @namespace: KubeNamespace.NeonSystem,
+                    localPort:  localPort, 
+                    remotePort: dexPort);
+
+                channel = GrpcChannel.ForAddress($"http://localhost:{localPort}");
+            }
+
+            DexClient = new Dex.Dex.DexClient(channel);
+        }
+
+        private async Task ConfigureHarborAsync()
+        {
+            await SyncContext.Clear;
+
+            harborHttpClient     = new HttpClient(new HttpClientHandler() { UseCookies = false });
+            HarborClient         = new HarborClient(harborHttpClient);
+
+            if (!NeonHelper.IsDevWorkstation)
+            {
+                HarborClient.BaseUrl = "http://registry-harbor-harbor-core.neon-system/api/v2.0";
+            }
+            else
+            {
+                HarborClient.BaseUrl = $"https://neon-registry.{ClusterInfo.Domain}/api/v2.0";
+            }
 
             _ = K8s.WatchAsync<V1Secret>(async (@event) =>
             {
                 await SyncContext.Clear;
 
-                var rootUser   = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(@event.Value.Data["root"]));
+                var rootUser = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(@event.Value.Data["root"]));
                 var authString = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{rootUser.Name}:{rootUser.Password}"));
 
-                harborHttpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", authString);
+                harborHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authString);
 
                 Logger.LogInformationEx("Updated Harbor Client");
             },

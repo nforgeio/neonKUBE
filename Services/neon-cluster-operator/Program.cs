@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -31,6 +32,7 @@ using Neon.Common;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Operator;
+using Neon.Net;
 using Neon.Service;
 
 using k8s;
@@ -75,7 +77,7 @@ namespace NeonClusterOperator
 
                 Service.MetricsOptions.Mode         = MetricsMode.Scrape;
                 Service.MetricsOptions.Path         = "metrics/";
-                Service.MetricsOptions.Port         = 9762;
+                Service.MetricsOptions.Port         = NeonHelper.IsDevWorkstation ? NetHelper.GetUnusedTcpPort(IPAddress.Loopback) : 9762;
                 Service.MetricsOptions.GetCollector =
                     () =>
                     {

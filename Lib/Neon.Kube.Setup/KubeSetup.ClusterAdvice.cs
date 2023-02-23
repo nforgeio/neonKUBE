@@ -953,7 +953,7 @@ namespace Neon.Kube.Setup
                 advice.MetricsEnabled = false;
             }
 
-            advice.PodMemoryLimit = ByteUnits.Parse("128Mi");
+            advice.PodMemoryLimit   = ByteUnits.Parse("128Mi");
             advice.PodMemoryRequest = ByteUnits.Parse("50Mi");
 
             return advice;

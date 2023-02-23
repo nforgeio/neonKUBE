@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,7 +30,9 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Clients;
+using Neon.Kube.Operator.Util;
 using Neon.Kube.Resources;
+using Neon.Kube.Resources.Cluster;
 
 using k8s;
 using k8s.Models;
@@ -41,19 +44,18 @@ using OpenTelemetry.Trace;
 using Prometheus;
 
 using Quartz;
-using System.Security.Cryptography.X509Certificates;
 
 namespace NeonClusterOperator
 {
     /// <summary>
     /// Handles updating of the <b>desktop.neoncluster.io</b> certificate.
     /// </summary>
+    [DisallowConcurrentExecution]
     public class CheckNeonDesktopCertificate : CronJob, IJob
     {
         private static readonly ILogger logger = TelemetryHub.CreateLogger<CheckNeonDesktopCertificate>();
 
         private static Random random   = new Random();
-        private static bool   updating = false;
 
         /// <summary>
         /// Constructor.
@@ -72,46 +74,47 @@ namespace NeonClusterOperator
             {
                 Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckNeonDesktopCertificate)));
 
-                if (updating)
+                var dataMap       = context.MergedJobDataMap;
+                var k8s           = (IKubernetes)dataMap["Kubernetes"];
+                var headendClient = (HeadendClient)dataMap["HeadendClient"];
+                var ingressSecret = await k8s.CoreV1.ReadNamespacedSecretAsync("neon-cluster-certificate", KubeNamespace.NeonIngress);
+                var systemSecret  = await k8s.CoreV1.ReadNamespacedSecretAsync("neon-cluster-certificate", KubeNamespace.NeonSystem);
+
+                var ingressCertificate = X509Certificate2.CreateFromPem(
+                    Encoding.UTF8.GetString(ingressSecret.Data["tls.crt"]),
+                    Encoding.UTF8.GetString(ingressSecret.Data["tls.key"]));
+
+                var systemCertificate = X509Certificate2.CreateFromPem(
+                    Encoding.UTF8.GetString(systemSecret.Data["tls.crt"]),
+                    Encoding.UTF8.GetString(systemSecret.Data["tls.key"]));
+
+                if (ingressCertificate.NotAfter.CompareTo(DateTime.Now.AddDays(30)) < 0 || systemCertificate.NotAfter.CompareTo(DateTime.Now.AddDays(30)) < 0)
                 {
-                    return;
+                    await Task.Delay(TimeSpan.FromMinutes(random.Next(90)));
+
+                    var cert = await headendClient.NeonDesktop.GetNeonDesktopCertificateAsync();
+
+                    ingressSecret.Data = cert;
+                    systemSecret.Data  = cert;
+
+                    await k8s.CoreV1.ReplaceNamespacedSecretAsync(ingressSecret, ingressSecret.Name(), ingressSecret.Namespace());
+                    await k8s.CoreV1.ReplaceNamespacedSecretAsync(systemSecret, systemSecret.Name(), systemSecret.Namespace());
                 }
 
-                try
+                var clusterOperator = await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonClusterOperator>(KubeService.NeonClusterOperator);
+                var patch           = OperatorHelper.CreatePatch<V1NeonClusterOperator>();
+
+                if (clusterOperator.Status == null)
                 {
-                    var dataMap       = context.MergedJobDataMap;
-                    var k8s           = (IKubernetes)dataMap["Kubernetes"];
-                    var headendClient = (HeadendClient)dataMap["HeadendClient"];
-                    var ingressSecret = await k8s.CoreV1.ReadNamespacedSecretAsync("neon-cluster-certificate", KubeNamespace.NeonIngress);
-                    var systemSecret  = await k8s.CoreV1.ReadNamespacedSecretAsync("neon-cluster-certificate", KubeNamespace.NeonSystem);
-
-                    var ingressCertificate = X509Certificate2.CreateFromPem(
-                        Encoding.UTF8.GetString(ingressSecret.Data["tls.crt"]),
-                        Encoding.UTF8.GetString(ingressSecret.Data["tls.key"]));
-
-                    var systemCertificate = X509Certificate2.CreateFromPem(
-                        Encoding.UTF8.GetString(systemSecret.Data["tls.crt"]),
-                        Encoding.UTF8.GetString(systemSecret.Data["tls.key"]));
-
-                    if (ingressCertificate.NotAfter.CompareTo(DateTime.Now.AddDays(30)) < 0 || systemCertificate.NotAfter.CompareTo(DateTime.Now.AddDays(30)) < 0)
-                    {
-                        updating = true;
-
-                        await Task.Delay(TimeSpan.FromMinutes(random.Next(90)));
-
-                        var cert = await headendClient.NeonDesktop.GetNeonDesktopCertificateAsync();
-
-                        ingressSecret.Data = cert;
-                        systemSecret.Data  = cert;
-
-                        await k8s.CoreV1.ReplaceNamespacedSecretAsync(ingressSecret, ingressSecret.Name(), ingressSecret.Namespace());
-                        await k8s.CoreV1.ReplaceNamespacedSecretAsync(systemSecret, systemSecret.Name(), systemSecret.Namespace());
-                    }
+                    patch.Replace(path => path.Status, new V1NeonClusterOperator.OperatorStatus());
                 }
-                finally
-                {
-                    updating = false;
-                }
+
+                patch.Replace(path => path.Status.NeonDesktopCertificate, new V1NeonClusterOperator.UpdateStatus());
+                patch.Replace(path => path.Status.NeonDesktopCertificate.LastCompleted, DateTime.UtcNow);
+
+                await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterOperator>(
+                    patch: OperatorHelper.ToV1Patch<V1NeonClusterOperator>(patch),
+                    name: clusterOperator.Name());
             }
         }
     }

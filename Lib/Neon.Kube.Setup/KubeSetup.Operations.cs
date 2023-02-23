@@ -349,6 +349,9 @@ spec:
                     await CreateNamespacesAsync(controller, controlNode);
 
                     controller.ThrowIfCancelled();
+                    await WriteClusterInfoAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
                     await InstallCrdsAsync(controller, controlNode);
 
                     controller.ThrowIfCancelled();
@@ -415,9 +418,6 @@ spec:
                     await InstallHarborAsync(controller, controlNode);
 
                     controller.ThrowIfCancelled();
-                    await WriteClusterInfoAsync(controller, controlNode);
-
-                    controller.ThrowIfCancelled();
                     await InstallMonitoringAsync(controller);
 
                     controller.ThrowIfCancelled();
@@ -428,6 +428,12 @@ spec:
 
                     controller.ThrowIfCancelled();
                     await InstallContainerRegistryResourcesAsync(controller, controlNode);
+
+                    if (controller.Get<bool>(KubeSetupProperty.DesktopImage, false))
+                    {
+                        controller.ThrowIfCancelled();
+                        await WaitForHarborImagePushAsync(controller, controlNode);
+                    }
 
                     // IMPORTANT!
                     //
@@ -2046,7 +2052,11 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add("certficateDuration", cluster.Definition.Network.AcmeOptions.CertificateDuration);
                     values.Add("certificateRenewBefore", cluster.Definition.Network.AcmeOptions.CertificateRenewBefore);
                     values.Add("isNeonDesktop", cluster.Definition.IsDesktop);
-                    values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 7 : 3);
+                    values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
+                    values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
+                    values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 9 : 3);
+                    values.Add("dotnetGcServer", cluster.Definition.Nodes.Count() == 1 ? 0 : 1);
+                    values.Add("dotnetGcHighMemPercent", cluster.Definition.Nodes.Count() == 1 ? 15.ToString("x") : 50.ToString("x"));
 
                     int i = 0;
 
@@ -4542,6 +4552,74 @@ $@"- name: StorageType
         }
 
         /// <summary>
+        /// For neon desktop, wait for node images to be pushed to harbor.
+        /// </summary>
+        /// <param name="controller"></param>
+        /// <param name="controlNode"></param>
+        /// <returns></returns>
+        public static async Task WaitForHarborImagePushAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        {
+            await SyncContext.Clear;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
+
+            var k8s = GetK8sClient(controller);
+
+            await controlNode.InvokeIdempotentAsync("setup/wait-harbor-image-push",
+                async () =>
+                {
+                    V1NeonClusterOperator clusterOperator = null;
+
+                    _ = k8s.WatchAsync<V1NeonClusterOperator>(async (@event) =>
+                    {
+                        await SyncContext.Clear;
+
+                        clusterOperator = @event.Value;
+                    },
+                    fieldSelector: $"metadata.name={KubeService.NeonClusterOperator}");
+
+                    // Wait for cron schedule to run.
+                    await NeonHelper.WaitForAsync(async () =>
+                    {
+                        await SyncContext.Clear;
+
+                        return clusterOperator?.Status?.ContainerImages?.LastCompleted != null;
+                    },
+                    timeout: TimeSpan.FromMinutes(10),
+                    pollInterval: TimeSpan.FromMilliseconds(250));
+
+                    // Wait for node tasks to complete.
+                    await NeonHelper.WaitForAsync(async () =>
+                    {
+                        await SyncContext.Clear;
+
+                        var labels = new Dictionary<string, string>
+                        {
+                    { NeonLabel.ManagedBy, KubeService.NeonClusterOperator },
+                    { NeonLabel.NodeTaskType, NeonNodeTaskType.ContainerImageSync }
+                        };
+                        var selector = labels.Keys.Select(k => $"{k}={labels[k]}");
+                        var selectorString = string.Join(",", selector.ToArray());
+
+                        var tasks = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>(
+                            labelSelector: selectorString);
+
+                        return !tasks.Items.Any(
+                            nt => nt.Status == null
+                            || nt.Status.Phase != V1NeonNodeTask.Phase.Success);
+                    },
+                    timeout: TimeSpan.FromMinutes(10),
+                    pollInterval: TimeSpan.FromSeconds(5));
+
+                    // Reset schedule to default value after completion.
+                    clusterOperator.Spec.Updates.ContainerImages.Schedule = "0 0 0 ? * *";
+
+                    await k8s.CustomObjects.UpsertClusterCustomObjectAsync(clusterOperator, clusterOperator.Name());
+                });
+        }
+
+        /// <summary>
         /// Installs <b>neon-cluster-operator</b>.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -4571,9 +4649,11 @@ $@"- name: StorageType
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
                     values.Add("image.pullPolicy", "IfNotPresent");
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
-                    values.Add("resource.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
-                    values.Add("resource.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
-                    values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 7 : 3);
+                    values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
+                    values.Add("resources.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
+                    values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 9 : 3);
+                    values.Add("dotnetGcServer", cluster.Definition.Nodes.Count() == 1 ? 0 : 1);
+                    values.Add("dotnetGcHighMemPercent", cluster.Definition.Nodes.Count() == 1 ? 15.ToString("x") : 50.ToString("x"));
                     values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
@@ -4623,7 +4703,7 @@ $@"- name: StorageType
                                 ContainerImages = new V1NeonClusterOperator.UpdateSpec()
                                 {
                                     Enabled = true,
-                                    Schedule = "0 0 0 ? * *"
+                                    Schedule = cluster.Definition.IsDesktop ? "0 * * ? * *" : "0 0 0 ? * *"
                                 },
                                 ControlPlaneCertificates = new V1NeonClusterOperator.UpdateSpec()
                                 {
@@ -4761,7 +4841,9 @@ $@"- name: StorageType
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
                     values.Add("resources.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
-                    values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 7 : 3);
+                    values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 9 : 3);
+                    values.Add("dotnetGcServer", cluster.Definition.Nodes.Count() == 1 ? 0 : 1);
+                    values.Add("dotnetGcHighMemPercent", cluster.Definition.Nodes.Count() == 1 ? 15.ToString("x") : 50.ToString("x"));
 
                     await controlNode.InstallHelmChartAsync(controller, "neon-node-agent",
                         releaseName:  "neon-node-agent",
@@ -4814,7 +4896,11 @@ $@"- name: StorageType
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
-                    values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 7 : 3);
+                    values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
+                    values.Add("resources.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
+                    values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 9 : 3);
+                    values.Add("dotnetGcServer", cluster.Definition.Nodes.Count() == 1 ? 0 : 1);
+                    values.Add("dotnetGcHighMemPercent", cluster.Definition.Nodes.Count() == 1 ? 15.ToString("x") : 50.ToString("x"));
 
                     await controlNode.InstallHelmChartAsync(controller, "neon-dashboard",
                         releaseName:  "neon-dashboard",
@@ -5283,13 +5369,11 @@ $@"- name: StorageType
             values.Add("secrets.cipherKey", AesCipher.GenerateKey(256));
             values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
             values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
-            values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 7 : 3);
-
-            if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
-            {
-                values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
-                values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
-            }
+            values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
+            values.Add("resources.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
+            values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 9 : 3);
+            values.Add("dotnetGcServer", cluster.Definition.Nodes.Count() == 1 ? 0 : 1);
+            values.Add("dotnetGcHighMemPercent", cluster.Definition.Nodes.Count() == 1 ? 15.ToString("x") : 50.ToString("x"));
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/neon-sso-session-proxy-install",

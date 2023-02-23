@@ -386,6 +386,7 @@ set -euo pipefail
             {
                 var moduleScript =
 @"
+set -x
 set -euo pipefail
 
 # Create the .conf file to load required modules during boot.
@@ -919,7 +920,25 @@ systemctl restart crio
 set +e      # Don't exit if the next command fails
 apt-mark hold cri-o cri-o-runc
 ";
-            SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.Defaults | RunOptions.FaultOnError);
+            // The CRI-O apt package mirror has been quite unreliable over the years, 
+            // so we're going to retry the operation in the hope that it may work
+            // eventually.
+
+            var retry = new LinearRetryPolicy(typeof(ExecuteException), maxAttempts: 3, retryInterval: TimeSpan.FromMinutes(1));
+
+            try
+            {
+                retry.Invoke(
+                    () =>
+                    {
+                        SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.Defaults)
+                            .EnsureSuccess();
+                    });
+            }
+            catch (Exception e)
+            {
+                Fault(e.Message);
+            }
 
             // $todo(jefflill): Remove this hack when/if it's no longer necessary.
             //
@@ -1053,7 +1072,25 @@ set +e      # Don't exit if the next command fails
 apt-mark hold podman 
 apt-mark hold skopeo 
 ";
-                    SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.Defaults | RunOptions.FaultOnError);
+                    // The PODMAN apt package mirror has been quite unreliable over the years, 
+                    // so we're going to retry the operation in the hope that it may work
+                    // eventually.
+
+                    var retry = new LinearRetryPolicy(typeof(ExecuteException), maxAttempts: 3, retryInterval: TimeSpan.FromMinutes(1));
+
+                    try
+                    {
+                        retry.Invoke(
+                            () =>
+                            {
+                                SudoCommand(CommandBundle.FromScript(setupScript), RunOptions.Defaults)
+                                    .EnsureSuccess();
+                            });
+                    }
+                    catch (Exception e)
+                    {
+                        Fault(e.Message);
+                    }
                 });
         }
 

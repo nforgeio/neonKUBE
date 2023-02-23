@@ -50,121 +50,16 @@ namespace Neon.Kube.Operator.Controller
     /// <summary>
     /// Describes the interface used to implement Neon based operator controllers.
     /// </summary>
-    /// <typeparam name="TEntity">Specifies the Kubernetes entity being managed.</typeparam>
-    [OperatorComponent(OperatorComponentType.Controller)]
-    [Controller]
-    public interface IResourceController<TEntity>
-        where TEntity : IKubernetesObject<V1ObjectMeta>
+    public interface IResourceController
     {
-        /// <summary>
-        /// The lease name for the controller resource manager.
-        /// </summary>
-        string LeaseName
-        {
-            get
-            {
-                return $"{GetType().Name}.{typeof(TEntity).GetKubernetesTypeMetadata().PluralName}".ToLower();
-            }
-        }
-
-        /// <summary>
-        /// An optional filter.
-        /// </summary>
-        Func<TEntity, bool> Filter => (TEntity) => true;
-
         /// <summary>
         /// Starts the controller.
         /// </summary>
         /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static Task StartAsync(IServiceProvider serviceProvider)
+        public Task StartAsync(IServiceProvider serviceProvider)
         {
             return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Called periodically to allow the operator to perform global operations.
-        /// The period is controlled by <see cref="ResourceManagerOptions.IdleInterval"/>.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public Task IdleAsync()
-        {
-            return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Called when a new resource is detected or when the non-status part of an existing resource
-        /// is modified.
-        /// </summary>
-        /// <param name="entity">The new or modified resource.</param>
-        /// <returns>
-        /// A <see cref="ResourceControllerResult"/> indicating the the current event or possibly a new event is 
-        /// to be requeue with a possible delay.  <c>null</c> may also bne returned, indicating that
-        /// the event is not to be requeued.
-        /// </returns>
-        public Task<ResourceControllerResult> ReconcileAsync(TEntity entity)
-        {
-            return Task.FromResult<ResourceControllerResult>(null);
-        }
-
-        /// <summary>
-        /// Called when the status part of a resource has been modified.
-        /// </summary>
-        /// <param name="entity">The modified resource.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public Task StatusModifiedAsync(TEntity entity)
-        {
-            return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Called when a resource has been deleted.
-        /// </summary>
-        /// <param name="entity">The deleted resource.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public Task DeletedAsync(TEntity entity)
-        {
-            return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Called when the instance has a <see cref="LeaderElector"/> and this instance has
-        /// assumed leadership.
-        /// </summary>
-        public Task OnPromotionAsync()
-        {
-            return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Called when the instance has a <see cref="LeaderElector"/> this instance has
-        /// been demoted.
-        /// </summary>
-        public Task OnDemotionAsync()
-        {
-            return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Called when the instance has a <see cref="LeaderElector"/> and a new leader has
-        /// been elected.
-        /// </summary>
-        /// <param name="identity">Identifies the new leader.</param>
-        public Task OnNewLeaderAsync(string identity)
-        {
-            return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Called when an exception is thrown. This allows the Operator to define the retry policy.
-        /// </summary>
-        /// <param name="entity"></param>
-        /// <param name="attempt"></param>
-        /// <param name="exception"></param>
-        /// <returns></returns>
-        public Task<ErrorPolicyResult> ErrorPolicyAsync(TEntity entity, int attempt, Exception exception)
-        {
-            return Task.FromResult(new ErrorPolicyResult());
         }
     }
 }

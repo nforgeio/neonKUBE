@@ -136,18 +136,18 @@ namespace Neon.Kube.Operator.ResourceManager
                 {
                     var @event = queue.Keys.Where(key => key.Value.Uid() == uid).FirstOrDefault();
 
+                    if (@event == null
+                         || @event.Value == null
+                         || queue[@event].IsCancellationRequested)
+                    {
+                        continue;
+                    }
+
                     try
                     {
                         currentEvents.TryAdd(uid, DateTime.UtcNow);
 
                         metrics.QueueDurationSeconds.Observe((DateTime.UtcNow - @event.CreatedAt).TotalSeconds);
-
-                        if (@event == null ||
-                            @event.Value == null ||
-                            queue[@event].IsCancellationRequested)
-                        {
-                            return;
-                        }
 
                         logger?.LogDebugEx(() => $"Executing event [{@event.Type}] for resource [{@event.Value.Kind}/{@event.Value.Name()}]");
 

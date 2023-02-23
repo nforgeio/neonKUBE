@@ -29,8 +29,8 @@
 	<ItemGroup>
         <PackageReference Include="KubernetesClient" Version="9.0.38" />
         <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
-        <PackageReference Include="Neon.Common" Version="10000.0.2844-dev-master" />
-        <PackageReference Include="Neon.JsonConverters" Version="10000.0.2844-dev-master" />
+        <PackageReference Include="Neon.Common" Version="10000.0.2849-dev-master" />
+        <PackageReference Include="Neon.JsonConverters" Version="10000.0.2849-dev-master" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
         <PackageReference Include="NJsonSchema" Version="10.8.0" />
         <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
