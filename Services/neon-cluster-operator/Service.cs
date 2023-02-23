@@ -144,9 +144,6 @@ namespace NeonClusterOperator
     [RbacRule<V1Secret>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     public partial class Service : NeonService
     {
-        private HttpClient  harborHttpClient;
-        private readonly    JsonSerializerOptions serializeOptions;
-
         /// <summary>
         /// Information about the cluster.
         /// </summary>
@@ -171,6 +168,10 @@ namespace NeonClusterOperator
         /// Dex client.
         /// </summary>
         public Dex.Dex.DexClient DexClient;
+
+        // private fields
+        private HttpClient harborHttpClient;
+        private readonly JsonSerializerOptions serializeOptions;
 
         /// <summary>
         /// Constructor.
@@ -203,15 +204,14 @@ namespace NeonClusterOperator
             await WatchClusterInfoAsync();
             await WatchRootUserAsync();
 
-            harborHttpClient     = new HttpClient(new HttpClientHandler() { UseCookies = false });
-            HarborClient         = new HarborClient(harborHttpClient);
+            harborHttpClient = new HttpClient(new HttpClientHandler() { UseCookies = false });
+            HarborClient = new HarborClient(harborHttpClient);
             HarborClient.BaseUrl = "http://registry-harbor-harbor-core.neon-system/api/v2.0";
 
             HeadendClient = HeadendClient.Create();
             HeadendClient.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", GetEnvironmentVariable("NEONCLOUD_HEADEND_TOKEN"));
 
             var channel = GrpcChannel.ForAddress($"http://{KubeService.Dex}:5557");
-
             DexClient = new Dex.Dex.DexClient(channel);
 
             // Start the web service.
@@ -236,7 +236,6 @@ namespace NeonClusterOperator
             await StartedAsync();
 
             // Handle termination gracefully.
-
             await Terminator.StopEvent.WaitAsync();
             Terminator.ReadyToExit();
 
@@ -274,10 +273,9 @@ namespace NeonClusterOperator
                             return true;
                         }
 
-                        // Filter out leader election since it's really chatty.
-
-                        if (httpcontext.RequestUri.Host == "10.253.0.1" &&
-                            httpcontext.RequestUri.AbsolutePath.StartsWith("/apis/coordination.k8s.io"))
+                        // filter out leader election since it's really chatty
+                        if (httpcontext.RequestUri.Host == "10.253.0.1"
+                        & httpcontext.RequestUri.AbsolutePath.StartsWith("/apis/coordination.k8s.io"))
                         {
                             return false;
                         }
@@ -317,8 +315,7 @@ namespace NeonClusterOperator
             KubeNamespace.NeonStatus,
             fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
 
-            // Wait for cluster info to be set.
-
+            // wait for cluster info to be set
             await NeonHelper.WaitForAsync(async () =>
             {
                 await SyncContext.Clear;
