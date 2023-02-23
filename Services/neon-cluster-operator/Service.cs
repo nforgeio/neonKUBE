@@ -82,11 +82,11 @@ using Quartz;
 using Quartz.Impl;
 using Quartz.Logging;
 using System.Net.Http;
+using Minio;
+using Neon.Kube.Operator.Rbac;
 
 using Task    = System.Threading.Tasks.Task;
 using Metrics = Prometheus.Metrics;
-using Minio;
-using Neon.Kube.Operator.Rbac;
 
 namespace NeonClusterOperator
 {
@@ -145,6 +145,11 @@ namespace NeonClusterOperator
     [RbacRule<V1Pod>(Verbs = RbacVerb.List, Scope = EntityScope.Namespaced, Namespace = KubeNamespace.NeonSystem)]
     public partial class Service : NeonService
     {
+        private const int dexPort = 5557;
+
+        private HttpClient                      harborHttpClient;
+        private readonly JsonSerializerOptions  serializeOptions;
+
         /// <summary>
         /// Information about the cluster.
         /// </summary>
@@ -176,9 +181,6 @@ namespace NeonClusterOperator
         public PortForwardManager PortForwardManager;
 
         // private fields
-        private HttpClient harborHttpClient;
-        private readonly JsonSerializerOptions serializeOptions;
-        private int dexPort = 5557;
 
         /// <summary>
         /// Constructor.
@@ -213,7 +215,7 @@ namespace NeonClusterOperator
                 this.PortForwardManager = new PortForwardManager(K8s, TelemetryHub.LoggerFactory);
             }
 
-            await WatchClusterInfoAsync();
+            await WaitForClusterInfoAsync();
             await ConfigureDexAsync();
             await ConfigureHarborAsync();
 
@@ -242,6 +244,7 @@ namespace NeonClusterOperator
             await StartedAsync();
 
             // Handle termination gracefully.
+
             await Terminator.StopEvent.WaitAsync();
             Terminator.ReadyToExit();
 
@@ -279,9 +282,10 @@ namespace NeonClusterOperator
                             return true;
                         }
 
-                        // filter out leader election since it's really chatty
-                        if (httpcontext.RequestUri.Host == "10.253.0.1"
-                        & httpcontext.RequestUri.AbsolutePath.StartsWith("/apis/coordination.k8s.io"))
+                        // Filter out leader election since it's really chatty.
+
+                        if (httpcontext.RequestUri.Host == "10.253.0.1" &&
+                            httpcontext.RequestUri.AbsolutePath.StartsWith("/apis/coordination.k8s.io"))
                         {
                             return false;
                         }
@@ -306,7 +310,11 @@ namespace NeonClusterOperator
             return true;
         }
 
-        private async Task WatchClusterInfoAsync()
+        /// <summary>
+        /// Waits for the cluster info config map.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task WaitForClusterInfoAsync()
         {
             await SyncContext.Clear;
 
@@ -321,7 +329,8 @@ namespace NeonClusterOperator
             KubeNamespace.NeonStatus,
             fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
 
-            // wait for cluster info to be set
+            // Wait for cluster info to be set.
+
             await NeonHelper.WaitForAsync(async () =>
             {
                 await SyncContext.Clear;
@@ -332,6 +341,10 @@ namespace NeonClusterOperator
             pollInterval: TimeSpan.FromMilliseconds(250));
         }
 
+        /// <summary>
+        /// Vonfigures DEX.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ConfigureDexAsync()
         {
             await SyncContext.Clear;
@@ -359,6 +372,10 @@ namespace NeonClusterOperator
             DexClient = new Dex.Dex.DexClient(channel);
         }
 
+        /// <summary>
+        /// Vonfigures Harbor.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ConfigureHarborAsync()
         {
             await SyncContext.Clear;
