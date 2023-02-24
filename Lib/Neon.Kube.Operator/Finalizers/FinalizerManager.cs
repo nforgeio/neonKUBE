@@ -98,6 +98,8 @@ namespace Neon.Kube.Operator.Finalizer
         {
             using var activity = TraceContext.ActivitySource?.StartActivity();
 
+            logger?.LogInformationEx(() => $"Registering finalizer {typeof(TFinalizer)} to {entity.Uid()}");
+
             return RegisterFinalizerInternalAsync(entity, finalizerInstanceBuilder.BuildFinalizer<TEntity, TFinalizer>(serviceProvider.CreateScope().ServiceProvider));
         }
 
@@ -105,8 +107,6 @@ namespace Neon.Kube.Operator.Finalizer
         public async Task RegisterAllFinalizersAsync(TEntity entity)
         {
             await SyncContext.Clear;
-
-            using var activity = TraceContext.ActivitySource?.StartActivity();
 
             await Task.WhenAll(
                 finalizerInstanceBuilder.BuildFinalizers<TEntity>(serviceProvider.CreateScope().ServiceProvider)
@@ -121,6 +121,8 @@ namespace Neon.Kube.Operator.Finalizer
             await SyncContext.Clear;
 
             using var activity = TraceContext.ActivitySource?.StartActivity();
+
+            logger?.LogInformationEx(() => $"Removing finalizer {typeof(TFinalizer)} from {entity.Uid()}");
 
             var finalizer = finalizerInstanceBuilder.BuildFinalizer<TEntity, TFinalizer>(serviceProvider.CreateScope().ServiceProvider);
 

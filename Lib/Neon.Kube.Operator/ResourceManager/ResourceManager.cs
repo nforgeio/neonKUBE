@@ -735,7 +735,7 @@ namespace Neon.Kube.Operator.ResourceManager
                 {
                     await SyncContext.Clear;
 
-                    using (var activity = Activity.Current)
+                    using (var activity = TraceContext.ActivitySource?.StartActivity("ActionAsync"))
                     {
                         var result            = (ResourceControllerResult)null;
                         var modifiedEventType = ModifiedEventType.Other;
