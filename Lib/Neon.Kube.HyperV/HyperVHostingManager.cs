@@ -657,7 +657,7 @@ namespace Neon.Kube.Hosting.HyperV
                 {
                     switchName = KubeConst.HyperVInternalSwitchName;
 
-                    controller.SetGlobalStepStatus($"configure: [{switchName}] internal switch");
+                    controller.SetGlobalStepStatus($"configure: [{switchName}] switch");
 
                     // We're going to create an internal switch named [neonkube] configured
                     // with the standard private subnet and a NAT to enable external routing.
@@ -669,7 +669,7 @@ namespace Neon.Kube.Hosting.HyperV
                         // The internal switch doesn't exist yet, so create it.  Note that
                         // this switch requires a virtual NAT.
 
-                        controller.SetGlobalStepStatus($"add: [{switchName}] internal switch with NAT for [{hostingOptions.NeonKubeInternalSubnet}]");
+                        controller.SetGlobalStepStatus($"add: [{switchName}] switch with NAT for [{hostingOptions.NeonKubeInternalSubnet}]");
                         hyperv.NewInternalSwitch(switchName, hostingOptions.NeonKubeInternalSubnet, addNat: true);
                         controller.SetGlobalStepStatus();
                     }
