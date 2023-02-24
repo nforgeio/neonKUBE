@@ -43,7 +43,7 @@ spec:
             - name: DOTNET_GCHighMemPercent
               value: {{ .Values.dotnetGcHighMemPercent | default "5A" | quote }}
             - name: DOTNET_gcServer
-              value: {{ .Values.dotnetGcServer | default "1" | quote }}
+              value: {{ .Values.dotnetGcServer | quote }}
             - name: SSO_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
