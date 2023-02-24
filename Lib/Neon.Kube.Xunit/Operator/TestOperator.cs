@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -32,30 +33,32 @@ using Neon.Kube.Operator.Builder;
 
 using k8s;
 
+// $todo(marcusbooyah): Would it make more sense for this to be in a test project?
+
 namespace Neon.Kube.Xunit.Operator
 {
     /// <inheritdoc/>
     public class TestOperator : ITestOperator
     {
-        private KubernetesOperatorTestHost host { get; set; }
-        private KubernetesOperatorTestHostBuilder hostBuilder { get; set; }
-
-        private KubernetesClientConfiguration k8sConfig { get; set; }
-
-        private IOperatorBuilder operatorBuilder { get; set; }
+        private KubernetesOperatorTestHost          host;
+        private KubernetesOperatorTestHostBuilder   hostBuilder;
+        private KubernetesClientConfiguration       k8sConfig;
+        private IOperatorBuilder                    operatorBuilder;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="k8sConfig"></param>
+        /// <param name="k8sConfig">Specifies the LKubernetes configuration.</param>
         public TestOperator(KubernetesClientConfiguration k8sConfig)
         {
+            Covenant.Requires<ArgumentNullException>(k8sConfig != null, nameof(k8sConfig));
+
             var operatorSettings = new OperatorSettings()
             {
-                Port = 1234,
-                AssemblyScanningEnabled = false,
-                Name = "my-cool-operator",
-                WatchNamespace = "default",
+                Port                          = 1234,
+                AssemblyScanningEnabled       = false,
+                Name                          = "my-cool-operator",
+                WatchNamespace                = "default",
                 KubernetesClientConfiguration = k8sConfig
             };
 

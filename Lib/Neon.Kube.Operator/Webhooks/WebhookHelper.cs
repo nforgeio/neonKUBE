@@ -25,6 +25,7 @@ using Microsoft.AspNetCore.Http;
 
 using k8s;
 using k8s.Models;
+using System.Diagnostics.Contracts;
 
 namespace Neon.Kube.Operator.Webhook
 {
@@ -36,30 +37,31 @@ namespace Neon.Kube.Operator.Webhook
         /// <summary>
         /// Helper method to create a route for an <see cref="IAdmissionWebhook{TEntity, TResult}"/>
         /// </summary>
-        /// <typeparam name="TEntity"></typeparam>
-        /// <param name="webhook"></param>
-        /// <param name="webhookType"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
-        public static string CreateEndpoint<TEntity>(Type webhook, WebhookType webhookType)
+        /// <typeparam name="TEntity">Specifies the entity type.</typeparam>
+        /// <param name="webhookImplementation">Specifies the web hook implementation type.</param>
+        /// <param name="webhookType">Specifies the webook type.</param>
+        /// <returns>The endpoint string.</returns>
+        public static string CreateEndpoint<TEntity>(Type webhookImplementation, WebhookType webhookType)
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
-            return CreateEndpoint(typeof(TEntity), webhook, webhookType);
+            Covenant.Requires<ArgumentNullException>(webhookImplementation != null, nameof(webhookImplementation));
+
+            return CreateEndpoint(typeof(TEntity), webhookImplementation, webhookType);
         }
 
         /// <summary>
         /// Helper method to create a route for an <see cref="IAdmissionWebhook{TEntity, TResult}"/>
         /// </summary>
-        /// <param name="webhook"></param>
-        /// <param name="webhookType"></param>
-        /// <param name="entityType"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
-        public static string CreateEndpoint(Type entityType, Type webhook, WebhookType webhookType)
+        /// <param name="entityType">Specifies the associated kubernetes entity type.</param>
+        /// <param name="webhookImplementation">Specifies the web hook implementation type.</param>
+        /// <param name="webhookType">Specifies the webook type.</param>
+        /// <returns>The endpoint string.</returns>
+        public static string CreateEndpoint(Type entityType, Type webhookImplementation, WebhookType webhookType)
         {
-            var metadata = entityType.GetKubernetesTypeMetadata();
+            Covenant.Requires<ArgumentNullException>(entityType != null, nameof(entityType));
 
-            var builder = new StringBuilder();
+            var metadata = entityType.GetKubernetesTypeMetadata();
+            var builder  = new StringBuilder();
 
             if (!string.IsNullOrEmpty(metadata.Group))
             {
@@ -76,19 +78,22 @@ namespace Neon.Kube.Operator.Webhook
                 builder.Append($"/{metadata.PluralName}");
             }
 
-            builder.Append($"/{webhook.Name}");
+            builder.Append($"/{webhookImplementation.Name}");
 
             switch (webhookType)
             {
-                case WebhookType.Mutate:
+                case WebhookType.Mutating:
+
                     builder.Append("/mutate");
                     break;
 
-                case WebhookType.Validate:
+                case WebhookType.Validating:
+
                     builder.Append("/validate");
                     break;
 
                 default:
+
                     throw new ArgumentException();
             }
 
@@ -98,8 +103,8 @@ namespace Neon.Kube.Operator.Webhook
         /// <summary>
         /// Returns a list of strings representing allowed operations.
         /// </summary>
-        /// <param name="operations"></param>
-        /// <returns></returns>
+        /// <param name="operations">The admission operations.</param>
+        /// <returns>The admission operation strings.</returns>
         public static List<string> ToList(this AdmissionOperations operations)
         {
             if (operations.HasFlag(AdmissionOperations.All))

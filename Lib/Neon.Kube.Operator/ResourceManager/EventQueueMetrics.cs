@@ -28,33 +28,35 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Diagnostics;
 using Neon.Tasks;
-using Neon.Kube.Operator.ResourceManager;
 
 using k8s;
 using k8s.Models;
 
-using KellermanSoftware.CompareNetObjects;
-
 using Prometheus;
+using System.Diagnostics.Contracts;
 
 namespace Neon.Kube.Operator.EventQueue
 {
+    /// <summary>
+    /// Used for maintaining event queue metrics.
+    /// </summary>
+    /// <typeparam name="TEntity">Specifies the entity type.</typeparam>
+    /// <typeparam name="TController">Specifies the controller type.</typeparam>
     internal class EventQueueMetrics<TEntity, TController>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         private const string prefix = "operator_eventqueue";
+        
         private static readonly string[] LabelNames = { "operator", "controller", "kind", "group", "version" };
-        public Counter.Child AddsTotal { get; private set; }
-        public Counter.Child RetriesTotal { get; private set; }
-        public Gauge.Child Depth { get; private set; }
-        public Histogram.Child QueueDurationSeconds { get; private set; }
-        public Histogram.Child WorkDurationSeconds { get; private set; }
-        public Gauge.Child UnfinishedWorkSeconds { get; private set; }
-        public Gauge.Child LongestRunningProcessorSeconds { get; private set; }
-        public Gauge.Child ActiveWorkers { get; private set; }
-        public Gauge.Child MaxActiveWorkers { get; private set; }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="operatorSettings">Specifies the operator settings.</param>
         public EventQueueMetrics(OperatorSettings operatorSettings) 
         {
+            Covenant.Requires<ArgumentNullException>(operatorSettings != null, nameof(operatorSettings));
+
             var crdMeta     = typeof(TEntity).GetKubernetesTypeMetadata();
             var labelValues = new string[] 
             { 
@@ -69,15 +71,15 @@ namespace Neon.Kube.Operator.EventQueue
                 .CreateCounter(
                     name: $"{prefix}_adds_total",
                     help: "The total number of queued items.",
-                    labelNames: LabelNames).
-                WithLabels(labelValues);
+                    labelNames: LabelNames)
+                .WithLabels(labelValues);
 
             RetriesTotal = Metrics
                 .CreateCounter(
                     name: $"{prefix}_retries_total",
                     help: "The total number of retries.",
-                    labelNames: LabelNames).
-                WithLabels(labelValues);
+                    labelNames: LabelNames)
+                .WithLabels(labelValues);
 
             Depth = Metrics
                 .CreateGauge(
@@ -127,7 +129,51 @@ namespace Neon.Kube.Operator.EventQueue
                     help: "Total number of reconciliations per controller.",
                     labelNames: LabelNames)
                 .WithLabels(labelValues);
-
         }
+
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
+        public Counter.Child AddsTotal { get; private set; }
+
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
+        public Counter.Child RetriesTotal { get; private set; }
+
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
+        public Gauge.Child Depth { get; private set; }
+
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
+        public Histogram.Child QueueDurationSeconds { get; private set; }
+
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
+        public Histogram.Child WorkDurationSeconds { get; private set; }
+
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
+        public Gauge.Child UnfinishedWorkSeconds { get; private set; }
+
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
+        public Gauge.Child LongestRunningProcessorSeconds { get; private set; }
+
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
+        public Gauge.Child ActiveWorkers { get; private set; }
+
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
+        public Gauge.Child MaxActiveWorkers { get; private set; }
     }
 }

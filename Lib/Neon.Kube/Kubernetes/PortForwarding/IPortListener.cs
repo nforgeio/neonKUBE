@@ -20,10 +20,18 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
-namespace Neon.Kube
+namespace Neon.Kube.PortForward
 {
+    /// <summary>
+    /// Describe port listeners used by <see cref="IPortForwardManager"/> implementations
+    /// to listen for connections on the local workstation that will be forwarded to a
+    /// pod running in the cluster.
+    /// </summary>
     internal interface IPortListener : IDisposable
     {
+        /// <summary>
+        /// Returns the associated <see cref="TcpListener"/>.
+        /// </summary>
         TcpListener Listener { get; }
     }
 }

@@ -1428,7 +1428,7 @@ systemctl enable kubelet
         /// </note>
         /// </param>
         /// <param name="releaseName">Optionally specifies the component release name.</param>
-        /// <param name="namespace">Optionally specifies the namespace where Kubernetes namespace where the Helm chart should be installed. This defaults to <b>default</b></param>
+        /// <param name="namespace">Optionally specifies the namespace where Kubernetes namespace where the Helm chart should be installed. This defaults to <b>default</b>.</param>
         /// <param name="prioritySpec">
         /// <para>
         /// Optionally specifies the Helm variable and priority class for any pods deployed by the chart.

@@ -4554,9 +4554,9 @@ $@"- name: StorageType
         /// <summary>
         /// For neon desktop, wait for node images to be pushed to harbor.
         /// </summary>
-        /// <param name="controller"></param>
-        /// <param name="controlNode"></param>
-        /// <returns></returns>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task WaitForHarborImagePushAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             await SyncContext.Clear;

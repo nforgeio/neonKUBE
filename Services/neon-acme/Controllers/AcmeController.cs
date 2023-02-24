@@ -87,7 +87,7 @@ namespace NeonAcme.Controllers
         /// <summary>
         /// Handles challenge presentations from Cert Manager.
         /// </summary>
-        /// <param name="challenge"></param>
+        /// <param name="challenge">Specifies the challenge.</param>
         /// <returns>The challenge response.</returns>
         [HttpPost("neoncluster_io")]
         [Produces("application/json")]

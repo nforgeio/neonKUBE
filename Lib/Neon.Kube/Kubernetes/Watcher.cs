@@ -35,6 +35,7 @@ using Neon.Tasks;
 using k8s;
 using k8s.Models;
 using k8s.Autorest;
+using System.Diagnostics.Contracts;
 
 namespace Neon.Kube
 {
@@ -80,10 +81,10 @@ namespace Neon.Kube
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="type"></param>
-        /// <param name="value"></param>
-        /// <param name="attempt"></param>
-        /// <param name="force"></param>
+        /// <param name="type">Identifies the event being watched.</param>
+        /// <param name="value">Identifies the type being watched.</param>
+        /// <param name="attempt">Optionally specifies the watch attempt (defaults to 0).</param>
+        /// <param name="force">Optionally forece a resource reconcile.</param>
         public WatchEvent(WatchEventType type, T value, int attempt = 0, bool force = false)
             : base()
         {
@@ -262,12 +263,13 @@ namespace Neon.Kube
         /// <summary>
         /// Handles received events.
         /// </summary>
-        /// <param name="action"></param>
-        /// <returns></returns>
+        /// <param name="action">The event handler.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="KubernetesException"></exception>
         private async Task EventHandlerAsync(Func<WatchEvent<T>, Task> action)
         {
             await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
 
             try
             {

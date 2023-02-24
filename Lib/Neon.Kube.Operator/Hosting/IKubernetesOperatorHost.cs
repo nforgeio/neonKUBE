@@ -73,15 +73,14 @@ namespace Neon.Kube.Operator
         X509Certificate2 Certificate { get; set; }
 
         /// <summary>
-        /// Run the Operator.
+        /// Run the operator asynchronously.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         Task RunAsync();
 
         /// <summary>
-        /// Run the Operator.
+        /// Run the operator synchronously.
         /// </summary>
-        /// <returns></returns>
         void Run();
     }
 }

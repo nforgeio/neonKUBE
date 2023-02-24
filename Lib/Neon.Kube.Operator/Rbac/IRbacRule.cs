@@ -53,19 +53,19 @@ namespace Neon.Kube.Operator.Rbac
         /// <summary>
         /// Gets a list of the Namespaces that the rule applies to.
         /// </summary>
-        /// <returns></returns>
-        IEnumerable<string> Namespaces();
+        /// <returns>The list of namespaces.</returns>
+        IEnumerable<string> NamespaceList();
 
         /// <summary>
         /// Returns the Type that the rule applies to.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The entity type.</returns>
         Type GetEntityType();
 
         /// <summary>
         /// Gets the <see cref="KubernetesEntityAttribute"/> for the type.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Returns the <see cref="KubernetesEntityAttribute"/>.</returns>
         KubernetesEntityAttribute GetKubernetesEntityAttribute();
     }
 }

@@ -19,10 +19,10 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-using Neon.Kube.Resources;
-
 using k8s;
 using k8s.Models;
+
+using Neon.Kube.Resources;
 
 namespace Neon.Kube.Operator.Rbac
 {
@@ -71,7 +71,7 @@ namespace Neon.Kube.Operator.Rbac
         }
 
         /// <inheritdoc/>
-        public IEnumerable<string> Namespaces()
+        public IEnumerable<string> NamespaceList()
         {
             return Namespace?.Split(',') ?? null;
         }

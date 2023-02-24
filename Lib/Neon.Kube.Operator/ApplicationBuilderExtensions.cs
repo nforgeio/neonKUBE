@@ -43,20 +43,20 @@ using Prometheus;
 namespace Neon.Kube.Operator
 {
     /// <summary>
-    /// Extension methods to register kubernetes operator components with the <see cref="IApplicationBuilder"/>.
+    /// Extension methods to register Kubernetes operator components with the <see cref="IApplicationBuilder"/>.
     /// </summary>
     public static class ApplicationBuilderExtensions
     {
         /// <summary>
         /// <para>
-        /// Use the kubernetes operator. Registers controllers and webhooks.
+        /// Use the Kubernetes operator. Registers controllers and webhooks.
         /// </para>
         /// </summary>
         /// <param name="app">The <see cref="IApplicationBuilder"/>.</param>
-        public static void UseKubernetesOperator(
-            this IApplicationBuilder app)
+        public static void UseKubernetesOperator(this IApplicationBuilder app)
         {
             app.UseRouting();
+
             app.UseEndpoints(
                 async endpoints =>
                 {
@@ -72,7 +72,7 @@ namespace Neon.Kube.Operator
                     {
                         Predicate = (healthCheck =>
                         {
-                            return healthCheck.Tags.Contains(OperatorBuilder.StartupProbeTag);
+                            return healthCheck.Tags.Contains(OperatorBuilder.StartupHealthProbeTag);
                         })
                     });
 
@@ -80,7 +80,7 @@ namespace Neon.Kube.Operator
                     {
                         Predicate = (healthCheck =>
                         {
-                            return healthCheck.Tags.Contains(OperatorBuilder.LivenessProbeTag);
+                            return healthCheck.Tags.Contains(OperatorBuilder.LivenessHealthProbeTag);
                         })
                     });
 
@@ -88,7 +88,7 @@ namespace Neon.Kube.Operator
                     {
                         Predicate = (healthCheck =>
                         {
-                            return healthCheck.Tags.Contains(OperatorBuilder.ReadinessProbeTag);
+                            return healthCheck.Tags.Contains(OperatorBuilder.ReadinessHealthProbeTag);
                         })
                     });
 
@@ -102,7 +102,7 @@ namespace Neon.Kube.Operator
                     }
                     catch { }
 
-                    var componentRegistrar = app.ApplicationServices.GetRequiredService<ComponentRegister>();
+                    var componentRegistrar = app.ApplicationServices.GetRequiredService<ComponentRegistration>();
 
                     foreach (var webhook in componentRegistrar.MutatingWebhookRegistrations)
                     {

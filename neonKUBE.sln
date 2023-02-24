@@ -175,6 +175,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.neon-node-agent", "Tes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestOperator", "Test\TestOperator\TestOperator.csproj", "{189BE023-07D0-4882-9469-D0269993C449}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SSH", "SSH", "{34305211-C7E2-4421-8E55-C33B44EBD317}"
+	ProjectSection(SolutionItems) = preProject
+		External\SSH\msys-2.0.dll = External\SSH\msys-2.0.dll
+		External\SSH\msys-crypto-1.1.dll = External\SSH\msys-crypto-1.1.dll
+		External\SSH\msys-gcc_s-seh-1.dll = External\SSH\msys-gcc_s-seh-1.dll
+		External\SSH\msys-z.dll = External\SSH\msys-z.dll
+		External\SSH\README.txt = External\SSH\README.txt
+		External\SSH\ssh-keygen.exe = External\SSH\ssh-keygen.exe
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -757,6 +767,7 @@ Global
 		{7D43806E-A532-47C3-A0DB-9518A6E7035D} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
 		{AD78F82C-B2F1-4116-B32A-C1682CF05999} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
 		{189BE023-07D0-4882-9469-D0269993C449} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
+		{34305211-C7E2-4421-8E55-C33B44EBD317} = {1A3C35E5-1C30-44F2-AB46-F5E7F99E524C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}

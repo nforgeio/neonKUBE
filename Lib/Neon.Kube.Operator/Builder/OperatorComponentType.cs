@@ -17,14 +17,29 @@
 
 namespace Neon.Kube.Operator.Builder
 {
+    /// <summary>
+    /// Identifies the type of an operator component.
+    /// </summary>
     internal enum OperatorComponentType
     {
+        /// <summary>
+        /// Identifies an operator controller.
+        /// </summary>
         Controller,
 
+        /// <summary>
+        /// Identifies an object finalizer.
+        /// </summary>
         Finalizer,
 
+        /// <summary>
+        /// Identifies a mutating webhook.
+        /// </summary>
         MutationWebhook,
 
+        /// <summary>
+        /// Identifies a validating webhook.
+        /// </summary>
         ValidationWebhook
     }
 }

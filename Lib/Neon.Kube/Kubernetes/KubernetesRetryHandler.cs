@@ -28,6 +28,7 @@ using System.Threading.Tasks;
 
 using k8s;
 using k8s.Autorest;
+
 using Neon.Retry;
 
 namespace Neon.Kube
@@ -97,7 +98,7 @@ namespace Neon.Kube
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="retryPolicy"></param>
+        /// <param name="retryPolicy">Optionally specifies anm overriding retry policy.</param>
         public KubernetesRetryHandler(IRetryPolicy retryPolicy = null)
             : base()
         {
@@ -107,9 +108,9 @@ namespace Neon.Kube
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="retryPolicy"></param>
-        /// <param name="innerHandler"></param>
-        public KubernetesRetryHandler(IRetryPolicy retryPolicy, HttpMessageHandler innerHandler)
+        /// <param name="innerHandler">Specifies an overriding HTTP handler.</param>
+        /// <param name="retryPolicy">Optionally specifies an overriding retry policy.</param>
+        public KubernetesRetryHandler(HttpMessageHandler innerHandler, IRetryPolicy retryPolicy = null)
             : base(innerHandler)
         {
             this.retryPolicy = retryPolicy ?? defaultRetryPolicy;

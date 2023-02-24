@@ -26,17 +26,16 @@ namespace Neon.Kube.Operator.Attributes
     public class MutatingWebhookAttribute : Attribute
     {
         /// <summary>
-        /// Whether to ignore the mutating webhook when scanning assemblies.
+        /// Constructor.
         /// </summary>
-        public bool Ignore { get; set; } = false;
-
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        public MutatingWebhookAttribute(
-            bool ignore = false)
+        public MutatingWebhookAttribute(bool ignore = false)
         {
             this.Ignore = ignore;
         }
+
+        /// <summary>
+        /// Whether to ignore the mutating webhook when scanning assemblies.
+        /// </summary>
+        public bool Ignore { get; set; } = false;
     }
 }

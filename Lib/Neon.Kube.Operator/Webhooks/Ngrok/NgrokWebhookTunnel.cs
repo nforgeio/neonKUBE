@@ -48,72 +48,52 @@ using Neon.Kube.Operator.Builder;
 namespace Neon.Kube.Operator.Webhook.Ngrok
 {
     /// <summary>
-    /// <para>
-    /// Provides an Ngrok tunnel for debugging webhooks.
-    /// </para>
+    /// Implements a Ngrok tunnel for debugging webhooks.
     /// </summary>
     internal class NgrokWebhookTunnel : IHostedService, IDisposable
     {
-        /// <summary>
-        /// The host that the tunnel should connect to.
-        /// </summary>
-        public string Host { get; init; } = string.Empty;
-
-        /// <summary>
-        /// The port that the tunnel should connect to.
-        /// </summary>
-        public int Port { get; init; }
-
-        /// <summary>
-        /// Details about the current tunnel.
-        /// </summary>
-        public NgrokTunnelDetail Tunnel { get; private set; }
-
-        private readonly ILogger logger;
-        private readonly IKubernetes k8s;
-        private readonly INgrokManager ngrokManager;
-        private readonly ComponentRegister componentRegister;
-        private readonly IServiceProvider serviceProvider;
-        private readonly JsonClient jsonClient;
-        private string tunnelNname;
-        private string ngrokdirectory;
-        private string ngrokAuthToken;
+        private readonly ILogger                logger;
+        private readonly IKubernetes            k8s;
+        private readonly INgrokManager          ngrokManager;
+        private readonly ComponentRegistration  componentRegistration;
+        private readonly IServiceProvider       serviceProvider;
+        private readonly JsonClient             jsonClient;
+        private string                          tunnelNname;
+        private string                          ngrokdirectory;
+        private string                          ngrokAuthToken;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="k8s"></param>
-        /// <param name="componentRegister"></param>
-        /// <param name="serviceProvider"></param>
-        /// <param name="ngrokdirectory"></param>
-        /// <param name="ngrokAuthToken"></param>
+        /// <param name="k8s">Specifies the Kubernetes client.</param>
+        /// <param name="componentRegistration">Specifies the component registration.</param>
+        /// <param name="serviceProvider">Specifies the dependency injection service provider.</param>
+        /// <param name="ngrokdirectory">Optionally specifies the NGROK directory.</param>
+        /// <param name="ngrokAuthToken">Optionally spefifices the NGROK authentication token.</param>
         public NgrokWebhookTunnel(
-            IKubernetes k8s,
-            ComponentRegister componentRegister,
-            IServiceProvider serviceProvider,
-            string ngrokdirectory = null,
-            string ngrokAuthToken = null)
+            IKubernetes             k8s,
+            ComponentRegistration   componentRegistration,
+            IServiceProvider        serviceProvider,
+            string                  ngrokdirectory = null,
+            string                  ngrokAuthToken = null)
         {
-            Covenant.Requires(k8s != null, nameof(k8s));
-            Covenant.Requires(componentRegister != null, nameof(componentRegister));
-            Covenant.Requires(serviceProvider != null, nameof(serviceProvider));
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            Covenant.Requires<ArgumentNullException>(componentRegistration != null, nameof(componentRegistration));
+            Covenant.Requires<ArgumentNullException>(serviceProvider != null, nameof(serviceProvider));
 
-            this.k8s               = k8s;
-            this.componentRegister = componentRegister;
-            this.serviceProvider   = serviceProvider;
-            this.ngrokdirectory    = ngrokdirectory;
-            this.ngrokAuthToken    = ngrokAuthToken;
-            this.logger            = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger<NgrokWebhookTunnel>();
+            this.k8s                   = k8s;
+            this.componentRegistration = componentRegistration;
+            this.serviceProvider       = serviceProvider;
+            this.ngrokdirectory        = ngrokdirectory;
+            this.ngrokAuthToken        = ngrokAuthToken;
+            this.logger                = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger<NgrokWebhookTunnel>();
+            this.ngrokManager          = new NgrokManager();
+            this.tunnelNname           = NeonHelper.CreateBase36Uuid();
 
-            ngrokManager = new NgrokManager();
-
-            jsonClient = new JsonClient()
+            this.jsonClient = new JsonClient()
             {
                 BaseAddress = new Uri("http://localhost:4040")
             };
-
-            tunnelNname = NeonHelper.CreateBase36Uuid();
-
 
         }
 
@@ -129,6 +109,21 @@ namespace Neon.Kube.Operator.Webhook.Ngrok
                 logger?.LogErrorEx(e);
             }
         }
+
+        /// <summary>
+        /// The host that the tunnel should connect to.
+        /// </summary>
+        public string Host { get; init; } = string.Empty;
+
+        /// <summary>
+        /// The port that the tunnel should connect to.
+        /// </summary>
+        public int Port { get; init; }
+
+        /// <summary>
+        /// Details about the current tunnel.
+        /// </summary>
+        public NgrokTunnelDetail Tunnel { get; private set; }
 
         /// <inheritdoc/>
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -151,9 +146,9 @@ namespace Neon.Kube.Operator.Webhook.Ngrok
 
                 var tunnel = new NgrokTunnelRequest
                 {
-                    Name = tunnelNname,
+                    Name  = tunnelNname,
                     Proto = "http",
-                    Addr = Port.ToString()
+                    Addr  = Port.ToString()
                 };
 
                 Tunnel = await jsonClient.PostAsync<NgrokTunnelDetail>("api/tunnels", tunnel);
@@ -164,28 +159,29 @@ namespace Neon.Kube.Operator.Webhook.Ngrok
                 }
                 catch
                 {
+                    // Ignoring
 
+                    // $todo(marcusbooyah): Does this catch make sense.  Why would ToString() fail here?
                 }
 
-                var componentRegistrar = serviceProvider.GetRequiredService<ComponentRegister>();
+                var componentRegistration = serviceProvider.GetRequiredService<ComponentRegistration>();
 
-                foreach (var mutatingWebhookRegistration in componentRegister.MutatingWebhookRegistrations)
+                foreach (var mutatingWebhookRegistration in this.componentRegistration.MutatingWebhookRegistrations)
                 {
                     var mutator = serviceProvider.GetRequiredService(mutatingWebhookRegistration.WebhookType);
 
                     var createMethod = typeof(IMutatingWebhook<>)
-                                    .MakeGenericType(mutatingWebhookRegistration.EntityType)
-                                    .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
-                                    .First(m => m.Name == "Create");
+                        .MakeGenericType(mutatingWebhookRegistration.EntityType)
+                        .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
+                        .First(m => m.Name == "Create");
 
                     await (Task)createMethod.Invoke(mutator, new object[] { k8s, serviceProvider.GetService<ILoggerFactory>() });
 
                     var property = typeof(IMutatingWebhook<>)
-                                .MakeGenericType(mutatingWebhookRegistration.EntityType)
-                                .GetProperty("WebhookConfiguration");
+                        .MakeGenericType(mutatingWebhookRegistration.EntityType)
+                        .GetProperty("WebhookConfiguration");
 
-                    var config = (V1MutatingWebhookConfiguration)property.GetValue(mutator);
-
+                    var config  = (V1MutatingWebhookConfiguration)property.GetValue(mutator);
                     var webhook = await k8s.AdmissionregistrationV1.ReadMutatingWebhookConfigurationAsync(config.Name());
 
                     webhook.SetAnnotation("cert-manager.io/inject-ca-from", null);
@@ -194,31 +190,30 @@ namespace Neon.Kube.Operator.Webhook.Ngrok
                     {
                         var path = hook.ClientConfig.Service.Path;
 
-                        hook.ClientConfig.Service = null;
+                        hook.ClientConfig.Service  = null;
                         hook.ClientConfig.CaBundle = null;
-                        hook.ClientConfig.Url = Tunnel.PublicUrl.TrimEnd('/') + path;
+                        hook.ClientConfig.Url      = Tunnel.PublicUrl.TrimEnd('/') + path;
                     }
 
                     await k8s.AdmissionregistrationV1.ReplaceMutatingWebhookConfigurationAsync(webhook, webhook.Name());
                 }
 
-                foreach (var validatingWebhookRegistration in componentRegister.ValidatingWebhookRegistrations)
+                foreach (var validatingWebhookRegistration in this.componentRegistration.ValidatingWebhookRegistrations)
                 {
                     var validator = serviceProvider.GetRequiredService(validatingWebhookRegistration.WebhookType);
 
                     var createMethod = typeof(IValidatingWebhook<>)
-                                    .MakeGenericType(validatingWebhookRegistration.EntityType)
-                                    .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
-                                    .First(m => m.Name == "Create");
+                        .MakeGenericType(validatingWebhookRegistration.EntityType)
+                        .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
+                        .First(m => m.Name == "Create");
 
                     await (Task)createMethod.Invoke(validator, new object[] { k8s, serviceProvider.GetService<ILoggerFactory>() });
 
                     var property = typeof(IValidatingWebhook<>)
-                                .MakeGenericType(validatingWebhookRegistration.EntityType)
-                                .GetProperty("WebhookConfiguration");
+                        .MakeGenericType(validatingWebhookRegistration.EntityType)
+                        .GetProperty("WebhookConfiguration");
 
-                    var config = (V1ValidatingWebhookConfiguration)property.GetValue(validator);
-
+                    var config  = (V1ValidatingWebhookConfiguration)property.GetValue(validator);
                     var webhook = await k8s.AdmissionregistrationV1.ReadValidatingWebhookConfigurationAsync(config.Name());
 
                     webhook.SetAnnotation("cert-manager.io/inject-ca-from", null);
@@ -227,9 +222,9 @@ namespace Neon.Kube.Operator.Webhook.Ngrok
                     {
                         var path = hook.ClientConfig.Service.Path;
 
-                        hook.ClientConfig.Service = null;
+                        hook.ClientConfig.Service  = null;
                         hook.ClientConfig.CaBundle = null;
-                        hook.ClientConfig.Url = Tunnel.PublicUrl.TrimEnd('/') + path;
+                        hook.ClientConfig.Url      = Tunnel.PublicUrl.TrimEnd('/') + path;
                     }
 
                     await k8s.AdmissionregistrationV1.ReplaceValidatingWebhookConfigurationAsync(webhook, webhook.Name());
@@ -258,13 +253,17 @@ namespace Neon.Kube.Operator.Webhook.Ngrok
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Kill any running NGROK processes.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task KillExistingNgrokProcessesAsync()
         {
             await SyncContext.Clear;
 
-            foreach (var p in Process.GetProcessesByName("ngrok"))
+            foreach (var process in Process.GetProcessesByName("ngrok"))
             {
-                p.Kill();
+                process.KillNow();
             }
         }
     }

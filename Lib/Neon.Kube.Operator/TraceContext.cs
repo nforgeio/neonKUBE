@@ -29,14 +29,41 @@ using OpenTelemetry.Trace;
 
 namespace Neon.Kube.Operator
 {
+    // $todo(marcusbooyah):
+    //
+    // I think we should really change this back to the Neon.Common TelemetryHub.
+    // Without doing that, there's not really a clean way for other Neon libraries
+    // to do tracing out-of-the-box.
+    //
+    // The Operator SDK is already referencing something like 17 nuget packages.
+    // Neon.Common isn't any less special than any of those.  Some of the defaults
+    // also kind of suck, for example, we never set our assembly versions so they'll
+    // always be 0.0.0.0 and assembly versions don't support semantic versioning,
+    // so we'll have no way of specifying alpha, beta, preview,...
+
+    /// <summary>
+    /// Tracing context.
+    /// </summary>
     internal static class TraceContext
     {
-        internal static readonly AssemblyName AssemblyName = typeof(TracerProviderBuilderExtensions).Assembly.GetName();
+        /// <summary>
+        /// Returns the assembly name.
+        /// </summary>
+        internal static AssemblyName AssemblyName { get; } = typeof(TracerProviderBuilderExtensions).Assembly.GetName();
 
-        internal static readonly string ActivitySourceName = AssemblyName.Name;
+        /// <summary>
+        /// Returns the activity source name.
+        /// </summary>
+        internal static string ActivitySourceName { get; } = AssemblyName.Name;
 
-        internal static readonly Version Version = AssemblyName.Version;
+        /// <summary>
+        /// Returns the the entry assembly version.
+        /// </summary>
+        internal static Version Version { get; } = AssemblyName.Version;
 
+        /// <summary>
+        /// Returns the activity source.
+        /// </summary>
         internal static ActivitySource ActivitySource => Cached.Source.Value;
 
         static class Cached

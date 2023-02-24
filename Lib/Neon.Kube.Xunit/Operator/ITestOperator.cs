@@ -36,81 +36,80 @@ namespace Neon.Kube.Xunit.Operator
     public interface ITestOperator
     {
         /// <summary>
-        /// Starts the operator.
+        /// Starts the operator masynchronously.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         Task StartAsync();
 
         /// <summary>
-        /// Starts the operator.
+        /// Starts the operator synchronously.
         /// </summary>
-        /// <returns></returns>
         void Start();
 
         /// <summary>
         /// Adds an <see cref="IResourceController{TEntity}"/> to the test operator.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        IOperatorBuilder AddController<T>()
-            where T : class;
+        /// <typeparam name="TEntity">Specifies the entity type.</typeparam>
+        /// <returns>THe <see cref="IOperatorBuilder"/>.</returns>
+        IOperatorBuilder AddController<TEntity>()
+            where TEntity : class;
 
         /// <summary>
         /// Adds an <see cref="IResourceFinalizer{TEntity}"/> to the test operator.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        IOperatorBuilder AddFinalizer<T>()
-            where T : class;
+        /// <typeparam name="TEntity">Specifies the entity type.</typeparam>
+        /// <returns>The <see cref="IOperatorBuilder"/>.</returns>
+        IOperatorBuilder AddFinalizer<TEntity>()
+            where TEntity : class;
 
         /// <summary>
         /// Adds an <see cref="IMutatingWebhook{TEntity}"/> to the test operator.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        IOperatorBuilder AddMutatingWebhook<T>()
-            where T : class;
+        /// <typeparam name="TEntity">Specifies the entity type.</typeparam>
+        /// <returns>The <see cref="IOperatorBuilder"/>.</returns>
+        IOperatorBuilder AddMutatingWebhook<TEntity>()
+            where TEntity : class;
 
         /// <summary>
         /// Adds an <see cref="IValidatingWebhook{TEntity}"/> to the test operator.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        IOperatorBuilder AddValidatingWebhook<T>()
-            where T : class;
+        /// <typeparam name="TEntity">Specifies the entity type.</typeparam>
+        /// <returns>The <see cref="IOperatorBuilder"/>.</returns>
+        IOperatorBuilder AddValidatingWebhook<TEntity>()
+            where TEntity : class;
 
         /// <summary>
         /// Adds an ngrok tunnel to the test operator.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The <see cref="IOperatorBuilder"/>.</returns>
         IOperatorBuilder AddNgrokTunnnel();
 
         /// <summary>
         /// Gets a <see cref="IResourceController{TEntity}"/> from the operator.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        T GetController<T>();
+        /// <typeparam name="TEntity"></typeparam>
+        /// <returns>The <typeparamref name="TEntity"/>.</returns>
+        TEntity GetController<TEntity>();
 
         /// <summary>
         /// Gets a <see cref="IResourceFinalizer{TEntity}"/> from the operator.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        T GetFinalizer<T>();
+        /// <typeparam name="TEntity">Specifies the entity type.</typeparam>
+        /// <returns>The <typeparamref name="TEntity"/>.</returns>
+        TEntity GetFinalizer<TEntity>();
 
         /// <summary>
         /// Gets a <see cref="IMutatingWebhook{TEntity}"/> from the operator.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        T GetMutatingWebhook<T>();
+        /// <typeparam name="TEntity">Specifies the entity type.</typeparam>
+        /// <returns>The <typeparamref name="TEntity"/>.</returns>
+        TEntity GetMutatingWebhook<TEntity>();
 
         /// <summary>
         /// Gets a <see cref="IValidatingWebhook{TEntity}"/> from the operator.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        T GetValidatingWebhook<T>();
+        /// <typeparam name="TEntity">Specifies the entity type.</typeparam>
+        /// <returns>The <typeparamref name="TEntity"/>.</returns>
+        TEntity GetValidatingWebhook<TEntity>();
     }
 }

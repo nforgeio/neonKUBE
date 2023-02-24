@@ -34,7 +34,7 @@ using YamlDotNet.Serialization;
 namespace Neon.Kube.Resources.CertManager
 {
     /// <summary>
-    /// The kubernetes spec for a cert-manager ClusterIssuer.
+    /// The Kubernetes spec for a cert-manager ClusterIssuer.
     /// </summary>
     public class AcmeIssuer
     {

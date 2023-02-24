@@ -21,11 +21,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Http;
-
-using k8s;
-using k8s.Models;
-
 namespace Neon.Kube.Operator.Webhook
 {
     /// <summary>
@@ -36,11 +31,11 @@ namespace Neon.Kube.Operator.Webhook
         /// <summary>
         /// Represents a validating webhook.
         /// </summary>
-        Validate,
+        Validating,
 
         /// <summary>
         /// Represents a mutating webhook.
         /// </summary>
-        Mutate
+        Mutating
     }
 }

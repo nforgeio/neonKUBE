@@ -28,6 +28,14 @@ namespace Neon.Kube.Operator.Attributes
     public class FinalizerAttribute : Attribute
     {
         /// <summary>
+        /// Constructor.
+        /// </summary>
+        public FinalizerAttribute(bool ignore = false)
+        {
+            this.Ignore = ignore;
+        }
+
+        /// <summary>
         /// Whether to ignore the finalizer when scanning assemblies.
         /// </summary>
         public bool Ignore { get; set; } = false;
@@ -36,14 +44,5 @@ namespace Neon.Kube.Operator.Attributes
         /// Whether to register this Finalizer when <see cref="FinalizerManager{TEntity}.RegisterAllFinalizersAsync(TEntity)"/> is called.
         /// </summary>
         public bool RegisterWithAll { get; set; } = true;
-
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        public FinalizerAttribute(
-            bool ignore = false)
-        {
-            this.Ignore = ignore;
-        }
     }
 }

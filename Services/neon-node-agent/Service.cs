@@ -87,7 +87,7 @@ namespace NeonNodeAgent
     /// <item>
     ///     <term><b>WATCHER_MAX_RETRY_INTERVAL</b></term>
     ///     <description>
-    ///     <b>timespan:</b> Specifies the maximum time the Operator resource watcher will wait
+    ///     <b>timespan:</b> Specifies the maximum time the operator resource watcher will wait
     ///     after a watch failure.  This defaults to <b>15 seconds</b>.
     ///     </description>
     /// </item>

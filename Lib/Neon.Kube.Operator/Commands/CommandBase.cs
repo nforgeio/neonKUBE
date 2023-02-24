@@ -24,12 +24,29 @@ using System.Threading.Tasks;
 
 namespace Neon.Kube.Operator.Commands
 {
+    /// <summary>
+    /// Base command line command class.
+    /// </summary>
     internal class CommandBase : Command
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="name">Specifies the command name.</param>
+        /// <param name="description">Specifies the command description.</param>
         protected CommandBase(string name, string description) : base(name, description)
         {
         }
 
+        /// <summary>
+        /// $todo(marcusbooyah): 
+        /// 
+        /// This seems to be somewhat misnamed.  If this is actually the command handler,
+        /// why isn't it virtual so it can be overridden and what's up with the message
+        /// parameter?
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
         protected int HandleCommand(string message)
         {
             Console.WriteLine(message);

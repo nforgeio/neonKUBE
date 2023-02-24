@@ -25,6 +25,9 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s;
+using k8s.Models;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,19 +37,27 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube.Operator.Attributes;
+using Neon.Kube.Resources;
 using Neon.Tasks;
 
-using k8s;
-using k8s.Models;
-
 using Prometheus;
-using Neon.Kube.Resources;
 
 namespace Neon.Kube.Operator.ResourceManager
 {
+    /// <summary>
+    /// Describes a resource manager.
+    /// </summary>
     internal interface IResourceManager
     {
+        /// <summary>
+        /// Returns the resource manager's options.
+        /// </summary>
         ResourceManagerOptions Options();
+
+        /// <summary>
+        /// Starts the resource manager.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         Task StartAsync();
     }
 }

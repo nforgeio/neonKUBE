@@ -35,28 +35,49 @@ using k8s;
 using k8s.Models;
 
 using Prometheus;
+using System.Diagnostics.Contracts;
 
 namespace Neon.Kube.Operator.Finalizer
 {
+    /// <summary>
+    /// Implements a finalizer manager for an entity type.
+    /// </summary>
+    /// <typeparam name="TEntity">Specifies the entity type.</typeparam>
     internal class FinalizerManager<TEntity> : IFinalizerManager<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
     {
         private readonly ILogger<FinalizerManager<TEntity>>    logger;
-        private readonly IKubernetes                           client;
+        private readonly IKubernetes                           k8s;
         private readonly IFinalizerBuilder                     finalizerInstanceBuilder;
         private readonly IServiceProvider                      serviceProvider;
         private readonly Dictionary<string, IFinalizerMetrics> metrics;
         private readonly OperatorSettings                      operatorSettings;
-        
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="k8s">Specifies the Kubernetes client.</param>
+        /// <param name="componentRegistration">Specifies the component register.</param>
+        /// <param name="finalizerInstanceBuilder">Specifies the finalizer builder.</param>
+        /// <param name="serviceProvider">Specifies the dependency injection service provider.</param>
+        /// <param name="operatorSettings">Optionally specifies the operator settings.</param>
+        /// <param name="loggerFactory">Optionally specifies the logger factory.</param>
         public FinalizerManager(
-            IKubernetes               client,
-            ComponentRegister         componentRegister,
+            IKubernetes               k8s,
+            ComponentRegistration     componentRegistration,
             IFinalizerBuilder         finalizerInstanceBuilder,
             IServiceProvider          serviceProvider,
-            OperatorSettings          operatorSettings,
-            ILoggerFactory            loggerFactory = null)
+            OperatorSettings          operatorSettings = null,
+            ILoggerFactory            loggerFactory    = null)
         {
-            this.client                   = client;
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            Covenant.Requires<ArgumentNullException>(componentRegistration != null, nameof(componentRegistration));
+            Covenant.Requires<ArgumentNullException>(finalizerInstanceBuilder != null, nameof(finalizerInstanceBuilder));
+            Covenant.Requires<ArgumentNullException>(serviceProvider != null, nameof(serviceProvider));
+
+            operatorSettings ??= new OperatorSettings();
+
+            this.k8s                      = k8s;
             this.finalizerInstanceBuilder = finalizerInstanceBuilder;
             this.serviceProvider          = serviceProvider; 
             this.operatorSettings         = operatorSettings;
@@ -66,6 +87,7 @@ namespace Neon.Kube.Operator.Finalizer
             foreach (var finalizer in finalizerInstanceBuilder.BuildFinalizers<TEntity>(serviceProvider.CreateScope().ServiceProvider))
             {
                 var finalizerMetrics = new FinalizerMetrics<TEntity>(operatorSettings, finalizer.GetType());
+
                 metrics.Add(finalizer.Identifier, finalizerMetrics);
             }
         }
@@ -88,10 +110,7 @@ namespace Neon.Kube.Operator.Finalizer
 
             await Task.WhenAll(
                 finalizerInstanceBuilder.BuildFinalizers<TEntity>(serviceProvider.CreateScope().ServiceProvider)
-                    .Where(f =>
-                        (f.GetType().GetCustomAttribute<FinalizerAttribute>()?.RegisterWithAll == true)
-                        || (f.GetType().GetCustomAttribute<FinalizerAttribute>() == null)
-                        )
+                    .Where(finalizer => (finalizer.GetType().GetCustomAttribute<FinalizerAttribute>()?.RegisterWithAll == true) || (finalizer.GetType().GetCustomAttribute<FinalizerAttribute>() == null))
                     .Select(f => RegisterFinalizerInternalAsync(entity, f)));
         }
 
@@ -156,11 +175,11 @@ namespace Neon.Kube.Operator.Finalizer
                             {
                                 if (string.IsNullOrEmpty(entity.Metadata.NamespaceProperty))
                                 {
-                                    entity = await client.CustomObjects.ReadClusterCustomObjectAsync<TEntity>(entity.Name());
+                                    entity = await k8s.CustomObjects.ReadClusterCustomObjectAsync<TEntity>(entity.Name());
                                 }
                                 else
                                 {
-                                    entity = await client.CustomObjects.ReadNamespacedCustomObjectAsync<TEntity>(entity.Namespace(), entity.Name());
+                                    entity = await k8s.CustomObjects.ReadNamespacedCustomObjectAsync<TEntity>(entity.Namespace(), entity.Name());
                                 }
 
                                 if (entity.RemoveFinalizer(finalizer.Identifier))
@@ -177,7 +196,7 @@ namespace Neon.Kube.Operator.Finalizer
 
                             return false;
                         },
-                        timeout: TimeSpan.FromSeconds(30),
+                        timeout:      TimeSpan.FromSeconds(30),
                         pollInterval: TimeSpan.FromSeconds(1));
                 }
 
@@ -222,10 +241,19 @@ namespace Neon.Kube.Operator.Finalizer
             await Task.WhenAll(tasks);
         }
 
+        /// <summary>
+        /// Registers a finalizer for an entity.
+        /// </summary>
+        /// <typeparam name="TFinalizer"></typeparam>
+        /// <param name="entity">Specifies the entity.</param>
+        /// <param name="finalizer">Specifies the finalizer.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task RegisterFinalizerInternalAsync<TFinalizer>(TEntity entity, TFinalizer finalizer)
             where TFinalizer : IResourceFinalizer<TEntity>
         {
             await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(entity != null, nameof(entity));
+            Covenant.Requires<ArgumentNullException>(finalizer != null, nameof(finalizer));
 
             using (metrics[finalizer.Identifier].RegistrationTimeSeconds.NewTimer())
             {
@@ -237,9 +265,15 @@ namespace Neon.Kube.Operator.Finalizer
             }
         }
 
+        /// <summary>
+        /// Updates an entiry.
+        /// </summary>
+        /// <param name="entity">Specifies the entity.</param>
+        /// <returns>THe tracking <see cref="Task"/>.</returns>
         private async Task UpdateEntityAsync(TEntity entity)
         {
             await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(entity != null, nameof(entity));
 
             try
             {
@@ -247,11 +281,11 @@ namespace Neon.Kube.Operator.Finalizer
 
                 if (string.IsNullOrEmpty(entity.Metadata.NamespaceProperty))
                 {
-                    await client.CustomObjects.ReplaceClusterCustomObjectAsync(entity, entity.Name());
+                    await k8s.CustomObjects.ReplaceClusterCustomObjectAsync(entity, entity.Name());
                 }
                 else
                 {
-                    await client.CustomObjects.ReplaceNamespacedCustomObjectAsync(entity, entity.Namespace(), entity.Name());
+                    await k8s.CustomObjects.ReplaceNamespacedCustomObjectAsync(entity, entity.Namespace(), entity.Name());
                 }
             }
             catch (Exception e)

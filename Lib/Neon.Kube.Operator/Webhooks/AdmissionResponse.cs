@@ -23,26 +23,59 @@ using System.Threading.Tasks;
 
 namespace Neon.Kube.Operator.Webhook
 {
+    /// <summary>
+    /// $todo(marcusbooyah): Documentation
+    /// </summary>
     internal sealed class AdmissionResponse
     {
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         public const string JsonPatch = "JSONPatch";
 
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         public string Uid { get; set; } = string.Empty;
 
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         public bool Allowed { get; init; }
 
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         public Reason Status { get; init; }
 
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         public string[] Warnings { get; init; } = Array.Empty<string>();
 
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         public string PatchType { get; set; }
 
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         public string Patch { get; set; }
 
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         internal sealed class Reason
         {
+            /// <summary>
+            /// $todo(marcusbooyah): Documentation
+            /// </summary>
             public int Code { get; init; }
 
+            /// <summary>
+            /// $todo(marcusbooyah): Documentation
+            /// </summary>
             public string Message { get; init; } = string.Empty;
         }
     }

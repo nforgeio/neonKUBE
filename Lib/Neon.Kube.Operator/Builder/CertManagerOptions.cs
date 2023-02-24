@@ -15,26 +15,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using k8s.Models;
-using Neon.Kube.Resources.CertManager;
 using System;
-using System.Collections.Generic;
-using System.Xml.Linq;
+
+using k8s.Models;
+
+using Neon.Kube.Resources.CertManager;
 
 namespace Neon.Kube.Operator.Builder
 {
     /// <summary>
-    /// Cert manager related options.
+    /// Certificate manager related options.
     /// </summary>
     public class CertManagerOptions
     {
         /// <summary>
-        /// How long the cert should be valid for.
+        /// Specifies the certificate lifespan.
         /// </summary>
         public TimeSpan CertificateDuration { get; set; }
 
         /// <summary>
-        /// The Issuer that should issue the cert.
+        /// The Issuer that should issue the certificate.
         /// </summary>
         public IssuerRef IssuerRef { get; set; }
     }

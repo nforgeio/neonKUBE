@@ -54,10 +54,11 @@ namespace Neon.Kube.Operator
         /// <typeparam name="TEntity">The type of the entity to associate the controller with.</typeparam>
         /// <returns>The builder for chaining.</returns>
         IOperatorBuilder AddController<TImplementation, TEntity>(
-            string @namespace = null,
-            ResourceManagerOptions options = null,
-            LeaderElectionConfig leaderConfig = null,
-            bool leaderElectionDisabled = false)
+            string                  @namespace = null,
+            ResourceManagerOptions  options = null,
+            LeaderElectionConfig    leaderConfig = null,
+            bool                    leaderElectionDisabled = false)
+
             where TImplementation : class, IResourceController<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>, new();
 
@@ -108,40 +109,48 @@ namespace Neon.Kube.Operator
         /// <param name="ngrokDirectory">The directory where the ngrok binary is located.</param>
         /// <param name="ngrokAuthToken">The ngrok auth token</param>
         /// <param name="enabled">Set to false to optionally disable this feature.</param>
-        /// <returns></returns>
+        /// <returns>The <see cref="IOperatorBuilder"/>.</returns>
         IOperatorBuilder AddNgrokTunnnel(
-            string hostname = "localhost",
-            int port = 5000,
-            string ngrokDirectory = null,
-            string ngrokAuthToken = null,
-            bool enabled = true);
+            string      hostname       = "localhost",
+            int         port           = 5000,
+            string      ngrokDirectory = null,
+            string      ngrokAuthToken = null,
+            bool        enabled        = true);
 
         /// <summary>
-        /// Add a startup check to the Operator.
+        /// Add a startup check to the operator.
         /// </summary>
-        /// <typeparam name="TStartupCheck"></typeparam>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        IOperatorBuilder AddStartupCheck<TStartupCheck>(string name = null)
-            where TStartupCheck : class, IHealthCheck;
+        /// <typeparam name="THealthChecker">
+        /// Specifies the type handling the health check.  Note that this
+        /// must implement <see cref="IHealthCheck"/>.
+        /// </typeparam>
+        /// <param name="name">Optionally specifies the health checker's name.</param>
+        /// <returns>The <see cref="IOperatorBuilder"/>.</returns>
+        IOperatorBuilder AddStartupCheck<THealthChecker>(string name = null)
+            where THealthChecker : class, IHealthCheck;
 
         /// <summary>
-        /// Add a liveness check to the Operator.
+        /// Add a liveness check to the operator.
         /// </summary>
-        /// <typeparam name="TLivenessCheck"></typeparam>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        IOperatorBuilder AddLivenessCheck<TLivenessCheck>(string name = null)
-            where TLivenessCheck : class, IHealthCheck;
+        /// <typeparam name="THealthChecker">
+        /// Specifies the type handling the health check.  Note that this
+        /// must implement <see cref="IHealthCheck"/>.
+        /// </typeparam>
+        /// <param name="name">Optionally specifies the health checker's name.</param>
+        /// <returns>The <see cref="IOperatorBuilder"/>.</returns>
+        IOperatorBuilder AddLivenessCheck<THealthChecker>(string name = null)
+            where THealthChecker : class, IHealthCheck;
 
         /// <summary>
-        /// Add a readiness check to the Operator.
+        /// Add a readiness check to the operator.
         /// </summary>
-        /// <typeparam name="TReadinessCheck"></typeparam>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        IOperatorBuilder AddReadinessCheck<TReadinessCheck>(string name = null)
-            where TReadinessCheck : class, IHealthCheck;
-
+        /// <typeparam name="THealthChecker">
+        /// Specifies the type handling the health check.  Note that this
+        /// must implement <see cref="IHealthCheck"/>.
+        /// </typeparam>
+        /// <param name="name">Optionally specifies the health checker's name.</param>
+        /// <returns>The <see cref="IOperatorBuilder"/>.</returns>
+        IOperatorBuilder AddReadinessCheck<THealthChecker>(string name = null)
+            where THealthChecker : class, IHealthCheck;
     }
 }

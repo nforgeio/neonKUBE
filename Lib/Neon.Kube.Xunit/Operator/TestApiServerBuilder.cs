@@ -28,13 +28,14 @@ using Microsoft.Extensions.Hosting;
 using k8s;
 using k8s.KubeConfigModels;
 using k8s.Models;
+using Neon.Common;
+using Neon.Net;
 
 namespace Neon.Kube.Xunit.Operator
 {
     /// <summary>
     /// Builds an <see cref="ITestApiServerHost"/>
     /// </summary>
-    /// <returns></returns>
     public class TestApiServerBuilder
     {
         private readonly IHostBuilder hostBuilder = new HostBuilder();
@@ -42,38 +43,37 @@ namespace Neon.Kube.Xunit.Operator
         /// <summary>
         /// Builds an <see cref="ITestApiServerHost"/>
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The <see cref="ITestApiServerHost"/>.</returns>
         public ITestApiServerHost Build()
         {
             if (string.IsNullOrEmpty(ServerUrl))
             {
-                ServerUrl = $"http://{IPAddress.Loopback}:{AvailablePort()}";
+                ServerUrl = $"http://{IPAddress.Loopback}:{NetHelper.GetUnusedTcpPort()}";
             }
 
             hostBuilder.ConfigureWebHostDefaults(web =>
             {
-                web
-                    .UseStartup<TestApiServerStartup>()
-                    .UseUrls(ServerUrl);
+                web.UseStartup<TestApiServerStartup>()
+                   .UseUrls(ServerUrl);
             });
 
             var host = hostBuilder.Build();
 
             var kubeConfig = new K8SConfiguration
             {
-                ApiVersion = "v1",
-                Kind = "Config",
+                ApiVersion     = "v1",
+                Kind           = "Config",
                 CurrentContext = "test-context",
-                Contexts = new[]
+                Contexts       = new[]
                 {
                     new Context
                     {
-                        Name = "test-context",
+                        Name           = "test-context",
                         ContextDetails = new ContextDetails
                         {
                             Namespace = "test-namespace",
-                            Cluster = "test-cluster",
-                            User = "test-user",
+                            Cluster   = "test-cluster",
+                            User      = "test-user",
                         }
                     }
                 },
@@ -81,7 +81,7 @@ namespace Neon.Kube.Xunit.Operator
                 {
                     new Cluster
                     {
-                        Name = "test-cluster",
+                        Name            = "test-cluster",
                         ClusterEndpoint = new ClusterEndpoint
                         {
                             Server = ServerUrl,
@@ -92,7 +92,7 @@ namespace Neon.Kube.Xunit.Operator
                 {
                     new User
                     {
-                        Name = "test-user",
+                        Name            = "test-user",
                         UserCredentials = new UserCredentials
                         {
                             Token = "test-token",
@@ -102,17 +102,9 @@ namespace Neon.Kube.Xunit.Operator
             };
 
             var clientConfiguration = KubernetesClientConfiguration.BuildConfigFromConfigObject(kubeConfig);
-
-            var client = new k8s.Kubernetes(clientConfiguration);
+            var client              = new k8s.Kubernetes(clientConfiguration);
 
             return new TestApiServerHost(host, kubeConfig, client);
-        }
-
-        private int AvailablePort()
-        {
-            using var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-            socket.Bind(new IPEndPoint(IPAddress.Any, 0));
-            return ((IPEndPoint)socket.LocalEndPoint).Port;
         }
 
         /// <summary>

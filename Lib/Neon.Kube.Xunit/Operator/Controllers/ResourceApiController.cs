@@ -39,8 +39,8 @@ namespace Neon.Kube.Xunit.Operator
     [Route("api/{version}/namespaces/{namespace}/{plural}")]
     public class ResourceApiController : Microsoft.AspNetCore.Mvc.Controller
     {
-        private readonly ITestApiServer testApiServer;
-        private readonly JsonSerializerOptions jsonSerializerOptions;
+        private readonly ITestApiServer         testApiServer;
+        private readonly JsonSerializerOptions  jsonSerializerOptions;
 
         /// <summary>
         /// Constructor.
@@ -84,6 +84,7 @@ namespace Neon.Kube.Xunit.Operator
             await SyncContext.Clear;
 
             var key = $"{string.Empty}/{Version}/{Plural}";
+
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
                 var typeMetadata = type.GetKubernetesTypeMetadata();

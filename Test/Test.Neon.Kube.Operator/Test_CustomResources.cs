@@ -53,7 +53,7 @@ namespace Test.Neon.Kube.Operator
         /// <summary>
         /// Ensures that the CRD can be written to a Yaml file.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         [Fact]
         public async Task CanWriteYamlFile()
         {
@@ -70,15 +70,14 @@ namespace Test.Neon.Kube.Operator
         /// <summary>
         /// Ensures that the CRD can be written to a Yaml file.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         [Fact]
         public async Task CanSerializeCustomResources()
         {
             var generator = new CustomResourceGenerator();
 
             var crd = await generator.GenerateCustomResourceDefinitionAsync(typeof(V1NeonSsoClient));
-
-            var str = KubernetesJson.Serialize(crd);
+            var str  = KubernetesJson.Serialize(crd);
             var yaml = KubernetesYaml.Serialize(crd);
         }
     }

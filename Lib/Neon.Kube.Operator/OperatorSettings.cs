@@ -30,15 +30,15 @@ using k8s;
 namespace Neon.Kube.Operator
 {
     /// <summary>
-    /// Specifies global options for the Operator.
+    /// Specifies global options for an operator.
     /// </summary>
     public class OperatorSettings
     {
-        internal bool certManagerEnabled { get; set; } = false;
-        internal bool leaderElectionEnabled { get; set; } = false;
-        internal bool manageCustomResourceDefinitions { get; set; } = true;
-        internal bool hasMutatingWebhooks { get; set; } = false;
-        internal bool hasValidatingWebhooks { get; set; } = false;
+        internal bool certManagerEnabled              = false;
+        internal bool leaderElectionEnabled           = false;
+        internal bool manageCustomResourceDefinitions = true;
+        internal bool hasMutatingWebhooks             = false;
+        internal bool hasValidatingWebhooks           = false;
 
         /// <summary>
         /// Default constructor.
@@ -48,12 +48,12 @@ namespace Neon.Kube.Operator
         }
 
         /// <summary>
-        /// The Operator name.
+        /// The Operator name.  This defaults to a Kubernetes safe version of the entry assembly name.
         /// </summary>
         public string Name { get; set; } = Regex.Replace(Assembly.GetEntryAssembly().GetName().Name, @"([a-z])([A-Z])", "$1-$2").ToLower();
 
         /// <summary>
-        /// The Operator name. This defaults to a Kubernetes safe version of the Assembly name.
+        /// Specifies the namespace to be watched or <c>null</c> for cluster scoped operators.
         /// </summary>
         public string WatchNamespace { get; set; } = null;
 

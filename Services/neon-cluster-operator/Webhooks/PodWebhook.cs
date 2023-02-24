@@ -38,18 +38,18 @@ using Quartz.Logging;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// Webhook to set priority classes on neon pods.
+    /// Webhook that sets priority classes for neonKUBE pods.
     /// </summary>
     [Webhook(
-        name: "pod-policy.neonkube.io",
+        name:                    "pod-policy.neonkube.io",
         admissionReviewVersions: "v1",
-        failurePolicy: "Ignore")]
+        failurePolicy:           "Ignore")]
     [WebhookRule(
-        apiGroups: V1Pod.KubeGroup,
+        apiGroups:   V1Pod.KubeGroup,
         apiVersions: V1Pod.KubeApiVersion, 
-        operations: AdmissionOperations.Create, 
-        resources: V1Pod.KubePluralName,
-        scope: "*")]
+        operations:  AdmissionOperations.Create, 
+        resources:   V1Pod.KubePluralName,
+        scope:       "*")]
     public class PodWebhook : IMutatingWebhook<V1Pod>
     {
         private ILogger<IMutatingWebhook<V1Pod>> logger { get; set; }
@@ -66,33 +66,34 @@ namespace NeonClusterOperator
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="logger"></param>
+        /// <param name="logger">Optionally specifies the logger.</param>
         public PodWebhook(
-            ILogger<IMutatingWebhook<V1Pod>> logger)
+            ILogger<IMutatingWebhook<V1Pod>> logger = null)
             : base()
         {
             this.logger = logger;
         }
 
         /// <inheritdoc/>
-        public async Task<MutationResult> CreateAsync(V1Pod entity, bool dryRun)
+        public async Task<MutationResult> CreateAsync(V1Pod pod, bool dryRun)
         {
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                logger?.LogInformationEx(() => $"Received request for pod {entity.Namespace()}/{entity.Name()}");
+                logger?.LogInformationEx(() => $"Received request for pod {pod.Namespace()}/{pod.Name()}");
 
-                if (!entity.EnsureMetadata().Namespace().StartsWith("neon-"))
+                if (string.IsNullOrEmpty(pod.EnsureMetadata().NamespaceProperty)
+                    || !pod.EnsureMetadata().NamespaceProperty.StartsWith("neon-"))
                 {
-                    logger?.LogInformationEx(() => $"Pod not in neon- namespace.");
+                    logger?.LogDebugEx(() => $"Pod not in a neonKUBE namespace.");
 
                     return MutationResult.NoChanges();
                 }
 
-                CheckPriorityClass(entity);
+                CheckPriorityClass(pod);
 
                 if (modified)
                 {
-                    return await Task.FromResult(MutationResult.Modified(entity));
+                    return await Task.FromResult(MutationResult.Modified(pod));
                 }
 
                 return await Task.FromResult(MutationResult.NoChanges());
@@ -100,54 +101,60 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task<MutationResult> UpdateAsync(V1Pod entity, V1Pod oldEntity, bool dryRun)
+        public async Task<MutationResult> UpdateAsync(V1Pod pod, V1Pod oldPod, bool dryRun)
         {
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                logger?.LogInformationEx(() => $"Received request for pod {entity.Namespace()}/{entity.Name()}");
+                logger?.LogInformationEx(() => $"Received request for pod {pod.Namespace()}/{pod.Name()}");
 
-                if (string.IsNullOrEmpty(entity.EnsureMetadata().NamespaceProperty)
-                    || !entity.EnsureMetadata().NamespaceProperty.StartsWith("neon-"))
+                if (string.IsNullOrEmpty(pod.EnsureMetadata().NamespaceProperty)
+                    || !pod.EnsureMetadata().NamespaceProperty.StartsWith("neon-"))
                 {
                     logger?.LogInformationEx(() => $"Pod not in neon- namespace.");
 
                     return MutationResult.NoChanges();
                 }
 
-                CheckPriorityClass(entity);
+                CheckPriorityClass(pod);
 
                 if (modified)
                 {
-                    return await Task.FromResult(MutationResult.Modified(entity));
+                    return await Task.FromResult(MutationResult.Modified(pod));
                 }
 
                 return await Task.FromResult(MutationResult.NoChanges());
             }
         }
 
-        private void CheckPriorityClass(V1Pod entity)
+        /// <summary>
+        /// Used to check whether a pod within a neonKUBE namespace has a priority class
+        /// assigned and sets the priority class and also <see cref="modified"/> when the
+        /// pod has no priority class.  For harbor related pods, this sets the priority
+        /// class to <see cref="PriorityClass.NeonStorage"/> or <see cref="PriorityClass.NeonMin"/>
+        /// for all other pod types.
+        /// </summary>
+        /// <param name="pod">Specifies the target pod.</param>
+        private void CheckPriorityClass(V1Pod pod)
         {
             try
             {
-                if (string.IsNullOrEmpty(entity.Spec.PriorityClassName)
-                    || entity.Spec.PriorityClassName == PriorityClass.UserMedium.Name)
+                if (string.IsNullOrEmpty(pod.Spec.PriorityClassName) || pod.Spec.PriorityClassName == PriorityClass.UserMedium.Name)
                 {
                     modified = true;
 
-                    if (entity.Metadata.Labels != null
-                        && entity.Metadata.Labels.ContainsKey("goharbor.io/operator-version"))
+                    if (pod.Metadata.Labels != null && pod.Metadata.Labels.ContainsKey("goharbor.io/operator-version"))
                     {
-                        logger?.LogInformationEx(() => $"Setting priority class for harbor pod.");
+                        logger?.LogInformationEx(() => $"Setting priority class for Harbor pod to: {PriorityClass.NeonStorage.Name}");
 
-                        entity.Spec.PriorityClassName = PriorityClass.NeonStorage.Name;
-                        entity.Spec.Priority = null;
+                        pod.Spec.PriorityClassName = PriorityClass.NeonStorage.Name;
+                        pod.Spec.Priority          = null;
                     }
                     else
                     {
-                        logger?.LogInformationEx(() => $"Setting default priority class to neon-min.");
+                        logger?.LogInformationEx(() => $"Setting default priority class to: {PriorityClass.NeonMin.Name}.");
 
-                        entity.Spec.PriorityClassName = PriorityClass.NeonMin.Name;
-                        entity.Spec.Priority = null;
+                        pod.Spec.PriorityClassName = PriorityClass.NeonMin.Name;
+                        pod.Spec.Priority          = null;
                     }
                 }
             }

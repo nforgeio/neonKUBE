@@ -86,7 +86,7 @@ namespace NeonDashboard
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="state"></param>
+        /// <param name="state">Specifies the application state.</param>
         public AppStateBase(AppState state)
         {
             AppState = state;

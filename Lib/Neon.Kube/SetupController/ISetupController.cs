@@ -282,7 +282,7 @@ namespace Neon.Kube.Setup
         /// Adds an <see cref="IDisposable"/> instance to the controller so that they
         /// can be properly disposed when <see cref="RunAsync(int)"/> exits.
         /// </summary>
-        /// <param name="disposable"></param>
+        /// <param name="disposable">The disposable instance.</param>
         void AddDisposable(IDisposable disposable);
 
         /// <summary>

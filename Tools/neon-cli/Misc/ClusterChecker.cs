@@ -519,7 +519,6 @@ namespace NeonCli
         /// <param name="k8s">Specifies the cluster's Kubernertes client.</param>
         /// <param name="details">Optionally specifies that status should be written to STDOUT when there's no errors.</param>
         /// <returns><c>true</c> when there are no problems, <c>false</c> otherwise.</returns>
-        /// <returns></returns>
         public static async Task<bool> CheckResourcesAsync(ClusterLogin clusterLogin, IKubernetes k8s, bool details = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));

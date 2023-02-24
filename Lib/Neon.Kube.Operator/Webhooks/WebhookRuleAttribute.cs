@@ -17,21 +17,29 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Neon.Kube.Resources;
+
 namespace Neon.Kube.Operator.Webhook
 {
     /// <summary>
+    /// <para>
     /// Rules describes what operations on what resources/subresources the 
     /// webhook cares about. The webhook cares about an operation if it matches
-    /// _any_ Rule. However, in order to prevent ValidatingAdmissionWebhooks 
+    /// <b>any rule</b>.
+    /// </para>
+    /// <para>
+    /// However, in order to prevent ValidatingAdmissionWebhooks 
     /// and MutatingAdmissionWebhooks from putting the cluster in a state which 
     /// cannot be recovered from without completely disabling the plugin, 
     /// ValidatingAdmissionWebhooks and MutatingAdmissionWebhooks are never called 
     /// on admission requests for ValidatingWebhookConfiguration and 
     /// MutatingWebhookConfiguration objects.
+    /// </para>
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     public class WebhookRuleAttribute : Attribute
@@ -39,23 +47,28 @@ namespace Neon.Kube.Operator.Webhook
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="apiGroups"></param>
-        /// <param name="apiVersions"></param>
-        /// <param name="operations"></param>
-        /// <param name="resources"></param>
-        /// <param name="scope"></param>
+        /// <param name="apiGroups">Specifies comma separated API groups.</param>
+        /// <param name="apiVersions">Specifies comma separated API versions.</param>
+        /// <param name="operations">Specifies webhook operations.</param>
+        /// <param name="resources">Specifies comma separated resource.</param>
+        /// <param name="scope">Specifies the entity scope, one of the <see cref="EntityScope"/> values.</param>
         public WebhookRuleAttribute(
-            string apiGroups, 
-            string apiVersions,
+            string              apiGroups, 
+            string              apiVersions,
             AdmissionOperations operations, 
-            string resources, 
-            string scope)
+            string              resources, 
+            string              scope)
         {
-            ApiGroups = apiGroups.Split(',');
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(apiGroups), nameof(apiGroups));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(apiVersions), nameof(apiVersions));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(resources), nameof(resources));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(scope), nameof(scope));
+
+            ApiGroups   = apiGroups.Split(',');
             ApiVersions = apiVersions.Split(',');
-            Operations = operations;
-            Resources = resources.Split(',');
-            Scope = scope;
+            Operations  = operations;
+            Resources   = resources.Split(',');
+            Scope       = scope;
         }
 
         /// <summary>

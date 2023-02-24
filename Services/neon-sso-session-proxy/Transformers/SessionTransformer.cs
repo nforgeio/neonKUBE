@@ -68,12 +68,11 @@ namespace NeonSsoSessionProxy
         /// <summary>
         /// Transforms the request before sending it upstream.
         /// </summary>
-        /// <param name="httpContext"></param>
-        /// <param name="proxyRequest"></param>
-        /// <param name="destinationPrefix"></param>
-        /// <returns></returns>
-        public override async ValueTask TransformRequestAsync(HttpContext httpContext,
-                HttpRequestMessage proxyRequest, string destinationPrefix)
+        /// <param name="httpContext">Specifies the request context.</param>
+        /// <param name="proxyRequest">Specifies the proxy request.</param>
+        /// <param name="destinationPrefix">Specifies the desitnation prefix.</param>
+        /// <returns>Returns the tracking <see cref="ValueTask"/>.</returns>
+        public override async ValueTask TransformRequestAsync(HttpContext httpContext, HttpRequestMessage proxyRequest, string destinationPrefix)
         {
             logger.LogDebugEx(() => $"Transform request");
 
@@ -81,19 +80,23 @@ namespace NeonSsoSessionProxy
         }
 
         /// <summary>
+        /// <para>
         /// Transforms the response before returning it to the client. 
-        /// 
+        /// </para>
         /// <para>
         /// This method will add a <see cref="Cookie"/> to each response containing relevant information
         /// about the current authentication flow. It also intercepts redirects from Dex and saves any relevant
         /// tokens to a cache for reuse.
         /// </para>
         /// </summary>
-        /// <param name="httpContext"></param>
-        /// <param name="proxyResponse"></param>
-        /// <returns></returns>
-        public override async ValueTask<bool> TransformResponseAsync(HttpContext httpContext,
-                HttpResponseMessage proxyResponse)
+        /// <param name="httpContext">Specifies the request context.</param>
+        /// <param name="proxyResponse">Specifies the proxy response.</param>
+        /// <returns>
+        /// A bool indicating if the response should be proxied to the client or not. A derived
+        ///  implementation that returns false may send an alternate response inline or return
+        ///  control to the caller for it to retry, respond, etc.
+        /// </returns>
+        public override async ValueTask<bool> TransformResponseAsync(HttpContext httpContext, HttpResponseMessage proxyResponse)
         {
             logger.LogDebugEx(() => $"Transform response");
 
@@ -106,23 +109,26 @@ namespace NeonSsoSessionProxy
                 try
                 {
                     logger.LogDebugEx(() => $"Decrypting existing cookie.");
+
                     cookie = NeonHelper.JsonDeserialize<Cookie>(cipher.DecryptBytesFrom(requestCookieBase64));
                 }
                 catch (Exception e)
                 {
                     logger.LogErrorEx(e);
+
                     cookie = new Cookie();
                 }
             }
             else
             {
                 logger.LogDebugEx("Cookie not present.");
+
                 cookie = new Cookie();
             }
 
             // If we're being redirected, intercept request and save token to cookie.
-            if (httpContext.Response.Headers.Location.Count > 0
-                && Uri.IsWellFormedUriString(httpContext.Response.Headers.Location.Single(), UriKind.Absolute))
+
+            if (httpContext.Response.Headers.Location.Count > 0 && Uri.IsWellFormedUriString(httpContext.Response.Headers.Location.Single(), UriKind.Absolute))
             {
                 var location = new Uri(httpContext.Response.Headers.Location.Single());
                 var code     = HttpUtility.ParseQueryString(location.Query).Get("code");
@@ -142,6 +148,7 @@ namespace NeonSsoSessionProxy
 
                         await cache.SetAsync(code, cipher.EncryptToBytes(NeonHelper.JsonSerializeToBytes(token)), cacheOptions);
                         logger.LogDebugEx(() => NeonHelper.JsonSerialize(token));
+
                         cookie.TokenResponse = token;
 
                         httpContext.Response.Cookies.Append(
@@ -161,21 +168,25 @@ namespace NeonSsoSessionProxy
             }
 
             // Add query parameters to the cookie.
+
             if (httpContext.Request.Query.TryGetValue("client_id", out var clientId))
             {
                 logger.LogDebugEx(() => $"Client ID: [{clientId}]");
+
                 cookie.ClientId = clientId;
             }
 
             if (httpContext.Request.Query.TryGetValue("state", out var state))
             {
                 logger.LogDebugEx(() => $"State: [{state}]");
+
                 cookie.State = state;
             }
 
             if (httpContext.Request.Query.TryGetValue("redirect_uri", out var redirectUri))
             {
                 logger.LogDebugEx(() => $"Redirect Uri: [{redirectUri}]");
+
                 cookie.RedirectUri = redirectUri;
             }
 
@@ -188,6 +199,7 @@ namespace NeonSsoSessionProxy
             if (httpContext.Request.Query.TryGetValue("response_type", out var responseType))
             {
                 logger.LogDebugEx(() => $"Response Type: [{responseType}]");
+
                 cookie.ResponseType = responseType;
             }
 

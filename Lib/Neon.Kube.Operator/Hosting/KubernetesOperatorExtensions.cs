@@ -33,6 +33,7 @@ using Neon.Kube.Operator.Builder;
 using k8s.Models;
 using k8s;
 using Microsoft.AspNetCore;
+using System.Diagnostics.Contracts;
 
 namespace Neon.Kube.Operator
 {
@@ -44,9 +45,9 @@ namespace Neon.Kube.Operator
         /// <summary>
         /// Configures the Kubernetes Operator.
         /// </summary>
-        /// <param name="k8sBuilder"></param>
-        /// <param name="configure"></param>
-        /// <returns></returns>
+        /// <param name="k8sBuilder">Specifies the operator host builder.</param>
+        /// <param name="configure">Optionally specifies a configuration action.</param>
+        /// <returns>The <see cref="IKubernetesOperatorHostBuilder"/>.</returns>
         public static IKubernetesOperatorHostBuilder ConfigureOperator(this IKubernetesOperatorHostBuilder k8sBuilder, Action<OperatorSettings> configure = null)
         {
             var operatorSettings = new OperatorSettings();
@@ -60,8 +61,8 @@ namespace Neon.Kube.Operator
         /// <summary>
         /// Builds the host.
         /// </summary>
-        /// <param name="k8sBuilder"></param>
-        /// <returns></returns>
+        /// <param name="k8sBuilder">Specifies the operator host builder.</param>
+        /// <returns>The <see cref="IKubernetesOperatorHostBuilder"/>.</returns>
         public static IKubernetesOperatorHost Build(this IKubernetesOperatorHostBuilder k8sBuilder)
         {
             return k8sBuilder.Build();
@@ -70,8 +71,8 @@ namespace Neon.Kube.Operator
         /// <summary>
         /// Configures the host for deployment in NeonKUBE clusters.
         /// </summary>
-        /// <param name="k8sBuilder"></param>
-        /// <returns></returns>
+        /// <param name="k8sBuilder">Specifies the operator host builder.</param>
+        /// <returns>The <see cref="IKubernetesOperatorHostBuilder"/>.</returns>
         public static IKubernetesOperatorHostBuilder ConfigureNeonKube(this IKubernetesOperatorHostBuilder k8sBuilder)
         {
             k8sBuilder.ConfigureCertManager(configure =>
@@ -90,9 +91,9 @@ namespace Neon.Kube.Operator
         /// <summary>
         /// Configures the host for deployment in NeonKUBE clusters.
         /// </summary>
-        /// <param name="k8sBuilder"></param>
-        /// <param name="configure"></param>
-        /// <returns></returns>
+        /// <param name="k8sBuilder">Specifies the operator host builder.</param>
+        /// <param name="configure">Optionally specifies a configuration action.</param>
+        /// <returns>The <see cref="IKubernetesOperatorHostBuilder"/>.</returns>
         public static IKubernetesOperatorHostBuilder ConfigureCertManager(
             this IKubernetesOperatorHostBuilder k8sBuilder,
             Action<CertManagerOptions> configure)
@@ -109,20 +110,21 @@ namespace Neon.Kube.Operator
         /// Configures the startup class to use.
         /// </summary>
         /// <typeparam name="TStartup"></typeparam>
-        /// <param name="k8sBuilder"></param>
-        /// <returns></returns>
+        /// <param name="k8sBuilder">Specifies the operator host builder.</param>
+        /// <returns>The <see cref="IKubernetesOperatorHostBuilder"/>.</returns>
         public static IKubernetesOperatorHostBuilder UseStartup<TStartup>(this IKubernetesOperatorHostBuilder k8sBuilder)
         {
             k8sBuilder.UseStartup<TStartup>();
+
             return k8sBuilder;
         }
 
         /// <summary>
         /// Add a singleton to the service collection.
         /// </summary>
-        /// <typeparam name="TSingleton"></typeparam>
-        /// <param name="k8sBuilder"></param>
-        /// <returns></returns>
+        /// <typeparam name="TSingleton">Specifies the singleton type.</typeparam>
+        /// <param name="k8sBuilder">Specifies the operator host builder.</param>
+        /// <returns>The <see cref="IKubernetesOperatorHostBuilder"/>.</returns>
         public static IKubernetesOperatorHostBuilder AddSingleton<TSingleton>(this IKubernetesOperatorHostBuilder k8sBuilder)
         {
             k8sBuilder.Services.AddSingleton(typeof(TSingleton));
@@ -131,28 +133,32 @@ namespace Neon.Kube.Operator
         }
 
         /// <summary>
-        /// Add a singleton to the service collection.
+        /// Add a singleton to the service collection using a generic type.
         /// </summary>
         /// <typeparam name="TSingleton"></typeparam>
-        /// <param name="k8sBuilder"></param>
-        /// <param name="instance"></param>
-        /// <returns></returns>
+        /// <param name="k8sBuilder">Specifies the operator host builder.</param>
+        /// <param name="instance">Specifies the singleton being added.</param>
+        /// <returns>The <see cref="IKubernetesOperatorHostBuilder"/>.</returns>
         public static IKubernetesOperatorHostBuilder AddSingleton<TSingleton>(this IKubernetesOperatorHostBuilder k8sBuilder, TSingleton instance)
         {
+            Covenant.Requires<ArgumentNullException>(instance != null, nameof(instance));
+
             k8sBuilder.Services.AddSingleton(typeof(TSingleton), instance);
 
             return k8sBuilder;
         }
 
         /// <summary>
-        /// Add a singleton to the service collection.
+        /// Add a singleton to the service collection using an explicit type.
         /// </summary>
-        /// <param name="k8sBuilder"></param>
-        /// <param name="type"></param>
-        /// <param name="instance"></param>
-        /// <returns></returns>
+        /// <param name="k8sBuilder">Specifies the operator host builder.</param>
+        /// <param name="type">Specifies the singleton type.</param>
+        /// <param name="instance">Specifies the singleton being added.</param>
+        /// <returns>The <see cref="IKubernetesOperatorHostBuilder"/>.</returns>
         public static IKubernetesOperatorHostBuilder AddSingleton(this IKubernetesOperatorHostBuilder k8sBuilder, Type type, object instance)
         {
+            Covenant.Requires<ArgumentNullException>(instance != null, nameof(instance));
+
             k8sBuilder.Services.AddSingleton(type, instance);
 
             return k8sBuilder;

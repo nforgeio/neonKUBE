@@ -25,6 +25,9 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s;
+using k8s.Models;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,29 +39,26 @@ using Neon.IO;
 using Neon.Kube.Operator.Attributes;
 using Neon.Tasks;
 
-using k8s;
-using k8s.Models;
-
 using Prometheus;
 using Neon.Kube.Resources;
 
 namespace Neon.Kube.Operator.ResourceManager
 {
     /// <summary>
-    /// Defines a dependent resource.
+    /// Describes a dependent resource.
     /// </summary>
     public interface IDependentResource
     {
         /// <summary>
         /// Gets the Entity <see cref="Type"/>
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The entity type.</returns>
         Type GetEntityType();
 
         /// <summary>
         /// Returns the entity <see cref="KubernetesEntityAttribute"/>
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The <see cref="KubernetesEntityAttribute"/>.</returns>
         KubernetesEntityAttribute GetKubernetesEntityAttribute();
     }
 }

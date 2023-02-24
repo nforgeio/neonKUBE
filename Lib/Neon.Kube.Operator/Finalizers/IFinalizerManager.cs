@@ -39,27 +39,33 @@ namespace Neon.Kube.Operator.Finalizer
         /// Registers a specific <see cref="IResourceFinalizer{TEntity}"/> to an entity.
         /// </summary>
         /// <typeparam name="TFinalizer"></typeparam>
-        /// <param name="entity"></param>
-        /// <returns></returns>
+        /// <param name="entity">Specifies the entity type.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         Task RegisterFinalizerAsync<TFinalizer>(TEntity entity)
             where TFinalizer : IResourceFinalizer<TEntity>;
 
         /// <summary>
         /// Registers all <see cref="IResourceFinalizer{TEntity}"/> to an entity.
         /// </summary>
-        /// <param name="entity"></param>
-        /// <returns></returns>
+        /// <param name="entity">Specifies the target entity.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         Task RegisterAllFinalizersAsync(TEntity entity);
 
         /// <summary>
         /// Removes a <see cref="IResourceFinalizer{TEntity}"/> from an entity.
         /// </summary>
-        /// <typeparam name="TFinalizer"></typeparam>
-        /// <param name="entity"></param>
-        /// <returns></returns>
+        /// <typeparam name="TFinalizer">Specifies the finalizer type.</typeparam>
+        /// <param name="entity">Specifies the target entity.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         Task RemoveFinalizerAsync<TFinalizer>(TEntity entity)
             where TFinalizer : IResourceFinalizer<TEntity>;
 
+        /// <summary>
+        /// Finalizes an entity.
+        /// </summary>
+        /// <param name="entity">Specifies the target entity.</param>
+        /// <param name="scope">Specifies the service scope.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         internal Task FinalizeAsync(TEntity entity, IServiceScope scope);
     }
 }

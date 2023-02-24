@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,7 +27,7 @@ using k8s.Models;
 namespace Neon.Kube.Operator.Webhook
 {
     /// <summary>
-    /// Describes an admission webhook and the resources and operations it applies to.
+    /// Describes an admission webhook and the resources and operations to which it applies.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class WebhookAttribute : Attribute
@@ -34,32 +35,46 @@ namespace Neon.Kube.Operator.Webhook
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="admissionReviewVersions"></param>
-        /// <param name="failurePolicy"></param>
-        /// <param name="sideEffects"></param>
-        /// <param name="timeoutSeconds"></param>
-        /// <param name="matchPolicy"></param>
-        /// <param name="reinvocationPolicy"></param>
-        /// <param name="url"></param>
+        /// <param name="name">Specifies the webbhook name.</param>
+        /// <param name="admissionReviewVersions">Specifies the entity versions this hook can handle.</param>
+        /// <param name="failurePolicy">Optionally specifies the failure policy.</param>
+        /// <param name="sideEffects">Optionally identifies any side effects.</param>
+        /// <param name="timeoutSeconds">Optionally specifies the maximum time in seconds that the API controller will wait for a webhook response.</param>
+        /// <param name="matchPolicy">Optionally specifies the match policy.</param>
+        /// <param name="reinvocationPolicy">Optionally specifies a reinvocation pilicy.</param>
+        /// <param name="url">Optionally specifies the webhook URL.</param>
         public WebhookAttribute(
-            string name,
-            string admissionReviewVersions,
-            string failurePolicy = "Fail", 
-            string sideEffects = "None", 
-            int timeoutSeconds = 5,
-            string matchPolicy = "Equivalent",
-            string reinvocationPolicy = "Never",
-            string url = null)
+            string  name,
+            string  admissionReviewVersions,
+            string  failurePolicy      = "Fail", 
+            string  sideEffects        = "None", 
+            int     timeoutSeconds     = 5,
+            string  matchPolicy        = "Equivalent",
+            string  reinvocationPolicy = "Never",
+            string  url                = null)
         {
-            Name = name;
+            // $todo(marcusbooyah):
+            //
+            // We should define enum types for these args and then change the
+            // parameter types.  That will make it much easir for developers
+            // to know what the possible values are:
+            //
+            //      failurePolicy 
+            //      sideEffects
+            //      matchPolicy
+            //      reinvocationPolicy
+
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(admissionReviewVersions), nameof(admissionReviewVersions));
+
+            Name                    = name;
             AdmissionReviewVersions = admissionReviewVersions.Split(',');
-            FailurePolicy = failurePolicy;
-            SideEffects = sideEffects;
-            TimeoutSeconds = timeoutSeconds;
-            MatchPolicy = matchPolicy;
-            ReinvocationPolicy = reinvocationPolicy;
-            Url = url;
+            FailurePolicy           = failurePolicy;
+            SideEffects             = sideEffects;
+            TimeoutSeconds          = timeoutSeconds;
+            MatchPolicy             = matchPolicy;
+            ReinvocationPolicy      = reinvocationPolicy;
+            Url                     = url;
         }
 
         /// <summary>

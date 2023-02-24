@@ -21,8 +21,16 @@ using System.Linq;
 
 namespace Neon.Kube.Operator.Rbac
 {
+    /// <summary>
+    /// RBAC verb extension methods.
+    /// </summary>
     internal static class VerbExtensions
     {
+        /// <summary>
+        /// Converts an <see cref="RbacVerb"/> into a list of corresponding strings.
+        /// </summary>
+        /// <param name="verb">Specifies the RBAC verb.</param>
+        /// <returns></returns>
         public static IList<string> ToStrings(this RbacVerb verb)
         {
             var result = new List<string>();
@@ -38,15 +46,16 @@ namespace Neon.Kube.Operator.Rbac
                 return result;
             }
 
-            foreach (var value in Enum.GetValues<RbacVerb>().Where(v => v != RbacVerb.None && v != RbacVerb.All))
+            foreach (var verbValue in Enum.GetValues<RbacVerb>()
+                .Where(verbValue => verbValue != RbacVerb.None && verbValue != RbacVerb.All))
             {
-                if (verb.HasFlag(value))
+                if (verb.HasFlag(verbValue))
                 {
-                    result.Add(value.ToString().ToLower());
+                    result.Add(verbValue.ToString().ToLower());
                 }
             }
 
-            return result.OrderBy(x => x).ToList();
+            return result.OrderBy(value => value).ToList();
         }
     }
 }

@@ -52,7 +52,7 @@ namespace Neon.Kube.Operator
         /// <summary>
         /// Build the host.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The <see cref="IKubernetesOperatorHost"/>.</returns>
         IKubernetesOperatorHost Build();
     }
 }

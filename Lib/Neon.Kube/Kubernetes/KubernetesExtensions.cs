@@ -709,26 +709,27 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Waits for a customresourcedefinition to be created in the API server.
+        /// Waits for a custom resource definition to be created in the API server.
         /// </summary>
-        /// <typeparam name="TEntity"></typeparam>
-        /// <param name="k8s"></param>
-        /// <param name="pollInterval"></param>
-        /// <param name="timeout"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <typeparam name="TEntity">Specifies the custom resource type.</typeparam>
+        /// <param name="k8s">Specifies the Kubernetes client.</param>
+        /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 5 seconds.</param>
+        /// <param name="timeout">Optionally specifies the maximum time to wait.  This defaults to 90 seconds.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task WaitForCustomResourceDefinitionAsync<TEntity>(
-            this IKubernetes k8s,
-            TimeSpan pollInterval = default,
-            TimeSpan timeout = default,
-            CancellationToken cancellationToken = default)
+            this IKubernetes    k8s,
+            TimeSpan            pollInterval      = default,
+            TimeSpan            timeout           = default,
+            CancellationToken   cancellationToken = default)
+
             where TEntity : IKubernetesObject<V1ObjectMeta>
         {
             await SyncContext.Clear;
 
             if (pollInterval <= TimeSpan.Zero)
             {
-                pollInterval = TimeSpan.FromSeconds(1);
+                pollInterval = TimeSpan.FromSeconds(5);
             }
 
             if (timeout <= TimeSpan.Zero)
@@ -776,7 +777,7 @@ namespace Neon.Kube
         /// Specifies the label selector to constrain the set of pods to be targeted.
         /// This is required.
         /// </param>
-        /// <returns></returns>
+        /// <returns>The <see cref="V1Pod"/>.</returns>
         /// <exception cref="KubernetesException">Thrown when no healthy pods exist.</exception>
         public static async Task<V1Pod> GetNamespacedRunningPodAsync(
             this IKubernetes    k8s,
@@ -898,14 +899,14 @@ namespace Neon.Kube
         /// <typeparam name="T">The type parameter.</typeparam>
         /// <param name="k8s">The <see cref="IKubernetes"/> instance.</param>
         /// <param name="actionAsync">The async action called as watch events are received.</param>
-        /// <param name="namespaceParameter">That target Kubernetes namespace.</param>
-        /// <param name="fieldSelector">The optional field selector</param>
-        /// <param name="labelSelector">The optional label selector</param>
-        /// <param name="resourceVersion">The start resource version.</param>
-        /// <param name="resourceVersionMatch">The optional <b>resourceVersionMatch</b> setting.</param>
-        /// <param name="timeoutSeconds">Optional timeout override.</param>
+        /// <param name="namespaceParameter">Optionally specifies a Kubernetes namespace.</param>
+        /// <param name="fieldSelector">Optionally specifies a field selector</param>
+        /// <param name="labelSelector">Optionally specifies a label selector</param>
+        /// <param name="resourceVersion">Optionally specifies a resource version.</param>
+        /// <param name="resourceVersionMatch">Optionally specifies a <b>resourceVersionMatch</b> setting.</param>
+        /// <param name="timeoutSeconds">Optionally specifies a timeout override.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
-        /// <param name="logger">Optional <see cref="ILogger"/></param>
+        /// <param name="logger">Optionally specifies a <see cref="ILogger"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task WatchAsync<T>(
             this IKubernetes            k8s,

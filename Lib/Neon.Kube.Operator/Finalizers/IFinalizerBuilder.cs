@@ -28,11 +28,27 @@ using k8s;
 
 namespace Neon.Kube.Operator.Finalizer
 {
+    /// <summary>
+    /// Describes a finalizer builder.
+    /// </summary>
     internal interface IFinalizerBuilder
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TEntity">Specifies the entity type.</typeparam>
+        /// <param name="serviceProvider">Specifies the dependency injection service provider.</param>
+        /// <returns></returns>
         public IEnumerable<IResourceFinalizer<TEntity>> BuildFinalizers<TEntity>(IServiceProvider serviceProvider)
             where TEntity : IKubernetesObject<V1ObjectMeta>, new();
 
+        /// <summary>
+        /// Builds the finalizer.
+        /// </summary>
+        /// <typeparam name="TEntity">Specifies the entity type.</typeparam>
+        /// <typeparam name="TFinalizer">Specifies the finalizer type.</typeparam>
+        /// <param name="serviceProvider">Specifies the dependency injection service provider.</param>
+        /// <returns>The resource finalizer.</returns>
         IResourceFinalizer<TEntity> BuildFinalizer<TEntity, TFinalizer>(IServiceProvider serviceProvider)
             where TEntity : IKubernetesObject<V1ObjectMeta>, new();
     }

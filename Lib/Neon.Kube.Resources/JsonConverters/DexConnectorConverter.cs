@@ -28,6 +28,7 @@ using Neon.Kube.Resources.Dex;
 
 using k8s;
 using k8s.Models;
+using System.Diagnostics.Contracts;
 
 namespace Neon.Kube.Resources.JsonConverters
 {
@@ -36,35 +37,26 @@ namespace Neon.Kube.Resources.JsonConverters
     /// </summary>
     public class DexConnectorJsonConverter : JsonConverter<IV1DexConnector>
     {
-        /// <summary>
-        /// Returns whether the connectio can be converted.
-        /// </summary>
-        /// <param name="objectType"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public override bool CanConvert(Type objectType)
         {
-            var result = objectType == typeof(IV1DexConnector)
-                || objectType.Implements<IV1DexConnector>();
+            Covenant.Requires<ArgumentNullException>(objectType != null, nameof(objectType));
 
-            return result;
+            return objectType == typeof(IV1DexConnector) || objectType.Implements<IV1DexConnector>();
         }
 
         /// <inheritdoc/>
-
         public override IV1DexConnector Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-
         {
             if (reader.TokenType != JsonTokenType.StartObject)
             {
                 throw new JsonException();
             }
 
-            Utf8JsonReader readerClone = reader;
-
-            var result = default(IV1DexConnector);
-
-            DexConnectorType? type = null;
-            int depth = 0;
+            var readerClone = reader;
+            var result      = default(IV1DexConnector);
+            var type        = (DexConnectorType ? )null;
+            var depth       = 0;
 
             while (readerClone.Read() 
                 && !type.HasValue)
@@ -74,21 +66,23 @@ namespace Neon.Kube.Resources.JsonConverters
                 switch (tokenType)
                 {
                     case JsonTokenType.StartObject:
+
                         depth++;
                         continue;
 
                     case JsonTokenType.EndObject:
+
                         depth--;
                         continue;
                 }
 
-                if (tokenType == JsonTokenType.EndObject
-                    && depth == 0)
+                if (tokenType == JsonTokenType.EndObject && depth == 0)
                 {
                     return result;
                 }
 
                 // Get the key.
+
                 if (tokenType == JsonTokenType.PropertyName)
                 {
                     var propertyName = readerClone.GetString();
@@ -96,7 +90,7 @@ namespace Neon.Kube.Resources.JsonConverters
                     if (propertyName == "type" && depth == 0)
                     {
                         var value = (JsonElement)JsonSerializer.Deserialize<dynamic>(ref readerClone, options);
-                        var str = value.ToString();
+
                         type = NeonHelper.ParseEnum<DexConnectorType>(value.ToString());
                     }
                 }
@@ -106,11 +100,12 @@ namespace Neon.Kube.Resources.JsonConverters
             switch (type)
             {
                 case DexConnectorType.Ldap:
+
                     result = new DexConnector<DexLdapConfig>();
                     break;
 
-
                 case DexConnectorType.Oidc:
+
                     result = new DexConnector<DexOidcConfig>();
                     break;
             }
@@ -125,17 +120,23 @@ namespace Neon.Kube.Resources.JsonConverters
                 if (reader.TokenType == JsonTokenType.PropertyName)
                 {
                     var propertyName = reader.GetString();
+
                     reader.Read();
+
                     switch (propertyName)
                     {
                         case "id":
+
                             result.Id = reader.GetString();
                             break;
-                        case "name":
-                            result.Name = reader.GetString();
 
+                        case "name":
+
+                            result.Name = reader.GetString();
                             break;
+
                         case "type":
+
                             result.Type = type.Value;
                             break;
 
@@ -146,13 +147,11 @@ namespace Neon.Kube.Resources.JsonConverters
                                 case DexConnectorType.Ldap:
 
                                     ((DexConnector<DexLdapConfig>)result).Config = JsonSerializer.Deserialize<DexLdapConfig>(ref reader, options);
-
                                     break;
 
                                 case DexConnectorType.Oidc:
 
                                     ((DexConnector<DexOidcConfig>)result).Config = JsonSerializer.Deserialize<DexOidcConfig>(ref reader, options);
-
                                     break;
                             }
                             break;

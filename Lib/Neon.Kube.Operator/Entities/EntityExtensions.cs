@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Text.Json.JsonDiffPatch;
@@ -33,48 +34,53 @@ namespace Neon.Kube.Operator
     /// </summary>
     public static class EntityExtensions
     {
-        private static JsonPatchDeltaFormatter JsonPatchDeltaFormatter = new JsonPatchDeltaFormatter();
+        private static readonly JsonPatchDeltaFormatter JsonPatchDeltaFormatter = new JsonPatchDeltaFormatter();
 
         /// <summary>
         /// Makes an owner reference from a <see cref="IKubernetesObject{V1ObjectMeta}"/>
         /// </summary>
-        /// <param name="entity"></param>
-        /// <param name="blockOwnerDeletion"></param>
-        /// <param name="controller"></param>
-        /// <returns></returns>
+        /// <param name="entity">The target kubernet3es entity.</param>
+        /// <param name="blockOwnerDeletion">Optionally indicates that owner deletion should be blocked.</param>
+        /// <param name="controller">Optionally indicates that the reference points to the managing controller.</param>
+        /// <returns>The <see cref="V1OwnerReference"/>.</returns>
         public static V1OwnerReference MakeOwnerReference(
-            this IKubernetesObject<V1ObjectMeta> entity,
-            bool? blockOwnerDeletion = null,
-            bool? controller = null)
+            this    IKubernetesObject<V1ObjectMeta> entity,
+            bool?   blockOwnerDeletion = null,
+            bool?   controller         = null)
         {
             return new V1OwnerReference(
-                apiVersion: entity.ApiVersion,
-                kind: entity.Kind,
-                name: entity.Metadata.Name,
-                uid: entity.Metadata.Uid,
+                apiVersion:         entity.ApiVersion,
+                kind:               entity.Kind,
+                name:               entity.Metadata.Name,
+                uid:                entity.Metadata.Uid,
                 blockOwnerDeletion: blockOwnerDeletion,
-                controller: controller);
+                controller:         controller);
         }
 
         /// <summary>
         /// Get the CRD name for the entity.
         /// </summary>
-        /// <param name="entityType"></param>
-        /// <returns></returns>
+        /// <param name="entityType">Specifies the entity type.</param>
+        /// <returns>The CRD name.</returns>
         public static string GetKubernetesCrdName(this Type entityType)
         {
             var entityMetatdata = entityType.GetKubernetesTypeMetadata();
+
             return $"{entityMetatdata.PluralName}.{entityMetatdata.Group}";
         }
 
         /// <summary>
-        /// Creates a <see cref="V1Patch"/> given two objects.
+        /// Creates a <see cref="V1Patch"/> that updates an old version of an
+        /// entity into the new version.
         /// </summary>
-        /// <param name="oldEntity"></param>
-        /// <param name="newEntity"></param>
-        /// <returns></returns>
+        /// <param name="oldEntity">Specifies the old entity.</param>
+        /// <param name="newEntity">Specifies the new entity.</param>
+        /// <returns>The <see cref="V1Patch"/>.</returns>
         public static V1Patch CreatePatch(this object oldEntity, object newEntity)
         {
+            Covenant.Requires<ArgumentNullException>(oldEntity != null, nameof(oldEntity));
+            Covenant.Requires<ArgumentNullException>(newEntity != null, nameof(newEntity));
+
             var node1 = JsonNode.Parse(KubernetesJson.Serialize(oldEntity));
             var node2 = JsonNode.Parse(KubernetesJson.Serialize(newEntity));
 

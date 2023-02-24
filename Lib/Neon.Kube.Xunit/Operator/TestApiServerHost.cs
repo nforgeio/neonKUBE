@@ -29,28 +29,61 @@ using k8s.KubeConfigModels;
 using k8s;
 using System.Text.Json.Serialization;
 using System.Text.Json;
+using System.Diagnostics.Contracts;
 
 namespace Neon.Kube.Xunit.Operator
 {
-
     /// <inheritdoc/>
     public class TestApiServerHost : ITestApiServerHost
     {
-        private readonly IHost host;
-        private bool disposedValue;
+        private readonly IHost  host;
+        private bool            isDisposed;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="host"></param>
-        /// <param name="kubeConfig"></param>
-        /// <param name="client"></param>
-        public TestApiServerHost(IHost host, K8SConfiguration kubeConfig, IKubernetes client)
+        /// <param name="host">Specifies the host.</param>
+        /// <param name="kubeConfig">Specifies the Kubernmetes configuration.</param>
+        /// <param name="k8s">Specifies the Kubernetes client.</param>
+        public TestApiServerHost(IHost host, K8SConfiguration kubeConfig, IKubernetes k8s)
         {
-            this.host = host;
-            KubeConfig = kubeConfig;
-            Client = client;
-            Services = new ServiceCollection();
+            Covenant.Requires<ArgumentNullException>(host != null, nameof(host));
+            Covenant.Requires<ArgumentNullException>(kubeConfig != null, nameof(kubeConfig));
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+
+            this.host       = host;
+            this.KubeConfig = kubeConfig;
+            this.K8s        = k8s;
+            this.Services   = new ServiceCollection();
+        }
+
+        /// <summary>
+        /// Finalizer.
+        /// </summary>
+        ~TestApiServerHost()
+        {
+            Dispose(disposing: false);
+        }
+
+        /// <inheritdoc/>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!isDisposed)
+            {
+                if (disposing)
+                {
+                    host.Dispose();
+                }
+
+                isDisposed = true;
+            }
+        }
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
 
         /// <inheritdoc/>
@@ -63,7 +96,7 @@ namespace Neon.Kube.Xunit.Operator
         public K8SConfiguration KubeConfig { get; }
 
         /// <inheritdoc/>
-        public IKubernetes Client { get; }
+        public IKubernetes K8s { get; }
 
         /// <inheritdoc/>
         IServiceProvider IHost.Services => throw new NotImplementedException();
@@ -73,27 +106,5 @@ namespace Neon.Kube.Xunit.Operator
 
         /// <inheritdoc/>
         public Task StopAsync(CancellationToken cancellationToken = default) => host.StartAsync(cancellationToken);
-
-        /// <inheritdoc/>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    host.Dispose();
-                }
-
-                disposedValue = true;
-            }
-        }
-
-        /// <inheritdoc/>
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
     }
 }

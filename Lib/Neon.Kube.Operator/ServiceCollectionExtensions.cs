@@ -40,10 +40,9 @@ namespace Neon.Kube.Operator
         /// <summary>
         /// Adds Kubernetes operator to the service collection.
         /// </summary>
-        /// <param name="services">The <see cref="IServiceCollection"/></param>
-        /// <returns></returns>
-        public static IOperatorBuilder AddKubernetesOperator(
-            this IServiceCollection services)
+        /// <param name="services">The <see cref="IServiceCollection"/>.</param>
+        /// <returns>The <see cref="OperatorBuilder"/>.</returns>
+        public static IOperatorBuilder AddKubernetesOperator(this IServiceCollection services)
         {
             return new OperatorBuilder(services).AddOperatorBase();
         }
@@ -51,13 +50,13 @@ namespace Neon.Kube.Operator
         /// <summary>
         /// Adds Kubernetes operator to the service collection.
         /// </summary>
-        /// <param name="services">The <see cref="IServiceCollection"/></param>
+        /// <param name="services">The <see cref="IServiceCollection"/>.</param>
         /// <param name="settings">Optional options</param>
-        /// <returns></returns>
-        public static IOperatorBuilder AddKubernetesOperator(
-            this IServiceCollection services,
-            OperatorSettings settings)
+        /// <returns>The <see cref="OperatorBuilder"/>.</returns>
+        public static IOperatorBuilder AddKubernetesOperator(this IServiceCollection services, OperatorSettings settings)
         {
+            // $todo(marcusbooyah): Should we be doing something with [settings] here?
+
             return new OperatorBuilder(services).AddOperatorBase();
         }
     }

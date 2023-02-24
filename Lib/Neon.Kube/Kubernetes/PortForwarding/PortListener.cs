@@ -16,50 +16,66 @@
 // limitations under the License.
 
 using System;
+using System.Diagnostics.Contracts;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
 using Microsoft.Extensions.Logging;
 
-namespace Neon.Kube
+using Neon.Net;
+
+namespace Neon.Kube.PortForward
 {
-    internal class PortListener : IPortListener
+    /// <inheritdoc/>
+    internal sealed class PortListener : IPortListener
     {
-        private readonly ILogger<PortListener> logger;
-        private int localPort;
-        private CancellationTokenRegistration ctr = default(CancellationTokenRegistration);
-        private bool disposed = false;
+        private bool                            disposed = false;
+        private readonly ILogger<PortListener>  logger;
+        private int                             localPort;
+        private CancellationTokenRegistration   ctr;
 
-        public TcpListener Listener { get; private set; }
-
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="localPort">Specifies the local port.</param>
+        /// <param name="loggerFactory">Optionally specifies the logger factory.</param>
+        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
         public PortListener(
             int               localPort, 
-            ILoggerFactory    loggerFactory,
-            CancellationToken cancellationToken)
+            ILoggerFactory    loggerFactory     = null,
+            CancellationToken cancellationToken = default)
         {
+            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort), nameof(localPort), $"Invalid TCP port: {localPort}");
+
             this.localPort = localPort;
-            this.logger = loggerFactory?.CreateLogger<PortListener>();
+            this.logger    = loggerFactory?.CreateLogger<PortListener>();
 
             Listener = new TcpListener(IPAddress.Loopback, localPort);
-            logger?.LogDebug($"PortListener created on {localPort}");
+            logger?.LogDebug($"PortListener created on: {localPort}");
 
             ctr = cancellationToken.Register(() => this.Dispose());
 
             Listener.Start(512);
-            logger?.LogDebug($"PortListener started on {localPort}");
+            logger?.LogDebug($"PortListener started on: {localPort}");
         }
 
+        /// <inheritdoc/>
         public void Dispose()
         {
             if (disposed)
             {
                 return;
             }
+
             disposed = true;
-            logger?.LogDebug($"PortListener stopped on {localPort}");
+
+            logger?.LogDebug($"PortListener stopped on: {localPort}");
             Listener.Stop();
             ctr.Dispose();
         }
+
+        /// <inheritdoc/>
+        public TcpListener Listener { get; private set; }
     }
 }

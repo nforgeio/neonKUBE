@@ -127,10 +127,12 @@ namespace NeonClusterOperator
         /// <summary>
         /// Removes the job from the specified scheduler.
         /// </summary>
-        /// <param name="scheduler"></param>
+        /// <param name="scheduler">Specifies the scheduler.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task DeleteFromSchedulerAsync(IScheduler scheduler)
         {
+            Covenant.Requires<ArgumentNullException>(scheduler != null, nameof(scheduler));
+
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("delete-from-scheduler");

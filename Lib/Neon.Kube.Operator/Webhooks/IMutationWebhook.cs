@@ -44,24 +44,15 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Neon.Kube.Operator.Webhook
 {
     /// <summary>
-    /// Represents a mutating webhook.
+    /// Describes a mutating webhook.
     /// </summary>
-    /// <typeparam name="TEntity"></typeparam>
+    /// <typeparam name="TEntity">Specifies the entity type.</typeparam>
     [OperatorComponent(OperatorComponentType.MutationWebhook)]
     [MutatingWebhook]
     public interface IMutatingWebhook<TEntity> : IAdmissionWebhook<TEntity, MutationResult>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
     {
         private static JsonPatchDeltaFormatter Formatter = new JsonPatchDeltaFormatter();
-        /// <summary>
-        /// The namespace selector.
-        /// </summary>
-        public V1LabelSelector NamespaceSelector => null;
-
-        /// <summary>
-        /// The Object selector.
-        /// </summary>
-        public V1LabelSelector ObjectSelector => null;
 
         /// <summary>
         /// The webhook configuration.
@@ -80,7 +71,7 @@ namespace Neon.Kube.Operator.Webhook
                 {
                     Name              = operatorSettings.Name,
                     NamespaceProperty = operatorSettings.DeployedNamespace,
-                    Path              = WebhookHelper.CreateEndpoint<TEntity>(this.GetType(), WebhookType.Mutate)
+                    Path              = WebhookHelper.CreateEndpoint<TEntity>(this.GetType(), WebhookType.Mutating)
                 }
             };
 
@@ -90,7 +81,7 @@ namespace Neon.Kube.Operator.Webhook
 
                 clientConfig.Service = null;
                 clientConfig.CaBundle = null;
-                clientConfig.Url = tunnelUrl.TrimEnd('/') + WebhookHelper.CreateEndpoint<TEntity>(this.GetType(), WebhookType.Mutate);
+                clientConfig.Url = tunnelUrl.TrimEnd('/') + WebhookHelper.CreateEndpoint<TEntity>(this.GetType(), WebhookType.Mutating);
             }
 
             var webhookConfig = new V1MutatingWebhookConfiguration().Initialize();
@@ -141,6 +132,16 @@ namespace Neon.Kube.Operator.Webhook
             return webhookConfig;
         }
 
+        /// <summary>
+        /// The namespace selector.
+        /// </summary>
+        public V1LabelSelector NamespaceSelector => null;
+
+        /// <summary>
+        /// The Object selector.
+        /// </summary>
+        public V1LabelSelector ObjectSelector => null;
+
         /// <inheritdoc />
         string IAdmissionWebhook<TEntity, MutationResult>.Endpoint
         {
@@ -148,29 +149,27 @@ namespace Neon.Kube.Operator.Webhook
         }
 
         /// <inheritdoc/>
-        WebhookType IAdmissionWebhook<TEntity, MutationResult>.WebhookType
-        {
-            get => WebhookType.Mutate;
-        }
+        WebhookType IAdmissionWebhook<TEntity, MutationResult>.WebhookType => WebhookType.Mutating;
 
         /// <inheritdoc />
         MutationResult IAdmissionWebhook<TEntity, MutationResult>.Create(TEntity newEntity, bool dryRun)
             => AdmissionResult.NotImplemented<MutationResult>();
 
         /// <inheritdoc />
-        MutationResult IAdmissionWebhook<TEntity, MutationResult>.Update(
-            TEntity oldEntity,
-            TEntity newEntity,
-            bool dryRun)
+        MutationResult IAdmissionWebhook<TEntity, MutationResult>.Update(TEntity oldEntity, TEntity newEntity, bool dryRun)
             => AdmissionResult.NotImplemented<MutationResult>();
 
         /// <inheritdoc />
         MutationResult IAdmissionWebhook<TEntity, MutationResult>.Delete(TEntity oldEntity, bool dryRun)
             => AdmissionResult.NotImplemented<MutationResult>();
 
-        AdmissionResponse IAdmissionWebhook<TEntity, MutationResult>.TransformResult(
-            MutationResult result,
-            AdmissionRequest<TEntity> request)
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
+        /// <param name="result"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        AdmissionResponse IAdmissionWebhook<TEntity, MutationResult>.TransformResult(MutationResult result, AdmissionRequest<TEntity> request)
         {
             var response = new AdmissionResponse
             {
@@ -189,16 +188,21 @@ namespace Neon.Kube.Operator.Webhook
                         : request.Object));
 
                 var node2 = JsonNode.Parse(KubernetesJson.Serialize(result.ModifiedObject));
+                var diff  = node1.Diff(node2, Formatter);
 
-                var diff = node1.Diff(node2, Formatter);
-
-                response.Patch = Convert.ToBase64String(Encoding.UTF8.GetBytes(KubernetesJson.Serialize(diff)));
+                response.Patch     = Convert.ToBase64String(Encoding.UTF8.GetBytes(KubernetesJson.Serialize(diff)));
                 response.PatchType = AdmissionResponse.JsonPatch;
             }
 
             return response;
         }
 
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
+        /// <param name="k8s"></param>
+        /// <param name="serviceProvider"></param>
+        /// <returns></returns>
         internal async Task Create(IKubernetes k8s, IServiceProvider serviceProvider)
         {
             var operatorSettings   = serviceProvider.GetRequiredService<OperatorSettings>();

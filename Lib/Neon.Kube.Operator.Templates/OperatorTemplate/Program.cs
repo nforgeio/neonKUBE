@@ -10,17 +10,19 @@ namespace OperatorTemplate
     {
         public static async Task Main(string[] args)
         {
-
-            var host = Host.CreateDefaultBuilder(args)
+            var host = 
+                Host.CreateDefaultBuilder(args)
                .ConfigureWebHostDefaults(webBuilder =>
                {
                    webBuilder.UseStartup<OperatorStartup>();
                });
-            host.ConfigureLogging(logging =>
-            {
-                logging.ClearProviders();
-                logging.AddConsole();
-            });
+
+            host.ConfigureLogging(
+                logging =>
+                {
+                    logging.ClearProviders();
+                    logging.AddConsole();
+                });
 
             await host.Build().RunAsync();
         }

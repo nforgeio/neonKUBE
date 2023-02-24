@@ -26,17 +26,16 @@ namespace Neon.Kube.Operator.Attributes
     public class ValidatingWebhookAttribute : Attribute
     {
         /// <summary>
-        /// Whether to ignore the validating webhook when scanning assemblies.
-        /// </summary>
-        public bool Ignore { get; set; } = false;
-
-        /// <summary>
         /// Constructor
         /// </summary>
-        public ValidatingWebhookAttribute(
-            bool ignore = false)
+        public ValidatingWebhookAttribute(bool ignore = false)
         {
             this.Ignore = ignore;
         }
+
+        /// <summary>
+        /// Whether to ignore the validating webhook when scanning assemblies.
+        /// </summary>
+        public bool Ignore { get; set; } = false;
     }
 }

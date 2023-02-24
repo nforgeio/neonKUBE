@@ -39,19 +39,21 @@ using System.Diagnostics;
 
 namespace Neon.Kube.Operator
 {
-
     /// <inheritdoc/>
     public class KubernetesOperatorHostBuilder : IKubernetesOperatorHostBuilder
     {
+        //---------------------------------------------------------------------
+        // Static members
+
         /// <summary>
         /// The SDK Version info Gauge.
         /// </summary>
         public static Gauge BuildInfo = Metrics.CreateGauge("operator_version_info", "Operator SDK Version", new string[] { "operator", "version" });
 
-        private KubernetesOperatorHost operatorHost;
+        //---------------------------------------------------------------------
+        // Instance members
 
-        /// <inheritdoc/>
-        public IServiceCollection Services { get; set; }
+        private KubernetesOperatorHost operatorHost;
 
         /// <summary>
         /// Constructor.
@@ -61,6 +63,9 @@ namespace Neon.Kube.Operator
             this.operatorHost = new KubernetesOperatorHost(args);
             this.Services     = new ServiceCollection();
         }
+
+        /// <inheritdoc/>
+        public IServiceCollection Services { get; set; }
 
         /// <inheritdoc/>
         public IKubernetesOperatorHost Build()
