@@ -211,9 +211,9 @@ namespace Neon.Kube.Operator.Webhook
                             response = TransformResult(result, review.Request);
 
                         }
-                        catch (Exception ex)
+                        catch (Exception e)
                         {
-                            logger?.LogErrorEx(ex, "An error happened during admission.");
+                            logger?.LogErrorEx(e, "An error happened during admission.");
 
                             response = new AdmissionResponse()
                             {
