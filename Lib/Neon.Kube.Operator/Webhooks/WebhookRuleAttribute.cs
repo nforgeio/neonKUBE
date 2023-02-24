@@ -59,7 +59,6 @@ namespace Neon.Kube.Operator.Webhook
             string              resources, 
             string              scope)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(apiGroups), nameof(apiGroups));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(apiVersions), nameof(apiVersions));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(resources), nameof(resources));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(scope), nameof(scope));
