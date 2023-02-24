@@ -23,9 +23,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Neon.Common" Version="10000.0.2876-dev-jeff" />
-		<PackageReference Include="Neon.Cryptography" Version="10000.0.2876-dev-jeff" />
-		<PackageReference Include="Neon.Service" Version="10000.0.2876-dev-jeff" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2877-dev-jeff" />
+		<PackageReference Include="Neon.Cryptography" Version="10000.0.2877-dev-jeff" />
+		<PackageReference Include="Neon.Service" Version="10000.0.2877-dev-jeff" />
 		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="7.0.3" />
 		<PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
 		<PackageReference Include="Tomlyn" Version="0.15.0" />
