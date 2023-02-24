@@ -27,12 +27,12 @@
 		<PackageReference Include="LiquidTestReports.Markdown" Version="1.1.1-beta" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.1" />
 		<PackageReference Include="Moq" Version="4.18.4" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2849-dev-master" />
-		<PackageReference Include="Neon.Deployment" Version="10000.0.2849-dev-master" />
-		<PackageReference Include="Neon.Docker" Version="10000.0.2849-dev-master" />
-		<PackageReference Include="Neon.Nats" Version="10000.0.2849-dev-master" />
-		<PackageReference Include="Neon.Service" Version="10000.0.2849-dev-master" />
-		<PackageReference Include="Neon.Xunit" Version="10000.0.2849-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2876-dev-jeff" />
+		<PackageReference Include="Neon.Deployment" Version="10000.0.2876-dev-jeff" />
+		<PackageReference Include="Neon.Docker" Version="10000.0.2876-dev-jeff" />
+		<PackageReference Include="Neon.Nats" Version="10000.0.2876-dev-jeff" />
+		<PackageReference Include="Neon.Service" Version="10000.0.2876-dev-jeff" />
+		<PackageReference Include="Neon.Xunit" Version="10000.0.2876-dev-jeff" />
 		<PackageReference Include="xunit" Version="2.4.2" />
 		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

@@ -107,17 +107,17 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// Converts the attribute to a <see cref="V1CustomResourceColumnDefinition"/>
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The <see cref="V1CustomResourceColumnDefinition"/></returns>
         public V1CustomResourceColumnDefinition ToV1CustomResourceColumnDefinition()
         {
             return new V1CustomResourceColumnDefinition()
             {
-                Name = Name,
-                Description= Description,
-                Format= Format,
-                Priority = Priority,
-                JsonPath= JsonPath,
-                Type = Type.ToString(),
+                Name        = Name,
+                Description = Description,
+                Format      = Format,
+                Priority    = Priority,
+                JsonPath    = JsonPath,
+                Type        = Type.ToString(),
             };
         }
     }

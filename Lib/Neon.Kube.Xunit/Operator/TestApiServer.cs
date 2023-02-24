@@ -16,11 +16,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+
 using k8s;
 using k8s.Models;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
@@ -38,14 +41,11 @@ namespace Neon.Kube.Xunit.Operator
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="options"></param>
+        /// <param name="options">Specifies the test API server options.</param>
         /// <exception cref="ArgumentNullException"></exception>
         public TestApiServer(IOptions<TestApiServerOptions> options)
         {
-            if (options is null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            Covenant.Requires<ArgumentNullException>(options != null, nameof(options));
         }
 
         /// <inheritdoc/>

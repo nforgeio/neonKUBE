@@ -34,41 +34,41 @@ using k8s;
 using k8s.Models;
 
 using Quartz.Logging;
+using System.Diagnostics.Contracts;
 
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// Webhook to set istio injection on neon deployments.
+    /// Webhook to set istio injection on neonKUBE deployments.
     /// </summary>
     [Webhook(
-        name: "deployment-policy.neonkube.io",
+        name:                    "deployment-policy.neonkube.io",
         admissionReviewVersions: "v1",
-        failurePolicy: "Ignore")]
+        failurePolicy:           "Ignore")]
     [WebhookRule(
-        apiGroups: V1Deployment.KubeGroup,
+        apiGroups:   V1Deployment.KubeGroup,
         apiVersions: V1Deployment.KubeApiVersion, 
-        operations: AdmissionOperations.Create | AdmissionOperations.Update, 
-        resources: V1Deployment.KubePluralName,
-        scope: "*")]
+        operations:  AdmissionOperations.Create | AdmissionOperations.Update, 
+        resources:   V1Deployment.KubePluralName,
+        scope:       "*")]
     public class DeploymentWebhook : IMutatingWebhook<V1Deployment>
     {
         private ILogger<IMutatingWebhook<V1Deployment>> logger { get; set; }
-
-        private bool modified = false;
-        private readonly Service service;
+        private bool                                    modified = false;
+        private readonly Service                        service;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="logger"></param>
-        /// <param name="service"></param>
+        /// <param name="service">Specifies the parent neon-cluster-operator service.</param>
+        /// <param name="logger">Optionally specifies a logger.</param>
         public DeploymentWebhook(
-            ILogger<IMutatingWebhook<V1Deployment>> logger,
-            Service service)
+            Service                                 service,
+            ILogger<IMutatingWebhook<V1Deployment>> logger = null)
             : base()
         {
-            this.logger = logger;
             this.service = service;
+            this.logger  = logger;
         }
 
         /// <inheritdoc/>
@@ -85,7 +85,7 @@ namespace NeonClusterOperator
                     return MutationResult.NoChanges();
                 }
 
-                CheckSidecarInjection(entity);
+                InjectIstioSidecar(entity);
 
                 if (modified)
                 {
@@ -97,32 +97,41 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task<MutationResult> UpdateAsync(V1Deployment entity, V1Deployment oldEntity, bool dryRun)
+        public async Task<MutationResult> UpdateAsync(V1Deployment deployment, V1Deployment oldEntity, bool dryRun)
         {
+            Covenant.Requires<ArgumentNullException>(deployment != null, nameof(deployment));
+
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                logger?.LogInformationEx(() => $"Received request for deployment {entity.Namespace()}/{entity.Name()}");
+                logger?.LogInformationEx(() => $"Received request for deployment {deployment.Namespace()}/{deployment.Name()}");
 
-                if (!entity.Metadata.Namespace().StartsWith("neon-"))
+                if (!deployment.Metadata.Namespace().StartsWith("neon-"))
                 {
                     logger?.LogInformationEx(() => $"Deployment not in neon- namespace.");
 
                     return MutationResult.NoChanges();
                 }
 
-                CheckSidecarInjection(entity);
+                InjectIstioSidecar(deployment);
 
                 if (modified)
                 {
-                    return await Task.FromResult(MutationResult.Modified(entity));
+                    return await Task.FromResult(MutationResult.Modified(deployment));
                 }
 
                 return await Task.FromResult(MutationResult.NoChanges());
             }
         }
 
-        private void CheckSidecarInjection(V1Deployment entity)
+        /// <summary>
+        /// Enables Istio service mesh sidecar injection for the deployment when the
+        /// service mesg feature is enabled.
+        /// </summary>
+        /// <param name="deployment">Specifies the target deploy,ent.</param>
+        private void InjectIstioSidecar(V1Deployment deployment)
         {
+            Covenant.Requires<ArgumentNullException>(deployment != null, nameof(deployment));
+
             if (service.ClusterInfo.FeatureOptions.ServiceMesh)
             {
                 return;
@@ -130,9 +139,9 @@ namespace NeonClusterOperator
 
             try
             {
-                if (entity.Metadata.EnsureLabels().ContainsKey("goharbor.io/operator-version"))
+                if (deployment.Metadata.EnsureLabels().ContainsKey("goharbor.io/operator-version"))
                 {
-                    if (entity.Spec.Template.Metadata.EnsureAnnotations().TryAdd("sidecar.istio.io/inject", "false"))
+                    if (deployment.Spec.Template.Metadata.EnsureAnnotations().TryAdd("sidecar.istio.io/inject", "false"))
                     {
                         modified = true;
                     }

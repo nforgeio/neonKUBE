@@ -29,12 +29,6 @@ namespace TestOperator
         private readonly IFinalizerManager<V1ExampleEntity> finalizerManager;
         private readonly ILogger<ExampleController> logger;
 
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        /// <param name="k8s"></param>
-        /// <param name="finalizerManager"></param>
-        /// <param name="logger"></param>
         public ExampleController(
             IKubernetes k8s,
             IFinalizerManager<V1ExampleEntity> finalizerManager,
@@ -45,11 +39,6 @@ namespace TestOperator
             this.logger = logger;
         }
 
-        /// <summary>
-        /// Reconciles.
-        /// </summary>
-        /// <param name="resource"></param>
-        /// <returns></returns>
         public async Task<ResourceControllerResult> ReconcileAsync(V1ExampleEntity resource)
         {
             await SyncContext.Clear;
@@ -59,11 +48,6 @@ namespace TestOperator
             return ResourceControllerResult.Ok();
         }
 
-        /// <summary>
-        /// Deleted.
-        /// </summary>
-        /// <param name="resource"></param>
-        /// <returns></returns>
         public async Task DeletedAsync(V1ExampleEntity resource)
         {
             logger.LogInformation($"DELETED: {resource.Name()}");

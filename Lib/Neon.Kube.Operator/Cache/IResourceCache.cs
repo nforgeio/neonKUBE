@@ -29,27 +29,92 @@ using k8s;
 
 namespace Neon.Kube.Operator.Cache
 {
+    /// <summary>
+    /// Describes a resource cache.
+    /// </summary>
+    /// <typeparam name="TEntity">Specifies the entity type.</typeparam>
+    /// <typeparam name="TValue">Specifies the entity Kubernetes object type.</typeparam>
     internal interface IResourceCache<TEntity, TValue>
         where TValue : IKubernetesObject<V1ObjectMeta>
     {
-        TValue Get(string id);
-        bool Get(string id, out TValue result);
+        // $todo(marcusbooyah):
+        //
+        // Seems like Get(id) should throw a [KeyNotFoundExceptipon] or something
+        // when the resource is not present to be consistent with how Get() methods
+        // normally work.
+        //
+        // We have the TryGet() method to handle the resource missing case.
 
+        /// <summary>
+        /// Attempts to retrieve cached resource by ID.
+        /// </summary>
+        /// <param name="id">Specifies the resouce ID.</param>
+        /// <returns>The resource <typeparamref name="TValue"/> when present, <c>null</c> otherwise.</returns>
+        TValue Get(string id);
+
+        /// <summary>
+        /// Attempts to retrieve a cached resource by ID.
+        /// </summary>
+        /// <param name="id">Specifies the resource ID.</param>
+        /// <param name="result">Returns the the resource if found.</param>
+        /// <returns><c>true</c> when the resource exists and was return, <c>false</c> otherwise.</returns>
+        bool TryGet(string id, out TValue result);
+
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
+        /// <param name="resource"></param>
+        /// <param name="result"></param>
         void Compare(TValue resource, out ModifiedEventType result);
 
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
+        /// <param name="resource"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
         TValue Upsert(TValue resource, out ModifiedEventType result);
 
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
+        /// <param name="resource"></param>
         void Upsert(TValue resource);
+
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
+        /// <param name="resources"></param>
         void Upsert(IEnumerable<TValue> resources);
 
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
+        /// <param name="resource"></param>
         void Remove(TValue resource);
 
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         void Clear();
 
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
+        /// <param name="resource"></param>
+        /// <returns></returns>
         bool IsFinalizing(TValue resource);
 
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
+        /// <param name="resource"></param>
         void AddFinalizer(TValue resource);
 
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
+        /// <param name="resource"></param>
         void RemoveFinalizer(TValue resource);
     }
 }

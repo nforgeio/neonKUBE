@@ -28,6 +28,7 @@ using Microsoft.Extensions.Hosting;
 using k8s;
 using k8s.KubeConfigModels;
 using System.Text.Json.Serialization;
+using System.Diagnostics.Contracts;
 
 namespace Neon.Kube.Xunit.Operator
 {
@@ -36,23 +37,28 @@ namespace Neon.Kube.Xunit.Operator
     /// </summary>
     public class TestApiServerStartup
     {
-        
         /// <summary>
         /// Configures depdendency injection.
         /// </summary>
         /// <param name="services">The service collection.</param>
         public void ConfigureServices(IServiceCollection services)
         {
+            Covenant.Requires<ArgumentNullException>(services != null, nameof(services));
+
             services.AddControllers()
-                .AddJsonOptions(options => {
-                    options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
-                    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-                });
+                .AddJsonOptions(
+                    options => 
+                    {
+                        options.JsonSerializerOptions.DictionaryKeyPolicy  = JsonNamingPolicy.CamelCase;
+                        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                    });
+
             services.AddSingleton<ITestApiServer, TestApiServer>();
+
             var serializeOptions = new JsonSerializerOptions()
             {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                IncludeFields = true,
+                PropertyNamingPolicy        = JsonNamingPolicy.CamelCase,
+                IncludeFields               = true,
                 PropertyNameCaseInsensitive = true,
             };
 
@@ -62,20 +68,24 @@ namespace Neon.Kube.Xunit.Operator
         }
 
         /// <summary>
-        /// Configures the operator service controllers.
+        /// Configures operator service controllers.
         /// </summary>
         /// <param name="app">Specifies the application builder.</param>
-        /// <param name="cluster"></param>
-        public void Configure(IApplicationBuilder app, ITestApiServer cluster)
+        /// <param name="apiServer">Specifies the test API server.</param>
+        public void Configure(IApplicationBuilder app, ITestApiServer apiServer)
         {
+            Covenant.Requires<ArgumentNullException>(app != null, nameof(app));
+            Covenant.Requires<ArgumentNullException>(apiServer != null, nameof(apiServer));
+
             app.Use(next => async context =>
             {
                 // This is a no-op, but very convenient for setting a breakpoint to see per-request details.
                 await next(context);
             });
+
             app.UseRouting();
             app.UseEndpoints(endpoints => endpoints.MapControllers());
-            app.Run(cluster.UnhandledRequest);
+            app.Run(apiServer.UnhandledRequest);
         }
     }
 }

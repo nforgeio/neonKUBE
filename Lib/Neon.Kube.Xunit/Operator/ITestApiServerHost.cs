@@ -38,7 +38,7 @@ namespace Neon.Kube.Xunit.Operator
         /// <summary>
         /// The kubernetes client for interacting with the test API server.
         /// </summary>
-        IKubernetes Client { get; }
+        IKubernetes K8s { get; }
 
         /// <summary>
         /// The test API server.

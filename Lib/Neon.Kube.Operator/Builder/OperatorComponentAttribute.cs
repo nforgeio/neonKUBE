@@ -19,14 +19,24 @@ using System;
 
 namespace Neon.Kube.Operator.Builder
 {
+    /// <summary>
+    /// Used to tag a type implementing an operatgor component.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Interface)]
     internal class OperatorComponentAttribute : Attribute
     {
-        public OperatorComponentType ComponentType { get; }
-
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="componentType">Specifies the component type.</param>
         public OperatorComponentAttribute(OperatorComponentType componentType)
         {
             ComponentType = componentType;
         }
+
+        /// <summary>
+        /// Returns the component type.
+        /// </summary>
+        public OperatorComponentType ComponentType { get; }
     }
 }

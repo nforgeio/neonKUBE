@@ -29,44 +29,46 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-
 using Microsoft.Extensions.Logging;
 
 using Neon.Diagnostics;
+using Neon.Net;
 
 using k8s;
+using System.Diagnostics.Contracts;
+using Neon.Retry;
 
-namespace Neon.Kube
+namespace Neon.Kube.PortForward
 {
     /// <inheritdoc/>
     public class PortForwardManager : IPortForwardManager
     {
-        private readonly IKubernetes    k8s;
-        private readonly IStreamManager streamManager;
-        private readonly ILoggerFactory loggerFactory;
-        private readonly ILogger        logger;
+        private readonly IKubernetes                k8s;
+        private readonly IPortForwardStreamManager  streamManager;
+        private readonly ILoggerFactory             loggerFactory;
+        private readonly ILogger                    logger;
 
         private ConcurrentDictionary<string, Task> containerPortForwards;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="k8s"></param>
-        /// <param name="loggerFactory"></param>
+        /// <param name="k8s">Specifies the Kubernetes client.</param>
+        /// <param name="loggerFactory">Optionally specifies the a logger factory.</param>
         public PortForwardManager(
-            IKubernetes k8s,
-            ILoggerFactory loggerFactory = null)
+            IKubernetes     k8s,
+            ILoggerFactory  loggerFactory = null)
         {
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+
             this.k8s                   = k8s;
             this.loggerFactory         = loggerFactory;
             this.logger                = loggerFactory?.CreateLogger<PortForwardManager>();
-            this.streamManager         = new StreamManager(loggerFactory);
+            this.streamManager         = new PortForwardStreamManager(loggerFactory);
             this.containerPortForwards = new ConcurrentDictionary<string, Task>();
         }
 
-        /// <summary>
-        /// <see cref="IPortForwardManager.StartPodPortForward"/>
-        /// </summary>
+        /// <inheritdoc/>
         public void StartPodPortForward(
             string                           name,
             string                           @namespace,
@@ -75,68 +77,67 @@ namespace Neon.Kube
             Dictionary<string, List<string>> customHeaders     = null,
             CancellationToken                cancellationToken = default(CancellationToken))
         {
+            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort), nameof(localPort), $"Invalid TCP port: {localPort}");
+            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(remotePort), nameof(remotePort), $"Invalid TCP port: {remotePort}");
+
             var key = $"{@namespace}/{name}";
+
             if (containerPortForwards.ContainsKey(key))
             {
                 return;
             }
 
-            var task = Task.Run(async () =>
-            {
-                using (var portListener = new PortListener(localPort, loggerFactory, cancellationToken))
+            var forwardingTask = Task.Run(
+                async () =>
                 {
-                    try
+                    using (var portListener = new PortListener(localPort, loggerFactory, cancellationToken))
                     {
-                        logger?.LogDebugEx(() => $"Starting listener for forwarding {localPort}:{remotePort}");
-
-                        Func<Task<WebSocket>> createWebSocketAsync = async () =>
+                        try
                         {
-                            logger?.LogDebugEx(() => $"Creating socket forwarding {localPort}:{remotePort}");
+                            logger?.LogDebugEx(() => $"Starting listener for forwarding: {localPort} --> {remotePort}");
 
-                            int tries = 0;
-                            Exception exception = null;
-                            while (tries < 3)
+                            RemoteConnectionFactory remoteConnectionFactory = 
+                                async () =>
+                                {
+                                    logger?.LogDebugEx(() => $"Creating socket forwarding: {localPort} --> {remotePort}");
+
+                                    var retry = new LinearRetryPolicy(typeof(WebSocketException), maxAttempts: 3, retryInterval: TimeSpan.FromMilliseconds(100));
+
+                                    return await retry.InvokeAsync(
+                                        async () =>
+                                        {
+                                            return await k8s.WebSocketNamespacedPodPortForwardAsync(
+                                                name:                 name,
+                                                @namespace:           @namespace,
+                                                ports:                new int[] { remotePort },
+                                                webSocketSubProtocol: WebSocketProtocol.V4BinaryWebsocketProtocol,
+                                                customHeaders:        customHeaders);
+                                        });
+                                };
+
+                            while (!cancellationToken.IsCancellationRequested)
                             {
-                                try
-                                {
-                                    return await this.k8s.WebSocketNamespacedPodPortForwardAsync(
-                                        name:                 name,
-                                        @namespace:           @namespace,
-                                        ports:                new int[] { remotePort },
-                                        webSocketSubProtocol: WebSocketProtocol.V4BinaryWebsocketProtocol,
-                                        customHeaders:        customHeaders);
-                                }
-                                catch (WebSocketException e)
-                                {
-                                    exception = e;
-                                    await Task.Delay(100);
-                                }
+                                var localConnection = await portListener.Listener.AcceptTcpClientAsync();
+
+                                streamManager.Start(
+                                    localConnection:         localConnection,
+                                    remoteConnectionFactory: remoteConnectionFactory,
+                                    remotePort:              remotePort,
+                                    cancellationToken:       cancellationToken);
                             }
-                            throw exception;
-                        };
-
-                        while (!cancellationToken.IsCancellationRequested)
+                        }
+                        catch (ObjectDisposedException)
                         {
-                            var localConnection = await portListener.Listener.AcceptTcpClientAsync();
-
-                            streamManager.Start(
-                                localConnection:         localConnection,
-                                remoteConnectionFactory: createWebSocketAsync,
-                                remotePort:              remotePort,
-                                cancellationToken:       cancellationToken);
+                            logger.LogDebugEx(() => $"Port forwarding was canceled");
+                        }
+                        catch (Exception e)
+                        {
+                            logger?.LogErrorEx(e, () => $"Port forwarding {@namespace}/{name} {localPort}:{remotePort} failed.");
+                            throw;
                         }
                     }
-                    catch (ObjectDisposedException)
-                    {
-                        logger.LogDebugEx(() => $"Port forwarding was canceled");
-                    }
-                    catch (Exception e)
-                    {
-                        logger?.LogErrorEx(() => $"Port forwarding {@namespace}/{name} {localPort}:{remotePort} failed with exception : {e.Message}");
-                        throw;
-                    }
-                }
-            }, cancellationToken);
+                }, 
+                cancellationToken);
 
             cancellationToken.Register(
                 () => 
@@ -144,7 +145,7 @@ namespace Neon.Kube
                     containerPortForwards.Remove(key, out _);
                 });
 
-            containerPortForwards.TryAdd(key, task);
+            containerPortForwards.TryAdd(key, forwardingTask);
         }
     }
 }

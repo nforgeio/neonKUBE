@@ -48,6 +48,7 @@ namespace Neon.Kube.Operator.Cache
         private readonly ConcurrentDictionary<string, TValue>    finalizingCache;
         private readonly CompareLogic                            comparelogLogic;
         private readonly ResourceCacheMetrics<TEntity>           metrics;
+
         public ResourceCache(
             ResourceCacheMetrics<TEntity> metrics,
             ILoggerFactory loggerFactory = null) 
@@ -87,7 +88,7 @@ namespace Neon.Kube.Operator.Cache
             return result;
         }
 
-        public bool Get(string id, out TValue result)
+        public bool TryGet(string id, out TValue result)
         {
             result = cache.GetValueOrDefault(id);
 

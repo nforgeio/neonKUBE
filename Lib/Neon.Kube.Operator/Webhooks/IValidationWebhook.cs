@@ -27,6 +27,13 @@ using System.Text.Json.JsonDiffPatch.Diffs.Formatters;
 using System.Text.Json.JsonDiffPatch;
 using System.Reflection;
 
+using k8s;
+using k8s.Autorest;
+using k8s.KubeConfigModels;
+using k8s.Models;
+using Microsoft.AspNetCore;
+using Microsoft.Extensions.DependencyInjection;
+
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 
@@ -35,34 +42,17 @@ using Neon.Diagnostics;
 using Neon.Kube.Operator.Attributes;
 using Neon.Kube.Operator.Builder;
 
-using k8s;
-using k8s.Autorest;
-using k8s.KubeConfigModels;
-using k8s.Models;
-using Microsoft.AspNetCore;
-using Microsoft.Extensions.DependencyInjection;
-
 namespace Neon.Kube.Operator.Webhook
 {
     /// <summary>
-    /// Represents a Validating webhook.
+    /// Describes a Validating webhook.
     /// </summary>
-    /// <typeparam name="TEntity"></typeparam>
+    /// <typeparam name="TEntity">Specifies the entity type.</typeparam>
     [OperatorComponent(OperatorComponentType.ValidationWebhook)]
     [ValidatingWebhook]
     public interface IValidatingWebhook<TEntity> : IAdmissionWebhook<TEntity, ValidationResult>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
     {
-        /// <summary>
-        /// The namespace selector.
-        /// </summary>
-        public V1LabelSelector NamespaceSelector => null;
-
-        /// <summary>
-        /// The Object selector.
-        /// </summary>
-        public V1LabelSelector ObjectSelector => null;
-
         /// <summary>
         /// The webhook configuration.
         /// </summary>
@@ -70,7 +60,7 @@ namespace Neon.Kube.Operator.Webhook
             OperatorSettings                     operatorSettings,
             bool                                 useTunnel = false, 
             string                               tunnelUrl = null,
-            ILogger<IValidatingWebhook<TEntity>> logger = null)
+            ILogger<IValidatingWebhook<TEntity>> logger    = null)
         {
             var hook = this.GetType().GetCustomAttribute<WebhookAttribute>();
 
@@ -80,7 +70,7 @@ namespace Neon.Kube.Operator.Webhook
                 {
                     Name              = operatorSettings.Name,
                     NamespaceProperty = operatorSettings.DeployedNamespace,
-                    Path              = WebhookHelper.CreateEndpoint<TEntity>(this.GetType(), WebhookType.Mutate)
+                    Path              = WebhookHelper.CreateEndpoint<TEntity>(this.GetType(), WebhookType.Mutating)
                 }
             };
 
@@ -88,9 +78,9 @@ namespace Neon.Kube.Operator.Webhook
             {
                 logger?.LogDebugEx(() => $"Configuring Webhook {this.GetType().Name} to use Dev Tunnel.");
 
-                clientConfig.Service = null;
+                clientConfig.Service  = null;
                 clientConfig.CaBundle = null;
-                clientConfig.Url = tunnelUrl.TrimEnd('/') + WebhookHelper.CreateEndpoint<TEntity>(this.GetType(), WebhookType.Validate);
+                clientConfig.Url      = tunnelUrl.TrimEnd('/') + WebhookHelper.CreateEndpoint<TEntity>(this.GetType(), WebhookType.Validating);
             }
 
             var webhookConfig = new V1ValidatingWebhookConfiguration().Initialize();
@@ -101,6 +91,7 @@ namespace Neon.Kube.Operator.Webhook
                 logger?.LogDebugEx(() => $"Not using tunnel for Webhook {this.GetType().Name}.");
 
                 webhookConfig.Metadata.Annotations = webhookConfig.Metadata.EnsureAnnotations();
+
                 webhookConfig.Metadata.Annotations.Add("cert-manager.io/inject-ca-from", $"{operatorSettings.DeployedNamespace}/{operatorSettings.Name}");
             }
 
@@ -108,16 +99,16 @@ namespace Neon.Kube.Operator.Webhook
             {
                 new V1ValidatingWebhook()
                 {
-                    Name = hook.Name,
-                    Rules = new List<V1RuleWithOperations>(),
-                    ClientConfig = clientConfig,
+                    Name                    = hook.Name,
+                    Rules                   = new List<V1RuleWithOperations>(),
+                    ClientConfig            = clientConfig,
                     AdmissionReviewVersions = hook.AdmissionReviewVersions,
-                    FailurePolicy = hook.FailurePolicy,
-                    SideEffects = hook.SideEffects,
-                    TimeoutSeconds = hook.TimeoutSeconds,
-                    NamespaceSelector = NamespaceSelector,
-                    MatchPolicy = hook.MatchPolicy,
-                    ObjectSelector = ObjectSelector,
+                    FailurePolicy           = hook.FailurePolicy,
+                    SideEffects             = hook.SideEffects,
+                    TimeoutSeconds          = hook.TimeoutSeconds,
+                    NamespaceSelector       = NamespaceSelector,
+                    MatchPolicy             = hook.MatchPolicy,
+                    ObjectSelector          = ObjectSelector,
                 }
             };
 
@@ -128,17 +119,27 @@ namespace Neon.Kube.Operator.Webhook
                 webhookConfig.Webhooks.FirstOrDefault().Rules.Add(
                     new V1RuleWithOperations()
                     {
-                        ApiGroups = rule.ApiGroups,
+                        ApiGroups   = rule.ApiGroups,
                         ApiVersions = rule.ApiVersions,
-                        Operations = rule.Operations.ToList(),
-                        Resources = rule.Resources,
-                        Scope = rule.Scope
+                        Operations  = rule.Operations.ToList(),
+                        Resources   = rule.Resources,
+                        Scope       = rule.Scope
                     }
                 );
             }
 
             return webhookConfig;
         }
+
+        /// <summary>
+        /// The namespace selector.
+        /// </summary>
+        public V1LabelSelector NamespaceSelector => null;
+
+        /// <summary>
+        /// The Object selector.
+        /// </summary>
+        public V1LabelSelector ObjectSelector => null;
 
         /// <inheritdoc />
         string IAdmissionWebhook<TEntity, ValidationResult>.Endpoint
@@ -149,7 +150,7 @@ namespace Neon.Kube.Operator.Webhook
         /// <inheritdoc/>
         WebhookType IAdmissionWebhook<TEntity, ValidationResult>.WebhookType
         {
-            get => WebhookType.Validate;
+            get => WebhookType.Validating;
         }
 
         /// <inheritdoc />
@@ -157,27 +158,22 @@ namespace Neon.Kube.Operator.Webhook
             => AdmissionResult.NotImplemented<ValidationResult>();
 
         /// <inheritdoc />
-        ValidationResult IAdmissionWebhook<TEntity, ValidationResult>.Update(
-            TEntity oldEntity,
-            TEntity newEntity,
-            bool dryRun)
+        ValidationResult IAdmissionWebhook<TEntity, ValidationResult>.Update(TEntity oldEntity, TEntity newEntity, bool dryRun)
             => AdmissionResult.NotImplemented<ValidationResult>();
 
         /// <inheritdoc />
         ValidationResult IAdmissionWebhook<TEntity, ValidationResult>.Delete(TEntity oldEntity, bool dryRun)
             => AdmissionResult.NotImplemented<ValidationResult>();
 
-        AdmissionResponse IAdmissionWebhook<TEntity, ValidationResult>.TransformResult(
-            ValidationResult result,
-            AdmissionRequest<TEntity> request)
+        AdmissionResponse IAdmissionWebhook<TEntity, ValidationResult>.TransformResult(ValidationResult result, AdmissionRequest<TEntity> request)
         {
             var response = new AdmissionResponse
             {
                 Allowed = result.Valid,
-                Status = result.StatusMessage == null
-                    ? null
-                    : new AdmissionResponse.Reason { Code = result.StatusCode ?? 0, Message = result.StatusMessage, },
                 Warnings = result.Warnings.ToArray(),
+                Status   = result.StatusMessage == null
+                    ? null
+                    : new AdmissionResponse.Reason { Code = result.StatusCode ?? 0, Message = result.StatusMessage, }
             };
 
             return response;
@@ -194,10 +190,10 @@ namespace Neon.Kube.Operator.Webhook
             bool useDevTunnel      = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("VS_TUNNEL_URL"));
             string certificateName = operatorSettings.certManagerEnabled ? operatorSettings.Name : null;
             var webhookConfig      = WebhookConfiguration(
-                                            operatorSettings: operatorSettings,
-                                            useTunnel: NeonHelper.IsDevWorkstation,
-                                            tunnelUrl: Environment.GetEnvironmentVariable("VS_TUNNEL_URL"),
-                                            logger: logger);
+                operatorSettings: operatorSettings,
+                useTunnel:        NeonHelper.IsDevWorkstation,
+                tunnelUrl:        Environment.GetEnvironmentVariable("VS_TUNNEL_URL"),
+                logger:           logger);
 
             try
             {

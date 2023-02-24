@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ComponentRegister.cs
+// FILE:	    ComponentRegistration.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -35,24 +35,59 @@ using k8s;
 
 namespace Neon.Kube.Operator.Builder
 {
-    internal class ComponentRegister
+    /// <summary>
+    /// $todo(marcusbooyah): documentation
+    /// </summary>
+    internal class ComponentRegistration
     {
-        public HashSet<ControllerRegistration> ControllerRegistrations { get; set; }
-        public HashSet<EntityRegistration> EntityRegistrations { get; set; }
-        public HashSet<FinalizerRegistration> FinalizerRegistrations { get; set; }
-        public HashSet<MutatingWebhookRegistration> MutatingWebhookRegistrations { get; set; }
-        public HashSet<Type> ResourceManagerRegistrations { get; set; }
-        public HashSet<ValidatingWebhookRegistration> ValidatingWebhookRegistrations { get; set; }
-
-        public ComponentRegister()
+        /// <summary>
+        /// $todo(marcusbooyah): documentation
+        /// </summary>
+        public ComponentRegistration()
         {
-            ControllerRegistrations = new HashSet<ControllerRegistration>();
-            EntityRegistrations = new HashSet<EntityRegistration>();
-            FinalizerRegistrations = new HashSet<FinalizerRegistration>();
-            MutatingWebhookRegistrations = new HashSet<MutatingWebhookRegistration>();
-            ResourceManagerRegistrations = new HashSet<Type>();
+            ControllerRegistrations        = new HashSet<ControllerRegistration>();
+            EntityRegistrations            = new HashSet<EntityRegistration>();
+            FinalizerRegistrations         = new HashSet<FinalizerRegistration>();
+            MutatingWebhookRegistrations   = new HashSet<MutatingWebhookRegistration>();
+            ResourceManagerRegistrations   = new HashSet<Type>();
             ValidatingWebhookRegistrations = new HashSet<ValidatingWebhookRegistration>();
         }
+
+        /// <summary>
+        /// $todo(marcusbooyah): documentation
+        /// </summary>
+        public HashSet<ControllerRegistration> ControllerRegistrations { get; set; }
+
+        /// <summary>
+        /// $todo(marcusbooyah): documentation
+        /// </summary>
+        public HashSet<EntityRegistration> EntityRegistrations { get; set; }
+
+        /// <summary>
+        /// $todo(marcusbooyah): documentation
+        /// </summary>
+        public HashSet<FinalizerRegistration> FinalizerRegistrations { get; set; }
+
+        /// <summary>
+        /// $todo(marcusbooyah): documentation
+        /// </summary>
+        public HashSet<MutatingWebhookRegistration> MutatingWebhookRegistrations { get; set; }
+
+        /// <summary>
+        /// $todo(marcusbooyah): documentation
+        /// </summary>
+        public HashSet<Type> ResourceManagerRegistrations { get; set; }
+
+        /// <summary>
+        /// $todo(marcusbooyah): documentation
+        /// </summary>
+        public HashSet<ValidatingWebhookRegistration> ValidatingWebhookRegistrations { get; set; }
+
+        /// <summary>
+        /// $todo(marcusbooyah): documentation
+        /// </summary>
+        /// <typeparam name="TController"></typeparam>
+        /// <typeparam name="TEntity"></typeparam>
         public void RegisterController<TController, TEntity>()
             where TController : class, IResourceController<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
@@ -61,6 +96,11 @@ namespace Neon.Kube.Operator.Builder
 
             return;
         }
+
+        /// <summary>
+        /// $todo(marcusbooyah): documentation
+        /// </summary>
+        /// <typeparam name="TEntity"></typeparam>
         public void RegisterEntity<TEntity>()
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
@@ -68,6 +108,12 @@ namespace Neon.Kube.Operator.Builder
 
             return;
         }
+
+        /// <summary>
+        /// $todo(marcusbooyah): documentation
+        /// </summary>
+        /// <typeparam name="TFinalizer"></typeparam>
+        /// <typeparam name="TEntity"></typeparam>
         public void RegisterFinalizer<TFinalizer, TEntity>()
             where TFinalizer : class, IResourceFinalizer<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
@@ -76,6 +122,12 @@ namespace Neon.Kube.Operator.Builder
 
             return;
         }
+
+        /// <summary>
+        /// $todo(marcusbooyah): documentation
+        /// </summary>
+        /// <typeparam name="TMutator"></typeparam>
+        /// <typeparam name="TEntity"></typeparam>
         public void RegisterMutatingWebhook<TMutator, TEntity>()
             where TMutator : class, IMutatingWebhook<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
@@ -84,12 +136,23 @@ namespace Neon.Kube.Operator.Builder
 
             return;
         }
+
+        /// <summary>
+        /// $todo(marcusbooyah): documentation
+        /// </summary>
+        /// <typeparam name="TResourceManager"></typeparam>
         public void RegisterResourceManager<TResourceManager>()
         {
             ResourceManagerRegistrations.Add(typeof(TResourceManager));
 
             return;
         }
+
+        /// <summary>
+        /// $todo(marcusbooyah): documentation
+        /// </summary>
+        /// <typeparam name="TMutator"></typeparam>
+        /// <typeparam name="TEntity"></typeparam>
         public void RegisterValidatingWebhook<TMutator, TEntity>()
             where TMutator : class, IValidatingWebhook<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
@@ -100,10 +163,43 @@ namespace Neon.Kube.Operator.Builder
         }
     }
 
+    /// <summary>
+    /// $todo(marcusbooyah): documentation
+    /// </summary>
+    /// <param name="ControllerType"></param>
+    /// <param name="EntityType"></param>
     internal record ControllerRegistration(Type ControllerType, Type EntityType);
+
+    /// <summary>
+    /// $todo(marcusbooyah): documentation
+    /// </summary>
+    /// <param name="EntityType"></param>
     internal record EntityRegistration(Type EntityType);
+
+    /// <summary>
+    /// $todo(marcusbooyah): documentation
+    /// </summary>
+    /// <param name="FinalizerType"></param>
+    /// <param name="EntityType"></param>
     internal record FinalizerRegistration(Type FinalizerType, Type EntityType);
+
+    /// <summary>
+    /// $todo(marcusbooyah): documentation
+    /// </summary>
+    /// <param name="WebhookType"></param>
+    /// <param name="EntityType"></param>
     internal record MutatingWebhookRegistration(Type WebhookType, Type EntityType);
+
+    /// <summary>
+    /// $todo(marcusbooyah): documentation
+    /// </summary>
+    /// <param name="ResourceManagerType"></param>
     internal record ResourceManagerRegistration(Type ResourceManagerType);
+
+    /// <summary>
+    /// $todo(marcusbooyah): documentation
+    /// </summary>
+    /// <param name="WebhookType"></param>
+    /// <param name="EntityType"></param>
     internal record ValidatingWebhookRegistration(Type WebhookType, Type EntityType);
 }

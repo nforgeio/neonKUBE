@@ -74,7 +74,7 @@ namespace NeonClusterOperator
         public OperatorStartup(IConfiguration configuration, Service service)
         {
             this.Configuration = configuration;
-            this.Service = service;
+            this.Service       = service;
         }
 
         /// <summary>
@@ -97,8 +97,7 @@ namespace NeonClusterOperator
         /// <param name="app">Specifies the application builder.</param>
         public void Configure(IApplicationBuilder app)
         {
-            if (NeonHelper.IsDevWorkstation
-                || !string.IsNullOrEmpty(Service.GetEnvironmentVariable("DEBUG")))
+            if (NeonHelper.IsDevWorkstation || !string.IsNullOrEmpty(Service.GetEnvironmentVariable("DEBUG")))
             {
                 app.UseDeveloperExceptionPage();
             }

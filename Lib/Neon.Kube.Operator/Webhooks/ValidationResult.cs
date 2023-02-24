@@ -35,8 +35,8 @@ namespace Neon.Kube.Operator.Webhook
         /// <summary>
         /// Constructs a success response with optional warnings.
         /// </summary>
-        /// <param name="warnings"></param>
-        /// <returns></returns>
+        /// <param name="warnings">Specifies zero or more warning strings.</param>
+        /// <returns>The <see cref="ValidationResult"/>.</returns>
         public static ValidationResult Success(params string[] warnings)
         {
             return new ValidationResult()
@@ -50,12 +50,10 @@ namespace Neon.Kube.Operator.Webhook
         /// <summary>
         /// Constructs a fail result with optional status code and status message.
         /// </summary>
-        /// <param name="statusCode"></param>
-        /// <param name="statusMessage"></param>
-        /// <returns></returns>
-        public static ValidationResult Fail(
-            int? statusCode = null,
-            string statusMessage = null)
+        /// <param name="statusCode">Optionally specifies the HTTP status code.</param>
+        /// <param name="statusMessage">Optionally specifies the status message.</param>
+        /// <returns>The <see cref="ValidationResult"/>.</returns>
+        public static ValidationResult Fail(int? statusCode = null, string statusMessage = null)
         {
             return new ValidationResult()
             {

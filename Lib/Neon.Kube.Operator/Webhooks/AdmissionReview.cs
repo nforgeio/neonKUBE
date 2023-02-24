@@ -19,19 +19,36 @@ using k8s;
 
 namespace Neon.Kube.Operator.Webhook
 {
+    /// <summary>
+    /// $todo(marcusbooyah): Documentation
+    /// </summary>
+    /// <typeparam name="TEntity"></typeparam>
     internal sealed class AdmissionReview<TEntity> : IKubernetesObject
     {
-        public AdmissionReview()
-        {
-        }
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
+        /// <param name="response"></param>
         public AdmissionReview(AdmissionResponse response) => Response = response;
 
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         public string ApiVersion { get; set; } = "admission.k8s.io/v1";
 
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         public string Kind { get; set; } = "AdmissionReview";
 
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         public AdmissionRequest<TEntity> Request { get; set; }
 
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         public AdmissionResponse Response { get; set; }
     }
 }

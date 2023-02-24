@@ -30,10 +30,16 @@ namespace Neon.Kube.Operator.ResourceManager
     /// </summary>
     public class ErrorPolicyResult
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="delay">Optionally override the default requruing delay.</param>
+        /// <param name="eventType">Optionally specfies the event type (defaults to <see cref="WatchEventType.Modified"/>.</param>
+        /// <param name="requeue">Optionally disable requeuing (defaults to <c>true</c>).</param>
         internal ErrorPolicyResult(
-            TimeSpan? delay = null,
-            WatchEventType eventType = WatchEventType.Modified,
-            bool requeue = true)
+            TimeSpan?       delay     = null,
+            WatchEventType  eventType = WatchEventType.Modified,
+            bool            requeue   = true)
         {
             RequeueDelay = delay;
             EventType    = eventType;

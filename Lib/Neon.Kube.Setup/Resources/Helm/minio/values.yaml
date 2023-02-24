@@ -5,7 +5,7 @@ operator:
   ## instead of clusterDomain and nsToWatch.
   # clusterDomain: "cluster.local"
   # nsToWatch: ""
-  ## Setup environment variables for the Operator
+  ## Setup environment variables for the operator
   # env:
   #   - name: MINIO_OPERATOR_TLS_ENABLE
   #     value: "off"

@@ -93,8 +93,8 @@ namespace NeonClusterOperator
                        .ConfigureOperator(configure =>
                        {
                            configure.AssemblyScanningEnabled = true;
-                           configure.Name = Service.Name;
-                           configure.DeployedNamespace = KubeNamespace.NeonSystem;
+                           configure.Name                    = Service.Name;
+                           configure.DeployedNamespace       = KubeNamespace.NeonSystem;
                        })
                        .ConfigureNeonKube()
                        .AddSingleton<Service>(Service)

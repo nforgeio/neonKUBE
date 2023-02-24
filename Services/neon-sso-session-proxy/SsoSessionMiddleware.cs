@@ -149,8 +149,8 @@ namespace NeonSsoSessionProxy
         /// <summary>
         /// Adds <see cref="SsoSessionMiddleware"/> to the ASP.NET middleware.
         /// </summary>
-        /// <param name="builder"></param>
-        /// <returns></returns>
+        /// <param name="builder">Specifies the application builder.</param>
+        /// <returns>The <see cref="IApplicationBuilder"/>.</returns>
         public static IApplicationBuilder UseSsoSessionMiddleware(this IApplicationBuilder builder)
         {
             return builder.UseMiddleware<SsoSessionMiddleware>();

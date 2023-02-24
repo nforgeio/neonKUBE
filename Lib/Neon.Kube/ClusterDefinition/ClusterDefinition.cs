@@ -188,7 +188,7 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// Populates the <see cref="NodeDefinition.Name"/> properties from its dictionary name.
         /// </summary>
-        /// <param name="clusterDefinition"></param>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         private static void PopulateNodeNames(ClusterDefinition clusterDefinition)
         {
             foreach (var item in clusterDefinition.NodeDefinitions)

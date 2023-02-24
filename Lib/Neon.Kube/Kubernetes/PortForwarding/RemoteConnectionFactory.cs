@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IStreamManager.cs
+// FILE:	    RemoteConnectionFactory.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -16,20 +16,28 @@
 // limitations under the License.
 
 using System;
-using System.Net;
+using System.Buffers.Binary;
+using System.Buffers;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
+using System.IO;
+using System.Linq;
 using System.Net.Sockets;
 using System.Net.WebSockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Neon.Kube
+using Microsoft.Extensions.Logging;
+
+using Neon.Net;
+
+namespace Neon.Kube.PortForward
 {
-    internal interface IStreamManager
-    {
-        void Start(
-            TcpClient             localConnection, 
-            Func<Task<WebSocket>> remoteConnectionFactory, 
-            int                   remotePort, 
-            CancellationToken     cancellationToken);
-    }
+    /// <summary>
+    /// Delegate that creates the <see cref="WebSocket"/> for a <see cref="PortForwardStream"/>.
+    /// </summary>
+    /// <returns>The <see cref="WebSocket"/>.</returns>
+    internal delegate Task<WebSocket> RemoteConnectionFactory();
 }

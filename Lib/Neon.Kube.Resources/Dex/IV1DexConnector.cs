@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 
@@ -81,64 +82,67 @@ namespace Neon.Kube.Resources.Dex
     /// </summary>
     public class DexConnectorConverter : JsonConverter
     {
-        /// <summary>
-        /// Returns whether the connectio can be converted.
-        /// </summary>
-        /// <param name="objectType"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public override bool CanConvert(Type objectType)
         {
+            Covenant.Requires<ArgumentNullException>(objectType != null, nameof(objectType));
+
             return objectType == typeof(IV1DexConnector) || objectType.Implements<IV1DexConnector>();
         }
 
         /// <summary>
-        /// Reads the json.
+        /// Returns the Dex connector from JSON read from a reader.
         /// </summary>
-        /// <param name="reader"></param>
-        /// <param name="objectType"></param>
-        /// <param name="existingValue"></param>
-        /// <param name="serializer"></param>
-        /// <returns></returns>
-        public override object ReadJson(JsonReader reader,
-               Type             objectType, 
-               object           existingValue,
-               JsonSerializer   serializer)
+        /// <param name="reader">Specifies the source JSON reader.</param>
+        /// <param name="objectType">Specifies the object type (ignored).</param>
+        /// <param name="existingValue">Specifies the existing value (ignored).</param>
+        /// <param name="serializer">Specifies the JSON serializer.</param>
+        /// <returns>The Dex connector.</returns>
+        public override object ReadJson(
+            JsonReader       reader,
+            Type             objectType, 
+            object           existingValue,
+            JsonSerializer   serializer)
         {
-            var jsonObject = JObject.Load(reader);
-            var connector = default(IV1DexConnector);
+            Covenant.Requires<ArgumentNullException>(reader != null, nameof(reader));
+            Covenant.Requires<ArgumentNullException>(serializer != null, nameof(serializer));
 
-            var value = jsonObject.Value<string>("type");
-            var type  = NeonHelper.ParseEnum<DexConnectorType>(value);
+            var jsonObject = JObject.Load(reader);
+            var connector  = default(IV1DexConnector);
+            var value      = jsonObject.Value<string>("type");
+            var type       = NeonHelper.ParseEnum<DexConnectorType>(value);
 
             switch (type)
             {
                 case DexConnectorType.Ldap:
 
                     connector = new DexConnector<DexLdapConfig>();
-
                     break;
 
                 case DexConnectorType.Oidc:
 
                     connector = new DexConnector<DexOidcConfig>();
-
                     break;
             }
             
             serializer.Populate(jsonObject.CreateReader(), connector);
+
             return connector;
         }
 
         /// <summary>
-        /// Writes json.
+        /// Writes the connection information to a JSON writer.
         /// </summary>
-        /// <param name="writer"></param>
-        /// <param name="value"></param>
-        /// <param name="serializer"></param>
+        /// <param name="writer">Specifies the target JSON writer.</param>
+        /// <param name="value">Specifies the  connection object.</param>
+        /// <param name="serializer">Specifies the JSON serializer.</param>
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
+            Covenant.Requires<ArgumentNullException>(writer != null, nameof(writer));
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
+            Covenant.Requires<ArgumentNullException>(serializer != null, nameof(serializer));
+            
             serializer.Serialize(writer, value);
-
         }
     }
 }

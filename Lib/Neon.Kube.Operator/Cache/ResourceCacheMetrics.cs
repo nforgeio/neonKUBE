@@ -39,15 +39,16 @@ using Prometheus;
 
 namespace Neon.Kube.Operator.Cache
 {
+    /// <summary>
+    /// Used for maintaining metrics for cached CRDs and resources.
+    /// </summary>
+    /// <typeparam name="TEntity"></typeparam>
     internal class ResourceCacheMetrics<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         private const string prefix = "operator_cache";
 
         private static readonly string[] LabelNames = { "operator", "kind", "group", "version" };
-        public Counter.Child ItemsTotal { get; private set; }
-        public Gauge.Child ItemsCount { get; private set; }
-        public Counter.Child HitsTotal { get; private set; }
 
         public ResourceCacheMetrics(OperatorSettings operatorSettings) 
         {
@@ -74,7 +75,21 @@ namespace Neon.Kube.Operator.Cache
                     help: "The total number of cache hits",
                     labelNames: LabelNames)
                 .WithLabels(labelValues);
-
         }
+
+        /// <summary>
+        /// Counts the number of items that have ever been cached.
+        /// </summary>
+        public Counter.Child ItemsTotal { get; private set; }
+
+        /// <summary>
+        /// Counts the number of items that are currently cached.
+        /// </summary>
+        public Gauge.Child ItemsCount { get; private set; }
+
+        /// <summary>
+        /// Counts the number of times items have been returned from a cache.
+        /// </summary>
+        public Counter.Child HitsTotal { get; private set; }
     }
 }

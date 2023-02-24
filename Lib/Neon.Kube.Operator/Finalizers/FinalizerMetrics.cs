@@ -41,6 +41,10 @@ using System.Diagnostics.Metrics;
 
 namespace Neon.Kube.Operator.Finalizer
 {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="TEntity"></typeparam>
     internal class FinalizerMetrics<TEntity> : IFinalizerMetrics<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {

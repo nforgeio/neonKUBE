@@ -52,6 +52,31 @@ namespace Neon.Kube.Operator
     /// </summary>
     public class KubernetesOperatorHost : IKubernetesOperatorHost
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <inheritdoc/>
+        public static IKubernetesOperatorHostBuilder CreateDefaultBuilder(string[] args = null)
+        {
+            return new KubernetesOperatorHostBuilder(args);
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
+        private string[]    args;
+        private ILogger     logger;
+        private IKubernetes k8s;
+
+        /// <summary>
+        /// Consructor.
+        /// </summary>
+        /// <param name="args">The operator's command line arguments.</param>
+        public KubernetesOperatorHost(string[] args = null)
+        {
+            this.args = args;
+        }
+
         /// <inheritdoc/>
         public IWebHost Host { get; set; }
 
@@ -70,27 +95,6 @@ namespace Neon.Kube.Operator
         /// <inheritdoc/>
         public X509Certificate2 Certificate { get; set; }
 
-        private string[] args { get; set; }
-        private ILogger logger;
-        private IKubernetes k8s;
-
-        /// <summary>
-        /// Consructor.
-        /// </summary>
-        /// <param name="args"></param>
-        public KubernetesOperatorHost(string[] args = null)
-        {
-            this.args = args;
-        }
-
-
-        /// <inheritdoc/>
-        public static IKubernetesOperatorHostBuilder CreateDefaultBuilder(string[] args = null)
-        {
-            var builder = new KubernetesOperatorHostBuilder(args);
-            return builder;
-        }
-
         /// <inheritdoc/>
         public void Run()
         {
@@ -101,15 +105,13 @@ namespace Neon.Kube.Operator
 
             if (args == null || args?.Count() == 0)
             {
-                Host = HostBuilder.Build();
+                Host   = HostBuilder.Build();
                 logger = Host.Services.GetService<ILoggerFactory>()?.CreateLogger<KubernetesOperatorHost>();
 
-                if (NeonHelper.IsDevWorkstation ||
-                    Debugger.IsAttached)
+                if (NeonHelper.IsDevWorkstation || Debugger.IsAttached)
                 {
-                    k8s = new Kubernetes(
-                        KubernetesClientConfiguration.BuildDefaultConfig(),
-                        new KubernetesRetryHandler());
+                    k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig(), new KubernetesRetryHandler());
+
                     ConfigureRbacAsync().RunSynchronously();
                 }
 
@@ -133,23 +135,27 @@ namespace Neon.Kube.Operator
 
             Host = HostBuilder.Build();
 
-            // Build the commands from what's registered in the DI container
+            // Build the commands from what's registered in the DI container.
+
             var rootCommand = new RootCommand();
+
             foreach (Command command in Host.Services.GetServices<GenerateCommand>())
             {
                 rootCommand.AddCommand(command);
             }
 
             var generateCommand = Host.Services.GetService<GenerateCommand>();
+
             foreach (Command command in Host.Services.GetServices<GenerateCommandBase>())
             {
                 generateCommand.AddCommand(command);
             }
 
             var commandLineBuilder = new CommandLineBuilder(rootCommand);
-            Parser parser = commandLineBuilder.UseDefaults().Build();
+            var parser             = commandLineBuilder.UseDefaults().Build();
 
-            // Invoke the command line parser which then invokes the respective command handlers
+            // Invoke the command line parser which then invokes the respective command handlers.
+
             parser.Invoke(args);
         }
 
@@ -168,12 +174,10 @@ namespace Neon.Kube.Operator
                 Host   = HostBuilder.Build();
                 logger = Host.Services.GetService<ILoggerFactory>()?.CreateLogger<KubernetesOperatorHost>();
 
-                if (NeonHelper.IsDevWorkstation ||
-                    Debugger.IsAttached)
+                if (NeonHelper.IsDevWorkstation || Debugger.IsAttached)
                 {
-                    k8s = new Kubernetes(
-                        KubernetesClientConfiguration.BuildDefaultConfig(),
-                        new KubernetesRetryHandler());
+                    k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig(),new KubernetesRetryHandler());
+
                     await ConfigureRbacAsync();
                 }
 
@@ -197,23 +201,27 @@ namespace Neon.Kube.Operator
 
             Host = HostBuilder.Build();
 
-            // Build the commands from what's registered in the DI container
+            // Build the commands from what's registered in the DI container.
+
             var rootCommand = new RootCommand();
+
             foreach (Command command in Host.Services.GetServices<GenerateCommand>())
             {
                 rootCommand.AddCommand(command);
             }
 
             var generateCommand = Host.Services.GetService<GenerateCommand>();
+
             foreach (Command command in Host.Services.GetServices<GenerateCommandBase>())
             {
                 generateCommand.AddCommand(command);
             }
 
             var commandLineBuilder = new CommandLineBuilder(rootCommand);
-            Parser parser = commandLineBuilder.UseDefaults().Build();
+            var parser             = commandLineBuilder.UseDefaults().Build();
 
-            // Invoke the command line parser which then invokes the respective command handlers
+            // Invoke the command line parser which then invokes the respective command handlers.
+
             await parser.InvokeAsync(args);
 
             return;
@@ -235,24 +243,24 @@ namespace Neon.Kube.Operator
                 {
                     Metadata = new V1ObjectMeta()
                     {
-                        Name = OperatorSettings.Name,
+                        Name              = OperatorSettings.Name,
                         NamespaceProperty = OperatorSettings.DeployedNamespace,
-                        Labels = new Dictionary<string, string>()
-                    {
-                        { NeonLabel.ManagedBy, OperatorSettings.Name }
-                    }
+                        Labels            = new Dictionary<string, string>()
+                        {
+                            { NeonLabel.ManagedBy, OperatorSettings.Name }
+                        }
                     },
                     Spec = new V1CertificateSpec()
                     {
                         DnsNames = new List<string>()
-                    {
-                        $"{OperatorSettings.Name}",
-                        $"{OperatorSettings.Name}.{OperatorSettings.DeployedNamespace}",
-                        $"{OperatorSettings.Name}.{OperatorSettings.DeployedNamespace}.svc",
-                        $"{OperatorSettings.Name}.{OperatorSettings.DeployedNamespace}.svc.cluster.local",
-                    },
-                        Duration = $"{CertManagerOptions.CertificateDuration.TotalHours}h{CertManagerOptions.CertificateDuration.Minutes}m{CertManagerOptions.CertificateDuration.Seconds}s",
-                        IssuerRef = CertManagerOptions.IssuerRef,
+                        {
+                            $"{OperatorSettings.Name}",
+                            $"{OperatorSettings.Name}.{OperatorSettings.DeployedNamespace}",
+                            $"{OperatorSettings.Name}.{OperatorSettings.DeployedNamespace}.svc",
+                            $"{OperatorSettings.Name}.{OperatorSettings.DeployedNamespace}.svc.cluster.local",
+                        },
+                        Duration   = $"{CertManagerOptions.CertificateDuration.TotalHours}h{CertManagerOptions.CertificateDuration.Minutes}m{CertManagerOptions.CertificateDuration.Seconds}s",
+                        IssuerRef  = CertManagerOptions.IssuerRef,
                         SecretName = $"{OperatorSettings.Name}-webhook-tls"
                     }
                 };
@@ -294,7 +302,7 @@ namespace Neon.Kube.Operator
 
                         return false;
                     },
-                    timeout: TimeSpan.FromSeconds(300),
+                    timeout:      TimeSpan.FromSeconds(300),
                     pollInterval: TimeSpan.FromMilliseconds(500));
             }
         }
@@ -302,6 +310,7 @@ namespace Neon.Kube.Operator
         private async Task ConfigureRbacAsync()
         {
             var rbac = new RbacBuilder(Host.Services, @namespace: OperatorSettings.DeployedNamespace);
+
             rbac.Build();
 
             foreach (var sa in rbac.ServiceAccounts)
@@ -314,6 +323,7 @@ namespace Neon.Kube.Operator
                 {
                     await k8s.CoreV1.DeleteNamespacedServiceAccountAsync(sa.Name(), sa.Namespace());
                 }
+
                 await k8s.CoreV1.CreateNamespacedServiceAccountAsync(sa, sa.Namespace());
             }
 

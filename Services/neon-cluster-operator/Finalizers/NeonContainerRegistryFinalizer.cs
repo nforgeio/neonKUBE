@@ -31,6 +31,7 @@ using Neon.Tasks;
 
 using k8s.Models;
 using Neon.Kube.Operator.Finalizer;
+using System.Diagnostics.Contracts;
 
 namespace NeonClusterOperator
 {
@@ -44,10 +45,12 @@ namespace NeonClusterOperator
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="logger"></param>
+        /// <param name="logger">Specifies the logger.</param>
         public NeonContainerRegistryFinalizer(
             ILogger<NeonContainerRegistryFinalizer> logger)
         { 
+            Covenant.Requires<ArgumentNullException>(logger != null, nameof(logger));
+
             this.logger = logger;
         }
 

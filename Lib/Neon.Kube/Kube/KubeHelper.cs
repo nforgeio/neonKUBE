@@ -655,7 +655,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path the folder containing kubernetes related tools, creating the folder 
+        /// Returns the path the folder containing Kubernetes related tools, creating the folder 
         /// if it doesn't already exist.
         /// </summary>
         /// <returns>The folder path.</returns>
@@ -2707,7 +2707,7 @@ TCPKeepAlive yes
         /// Returns the path to the a tool binary to be used by <b>neon-cli</b>.
         /// </summary>
         /// <param name="installFolder">Path to the tool installation folder.</param>
-        /// <param name="toolName">The requested tool name, one of: <b>helm</b> or <b>kubectl</b></param>
+        /// <param name="toolName">The requested tool name, one of: <b>helm</b> or <b>kubectl</b>.</param>
         /// <param name="toolChecker">Callback taking the the tool path as a parameter and returning <c>true</c> when the tool version matches what's required.</param>
         /// <param name="userToolsFolder">
         /// Optionally specifies that instead of downloading missing tool binaries to <paramref name="installFolder"/>,
@@ -3247,9 +3247,9 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Gets the current namespace fromwithin a pod.
+        /// Gets the current namespace from within a pod.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The current namespacee.</returns>
         public static async Task<string> GetCurrentNamespaceAsync()
         {
             if (NeonHelper.IsDevWorkstation)

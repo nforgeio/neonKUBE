@@ -38,7 +38,7 @@ namespace Neon.Kube.Resources
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="scope"></param>
+        /// <param name="scope">Specifies the entity scope, one of the <see cref="EntityScope"/> values.</param>
         public EntityScopeAttribute(EntityScope scope = EntityScope.Namespaced)
         {
             Scope = scope;

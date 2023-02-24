@@ -165,6 +165,20 @@ namespace Neon.Kube.Operator.ResourceManager
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         where TController : IResourceController<TEntity>
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static ResourceManager()
+        {
+            kubernetesTypes = Assembly.GetAssembly(typeof(V1Pod)).DefinedTypes.Where(t => t.GetCustomAttribute<KubernetesEntityAttribute>() != null).Select(t => t.GetKubernetesCrdName());
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         private static IEnumerable<string>                               kubernetesTypes;
         private ResourceManagerOptions                                   options;
         private OperatorSettings                                         operatorSettings;
@@ -194,11 +208,6 @@ namespace Neon.Kube.Operator.ResourceManager
         private CancellationTokenSource                                  watcherTcs;
         private EventQueue<TEntity, TController>                         eventQueue;
 
-        static ResourceManager()
-        {
-            kubernetesTypes = Assembly.GetAssembly(typeof(V1Pod)).DefinedTypes.Where(t => t.GetCustomAttribute<KubernetesEntityAttribute>() != null).Select(t => t.GetKubernetesCrdName());
-        }
-
         /// <summary>
         /// Default constructor.
         /// </summary>
@@ -212,14 +221,15 @@ namespace Neon.Kube.Operator.ResourceManager
         /// the <b>LEADER ELECTION SECTION</b> in the <see cref="ResourceManager{TResource, TController}"/>
         /// remarks for more information.
         /// </param>
-        /// <param name="leaderElectionDisabled"></param>
-        /// <param name="serviceProvider"></param>
+        /// <param name="leaderElectionDisabled">Optionally specifies the leader election should be disabled.</param>
+        /// <param name="serviceProvider">Specifies the depedency injection service provider.</param>
         public ResourceManager(
             IServiceProvider        serviceProvider,
             ResourceManagerOptions  options                = null,
             LeaderElectionConfig    leaderConfig           = null,
             bool                    leaderElectionDisabled = false)
         {
+            Covenant.Requires<ArgumentNullException>(serviceProvider != null, nameof(ServiceProvider));
             Covenant.Requires<ArgumentException>(options.WatchNamespace == null || options.WatchNamespace != string.Empty, nameof(options.WatchNamespace));
             Covenant.Requires<ArgumentException>(!(leaderConfig != null && leaderElectionDisabled == true), nameof(leaderElectionDisabled));
             
@@ -299,7 +309,7 @@ namespace Neon.Kube.Operator.ResourceManager
                     leaderConfig,
                     onStartedLeading: OnPromotion,
                     onStoppedLeading: OnDemotion,
-                    onNewLeader: OnNewLeader);
+                    onNewLeader:      OnNewLeader);
 
                 leaderTask = leaderElector.RunAsync();
             }
@@ -365,19 +375,23 @@ namespace Neon.Kube.Operator.ResourceManager
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         private async Task EnsurePermissionsAsync()
         {
             await SyncContext.Clear;
 
             using var activity = TraceContext.ActivitySource?.StartActivity();
 
-            HttpOperationResponse<object> resp;
+            HttpOperationResponse<object> response;
 
             try
             {
                 if (resourceNamespaces == null)
                 {
-                    resp = await k8s.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync<TEntity>(
+                    response = await k8s.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync<TEntity>(
                         allowWatchBookmarks: true,
                         watch: true);
                 }
@@ -385,10 +399,10 @@ namespace Neon.Kube.Operator.ResourceManager
                 {
                     foreach (var @namespace in resourceNamespaces)
                     {
-                        resp = await k8s.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync<TEntity>(
-                        @namespace,
-                        allowWatchBookmarks: true,
-                        watch: true);
+                        response = await k8s.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync<TEntity>(
+                            @namespace,
+                            allowWatchBookmarks: true,
+                            watch:               true);
                     }
                 }
             }
@@ -397,7 +411,6 @@ namespace Neon.Kube.Operator.ResourceManager
                 if (e.Response.StatusCode == HttpStatusCode.Forbidden)
                 {
                     logger?.LogErrorEx(() => $"Cannot watch type {typeof(TEntity)}, please check RBAC rules for the controller.");
-
                     throw;
                 }
             }
@@ -408,6 +421,11 @@ namespace Neon.Kube.Operator.ResourceManager
             }
         }
 
+        /// <summary>
+        /// Starts the CRD watchers.
+        /// </summary>
+        /// <param name="cancellationToken">Specifies the cancellation token.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task StartCrdWatchersAsync(CancellationToken cancellationToken)
         {
             await SyncContext.Clear;
@@ -422,16 +440,17 @@ namespace Neon.Kube.Operator.ResourceManager
                 return;
             }
 
-            _ = k8s.WatchAsync<V1CustomResourceDefinition>(async (@event) =>
-            {
-                await SyncContext.Clear;
+            _ = k8s.WatchAsync<V1CustomResourceDefinition>(
+                async (@event) =>
+                {
+                    await SyncContext.Clear;
 
-                crdCache.Upsert(@event.Value);
+                    crdCache.Upsert(@event.Value);
 
-                logger?.LogInformationEx(() => $"Updated {typeof(TEntity)} CRD.");
-            },
-            fieldSelector: $"metadata.name={crdName}",
-            cancellationToken: cancellationToken);
+                    logger?.LogInformationEx(() => $"Updated {typeof(TEntity)} CRD.");
+                },
+                fieldSelector:     $"metadata.name={crdName}",
+                cancellationToken: cancellationToken);
 
             crdCache.Upsert(await k8s.ApiextensionsV1.ReadCustomResourceDefinitionAsync(crdName));
 
@@ -446,10 +465,9 @@ namespace Neon.Kube.Operator.ResourceManager
                         await SyncContext.Clear;
 
                         crdCache.Upsert(@event.Value);
-
                         logger?.LogInformationEx(() => $"Updated {dependent.GetEntityType()} CRD.");
                     },
-                    fieldSelector: $"metadata.name={crdName}",
+                    fieldSelector:     $"metadata.name={crdName}",
                     cancellationToken: cancellationToken);
 
                     crdCache.Upsert(await k8s.ApiextensionsV1.ReadCustomResourceDefinitionAsync(crdName));
@@ -518,11 +536,13 @@ namespace Neon.Kube.Operator.ResourceManager
                         // Stop the IDLE loop.
 
                         stopIdleLoop = true;
+
                         await idleLoopTask;
 
                         // Stop the watcher.
 
                         watcherTcs.Cancel();
+
                         await watcherTask;
 
                         // Inform the controller.
@@ -540,7 +560,7 @@ namespace Neon.Kube.Operator.ResourceManager
 
                 stopIdleLoop = false;
                 idleLoopTask = null;
-                watcherTask = null;
+                watcherTask  = null;
             }
         }
 
@@ -568,6 +588,10 @@ namespace Neon.Kube.Operator.ResourceManager
                 }).Wait();
         }
 
+        /// <summary>
+        /// Creates or updates CRDs for the controller.
+        /// </summary>
+        /// <returns></returns>
         private async Task CreateOrReplaceCustomResourceDefinitionAsync()
         {
             await SyncContext.Clear;
@@ -576,18 +600,16 @@ namespace Neon.Kube.Operator.ResourceManager
 
             try
             {
-                var generator = serviceProvider.GetRequiredService<CustomResourceGenerator>();
-
-                var crd = await generator.GenerateCustomResourceDefinitionAsync(typeof(TEntity));
-
-                var existingList = await k8s.ApiextensionsV1.ListCustomResourceDefinitionAsync(
-                    fieldSelector: $"metadata.name={crd.Name()}");
+                var generator    = serviceProvider.GetRequiredService<CustomResourceGenerator>();
+                var crd          = await generator.GenerateCustomResourceDefinitionAsync(typeof(TEntity));
+                var existingList = await k8s.ApiextensionsV1.ListCustomResourceDefinitionAsync(fieldSelector: $"metadata.name={crd.Name()}");
 
                 var existingCustomResourceDefinition = existingList?.Items?.SingleOrDefault();
 
                 if (existingCustomResourceDefinition != null)
                 {
                     crd.Metadata.ResourceVersion = existingCustomResourceDefinition.ResourceVersion();
+
                     await k8s.ApiextensionsV1.ReplaceCustomResourceDefinitionAsync(crd, crd.Name());
                 }
                 else
@@ -650,31 +672,31 @@ namespace Neon.Kube.Operator.ResourceManager
                             // operator's controller or from any members above called by the controller.
 
                             await mutex.ExecuteActionAsync(
-                            async () =>
-                            {
-                                try
+                                async () =>
                                 {
-                                    using (var scope = serviceProvider.CreateScope())
+                                    try
                                     {
-                                        using (metrics.IdleTimeSeconds.NewTimer())
+                                        using (var scope = serviceProvider.CreateScope())
                                         {
-                                            await CreateController(scope.ServiceProvider).IdleAsync();
+                                            using (metrics.IdleTimeSeconds.NewTimer())
+                                            {
+                                                await CreateController(scope.ServiceProvider).IdleAsync();
+                                            }
                                         }
                                     }
-                                }
-                                catch (OperationCanceledException)
-                                {
-                                    // Exit the loop when the [mutex] is disposed which happens
-                                    // when the resource manager is disposed.
+                                    catch (OperationCanceledException)
+                                    {
+                                        // Exit the loop when the [mutex] is disposed which happens
+                                        // when the resource manager is disposed.
 
-                                    return;
-                                }
-                                catch (Exception e)
-                                {
-                                    metrics.IdleErrorsTotal?.Inc();
-                                    logger?.LogErrorEx(e);
-                                }
-                            });
+                                        return;
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        metrics.IdleErrorsTotal?.Inc();
+                                        logger?.LogErrorEx(e);
+                                    }
+                                });
                         }
                     }
 
@@ -687,7 +709,7 @@ namespace Neon.Kube.Operator.ResourceManager
         /// Temporarily implements our own resource watcher.
         /// </summary>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to stop the watcher when the operator is demoted.</param>
-        /// <returns></returns>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task WatchAsync(CancellationToken cancellationToken)
         {
             await SyncContext.Clear;
@@ -702,8 +724,8 @@ namespace Neon.Kube.Operator.ResourceManager
             // JSON, with these keyed by resource name.  Note that the resource
             // entities might not have a [Status] property.
 
-            var entityType      = typeof(TEntity);
-            var statusGetter    = entityType.GetProperty("Status")?.GetMethod;
+            var entityType   = typeof(TEntity);
+            var statusGetter = entityType.GetProperty("Status")?.GetMethod;
             
             //-----------------------------------------------------------------
             // Our watcher handler action.
@@ -715,11 +737,10 @@ namespace Neon.Kube.Operator.ResourceManager
 
                     using (var activity = Activity.Current)
                     {
-                        ResourceControllerResult result = null;
-                        ModifiedEventType modifiedEventType = ModifiedEventType.Other;
-
-                        var resource = @event.Value;
-                        var resourceName = resource.Metadata.Name;
+                        var result            = (ResourceControllerResult)null;
+                        var modifiedEventType = ModifiedEventType.Other;
+                        var resource          = @event.Value;
+                        var resourceName      = resource.Metadata.Name;
 
                         using (await lockProvider.LockAsync(@event.Value.Uid(), cancellationToken).ConfigureAwait(false))
                         {
@@ -776,7 +797,7 @@ namespace Neon.Kube.Operator.ResourceManager
 
                                                     await eventQueue.RequeueAsync(
                                                         @event, 
-                                                        delay: errorPolicyResult.RequeueDelay, 
+                                                        delay:          errorPolicyResult.RequeueDelay, 
                                                         watchEventType: errorPolicyResult.EventType);
 
                                                     return;
@@ -824,9 +845,7 @@ namespace Neon.Kube.Operator.ResourceManager
                                                     catch (Exception e)
                                                     {
                                                         metrics.ReconcileErrorsTotal?.Inc();
-                                                        logger?.LogErrorEx(e);
-
-                                                        logger?.LogErrorEx(() => $"Event type [{modifiedEventType}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Attempt [{@event.Attempt}]");
+                                                        logger?.LogErrorEx(e, () => $"Event type [{modifiedEventType}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Attempt [{@event.Attempt}]");
 
                                                         var errorPolicyResult = await CreateController(scope.ServiceProvider).ErrorPolicyAsync(resource, @event.Attempt, e);
 
@@ -838,7 +857,7 @@ namespace Neon.Kube.Operator.ResourceManager
 
                                                             await eventQueue.RequeueAsync(
                                                                 @event,
-                                                                delay: errorPolicyResult.RequeueDelay,
+                                                                delay:          errorPolicyResult.RequeueDelay,
                                                                 watchEventType: errorPolicyResult.EventType);
 
                                                             return;
@@ -870,20 +889,19 @@ namespace Neon.Kube.Operator.ResourceManager
                                                         logger?.LogErrorEx(e);
 
                                                         resourceCache.RemoveFinalizer(resource);
-
-                                                        logger?.LogErrorEx(() => $"Event type [{modifiedEventType}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Attempt [{@event.Attempt}]");
+                                                        logger?.LogErrorEx(e, () => $"Event type [{modifiedEventType}] on resource [{resource.Kind}/{resourceName}] error [attempt={@event.Attempt}]");
 
                                                         var errorPolicyResult = await CreateController(scope.ServiceProvider).ErrorPolicyAsync(resource, @event.Attempt, e);
 
                                                         if (errorPolicyResult.Requeue)
                                                         {
-                                                            @event.Attempt += 1;
+                                                            @event.Attempt++;
 
                                                             resourceCache.Remove(resource);
 
                                                             await eventQueue.RequeueAsync(
                                                                 @event,
-                                                                delay: errorPolicyResult.RequeueDelay,
+                                                                delay:          errorPolicyResult.RequeueDelay,
                                                                 watchEventType: errorPolicyResult.EventType);
 
                                                             return;
@@ -898,10 +916,9 @@ namespace Neon.Kube.Operator.ResourceManager
                                                         return;
                                                     }
 
-                                                    var newStatus = statusGetter.Invoke(resource, Array.Empty<object>());
+                                                    var newStatus     = statusGetter.Invoke(resource, Array.Empty<object>());
                                                     var newStatusJson = newStatus == null ? null : JsonSerializer.Serialize(newStatus);
-
-                                                    var oldStatus = statusGetter.Invoke(cachedEntity, Array.Empty<object>());
+                                                    var oldStatus     = statusGetter.Invoke(cachedEntity, Array.Empty<object>());
                                                     var oldStatusJson = oldStatus == null ? null : JsonSerializer.Serialize(oldStatus);
 
                                                     if (newStatusJson != oldStatusJson)
@@ -949,9 +966,7 @@ namespace Neon.Kube.Operator.ResourceManager
                             {
                                 case null:
 
-                                    logger?.LogInformationEx(() =>
-                                        $@"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] successfully reconciled. Requeue not requested.");
-                                    
+                                    logger?.LogInformationEx(() => $@"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] successfully reconciled. Requeue not requested.");
                                     await eventQueue.DequeueAsync(@event);
 
                                     return;
@@ -963,18 +978,15 @@ namespace Neon.Kube.Operator.ResourceManager
 
                                     if (specificQueueTypeRequested)
                                     {
-                                        logger?.LogInformationEx(() =>
-                                                $@"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] successfully reconciled. Requeue requested as type [{requestedQueueType}] with delay [{requeue}].");
+                                        logger?.LogInformationEx(() => $@"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] successfully reconciled. Requeue requested as type [{requestedQueueType}] with delay [{requeue}].");
                                     }
                                     else
                                     {
-                                        logger?.LogInformationEx(() =>
-                                            $@"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] successfully reconciled. Requeue requested with delay [{requeue}].");
+                                        logger?.LogInformationEx(() => $@"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] successfully reconciled. Requeue requested with delay [{requeue}].");
                                     }
 
                                     resourceCache.Remove(resource);
                                     await eventQueue.RequeueAsync(@event, requeue.RequeueDelay, requestedQueueType);
-
                                     break;
                             }
                         }
@@ -985,13 +997,13 @@ namespace Neon.Kube.Operator.ResourceManager
                 async (WatchEvent<TEntity> @event) =>
                 {
                     await SyncContext.Clear;
+
                     using (var activity = TraceContext.ActivitySource?.StartActivity("EnqueueResourceEvent", ActivityKind.Server))
                     {
-                        var resource = @event.Value;
+                        var resource     = @event.Value;
                         var resourceName = resource.Metadata.Name;
 
                         resourceCache.Compare(resource, out var modifiedEventType);
-
                         logger?.LogDebugEx(() => $"Resource {resource.Kind} {resource.Namespace()}/{resource.Name()} received {@event.Type}/{modifiedEventType} event.");
 
                         using (var scope = serviceProvider.CreateScope())
@@ -1000,7 +1012,6 @@ namespace Neon.Kube.Operator.ResourceManager
                             {
                                 return;
                             }
-
                         }
 
                         switch (@event.Type)
@@ -1010,7 +1021,6 @@ namespace Neon.Kube.Operator.ResourceManager
 
                                 await eventQueue.DequeueAsync(@event);
                                 await eventQueue.EnqueueAsync(@event);
-
                                 break;
 
                             case WatchEventType.Modified:
@@ -1022,7 +1032,6 @@ namespace Neon.Kube.Operator.ResourceManager
 
                                 await eventQueue.DequeueAsync(@event);
                                 await eventQueue.EnqueueAsync(@event);
-
                                 break;
 
                             case WatchEventType.Bookmark:
@@ -1068,12 +1077,12 @@ namespace Neon.Kube.Operator.ResourceManager
 
                     using (var activity = TraceContext.ActivitySource?.StartActivity("EnqueueDependentResourceEvent", ActivityKind.Server))
                     {
-                        var resource = (IKubernetesObject<V1ObjectMeta>)@event.Value;
+                        var resource     = (IKubernetesObject<V1ObjectMeta>)@event.Value;
                         var resourceName = resource.Metadata.Name;
 
                         dependentResourceCache.Compare(resource, out var modifiedEventType);
 
-                        if (resource.Metadata.OwnerReferences.Any(r => resourceCache.Get(r.Uid, out _)))
+                        if (resource.Metadata.OwnerReferences.Any(r => resourceCache.TryGet(r.Uid, out _)))
                         {
                             dependentResourceCache.Upsert(resource);
                         }
@@ -1086,7 +1095,7 @@ namespace Neon.Kube.Operator.ResourceManager
 
                                 foreach (var ownerRef in resource.Metadata.OwnerReferences)
                                 {
-                                    if (resourceCache.Get(ownerRef.Uid, out TEntity owner))
+                                    if (resourceCache.TryGet(ownerRef.Uid, out TEntity owner))
                                     {
                                         logger?.LogDebugEx(() => $"Dependent resource {resource.Kind} {resource.Namespace()}/{resource.Name()} queuing new event for {typeof(TEntity)} {owner.Namespace()}/{owner.Name()}.");
 
@@ -1105,7 +1114,7 @@ namespace Neon.Kube.Operator.ResourceManager
                                 {
                                     foreach (var ownerRef in resource.Metadata.OwnerReferences)
                                     {
-                                        if (resourceCache.Get(ownerRef.Uid, out TEntity owner))
+                                        if (resourceCache.TryGet(ownerRef.Uid, out TEntity owner))
                                         {
                                             logger?.LogDebugEx(() => $"Dependent resource {resource.Kind} {resource.Namespace()}/{resource.Name()} queuing new event for {typeof(TEntity)} {owner.Namespace()}/{owner.Name()}.");
 
@@ -1169,8 +1178,7 @@ namespace Neon.Kube.Operator.ResourceManager
             {
                 var tasks = new List<Task>();
 
-                if (this.resourceNamespaces != null
-                    && crdCache.Get(typeof(TEntity).GetKubernetesCrdName())?.Spec.Scope != "Cluster")
+                if (this.resourceNamespaces != null && crdCache.Get(typeof(TEntity).GetKubernetesCrdName())?.Spec.Scope != "Cluster")
                 {
                     foreach (var ns in resourceNamespaces)
                     {
@@ -1185,14 +1193,13 @@ namespace Neon.Kube.Operator.ResourceManager
                 foreach (var dependent in options.DependentResources)
                 {
                     var watchMethod = typeof(KubernetesExtensions).GetMethod("WatchAsync").MakeGenericMethod(dependent.GetEntityType());
-                    var args = new object[watchMethod.GetParameters().Count()];
+                    var args        = new object[watchMethod.GetParameters().Count()];
 
                     args[0] = k8s;
                     args[1] = enqueueDependentAsync;
                     args[8] = cancellationToken;
 
-                    if (this.resourceNamespaces != null
-                        && crdCache.Get(dependent.GetEntityType().GetKubernetesCrdName())?.Spec.Scope != "Cluster")
+                    if (this.resourceNamespaces != null && crdCache.Get(dependent.GetEntityType().GetKubernetesCrdName())?.Spec.Scope != "Cluster")
                     {
                         foreach (var @namespace in this.resourceNamespaces)
                         {

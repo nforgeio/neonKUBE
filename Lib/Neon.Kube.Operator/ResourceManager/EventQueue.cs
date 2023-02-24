@@ -25,6 +25,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Builder;
@@ -45,14 +46,14 @@ using k8s.Autorest;
 using k8s.Models;
 
 using Prometheus;
-using OpenTelemetry.Resources;
-using System.Threading.Channels;
-using System.ServiceModel.Channels;
-using static IdentityModel.OidcConstants;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Neon.Kube.Operator.ResourceManager
 {
+    /// <summary>
+    /// Implements operator event queues.
+    /// </summary>
+    /// <typeparam name="TEntity">Specifies the entity type.</typeparam>
+    /// <typeparam name="TController">Specifies the controller type.</typeparam>
     internal class EventQueue<TEntity, TController>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
@@ -61,26 +62,31 @@ namespace Neon.Kube.Operator.ResourceManager
         private readonly ResourceManagerOptions                                                 options;
         private readonly ConcurrentDictionary<WatchEvent<TEntity>, CancellationTokenSource>     queue;
         private readonly ConcurrentDictionary<string, DateTime>                                 currentEvents;
-        private readonly Func<WatchEvent<TEntity>, Task>                                        eventHandler;
         private readonly EventQueueMetrics<TEntity, TController>                                metrics;
+        private readonly Func<WatchEvent<TEntity>, Task>                                        eventHandler;
         private readonly Channel<string>                                                        eventChannel;
         private readonly Task[]                                                                 consumerTasks;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="k8s"></param>
-        /// <param name="options"></param>
-        /// <param name="eventHandler"></param>
-        /// <param name="metrics"></param>
-        /// <param name="loggerFactory"></param>
+        /// <param name="k8s">Specifies the Kubernetes client.</param>
+        /// <param name="metrics">Specifies the event queue metrics.</param>
+        /// <param name="options">Optionally specifies custom resource manager options.</param>
+        /// <param name="eventHandler">Optionally specifies a watched event handler.</param>
+        /// <param name="loggerFactory">Optionally specifies the logger factory.</param>
         public EventQueue(
-            IKubernetes                         k8s,
-            ResourceManagerOptions              options,
-            Func<WatchEvent<TEntity>, Task>     eventHandler,
-            EventQueueMetrics<TEntity, TController>          metrics,
-            ILoggerFactory                      loggerFactory = null)
+            IKubernetes                             k8s,
+            ResourceManagerOptions                  options       = null,
+            EventQueueMetrics<TEntity, TController> metrics       = null,
+            Func<WatchEvent<TEntity>, Task>         eventHandler  = null,
+            ILoggerFactory                          loggerFactory = null)
         {
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            Covenant.Requires<ArgumentNullException>(metrics != null, nameof(metrics));
+
+            options ??= new ResourceManagerOptions();
+
             this.k8s           = k8s;
             this.options       = options;
             this.eventHandler  = eventHandler;
@@ -109,6 +115,10 @@ namespace Neon.Kube.Operator.ResourceManager
             _ = StartConsumersAsync();
         }
 
+        /// <summary>
+        /// Starts task consumers.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task StartConsumersAsync()
         {
             while (true)
@@ -116,6 +126,7 @@ namespace Neon.Kube.Operator.ResourceManager
                 for (int i = 0; i < consumerTasks.Length; i++)
                 {
                     var task = consumerTasks[i];
+
                     if (task == null || !task.Status.Equals(TaskStatus.Running))
                     {
                         consumerTasks[i] = ConsumerAsync();
@@ -126,6 +137,10 @@ namespace Neon.Kube.Operator.ResourceManager
             }
         }
 
+        /// <summary>
+        /// Implements an event consumer.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ConsumerAsync()
         {
             using var worker = metrics.ActiveWorkers.TrackInProgress();
@@ -136,9 +151,7 @@ namespace Neon.Kube.Operator.ResourceManager
                 {
                     var @event = queue.Keys.Where(key => key.Value.Uid() == uid).FirstOrDefault();
 
-                    if (@event == null
-                         || @event.Value == null
-                         || queue[@event].IsCancellationRequested)
+                    if (@event == null || @event.Value == null || queue[@event].IsCancellationRequested)
                     {
                         continue;
                     }
@@ -148,7 +161,6 @@ namespace Neon.Kube.Operator.ResourceManager
                         currentEvents.TryAdd(uid, DateTime.UtcNow);
 
                         metrics.QueueDurationSeconds.Observe((DateTime.UtcNow - @event.CreatedAt).TotalSeconds);
-
                         logger?.LogDebugEx(() => $"Executing event [{@event.Type}] for resource [{@event.Value.Kind}/{@event.Value.Name()}]");
 
                         using (var timer = metrics.WorkDurationSeconds.NewTimer())
@@ -165,13 +177,15 @@ namespace Neon.Kube.Operator.ResourceManager
         }
 
         /// <summary>
-        /// Used to notigfy the queue of a new reconcilliation request. This will make sure that any pending
+        /// Used to notify the queue of a new reconcilliation request. This will make sure that any pending
         /// requeue requests are cancelled, since they are no longer valid.
         /// </summary>
-        /// <param name="event"></param>
-        /// <returns></returns>
+        /// <param name="event">The watch event being queued.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task NotifyAsync(WatchEvent<TEntity> @event)
         {
+            Covenant.Requires<ArgumentNullException>(@event != null, nameof(@event));
+
             var queuedEvent = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).FirstOrDefault();
 
             if (queuedEvent != null)
@@ -186,14 +200,13 @@ namespace Neon.Kube.Operator.ResourceManager
         /// <summary>
         /// Requeue an event.
         /// </summary>
-        /// <param name="event"></param>
-        /// <param name="watchEventType"></param>
-        /// <returns></returns>
-        public async Task EnqueueAsync(
-            WatchEvent<TEntity>  @event,
-            WatchEventType?     watchEventType = null)
+        /// <param name="event">Specifies the watch event being queued.</param>
+        /// <param name="watchEventType">Optionally specifies the event type.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task EnqueueAsync(WatchEvent<TEntity>  @event,  WatchEventType? watchEventType = null)
         {
             await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(@event != null, nameof(@event));
 
             var resource = @event.Value;
 
@@ -226,15 +239,21 @@ namespace Neon.Kube.Operator.ResourceManager
         /// <summary>
         /// Queue an event, but dequeue existing event first.
         /// </summary>
-        /// <param name="event"></param>
-        /// <param name="delay"></param>
-        /// <param name="watchEventType"></param>
-        /// <returns></returns>
+        /// <param name="event">Specifies the watch event being queued.</param>
+        /// <param name="delay">
+        /// Optionally specifies the time to delay before requeuing the event.  This
+        /// defaults to a computed value based on the number of times reconcile has
+        /// been attempted.
+        /// </param>
+        /// <param name="watchEventType">Optionally specifies the watch event type.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task RequeueAsync(
             WatchEvent<TEntity> @event,
             TimeSpan?           delay          = null, 
             WatchEventType?     watchEventType = null)
         {
+            Covenant.Requires<ArgumentNullException>(@event != null, nameof(@event));
+
             logger?.LogDebugEx(() => $"Requeuing resource [{@event.Value.Kind}/{@event.Value.Name()}]. Attempt [{@event.Attempt}]");
 
             metrics.RetriesTotal.Inc();
@@ -242,16 +261,14 @@ namespace Neon.Kube.Operator.ResourceManager
             try
             {
                 var resource = @event.Value;
-
-                var old = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).FirstOrDefault();
+                var old      = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).FirstOrDefault();
 
                 if (old != null)
                 {
                     await DequeueAsync(old);
                 }
 
-                if (delay == null
-                    && @event.Attempt > 0)
+                if (delay == null && @event.Attempt > 0)
                 {
                     delay = GetDelay(@event.Attempt);
 
@@ -260,7 +277,7 @@ namespace Neon.Kube.Operator.ResourceManager
 
                 if (delay > TimeSpan.Zero)
                 {
-                    _ = EnqueueAfterSleepAsync(@event, delay, watchEventType);
+                    _ = EnqueueAfterSleepAsync(@event, delay.Value, watchEventType);
 
                     return;
                 }
@@ -275,11 +292,21 @@ namespace Neon.Kube.Operator.ResourceManager
             await EnqueueAsync(@event, watchEventType);
         }
 
-        private async Task EnqueueAfterSleepAsync(WatchEvent<TEntity> @event, TimeSpan? delay, WatchEventType? watchEventType)
+        /// <summary>
+        /// Enqueue an watch event after a specified delay.
+        /// </summary>
+        /// <param name="event">Specifies the watch event.</param>
+        /// <param name="delay">Specifies the delay.</param>
+        /// <param name="watchEventType">Optionally specifies the watch event type.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task EnqueueAfterSleepAsync(WatchEvent<TEntity> @event, TimeSpan delay, WatchEventType? watchEventType = null)
         {
+            Covenant.Requires<ArgumentNullException>(@event != null, nameof(@event));
+            Covenant.Requires<ArgumentNullException>(delay >= TimeSpan.Zero, nameof(delay));
+
             logger?.LogDebugEx(() => $"Sleeping before executing event [{@event.Type}] for resource [{@event.Value.Kind}/{@event.Value.Name()}]");
 
-            await Task.Delay(delay.Value);
+            await Task.Delay(delay);
 
             @event.CreatedAt = DateTime.UtcNow;
 
@@ -287,14 +314,15 @@ namespace Neon.Kube.Operator.ResourceManager
         }
 
         /// <summary>
-        /// Dequeue an event.
+        /// Dequeues an event.
         /// </summary>
-        /// <param name="event"></param>
-        /// <returns></returns>
+        /// <param name="event">Specifies the watch event being dequeued.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task DequeueAsync(WatchEvent<TEntity> @event)
         {
             await SyncContext.Clear;
-            
+            Covenant.Requires<ArgumentNullException>(@event != null, nameof(@event));
+
             logger?.LogDebugEx(() => $"Dequeuing resource [{@event.Value.Kind}/{@event.Value.Name()}].");
 
             var queuedEvent = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).FirstOrDefault();
@@ -318,11 +346,16 @@ namespace Neon.Kube.Operator.ResourceManager
             }
         }
 
+        /// <summary>
+        /// Computes the default requeuing delay based on the number of reconcile attempts so far
+        /// </summary>
+        /// <param name="attempts">The current number of reconcile attempts.</param>
+        /// <returns>The delat <see cref="TimeSpan"/>.</returns>
         private TimeSpan GetDelay(int attempts)
         {
-            var delay = Math.Min(options.ErrorMinRequeueInterval.TotalMilliseconds * (attempts), options.ErrorMaxRequeueInterval.TotalMilliseconds);
+            Covenant.Requires<ArgumentException>(attempts >= 0, nameof(attempts));
 
-            return TimeSpan.FromMilliseconds(delay);
+            return TimeSpan.FromMilliseconds(Math.Min(options.ErrorMinRequeueInterval.TotalMilliseconds * (attempts), options.ErrorMaxRequeueInterval.TotalMilliseconds));
         }
     }
 }

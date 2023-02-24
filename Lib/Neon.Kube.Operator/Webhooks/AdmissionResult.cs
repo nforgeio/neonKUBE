@@ -57,11 +57,16 @@ namespace Neon.Kube.Operator.Webhook
         /// </summary>
         public IList<string> Warnings { get; init; } = new List<string>();
 
+        /// <summary>
+        /// Used to signal that a webhook is not implemented.
+        /// </summary>
+        /// <typeparam name="TResult">Specifies the result type.</typeparam>
+        /// <returns>The <typeparamref name="TResult"/>.</returns>
         internal static TResult NotImplemented<TResult>()
             where TResult : AdmissionResult, new() => new()
             {
-                Valid = false,
-                StatusCode = StatusCodes.Status501NotImplemented,
+                Valid         = false,
+                StatusCode    = StatusCodes.Status501NotImplemented,
                 StatusMessage = "The method is not implemented.",
             };
 

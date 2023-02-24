@@ -42,24 +42,32 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 using Prometheus;
-
 using Quartz;
 
-using Task = System.Threading.Tasks.Task;
+using Task    = System.Threading.Tasks.Task;
 using Metrics = Prometheus.Metrics;
 
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// Handles updating of Linux CA certificates on cluster nodes.
+    /// Handles loading of neonKUBE container images into Harbor by assigning node tasks to
+    /// specific cluster nodes to upload missing images that are already cached locally by
+    /// CRI-O or by fetching these from our public container registry and pushing them to
+    /// Harbor.
     /// </summary>
     [DisallowConcurrentExecution]
     public class CheckRegistryImages : CronJob, IJob
     {
+        //---------------------------------------------------------------------
+        // Static members
+
         private static readonly ILogger logger = TelemetryHub.CreateLogger<CheckRegistryImages>();
 
-        private HarborClient harborClient;
-        private IKubernetes k8s;
+        //---------------------------------------------------------------------
+        // Instance members
+
+        private HarborClient    harborClient;
+        private IKubernetes     k8s;
 
         /// <summary>
         /// Constructor.
@@ -78,13 +86,13 @@ namespace NeonClusterOperator
             {
                 Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckRegistryImages)));
 
-                var dataMap = context.MergedJobDataMap;
-                k8s = (IKubernetes)dataMap["Kubernetes"];
+                var dataMap  = context.MergedJobDataMap;
+                k8s          = (IKubernetes)dataMap["Kubernetes"];
                 harborClient = (HarborClient)dataMap["HarborClient"];
 
                 await CheckProjectAsync(KubeConst.LocalClusterRegistryProject);
 
-                var nodes = await k8s.CoreV1.ListNodeAsync();
+                var nodes     = await k8s.CoreV1.ListNodeAsync();
                 var startTime = DateTime.UtcNow.AddSeconds(10);
 
                 var clusterManifestJson = Program.Resources.GetFile("/cluster-manifest.json").ReadAllText();
@@ -94,11 +102,11 @@ namespace NeonClusterOperator
 
                 foreach (var image in clusterManifest.ContainerImages)
                 {
-                    var tag = image.InternalRef.Split(':').Last();
+                    var tag       = image.InternalRef.Split(':').Last();
                     var imageName = image.InternalRef.Split('/').Last().Split(':').First();
-                    var node = masters.Items.SelectRandom(1).First();
-                    var tempDir = $"/tmp/{NeonHelper.CreateBase36Uuid()}";
-                    var labels = new Dictionary<string, string>
+                    var node      = masters.Items.SelectRandom(1).First();
+                    var tempDir   = $"/tmp/{NeonHelper.CreateBase36Uuid()}";
+                    var labels    = new Dictionary<string, string>
                     {
                         { NeonLabel.ManagedBy, KubeService.NeonClusterOperator },
                         { NeonLabel.NodeTaskType, NeonNodeTaskType.ContainerImageSync },
@@ -107,14 +115,14 @@ namespace NeonClusterOperator
                         { "tag", tag },
                     };
 
-                    if (await ImageExistsAsync(KubeConst.LocalClusterRegistryProject, imageName, tag))
+                    if (await HarborHoldsContainerImageAsync(KubeConst.LocalClusterRegistryProject, imageName, tag))
                     {
                         logger?.LogDebugEx(() => $"Image {KubeConst.LocalClusterRegistryProject}/{imageName}:{tag} exists.");
 
                         continue;
                     }
 
-                    if (await TaskPendingAsync(labels))
+                    if (await IsAnyNodeTaskPendingAsync(labels))
                     {
                         logger?.LogDebugEx(() => $"Image {KubeConst.LocalClusterRegistryProject}/{imageName}:{tag} has node task pending.");
 
@@ -125,14 +133,14 @@ namespace NeonClusterOperator
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = $"{NeonNodeTaskType.ContainerImageSync}-{NeonHelper.CreateBase36Uuid()}",
+                            Name   = $"{NeonNodeTaskType.ContainerImageSync}-{NeonHelper.CreateBase36Uuid()}",
                             Labels = labels
                         },
                         Spec = new V1NeonNodeTask.TaskSpec()
                         {
-                            Node = node.Name(),
+                            Node                = node.Name(),
                             StartAfterTimestamp = startTime,
-                            BashScript = @$"
+                            BashScript          = @$"
 podman save --format oci-dir --output {tempDir} {image.InternalRef}
 
 retVal=$?
@@ -144,7 +152,7 @@ fi
 skopeo copy --retry-times 5 oci:{tempDir} docker://{image.InternalRef}
 rm -rf {tempDir}
 ",
-                            CaptureOutput = true,
+                            CaptureOutput    = true,
                             RetentionSeconds = (int)TimeSpan.FromHours(1).TotalSeconds
                         }
                     };
@@ -201,22 +209,30 @@ rm -rf {tempDir}
                 }
             }
         }
-        private async Task<bool> ImageExistsAsync(string projectName, string imageName, string tag)
+
+        /// <summary>
+        /// Determines whether a neonKuber container exists in Harbor.
+        /// </summary>
+        /// <param name="projectName">Specifies the target Harbor project name.</param>
+        /// <param name="imageName">Specifies the container image name.</param>
+        /// <param name="tag">Specifies the container image tag.</param>
+        /// <returns><c>true</c> when the container image exists in Harbor.</returns>
+        private async Task<bool> HarborHoldsContainerImageAsync(string projectName, string imageName, string tag)
         {
             var exists = false;
 
             try
             {
                 var result = await harborClient.ListTagsAsync(
-                    x_Request_Id: null,
-                    project_name: projectName,
-                    repository_name: imageName,
-                    reference: tag,
-                    q: null,
-                    sort: null,
-                    page: null,
-                    page_size: null,
-                    with_signature: null,
+                    x_Request_Id:          null,
+                    project_name:          projectName,
+                    repository_name:       imageName,
+                    reference:             tag,
+                    q:                     null,
+                    sort:                  null,
+                    page:                  null,
+                    page_size:             null,
+                    with_signature:        null,
                     with_immutable_status: null);
 
                 if (result.Count > 0)
@@ -232,18 +248,20 @@ rm -rf {tempDir}
             return exists;
         }
 
-        private async Task<bool> TaskPendingAsync(Dictionary<string, string> labels)
+        /// <summary>
+        /// Detetermines whether any <see cref="V1NeonNodeTask"/> with the specified labels
+        /// is still pending.
+        /// </summary>
+        /// <param name="labels">The target node task labels.</param>
+        /// <returns><c>true</c> when any matching tasks are pending.</returns>
+        private async Task<bool> IsAnyNodeTaskPendingAsync(Dictionary<string, string> labels)
         {
-            var selector       = labels.Keys.Select(k => $"{k}={labels[k]}");
+            var selector       = labels.Keys.Select(key => $"{key}={labels[key]}");
             var selectorString = string.Join(",", selector.ToArray());
 
-            var tasks = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>(
-                labelSelector: selectorString);
+            var tasks = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>(labelSelector: selectorString);
 
-            return tasks.Items.Any(nt => (
-                nt.Status == null
-                || nt.Status?.Phase <=  V1NeonNodeTask.Phase.Running
-                ));
+            return tasks.Items.Any(nodeTask => nodeTask.Status == null || nodeTask.Status?.Phase <=  V1NeonNodeTask.Phase.Running);
         }
     }
 }

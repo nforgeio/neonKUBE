@@ -57,12 +57,5 @@ namespace Neon.Kube.Operator.Attributes
         /// Specifies the <see cref="ResourceManager.ResourceManagerOptions.ErrorMaxRequeueInterval"/>.
         /// </summary>
         public int ErrorMaxRequeueIntervalSeconds { get; set; } = 600;
-
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        public ControllerAttribute()
-        {
-        }
     }
 }

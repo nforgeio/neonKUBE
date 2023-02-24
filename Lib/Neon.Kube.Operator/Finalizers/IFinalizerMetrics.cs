@@ -40,20 +40,53 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Neon.Kube.Operator.Finalizer
 {
+    /// <summary>
+    /// Describes a finalizer metrics implementation.
+    /// </summary>
+    /// <typeparam name="TEntity">Specifies the entity type.</typeparam>
     internal interface IFinalizerMetrics<TEntity> : IFinalizerMetrics
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
-
     }
 
+    /// <summary>
+    /// Describes finalizer metrics.
+    /// </summary>
     internal interface IFinalizerMetrics
     {
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         ICounter RegistrationsTotal { get; }
+
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         IHistogram RegistrationTimeSeconds { get; }
+
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         ICounter RemovalsTotal { get; }
+
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         IHistogram RemovalTimeSeconds { get; }
+
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         IGauge FinalizingCount { get; }
+
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         ICounter FinalizedTotal { get; }
+
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         IHistogram FinalizeTimeSeconds { get; }
     }
 }

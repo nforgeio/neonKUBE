@@ -44,12 +44,8 @@ namespace Neon.Kube.Operator.Webhook
     {
         private const string prefix = "operator_webhook";
 
-        private static readonly string[] LabelNames = { "operator", "webhook" };
-
-        private readonly string webhook;
-        public Histogram.Child LatencySeconds { get; private set; }
-        public Counter RequestsTotal { get; private set; }
-        public Gauge.Child RequestsInFlight { get; private set; }
+        private static readonly string[]    LabelNames = { "operator", "webhook" };
+        private readonly string             webhook;
 
         public WebhookMetrics(string operatorName, string webhook) 
         {
@@ -77,5 +73,20 @@ namespace Neon.Kube.Operator.Webhook
                     labelNames: LabelNames)
                 .WithLabels(labelValues);
         }
+        
+        /// <summary>
+        /// Latency in seconds.
+        /// </summary>
+        public Histogram.Child LatencySeconds { get; private set; }
+
+        /// <summary>
+        /// Request count.
+        /// </summary>
+        public Counter RequestsTotal { get; private set; }
+
+        /// <summary>
+        /// Requests currently in flight.
+        /// </summary>
+        public Gauge.Child RequestsInFlight { get; private set; }
     }
 }

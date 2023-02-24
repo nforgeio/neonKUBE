@@ -48,7 +48,7 @@ namespace Neon.Kube.Xunit.Operator
         public IKubernetes KubernetesClient { get; private set; }
 
         /// <summary>
-        /// The kubernetes configuration for the test api server.
+        /// The Kubernetes configuration for the test api server.
         /// </summary>
         public KubernetesClientConfiguration KubernetesClientConfiguration { get; private set; }
 
@@ -77,7 +77,7 @@ namespace Neon.Kube.Xunit.Operator
         /// <summary>
         /// Start the test fixture.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The <see cref="TestFixtureStatus"/>.</returns>
         public TestFixtureStatus Start()
         {
             if (started) 

@@ -38,23 +38,32 @@ using Newtonsoft.Json;
 using k8s;
 using k8s.Models;
 using Prometheus;
+using System.Diagnostics.Contracts;
 
 namespace Neon.Kube.Operator.Webhook
 {
     /// <summary>
     /// Represents an Admission webhook.
     /// </summary>
-    /// <typeparam name="TEntity"></typeparam>
-    /// <typeparam name="TResult"></typeparam>
+    /// <typeparam name="TEntity">Specifies the entity type.</typeparam>
+    /// <typeparam name="TResult">Specifies the result type.</typeparam>
     public interface IAdmissionWebhook<TEntity, TResult>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         where TResult : AdmissionResult, new()
     {
-        internal string Name =>
-            $"{GetType().Namespace ?? "root"}.{typeof(TEntity).Name}.{GetType().Name}".ToLowerInvariant();
+        /// <summary>
+        /// Returns the webhook name.
+        /// </summary>
+        internal string Name => $"{GetType().Namespace ?? "root"}.{typeof(TEntity).Name}.{GetType().Name}".ToLowerInvariant();
 
+        /// <summary>
+        /// Returns the nwebhook endpoiunt.
+        /// </summary>
         internal string Endpoint { get; }
 
+        /// <summary>
+        /// Returns the webhook endpoint.
+        /// </summary>
         internal WebhookType WebhookType { get; }
 
         /// <summary>
@@ -62,7 +71,7 @@ namespace Neon.Kube.Operator.Webhook
         /// </summary>
         /// <param name="newEntity">The newly created entity that should be validated.</param>
         /// <param name="dryRun">A boolean that indicates if this call was initiated from a dry run (kubectl ... --dry-run).</param>
-        /// <returns>A result that is transmitted to kubernetes.</returns>
+        /// <returns>A result that is transmitted to Kubernetes.</returns>
         TResult Create(TEntity newEntity, bool dryRun);
 
         /// <inheritdoc cref="Create"/>
@@ -79,7 +88,7 @@ namespace Neon.Kube.Operator.Webhook
         /// <param name="oldEntity">The old entity. This is the "old" version before the update.</param>
         /// <param name="newEntity">The new entity. This is the "new" version after the update is performed.</param>
         /// <param name="dryRun">A boolean that indicates if this call was initiated from a dry run (kubectl ... --dry-run).</param>
-        /// <returns>A result that is transmitted to kubernetes.</returns>
+        /// <returns>A result that is transmitted to Kubernetes.</returns>
         TResult Update(TEntity oldEntity, TEntity newEntity, bool dryRun);
 
         /// <inheritdoc cref="Update"/>
@@ -95,7 +104,7 @@ namespace Neon.Kube.Operator.Webhook
         /// </summary>
         /// <param name="oldEntity">The entity that is being deleted.</param>
         /// <param name="dryRun">A boolean that indicates if this call was initiated from a dry run (kubectl ... --dry-run).</param>
-        /// <returns>A result that is transmitted to kubernetes.</returns>
+        /// <returns>A result that is transmitted to Kubernetes.</returns>
         TResult Delete(TEntity oldEntity, bool dryRun);
 
         /// <inheritdoc cref="Delete"/>
@@ -106,20 +115,24 @@ namespace Neon.Kube.Operator.Webhook
             return Task.FromResult(Delete(oldEntity, dryRun));
         }
 
-        internal AdmissionResponse TransformResult(
-            TResult result,
-            AdmissionRequest<TEntity> request);
+        /// <summary>
+        /// $todo(marcusbooyah): documentation
+        /// </summary>
+        /// <param name="result"></param>
+        /// <param name="request"></param>
+        /// <returns>The <see cref="AdmissionResponse"/>.</returns>
+        internal AdmissionResponse TransformResult(TResult result, AdmissionRequest<TEntity> request);
 
         /// <summary>
         /// Registers the webhook endpoints.
         /// </summary>
-        /// <param name="endpoints"></param>
-        /// <param name="serviceProvider"></param>
-        /// <returns></returns>
-        internal void Register(
-            IEndpointRouteBuilder endpoints, 
-            IServiceProvider serviceProvider)
+        /// <param name="endpoints">Specifies the endpoints.</param>
+        /// <param name="serviceProvider">Specifies the dependencu injection service provider.</param>
+        internal void Register( IEndpointRouteBuilder endpoints, IServiceProvider serviceProvider)
         {
+            Covenant.Requires<ArgumentNullException>(endpoints != null, nameof(endpoints));
+            Covenant.Requires<ArgumentNullException>(serviceProvider != null, nameof(serviceProvider));
+
             var logger           = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger<IAdmissionWebhook<TEntity, TResult>>();
             var operatorSettings = serviceProvider.GetRequiredService<OperatorSettings>();
             var metrics          = new WebhookMetrics<TEntity>(operatorSettings.Name, Endpoint);
@@ -131,7 +144,6 @@ namespace Neon.Kube.Operator.Webhook
                 async context =>
                 {
                     using var activity = Activity.Current;
-
                     using var inFlight = metrics.RequestsInFlight.TrackInProgress();
                     using var timer    = metrics.LatencySeconds.NewTimer();
 
@@ -157,6 +169,7 @@ namespace Neon.Kube.Operator.Webhook
                         }
 
                         AdmissionResponse response;
+
                         try
                         {
                             if (context.RequestServices.GetRequiredService(GetType()) is not
@@ -166,12 +179,13 @@ namespace Neon.Kube.Operator.Webhook
                                 throw new Exception("Object is not a valid IAdmissionWebhook<TEntity, TResult>");
                             }
 
-                            var @object = KubernetesJson.Deserialize<TEntity>(KubernetesJson.Serialize(review.Request.Object));
+                            var @object   = KubernetesJson.Deserialize<TEntity>(KubernetesJson.Serialize(review.Request.Object));
                             var oldObject = KubernetesJson.Deserialize<TEntity>(KubernetesJson.Serialize(review.Request.OldObject));
 
                             logger?.LogInformationEx(() => @$"Admission with method ""{review.Request.Operation}"".");
 
                             TResult result;
+
                             switch (review.Request.Operation)
                             {
                                 case "CREATE":
@@ -200,27 +214,26 @@ namespace Neon.Kube.Operator.Webhook
                         catch (Exception ex)
                         {
                             logger?.LogErrorEx(ex, "An error happened during admission.");
+
                             response = new AdmissionResponse()
                             {
                                 Allowed = false,
-                                Status = new()
+                                Status  = new()
                                 {
-                                    Code = StatusCodes.Status500InternalServerError,
+                                    Code    = StatusCodes.Status500InternalServerError,
                                     Message = "There was an internal server error.",
                                 },
                             };
                         }
 
-                        review.Response = response;
+                        review.Response     = response;
                         review.Response.Uid = review.Request.Uid;
 
-                        logger?.LogInformationEx(() =>
-                            @$"AdmissionHook ""{Name}"" did return ""{review.Response?.Allowed}"" for ""{review.Request.Operation}"".");
+                        logger?.LogInformationEx(() => @$"AdmissionHook ""{Name}"" did return ""{review.Response?.Allowed}"" for ""{review.Request.Operation}"".");
 
                         review.Request = null;
 
                         metrics.RequestsTotal.WithLabels(new string[] { operatorSettings.Name, Endpoint, response.Status?.Code.ToString()}).Inc();
-
                         await context.Response.WriteAsJsonAsync(review);
                     }
                     catch (Exception e)

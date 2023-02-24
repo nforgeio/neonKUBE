@@ -25,24 +25,27 @@ using k8s;
 
 namespace Neon.Kube.Operator.ResourceManager
 {
+    /// <summary>
+    /// Used to indicate that a reconcile event should be requeue.
+    /// </summary>
     internal class RequeueEventResult : ResourceControllerResult
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="requeueIn"></param>
-        public RequeueEventResult(TimeSpan requeueIn)
-            : base(requeueIn)
+        /// <param name="requeueDelay">Specifies the requeue delay.</param>
+        public RequeueEventResult(TimeSpan requeueDelay)
+            : base(requeueDelay)
         {
         }
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="requeueIn"></param>
-        /// <param name="eventType"></param>
-        public RequeueEventResult(TimeSpan requeueIn, WatchEventType eventType)
-            : base(requeueIn, eventType)
+        /// <param name="requeueDelay">Specifies the requeue delay.</param>
+        /// <param name="eventType">Specifies the watch event type.</param>
+        public RequeueEventResult(TimeSpan requeueDelay, WatchEventType eventType)
+            : base(requeueDelay, eventType)
         {
         }
     }

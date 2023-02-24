@@ -21,7 +21,7 @@ using System.Collections.Generic;
 namespace Neon.Kube.Operator.Rbac
 {
     /// <summary>
-    /// Enumerates the kubernetes RBAC verbs.
+    /// Enumerates the Kubernetes RBAC verbs.
     /// </summary>
     [Flags]
     public enum RbacVerb

@@ -29,28 +29,29 @@ using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
 
-namespace Neon.Kube
+namespace Neon.Kube.PortForward
 {
     /// <summary>
-    /// Manages port-forwarding to remote pods.
+    /// Manages port-forwarding from the local workstation to remote pods running in the cluster.
     /// </summary>
     public interface IPortForwardManager
     {
         /// <summary>
-        /// Starts a port-forward to a pod.
+        /// Establishes a <see cref="PortForwardStream"/> connection from the local
+        /// workstation toa pod running in the cluster.
         /// </summary>
-        /// <param name="namespaceName"></param>
-        /// <param name="podName"></param>
-        /// <param name="localPort"></param>
-        /// <param name="remotePort"></param>
-        /// <param name="customHeaders"></param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="namespaceName">Specifies the remote pod namespace.</param>
+        /// <param name="podName">Specifies the remote pod name.</param>
+        /// <param name="localPort">Specifies the local port on the workstation.</param>
+        /// <param name="remotePort">Specifies the target port for the remotye pod.</param>
+        /// <param name="customHeaders">Optionally specifies any custom connection headers.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         void StartPodPortForward(
             string                           namespaceName,
             string                           podName,
             int                              localPort,
             int                              remotePort,
             Dictionary<string, List<string>> customHeaders     = null,
-            CancellationToken                cancellationToken = default(CancellationToken));
+            CancellationToken                cancellationToken = default);
     }
 }

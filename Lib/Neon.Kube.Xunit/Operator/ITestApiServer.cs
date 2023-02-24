@@ -43,29 +43,30 @@ namespace Neon.Kube.Xunit.Operator
         Dictionary<string, Type> Types { get; }
 
         /// <summary>
-        /// No op.
+        /// Called for unhandled requests.
         /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
+        /// <param name="context">Specifies the request context.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         Task UnhandledRequest(HttpContext context);
 
         /// <summary>
         /// Adds a resource to the API server's resource collection.
         /// </summary>
-        /// <param name="group"></param>
-        /// <param name="version"></param>
-        /// <param name="plural"></param>
-        /// <param name="resource"></param>
+        /// <param name="group">Specifies the API group.</param>
+        /// <param name="version">Specifies the API version.</param>
+        /// <param name="plural">Specifies the plural name for the resource.</param>
+        /// <param name="resource">Specifies the resource.</param>
         void AddResource(string group, string version, string plural, object resource);
 
         /// <summary>
-        /// Adds a resource to the API server's resource collection.
+        /// Adds a type-safe resource to the API server's resource collection.
         /// </summary>
-        /// <param name="group"></param>
-        /// <param name="version"></param>
-        /// <param name="plural"></param>
-        /// <param name="resource"></param>
-        void AddResource<T>(string group, string version, string plural, T resource)
-            where T : IKubernetesObject<V1ObjectMeta>;
+        /// <typeparam name="TResource">Specifies the resource type.</typeparam>
+        /// <param name="group">Specifies the API group.</param>
+        /// <param name="version">Specifies the API version.</param>
+        /// <param name="plural">Specifies the plural name for the resource.</param>
+        /// <param name="resource">Specifies the resource.</param>
+        void AddResource<TResource>(string group, string version, string plural, TResource resource)
+            where TResource : IKubernetesObject<V1ObjectMeta>;
     }
 }

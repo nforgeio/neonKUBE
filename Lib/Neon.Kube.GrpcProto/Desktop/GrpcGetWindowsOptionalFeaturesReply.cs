@@ -54,7 +54,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// <summary>
         /// Reply constructor.
         /// </summary>
-        /// <param name="capabilities"></param>
+        /// <param name="capabilities">Specifies the capabilities being returned.</param>
         public GrpcGetWindowsOptionalFeaturesReply(Dictionary<string, WindowsFeatureStatus> capabilities)
         {
             this.Capabilities = capabilities;

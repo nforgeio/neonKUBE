@@ -45,6 +45,8 @@ namespace Neon.Kube.Operator.ResourceManager
     /// <summary>
     /// Specifies metrics for a resource manager.  See the <see cref="ResourceManager{TResource, TController}"/>.
     /// </summary>
+    /// <typeparam name="TEntity">Specifies the entity type.</typeparam>
+    /// <typeparam name="TController">Specifies the controller type.</typeparam>
     internal class ResourceManagerMetrics<TEntity, TController>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         where TController : IResourceController<TEntity>
@@ -61,11 +63,13 @@ namespace Neon.Kube.Operator.ResourceManager
         }
 
         /// <summary>
-        /// Default constructor.
+        /// Constructor.
         /// </summary>
-        public ResourceManagerMetrics(
-            OperatorSettings operatorSettings)
+        /// <param name="operatorSettings">Specifies the operator settings.</param>
+        public ResourceManagerMetrics(OperatorSettings operatorSettings)
         {
+            Covenant.Requires<ArgumentNullException>(operatorSettings != null, nameof(operatorSettings));
+
             var crdMeta     = typeof(TEntity).GetKubernetesTypeMetadata();
             var labelValues = new string[] { operatorSettings.Name, typeof(TController).Name.ToLower(), crdMeta.PluralName, crdMeta.Group, crdMeta.ApiVersion };
 

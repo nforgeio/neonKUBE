@@ -35,11 +35,7 @@ namespace Neon.Kube.Resources.JsonConverters
     public class JsonCollectionItemConverter<TDatatype, TConverterType> : JsonConverter<IEnumerable<TDatatype>>
         where TConverterType : JsonConverter
     {
-        /// <summary>
-        /// Returns whether the connectio can be converted.
-        /// </summary>
-        /// <param name="objectType"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public override bool CanConvert(Type objectType)
         {
             var result = objectType == typeof(IEnumerable<TDatatype>);
@@ -47,13 +43,7 @@ namespace Neon.Kube.Resources.JsonConverters
             return result;
         }
 
-        /// <summary>
-        /// Reads a json string and deserializes it into an object.
-        /// </summary>
-        /// <param name="reader">Json reader.</param>
-        /// <param name="typeToConvert">Type to convert.</param>
-        /// <param name="options">Serializer options.</param>
-        /// <returns>Created object.</returns>
+        /// <inheritdoc/>
         public override IEnumerable<TDatatype> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             if (reader.TokenType == JsonTokenType.Null)
@@ -80,12 +70,7 @@ namespace Neon.Kube.Resources.JsonConverters
             return returnValue;
         }
 
-        /// <summary>
-        /// Writes a json string.
-        /// </summary>
-        /// <param name="writer">Json writer.</param>
-        /// <param name="value">Value to write.</param>
-        /// <param name="options">Serializer options.</param>
+        /// <inheritdoc/>
         public override void Write(Utf8JsonWriter writer, IEnumerable<TDatatype> value, JsonSerializerOptions options)
         {
             if (value == null)
@@ -94,7 +79,8 @@ namespace Neon.Kube.Resources.JsonConverters
                 return;
             }
 
-            JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions(options);
+            var jsonSerializerOptions = new JsonSerializerOptions(options);
+
             jsonSerializerOptions.Converters.Clear();
             jsonSerializerOptions.Converters.Add(Activator.CreateInstance<TConverterType>());
 

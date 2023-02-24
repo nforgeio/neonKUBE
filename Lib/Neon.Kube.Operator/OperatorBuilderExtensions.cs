@@ -45,46 +45,44 @@ namespace Neon.Kube.Operator
 {
     /// <summary>
     /// <para>
-    /// Extension methods for adding components to the Operator.
+    /// Extension methods for adding components to the operator.
     /// </para>
     /// </summary>
     public static class OperatorBuilderExtensions
     {
         /// <summary>
-        /// Adds a <see cref="IResourceController{TEntity}"/> to the Operator.
+        /// Adds a <see cref="IResourceController{TEntity}"/> implementation to the operator.
         /// </summary>
-        /// <typeparam name="TImplementation"></typeparam>
-        /// <param name="builder"></param>
-        /// <param name="namespace"></param>
-        /// <param name="options"></param>
-        /// <param name="leaderConfig"></param>
-        /// <param name="leaderElectionDisabled"></param>
-        /// <returns></returns>
-        public static IOperatorBuilder AddController<TImplementation>(
-            this IOperatorBuilder builder,
-            string @namespace = null,
-            ResourceManagerOptions options = null,
-            LeaderElectionConfig leaderConfig = null,
-            bool leaderElectionDisabled = false)
-            where TImplementation : class
+        /// <typeparam name="TResourceController">Specifies the controller type.</typeparam>
+        /// <param name="builder">Specifies the operator builder.</param>
+        /// <param name="namespace">Optionally specifies the operator namespace.</param>
+        /// <param name="options">Optionally specifies the resource manager options.</param>
+        /// <param name="leaderConfig">Optionally specifies a custom leader electionb configuration.</param>
+        /// <param name="leaderElectionDisabled">Optionally indicates that leader election is disabled.</param>
+        /// <returns>The <see cref="IOperatorBuilder"/>.</returns>
+        public static IOperatorBuilder AddController<TResourceController>(
+            this IOperatorBuilder   builder,
+            string                  @namespace             = null,
+            ResourceManagerOptions  options                = null,
+            LeaderElectionConfig    leaderConfig           = null,
+            bool                    leaderElectionDisabled = false)
+
+            where TResourceController : class
         {
-            var entityTypes = typeof(TImplementation).GetInterfaces()
-                .Where(
-                    t =>
-                        t.IsConstructedGenericType &&
-                        t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IResourceController<>)))
-                .Select(i => i.GenericTypeArguments[0]);
+            var interfaces = typeof(TResourceController).GetInterfaces()
+                .Where(@interface => @interface.IsConstructedGenericType && @interface.GetGenericTypeDefinition().IsEquivalentTo(typeof(IResourceController<>)))
+                .Select(@interface => @interface.GenericTypeArguments[0]);
 
             var genericRegistrationMethod = builder
                 .GetType()
                 .GetMethods()
-                .Single(m => m.Name == nameof(IOperatorBuilder.AddController) && m.GetGenericArguments().Length == 2);
+                .Single(method => method.Name == nameof(IOperatorBuilder.AddController) && method.GetGenericArguments().Length == 2);
 
-            foreach (var entityType in entityTypes)
+            foreach (var @interface in interfaces)
             {
-                var registrationMethod =
-                    genericRegistrationMethod.MakeGenericMethod(typeof(TImplementation), entityType);
-                var param = registrationMethod.GetParameters();
+                var registrationMethod = genericRegistrationMethod.MakeGenericMethod(typeof(TResourceController), @interface);
+                var param              = registrationMethod.GetParameters();
+
                 registrationMethod.Invoke(builder, new object[]
                 {
                     @namespace,
@@ -98,31 +96,28 @@ namespace Neon.Kube.Operator
         }
 
         /// <summary>
-        /// Adds a <see cref="IResourceFinalizer{TEntity}"/> to the Operator.
+        /// Adds a <see cref="IResourceFinalizer{TEntity}"/> to the operator.
         /// </summary>
-        /// <typeparam name="TImplementation"></typeparam>
-        /// <param name="builder"></param>
-        /// <returns></returns>
-        public static IOperatorBuilder AddFinalizer<TImplementation>(this IOperatorBuilder builder)
-            where TImplementation : class
+        /// <typeparam name="TResourceController">Specifies the controller type.</typeparam>
+        /// <param name="builder">Specifies the operator builder.</param>
+        /// <returns>The <see cref="IOperatorBuilder"/>.</returns>
+        public static IOperatorBuilder AddFinalizer<TResourceController>(this IOperatorBuilder builder)
+            where TResourceController : class
         {
-            var entityTypes = typeof(TImplementation).GetInterfaces()
-                .Where(
-                    t =>
-                        t.IsConstructedGenericType &&
-                        t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IResourceFinalizer<>)))
-                .Select(i => i.GenericTypeArguments[0]);
+            var interfaces = typeof(TResourceController).GetInterfaces()
+                .Where(@interface => @interface.IsConstructedGenericType && @interface.GetGenericTypeDefinition().IsEquivalentTo(typeof(IResourceFinalizer<>)))
+                .Select(@interface => @interface.GenericTypeArguments[0]);
 
             var genericRegistrationMethod = builder
                 .GetType()
                 .GetMethods()
                 .Single(m => m.Name == nameof(IOperatorBuilder.AddFinalizer) && m.GetGenericArguments().Length == 2);
 
-            foreach (var entityType in entityTypes)
+            foreach (var @interface in interfaces)
             {
-                var registrationMethod =
-                    genericRegistrationMethod.MakeGenericMethod(typeof(TImplementation), entityType);
-                var param = registrationMethod.GetParameters();
+                var registrationMethod = genericRegistrationMethod.MakeGenericMethod(typeof(TResourceController), @interface);
+                var param              = registrationMethod.GetParameters();
+
                 registrationMethod.Invoke(builder, new object[registrationMethod.GetParameters().Count()]);
             }
 
@@ -130,31 +125,28 @@ namespace Neon.Kube.Operator
         }
 
         /// <summary>
-        /// Adds a <see cref="IMutatingWebhook{TEntity}"/> to the Operator.
+        /// Adds a <see cref="IMutatingWebhook{TEntity}"/> to the operator.
         /// </summary>
-        /// <typeparam name="TImplementation"></typeparam>
-        /// <param name="builder"></param>
-        /// <returns></returns>
-        public static IOperatorBuilder AddMutatingWebhook<TImplementation>(this IOperatorBuilder builder)
-            where TImplementation : class
+        /// <typeparam name="TResourceController">Specifies the controller type.</typeparam>
+        /// <param name="builder">Specifies the operator builder.</param>
+        /// <returns>The <see cref="IOperatorBuilder"/>.</returns>
+        public static IOperatorBuilder AddMutatingWebhook<TResourceController>(this IOperatorBuilder builder)
+            where TResourceController : class
         {
-            var entityTypes = typeof(TImplementation).GetInterfaces()
-                .Where(
-                    t =>
-                        t.IsConstructedGenericType &&
-                        t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IMutatingWebhook<>)))
-                .Select(i => i.GenericTypeArguments[0]);
+            var interfaces = typeof(TResourceController).GetInterfaces()
+                .Where(@interface => @interface.IsConstructedGenericType && @interface.GetGenericTypeDefinition().IsEquivalentTo(typeof(IMutatingWebhook<>)))
+                .Select(@interface => @interface.GenericTypeArguments[0]);
 
             var genericRegistrationMethod = builder
                 .GetType()
                 .GetMethods()
                 .Single(m => m.Name == nameof(IOperatorBuilder.AddMutatingWebhook) && m.GetGenericArguments().Length == 2);
 
-            foreach (var entityType in entityTypes)
+            foreach (var @interface in interfaces)
             {
-                var registrationMethod =
-                    genericRegistrationMethod.MakeGenericMethod(typeof(TImplementation), entityType);
-                var param = registrationMethod.GetParameters();
+                var registrationMethod = genericRegistrationMethod.MakeGenericMethod(typeof(TResourceController), @interface);
+                var param              = registrationMethod.GetParameters();
+
                 registrationMethod.Invoke(builder, new object[registrationMethod.GetParameters().Count()]);
             }
 
@@ -162,31 +154,28 @@ namespace Neon.Kube.Operator
         }
 
         /// <summary>
-        /// Adds a <see cref="IValidatingWebhook{TEntity}"/> to the Operator.
+        /// Adds a <see cref="IValidatingWebhook{TEntity}"/> to the operator.
         /// </summary>
-        /// <typeparam name="TImplementation"></typeparam>
-        /// <param name="builder"></param>
-        /// <returns></returns>
-        public static IOperatorBuilder AddValidatingWebhook<TImplementation>(this IOperatorBuilder builder)
-            where TImplementation : class
+        /// <typeparam name="TResourceController">Specifies the controller type.</typeparam>
+        /// <param name="builder">Specifies the operator builder.</param>
+        /// <returns>The <see cref="IOperatorBuilder"/>.</returns>
+        public static IOperatorBuilder AddValidatingWebhook<TResourceController>(this IOperatorBuilder builder)
+            where TResourceController : class
         {
-            var entityTypes = typeof(TImplementation).GetInterfaces()
-                .Where(
-                    t =>
-                        t.IsConstructedGenericType &&
-                        t.GetGenericTypeDefinition().IsEquivalentTo(typeof(IValidatingWebhook<>)))
-                .Select(i => i.GenericTypeArguments[0]);
+            var interfaces = typeof(TResourceController).GetInterfaces()
+                .Where(@interface => @interface.IsConstructedGenericType && @interface.GetGenericTypeDefinition().IsEquivalentTo(typeof(IValidatingWebhook<>)))
+                .Select(@interface => @interface.GenericTypeArguments[0]);
 
             var genericRegistrationMethod = builder
                 .GetType()
                 .GetMethods()
                 .Single(m => m.Name == nameof(IOperatorBuilder.AddValidatingWebhook) && m.GetGenericArguments().Length == 2);
 
-            foreach (var entityType in entityTypes)
+            foreach (var @interface in interfaces)
             {
-                var registrationMethod =
-                    genericRegistrationMethod.MakeGenericMethod(typeof(TImplementation), entityType);
-                var param = registrationMethod.GetParameters();
+                var registrationMethod = genericRegistrationMethod.MakeGenericMethod(typeof(TResourceController), @interface);
+                var param              = registrationMethod.GetParameters();
+
                 registrationMethod.Invoke(builder, new object[registrationMethod.GetParameters().Count()]);
             }
 

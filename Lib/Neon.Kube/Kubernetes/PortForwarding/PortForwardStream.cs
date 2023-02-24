@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    StreamInstance.cs
+// FILE:	    PortForwardStream.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -20,84 +20,113 @@ using System.Buffers.Binary;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.Extensions.Logging;
 using k8s;
-using System.Net.Sockets;
-using System.Diagnostics.Contracts;
+
+using Microsoft.Extensions.Logging;
+
 using Neon.Diagnostics;
+using Neon.Net;
 
-namespace Neon.Kube
+namespace Neon.Kube.PortForward
 {
-    internal class StreamInstance
+    /// <summary>
+    /// Implements a a stream that forwards traffic from a port on the client
+    /// workstation to a remote port on a pod running in the cluster.
+    /// </summary>
+    internal class PortForwardStream
     {
-        private TcpClient             localConnection;
-        private Func<Task<WebSocket>> remoteConnectionFactory;
-        private ILogger               logger;
-        private int                   remotePort;
+        private const int BUFFER_SIZE = 8192;
 
-        private SemaphoreSlim syncObject            = new SemaphoreSlim(1);
-        private int           remoteStartRetryCount = 0;
-        private NetworkStream localStream;
-        private WebSocket     remote;
-        private StreamDemuxer remoteStreams;
-        private bool          stop;
-        private bool          receiveStarted;
+        private SemaphoreSlim           syncLock = new SemaphoreSlim(1);
+        private TcpClient               localConnection;
+        private RemoteConnectionFactory remoteConnectionFactory;
+        private ILogger                 logger;
+        private int                     remotePort;
+        private int                     remoteStartRetryCount = 0;
+        private NetworkStream           localStream;
+        private WebSocket               remote;
+        private StreamDemuxer           remoteStreams;
+        private bool                    stop;
+        private bool                    receiveStarted;
 
-        private const int BUFFER_SIZE = 81920;
-
-        public StreamInstance(
-            TcpClient             localConnection,
-            Func<Task<WebSocket>> remoteConnectionFactory,
-            int                   remotePort,
-            ILoggerFactory        loggerFactory)
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="localConnection">Specfies the local side of the connection.</param>
+        /// <param name="remoteConnectionFactory">Specifies the factory that returns the websocket for the remote side of the connection.</param>
+        /// <param name="remotePort">Specfies the remote port.</param>
+        /// <param name="loggerFactory">Optionally specfies a logger factory.</param>
+        public PortForwardStream(
+            TcpClient               localConnection,
+            RemoteConnectionFactory remoteConnectionFactory,
+            int                     remotePort,
+            ILoggerFactory          loggerFactory = null)
         {
             Covenant.Requires(localConnection != null, nameof(localConnection));
             Covenant.Requires(remoteConnectionFactory != null, nameof(remoteConnectionFactory));
+            Covenant.Requires<ArgumentNullException>(NetHelper.IsValidPort(remotePort), nameof(remotePort), $"Invalid TCP port: {remotePort}");
 
-            this.logger                  = loggerFactory?.CreateLogger<StreamInstance>();
+            this.logger                  = loggerFactory?.CreateLogger<PortForwardStream>();
             this.localConnection         = localConnection;
             this.localStream             = localConnection.GetStream();
             this.remoteConnectionFactory = remoteConnectionFactory;
             this.remotePort              = remotePort;
         }
 
-        public Task Run(CancellationToken cancellationToken)
+        /// <summary>
+        /// Forwards traffic between the local and remote ports until the operation is cancelled.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public Task RunAsync(CancellationToken cancellationToken)
         {
             using (cancellationToken.Register(() => Stop()))
             {
-                return RunSendLoop();
+                return SendLoop();
             }
         }
 
-        private async Task RunSendLoop()
+        /// <summary>
+        /// Handles traffic forwarded from the local workstation to the remote pod.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task SendLoop()
         {
-            byte[] buffer = new byte[BUFFER_SIZE];
+            var buffer = new byte[BUFFER_SIZE];
+
             while (true)
             {
-                int cRead = localStream != null ? await localStream.ReadAsync(buffer, 0, buffer.Length) : 0;
-                if (cRead == 0)
+                var cbRead = localStream != null ? await localStream.ReadAsync(buffer, 0, buffer.Length) : 0;
+
+                if (cbRead == 0)
                 {
                     this.Stop();
                     break;
                 }
                 else
                 {
-                    bool sendSuccess = false;
+                    var sendSuccess = false;
+
                     try
                     {
                         await EnsureRemoteStartAsync();
-                        var s = this.GetRemoteStream(remoteStreams, forWrite: true);
-                        await s.WriteAsync(buffer, 0, cRead);
+
+                        var stream = this.GetRemoteStream(remoteStreams, forWrite: true);
+
+                        await stream.WriteAsync(buffer, 0, cbRead);
+
                         sendSuccess = true;
                     }
-                    catch (Exception ex)
+                    catch
                     {
                         this.StopRemote();
                     }
@@ -110,18 +139,25 @@ namespace Neon.Kube
             }
         }
 
-        private async Task RunReceiveLoop()
+        /// <summary>
+        /// Handles traffic forwarded from the remote pod to the workstation.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task ReceiveLoop()
         {
-            byte[] buffer = new byte[BUFFER_SIZE];
-            var s = this.GetRemoteStream(remoteStreams, forRead: true);
+            var buffer        = new byte[BUFFER_SIZE];
+            var stream        = this.GetRemoteStream(remoteStreams, forRead: true);
+            var bytesReceived = 0;
+
             receiveStarted = true;
-            long bytesReceived = 0;
+
             while (true)
             {
                 try
                 {
-                    int cRead = await s.ReadAsync(buffer, 0, buffer.Length);
-                    if (cRead == 0)
+                    var cbRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+
+                    if (cbRead == 0)
                     {
                         this.Stop();
                         break;
@@ -130,21 +166,26 @@ namespace Neon.Kube
                     {
                         if (localStream != null)
                         {
-                            bytesReceived += cRead;
-                            if (bytesReceived == 2 && cRead == 2 && (remotePort >> 8) == buffer[1] && (remotePort % 256) == buffer[0])
+                            bytesReceived += cbRead;
+
+                            if (bytesReceived == 2 && cbRead == 2 && (remotePort >> 8) == buffer[1] && (remotePort % 256) == buffer[0])
                             {
                                 // This is a bug in the K8s client library around port-forwarding. Some times at the first receiving, K8s will send
                                 // back the port number in the first 2 bytes. K8s client library should filter out these 2 bytes but it didn't.
-                                // Work around this issue here before the K8s client library fix. https://github.com/kubernetes-client/csharp/issues/229
+                                // Work around this issue here before the K8s client library fix:
+                                //
+                                //      https://github.com/kubernetes-client/csharp/issues/229
+
                                 continue;
                             }
-                            await localStream.WriteAsync(buffer, 0, cRead);
+
+                            await localStream.WriteAsync(buffer, 0, cbRead);
                         }
                     }
                 }
-                catch (Exception ex)
+                catch (Exception e)
                 {
-                    logger?.LogErrorEx(() => $"Write to local failed with {ex.Message}");
+                    logger?.LogErrorEx(() => $"Write to local failed with: {e.Message}");
                     this.Stop();
                     break;
                 }
@@ -158,7 +199,7 @@ namespace Neon.Kube
                 return;
             }
             StreamDemuxer remoteStreams = null;
-            await syncObject.WaitAsync();
+            await syncLock.WaitAsync();
             try
             {
                 if (remote == null)
@@ -171,12 +212,12 @@ namespace Neon.Kube
             }
             finally
             {
-                syncObject.Release();
+                syncLock.Release();
             }
             if (remoteStreams != null)
             {
                 remoteStreams.Start();
-                _ = Task.Run(() => this.RunReceiveLoop());
+                _ = Task.Run(() => this.ReceiveLoop());
             }
         }
 
@@ -224,7 +265,7 @@ namespace Neon.Kube
 
         private void StopLocal()
         {
-            syncObject.Wait();
+            syncLock.Wait();
             try
             {
                 localConnection?.Close();
@@ -234,13 +275,13 @@ namespace Neon.Kube
             }
             finally
             {
-                syncObject.Release();
+                syncLock.Release();
             }
         }
 
         private void StopRemote()
         {
-            syncObject.Wait();
+            syncLock.Wait();
             try
             {
                 var remoteStreams = this.remoteStreams;
@@ -257,7 +298,7 @@ namespace Neon.Kube
             }
             finally
             {
-                syncObject.Release();
+                syncLock.Release();
             }
         }
     }

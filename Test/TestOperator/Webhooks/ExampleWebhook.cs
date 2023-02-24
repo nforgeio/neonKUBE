@@ -41,33 +41,25 @@ namespace TestOperator
     /// Webhook to set priority classes on neon pods.
     /// </summary>
     [Webhook(
-        name: "pod-policy.neonkube.io",
+        name:                    "pod-policy.neonkube.io",
         admissionReviewVersions: "v1",
-        failurePolicy: "Ignore")]
+        failurePolicy:           "Ignore")]
     [WebhookRule(
-        apiGroups: V1Pod.KubeGroup,
+        apiGroups:   V1Pod.KubeGroup,
         apiVersions: V1Pod.KubeApiVersion,
-        operations: AdmissionOperations.Create | AdmissionOperations.Update,
-        resources: V1Pod.KubePluralName,
-        scope: "*")]
+        operations:  AdmissionOperations.Create | AdmissionOperations.Update,
+        resources:   V1Pod.KubePluralName,
+        scope:       "*")]
     [RbacRule<V1Pod>(Verbs = RbacVerb.All)]
     public class PodWebhook : IMutatingWebhook<V1Pod>
     {
-        private ILogger<IMutatingWebhook<V1Pod>> logger { get; set; }
+        private ILogger<IMutatingWebhook<V1Pod>>    logger;
+        private bool                                modified = false;
 
-        private bool modified = false;
-
-        /// <summary>
-        /// Constructor.
-        /// </summary>
         public PodWebhook()
         {
         }
 
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        /// <param name="logger"></param>
         public PodWebhook(
             ILogger<IMutatingWebhook<V1Pod>> logger)
             : base()
@@ -75,7 +67,6 @@ namespace TestOperator
             this.logger = logger;
         }
 
-        /// <inheritdoc/>
         public async Task<MutationResult> CreateAsync(V1Pod entity, bool dryRun)
         {
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
@@ -100,7 +91,6 @@ namespace TestOperator
             }
         }
 
-        /// <inheritdoc/>
         public async Task<MutationResult> UpdateAsync(V1Pod entity, V1Pod oldEntity, bool dryRun)
         {
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
@@ -129,13 +119,11 @@ namespace TestOperator
         {
             try
             {
-                if (string.IsNullOrEmpty(entity.Spec.PriorityClassName)
-                    || entity.Spec.PriorityClassName == PriorityClass.UserMedium.Name)
+                if (string.IsNullOrEmpty(entity.Spec.PriorityClassName) || entity.Spec.PriorityClassName == PriorityClass.UserMedium.Name)
                 {
                     modified = true;
 
-                    if (entity.Metadata.Labels != null
-                        && entity.Metadata.Labels.ContainsKey("goharbor.io/operator-version"))
+                    if (entity.Metadata.Labels != null && entity.Metadata.Labels.ContainsKey("goharbor.io/operator-version"))
                     {
                         logger?.LogInformationEx(() => $"Setting priority class for harbor pod.");
 

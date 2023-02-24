@@ -36,35 +36,48 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
-using Neon.Tasks;
 using Neon.Kube.Operator.Builder;
 using Neon.Kube.Operator.Controller;
-
+using Neon.Tasks;
 
 namespace Neon.Kube.Operator.ResourceManager
 {
+    /// <summary>
+    /// Manages a resource controller.
+    /// </summary>
     internal class ResourceControllerManager : IHostedService
     {
         private readonly ILogger<ResourceControllerManager> logger;
-
-        private ComponentRegister componentRegister;
-        private IServiceProvider  serviceProvider;
+        private ComponentRegistration                       componentRegistration;
+        private IServiceProvider                            serviceProvider;
         
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="componentRegistration">Specifies the component registration.</param>
+        /// <param name="serviceProvider">Specifies the depdency injection service provider.</param>
         public ResourceControllerManager(
-            ComponentRegister componentRegister,
-            IServiceProvider  serviceProvider)
+            ComponentRegistration   componentRegistration,
+            IServiceProvider        serviceProvider)
         {
-            this.componentRegister = componentRegister;
-            this.serviceProvider   = serviceProvider;
+            Covenant.Requires<ArgumentNullException>(componentRegistration != null, nameof(componentRegistration));
+            Covenant.Requires<ArgumentNullException>(serviceProvider != null, nameof(serviceProvider));
 
-            this.logger            = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger<ResourceControllerManager>();
+            this.componentRegistration = componentRegistration;
+            this.serviceProvider       = serviceProvider;
+            this.logger                = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger<ResourceControllerManager>();
         }
 
+        /// <summary>
+        /// Starts the controller.
+        /// </summary>
+        /// <param name="cancellationToken">Specifies the cancellation token.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             await SyncContext.Clear;
 
-            foreach (var resourceManagerType in componentRegister.ResourceManagerRegistrations)
+            foreach (var resourceManagerType in componentRegistration.ResourceManagerRegistrations)
             {
                 try
                 {
@@ -78,14 +91,13 @@ namespace Neon.Kube.Operator.ResourceManager
                 }
             }
 
-
-            foreach (var ct in componentRegister.ControllerRegistrations)
+            foreach (var registration in componentRegistration.ControllerRegistrations)
             {
                 using (var scope = serviceProvider.CreateScope())
                 {
                     try
                     {
-                        (Type controllerType, Type entityType) = ct;
+                        (Type controllerType, Type entityType) = registration;
 
                         logger?.LogInformationEx(() => $"Registering controller [{controllerType.Name}].");
 
@@ -103,6 +115,16 @@ namespace Neon.Kube.Operator.ResourceManager
             }
         }
 
+        // $todo(marcusbooyah):
+        //
+        // Does this method make sense?  I would have thought that folks would stop
+        // a controller by cancelling the cancellation token passed to StartAsync().
+
+        /// <summary>
+        /// Stops the controller.
+        /// </summary>
+        /// <param name="cancellationToken">Specifies the cancellation token.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task StopAsync(CancellationToken cancellationToken)
         {
             await SyncContext.Clear;

@@ -26,12 +26,7 @@ using Neon.Common;
 namespace Neon.Kube.Operator
 {
     /// <summary>
-    /// <para>
-    /// <b>INTERNAL USE ONLY:</b> Common code for neonKUBE service implementations.
-    /// </para>
-    /// <note>
-    /// This is only supported for .NET 6.0 applications.
-    /// </note>
+    /// <b>INTERNAL USE ONLY:</b> Prototype Kubernetes Operator SDK
     /// </summary>
     [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc

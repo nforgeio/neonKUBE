@@ -37,8 +37,8 @@ namespace Neon.Kube.Operator
         /// <summary>
         /// Adds Kubernetes Operator to the tracing pipeline.
         /// </summary>
-        /// <param name="builder"></param>
-        /// <returns></returns>
+        /// <param name="builder">Specifies the trace provider builder.</param>
+        /// <returns>The <see cref="TracerProviderBuilder"/>.</returns>
         public static TracerProviderBuilder AddKubernetesOperatorInstrumentation(
             this TracerProviderBuilder builder)
         {

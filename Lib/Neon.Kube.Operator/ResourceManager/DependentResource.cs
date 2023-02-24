@@ -39,14 +39,11 @@ using Neon.Tasks;
 using k8s;
 using k8s.Models;
 
-using Prometheus;
-using Neon.Kube.Resources;
-
 namespace Neon.Kube.Operator.ResourceManager
 {
     /// <summary>
     /// <para>
-    /// Defines a dependent resource. This allows the Operator to respond to updates to Dependent resources.
+    /// Defines a dependent resource. This allows the operator to respond to updates to Dependent resources.
     /// For example, a Deployment will create a ReplicaSet and the Deployment controller may want to Reconcile
     /// when there are updates to the ReplicaSet.
     /// </para>

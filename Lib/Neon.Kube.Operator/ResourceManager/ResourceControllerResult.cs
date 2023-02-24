@@ -59,8 +59,7 @@ namespace Neon.Kube.Operator.ResourceManager
         /// Based on this new calculation, the new event triggers the according function.
         /// </summary>
         /// <returns>The <see cref="ResourceControllerResult"/> with the configured delay.</returns>
-        public static ResourceControllerResult Ok()
-            => null;
+        public static ResourceControllerResult Ok() => null;
 
         /// <summary>
         /// Create a <see cref="ResourceControllerResult"/> that requeues a resource
@@ -73,8 +72,7 @@ namespace Neon.Kube.Operator.ResourceManager
         /// will result in an immediate trigger of the function. This can lead to infinite circles.
         /// </param>
         /// <returns>The <see cref="ResourceControllerResult"/> with the configured delay.</returns>
-        public static ResourceControllerResult RequeueEvent(TimeSpan delay)
-            => new RequeueEventResult(delay);
+        public static ResourceControllerResult RequeueEvent(TimeSpan delay) => new RequeueEventResult(delay);
 
         /// <summary>
         /// Create a <see cref="ResourceControllerResult"/> that requeues a resource
@@ -90,7 +88,6 @@ namespace Neon.Kube.Operator.ResourceManager
         /// The event type to queue.
         /// </param>
         /// <returns>The <see cref="ResourceControllerResult"/> with the configured delay and event type.</returns>
-        public static ResourceControllerResult RequeueEvent(TimeSpan delay, WatchEventType eventType)
-            => new RequeueEventResult(delay, eventType);
+        public static ResourceControllerResult RequeueEvent(TimeSpan delay, WatchEventType eventType) => new RequeueEventResult(delay, eventType);
     }
 }

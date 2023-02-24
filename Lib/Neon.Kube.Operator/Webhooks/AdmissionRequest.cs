@@ -23,17 +23,35 @@ using System.Threading.Tasks;
 
 namespace Neon.Kube.Operator.Webhook
 {
+    /// <summary>
+    /// $todo(marcusbooyah): Documentation
+    /// </summary>
+    /// <typeparam name="TEntity"></typeparam>
     internal sealed class AdmissionRequest<TEntity>
     {
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         public string Uid { get; init; } = string.Empty;
 
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         public string Operation { get; init; } = string.Empty;
 
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         public TEntity Object { get; set; }
 
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         public TEntity OldObject { get; set; }
 
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
         public bool DryRun { get; set; }
     }
-
 }

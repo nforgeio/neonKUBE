@@ -30,7 +30,7 @@ using k8s;
 namespace Neon.Kube.Operator.Finalizer
 {
     /// <summary>
-    /// Finalizer manager.
+    /// Describes a ginalizer manager.
     /// </summary>
     /// <typeparam name="TEntity">The type of the k8s entity.</typeparam>
     [OperatorComponent(OperatorComponentType.Finalizer)]
@@ -46,10 +46,10 @@ namespace Neon.Kube.Operator.Finalizer
             get
             {
                 var metadata = new TEntity().GetKubernetesTypeMetadata();
+                var name     = $"{metadata.Group}/{GetType().Name.ToLowerInvariant()}";
 
-                var name = $"{metadata.Group}/{GetType().Name.ToLowerInvariant()}";
+                // Trim if longer than max label length.
 
-                // trim if longer than max label length.
                 if (name.Length > KubeConst.MaxLabelLength)
                 {
                     name = name[..KubeConst.MaxLabelLength];
@@ -62,8 +62,8 @@ namespace Neon.Kube.Operator.Finalizer
         /// <summary>
         /// Called when the entity needs to be finalized.
         /// </summary>
-        /// <param name="entity"></param>
-        /// <returns></returns>
+        /// <param name="entity">Specifies the entity being finalized.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         Task FinalizeAsync(TEntity entity);
     }
 }

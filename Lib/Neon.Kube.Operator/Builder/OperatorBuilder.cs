@@ -49,51 +49,61 @@ using k8s.KubeConfigModels;
 using Prometheus;
 using Neon.Kube.Operator.EventQueue;
 using Neon.Kube.Operator.Entities;
+using System.Diagnostics.Contracts;
 
 namespace Neon.Kube.Operator.Builder
 {
     /// <summary>
     /// <para>
-    /// Used to build a kubernetes operator.
+    /// Used to build a Kubernetes operator.
     /// </para>
     /// </summary>
     public class OperatorBuilder : IOperatorBuilder
     {
-        internal static string StartupProbeTag = "startup";
-        internal static string LivenessProbeTag = "liveness";
-        internal static string ReadinessProbeTag = "readiness";
+        /// <summary>
+        /// Identifies startup health probing.
+        /// </summary>
+        internal const string StartupHealthProbeTag = "startup";
 
-        /// <inheritdoc/>
-        public IServiceCollection Services { get; }
+        /// <summary>
+        /// Identifies liveness health probing.
+        /// </summary>
+        internal const string LivenessHealthProbeTag = "liveness";
 
-        private ComponentRegister componentRegister { get; }
+        /// <summary>
+        /// Identifies readiness health probing.
+        /// </summary>
+        internal const string ReadinessHealthProbeTag = "readiness";
 
-        private OperatorSettings operatorSettings { get; set; }
+        private ComponentRegistration   componentRegistration;
+        private OperatorSettings        operatorSettings;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="services"></param>
+        /// <param name="services">Specifies the dependency injection service container.</param>
         public OperatorBuilder(IServiceCollection services)
         {
-            Services = services;
-            componentRegister = new ComponentRegister();
+            Covenant.Requires<ArgumentNullException>(services != null, nameof(Service));
+
+            Services              = services;
+            componentRegistration = new ComponentRegistration();
         }
 
+        /// <summary>
+        /// $todo(marcusbooyah): Documentation
+        /// </summary>
+        /// <returns>THe <see cref="IOperatorBuilder"/>.</returns>
         internal IOperatorBuilder AddOperatorBase()
         {
             operatorSettings = (OperatorSettings)Services.Where(s => s.ServiceType == typeof(OperatorSettings)).Single().ImplementationInstance;
 
-            if (!Services.Any(x => x.ServiceType == typeof(IKubernetes)))
+            if (!Services.Any(service => service.ServiceType == typeof(IKubernetes)))
             {
                 var k8sClientConfig = operatorSettings.KubernetesClientConfiguration ?? KubernetesClientConfiguration.BuildDefaultConfig();
+                var k8s             = new Kubernetes(k8sClientConfig, new KubernetesRetryHandler());
 
-                var k8s = new Kubernetes(
-                    k8sClientConfig,
-                    new KubernetesRetryHandler());
-
-                if (NeonHelper.IsDevWorkstation ||
-                    Debugger.IsAttached)
+                if (NeonHelper.IsDevWorkstation || Debugger.IsAttached)
                 {
                     k8s.HttpClient.DefaultRequestHeaders.Add("Impersonate-User", $"system:serviceaccount:{operatorSettings.DeployedNamespace}:{operatorSettings.Name}"); 
                 }
@@ -103,7 +113,7 @@ namespace Neon.Kube.Operator.Builder
 
             Services.AddSingleton<OperatorSettings>(operatorSettings);
             Services.AddSingleton(operatorSettings.ResourceManagerOptions);
-            Services.AddSingleton(componentRegister);
+            Services.AddSingleton(componentRegistration);
             Services.AddSingleton(typeof(EventQueueMetrics<,>));
             Services.AddSingleton(typeof(ResourceCacheMetrics<>));
             Services.AddSingleton(typeof(ResourceManagerMetrics<,>));
@@ -111,11 +121,12 @@ namespace Neon.Kube.Operator.Builder
             Services.AddSingleton(typeof(IFinalizerManager<>), typeof(FinalizerManager<>));
             Services.AddSingleton(typeof(ICrdCache), typeof(CrdCache));
             Services.AddSingleton(typeof(IResourceCache<,>), typeof(ResourceCache<,>));
-            Services.AddSingleton(new AsyncKeyedLocker<string>(o =>
-            {
-                o.PoolSize = operatorSettings.LockPoolSize;
-                o.PoolInitialFill = operatorSettings.LockPoolInitialFill;
-            }));
+            Services.AddSingleton(new AsyncKeyedLocker<string>(
+                options =>
+                {
+                    options.PoolSize        = operatorSettings.LockPoolSize;
+                    options.PoolInitialFill = operatorSettings.LockPoolInitialFill;
+                }));
 
             if (operatorSettings.manageCustomResourceDefinitions)
             {
@@ -126,22 +137,25 @@ namespace Neon.Kube.Operator.Builder
             {
                 var types = AppDomain.CurrentDomain.GetAssemblies()
                     .SelectMany(s => s.GetTypes())
-                    .Where(
-                        t => t.GetInterfaces().Any(i => i.GetCustomAttributes<OperatorComponentAttribute>().Any())
-                    );
+                    .Where(type => type.GetInterfaces().Any(@interface => @interface.GetCustomAttributes<OperatorComponentAttribute>()
+                    .Any()));
 
                 foreach (var type in types)
                 {
-                    switch (type.GetInterfaces().Where(i => i.GetCustomAttributes<OperatorComponentAttribute>().Any()).Select(i => i.GetCustomAttribute<OperatorComponentAttribute>()).FirstOrDefault().ComponentType)
+                    switch (type.GetInterfaces()
+                        .Where(@interface => @interface.GetCustomAttributes<OperatorComponentAttribute>()
+                        .Any())
+                        .Select(@interface => @interface.GetCustomAttribute<OperatorComponentAttribute>())
+                        .FirstOrDefault().ComponentType)
                     {
                         case OperatorComponentType.Controller:
 
                             var controllerRegMethod = typeof(OperatorBuilderExtensions).GetMethod(nameof(OperatorBuilderExtensions.AddController));
                             var controllerArgs      = new object[controllerRegMethod.GetParameters().Count()];
-                            controllerArgs[0]       = this;
-
                             var options             = new ResourceManagerOptions();
                             var controllerAttribute = type.GetCustomAttribute<ControllerAttribute>();
+
+                            controllerArgs[0]       = this;
 
                             if (controllerAttribute?.Ignore == true)
                             {
@@ -171,23 +185,21 @@ namespace Neon.Kube.Operator.Builder
                             }
 
                             var dependentResources = type.GetCustomAttributes()
-                                                            .Where(a => a.GetType().IsGenericType)
-                                                            .Where(a => a.GetType()
-                                                                    .GetGenericTypeDefinition()
-                                                                    .IsEquivalentTo(typeof(DependentResourceAttribute<>)))
-                                                            .Select(a => (IDependentResource)(a)).ToList();
+                                .Where(attribute => attribute.GetType().IsGenericType)
+                                .Where(attribute => attribute.GetType().GetGenericTypeDefinition().IsEquivalentTo(typeof(DependentResourceAttribute<>)))
+                                .Select(attribute => (IDependentResource)(attribute)).ToList();
 
-                            foreach (var dr in dependentResources)
+                            foreach (var resource in dependentResources)
                             {
-                                if (!options.DependentResources.Any(t => t.GetEntityType() == dr.GetEntityType()))
+                                if (!options.DependentResources.Any(resource => resource.GetEntityType() == resource.GetEntityType()))
                                 {
-                                    options.DependentResources.Add(dr);
+                                    options.DependentResources.Add(resource);
                                 }
                             }
 
                             controllerArgs[2] = options;
-                            controllerRegMethod.MakeGenericMethod(type).Invoke(null, controllerArgs);
 
+                            controllerRegMethod.MakeGenericMethod(type).Invoke(null, controllerArgs);
                             break;
 
                         case OperatorComponentType.Finalizer:
@@ -198,10 +210,11 @@ namespace Neon.Kube.Operator.Builder
                             }
 
                             var finalizerRegMethod = typeof(OperatorBuilderExtensions).GetMethod(nameof(OperatorBuilderExtensions.AddFinalizer));
-                            var finalizerRegArgs = new object[finalizerRegMethod.GetParameters().Count()];
-                            finalizerRegArgs[0] = this;
-                            finalizerRegMethod.MakeGenericMethod(type).Invoke(null, finalizerRegArgs);
+                            var finalizerRegArgs   = new object[finalizerRegMethod.GetParameters().Count()];
 
+                            finalizerRegArgs[0] = this;
+
+                            finalizerRegMethod.MakeGenericMethod(type).Invoke(null, finalizerRegArgs);
                             break;
 
                         case OperatorComponentType.MutationWebhook:
@@ -212,10 +225,11 @@ namespace Neon.Kube.Operator.Builder
                             }
 
                             var mutatingWebhookRegMethod = typeof(OperatorBuilderExtensions).GetMethod(nameof(OperatorBuilderExtensions.AddMutatingWebhook));
-                            var mutatingWebhookRegArgs = new object[mutatingWebhookRegMethod.GetParameters().Count()];
-                            mutatingWebhookRegArgs[0] = this;
-                            mutatingWebhookRegMethod.MakeGenericMethod(type).Invoke(null, mutatingWebhookRegArgs);
+                            var mutatingWebhookRegArgs   = new object[mutatingWebhookRegMethod.GetParameters().Count()];
 
+                            mutatingWebhookRegArgs[0] = this;
+
+                            mutatingWebhookRegMethod.MakeGenericMethod(type).Invoke(null, mutatingWebhookRegArgs);
                             break;
 
                         case OperatorComponentType.ValidationWebhook:
@@ -226,10 +240,11 @@ namespace Neon.Kube.Operator.Builder
                             }
 
                             var validatingWebhookRegMethod = typeof(OperatorBuilderExtensions).GetMethod(nameof(OperatorBuilderExtensions.AddValidatingWebhook));
-                            var validatingWebhookRegArgs = new object[validatingWebhookRegMethod.GetParameters().Count()];
-                            validatingWebhookRegArgs[0] = this;
-                            validatingWebhookRegMethod.MakeGenericMethod(type).Invoke(null, validatingWebhookRegArgs);
+                            var validatingWebhookRegArgs   = new object[validatingWebhookRegMethod.GetParameters().Count()];
 
+                            validatingWebhookRegArgs[0] = this;
+
+                            validatingWebhookRegMethod.MakeGenericMethod(type).Invoke(null, validatingWebhookRegArgs);
                             break;
                     }
                 }
@@ -237,10 +252,13 @@ namespace Neon.Kube.Operator.Builder
 
             Services.AddHealthChecks().ForwardToPrometheus();
             Services.AddHostedService<ResourceControllerManager>();
-
             Services.AddRouting();
+
             return this;
         }
+
+        /// <inheritdoc/>
+        public IServiceCollection Services { get; }
 
         /// <inheritdoc/>
         public IOperatorBuilder AddFinalizer<TImplementation, TEntity>()
@@ -248,7 +266,7 @@ namespace Neon.Kube.Operator.Builder
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
             Services.TryAddScoped<TImplementation>();
-            componentRegister.RegisterFinalizer<TImplementation, TEntity>();
+            componentRegistration.RegisterFinalizer<TImplementation, TEntity>();
 
             return this;
         }
@@ -259,7 +277,7 @@ namespace Neon.Kube.Operator.Builder
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
             Services.TryAddScoped<TImplementation>();
-            componentRegister.RegisterMutatingWebhook<TImplementation, TEntity>();
+            componentRegistration.RegisterMutatingWebhook<TImplementation, TEntity>();
 
             operatorSettings.hasMutatingWebhooks = true;
 
@@ -272,7 +290,7 @@ namespace Neon.Kube.Operator.Builder
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
             Services.TryAddScoped<TImplementation>();
-            componentRegister.RegisterValidatingWebhook<TImplementation, TEntity>();
+            componentRegistration.RegisterValidatingWebhook<TImplementation, TEntity>();
 
             operatorSettings.hasValidatingWebhooks = true;
 
@@ -281,10 +299,11 @@ namespace Neon.Kube.Operator.Builder
 
         /// <inheritdoc/>
         public IOperatorBuilder AddController<TImplementation, TEntity>(
-            string @namespace = null,
-            ResourceManagerOptions options = null,
-            LeaderElectionConfig leaderConfig = null,
-            bool leaderElectionDisabled = false)
+            string                  @namespace             = null,
+            ResourceManagerOptions  options                = null,
+            LeaderElectionConfig    leaderConfig           = null,
+            bool                    leaderElectionDisabled = false)
+
             where TImplementation : class, IResourceController<TEntity>
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
@@ -298,10 +317,10 @@ namespace Neon.Kube.Operator.Builder
                     leaderConfig: leaderConfig,
                     leaderElectionDisabled: leaderElectionDisabled);
             });
-            componentRegister.RegisterResourceManager<ResourceManager<TEntity, TImplementation>>();
 
+            componentRegistration.RegisterResourceManager<ResourceManager<TEntity, TImplementation>>();
             Services.TryAddScoped<TImplementation>();
-            componentRegister.RegisterController<TImplementation, TEntity>();
+            componentRegistration.RegisterController<TImplementation, TEntity>();
 
             if (!leaderElectionDisabled)
             {
@@ -318,11 +337,11 @@ namespace Neon.Kube.Operator.Builder
 
         /// <inheritdoc/>
         public IOperatorBuilder AddNgrokTunnnel(
-            string hostname = "localhost",
-            int port = 5000,
-            string ngrokDirectory = null,
-            string ngrokAuthToken = null,
-            bool enabled = true)
+            string  hostname       = "localhost",
+            int     port           = 5000,
+            string  ngrokDirectory = null,
+            string  ngrokAuthToken = null,
+            bool    enabled        = true)
         {
             if (!enabled)
             {
@@ -332,7 +351,7 @@ namespace Neon.Kube.Operator.Builder
             Services.AddHostedService(
                 services => new NgrokWebhookTunnel(
                     services.GetRequiredService<IKubernetes>(),
-                    componentRegister,
+                    componentRegistration,
                     services,
                     ngrokDirectory,
                     ngrokAuthToken)
@@ -353,7 +372,7 @@ namespace Neon.Kube.Operator.Builder
                 name = typeof(TStartupCheck).Name;
             }
 
-            Services.AddHealthChecks().AddCheck<TStartupCheck>(name, HealthStatus.Unhealthy, new string[] { StartupProbeTag });
+            Services.AddHealthChecks().AddCheck<TStartupCheck>(name, HealthStatus.Unhealthy, new string[] { StartupHealthProbeTag });
 
             return this;
         }
@@ -367,7 +386,7 @@ namespace Neon.Kube.Operator.Builder
                 name = typeof(TLivenessCheck).Name;
             }
 
-            Services.AddHealthChecks().AddCheck<TLivenessCheck>(name, HealthStatus.Unhealthy, new string[] { LivenessProbeTag });
+            Services.AddHealthChecks().AddCheck<TLivenessCheck>(name, HealthStatus.Unhealthy, new string[] { LivenessHealthProbeTag });
 
             return this;
         }
@@ -381,7 +400,7 @@ namespace Neon.Kube.Operator.Builder
                 name = typeof(TReadinessCheck).Name;
             }
 
-            Services.AddHealthChecks().AddCheck<TReadinessCheck>(name, HealthStatus.Unhealthy, new string[] { ReadinessProbeTag });
+            Services.AddHealthChecks().AddCheck<TReadinessCheck>(name, HealthStatus.Unhealthy, new string[] { ReadinessHealthProbeTag });
 
             return this;
         }
