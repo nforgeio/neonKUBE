@@ -701,7 +701,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Returns the path the folder used by neonKUBE development tools to
-        /// cache packed container image files used to prepare neonKUBE node
+        /// cache the packed container image files used to prepare neonKUBE node
         /// images, creating the folder if it doesn't already exist.
         /// </para>
         /// <note>
@@ -722,7 +722,7 @@ namespace Neon.Kube
                     return cachedNodeContainerImagesFolder;
                 }
 
-                var path = Path.Combine(NeonHelper.DefaultUserHomeFolder, "node-container-images");
+                var path = Path.Combine(NeonHelper.DefaultUserHomeFolder, ".neonkube-dev", "node-container-images");
 
                 Directory.CreateDirectory(path);
 
