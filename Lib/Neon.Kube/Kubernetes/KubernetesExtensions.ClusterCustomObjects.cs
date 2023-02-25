@@ -126,7 +126,7 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object list.</returns>
         public static async Task<V1CustomObjectList<T>> ListClusterCustomObjectAsync<T>(
-            this ICustomObjectsOperations    k8s,
+            this ICustomObjectsOperations k8s,
             bool?               allowWatchBookmarks  = null,
             string              continueParameter    = null,
             string              fieldSelector        = null,
@@ -136,7 +136,7 @@ namespace Neon.Kube
             string              resourceVersionMatch = null,
             int?                timeoutSeconds       = null,
             bool?               watch                = null,
-            CancellationToken   cancellationToken    = default(CancellationToken))
+            CancellationToken   cancellationToken    = default)
 
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
@@ -248,7 +248,7 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object list.</returns>
         public static async Task<HttpOperationResponse<object>> ListClusterCustomObjectWithHttpMessagesAsync<T>(
-            this                ICustomObjectsOperations k8s,
+            this ICustomObjectsOperations k8s,
             bool?               allowWatchBookmarks  = null,
             string              continueParameter    = null,
             string              fieldSelector        = null,
@@ -258,7 +258,7 @@ namespace Neon.Kube
             string              resourceVersionMatch = null,
             int?                timeoutSeconds       = null,
             bool?               watch                = null,
-            CancellationToken   cancellationToken    = default(CancellationToken))
+            CancellationToken   cancellationToken    = default)
 
             where T : IKubernetesObject
         {
@@ -384,7 +384,7 @@ namespace Neon.Kube
             string              resourceVersionMatch = null,
             int?                timeoutSeconds       = null,
             bool?               watch                = null,
-            CancellationToken   cancellationToken    = default(CancellationToken))
+            CancellationToken   cancellationToken    = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(group), nameof(group));
@@ -431,7 +431,7 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The new object.</returns>
         public static async Task<T> CreateClusterCustomObjectAsync<T>(
-            this ICustomObjectsOperations    k8s,
+            this ICustomObjectsOperations k8s,
             T                   body,
             string              name,
             string              dryRun            = null,
@@ -469,9 +469,9 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object.</returns>
         public static async Task<T> ReadClusterCustomObjectAsync<T>(
-            this ICustomObjectsOperations    k8s,
+            this ICustomObjectsOperations k8s,
             string              name,
-            CancellationToken   cancellationToken = default(CancellationToken)) 
+            CancellationToken   cancellationToken = default) 
             
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
@@ -509,12 +509,12 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated object.</returns>
         public static async Task<T> ReplaceClusterCustomObjectAsync<T>(
-            this ICustomObjectsOperations    k8s,
+            this ICustomObjectsOperations k8s,
             T                   body,
             string              name, 
             string              dryRun            = null,
             string              fieldManager      = null,
-            CancellationToken   cancellationToken = default(CancellationToken))
+            CancellationToken   cancellationToken = default)
 
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
@@ -556,12 +556,12 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated object.</returns>
         public static async Task<T> UpsertClusterCustomObjectAsync<T>(
-            this ICustomObjectsOperations    k8s,
+            this ICustomObjectsOperations k8s,
             T                   body,
             string              name, 
             string              dryRun            = null,
             string              fieldManager      = null,
-            CancellationToken   cancellationToken = default(CancellationToken))
+            CancellationToken   cancellationToken = default)
 
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
@@ -627,13 +627,13 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated custom object.</returns>
         public static async Task<T> PatchClusterCustomObjectStatusAsync<T>(
-            this ICustomObjectsOperations    k8s,
+            this ICustomObjectsOperations k8s,
             V1Patch             patch,
             string              name,
             string              dryRun            = null,
             string              fieldManager      = null,
             bool?               force             = null,
-            CancellationToken   cancellationToken = default(CancellationToken))
+            CancellationToken   cancellationToken = default)
 
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
@@ -685,13 +685,13 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated custom object.</returns>
         public static async Task<T> PatchClusterCustomObjectAsync<T>(
-            this ICustomObjectsOperations  k8s,
-            V1Patch           patch,
-            string            name,
-            string            dryRun = null,
-            string            fieldManager = null,
-            bool?             force = null,
-            CancellationToken cancellationToken = default(CancellationToken))
+            this ICustomObjectsOperations k8s,
+            V1Patch             patch,
+            string              name,
+            string              dryRun            = null,
+            string              fieldManager      = null,
+            bool?               force             = null,
+            CancellationToken   cancellationToken = default)
 
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
@@ -749,14 +749,14 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task DeleteClusterCustomObjectAsync<T>(
-            this                ICustomObjectsOperations k8s,
+            this ICustomObjectsOperations k8s,
             string              name,
             V1DeleteOptions     body               = null,
             int?                gracePeriodSeconds = null,
             bool?               orphanDependents   = null,
             string              propagationPolicy  = null,
             string              dryRun             = null,
-            CancellationToken   cancellationToken  = default(CancellationToken))
+            CancellationToken   cancellationToken  = default)
 
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
@@ -826,14 +826,14 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task DeleteClusterCustomObjectAsync<T>(
-            this                ICustomObjectsOperations k8s,
+            this ICustomObjectsOperations k8s,
             T                   @object,
             V1DeleteOptions     body               = null,
             int?                gracePeriodSeconds = null,
             bool?               orphanDependents   = null,
             string              propagationPolicy  = null,
             string              dryRun             = null,
-            CancellationToken   cancellationToken  = default(CancellationToken))
+            CancellationToken   cancellationToken  = default)
 
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {

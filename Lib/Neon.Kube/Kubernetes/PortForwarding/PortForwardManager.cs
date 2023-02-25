@@ -75,7 +75,7 @@ namespace Neon.Kube.PortForward
             int                              localPort,
             int                              remotePort,
             Dictionary<string, List<string>> customHeaders     = null,
-            CancellationToken                cancellationToken = default(CancellationToken))
+            CancellationToken                cancellationToken = default)
         {
             Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort), nameof(localPort), $"Invalid TCP port: {localPort}");
             Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(remotePort), nameof(remotePort), $"Invalid TCP port: {remotePort}");
