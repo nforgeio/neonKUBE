@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TypeSafeConfigMap.cs
+// FILE:	    TypedConfigMap.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -50,13 +50,13 @@ namespace Neon.Kube
     /// </para>
     /// <note>
     /// This is typically used for persisting state to the cluster rather than for setting
-    /// configuration for pods.
+    /// configuration for pods but can be used for that as well.
     /// </note>
     /// </summary>
     /// <typeparam name="TConfig">Specifies the configuration type.</typeparam>
     /// <remarks>
     /// <para>
-    /// To create a configmap, use the <see cref="TypeSafeConfigMap(string, string, TConfig)"/>
+    /// To create a configmap, use the <see cref="TypedConfigMap(string, string, TConfig)"/>
     /// constructor, specifying the configmap's Kubernetes name and namespace as well as an
     /// instance of the typesafe config; your typed config will be available as the <see cref="Config"/>
     /// property.  Configure your config as required and then call <b>IKubernetes.CreateNamespacedConfigMapAsync()</b>,
@@ -65,7 +65,7 @@ namespace Neon.Kube
     /// <para>
     /// To read an existing configmap, call <b>IKubernetes.CoreV1.ReadNamespacedConfigMapAsync</b> to retrieve the
     /// Kubernetes configmap and then call the static <see cref="From"/> method to wrap the result
-    /// into a <see cref="TypeSafeConfigMap{TConfig}"/> where your typesafe values can be accessed
+    /// into a <see cref="TypedConfigMap{TConfig}"/> where your typesafe values can be accessed
     /// via the <see cref="Config"/> property.
     /// </para>
     /// <para>
@@ -74,7 +74,7 @@ namespace Neon.Kube
     /// passing <see cref="ConfigMap"/>.
     /// </para>
     /// </remarks>
-    public class TypeSafeConfigMap<TConfig>
+    public class TypedConfigMap<TConfig>
         where TConfig : class, new()
     {
         //---------------------------------------------------------------------
@@ -87,11 +87,11 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="configMap">The source config map.</param>
         /// <returns>The parsed configuration</returns>
-        public static TypeSafeConfigMap<TConfig> From(V1ConfigMap configMap)
+        public static TypedConfigMap<TConfig> From(V1ConfigMap configMap)
         {
             Covenant.Requires<ArgumentNullException>(configMap != null, nameof(configMap));
 
-            return new TypeSafeConfigMap<TConfig>(configMap);
+            return new TypedConfigMap<TConfig>(configMap);
         }
 
         //---------------------------------------------------------------------
@@ -103,7 +103,7 @@ namespace Neon.Kube
         /// Constructs an instance from an existing <see cref="V1ConfigMap"/>.
         /// </summary>
         /// <param name="configMap">The config map name as it will be persisted to Kubernetes.</param>
-        public TypeSafeConfigMap(V1ConfigMap configMap)
+        public TypedConfigMap(V1ConfigMap configMap)
         {
             Covenant.Requires<ArgumentNullException>(configMap != null, nameof(configMap));
 
@@ -125,7 +125,7 @@ namespace Neon.Kube
         /// Optionally specifies the initial config value.  A default instance will be created
         /// when this is <c>null</c>.
         /// </param>
-        public TypeSafeConfigMap(string name, string @namespace, TConfig config = null)
+        public TypedConfigMap(string name, string @namespace, TConfig config = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));

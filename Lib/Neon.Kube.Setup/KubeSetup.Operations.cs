@@ -381,9 +381,9 @@ spec:
                     controller.ThrowIfCancelled();
                     await InstallKubeDashboardAsync(controller, controlNode);
 
+                    controller.ThrowIfCancelled();
                     if (cluster.Definition.Features.NodeProblemDetector)
                     {
-                        controller.ThrowIfCancelled();
                         await InstallNodeProblemDetectorAsync(controller, controlNode);
                     }
 
@@ -400,15 +400,14 @@ spec:
                     await InstallRedisAsync(controller, controlNode);
 
                     controller.ThrowIfCancelled();
-                    await InstallClusterManifestConfigMapAsync(controller);
                     await InstallClusterOperatorAsync(controller, controlNode);
 
                     controller.ThrowIfCancelled();
                     await InstallSsoAsync(controller, controlNode);
 
+                    controller.ThrowIfCancelled();
                     if (cluster.Definition.Features.Kiali)
                     {
-                        controller.ThrowIfCancelled();
                         await InstallKialiAsync(controller, controlNode);
                     }
 
@@ -1584,45 +1583,25 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         }
 
         /// <summary>
-        /// Uploads the cluster manifest to cluster nodes at: <b>/etc/neonkube/metadata/cluster-manifest.json</b>
+        /// Uploads cluster related metadata to cluster nodes to <b>/etc/neonkube/metadata</b>
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="node">The target cluster node.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task ConfigureManifestAsync(ISetupController controller, NodeSshProxy<NodeDefinition> node)
+        public static async Task ConfigureMetadataAsync(ISetupController controller, NodeSshProxy<NodeDefinition> node)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
             controller.ThrowIfCancelled();
-            node.InvokeIdempotent("cluster-manifest",
+            node.InvokeIdempotent("cluster-metadata",
                 () =>
                 {
                     node.UploadText(LinuxPath.Combine(KubeNodeFolder.Config, "metadata", "cluster-manifest.json"), NeonHelper.JsonSerialize(ClusterManifest, Formatting.Indented));
                 });
 
             await Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Uploads the cluster manifest to the <see cref="KubeConfigMapName.ClusterManifest"/> in the 
-        /// <see cref="KubeNamespace.NeonSystem"/> namespace.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InstallClusterManifestConfigMapAsync(ISetupController controller)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-
-            controller.ThrowIfCancelled();
-
-            var k8s                      = GetK8sClient(controller);
-            var clusterManifest          = KubeSetup.ClusterManifest;
-            var clusterManifestConfigMap = new TypeSafeConfigMap<ClusterManifest>(KubeConfigMapName.ClusterManifest, KubeNamespace.NeonSystem, clusterManifest);
-
-            await k8s.CoreV1.CreateNamespacedConfigMapAsync(clusterManifestConfigMap.ConfigMap, KubeNamespace.NeonSystem);
         }
 
         /// <summary>
@@ -5724,7 +5703,7 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/cluster-info",
                 (Func<Task>)(async () =>
                 {
-                    var clusterInfoMap = new TypeSafeConfigMap<ClusterInfo>(
+                    var clusterInfoMap = new TypedConfigMap<ClusterInfo>(
                         name:       KubeConfigMapName.ClusterInfo,
                         @namespace: KubeNamespace.NeonStatus,
                         config:     new ClusterInfo(cluster.Definition));
@@ -5752,7 +5731,7 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/cluster-lock",
                 async () =>
                 {
-                    var clusterLockMap = new TypeSafeConfigMap<ClusterLock>(
+                    var clusterLockMap = new TypedConfigMap<ClusterLock>(
                         name:       KubeConfigMapName.ClusterLock,
                         @namespace: KubeNamespace.NeonStatus,
                         config:     new ClusterLock()
@@ -5766,7 +5745,7 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/cluster-health",
                 (Func<Task>)(async () =>
                 {
-                    var clusterHealthMap = new TypeSafeConfigMap<ClusterHealth>(
+                    var clusterHealthMap = new TypedConfigMap<ClusterHealth>(
                         name:       KubeConfigMapName.ClusterHealth,
                         @namespace: KubeNamespace.NeonStatus,
                         config:     new ClusterHealth()

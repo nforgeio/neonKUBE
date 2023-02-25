@@ -96,7 +96,7 @@ namespace NeonClusterOperator
                 var nodes                        = await k8s.CoreV1.ListNodeAsync();
                 var startTime                    = DateTime.UtcNow.AddSeconds(10);
                 var rawClusterManifestConfigMap  = await k8s.CoreV1.ReadNamespacedConfigMapAsync(KubeConfigMapName.ClusterManifest, KubeNamespace.NeonSystem);
-                var safeClusterManifestConfigmap = TypeSafeConfigMap<ClusterManifest>.From(rawClusterManifestConfigMap);
+                var safeClusterManifestConfigmap = TypedConfigMap<ClusterManifest>.From(rawClusterManifestConfigMap);
                 var masters                      = await k8s.CoreV1.ListNodeAsync(labelSelector: "node-role.kubernetes.io/control-plane=");
 
                 foreach (var image in safeClusterManifestConfigmap.Config.ContainerImages)
