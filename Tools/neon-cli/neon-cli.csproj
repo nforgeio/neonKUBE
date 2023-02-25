@@ -38,9 +38,9 @@
 		<PackageReference Include="KubernetesClient" Version="9.0.38" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
 		<PackageReference Include="Microsoft.Windows.Compatibility" Version="7.0.0" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2878-dev-jeff" />
-		<PackageReference Include="Neon.Deployment" Version="10000.0.2878-dev-jeff" />
-		<PackageReference Include="Neon.WinTTY" Version="10000.0.2878-dev-jeff" />
+		<PackageReference Include="Neon.Common" Version="10000.0.2879-dev-master" />
+		<PackageReference Include="Neon.Deployment" Version="10000.0.2879-dev-master" />
+		<PackageReference Include="Neon.WinTTY" Version="10000.0.2879-dev-master" />
 		<PackageReference Include="System.Diagnostics.StackTrace" Version="4.3.0" />
 		<PackageReference Include="System.Runtime" Version="4.3.1" />
 		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />

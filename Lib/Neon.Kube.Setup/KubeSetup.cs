@@ -87,9 +87,21 @@ namespace Neon.Kube.Setup
         }
 
         /// <summary>
+        /// <para>
         /// Returns the <see cref="ClusterManifest"/> for the current neonKUBE build.  This is generated
         /// by the internal <b>neon-image prepare node ...</b> tool command which prepares node images.
         /// This manifest describes the container images that will be provisioned into clusters.
+        /// </para>
+        /// <para>
+        /// The cluster manifest is uploaded to our S3 bucket at <see cref="KubeDownloads.NeonClusterManifestUri"/>
+        /// and is available from there and for installed <b>neon-desktop</b> and <b>neon-cli</b> applications,
+        /// the cluster manifest will also be persisted as <b>cluster-manifest.json</b> in the app installation
+        /// folder.
+        /// </para>
+        /// <para>
+        /// This property first attempts to loads (and caches) the manifest from the local <b>cluster-manifest.json</b> 
+        /// file and then falls back to downloading it from S3.
+        /// </para>
         /// </summary>
         public static ClusterManifest ClusterManifest
         {
@@ -100,7 +112,21 @@ namespace Neon.Kube.Setup
                     return cachedClusterManifest;
                 }
 
-                return cachedClusterManifest = NeonHelper.JsonDeserialize<ClusterManifest>(Resources.GetFile("/cluster-manifest.json").ReadAllText());
+                var localClusterManifestPath = Path.Combine(NeonHelper.GetApplicationFolder(), "cluster-manifest.json");
+
+                if (File.Exists(localClusterManifestPath))
+                {
+                    return cachedClusterManifest = NeonHelper.JsonDeserialize<ClusterManifest>(localClusterManifestPath);
+                }
+                else
+                {
+                    using (var httpClient = new HttpClient())
+                    {
+                        var response = httpClient.GetSafeAsync(KubeDownloads.NeonClusterManifestUri).Result;
+
+                        return cachedClusterManifest = NeonHelper.JsonDeserialize<ClusterManifest>(response.Content.ReadAsStringAsync().Result);
+                    }
+                }
             }
         }
 
