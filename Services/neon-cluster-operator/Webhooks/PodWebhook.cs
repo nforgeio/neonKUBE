@@ -81,8 +81,7 @@ namespace NeonClusterOperator
             {
                 logger?.LogInformationEx(() => $"Received request for pod {pod.Namespace()}/{pod.Name()}");
 
-                if (string.IsNullOrEmpty(pod.EnsureMetadata().NamespaceProperty)
-                    || !pod.EnsureMetadata().NamespaceProperty.StartsWith("neon-"))
+                if (string.IsNullOrEmpty(pod.EnsureMetadata().NamespaceProperty) || !pod.EnsureMetadata().NamespaceProperty.StartsWith("neon-"))
                 {
                     logger?.LogDebugEx(() => $"Pod not in a neonKUBE namespace.");
 
@@ -107,8 +106,7 @@ namespace NeonClusterOperator
             {
                 logger?.LogInformationEx(() => $"Received request for pod {pod.Namespace()}/{pod.Name()}");
 
-                if (string.IsNullOrEmpty(pod.EnsureMetadata().NamespaceProperty)
-                    || !pod.EnsureMetadata().NamespaceProperty.StartsWith("neon-"))
+                if (string.IsNullOrEmpty(pod.EnsureMetadata().NamespaceProperty) || !pod.EnsureMetadata().NamespaceProperty.StartsWith("neon-"))
                 {
                     logger?.LogInformationEx(() => $"Pod not in neon- namespace.");
 

@@ -140,12 +140,12 @@ namespace NeonClusterOperator
                 // Ignore all events when the controller hasn't been started.
 
                 var patch = OperatorHelper.CreatePatch<V1NeonSsoClient>();
+
                 patch.Replace(path => path.Status, new V1SsoClientStatus());
                 patch.Replace(path => path.Status.State, "reconciling");
                 await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonSsoClient>(OperatorHelper.ToV1Patch<V1NeonSsoClient>(patch), resource.Name());
 
                 await UpsertClientAsync(resource);
-
 
                 patch.Replace(path => path.Status, new V1SsoClientStatus());
                 patch.Replace(path => path.Status.State, "reconciled");
@@ -172,10 +172,8 @@ namespace NeonClusterOperator
                 });
 
                 var oauth2ProxyConfig = await k8s.CoreV1.ReadNamespacedConfigMapAsync("neon-sso-oauth2-proxy", KubeNamespace.NeonSystem);
-
-                var alphaConfig = NeonHelper.YamlDeserialize<Oauth2ProxyConfig>(oauth2ProxyConfig.Data["oauth2_proxy_alpha.cfg"]);
-
-                var provider = alphaConfig.Providers.Where(p => p.ClientId == "neon-sso").Single();
+                var alphaConfig       = NeonHelper.YamlDeserialize<Oauth2ProxyConfig>(oauth2ProxyConfig.Data["oauth2_proxy_alpha.cfg"]);
+                var provider          = alphaConfig.Providers.Where(p => p.ClientId == "neon-sso").Single();
 
                 if (provider.OidcConfig.ExtraAudiences.Contains(resource.Spec.Id))
                 {
@@ -185,7 +183,6 @@ namespace NeonClusterOperator
                 oauth2ProxyConfig.Data["oauth2_proxy_alpha.cfg"] = NeonHelper.YamlSerialize(alphaConfig);
 
                 await k8s.CoreV1.ReplaceNamespacedConfigMapAsync(oauth2ProxyConfig, oauth2ProxyConfig.Name(), KubeNamespace.NeonSystem);
-
                 logger?.LogInformationEx(() => $"DELETED: {resource.Name()}");
             }
         }
@@ -198,8 +195,8 @@ namespace NeonClusterOperator
             {
                 var client = new Dex.Client()
                 {
-                    Id = resource.Spec.Id,
-                    Name = resource.Spec.Name,
+                    Id     = resource.Spec.Id,
+                    Name   = resource.Spec.Name,
                     Public = resource.Spec.Public
                 };
 
@@ -227,8 +224,8 @@ namespace NeonClusterOperator
                     {
                         var updateClientRequest = new UpdateClientReq()
                         {
-                            Id = client.Id,
-                            Name = client.Name,
+                            Id      = client.Id,
+                            Name    = client.Name,
                             LogoUrl = client.LogoUrl
                         };
                         updateClientRequest.RedirectUris.AddRange(client.RedirectUris);
@@ -239,13 +236,10 @@ namespace NeonClusterOperator
                 }
 
                 var oauth2ProxyConfig = await k8s.CoreV1.ReadNamespacedConfigMapAsync("neon-sso-oauth2-proxy", KubeNamespace.NeonSystem);
-
-                var alphaConfig = NeonHelper.YamlDeserialize<Oauth2ProxyConfig>(oauth2ProxyConfig.Data["oauth2_proxy_alpha.cfg"]);
-
-                var provider = alphaConfig.Providers.Where(p => p.ClientId == "neon-sso").Single();
+                var alphaConfig       = NeonHelper.YamlDeserialize<Oauth2ProxyConfig>(oauth2ProxyConfig.Data["oauth2_proxy_alpha.cfg"]);
+                var provider          = alphaConfig.Providers.Where(p => p.ClientId == "neon-sso").Single();
                 
-                if (resource.Spec.Id != "neon-sso"
-                    && !provider.OidcConfig.ExtraAudiences.Contains(resource.Spec.Id))
+                if (resource.Spec.Id != "neon-sso" && !provider.OidcConfig.ExtraAudiences.Contains(resource.Spec.Id))
                 {
                     provider.OidcConfig.ExtraAudiences.Add(resource.Spec.Id);
                 }

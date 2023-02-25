@@ -96,7 +96,7 @@ namespace NeonClusterOperator
                 var startTime = DateTime.UtcNow.AddSeconds(10);
 
                 var clusterManifestJson = Program.Resources.GetFile("/cluster-manifest.json").ReadAllText();
-                var clusterManifest = NeonHelper.JsonDeserialize<ClusterManifest>(clusterManifestJson);
+                var clusterManifest     = NeonHelper.JsonDeserialize<ClusterManifest>(clusterManifestJson);
 
                 var masters = await k8s.CoreV1.ListNodeAsync(labelSelector: "node-role.kubernetes.io/control-plane=");
 
@@ -125,7 +125,6 @@ namespace NeonClusterOperator
                     if (await IsAnyNodeTaskPendingAsync(labels))
                     {
                         logger?.LogDebugEx(() => $"Image {KubeConst.LocalClusterRegistryProject}/{imageName}:{tag} has node task pending.");
-
                         continue;
                     }
 
@@ -175,7 +174,7 @@ rm -rf {tempDir}
                 
                 await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterOperator>(
                     patch: OperatorHelper.ToV1Patch<V1NeonClusterOperator>(patch), 
-                    name: clusterOperator.Name());
+                    name:  clusterOperator.Name());
             }
         }
 

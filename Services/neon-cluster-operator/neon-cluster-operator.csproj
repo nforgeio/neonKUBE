@@ -78,7 +78,7 @@
 	$todo(jefflill): 02-25-2023
 	
 	I've refactored how cluster manifests are handled.  Before 02-25-2023, we included
-	this manifest in the [Neon.Kube.Setup] and [neon-node-agent] projects as resources.
+	this manifest in the [Neon.Kube.Setup] and [neon-cluster-operator] projects as resources.
 	This resulted in a chicken-and-egg issue where rebuilding the manifest in neonCLOUD
 	would change the manifest, which was result in a change to [neon-cluster-operator]
 	which would cause the manifest to change when rebuilt, and so on...

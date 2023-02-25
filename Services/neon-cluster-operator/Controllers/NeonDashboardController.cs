@@ -53,13 +53,13 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 using Prometheus;
-
-using Task = System.Threading.Tasks.Task;
-using Metrics = Prometheus.Metrics;
 using Neon.Kube.Operator.Finalizer;
 using Neon.Kube.Operator.ResourceManager;
 using Neon.Kube.Operator.Controller;
 using Neon.Kube.Operator.Rbac;
+
+using Task    = System.Threading.Tasks.Task;
+using Metrics = Prometheus.Metrics;
 
 namespace NeonClusterOperator
 {
@@ -82,7 +82,7 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Instance members
 
-        private readonly IKubernetes k8s;
+        private readonly IKubernetes                        k8s;
         private readonly ILogger<NeonDashboardController>   logger;
 
         /// <summary>
@@ -95,8 +95,8 @@ namespace NeonClusterOperator
             Covenant.Requires(k8s != null, nameof(k8s));
             Covenant.Requires(logger != null, nameof(logger));
 
-            this.k8s              = k8s;
-            this.logger           = logger;
+            this.k8s    = k8s;
+            this.logger = logger;
         }
 
         /// <summary>
@@ -118,7 +118,6 @@ namespace NeonClusterOperator
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
                 Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("customresource", nameof(V1NeonDashboard)));
-
                 logger?.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
 
                 return null;
@@ -132,7 +131,6 @@ namespace NeonClusterOperator
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-
                 // Ignore all events when the controller hasn't been started.
 
                 logger?.LogInformationEx(() => $"DELETED: {resource.Name()}");

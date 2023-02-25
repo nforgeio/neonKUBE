@@ -136,6 +136,7 @@ namespace NeonClusterOperator
                 logger?.LogInformationEx(() => $"Reconciling {typeof(V1MinioBucket)} [{resource.Namespace()}/{resource.Name()}].");
 
                 var patch = OperatorHelper.CreatePatch<V1MinioBucket>();
+
                 patch.Replace(path => path.Status, new V1MinioBucket.V1MinioBucketStatus());
                 patch.Replace(path => path.Status.State, "reconciling");
 
@@ -146,6 +147,7 @@ namespace NeonClusterOperator
                     minioClient = await GetMinioClientAsync(resource);
 
                     // Create bucket if it doesn't exist.
+
                     bool exists = await minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(resource.Name()));
 
                     if (exists)
@@ -187,11 +189,11 @@ namespace NeonClusterOperator
                 }
 
                 patch = OperatorHelper.CreatePatch<V1MinioBucket>();
+
                 patch.Replace(path => path.Status, new V1MinioBucket.V1MinioBucketStatus());
                 patch.Replace(path => path.Status.State, "reconciled");
 
                 await k8s.CustomObjects.PatchNamespacedCustomObjectStatusAsync<V1MinioBucket>(OperatorHelper.ToV1Patch<V1MinioBucket>(patch), resource.Namespace(), resource.Name());
-
                 logger?.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
 
                 return null;
@@ -222,19 +224,19 @@ namespace NeonClusterOperator
             var secret        = await k8s.CoreV1.ReadNamespacedSecretAsync(secretName, resource.Namespace());
             var accessKey     = Encoding.UTF8.GetString(secret.Data["accesskey"]);
             var secretKey     = Encoding.UTF8.GetString(secret.Data["secretkey"]);
+            var minioPort     = 80;
 
-            int port = 80;
             if (NeonHelper.IsDevWorkstation) 
             { 
                 var pod = (await k8s.CoreV1.ListNamespacedPodAsync(resource.Namespace(), labelSelector: $"v1.min.io/tenant={resource.Spec.Tenant}")).Items.First();
 
-                port           = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
+                minioPort      = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
                 portForwardCts = new CancellationTokenSource();
 
                 service.PortForwardManager.StartPodPortForward(
                     name:              pod.Name(), 
                     @namespace:        pod.Namespace(), 
-                    localPort:         port, 
+                    localPort:         minioPort, 
                     remotePort:        9000, 
                     cancellationToken: portForwardCts.Token);
 
@@ -242,7 +244,7 @@ namespace NeonClusterOperator
             }
 
             minioClient
-                .WithEndpoint(minioEndpoint, port)
+                .WithEndpoint(minioEndpoint, minioPort)
                 .WithCredentials(accessKey, secretKey)
                 .Build();
 
@@ -252,7 +254,7 @@ namespace NeonClusterOperator
                     "alias",
                     "set",
                     $"{GetTenantAlias(resource)}",
-                    $"http://{minioEndpoint}:{port}",
+                    $"http://{minioEndpoint}:{minioPort}",
                     accessKey,
                     secretKey
                 });

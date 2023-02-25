@@ -79,8 +79,7 @@ namespace NeonClusterOperator
             {
                 logger?.LogInformationEx(() => $"Received request for deployment {deployment.Namespace()}/{deployment.Name()}");
 
-                if (string.IsNullOrEmpty(deployment.EnsureMetadata().NamespaceProperty)
-                    || !deployment.EnsureMetadata().NamespaceProperty.StartsWith("neon-"))
+                if (string.IsNullOrEmpty(deployment.EnsureMetadata().NamespaceProperty) || !deployment.EnsureMetadata().NamespaceProperty.StartsWith("neon-"))
                 {
                     logger?.LogInformationEx(() => $"Deployment not in neon- namespace.");
 
@@ -107,8 +106,7 @@ namespace NeonClusterOperator
             {
                 logger?.LogInformationEx(() => $"Received request for deployment {deployment.Namespace()}/{deployment.Name()}");
 
-                if (string.IsNullOrEmpty(deployment.EnsureMetadata().NamespaceProperty)
-                    || !deployment.EnsureMetadata().NamespaceProperty.StartsWith("neon-"))
+                if (string.IsNullOrEmpty(deployment.EnsureMetadata().NamespaceProperty) || !deployment.EnsureMetadata().NamespaceProperty.StartsWith("neon-"))
                 {
                     logger?.LogInformationEx(() => $"Deployment not in neon- namespace.");
 

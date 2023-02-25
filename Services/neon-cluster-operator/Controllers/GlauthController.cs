@@ -68,9 +68,9 @@ namespace NeonClusterOperator
     /// </summary>
     [Controller(ManageCustomResourceDefinitions = false)]
     [RbacRule<V1Secret>(
-        Verbs = RbacVerb.Get, 
-        Scope = EntityScope.Namespaced,
-        Namespace = KubeNamespace.NeonSystem,
+        Verbs         = RbacVerb.Get, 
+        Scope         = EntityScope.Namespaced,
+        Namespace     = KubeNamespace.NeonSystem,
         ResourceNames = "neon-admin.neon-system-db.credentials.postgresql,glauth-users,glauth-groups")]
     [RbacRule<V1Pod>(Verbs = RbacVerb.List)]
     public class GlauthController : IResourceController<V1Secret>
@@ -97,12 +97,9 @@ namespace NeonClusterOperator
             {
                 Tracer.CurrentSpan?.AddEvent("start", attributes => attributes.Add("customresource", nameof(V1Secret)));
 
-                var logger = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger<GlauthController>();
-
-                var k8s = serviceProvider.GetRequiredService<IKubernetes>();
-
-                var secret = await k8s.CoreV1.ReadNamespacedSecretAsync("neon-admin.neon-system-db.credentials.postgresql", KubeNamespace.NeonSystem);
-
+                var logger   = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger<GlauthController>();
+                var k8s      = serviceProvider.GetRequiredService<IKubernetes>();
+                var secret   = await k8s.CoreV1.ReadNamespacedSecretAsync("neon-admin.neon-system-db.credentials.postgresql", KubeNamespace.NeonSystem);
                 var password = Encoding.UTF8.GetString(secret.Data["password"]);
 
                 if (!NeonHelper.IsDevWorkstation)
@@ -111,15 +108,15 @@ namespace NeonClusterOperator
                 }
                 else
                 {
-                    var port = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
-                    var pod  = (await k8s.CoreV1.ListNamespacedPodAsync(KubeNamespace.NeonSystem, labelSelector: "app=neon-system-db")).Items.First();
+                    var localPort = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
+                    var pod       = (await k8s.CoreV1.ListNamespacedPodAsync(KubeNamespace.NeonSystem, labelSelector: "app=neon-system-db")).Items.First();
 
-                    connectionString = $"Host=localhost;Port={port};Username={KubeConst.NeonSystemDbAdminUser};Password={password};Database=glauth";
+                    connectionString = $"Host=localhost;Port={localPort};Username={KubeConst.NeonSystemDbAdminUser};Password={password};Database=glauth";
 
                     service.PortForwardManager.StartPodPortForward(
                         name:       pod.Name(), 
                         @namespace: KubeNamespace.NeonSystem, 
-                        localPort:  port, 
+                        localPort:  localPort, 
                         remotePort: 5432);
                 }
 
