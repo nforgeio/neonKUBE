@@ -87,20 +87,19 @@ namespace NeonClusterOperator
                 Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckRegistryImages)));
 
                 var dataMap  = context.MergedJobDataMap;
+
                 k8s          = (IKubernetes)dataMap["Kubernetes"];
                 harborClient = (HarborClient)dataMap["HarborClient"];
 
                 await CheckProjectAsync(KubeConst.LocalClusterRegistryProject);
 
-                var nodes     = await k8s.CoreV1.ListNodeAsync();
-                var startTime = DateTime.UtcNow.AddSeconds(10);
+                var nodes                        = await k8s.CoreV1.ListNodeAsync();
+                var startTime                    = DateTime.UtcNow.AddSeconds(10);
+                var rawClusterManifestConfigMap  = await k8s.CoreV1.ReadNamespacedConfigMapAsync(KubeConfigMapName.ClusterManifest, KubeNamespace.NeonSystem);
+                var safeClusterManifestConfigmap = TypeSafeConfigMap<ClusterManifest>.From(rawClusterManifestConfigMap);
+                var masters                      = await k8s.CoreV1.ListNodeAsync(labelSelector: "node-role.kubernetes.io/control-plane=");
 
-                var clusterManifestJson = Program.Resources.GetFile("/cluster-manifest.json").ReadAllText();
-                var clusterManifest     = NeonHelper.JsonDeserialize<ClusterManifest>(clusterManifestJson);
-
-                var masters = await k8s.CoreV1.ListNodeAsync(labelSelector: "node-role.kubernetes.io/control-plane=");
-
-                foreach (var image in clusterManifest.ContainerImages)
+                foreach (var image in safeClusterManifestConfigmap.Config.ContainerImages)
                 {
                     var tag       = image.InternalRef.Split(':').Last();
                     var imageName = image.InternalRef.Split('/').Last().Split(':').First();
@@ -118,7 +117,6 @@ namespace NeonClusterOperator
                     if (await HarborHoldsContainerImageAsync(KubeConst.LocalClusterRegistryProject, imageName, tag))
                     {
                         logger?.LogDebugEx(() => $"Image {KubeConst.LocalClusterRegistryProject}/{imageName}:{tag} exists.");
-
                         continue;
                     }
 

@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -34,7 +35,6 @@ using k8s;
 using k8s.Models;
 
 using Quartz.Logging;
-using System.Diagnostics.Contracts;
 using Octokit;
 
 namespace NeonClusterOperator

@@ -239,7 +239,7 @@ namespace Neon.Kube.Setup
             controller.AddNodeStep("node basics", (controller, node) => node.BaseInitialize(controller, upgradeLinux: false));  // $todo(jefflill): We don't support Linux distribution upgrades yet.
             controller.AddNodeStep("root certificates", (controller, node) => node.UpdateRootCertificates());
             controller.AddNodeStep("setup ntp", (controller, node) => node.SetupConfigureNtp(controller));
-            controller.AddNodeStep("cluster metadata", ConfigureMetadataAsync);
+            controller.AddNodeStep("cluster manifest", ConfigureManifestAsync);
 
             // Perform common configuration for the bootstrap node first.
             // We need to do this so the the package cache will be running
