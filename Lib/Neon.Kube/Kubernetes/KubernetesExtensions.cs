@@ -939,6 +939,8 @@ namespace Neon.Kube
         /// <returns>The <see cref="V1PodList"/>.</returns>
         public static async Task<V1PodList> ListAllPodsAsync(this IKubernetes k8s)
         {
+            await SyncContext.Clear;
+
             // Clusters may have hundreds or even thousands of namespaces, so we don't
             // want to query for pods one namespace at a time because that may take too
             // long.  But we also don't want to slam the API server with potentially
@@ -967,6 +969,135 @@ namespace Neon.Kube
                 });
 
             return pods;
+        }
+
+        //---------------------------------------------------------------------
+        // Namespaced typed config extensions.
+
+        /// <summary>
+        /// Creates a namespace scoped typed config.
+        /// </summary>
+        /// <typeparam name="TConfigMap">Specifies the config type.</typeparam>
+        /// <param name="k8s">The <see cref="IKubernetes"/> instance.</param>
+        /// <param name="config">Specifies the config data.</param>
+        /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
+        /// <param name="name">Specifies the object name.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <returns>The <see cref="V1ConfigMap"/> created for the typed config.</returns>
+        /// <remarks>
+        /// Typed configs are <see cref="V1ConfigMap"/> objects that wrap a strongly typed
+        /// object formatted using the <see cref="TypedConfigMap{TConfigMap}"/> class.  This
+        /// makes it easy to persist typed data to a Kubernetes cluster.
+        /// </remarks>
+        public static async Task<V1ConfigMap> CreateNamespacedConfig<TConfigMap>(
+            this IKubernetes    k8s,
+            TConfigMap          config,
+            string              name,
+            string              namespaceParameter,
+            CancellationToken   cancellationToken = default)
+
+            where TConfigMap: class, new()
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(config != null, nameof(config));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
+
+            var typedConfigMap = new TypedConfigMap<TConfigMap>(name, namespaceParameter, config);
+
+            return await k8s.CoreV1.CreateNamespacedConfigMapAsync(typedConfigMap.ConfigMap, namespaceParameter, cancellationToken: cancellationToken);
+        }
+
+        /// <summary>
+        /// Retrieves a namespace scoped typed config.
+        /// </summary>
+        /// <typeparam name="TConfigMap">Specifies the config type.</typeparam>
+        /// <param name="k8s">The <see cref="IKubernetes"/> instance.</param>
+        /// <param name="name">Specifies the object name.</param>
+        /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <returns>The retrieved config.</returns>
+        /// <remarks>
+        /// Typed configs are <see cref="V1ConfigMap"/> objects that wrap a strongly typed
+        /// object formatted using the <see cref="TypedConfigMap{TConfigMap}"/> class.  This
+        /// makes it easy to persist typed data to a Kubernetes cluster.
+        /// </remarks>
+        public static async Task<TConfigMap> ReadNamespacedConfig<TConfigMap>(
+            this IKubernetes    k8s,
+            string              name,
+            string              namespaceParameter,
+            CancellationToken   cancellationToken = default)
+
+            where TConfigMap : class, new()
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
+
+            var rawConfig   = await k8s.CoreV1.ReadNamespacedConfigMapAsync(name, namespaceParameter, pretty: false, cancellationToken: cancellationToken);
+            var typedConfig = TypedConfigMap<TConfigMap>.From(rawConfig);
+
+            return typedConfig.Config;
+        }
+
+        /// <summary>
+        /// Replaces an existing typed config with new data.
+        /// </summary>
+        /// <typeparam name="TConfigMap">Specifies the config type.</typeparam>
+        /// <param name="k8s">The <see cref="IKubernetes"/> instance.</param>
+        /// <param name="config">Specifies the replacement data.</param>
+        /// <param name="name">Specifies the object name.</param>
+        /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <returns>The updated <see cref="V1ConfigMap"/> for the config.</returns>
+        /// <remarks>
+        /// Typed configs are <see cref="V1ConfigMap"/> objects that wrap a strongly typed
+        /// object formatted using the <see cref="TypedConfigMap{TConfigMap}"/> class.  This
+        /// makes it easy to persist typed data to a Kubernetes cluster.
+        /// </remarks>
+        public static async Task<V1ConfigMap> ReplaceNamespacedConfig<TConfigMap>(
+            this IKubernetes    k8s,
+            TConfigMap          config,
+            string              name,
+            string              namespaceParameter,
+            CancellationToken   cancellationToken = default)
+
+            where TConfigMap : class, new()
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(config != null, nameof(config));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
+
+            var typedConfig = new TypedConfigMap<TConfigMap>(name, namespaceParameter, config);
+
+            return await k8s.CoreV1.ReplaceNamespacedConfigMapAsync(typedConfig.ConfigMap, name, namespaceParameter, cancellationToken: cancellationToken);
+        }
+
+        /// <summary>
+        /// Deletes a namespaced typed config.
+        /// </summary>
+        /// <param name="k8s">The <see cref="IKubernetes"/> instance.</param>
+        /// <param name="name">Specifies the object name.</param>
+        /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <remarks>
+        /// Typed configs are <see cref="V1ConfigMap"/> objects that wrap a strongly typed
+        /// object formatted using the <see cref="TypedConfigMap{TConfigMap}"/> class.  This
+        /// makes it easy to persist typed data to a Kubernetes cluster.
+        /// </remarks>
+        public static async Task DeleteNamespacedConfig(
+            this IKubernetes    k8s,
+            string              name,
+            string              namespaceParameter,
+            CancellationToken   cancellationToken = default)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
+
+            await k8s.CoreV1.DeleteNamespacedConfigMapAsync(name, namespaceParameter, cancellationToken: cancellationToken);
         }
     }
 }
