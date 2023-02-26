@@ -66,7 +66,9 @@ namespace NeonClusterOperator
     /// <summary>
     /// Manages Glauth LDAP database.
     /// </summary>
-    [Controller(ManageCustomResourceDefinitions = false)]
+    [Controller(
+        ManageCustomResourceDefinitions = false,
+        LabelSelector = "neonkube.io/managed-by=neon-cluster-operator,neonkube.io/controlled-by=glauth-controller")]
     [RbacRule<V1Secret>(
         Verbs = RbacVerb.Get, 
         Scope = EntityScope.Namespaced,
@@ -75,12 +77,6 @@ namespace NeonClusterOperator
     [RbacRule<V1Pod>(Verbs = RbacVerb.List)]
     public class GlauthController : IResourceController<V1Secret>
     {
-        /// <inheritdoc/>
-        public Func<V1Secret, bool> Filter => (resource) =>
-        {
-            return (resource.Name() == "glauth-users" || resource.Name() == "glauth-groups");
-        };
-
         //---------------------------------------------------------------------
         // Static members
 

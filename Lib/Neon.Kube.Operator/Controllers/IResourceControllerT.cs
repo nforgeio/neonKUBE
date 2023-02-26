@@ -68,11 +68,6 @@ namespace Neon.Kube.Operator.Controller
         }
 
         /// <summary>
-        /// An optional filter.
-        /// </summary>
-        Func<TEntity, bool> Filter => (TEntity) => true;
-
-        /// <summary>
         /// Called periodically to allow the operator to perform global operations.
         /// The period is controlled by <see cref="ResourceManagerOptions.IdleInterval"/>.
         /// </summary>

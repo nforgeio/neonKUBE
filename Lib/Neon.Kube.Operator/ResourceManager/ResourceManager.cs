@@ -56,6 +56,7 @@ using k8s.Models;
 using Prometheus;
 using OpenTelemetry.Resources;
 using System.Runtime.InteropServices;
+using Neon.Kube.Operator.Attributes;
 
 namespace Neon.Kube.Operator.ResourceManager
 {
@@ -1006,14 +1007,6 @@ namespace Neon.Kube.Operator.ResourceManager
                         resourceCache.Compare(resource, out var modifiedEventType);
                         logger?.LogDebugEx(() => $"Resource {resource.Kind} {resource.Namespace()}/{resource.Name()} received {@event.Type}/{modifiedEventType} event.");
 
-                        using (var scope = serviceProvider.CreateScope())
-                        {
-                            if (!CreateController(scope.ServiceProvider).Filter.Invoke(resource))
-                            {
-                                return;
-                            }
-                        }
-
                         switch (@event.Type)
                         {
                             case WatchEventType.Added:
@@ -1182,12 +1175,21 @@ namespace Neon.Kube.Operator.ResourceManager
                 {
                     foreach (var ns in resourceNamespaces)
                     {
-                        tasks.Add(k8s.WatchAsync<TEntity>(enqueueAsync, namespaceParameter: ns, cancellationToken: cancellationToken));
+                        tasks.Add(k8s.WatchAsync<TEntity>(
+                            actionAsync: enqueueAsync, 
+                            namespaceParameter: ns, 
+                            fieldSelector: options.FieldSelector,
+                            labelSelector: options.LabelSelector,
+                            cancellationToken: cancellationToken));
                     }
                 }
                 else
                 {
-                    tasks.Add(k8s.WatchAsync<TEntity>(enqueueAsync, cancellationToken: cancellationToken));
+                    tasks.Add(k8s.WatchAsync<TEntity>(
+                        actionAsync: enqueueAsync,
+                        fieldSelector: options.FieldSelector,
+                        labelSelector: options.LabelSelector,
+                        cancellationToken: cancellationToken));
                 }
 
                 foreach (var dependent in options.DependentResources)
@@ -1197,6 +1199,8 @@ namespace Neon.Kube.Operator.ResourceManager
 
                     args[0] = k8s;
                     args[1] = enqueueDependentAsync;
+                    args[3] = options.FieldSelector;
+                    args[4] = options.LabelSelector;
                     args[8] = cancellationToken;
 
                     if (this.resourceNamespaces != null && crdCache.Get(dependent.GetEntityType().GetKubernetesCrdName())?.Spec.Scope != "Cluster")

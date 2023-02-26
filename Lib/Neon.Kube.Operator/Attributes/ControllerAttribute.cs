@@ -44,6 +44,16 @@ namespace Neon.Kube.Operator.Attributes
         public bool ManageCustomResourceDefinitions { get; set; } = true;
 
         /// <summary>
+        /// An optional label selector to be applied to the watcher. This can be used for filtering.
+        /// </summary>
+        public string LabelSelector { get; set; } = null;
+
+        /// <summary>
+        /// An optional field selector to be applied to the watcher. This can be used for filtering.
+        /// </summary>
+        public string FieldSelector { get; set; } = null;
+
+        /// <summary>
         /// Specifies the <see cref="ResourceManager.ResourceManagerOptions.MaxConcurrentReconciles"/>.
         /// </summary>
         public int MaxConcurrentReconciles { get; set; } = 1;

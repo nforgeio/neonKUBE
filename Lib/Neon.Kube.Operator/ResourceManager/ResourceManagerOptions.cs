@@ -97,6 +97,16 @@ namespace Neon.Kube.Operator.ResourceManager
         public EntityScope Scope { get; set; } = EntityScope.Namespaced;
 
         /// <summary>
+        /// An optional label selector to be applied to the watcher. This can be used for filtering.
+        /// </summary>
+        public string LabelSelector { get; set; } = null;
+
+        /// <summary>
+        /// An optional field selector to be applied to the watcher. This can be used for filtering.
+        /// </summary>
+        public string FieldSelector { get; set; } = null;
+
+        /// <summary>
         /// Specifies the minimum timeout to before retrying after an error.  Timeouts will start
         /// at <see cref="ErrorMinRequeueInterval"/> and increase to <see cref="ErrorMaxRequeueInterval"/>
         /// until the error is resolved.  This defaults to <b>15 seconds</b>.

@@ -184,6 +184,18 @@ namespace Neon.Kube.Operator.Builder
                                 options.MaxConcurrentReconciles = controllerAttribute.MaxConcurrentReconciles;
                             }
 
+                            if (options.FieldSelector == null
+                                && controllerAttribute?.FieldSelector != null)
+                            {
+                                options.FieldSelector = controllerAttribute.FieldSelector;
+                            }
+
+                            if (options.LabelSelector == null
+                                && controllerAttribute?.LabelSelector != null)
+                            {
+                                options.LabelSelector = controllerAttribute.LabelSelector;
+                            }
+
                             var dependentResources = type.GetCustomAttributes()
                                 .Where(attribute => attribute.GetType().IsGenericType)
                                 .Where(attribute => attribute.GetType().GetGenericTypeDefinition().IsEquivalentTo(typeof(DependentResourceAttribute<>)))
