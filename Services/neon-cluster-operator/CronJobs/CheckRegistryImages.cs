@@ -31,6 +31,7 @@ using Neon.Kube;
 using Neon.Kube.Operator.Util;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
+using Neon.Tasks;
 
 using NeonClusterOperator.Harbor;
 
@@ -86,27 +87,29 @@ namespace NeonClusterOperator
             {
                 Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckRegistryImages)));
 
-                var dataMap  = context.MergedJobDataMap;
-                k8s          = (IKubernetes)dataMap["Kubernetes"];
-                harborClient = (HarborClient)dataMap["HarborClient"];
-
-                await CheckProjectAsync(KubeConst.LocalClusterRegistryProject);
-
-                var nodes     = await k8s.CoreV1.ListNodeAsync();
-                var startTime = DateTime.UtcNow.AddSeconds(10);
-
-                var clusterManifestJson = Program.Resources.GetFile("/cluster-manifest.json").ReadAllText();
-                var clusterManifest = NeonHelper.JsonDeserialize<ClusterManifest>(clusterManifestJson);
-
-                var masters = await k8s.CoreV1.ListNodeAsync(labelSelector: "node-role.kubernetes.io/control-plane=");
-
-                foreach (var image in clusterManifest.ContainerImages)
+                try
                 {
-                    var tag       = image.InternalRef.Split(':').Last();
-                    var imageName = image.InternalRef.Split('/').Last().Split(':').First();
-                    var node      = masters.Items.SelectRandom(1).First();
-                    var tempDir   = $"/tmp/{NeonHelper.CreateBase36Uuid()}";
-                    var labels    = new Dictionary<string, string>
+                    var dataMap  = context.MergedJobDataMap;
+                    k8s          = (IKubernetes)dataMap["Kubernetes"];
+                    harborClient = (HarborClient)dataMap["HarborClient"];
+
+                    await CheckProjectAsync(KubeConst.LocalClusterRegistryProject);
+
+                    var nodes     = await k8s.CoreV1.ListNodeAsync();
+                    var startTime = DateTime.UtcNow.AddSeconds(10);
+
+                    var clusterManifestJson = Program.Resources.GetFile("/cluster-manifest.json").ReadAllText();
+                    var clusterManifest = NeonHelper.JsonDeserialize<ClusterManifest>(clusterManifestJson);
+
+                    var masters = await k8s.CoreV1.ListNodeAsync(labelSelector: "node-role.kubernetes.io/control-plane=");
+
+                    foreach (var image in clusterManifest.ContainerImages)
+                    {
+                        var tag       = image.InternalRef.Split(':').Last();
+                        var imageName = image.InternalRef.Split('/').Last().Split(':').First();
+                        var node      = masters.Items.SelectRandom(1).First();
+                        var tempDir   = $"/tmp/{NeonHelper.CreateBase36Uuid()}";
+                        var labels    = new Dictionary<string, string>
                     {
                         { NeonLabel.ManagedBy, KubeService.NeonClusterOperator },
                         { NeonLabel.NodeTaskType, NeonNodeTaskType.ContainerImageSync },
@@ -115,32 +118,32 @@ namespace NeonClusterOperator
                         { "tag", tag },
                     };
 
-                    if (await HarborHoldsContainerImageAsync(KubeConst.LocalClusterRegistryProject, imageName, tag))
-                    {
-                        logger?.LogDebugEx(() => $"Image {KubeConst.LocalClusterRegistryProject}/{imageName}:{tag} exists.");
-
-                        continue;
-                    }
-
-                    if (await IsAnyNodeTaskPendingAsync(labels))
-                    {
-                        logger?.LogDebugEx(() => $"Image {KubeConst.LocalClusterRegistryProject}/{imageName}:{tag} has node task pending.");
-
-                        continue;
-                    }
-
-                    var nodeTask = new V1NeonNodeTask()
-                    {
-                        Metadata = new V1ObjectMeta()
+                        if (await HarborHoldsContainerImageAsync(KubeConst.LocalClusterRegistryProject, imageName, tag))
                         {
-                            Name   = $"{NeonNodeTaskType.ContainerImageSync}-{NeonHelper.CreateBase36Uuid()}",
-                            Labels = labels
-                        },
-                        Spec = new V1NeonNodeTask.TaskSpec()
+                            logger?.LogDebugEx(() => $"Image {KubeConst.LocalClusterRegistryProject}/{imageName}:{tag} exists.");
+
+                            continue;
+                        }
+
+                        if (await IsAnyNodeTaskPendingAsync(labels))
                         {
-                            Node                = node.Name(),
-                            StartAfterTimestamp = startTime,
-                            BashScript          = @$"
+                            logger?.LogDebugEx(() => $"Image {KubeConst.LocalClusterRegistryProject}/{imageName}:{tag} has node task pending.");
+
+                            continue;
+                        }
+
+                        var nodeTask = new V1NeonNodeTask()
+                        {
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Name   = $"{NeonNodeTaskType.ContainerImageSync}-{NeonHelper.CreateBase36Uuid()}",
+                                Labels = labels
+                            },
+                            Spec = new V1NeonNodeTask.TaskSpec()
+                            {
+                                Node                = node.Name(),
+                                StartAfterTimestamp = startTime,
+                                BashScript          = @$"
 podman save --format oci-dir --output {tempDir} {image.InternalRef}
 
 retVal=$?
@@ -152,30 +155,35 @@ fi
 skopeo copy --retry-times 5 oci:{tempDir} docker://{image.InternalRef}
 rm -rf {tempDir}
 ",
-                            CaptureOutput    = true,
-                            RetentionSeconds = (int)TimeSpan.FromHours(1).TotalSeconds
-                        }
-                    };
+                                CaptureOutput    = true,
+                                RetentionSeconds = (int)TimeSpan.FromHours(1).TotalSeconds
+                            }
+                        };
 
-                    await k8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, nodeTask.Name());
+                        await k8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, nodeTask.Name());
 
-                    startTime = startTime.AddSeconds(10);
+                        startTime = startTime.AddSeconds(10);
+                    }
+
+                    var clusterOperator = await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonClusterOperator>(KubeService.NeonClusterOperator);
+                    var patch           = OperatorHelper.CreatePatch<V1NeonClusterOperator>();
+
+                    if (clusterOperator.Status == null)
+                    {
+                        patch.Replace(path => path.Status, new V1NeonClusterOperator.OperatorStatus());
+                    }
+
+                    patch.Replace(path => path.Status.ContainerImages, new V1NeonClusterOperator.UpdateStatus());
+                    patch.Replace(path => path.Status.ContainerImages.LastCompleted, DateTime.UtcNow);
+
+                    await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterOperator>(
+                        patch: OperatorHelper.ToV1Patch<V1NeonClusterOperator>(patch),
+                        name: clusterOperator.Name());
                 }
-
-                var clusterOperator = await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonClusterOperator>(KubeService.NeonClusterOperator);
-                var patch           = OperatorHelper.CreatePatch<V1NeonClusterOperator>();
-
-                if (clusterOperator.Status == null)
+                catch (Exception e)
                 {
-                    patch.Replace(path => path.Status, new V1NeonClusterOperator.OperatorStatus());
+                    logger?.LogErrorEx(e);
                 }
-
-                patch.Replace(path => path.Status.ContainerImages, new V1NeonClusterOperator.UpdateStatus());
-                patch.Replace(path => path.Status.ContainerImages.LastCompleted, DateTime.UtcNow);
-                
-                await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterOperator>(
-                    patch: OperatorHelper.ToV1Patch<V1NeonClusterOperator>(patch), 
-                    name: clusterOperator.Name());
             }
         }
 
