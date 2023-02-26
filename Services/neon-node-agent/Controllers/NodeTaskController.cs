@@ -71,8 +71,6 @@ namespace NeonNodeAgent
     {
         /// <inheritdoc/>
         public string LeaseName { get; } = $"{Program.Service.Name}.nodetask-{Node.Name}";
-        /// <inheritdoc/>
-        public string FieldSelector { get; } = $"spec.node={Node.Name}";
         
         //---------------------------------------------------------------------
         // Static members
@@ -239,9 +237,14 @@ rm $0
                 return null;
             }
 
+            if (resource.Spec.Node != Node.Name)
+            {
+                return null;
+            }
+
             // For new tasks, update the status to PENDING and also add the
             // node's owner reference to the object.
-                        
+
             if (nodeTask.Status.Phase == V1NeonNodeTask.Phase.New)
             {
                 var patch = OperatorHelper.CreatePatch<V1NeonNodeTask>();
