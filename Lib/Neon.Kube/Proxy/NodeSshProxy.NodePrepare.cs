@@ -924,8 +924,6 @@ apt-mark hold cri-o cri-o-runc
             // so we're going to retry the operation in the hope that it may work
             // eventually.
 
-            var retry = new LinearRetryPolicy(typeof(ExecuteException), maxAttempts: 3, retryInterval: TimeSpan.FromMinutes(1));
-
             try
             {
                 retry.Invoke(
@@ -1075,8 +1073,6 @@ apt-mark hold skopeo
                     // The PODMAN apt package mirror has been quite unreliable over the years, 
                     // so we're going to retry the operation in the hope that it may work
                     // eventually.
-
-                    var retry = new LinearRetryPolicy(typeof(ExecuteException), maxAttempts: 3, retryInterval: TimeSpan.FromMinutes(1));
 
                     try
                     {
@@ -1304,9 +1300,15 @@ rm  install-kustomize.sh
                 {
                     var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
-                    // Perform the install.
+                    // The Google package mirror can have problems, so we're going to use
+                    // workaround this with a retry policy.
 
-                    var mainScript =
+                    retry.Invoke(
+                        () =>
+                        {
+                            // Perform the install.
+
+                            var mainScript =
 $@"
 # $todo(jefflill):
 #
@@ -1370,9 +1372,10 @@ systemctl daemon-reload
 systemctl stop kubelet
 systemctl disable kubelet
 ";
-                    controller.LogProgress(this, verb: "setup", message: "kubernetes");
+                            controller.LogProgress(this, verb: "setup", message: "kubernetes");
 
-                    SudoCommand(CommandBundle.FromScript(mainScript), RunOptions.Defaults | RunOptions.FaultOnError);
+                            SudoCommand(CommandBundle.FromScript(mainScript), RunOptions.Defaults | RunOptions.FaultOnError);
+                        });
                 });
         }
     }
