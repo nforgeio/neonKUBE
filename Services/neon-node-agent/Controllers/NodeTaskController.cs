@@ -71,7 +71,9 @@ namespace NeonNodeAgent
     {
         /// <inheritdoc/>
         public string LeaseName { get; } = $"{Program.Service.Name}.nodetask-{Node.Name}";
-
+        /// <inheritdoc/>
+        public string FieldSelector { get; } = $"spec.node={Node.Name}";
+        
         //---------------------------------------------------------------------
         // Static members
 
@@ -209,8 +211,6 @@ rm $0
         /// <inheritdoc/>
         public async Task<ResourceControllerResult> ReconcileAsync(V1NeonNodeTask resource)
         {
-            // Ignore all events when the controller hasn't been started.
-
             var name = resource.Name();
 
             logger.LogInformationEx(() => $"RECONCILED: {name}");

@@ -278,17 +278,22 @@ namespace Neon.Kube.Operator.ResourceManager
             this.finalizerManager       = serviceProvider.GetRequiredService<IFinalizerManager<TEntity>>();
             this.lockProvider           = serviceProvider.GetRequiredService<AsyncKeyedLocker<string>>();
 
+            IResourceController<TEntity> controller;
+            using (var scope = serviceProvider.CreateScope())
+            {
+                controller = CreateController(scope.ServiceProvider);
+            }
+
+            options.FieldSelector = options.FieldSelector ?? controller.FieldSelector;
+            options.LabelSelector = options.LabelSelector ?? controller.LabelSelector;
+
             if (leaderConfig == null && !leaderElectionDisabled)
             {
-                using (var scope = serviceProvider.CreateScope())
-                {
-                    var controller = CreateController(scope.ServiceProvider);
-                    this.leaderConfig =
-                        new LeaderElectionConfig(
-                            @namespace: operatorSettings.DeployedNamespace,
-                            leaseName: controller.LeaseName,
-                            identity: Pod.Name);
-                }
+                this.leaderConfig =
+                    new LeaderElectionConfig(
+                        @namespace: operatorSettings.DeployedNamespace,
+                        leaseName: controller.LeaseName,
+                        identity: Pod.Name);
             }
 
             if (started)

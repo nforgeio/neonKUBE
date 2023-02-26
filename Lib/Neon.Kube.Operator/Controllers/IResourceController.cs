@@ -53,6 +53,16 @@ namespace Neon.Kube.Operator.Controller
     public interface IResourceController
     {
         /// <summary>
+        /// Another way to specify the Field selector.
+        /// </summary>
+        string FieldSelector => null;
+
+        /// <summary>
+        /// Another way to specify the Label Selector.
+        /// </summary>
+        string LabelSelector => null;
+
+        /// <summary>
         /// Starts the controller.
         /// </summary>
         /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
