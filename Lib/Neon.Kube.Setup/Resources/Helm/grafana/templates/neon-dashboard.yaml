@@ -6,10 +6,53 @@ metadata:
     app: grafana
 spec:
   datasources:
-    - inputName: "DS_PROMETHEUS"
+    - inputName: "DS_MIMIR"
       datasourceName: "Mimir"
   json: >
     {{`{
+      "__inputs": [
+        {
+          "name": "DS_MIMIR",
+          "label": "Mimir",
+          "description": "",
+          "type": "datasource",
+          "pluginId": "prometheus",
+          "pluginName": "Prometheus"
+        }
+      ],
+      "__elements": {},
+      "__requires": [
+        {
+          "type": "grafana",
+          "id": "grafana",
+          "name": "Grafana",
+          "version": "9.3.6"
+        },
+        {
+          "type": "datasource",
+          "id": "prometheus",
+          "name": "Prometheus",
+          "version": "1.0.0"
+        },
+        {
+          "type": "panel",
+          "id": "stat",
+          "name": "Stat",
+          "version": ""
+        },
+        {
+          "type": "panel",
+          "id": "text",
+          "name": "Text",
+          "version": ""
+        },
+        {
+          "type": "panel",
+          "id": "timeseries",
+          "name": "Time series",
+          "version": ""
+        }
+      ],
       "annotations": {
         "list": [
           {
@@ -35,14 +78,14 @@ spec:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "id": 9,
+      "id": null,
       "links": [],
       "liveNow": false,
       "panels": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${DS_MIMIR}"
           },
           "gridPos": {
             "h": 8,
@@ -52,17 +95,22 @@ spec:
           },
           "id": 14,
           "options": {
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
             "content": "<div id=\"wrapper\">\n    <div id=\"div1\" style=\"display: inline-block\">\n         <img src=\"./public/img/neonkube/neonkube-transparent.png\"\n     alt=\"neonkube logo\"\n     style=\"float: left; margin-right: 0px; height: 200px\" />\n\n    </div>\n    <div id=\"div2\" style=\"display: inline-block;\">\n         <table >\n              <tr>\n                   <td>Cluster</td>\n                   <td>`}}{{ .Values.cluster.name }}{{`</td>\n               </tr>\n               <tr>\n                    <td>Datacenter</td>\n                    <td>`}}{{ .Values.cluster.datacenter }}{{`</td>\n               </tr>\n               <tr>\n                    <td>Hosting Environment</td>\n                    <td>`}}{{ .Values.cluster.hostingEnvironment }}{{`</td>\n               </tr>\n               <tr>\n                    <td>neonKUBE Version</td>\n                    <td>`}}{{ .Values.cluster.version }}{{`</td>\n               </tr>\n          </table>\n    </div>\n</div>\n\n\n",
             "mode": "html"
           },
-          "pluginVersion": "9.0.5",
+          "pluginVersion": "9.3.6",
           "title": " ",
           "type": "text"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${DS_MIMIR}"
           },
           "fieldConfig": {
             "defaults": {
@@ -109,12 +157,12 @@ spec:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "9.0.5",
+          "pluginVersion": "9.3.6",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "mimir"
+                "uid": "${DS_MIMIR}"
               },
               "exemplar": true,
               "expr": "sum(node_memory_MemTotal_bytes{instance=~\"$node\",job=\"integrations/node_exporter\"} - node_memory_MemAvailable_bytes{instance=~\"$node\",job=\"integrations/node_exporter\"})",
@@ -131,7 +179,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${DS_MIMIR}"
           },
           "fieldConfig": {
             "defaults": {
@@ -178,12 +226,12 @@ spec:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "9.0.5",
+          "pluginVersion": "9.3.6",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "mimir"
+                "uid": "${DS_MIMIR}"
               },
               "exemplar": true,
               "expr": "sum(node_memory_MemAvailable_bytes{instance=~\"$node\",job=\"integrations/node_exporter\"})",
@@ -200,7 +248,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${DS_MIMIR}"
           },
           "fieldConfig": {
             "defaults": {
@@ -247,12 +295,12 @@ spec:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "9.0.5",
+          "pluginVersion": "9.3.6",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "mimir"
+                "uid": "${DS_MIMIR}"
               },
               "exemplar": true,
               "expr": "sum(container_memory_working_set_bytes{cluster=~\"$cluster\", node=~\"$node\", namespace=~\"$namespace\", container=~\"$container\"})",
@@ -269,7 +317,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${DS_MIMIR}"
           },
           "fieldConfig": {
             "defaults": {
@@ -316,12 +364,12 @@ spec:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "9.0.5",
+          "pluginVersion": "9.3.6",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "mimir"
+                "uid": "${DS_MIMIR}"
               },
               "exemplar": true,
               "expr": "sum(kube_pod_container_resource_requests{namespace=~\"$namespace\", container=~\"$container\"})",
@@ -338,7 +386,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${DS_MIMIR}"
           },
           "fieldConfig": {
             "defaults": {
@@ -346,6 +394,8 @@ spec:
                 "mode": "palette-classic"
               },
               "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
@@ -405,6 +455,7 @@ spec:
               ],
               "displayMode": "table",
               "placement": "right",
+              "showLegend": true,
               "sortBy": "Mean",
               "sortDesc": true
             },
@@ -417,7 +468,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "mimir"
+                "uid": "${DS_MIMIR}"
               },
               "editorMode": "code",
               "exemplar": true,
@@ -435,7 +486,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${DS_MIMIR}"
           },
           "fieldConfig": {
             "defaults": {
@@ -443,6 +494,8 @@ spec:
                 "mode": "palette-classic"
               },
               "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
@@ -527,6 +580,7 @@ spec:
               ],
               "displayMode": "table",
               "placement": "right",
+              "showLegend": true,
               "sortBy": "Mean",
               "sortDesc": true
             },
@@ -539,7 +593,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "mimir"
+                "uid": "${DS_MIMIR}"
               },
               "exemplar": true,
               "expr": "sum(container_memory_working_set_bytes{cluster=~\"$cluster\", instance=~\"$node\", namespace=~\"$namespace\", container=~\"$container\"})",
@@ -556,7 +610,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${DS_MIMIR}"
           },
           "fieldConfig": {
             "defaults": {
@@ -564,6 +618,8 @@ spec:
                 "mode": "palette-classic"
               },
               "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
@@ -607,7 +663,32 @@ spec:
               },
               "unit": "bytes"
             },
-            "overrides": []
+            "overrides": [
+              {
+                "__systemRef": "hideSeriesFrom",
+                "matcher": {
+                  "id": "byNames",
+                  "options": {
+                    "mode": "exclude",
+                    "names": [
+                      "istio-ingressgateway-7rbd6"
+                    ],
+                    "prefix": "All except:",
+                    "readOnly": true
+                  }
+                },
+                "properties": [
+                  {
+                    "id": "custom.hideFrom",
+                    "value": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": true
+                    }
+                  }
+                ]
+              }
+            ]
           },
           "gridPos": {
             "h": 9,
@@ -624,6 +705,7 @@ spec:
               ],
               "displayMode": "table",
               "placement": "right",
+              "showLegend": true,
               "sortBy": "Mean",
               "sortDesc": true
             },
@@ -636,7 +718,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "mimir"
+                "uid": "${DS_MIMIR}"
               },
               "exemplar": true,
               "expr": "sum(container_memory_working_set_bytes{cluster=~\"$cluster\", instance=~\"$node\", namespace=~\"$namespace\", container=~\"istio-proxy\"}) by (pod)",
@@ -652,7 +734,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${DS_MIMIR}"
           },
           "fieldConfig": {
             "defaults": {
@@ -660,6 +742,8 @@ spec:
                 "mode": "palette-classic"
               },
               "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
@@ -719,6 +803,7 @@ spec:
               ],
               "displayMode": "table",
               "placement": "right",
+              "showLegend": true,
               "sortBy": "Mean",
               "sortDesc": true
             },
@@ -731,7 +816,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "mimir"
+                "uid": "${DS_MIMIR}"
               },
               "exemplar": true,
               "expr": "sum(container_memory_working_set_bytes{cluster=~\"$cluster\", instance=~\"$node\", namespace=~\"$namespace\", container=~\"istio-proxy\"})",
@@ -747,7 +832,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "mimir"
+            "uid": "${DS_MIMIR}"
           },
           "fieldConfig": {
             "defaults": {
@@ -755,6 +840,8 @@ spec:
                 "mode": "palette-classic"
               },
               "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
@@ -814,6 +901,7 @@ spec:
               ],
               "displayMode": "table",
               "placement": "right",
+              "showLegend": true,
               "sortBy": "Mean",
               "sortDesc": true
             },
@@ -826,7 +914,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "mimir"
+                "uid": "${DS_MIMIR}"
               },
               "editorMode": "code",
               "exemplar": true,
@@ -844,20 +932,18 @@ spec:
         }
       ],
       "refresh": "10s",
-      "schemaVersion": 36,
+      "schemaVersion": 37,
       "style": "dark",
-      "tags": [],
+      "tags": [
+        "neonkube"
+      ],
       "templating": {
         "list": [
           {
-            "current": {
-              "selected": false,
-              "text": "wrt-00-draco",
-              "value": "wrt-00-draco"
-            },
+            "current": {},
             "datasource": {
               "type": "prometheus",
-              "uid": "mimir"
+              "uid": "${DS_MIMIR}"
             },
             "definition": "label_values(kube_node_info, cluster)",
             "hide": 0,
@@ -876,18 +962,10 @@ spec:
             "type": "query"
           },
           {
-            "current": {
-              "selected": true,
-              "text": [
-                "All"
-              ],
-              "value": [
-                "$__all"
-              ]
-            },
+            "current": {},
             "datasource": {
               "type": "prometheus",
-              "uid": "mimir"
+              "uid": "${DS_MIMIR}"
             },
             "definition": "label_values(kube_node_info, node)",
             "hide": 0,
@@ -906,18 +984,10 @@ spec:
             "type": "query"
           },
           {
-            "current": {
-              "selected": true,
-              "text": [
-                "All"
-              ],
-              "value": [
-                "$__all"
-              ]
-            },
+            "current": {},
             "datasource": {
               "type": "prometheus",
-              "uid": "mimir"
+              "uid": "${DS_MIMIR}"
             },
             "definition": "label_values(kube_namespace_created{cluster=~\"$cluster\"}, namespace)",
             "hide": 0,
@@ -936,14 +1006,10 @@ spec:
             "type": "query"
           },
           {
-            "current": {
-              "selected": false,
-              "text": "All",
-              "value": "$__all"
-            },
+            "current": {},
             "datasource": {
               "type": "prometheus",
-              "uid": "mimir"
+              "uid": "${DS_MIMIR}"
             },
             "definition": "label_values(container_memory_usage_bytes{cluster=~\"$cluster\"}, container)",
             "hide": 0,
@@ -956,20 +1022,16 @@ spec:
               "refId": "StandardVariableQuery"
             },
             "refresh": 1,
-            "regex": "",
+            "regex": "/^(?!POD).*$/",
             "skipUrlSync": false,
             "sort": 0,
             "type": "query"
           },
           {
-            "current": {
-              "selected": false,
-              "text": "All",
-              "value": "$__all"
-            },
+            "current": {},
             "datasource": {
               "type": "prometheus",
-              "uid": "mimir"
+              "uid": "${DS_MIMIR}"
             },
             "definition": "label_values(container_memory_usage_bytes{cluster=~\"$cluster\", container=~\"$container\"}, pod)",
             "hide": 0,
@@ -988,14 +1050,10 @@ spec:
             "type": "query"
           },
           {
-            "current": {
-              "selected": true,
-              "text": "wrt-00",
-              "value": "wrt-00"
-            },
+            "current": {},
             "datasource": {
               "type": "prometheus",
-              "uid": "mimir"
+              "uid": "${DS_MIMIR}"
             },
             "definition": "label_values(node_os_info, datacenter)",
             "hide": 0,
@@ -1014,14 +1072,10 @@ spec:
             "type": "query"
           },
           {
-            "current": {
-              "selected": true,
-              "text": "XenServer",
-              "value": "XenServer"
-            },
+            "current": {},
             "datasource": {
               "type": "prometheus",
-              "uid": "mimir"
+              "uid": "${DS_MIMIR}"
             },
             "definition": "label_values(node_os_info, hosting_environment)",
             "hide": 0,
@@ -1040,14 +1094,10 @@ spec:
             "type": "query"
           },
           {
-            "current": {
-              "selected": false,
-              "text": "0.7.0-alpha",
-              "value": "0.7.0-alpha"
-            },
+            "current": {},
             "datasource": {
               "type": "prometheus",
-              "uid": "mimir"
+              "uid": "${DS_MIMIR}"
             },
             "definition": "label_values(node_os_info, neonkube_version)",
             "hide": 0,
@@ -1074,7 +1124,7 @@ spec:
       "timepicker": {},
       "timezone": "",
       "title": "Neon dashboard",
-      "uid": "neonkube-default-dashboard",
-      "version": 2,
+      "uid": "O7__VdbVz",
+      "version": 3,
       "weekStart": ""
     }`}}
