@@ -29,6 +29,7 @@ using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Operator;
 using Neon.Kube.Operator.Webhook;
+using Neon.Tasks;
 
 using k8s;
 using k8s.Models;
@@ -75,54 +76,68 @@ namespace NeonClusterOperator
         /// <inheritdoc/>
         public async Task<MutationResult> CreateAsync(V1Deployment deployment, bool dryRun)
         {
+            await SyncContext.Clear;
+
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                logger?.LogInformationEx(() => $"Received request for deployment {deployment.Namespace()}/{deployment.Name()}");
-
-                if (string.IsNullOrEmpty(deployment.EnsureMetadata().NamespaceProperty)
-                    || !deployment.EnsureMetadata().NamespaceProperty.StartsWith("neon-"))
+                try
                 {
-                    logger?.LogInformationEx(() => $"Deployment not in neon- namespace.");
+                    logger?.LogInformationEx(() => $"Received request for deployment {deployment.Namespace()}/{deployment.Name()}");
 
-                    return MutationResult.NoChanges();
+                    if (!deployment.EnsureMetadata().NamespaceProperty.StartsWith("neon-"))
+                    {
+                        logger?.LogInformationEx(() => $"Deployment not in neon- namespace.");
+
+                        return MutationResult.NoChanges();
+                    }
+
+                    InjectIstioSidecar(deployment);
+
+                    if (modified)
+                    {
+                        return MutationResult.Modified(deployment);
+                    }
+                }
+                catch (Exception e)
+                {
+                    logger?.LogErrorEx(e);
                 }
 
-                InjectIstioSidecar(deployment);
-
-                if (modified)
-                {
-                    return await Task.FromResult(MutationResult.Modified(deployment));
-                }
-
-                return await Task.FromResult(MutationResult.NoChanges());
+                return MutationResult.NoChanges();
             }
         }
 
         /// <inheritdoc/>
         public async Task<MutationResult> UpdateAsync(V1Deployment deployment, V1Deployment oldDeployment, bool dryRun)
         {
-            Covenant.Requires<ArgumentNullException>(deployment != null, nameof(deployment));
+            await SyncContext.Clear;
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                logger?.LogInformationEx(() => $"Received request for deployment {deployment.Namespace()}/{deployment.Name()}");
-
-                if (string.IsNullOrEmpty(deployment.EnsureMetadata().NamespaceProperty)
-                    || !deployment.EnsureMetadata().NamespaceProperty.StartsWith("neon-"))
+                try
                 {
-                    logger?.LogInformationEx(() => $"Deployment not in neon- namespace.");
+                    logger?.LogInformationEx(() => $"Received request for deployment {deployment.Namespace()}/{deployment.Name()}");
 
-                    return MutationResult.NoChanges();
+                    if (!deployment.EnsureMetadata().NamespaceProperty.StartsWith("neon-"))
+                    {
+                        logger?.LogInformationEx(() => $"Deployment not in neon- namespace.");
+
+                        return MutationResult.NoChanges();
+                    }
+
+                    InjectIstioSidecar(deployment);
+
+                    if (modified)
+                    {
+                        return MutationResult.Modified(deployment);
+                    }
                 }
-
-                InjectIstioSidecar(deployment);
-
-                if (modified)
+                catch (Exception e) 
                 {
-                    return await Task.FromResult(MutationResult.Modified(deployment));
+                    logger?.LogErrorEx(e);
                 }
-
-                return await Task.FromResult(MutationResult.NoChanges());
+                
+                return MutationResult.NoChanges();
             }
         }
 

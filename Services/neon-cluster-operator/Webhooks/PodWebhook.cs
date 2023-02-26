@@ -29,6 +29,7 @@ using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Operator;
 using Neon.Kube.Operator.Webhook;
+using Neon.Tasks;
 
 using k8s;
 using k8s.Models;
@@ -77,52 +78,68 @@ namespace NeonClusterOperator
         /// <inheritdoc/>
         public async Task<MutationResult> CreateAsync(V1Pod pod, bool dryRun)
         {
+            await SyncContext.Clear;
+
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                logger?.LogInformationEx(() => $"Received request for pod {pod.Namespace()}/{pod.Name()}");
-
-                if (string.IsNullOrEmpty(pod.EnsureMetadata().NamespaceProperty)
-                    || !pod.EnsureMetadata().NamespaceProperty.StartsWith("neon-"))
+                try
                 {
-                    logger?.LogDebugEx(() => $"Pod not in a neonKUBE namespace.");
+                    logger?.LogInformationEx(() => $"Received request for pod {pod.Namespace()}/{pod.Name()}");
 
-                    return MutationResult.NoChanges();
+                    if (!pod.EnsureMetadata().NamespaceProperty.StartsWith("neon-"))
+                    {
+                        logger?.LogDebugEx(() => $"Pod not in a neonKUBE namespace.");
+
+                        return MutationResult.NoChanges();
+                    }
+
+                    CheckPriorityClass(pod);
+
+                    if (modified)
+                    {
+                        return MutationResult.Modified(pod);
+                    }
+                } 
+                catch (Exception e) 
+                {
+                    logger?.LogErrorEx(e);
                 }
 
-                CheckPriorityClass(pod);
-
-                if (modified)
-                {
-                    return await Task.FromResult(MutationResult.Modified(pod));
-                }
-
-                return await Task.FromResult(MutationResult.NoChanges());
+                return MutationResult.NoChanges();
             }
         }
 
         /// <inheritdoc/>
         public async Task<MutationResult> UpdateAsync(V1Pod pod, V1Pod oldPod, bool dryRun)
         {
+            await SyncContext.Clear;
+
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                logger?.LogInformationEx(() => $"Received request for pod {pod.Namespace()}/{pod.Name()}");
-
-                if (string.IsNullOrEmpty(pod.EnsureMetadata().NamespaceProperty)
-                    || !pod.EnsureMetadata().NamespaceProperty.StartsWith("neon-"))
+                try
                 {
-                    logger?.LogInformationEx(() => $"Pod not in neon- namespace.");
+                    logger?.LogInformationEx(() => $"Received request for pod {pod.Namespace()}/{pod.Name()}");
 
-                    return MutationResult.NoChanges();
+                    if (!pod.EnsureMetadata().NamespaceProperty.StartsWith("neon-"))
+                    {
+                        logger?.LogInformationEx(() => $"Pod not in neon- namespace.");
+
+                        return MutationResult.NoChanges();
+                    }
+
+                    CheckPriorityClass(pod);
+
+                    if (modified)
+                    {
+                        return MutationResult.Modified(pod);
+                    }
                 }
-
-                CheckPriorityClass(pod);
-
-                if (modified)
-                {
-                    return await Task.FromResult(MutationResult.Modified(pod));
+                catch (Exception e) 
+                { 
+                    logger?.LogErrorEx(e);
                 }
-
-                return await Task.FromResult(MutationResult.NoChanges());
+                
+                return MutationResult.NoChanges();
             }
         }
 
