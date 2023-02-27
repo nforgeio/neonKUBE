@@ -358,7 +358,7 @@ namespace Neon.Kube.Hosting.XenServer
 
             if (!controller.Get<bool>(KubeSetupProperty.DisableImageDownload, false))
             {
-                xenController.AddNodeStep("xenserver node image", (controller, hostProxy) => InstallVmTemplateAsync(hostProxy), parallelLimit: 1);
+                xenController.AddNodeStep("xenserver node image", (controller, hostProxy) => InstallNodeImageAsync(hostProxy), parallelLimit: 1);
             }
 
             var createVmLabel = "create virtual machine";
@@ -545,12 +545,12 @@ namespace Neon.Kube.Hosting.XenServer
         /// Install the virtual machine template on the XenServer if it's not already present.
         /// </summary>
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
-        private async Task InstallVmTemplateAsync(NodeSshProxy<XenClient> xenSshProxy)
+        private async Task InstallNodeImageAsync(NodeSshProxy<XenClient> xenSshProxy)
         {
             await SyncContext.Clear;
 
             var xenClient    = xenSshProxy.Metadata;
-            var templateName = $"neonkube-{KubeVersions.NeonKube}";
+            var templateName = $"neonkube-{KubeVersions.NeonKubeWithBranchPart}";
 
             // Download the node template to the workstation if it's not already present.
 
@@ -562,7 +562,7 @@ namespace Neon.Kube.Hosting.XenServer
             }
             else
             {
-                xenSshProxy.Status = $"download: node image {templateName}";
+                xenSshProxy.Status = $"download: node image [{templateName}]";
                 xenController.SetGlobalStepStatus();
 
                 string driveTemplateName;
@@ -613,7 +613,7 @@ namespace Neon.Kube.Hosting.XenServer
             }
             else
             {
-                xenSshProxy.Status = $"compute: node image MD5: {templateMd5Path}";
+                xenSshProxy.Status = $"compute: node image MD5 [{templateMd5Path}]";
                 xenController.SetGlobalStepStatus();
 
                 using (var templateStream = File.OpenRead(driveTemplatePath))

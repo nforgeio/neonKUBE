@@ -153,7 +153,7 @@ namespace NeonDashboard
             {
                 await SyncContext.Clear;
 
-                ClusterInfo = TypeSafeConfigMap<ClusterInfo>.From(@event.Value).Config;
+                ClusterInfo = TypedConfigMap<ClusterInfo>.From(@event.Value).Config;
                 
                 if (PrometheusClient.JsonClient.DefaultRequestHeaders.Contains("X-Scope-OrgID"))
                 {

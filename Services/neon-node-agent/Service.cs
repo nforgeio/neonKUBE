@@ -299,7 +299,7 @@ namespace NeonNodeAgent
             {
                 await SyncContext.Clear;
 
-                ClusterInfo = TypeSafeConfigMap<ClusterInfo>.From(@event.Value).Config;
+                ClusterInfo = TypedConfigMap<ClusterInfo>.From(@event.Value).Config;
 
                 Logger.LogInformationEx("Updated cluster info");
             },

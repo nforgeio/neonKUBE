@@ -72,12 +72,11 @@ namespace NeonClusterOperator
                 {
                     logger.LogInformationEx(() => "Sending cluster telemetry.");
 
-                    var dataMap = context.MergedJobDataMap;
-                    var k8s = (IKubernetes)dataMap["Kubernetes"];
-
+                    var dataMap          = context.MergedJobDataMap;
+                    var k8s              = (IKubernetes)dataMap["Kubernetes"];
                     var clusterTelemetry = new ClusterTelemetry();
+                    var nodes            = await k8s.CoreV1.ListNodeAsync();
 
-                    var nodes = await k8s.CoreV1.ListNodeAsync();
                     clusterTelemetry.Nodes = nodes.Items.ToList();
 
                     var configMap = await k8s.CoreV1.ReadNamespacedConfigMapAsync(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus);
@@ -104,7 +103,7 @@ namespace NeonClusterOperator
 
                     await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterOperator>(
                         patch: OperatorHelper.ToV1Patch<V1NeonClusterOperator>(patch),
-                        name: clusterOperator.Name());
+                        name:  clusterOperator.Name());
                 }
                 catch (Exception e)
                 {

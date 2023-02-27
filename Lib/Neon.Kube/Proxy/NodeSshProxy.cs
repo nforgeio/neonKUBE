@@ -125,9 +125,13 @@ namespace Neon.Kube.Proxy
         }
 
         //---------------------------------------------------------------------
-        // Implementation
+        // Static members
 
-        private static readonly Regex   idempotentRegex  = new Regex(@"[a-z0-9\.-/]+", RegexOptions.IgnoreCase);
+        private static readonly Regex           idempotentRegex  = new Regex(@"[a-z0-9\.-/]+", RegexOptions.IgnoreCase);
+        private static readonly IRetryPolicy    retry            = new ExponentialRetryPolicy(typeof(ExecuteException), maxAttempts: 3, initialRetryInterval: TimeSpan.FromMinutes(1), maxRetryInterval: TimeSpan.FromMinutes(4));
+
+        //---------------------------------------------------------------------
+        // Instance members
 
         private ClusterProxy        cluster;
         private StringBuilder       internalLogBuilder;

@@ -64,7 +64,7 @@ using Prometheus;
 using Quartz.Impl;
 using Quartz;
 
-using Task = System.Threading.Tasks.Task;
+using Task    = System.Threading.Tasks.Task;
 using Metrics = Prometheus.Metrics;
 
 namespace NeonClusterOperator
@@ -113,12 +113,12 @@ namespace NeonClusterOperator
         /// </summary>
         static NeonClusterOperatorController() 
         {
-            schedulerFactory = new StdSchedulerFactory();
-            updateCaCertificates = new UpdateCaCertificates();
+            schedulerFactory              = new StdSchedulerFactory();
+            updateCaCertificates          = new UpdateCaCertificates();
             checkControlPlaneCertificates = new CheckControlPlaneCertificates();
-            checkRegistryImages = new CheckRegistryImages();
-            sendClusterTelemetry = new SendClusterTelemetry();
-            checkNeonDesktopCert = new CheckNeonDesktopCertificate();
+            checkRegistryImages           = new CheckRegistryImages();
+            sendClusterTelemetry          = new SendClusterTelemetry();
+            checkNeonDesktopCert          = new CheckNeonDesktopCertificate();
         }
 
         //---------------------------------------------------------------------
@@ -141,10 +141,10 @@ namespace NeonClusterOperator
             Covenant.Requires(headendClient != null, nameof(headendClient));
             Covenant.Requires(harborClient != null, nameof(harborClient));
 
-            this.k8s              = k8s;
-            this.logger           = logger;
-            this.headendClient    = headendClient;
-            this.harborClient     = harborClient;
+            this.k8s           = k8s;
+            this.logger        = logger;
+            this.headendClient = headendClient;
+            this.harborClient  = harborClient;
         }
 
         /// <summary>
@@ -194,7 +194,6 @@ namespace NeonClusterOperator
                 var controlPlaneCertExpression = resource.Spec.Updates.ControlPlaneCertificates.Schedule;
 
                 CronExpression.ValidateExpression(controlPlaneCertExpression);
-
                 await checkControlPlaneCertificates.DeleteFromSchedulerAsync(scheduler);
                 await checkControlPlaneCertificates.AddToSchedulerAsync(scheduler, k8s, controlPlaneCertExpression);
 
@@ -215,6 +214,7 @@ namespace NeonClusterOperator
                 if (resource.Spec.Updates.Telemetry.Enabled)
                 {
                     var clusterTelemetryExpression = resource.Spec.Updates.Telemetry.Schedule;
+
                     CronExpression.ValidateExpression(clusterTelemetryExpression);
 
                     await sendClusterTelemetry.DeleteFromSchedulerAsync(scheduler);
@@ -224,6 +224,7 @@ namespace NeonClusterOperator
                 if (resource.Spec.Updates.NeonDesktopCertificate.Enabled)
                 {
                     var neonDesktopCertExpression = resource.Spec.Updates.NeonDesktopCertificate.Schedule;
+
                     CronExpression.ValidateExpression(neonDesktopCertExpression);
 
                     await checkNeonDesktopCert.DeleteFromSchedulerAsync(scheduler);
@@ -250,7 +251,6 @@ namespace NeonClusterOperator
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-
                 // Ignore all events when the controller hasn't been started.
 
                 if (resource.Name() != KubeService.NeonClusterOperator)
@@ -259,7 +259,6 @@ namespace NeonClusterOperator
                 }
                 
                 logger?.LogInformationEx(() => $"DELETED: {resource.Name()}");
-
                 await ShutDownAsync();
             }
         }
@@ -268,7 +267,6 @@ namespace NeonClusterOperator
         public async Task OnDemotionAsync()
         {
             await SyncContext.Clear;
-
             await ShutDownAsync();
         }
 

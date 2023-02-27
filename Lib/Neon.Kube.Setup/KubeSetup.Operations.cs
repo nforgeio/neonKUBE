@@ -5703,7 +5703,7 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/cluster-info",
                 (Func<Task>)(async () =>
                 {
-                    var clusterInfoMap = new TypeSafeConfigMap<ClusterInfo>(
+                    var clusterInfoMap = new TypedConfigMap<ClusterInfo>(
                         name:       KubeConfigMapName.ClusterInfo,
                         @namespace: KubeNamespace.NeonStatus,
                         config:     new ClusterInfo(cluster.Definition));
@@ -5731,7 +5731,7 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/cluster-lock",
                 async () =>
                 {
-                    var clusterLockMap = new TypeSafeConfigMap<ClusterLock>(
+                    var clusterLockMap = new TypedConfigMap<ClusterLock>(
                         name:       KubeConfigMapName.ClusterLock,
                         @namespace: KubeNamespace.NeonStatus,
                         config:     new ClusterLock()
@@ -5745,7 +5745,7 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/cluster-health",
                 (Func<Task>)(async () =>
                 {
-                    var clusterHealthMap = new TypeSafeConfigMap<ClusterHealth>(
+                    var clusterHealthMap = new TypedConfigMap<ClusterHealth>(
                         name:       KubeConfigMapName.ClusterHealth,
                         @namespace: KubeNamespace.NeonStatus,
                         config:     new ClusterHealth()

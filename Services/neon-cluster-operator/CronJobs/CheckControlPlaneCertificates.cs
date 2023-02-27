@@ -72,9 +72,8 @@ namespace NeonClusterOperator
 
                 try
                 {
-                    var dataMap = context.MergedJobDataMap;
-                    var k8s     = (IKubernetes)dataMap["Kubernetes"];
-
+                    var dataMap   = context.MergedJobDataMap;
+                    var k8s       = (IKubernetes)dataMap["Kubernetes"];
                     var nodes     = await k8s.CoreV1.ListNodeAsync(labelSelector: "neonkube.io/node.role=control-plane");
                     var startTime = DateTime.UtcNow;
 
@@ -124,7 +123,7 @@ namespace NeonClusterOperator
 
                     await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterOperator>(
                         patch: OperatorHelper.ToV1Patch<V1NeonClusterOperator>(patch),
-                        name: clusterOperator.Name());
+                        name:  clusterOperator.Name());
                 }
                 catch (Exception e)
                 {

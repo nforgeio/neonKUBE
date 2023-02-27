@@ -3101,7 +3101,7 @@ TCPKeepAlive yes
                         namespaceParameter: KubeNamespace.NeonStatus,
                         cancellationToken:  cancellationToken);
 
-                    var statusConfig = new TypeSafeConfigMap<ClusterHealth>(configMap);
+                    var statusConfig = new TypedConfigMap<ClusterHealth>(configMap);
 
                     return statusConfig.Config;
                 }

@@ -98,8 +98,8 @@ namespace NeonClusterOperator
             Covenant.Requires(k8s != null, nameof(k8s));
             Covenant.Requires(logger != null, nameof(logger));
 
-            this.k8s              = k8s;
-            this.logger           = logger;
+            this.k8s    = k8s;
+            this.logger = logger;
         }
 
         /// <summary>

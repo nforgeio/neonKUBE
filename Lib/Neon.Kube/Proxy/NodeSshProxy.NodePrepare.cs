@@ -924,8 +924,6 @@ apt-mark hold cri-o cri-o-runc
             // so we're going to retry the operation in the hope that it may work
             // eventually.
 
-            var retry = new LinearRetryPolicy(typeof(ExecuteException), maxAttempts: 3, retryInterval: TimeSpan.FromMinutes(1));
-
             try
             {
                 retry.Invoke(
@@ -1075,8 +1073,6 @@ apt-mark hold skopeo
                     // The PODMAN apt package mirror has been quite unreliable over the years, 
                     // so we're going to retry the operation in the hope that it may work
                     // eventually.
-
-                    var retry = new LinearRetryPolicy(typeof(ExecuteException), maxAttempts: 3, retryInterval: TimeSpan.FromMinutes(1));
 
                     try
                     {
@@ -1304,9 +1300,36 @@ rm  install-kustomize.sh
                 {
                     var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
-                    // Perform the install.
+                    // $todo(jefflill):
+                    //
+                    // We ran into a problem downloading the Google [apt-key.gpg] file which
+                    // caused node image build failures:
+                    //
+                    //      https://github.com/nforgeio/neonKUBE/issues/1754
+                    //      https://github.com/kubernetes/kubernetes/issues/116068
+                    //
+                    // We're going to workaround this by temporarily disabling security checks, which
+                    // is dangerous.  We need to disable this as soon as Google deploys a fix.
 
-                    var mainScript =
+                    var disableSecurityChecks     = true;
+                    var allowUnauthenticated      = string.Empty;
+                    var allowInsecureRepositories = string.Empty;
+
+                    if (disableSecurityChecks)
+                    {
+                        allowUnauthenticated      = "--allow-unauthenticated";
+                        allowInsecureRepositories = "--allow-insecure-repositories";
+                    }
+
+                    // The Google package mirror can have problems, so we're going to use
+                    // workaround this with a retry policy.
+
+                    retry.Invoke(
+                        () =>
+                        {
+                            // Perform the install.
+
+                            var mainScript =
 $@"
 # $todo(jefflill):
 #
@@ -1331,20 +1354,23 @@ $@"
 
 set -euo pipefail
 
-curl {KubeHelper.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/sources.list.d/kubernetes.list
-{KubeNodeFolder.Bin}/safe-apt-get update
+if [ ""{disableSecurityChecks}"" != ""True"" ]; then
+    curl {KubeHelper.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+fi
 
-set +e                                                                                                                                              # <--- HACK: disable error checks
-{KubeNodeFolder.Bin}/safe-apt-get install -yq kubeadm={KubeVersions.KubeAdminPackage} -o Dpkg::Options::=""--force-overwrite""
+echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/sources.list.d/kubernetes.list
+{KubeNodeFolder.Bin}/safe-apt-get update {allowInsecureRepositories}
+
+set +e                                                                                                                                                                  # <--- HACK: disable error checks
+{KubeNodeFolder.Bin}/safe-apt-get install -yq kubeadm={KubeVersions.KubeAdminPackage} -o Dpkg::Options::=""--force-overwrite"" {allowUnauthenticated}
 
 # Note that the [kubeadm] install also installs [kubelet] and [kubectl] but that the
 # versions installed may be more recent than the Kubernetes version.  We want our
 # clusters to use consistent versions of all tools so we're going to install these
 # two packages again with specific versions and allow them to be downgraded.
 
-{KubeNodeFolder.Bin}/safe-apt-get install -yq --allow-downgrades kubelet={KubeVersions.KubeletPackage} -o Dpkg::Options::=""--force-overwrite""     # <--- HACK: ignore overwrite errors
-{KubeNodeFolder.Bin}/safe-apt-get install -yq --allow-downgrades kubectl={KubeVersions.KubectlPackage} -o Dpkg::Options::=""--force-overwrite""     # <--- HACK: ignore overwrite errors
+{KubeNodeFolder.Bin}/safe-apt-get install -yq --allow-downgrades kubelet={KubeVersions.KubeletPackage} -o Dpkg::Options::=""--force-overwrite"" {allowUnauthenticated}  # <--- HACK: ignore overwrite errors
+{KubeNodeFolder.Bin}/safe-apt-get install -yq --allow-downgrades kubectl={KubeVersions.KubectlPackage} -o Dpkg::Options::=""--force-overwrite"" {allowUnauthenticated}  # <--- HACK: ignore overwrite errors
 
 # Prevent the package manager these components from starting automatically.
 
@@ -1370,9 +1396,10 @@ systemctl daemon-reload
 systemctl stop kubelet
 systemctl disable kubelet
 ";
-                    controller.LogProgress(this, verb: "setup", message: "kubernetes");
+                            controller.LogProgress(this, verb: "setup", message: "kubernetes");
 
-                    SudoCommand(CommandBundle.FromScript(mainScript), RunOptions.Defaults | RunOptions.FaultOnError);
+                            SudoCommand(CommandBundle.FromScript(mainScript), RunOptions.Defaults | RunOptions.FaultOnError);
+                        });
                 });
         }
     }
