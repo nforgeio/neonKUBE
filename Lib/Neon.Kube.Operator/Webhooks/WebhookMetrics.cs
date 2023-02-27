@@ -45,11 +45,14 @@ namespace Neon.Kube.Operator.Webhook
         private const string prefix = "operator_webhook";
 
         private static readonly string[]    LabelNames = { "operator", "webhook" };
+        private readonly string             operatorName;
         private readonly string             webhook;
 
-        public WebhookMetrics(string operatorName, string webhook) 
+
+        public WebhookMetrics(OperatorSettings operatorSettings, string webhook) 
         {
-            this.webhook = webhook;
+            this.operatorName = operatorSettings.Name;
+            this.webhook      = webhook;
 
             var labelValues = new string[] { operatorName, webhook };
 
@@ -57,14 +60,16 @@ namespace Neon.Kube.Operator.Webhook
                 .CreateHistogram(
                     name: $"{prefix}_latency_seconds",
                     help: "Histogram of the latency of processing admission requests.", 
-                    labelNames: LabelNames)
+                    labelNames: LabelNames,
+                    configuration: new HistogramConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             RequestsTotal = Metrics
                 .CreateCounter(
                     name: $"{prefix}_requests_total",
                     help: "Total number of admission requests by HTTP status code.",
-                    labelNames: new string[] { "operator", "webhook", "code" });
+                    labelNames: new string[] { "operator", "webhook", "code" },
+                    configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior });
 
             RequestsInFlight = Metrics
                 .CreateGauge(

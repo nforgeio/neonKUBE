@@ -68,28 +68,32 @@ namespace Neon.Kube.Operator.Finalizer
                 .CreateCounter(
                     name: $"{prefix}_registrations_total",
                     help: "The total number of finalizer registrations.",
-                    labelNames: LabelNames)
+                    labelNames: LabelNames,
+                    configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             RegistrationTimeSeconds = Metrics
                 .CreateHistogram(
                     name: $"{prefix}_registration_time_seconds",
                     help: "The time taken to register finalizers.",
-                    labelNames: LabelNames)
+                    labelNames: LabelNames,
+                    configuration: new HistogramConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             RemovalsTotal = Metrics
                 .CreateCounter(
                     name: $"{prefix}_removals_total",
                     help: "The total number of finalizer removals. Incremented after the finalizer has been run on a resource.",
-                    labelNames: LabelNames)
+                    labelNames: LabelNames,
+                    configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             RemovalTimeSeconds = Metrics
                 .CreateHistogram(
                     name: $"{prefix}_removal_time_seconds",
                     help: "The time taken to remove finalizers from resources. This is after the resource has been finalized and is being removed via the apiserver.",
-                    labelNames: LabelNames)
+                    labelNames: LabelNames,
+                    configuration: new HistogramConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             FinalizingCount = Metrics
@@ -103,14 +107,16 @@ namespace Neon.Kube.Operator.Finalizer
                 .CreateCounter(
                     name: $"{prefix}_finalized_total",
                     help: "The total number of resources finalized.",
-                    labelNames: LabelNames)
+                    labelNames: LabelNames,
+                    configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             FinalizeTimeSeconds = Metrics
                 .CreateHistogram(
                     name: $"{prefix}_finalize_time_seconds",
                     help: "The time taken to finalize resources.",
-                    labelNames: LabelNames)
+                    labelNames: LabelNames,
+                    configuration: new HistogramConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
         }
     }

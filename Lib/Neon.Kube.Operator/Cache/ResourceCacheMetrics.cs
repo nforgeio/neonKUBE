@@ -59,7 +59,8 @@ namespace Neon.Kube.Operator.Cache
                 .CreateCounter(
                     name: $"{prefix}_items_total",
                     help: "The total number of cached items", 
-                    labelNames: LabelNames)
+                    labelNames: LabelNames,
+                    configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             ItemsCount = Metrics
@@ -73,7 +74,8 @@ namespace Neon.Kube.Operator.Cache
                 .CreateCounter(
                     name: $"{prefix}_hits_total",
                     help: "The total number of cache hits",
-                    labelNames: LabelNames)
+                    labelNames: LabelNames,
+                    configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
         }
 

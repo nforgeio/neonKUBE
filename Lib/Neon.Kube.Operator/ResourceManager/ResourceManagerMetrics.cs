@@ -77,56 +77,64 @@ namespace Neon.Kube.Operator.ResourceManager
                 .CreateCounter(
                     name: $"{prefix}_idle_total",
                     help: "IDLE events handled by the controller.",
-                    labelNames: LabelNames)
+                    labelNames: LabelNames,
+                    configuration: new CounterConfiguration() {  ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             ReconcileEventsTotal = Metrics
                 .CreateCounter(
                     name: $"{prefix}_reconcile_total",
                     help: "Total number of reconciliations per controller.",
-                    labelNames: LabelNames)
+                    labelNames: LabelNames,
+                    configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             DeleteEventsTotal = Metrics
                 .CreateCounter(
                     name: $"{prefix}_delete_total",
                     help: "Total number of delete events per controller.",
-                    labelNames: LabelNames)
+                    labelNames: LabelNames,
+                    configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             StatusModifiedTotal = Metrics
                 .CreateCounter(
                     name: $"{prefix}_statusmodify_total",
                     help: "Total number of status updates handled by the controller.",
-                    labelNames: LabelNames)
+                    labelNames: LabelNames,
+                    configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             FinalizeTotal = Metrics
                 .CreateCounter(
                     name: $"{prefix}_finalize_total",
                     help: "Total number of finalize events handled by the controller.",
-                    labelNames: LabelNames)
+                    labelNames: LabelNames,
+                    configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             IdleErrorsTotal = Metrics
                 .CreateCounter(
                     name: $"{prefix}_idle_errors_total",
                     help: "The number of errors that occured during idle.",
-                    labelNames: LabelNames)
+                    labelNames: LabelNames,
+                    configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             ReconcileErrorsTotal = Metrics
                 .CreateCounter(
                     name: $"{prefix}_reconcile_errors_total",
                     help: "The number of exceptions thrown while handling reconcile events.",
-                    labelNames: LabelNames)
+                    labelNames: LabelNames,
+                    configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             DeleteErrorsTotal = Metrics
                 .CreateCounter(
                     name: $"{prefix}_delete_errors_total",
                     help: "The number of exceptions thrown while handling delete events.",
-                    labelNames: LabelNames)
+                    labelNames: LabelNames,
+                    configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             StatusModifiedErrorsTotal = Metrics
@@ -140,42 +148,48 @@ namespace Neon.Kube.Operator.ResourceManager
                 .CreateCounter(
                     name: $"{prefix}_finalize_errors_total",
                     help: "The number of exceptions thrown while handling finalize events.",
-                    labelNames: LabelNames)
+                    labelNames: LabelNames,
+                    configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             IdleTimeSeconds = Metrics
                 .CreateHistogram(
                     name: $"{prefix}_idle_time_seconds",
                     help: "How long in seconds the operator spent processing idle requests.",
-                    labelNames: LabelNames)
+                    labelNames: LabelNames,
+                    configuration: new HistogramConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             ReconcileTimeSeconds = Metrics
                 .CreateHistogram(
                     name: $"{prefix}_reconcile_time_seconds",
                     help: "How long in seconds the operator spent reconciling resources.",
-                    labelNames: LabelNames)
+                    labelNames: LabelNames,
+                    configuration: new HistogramConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             DeleteTimeSeconds = Metrics
                 .CreateHistogram(
                     name: $"{prefix}_delete_time_seconds",
                     help: "How long in seconds the operator spent deleting resources.",
-                    labelNames: LabelNames)
+                    labelNames: LabelNames,
+                    configuration: new HistogramConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             StatusModifiedTimeSeconds = Metrics
                 .CreateHistogram(
                     name: $"{prefix}_statusmodified_time_seconds",
                     help: "How long in seconds the operator spent processing status updated requests.",
-                    labelNames: LabelNames)
+                    labelNames: LabelNames,
+                    configuration: new HistogramConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             FinalizeTimeSeconds = Metrics
                 .CreateHistogram(
                     name: $"{prefix}_finalize_time_seconds",
                     help: "How long in seconds the operator spent finalizing resources.",
-                    labelNames: LabelNames)
+                    labelNames: LabelNames,
+                    configuration: new HistogramConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
         }
 

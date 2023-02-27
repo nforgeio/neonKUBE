@@ -27,6 +27,8 @@ using Neon.Kube.Operator.Util;
 
 using k8s;
 
+using Prometheus;
+
 namespace Neon.Kube.Operator
 {
     /// <summary>
@@ -119,6 +121,15 @@ namespace Neon.Kube.Operator
         /// The endpoint where the Readiness check will be exposed.
         /// </summary>
         public string ReadinessEndpooint { get; set; } = "/ready";
+
+        /// <summary>
+        /// Specifies the default <see cref="Prometheus.ExemplarBehavior"/>.
+        /// </summary>
+        public ExemplarBehavior ExemplarBehavior { get; set; } = new ExemplarBehavior()
+        {
+            DefaultExemplarProvider = (_, _) => Exemplar.FromTraceContext(),
+            NewExemplarMinInterval  = TimeSpan.FromMinutes(5)
+        };
 
         /// <summary>
         /// Validates the option properties.

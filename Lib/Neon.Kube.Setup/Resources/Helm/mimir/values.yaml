@@ -1095,6 +1095,7 @@ minio:
   enabled: true
 
 limits:
+  max_global_exemplars_per_user: 100000
   max_global_series_per_user: 0
   max_global_series_per_metric: 0 
   enforce_metadata_metric_name: true

@@ -135,7 +135,7 @@ namespace Neon.Kube.Operator.Webhook
 
             var logger           = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger<IAdmissionWebhook<TEntity, TResult>>();
             var operatorSettings = serviceProvider.GetRequiredService<OperatorSettings>();
-            var metrics          = new WebhookMetrics<TEntity>(operatorSettings.Name, Endpoint);
+            var metrics          = new WebhookMetrics<TEntity>(operatorSettings, Endpoint);
 
             logger?.LogInformationEx(() => $"Registered webhook at [{Endpoint}]");
 
