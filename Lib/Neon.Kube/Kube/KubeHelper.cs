@@ -3098,14 +3098,7 @@ TCPKeepAlive yes
 
                 try
                 {
-                    var configMap = await k8s.CoreV1.ReadNamespacedConfigMapAsync(
-                        name:               KubeConfigMapName.ClusterHealth,
-                        namespaceParameter: KubeNamespace.NeonStatus,
-                        cancellationToken:  cancellationToken);
-
-                    var statusConfig = new TypedConfigMap<ClusterHealth>(configMap);
-
-                    return statusConfig.Data;
+                    return (await k8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterHealth>(KubeConfigMapName.ClusterHealth, KubeNamespace.NeonStatus)).Data;
                 }
                 catch (OperationCanceledException)
                 {

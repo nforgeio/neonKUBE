@@ -61,8 +61,8 @@ using OpenTelemetry.Trace;
 
 using Prometheus;
 
-using Quartz.Impl;
 using Quartz;
+using Quartz.Impl;
 
 using Task    = System.Threading.Tasks.Task;
 using Metrics = Prometheus.Metrics;

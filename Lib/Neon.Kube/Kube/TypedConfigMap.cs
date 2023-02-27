@@ -125,17 +125,17 @@ namespace Neon.Kube.Kube
         /// </summary>
         /// <param name="name">Specifies the configmap name.</param>
         /// <param name="namespace">specifies the namespace.</param>
-        /// <param name="configmap">
-        /// Optionally specifies the initial configmap value.  A default instance will be created
+        /// <param name="data">
+        /// Optionally specifies the configmap data.  A default instance will be created
         /// when this is <c>null</c>.
         /// </param>
-        public TypedConfigMap(string name, string @namespace, TConfigMapData configmap = null)
+        public TypedConfigMap(string name, string @namespace, TConfigMapData data = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
-            Covenant.Requires<ArgumentNullException>(configmap != null, nameof(configmap));
+            Covenant.Requires<ArgumentNullException>(data != null, nameof(data));
 
-            Data                                    = configmap ?? new TConfigMapData();
+            Data                                    = data ?? new TConfigMapData();
             UntypedConfigMap                        = KubeHelper.CreateKubeObject<V1ConfigMap>(name);
             UntypedConfigMap.Data                   = new Dictionary<string, string>();
             UntypedConfigMap.Data[DataPropertyName] = NeonHelper.JsonSerialize(Data);

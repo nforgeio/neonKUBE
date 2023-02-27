@@ -807,14 +807,7 @@ namespace Neon.Kube.Proxy
 
             try
             {
-                var configMap = await K8s.CoreV1.ReadNamespacedConfigMapAsync(
-                    name:               KubeConfigMapName.ClusterLock,
-                    namespaceParameter: KubeNamespace.NeonStatus,
-                    cancellationToken:  cancellationToken);
-
-                var lockStatusConfig = TypedConfigMap<ClusterLock>.From(configMap);
-
-                return lockStatusConfig.Data.IsLocked;
+                return (await K8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterLock>(KubeConfigMapName.ClusterLock, KubeNamespace.NeonStatus)).Data.IsLocked;
             }
             catch
             {
@@ -838,19 +831,14 @@ namespace Neon.Kube.Proxy
             // We need to check and the potentially modify the existing lock configmap
             // so that Kubernetes can check for write conflicts.
 
-            var configMap = await K8s.CoreV1.ReadNamespacedConfigMapAsync(
-                name:               KubeConfigMapName.ClusterLock,
-                namespaceParameter: KubeNamespace.NeonStatus,
-                cancellationToken:  cancellationToken);
+            var clusterLock = await K8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterLock>(KubeConfigMapName.ClusterLock, KubeNamespace.NeonStatus);
 
-            var lockStatusConfig = TypedConfigMap<ClusterLock>.From(configMap);
-
-            if (!lockStatusConfig.Data.IsLocked)
+            if (!clusterLock.Data.IsLocked)
             {
-                lockStatusConfig.Data.IsLocked = true;
-                lockStatusConfig.Update();
+                clusterLock.Data.IsLocked = true;
+                clusterLock.Update();
 
-                await K8s.CoreV1.ReplaceNamespacedConfigMapAsync(configMap, name: configMap.Metadata.Name, namespaceParameter: configMap.Metadata.NamespaceProperty); 
+                await K8s.CoreV1.ReplaceNamespacedTypedConfigMapAsync(clusterLock);
             }
         }
 
@@ -870,19 +858,17 @@ namespace Neon.Kube.Proxy
             // We need to check and the potentially modify the existing lock configmap
             // so that Kubernetes can check for write conflicts.
 
-            var configMap = await K8s.CoreV1.ReadNamespacedConfigMapAsync(
+            var lockStatusConfig = await K8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterLock>(
                 name:               KubeConfigMapName.ClusterLock,
                 namespaceParameter: KubeNamespace.NeonStatus,
                 cancellationToken:  cancellationToken);
-
-            var lockStatusConfig = TypedConfigMap<ClusterLock>.From(configMap);
 
             if (lockStatusConfig.Data.IsLocked)
             {
                 lockStatusConfig.Data.IsLocked = false;
                 lockStatusConfig.Update();
 
-                await K8s.CoreV1.ReplaceNamespacedConfigMapAsync(configMap, name: configMap.Metadata.Name, namespaceParameter: configMap.Metadata.NamespaceProperty);
+                await K8s.CoreV1.ReplaceNamespacedTypedConfigMapAsync(lockStatusConfig);
             }
         }
 
@@ -923,13 +909,11 @@ namespace Neon.Kube.Proxy
         {
             await SyncContext.Clear;
 
-            var configMap = await K8s.CoreV1.ReadNamespacedConfigMapAsync(
+            var clusterInfoConfig = await K8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterInfo>(
                 name:               KubeConfigMapName.ClusterInfo,
                 namespaceParameter: KubeNamespace.NeonStatus);
 
-            var clusterInfoMap = TypedConfigMap<ClusterInfo>.From(configMap);
-
-            return clusterInfoMap.Data;
+            return clusterInfoConfig.Data;
         }
 
         /// <summary>
@@ -944,7 +928,7 @@ namespace Neon.Kube.Proxy
 
             var clusterInfoMap = new TypedConfigMap<ClusterInfo>(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus, clusterInfo);
 
-            await K8s.CoreV1.ReplaceNamespacedConfigMapAsync(clusterInfoMap.UntypedConfigMap, KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus);
+            await K8s.CoreV1.ReplaceNamespacedTypedConfigMapAsync(clusterInfoMap);
         }
 
         /// <summary>

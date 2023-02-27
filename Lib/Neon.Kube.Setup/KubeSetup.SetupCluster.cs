@@ -313,7 +313,7 @@ namespace Neon.Kube.Setup
                 });
 
             //-----------------------------------------------------------------
-            // Verify the cluster.
+            // Check the cluster.
 
             controller.AddNodeStep("check control-plane nodes",
                 (controller, node) =>
