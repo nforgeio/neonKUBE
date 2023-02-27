@@ -358,7 +358,7 @@ namespace Neon.Kube.Hosting.XenServer
 
             if (!controller.Get<bool>(KubeSetupProperty.DisableImageDownload, false))
             {
-                xenController.AddNodeStep("xenserver node image", (controller, hostProxy) => InstallNodeImageAsync(hostProxy), parallelLimit: 1);
+                xenController.AddNodeStep("xenserver node image", (controller, hostProxy) => InstallVmTemplateAsync(hostProxy), parallelLimit: 1);
             }
 
             var createVmLabel = "create virtual machine";
@@ -545,7 +545,7 @@ namespace Neon.Kube.Hosting.XenServer
         /// Install the virtual machine template on the XenServer if it's not already present.
         /// </summary>
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
-        private async Task InstallNodeImageAsync(NodeSshProxy<XenClient> xenSshProxy)
+        private async Task InstallVmTemplateAsync(NodeSshProxy<XenClient> xenSshProxy)
         {
             await SyncContext.Clear;
 
@@ -768,7 +768,7 @@ namespace Neon.Kube.Hosting.XenServer
 
                 xenSshProxy.Status = FormatVmStatus(vmName, "create: virtual machine");
 
-                var vm = xenClient.Machine.Create(vmName, $"neonkube-{KubeVersions.NeonKube}",
+                var vm = xenClient.Machine.Create(vmName, $"neonkube-{KubeVersions.NeonKubeWithBranchPart}",
                     cores:                      cores,
                     memoryBytes:                memoryBytes,
                     diskBytes:                  osDiskBytes,
