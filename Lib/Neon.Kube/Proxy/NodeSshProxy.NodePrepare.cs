@@ -1345,15 +1345,16 @@ set -euo pipefail
 
 set +e                                                                                                                                              # <--- HACK: disable error checks
 curl {KubeHelper.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
- 
-if $?; then
+haveKey=$? 
+
+if [ ! $haveKey ]; then
     
     # The primary apt-key URI failed, so we're going to use the alternate, after
     # re-enabling error checking.
 
     set -euo pipefail
     curl {KubeHelper.CurlOptions} https://dl.k8s.io/apt/doc/apt-key.gpg | apt-key add -    
-if
+fi
 
 echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/sources.list.d/kubernetes.list
 {KubeNodeFolder.Bin}/safe-apt-get update
