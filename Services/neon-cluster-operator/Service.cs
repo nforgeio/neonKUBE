@@ -23,6 +23,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Reflection;
@@ -47,6 +48,7 @@ using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Clients;
 using Neon.Kube.Glauth;
+using Neon.Kube.Kube;
 using Neon.Kube.Operator;
 using Neon.Kube.Operator.ResourceManager;
 using Neon.Kube.Operator.Rbac;
@@ -83,7 +85,6 @@ using Prometheus;
 using Quartz;
 using Quartz.Impl;
 using Quartz.Logging;
-using System.Net.Http;
 using Minio;
 
 using Task    = System.Threading.Tasks.Task;
@@ -323,7 +324,7 @@ namespace NeonClusterOperator
             {
                 await SyncContext.Clear;
 
-                ClusterInfo = TypedConfigMap<ClusterInfo>.From(@event.Value).Config;
+                ClusterInfo = TypedConfigMap<ClusterInfo>.From(@event.Value).Data;
 
                 Logger.LogInformationEx("Updated cluster info");
             },

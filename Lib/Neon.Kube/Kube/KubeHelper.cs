@@ -52,9 +52,11 @@ using Neon.IO;
 using Neon.Kube.BuildInfo;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Glauth;
+using Neon.Kube.Kube;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Tasks;
+
 using SharpCompress.Readers;
 
 namespace Neon.Kube
@@ -3103,7 +3105,7 @@ TCPKeepAlive yes
 
                     var statusConfig = new TypedConfigMap<ClusterHealth>(configMap);
 
-                    return statusConfig.Config;
+                    return statusConfig.Data;
                 }
                 catch (OperationCanceledException)
                 {

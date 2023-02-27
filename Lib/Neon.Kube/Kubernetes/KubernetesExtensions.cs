@@ -33,6 +33,7 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.Kube.Kube;
 using Neon.Retry;
 using Neon.Tasks;
 
@@ -971,110 +972,102 @@ namespace Neon.Kube
         }
 
         //---------------------------------------------------------------------
-        // Namespaced typed config extensions.
+        // Namespaced typed configmap extensions.
 
         /// <summary>
-        /// Creates a namespace scoped typed config.
+        /// Creates a namespace scoped typed configmap.
         /// </summary>
-        /// <typeparam name="TConfigMap">Specifies the config type.</typeparam>
+        /// <typeparam name="TConfigMapData">Specifies the configmap data type.</typeparam>
         /// <param name="k8sCoreV1">The <see cref="Kubernetes"/> client's <see cref="ICoreV1Operations"/>.</param>
-        /// <param name="config">Specifies the config data.</param>
-        /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
-        /// <param name="name">Specifies the object name.</param>
+        /// <param name="typedConfigMap">Specifies the typed configmap.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
-        /// <returns>The <see cref="V1ConfigMap"/> created for the typed config.</returns>
+        /// <returns>The new <see cref="TypedConfigMap{TConfigMap}"/>.</returns>
         /// <remarks>
-        /// Typed configs are <see cref="V1ConfigMap"/> objects that wrap a strongly typed
+        /// Typed configmaps are <see cref="V1ConfigMap"/> objects that wrap a strongly typed
         /// object formatted using the <see cref="TypedConfigMap{TConfigMap}"/> class.  This
-        /// makes it easy to persist typed data to a Kubernetes cluster.
+        /// makes it easy to persist and retrieve typed data to a Kubernetes cluster.
         /// </remarks>
-        public static async Task<V1ConfigMap> CreateNamespacedConfigAsync<TConfigMap>(
+        public static async Task<TypedConfigMap<TConfigMapData>> CreateNamespacedTypedConfigMapAsync<TConfigMapData>(
             this ICoreV1Operations      k8sCoreV1,
-            TConfigMap                  config,
-            string                      name,
-            string                      namespaceParameter,
+            TypedConfigMap<TConfigMapData>  typedConfigMap,
             CancellationToken           cancellationToken = default)
 
-            where TConfigMap: class, new()
+            where TConfigMapData: class, new()
         {
             await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(config != null, nameof(config));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
+            Covenant.Requires<ArgumentNullException>(typedConfigMap != null, nameof(typedConfigMap));
 
-            var typedConfigMap = new TypedConfigMap<TConfigMap>(name, namespaceParameter, config);
-
-            return await k8sCoreV1.CreateNamespacedConfigMapAsync(typedConfigMap.ConfigMap, namespaceParameter, cancellationToken: cancellationToken);
+            return TypedConfigMap<TConfigMapData>.From(await k8sCoreV1.CreateNamespacedConfigMapAsync(
+                body:               typedConfigMap.UntypedConfigMap, 
+                namespaceParameter: typedConfigMap.UntypedConfigMap.Namespace(), 
+                cancellationToken:  cancellationToken));
         }
 
         /// <summary>
-        /// Retrieves a namespace scoped typed config.
+        /// Retrieves a namespace scoped typed configmap.
         /// </summary>
-        /// <typeparam name="TConfigMap">Specifies the config type.</typeparam>
+        /// <typeparam name="TConfigMapData">Specifies the configmap data type.</typeparam>
         /// <param name="k8sCoreV1">The <see cref="Kubernetes"/> client's <see cref="ICoreV1Operations"/>.</param>
         /// <param name="name">Specifies the object name.</param>
         /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
-        /// <returns>The retrieved config.</returns>
+        /// <returns>The retrieved <see cref="TypedConfigMap{TConfigMap}"/>.</returns>
         /// <remarks>
-        /// Typed configs are <see cref="V1ConfigMap"/> objects that wrap a strongly typed
+        /// Typed configmaps are <see cref="V1ConfigMap"/> objects that wrap a strongly typed
         /// object formatted using the <see cref="TypedConfigMap{TConfigMap}"/> class.  This
-        /// makes it easy to persist typed data to a Kubernetes cluster.
+        /// makes it easy to persist and retrieve typed data to a Kubernetes cluster.
         /// </remarks>
-        public static async Task<TConfigMap> ReadNamespacedConfigAsync<TConfigMap>(
+        public static async Task<TypedConfigMap<TConfigMapData>> ReadNamespacedTypedConfigMapAsync<TConfigMapData>(
             this ICoreV1Operations      k8sCoreV1,
             string                      name,
             string                      namespaceParameter,
             CancellationToken           cancellationToken = default)
 
-            where TConfigMap : class, new()
+            where TConfigMapData : class, new()
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
 
-            var rawConfig   = await k8sCoreV1.ReadNamespacedConfigMapAsync(name, namespaceParameter, pretty: false, cancellationToken: cancellationToken);
-            var typedConfig = TypedConfigMap<TConfigMap>.From(rawConfig);
-
-            return typedConfig.Config;
+            return TypedConfigMap<TConfigMapData>.From(await k8sCoreV1.ReadNamespacedConfigMapAsync(name, namespaceParameter, pretty: false, cancellationToken: cancellationToken));
         }
 
         /// <summary>
-        /// Replaces an existing typed config with new data.
+        /// Replaces an existing typed configmap with new data.
         /// </summary>
-        /// <typeparam name="TConfigMap">Specifies the config type.</typeparam>
+        /// <typeparam name="TConfigMapData">Specifies the configmap data type.</typeparam>
         /// <param name="k8sCoreV1">The <see cref="Kubernetes"/> client's <see cref="ICoreV1Operations"/>.</param>
-        /// <param name="config">Specifies the replacement data.</param>
+        /// <param name="configmap">Specifies the replacement configmap data.</param>
         /// <param name="name">Specifies the object name.</param>
         /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
-        /// <returns>The updated <see cref="V1ConfigMap"/> for the config.</returns>
+        /// <returns>The updated <see cref="TypedConfigMap{TConfigMap}"/>.</returns>
         /// <remarks>
-        /// Typed configs are <see cref="V1ConfigMap"/> objects that wrap a strongly typed
+        /// Typed configmaps are <see cref="V1ConfigMap"/> objects that wrap a strongly typed
         /// object formatted using the <see cref="TypedConfigMap{TConfigMap}"/> class.  This
-        /// makes it easy to persist typed data to a Kubernetes cluster.
+        /// makes it easy to persist and retrieve typed data to a Kubernetes cluster.
         /// </remarks>
-        public static async Task<V1ConfigMap> ReplaceNamespacedConfigAsync<TConfigMap>(
+        public static async Task<TypedConfigMap<TConfigMapData>> ReplaceNamespacedTypedConfigMapAsync<TConfigMapData>(
             this ICoreV1Operations      k8sCoreV1,
-            TConfigMap                  config,
+            TConfigMapData                  configmap,
             string                      name,
             string                      namespaceParameter,
             CancellationToken           cancellationToken = default)
 
-            where TConfigMap : class, new()
+            where TConfigMapData : class, new()
         {
             await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(config != null, nameof(config));
+            Covenant.Requires<ArgumentNullException>(configmap != null, nameof(configmap));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
 
-            var typedConfig = new TypedConfigMap<TConfigMap>(name, namespaceParameter, config);
+            var typedConfig = new TypedConfigMap<TConfigMapData>(name, namespaceParameter, configmap);
 
-            return await k8sCoreV1.ReplaceNamespacedConfigMapAsync(typedConfig.ConfigMap, name, namespaceParameter, cancellationToken: cancellationToken);
+            return TypedConfigMap<TConfigMapData>.From(await k8sCoreV1.ReplaceNamespacedConfigMapAsync(typedConfig.UntypedConfigMap, name, namespaceParameter, cancellationToken: cancellationToken));
         }
 
         /// <summary>
-        /// Deletes a namespaced typed config.
+        /// Deletes a namespaced typed configmap.
         /// </summary>
         /// <param name="k8sCoreV1">The <see cref="Kubernetes"/> client's <see cref="ICoreV1Operations"/>.</param>
         /// <param name="name">Specifies the object name.</param>
@@ -1082,11 +1075,11 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
-        /// Typed configs are <see cref="V1ConfigMap"/> objects that wrap a strongly typed
+        /// Typed configmaps are <see cref="V1ConfigMap"/> objects that wrap a strongly typed
         /// object formatted using the <see cref="TypedConfigMap{TConfigMap}"/> class.  This
-        /// makes it easy to persist typed data to a Kubernetes cluster.
+        /// makes it easy to persist and retrieve typed data to a Kubernetes cluster.
         /// </remarks>
-        public static async Task DeleteNamespacedConfigAsync(
+        public static async Task DeleteNamespacedTypedConfigMapAsync(
             this ICoreV1Operations  k8sCoreV1,
             string                  name,
             string                  namespaceParameter,

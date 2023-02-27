@@ -27,6 +27,7 @@ using Microsoft.Extensions.Logging;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.Kube;
 using Neon.Kube.Operator.Util;
 using Neon.Net;
 using Neon.Kube.Resources.Cluster;
@@ -81,7 +82,7 @@ namespace NeonClusterOperator
 
                     var configMap = await k8s.CoreV1.ReadNamespacedConfigMapAsync(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus);
 
-                    clusterTelemetry.ClusterInfo = TypedConfigMap<ClusterInfo>.From(configMap).Config;
+                    clusterTelemetry.ClusterInfo = TypedConfigMap<ClusterInfo>.From(configMap).Data;
 
                     using (var jsonClient = new JsonClient() { BaseAddress = KubeEnv.HeadendUri })
                     {

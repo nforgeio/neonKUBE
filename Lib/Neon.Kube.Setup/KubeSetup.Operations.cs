@@ -34,6 +34,7 @@ using Neon.Kube.Clients;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Glauth;
 using Neon.Kube.Hosting;
+using Neon.Kube.Kube;
 using Neon.Kube.Operator;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Calico;
@@ -5706,9 +5707,9 @@ $@"- name: StorageType
                     var clusterInfoMap = new TypedConfigMap<ClusterInfo>(
                         name:       KubeConfigMapName.ClusterInfo,
                         @namespace: KubeNamespace.NeonStatus,
-                        config:     new ClusterInfo(cluster.Definition));
+                        configmap:     new ClusterInfo(cluster.Definition));
 
-                    await k8s.CoreV1.CreateNamespacedConfigMapAsync(clusterInfoMap.ConfigMap, KubeNamespace.NeonStatus);
+                    await k8s.CoreV1.CreateNamespacedTypedConfigMapAsync(clusterInfoMap);
                 }));
         }
 
@@ -5734,12 +5735,12 @@ $@"- name: StorageType
                     var clusterLockMap = new TypedConfigMap<ClusterLock>(
                         name:       KubeConfigMapName.ClusterLock,
                         @namespace: KubeNamespace.NeonStatus,
-                        config:     new ClusterLock()
+                        configmap:     new ClusterLock()
                         {
                             IsLocked = cluster.Definition.IsLocked,
                         });
 
-                    await k8s.CoreV1.CreateNamespacedConfigMapAsync(clusterLockMap.ConfigMap, KubeNamespace.NeonStatus);
+                    await k8s.CoreV1.CreateNamespacedConfigMapAsync(clusterLockMap.UntypedConfigMap, KubeNamespace.NeonStatus);
                 });
 
             await controlNode.InvokeIdempotentAsync("setup/cluster-health",
@@ -5748,13 +5749,13 @@ $@"- name: StorageType
                     var clusterHealthMap = new TypedConfigMap<ClusterHealth>(
                         name:       KubeConfigMapName.ClusterHealth,
                         @namespace: KubeNamespace.NeonStatus,
-                        config:     new ClusterHealth()
+                        configmap:     new ClusterHealth()
                         {
                             State   = ClusterState.Healthy,
                             Summary = "Cluster is healthy"
                         });
 
-                    await k8s.CoreV1.CreateNamespacedConfigMapAsync(clusterHealthMap.ConfigMap, KubeNamespace.NeonStatus);
+                    await k8s.CoreV1.CreateNamespacedConfigMapAsync(clusterHealthMap.UntypedConfigMap, KubeNamespace.NeonStatus);
                 }));
         }
 

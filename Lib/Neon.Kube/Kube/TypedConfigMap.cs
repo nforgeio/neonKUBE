@@ -40,132 +40,135 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
-namespace Neon.Kube
+namespace Neon.Kube.Kube
 {
     /// <summary>
     /// <para>
     /// Wraps a Kubernetes <see cref="V1ConfigMap"/> to support strongly typed configurations.
-    /// This is persisted using a string dictionary where the configuration is persisted as
-    /// JSON using the <b>"data"</b> key.
+    /// This is implemented by serializing the config data as JSON and adding that to the 
+    /// low-level configmap under the <see cref="DataPropertyName"/> key.
     /// </para>
     /// <note>
     /// This is typically used for persisting state to the cluster rather than for setting
     /// configuration for pods but can be used for that as well.
     /// </note>
     /// </summary>
-    /// <typeparam name="TConfigMap">Specifies the configuration type.</typeparam>
+    /// <typeparam name="TConfigMapData">Specifies the configmap data type.</typeparam>
     /// <remarks>
     /// <para>
-    /// To create a configmap, use the <see cref="TypedConfigMap(string, string, TConfigMap)"/>
+    /// To create a configmap, use the <see cref="TypedConfigMap(string, string, TConfigMapData)"/>
     /// constructor, specifying the configmap's Kubernetes name and namespace as well as an
-    /// instance of the typesafe config; your typed config will be available as the <see cref="Config"/>
-    /// property.  Configure your config as required and then call <b>IKubernetes.CreateNamespacedConfigMapAsync()</b>,
-    /// passing <see cref="ConfigMap"/> as the request body (this holds the <see cref="V1ConfigMap"/>).
+    /// instance of the typesafe config; your typed config will be available as the <see cref="Data"/>
+    /// property.  Configure your config as required and then call <b>IKubernetes.CreateNamespacedTypedConfigMapAsync()</b>,
+    /// passing <see cref="UntypedConfigMap"/> as the request body (this holds the <see cref="V1ConfigMap"/>).
     /// </para>
     /// <para>
-    /// To read an existing configmap, call <b>IKubernetes.CoreV1.ReadNamespacedConfigMapAsync</b> to retrieve the
-    /// Kubernetes configmap and then call the static <see cref="From"/> method to wrap the result
-    /// into a <see cref="TypedConfigMap{TConfig}"/> where your typesafe values can be accessed
-    /// via the <see cref="Config"/> property.
+    /// To read an existing configmap, call <b>IKubernetes.CoreV1.ReadNamespacedTypedConfigMapAsync()</b> 
+    /// to retrieve the Kubernetes configmap and then call the static <see cref="From"/> method to wrap
+    /// the result into a <see cref="TypedConfigMap{TConfig}"/> where your typesafe values can be accessed
+    /// via the <see cref="Data"/> property.
     /// </para>
     /// <para>
-    /// To update an existing config, call <b>IKubernetes.CoreV1.ReadNamespacedConfigMapAsync</b> to retrieve it, 
-    /// modify it via the <see cref="Config"/> property and then call <b>IKubernetes.CoreV1.ReplaceNamespacedConfigMapAsync()</b>
-    /// passing <see cref="ConfigMap"/>.
+    /// To update an existing config, call <b>IKubernetes.CoreV1.ReadNamespacedTypedConfigMapAsync</b> to retrieve it, 
+    /// modify it via the <see cref="Data"/> property and then call <b>IKubernetes.CoreV1.ReplaceNamespacedTypedConfigMapAsync()</b>
+    /// passing the new <see cref="UntypedConfigMap"/>.
     /// </para>
     /// </remarks>
-    public class TypedConfigMap<TConfigMap>
-        where TConfigMap : class, new()
+    public class TypedConfigMap<TConfigMapData>
+        where TConfigMapData : class, new()
     {
         //---------------------------------------------------------------------
         // Static members
 
-        private const string dataPropertyName = "data";
+        /// <summary>
+        /// Identifies the key used to store typed data within an untyped configmap.
+        /// </summary>
+        public const string DataPropertyName = "typed-data";
 
         /// <summary>
         /// Constructs an instance by parsing a <see cref="V1ConfigMap"/>.
         /// </summary>
-        /// <param name="configMap">The source config map.</param>
-        /// <returns>The parsed configuration</returns>
-        public static TypedConfigMap<TConfigMap> From(V1ConfigMap configMap)
+        /// <param name="untypedonfigMap">Specifies the untyped config map..</param>
+        /// <returns>The typed configmap.</returns>
+        public static TypedConfigMap<TConfigMapData> From(V1ConfigMap untypedonfigMap)
         {
-            Covenant.Requires<ArgumentNullException>(configMap != null, nameof(configMap));
+            Covenant.Requires<ArgumentNullException>(untypedonfigMap != null, nameof(untypedonfigMap));
 
-            return new TypedConfigMap<TConfigMap>(configMap);
+            return new TypedConfigMap<TConfigMapData>(untypedonfigMap);
         }
 
         //---------------------------------------------------------------------
         // Instance members
 
-        private TConfigMap  config;
+        private TConfigMapData data;
 
         /// <summary>
-        /// Constructs an instance from an existing <see cref="V1ConfigMap"/>.
+        /// Constructs an instance from an untyped <see cref="V1ConfigMap"/>.
         /// </summary>
-        /// <param name="configMap">The config map name as it will be persisted to Kubernetes.</param>
-        public TypedConfigMap(V1ConfigMap configMap)
+        /// <param name="untypedConfigMap">The config map name as it will be persisted to Kubernetes.</param>
+        public TypedConfigMap(V1ConfigMap untypedConfigMap)
         {
-            Covenant.Requires<ArgumentNullException>(configMap != null, nameof(configMap));
+            Covenant.Requires<ArgumentNullException>(untypedConfigMap != null, nameof(untypedConfigMap));
 
-            if (!configMap.Data.TryGetValue(dataPropertyName, out var json))
+            if (!untypedConfigMap.Data.TryGetValue(DataPropertyName, out var json))
             {
-                throw new InvalidDataException($"Expected the [{configMap}] to have a [{dataPropertyName}] property.");
+                throw new InvalidDataException($"Expected the [{untypedConfigMap}] to have a [{DataPropertyName}] property.");
             }
 
-            this.ConfigMap = configMap;
-            this.Config    = NeonHelper.JsonDeserialize<TConfigMap>(json, strict: true);
+            UntypedConfigMap = untypedConfigMap;
+            Data             = NeonHelper.JsonDeserialize<TConfigMapData>(json, strict: true);
         }
 
         /// <summary>
-        /// Constructs an instance with the specified name and <typeparamref name="TConfigMap"/> value.
+        /// Constructs a typed configmap with the specified name and an optional initial value
+        /// <typeparamref name="TConfigMapData"/> value.
         /// </summary>
         /// <param name="name">Specifies the configmap name.</param>
         /// <param name="namespace">specifies the namespace.</param>
-        /// <param name="config">
-        /// Optionally specifies the initial config value.  A default instance will be created
+        /// <param name="configmap">
+        /// Optionally specifies the initial configmap value.  A default instance will be created
         /// when this is <c>null</c>.
         /// </param>
-        public TypedConfigMap(string name, string @namespace, TConfigMap config = null)
+        public TypedConfigMap(string name, string @namespace, TConfigMapData configmap = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
-            Covenant.Requires<ArgumentNullException>(config != null, nameof(config));
+            Covenant.Requires<ArgumentNullException>(configmap != null, nameof(configmap));
 
-            this.Config         = config ?? new TConfigMap();
-            this.ConfigMap      = KubeHelper.CreateKubeObject<V1ConfigMap>(name);
-            this.ConfigMap.Data = new Dictionary<string, string>();
-
-            this.ConfigMap.Data[dataPropertyName] = NeonHelper.JsonSerialize(this.Config);
+            Data                                    = configmap ?? new TConfigMapData();
+            UntypedConfigMap                        = KubeHelper.CreateKubeObject<V1ConfigMap>(name);
+            UntypedConfigMap.Data                   = new Dictionary<string, string>();
+            UntypedConfigMap.Data[DataPropertyName] = NeonHelper.JsonSerialize(Data);
         }
 
         /// <summary>
-        /// Returns the associated <see cref="V1ConfigMap"/>.
+        /// Returns the associated untyped configmap.
         /// </summary>
-        public V1ConfigMap ConfigMap { get; private set; }
+        public V1ConfigMap UntypedConfigMap { get; private set; }
 
         /// <summary>
-        /// Returns the current <typeparamref name="TConfigMap"/> value.
+        /// Specifies the current typed configmap data.
         /// </summary>
         /// <exception cref="ArgumentNullException">Thrown when the value being set is <c>null</c>.</exception>
-        public TConfigMap Config
+        public TConfigMapData Data
         {
-            get => config;
+            get => data;
 
             set
             {
-                Covenant.Requires<ArgumentNullException>(value != null, nameof(Config));
+                Covenant.Requires<ArgumentNullException>(value != null, nameof(Data));
 
-                config = value;
+                data = value;
             }
         }
 
         /// <summary>
-        /// Updates the configmap by persisting any changes to <see cref="Config"/> back to
-        /// the Kubernetes configmap's <b>"data"</b> key.
+        /// Updates the configmap by persisting any changes to <see cref="Data"/> back to
+        /// the Kubernetes configmap's <see cref="DataPropertyName"/> key.
         /// </summary>
         public void Update()
         {
-            ConfigMap.Data[dataPropertyName] = NeonHelper.JsonSerialize(Config);
+            UntypedConfigMap.Data[DataPropertyName] = NeonHelper.JsonSerialize(Data);
         }
     }
 }

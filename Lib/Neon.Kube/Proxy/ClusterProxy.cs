@@ -37,6 +37,7 @@ using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Hosting;
+using Neon.Kube.Kube;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Kube.Setup;
@@ -813,7 +814,7 @@ namespace Neon.Kube.Proxy
 
                 var lockStatusConfig = TypedConfigMap<ClusterLock>.From(configMap);
 
-                return lockStatusConfig.Config.IsLocked;
+                return lockStatusConfig.Data.IsLocked;
             }
             catch
             {
@@ -844,9 +845,9 @@ namespace Neon.Kube.Proxy
 
             var lockStatusConfig = TypedConfigMap<ClusterLock>.From(configMap);
 
-            if (!lockStatusConfig.Config.IsLocked)
+            if (!lockStatusConfig.Data.IsLocked)
             {
-                lockStatusConfig.Config.IsLocked = true;
+                lockStatusConfig.Data.IsLocked = true;
                 lockStatusConfig.Update();
 
                 await K8s.CoreV1.ReplaceNamespacedConfigMapAsync(configMap, name: configMap.Metadata.Name, namespaceParameter: configMap.Metadata.NamespaceProperty); 
@@ -876,9 +877,9 @@ namespace Neon.Kube.Proxy
 
             var lockStatusConfig = TypedConfigMap<ClusterLock>.From(configMap);
 
-            if (lockStatusConfig.Config.IsLocked)
+            if (lockStatusConfig.Data.IsLocked)
             {
-                lockStatusConfig.Config.IsLocked = false;
+                lockStatusConfig.Data.IsLocked = false;
                 lockStatusConfig.Update();
 
                 await K8s.CoreV1.ReplaceNamespacedConfigMapAsync(configMap, name: configMap.Metadata.Name, namespaceParameter: configMap.Metadata.NamespaceProperty);
@@ -928,7 +929,7 @@ namespace Neon.Kube.Proxy
 
             var clusterInfoMap = TypedConfigMap<ClusterInfo>.From(configMap);
 
-            return clusterInfoMap.Config;
+            return clusterInfoMap.Data;
         }
 
         /// <summary>
@@ -943,7 +944,7 @@ namespace Neon.Kube.Proxy
 
             var clusterInfoMap = new TypedConfigMap<ClusterInfo>(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus, clusterInfo);
 
-            await K8s.CoreV1.ReplaceNamespacedConfigMapAsync(clusterInfoMap.ConfigMap, KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus);
+            await K8s.CoreV1.ReplaceNamespacedConfigMapAsync(clusterInfoMap.UntypedConfigMap, KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus);
         }
 
         /// <summary>
