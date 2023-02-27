@@ -112,7 +112,7 @@ namespace NeonCli
         /// <summary>
         /// Returns the folder path where the program binary is located.
         /// </summary>
-        private static readonly string BinaryFolder = NeonHelper.GetBaseDirectory();
+        private static readonly string BinaryFolder = NeonHelper.GetApplicationFolder();
 
         /// <summary>
         /// Returns the path to the standard tool folder when <b>neon-cli</b> has been fully installed.
