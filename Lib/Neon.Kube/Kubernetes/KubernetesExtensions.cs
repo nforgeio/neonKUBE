@@ -989,7 +989,7 @@ namespace Neon.Kube
         /// object formatted using the <see cref="TypedConfigMap{TConfigMap}"/> class.  This
         /// makes it easy to persist typed data to a Kubernetes cluster.
         /// </remarks>
-        public static async Task<V1ConfigMap> CreateNamespacedConfig<TConfigMap>(
+        public static async Task<V1ConfigMap> CreateNamespacedConfigAsync<TConfigMap>(
             this IKubernetes    k8s,
             TConfigMap          config,
             string              name,
@@ -1022,7 +1022,7 @@ namespace Neon.Kube
         /// object formatted using the <see cref="TypedConfigMap{TConfigMap}"/> class.  This
         /// makes it easy to persist typed data to a Kubernetes cluster.
         /// </remarks>
-        public static async Task<TConfigMap> ReadNamespacedConfig<TConfigMap>(
+        public static async Task<TConfigMap> ReadNamespacedConfigAsync<TConfigMap>(
             this IKubernetes    k8s,
             string              name,
             string              namespaceParameter,
@@ -1055,7 +1055,7 @@ namespace Neon.Kube
         /// object formatted using the <see cref="TypedConfigMap{TConfigMap}"/> class.  This
         /// makes it easy to persist typed data to a Kubernetes cluster.
         /// </remarks>
-        public static async Task<V1ConfigMap> ReplaceNamespacedConfig<TConfigMap>(
+        public static async Task<V1ConfigMap> ReplaceNamespacedConfigAsync<TConfigMap>(
             this IKubernetes    k8s,
             TConfigMap          config,
             string              name,
@@ -1087,7 +1087,7 @@ namespace Neon.Kube
         /// object formatted using the <see cref="TypedConfigMap{TConfigMap}"/> class.  This
         /// makes it easy to persist typed data to a Kubernetes cluster.
         /// </remarks>
-        public static async Task DeleteNamespacedConfig(
+        public static async Task DeleteNamespacedConfigAsync(
             this IKubernetes    k8s,
             string              name,
             string              namespaceParameter,
