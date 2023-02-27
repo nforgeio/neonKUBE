@@ -80,12 +80,10 @@ namespace NeonClusterOperator
                     clusterTelemetry.Nodes = nodes.Items.ToList();
 
                     var configMap = await k8s.CoreV1.ReadNamespacedConfigMapAsync(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus);
-                    clusterTelemetry.ClusterInfo = TypeSafeConfigMap<ClusterInfo>.From(configMap).Config;
 
-                    using (var jsonClient = new JsonClient()
-                    {
-                        BaseAddress = KubeEnv.HeadendUri
-                    })
+                    clusterTelemetry.ClusterInfo = TypedConfigMap<ClusterInfo>.From(configMap).Config;
+
+                    using (var jsonClient = new JsonClient() { BaseAddress = KubeEnv.HeadendUri })
                     {
                         await jsonClient.PostAsync("/telemetry/cluster", clusterTelemetry);
                     }
