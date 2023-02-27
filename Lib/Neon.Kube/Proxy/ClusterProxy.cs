@@ -37,6 +37,7 @@ using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Hosting;
+using Neon.Kube.Kube;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Kube.Setup;
@@ -645,7 +646,7 @@ namespace Neon.Kube.Proxy
         {
             await SyncContext.Clear;
 
-            var minioPod = await K8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
+            var minioPod = await K8s.CoreV1.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
             var command  = new string[]
             {
                 "/bin/bash",
@@ -704,7 +705,7 @@ namespace Neon.Kube.Proxy
                 psqlCommand += ';';
             }
 
-            var sysDbPod = await K8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app=neon-system-db");
+            var sysDbPod = await K8s.CoreV1.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app=neon-system-db");
             var command  = new string[]
             {
                 "/bin/bash",
@@ -806,14 +807,7 @@ namespace Neon.Kube.Proxy
 
             try
             {
-                var configMap = await K8s.CoreV1.ReadNamespacedConfigMapAsync(
-                    name:               KubeConfigMapName.ClusterLock,
-                    namespaceParameter: KubeNamespace.NeonStatus,
-                    cancellationToken:  cancellationToken);
-
-                var lockStatusConfig = TypedConfigMap<ClusterLock>.From(configMap);
-
-                return lockStatusConfig.Config.IsLocked;
+                return (await K8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterLock>(KubeConfigMapName.ClusterLock, KubeNamespace.NeonStatus)).Data.IsLocked;
             }
             catch
             {
@@ -837,19 +831,14 @@ namespace Neon.Kube.Proxy
             // We need to check and the potentially modify the existing lock configmap
             // so that Kubernetes can check for write conflicts.
 
-            var configMap = await K8s.CoreV1.ReadNamespacedConfigMapAsync(
-                name:               KubeConfigMapName.ClusterLock,
-                namespaceParameter: KubeNamespace.NeonStatus,
-                cancellationToken:  cancellationToken);
+            var clusterLock = await K8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterLock>(KubeConfigMapName.ClusterLock, KubeNamespace.NeonStatus);
 
-            var lockStatusConfig = TypedConfigMap<ClusterLock>.From(configMap);
-
-            if (!lockStatusConfig.Config.IsLocked)
+            if (!clusterLock.Data.IsLocked)
             {
-                lockStatusConfig.Config.IsLocked = true;
-                lockStatusConfig.Update();
+                clusterLock.Data.IsLocked = true;
+                clusterLock.Update();
 
-                await K8s.CoreV1.ReplaceNamespacedConfigMapAsync(configMap, name: configMap.Metadata.Name, namespaceParameter: configMap.Metadata.NamespaceProperty); 
+                await K8s.CoreV1.ReplaceNamespacedTypedConfigMapAsync(clusterLock);
             }
         }
 
@@ -869,19 +858,17 @@ namespace Neon.Kube.Proxy
             // We need to check and the potentially modify the existing lock configmap
             // so that Kubernetes can check for write conflicts.
 
-            var configMap = await K8s.CoreV1.ReadNamespacedConfigMapAsync(
+            var lockStatusConfig = await K8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterLock>(
                 name:               KubeConfigMapName.ClusterLock,
                 namespaceParameter: KubeNamespace.NeonStatus,
                 cancellationToken:  cancellationToken);
 
-            var lockStatusConfig = TypedConfigMap<ClusterLock>.From(configMap);
-
-            if (lockStatusConfig.Config.IsLocked)
+            if (lockStatusConfig.Data.IsLocked)
             {
-                lockStatusConfig.Config.IsLocked = false;
+                lockStatusConfig.Data.IsLocked = false;
                 lockStatusConfig.Update();
 
-                await K8s.CoreV1.ReplaceNamespacedConfigMapAsync(configMap, name: configMap.Metadata.Name, namespaceParameter: configMap.Metadata.NamespaceProperty);
+                await K8s.CoreV1.ReplaceNamespacedTypedConfigMapAsync(lockStatusConfig);
             }
         }
 
@@ -922,13 +909,11 @@ namespace Neon.Kube.Proxy
         {
             await SyncContext.Clear;
 
-            var configMap = await K8s.CoreV1.ReadNamespacedConfigMapAsync(
+            var clusterInfoConfig = await K8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterInfo>(
                 name:               KubeConfigMapName.ClusterInfo,
                 namespaceParameter: KubeNamespace.NeonStatus);
 
-            var clusterInfoMap = TypedConfigMap<ClusterInfo>.From(configMap);
-
-            return clusterInfoMap.Config;
+            return clusterInfoConfig.Data;
         }
 
         /// <summary>
@@ -943,7 +928,7 @@ namespace Neon.Kube.Proxy
 
             var clusterInfoMap = new TypedConfigMap<ClusterInfo>(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus, clusterInfo);
 
-            await K8s.CoreV1.ReplaceNamespacedConfigMapAsync(clusterInfoMap.ConfigMap, KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus);
+            await K8s.CoreV1.ReplaceNamespacedTypedConfigMapAsync(clusterInfoMap);
         }
 
         /// <summary>

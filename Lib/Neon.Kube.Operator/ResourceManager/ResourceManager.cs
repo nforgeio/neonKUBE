@@ -623,7 +623,7 @@ namespace Neon.Kube.Operator.ResourceManager
                     await k8s.ApiextensionsV1.CreateCustomResourceDefinitionAsync(crd);
                 }
 
-                await k8s.WaitForCustomResourceDefinitionAsync<TEntity>();
+                await k8s.ApiextensionsV1.WaitForCustomResourceDefinitionAsync<TEntity>();
             }
             catch (Exception e)
             {
