@@ -645,7 +645,7 @@ namespace Neon.Kube.Proxy
         {
             await SyncContext.Clear;
 
-            var minioPod = await K8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
+            var minioPod = await K8s.CoreV1.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
             var command  = new string[]
             {
                 "/bin/bash",
@@ -704,7 +704,7 @@ namespace Neon.Kube.Proxy
                 psqlCommand += ';';
             }
 
-            var sysDbPod = await K8s.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app=neon-system-db");
+            var sysDbPod = await K8s.CoreV1.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app=neon-system-db");
             var command  = new string[]
             {
                 "/bin/bash",
