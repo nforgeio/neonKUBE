@@ -76,7 +76,7 @@ namespace NeonClusterOperator
                 Service = new Service(KubeService.NeonClusterOperator);
 
                 Service.MetricsOptions.Mode         = MetricsMode.Scrape;
-                Service.MetricsOptions.Path         = "metrics/";
+                Service.MetricsOptions.Path         = "/metrics";
                 Service.MetricsOptions.Port         = NeonHelper.IsDevWorkstation ? NetHelper.GetUnusedTcpPort(IPAddress.Loopback) : 9762;
                 Service.MetricsOptions.GetCollector =
                     () =>
