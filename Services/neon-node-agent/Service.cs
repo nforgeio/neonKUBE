@@ -296,16 +296,17 @@ namespace NeonNodeAgent
         {
             await SyncContext.Clear;
 
-            _ = K8s.WatchAsync<V1ConfigMap>(async (@event) =>
-            {
-                await SyncContext.Clear;
+            _ = K8s.WatchAsync<V1ConfigMap>(
+                async (@event) =>
+                {
+                    await SyncContext.Clear;
 
-                ClusterInfo = TypedConfigMap<ClusterInfo>.From(@event.Value).Data;
+                    ClusterInfo = TypedConfigMap<ClusterInfo>.From(@event.Value).Data;
 
-                Logger.LogInformationEx("Updated cluster info");
-            },
-            KubeNamespace.NeonStatus,
-            fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
+                    Logger.LogInformationEx("Updated cluster info");
+                },
+                KubeNamespace.NeonStatus,
+                fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
         }
     }
 }

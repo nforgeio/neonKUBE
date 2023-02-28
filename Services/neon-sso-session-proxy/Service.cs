@@ -139,33 +139,34 @@ namespace NeonSsoSessionProxy
 
             Clients = new List<V1NeonSsoClient>();
 
-            _ = k8s.WatchAsync<V1NeonSsoClient>(async (@event) =>
-            {
-                await SyncContext.Clear;
-
-                switch (@event.Type)
+            _ = k8s.WatchAsync<V1NeonSsoClient>(
+                async (@event) =>
                 {
-                    case WatchEventType.Added:
+                    await SyncContext.Clear;
 
-                        await AddClientAsync(@event.Value);
-                        break;
+                    switch (@event.Type)
+                    {
+                        case WatchEventType.Added:
 
-                    case WatchEventType.Deleted:
+                            await AddClientAsync(@event.Value);
+                            break;
 
-                        await RemoveClientAsync(@event.Value);
-                        break;
+                        case WatchEventType.Deleted:
 
-                    case WatchEventType.Modified:
+                            await RemoveClientAsync(@event.Value);
+                            break;
 
-                        await RemoveClientAsync(@event.Value);
-                        await AddClientAsync(@event.Value);
-                        break;
+                        case WatchEventType.Modified:
 
-                    default:
+                            await RemoveClientAsync(@event.Value);
+                            await AddClientAsync(@event.Value);
+                            break;
 
-                        break;
-                }
-            });
+                        default:
+
+                            break;
+                    }
+                });
 
             int port = 80;
 

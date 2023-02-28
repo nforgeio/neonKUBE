@@ -135,10 +135,11 @@ namespace Neon.Kube.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
             Covenant.Requires<ArgumentNullException>(data != null, nameof(data));
 
-            Data                                    = data ?? new TConfigMapData();
-            UntypedConfigMap                        = KubeHelper.CreateKubeObject<V1ConfigMap>(name);
-            UntypedConfigMap.Data                   = new Dictionary<string, string>();
-            UntypedConfigMap.Data[DataPropertyName] = NeonHelper.JsonSerialize(Data);
+            Data                                        = data ?? new TConfigMapData();
+            UntypedConfigMap                            = KubeHelper.CreateKubeObject<V1ConfigMap>(name);
+            UntypedConfigMap.Metadata.NamespaceProperty = @namespace;
+            UntypedConfigMap.Data                       = new Dictionary<string, string>();
+            UntypedConfigMap.Data[DataPropertyName]     = NeonHelper.JsonSerialize(Data);
         }
 
         /// <summary>

@@ -313,38 +313,30 @@ namespace NeonClusterOperator
         }
 
         /// <summary>
-        /// Waits for the cluster info config map.
+        /// <para>
+        /// Retrieves the cluster information configmap.
+        /// </para>
+        /// <note>
+        /// The cluster information may not exist yet during cluster setup.  This method
+        /// mitigates that by waiting for a period of time before failing with a 
+        /// <see cref="TimeoutException"/>.
+        /// </note>
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="TimeoutException">Thrown if the cluster information could not be retrieved after a grace period.</exception>
         private async Task WaitForClusterInfoAsync()
         {
             await SyncContext.Clear;
 
-            _ = K8s.WatchAsync<V1ConfigMap>(async (@event) =>
-            {
-                await SyncContext.Clear;
-
-                ClusterInfo = TypedConfigMap<ClusterInfo>.From(@event.Value).Data;
-
-                Logger.LogInformationEx("Updated cluster info");
-            },
-            KubeNamespace.NeonStatus,
-            fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
-
             // Wait for cluster info to be set.
 
-            await NeonHelper.WaitForAsync(async () =>
-            {
-                await SyncContext.Clear;
+            var retry = new LinearRetryPolicy(e => true, retryInterval: TimeSpan.FromSeconds(1), timeout: TimeSpan.FromSeconds(60));
 
-                return (ClusterInfo != null);
-            },
-            timeout:      TimeSpan.FromSeconds(60),
-            pollInterval: TimeSpan.FromMilliseconds(250));
+            ClusterInfo = await retry.InvokeAsync(async () => (await K8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterInfo>(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus)).Data);
         }
 
         /// <summary>
-        /// Vonfigures DEX.
+        /// Configures DEX.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ConfigureDexAsync()
@@ -375,15 +367,15 @@ namespace NeonClusterOperator
         }
 
         /// <summary>
-        /// Vonfigures Harbor.
+        /// Configures Harbor.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ConfigureHarborAsync()
         {
             await SyncContext.Clear;
 
-            harborHttpClient     = new HttpClient(new HttpClientHandler() { UseCookies = false });
-            HarborClient         = new HarborClient(harborHttpClient);
+            harborHttpClient = new HttpClient(new HttpClientHandler() { UseCookies = false });
+            HarborClient     = new HarborClient(harborHttpClient);
 
             if (!NeonHelper.IsDevWorkstation)
             {
@@ -394,19 +386,20 @@ namespace NeonClusterOperator
                 HarborClient.BaseUrl = $"https://neon-registry.{ClusterInfo.Domain}/api/v2.0";
             }
 
-            _ = K8s.WatchAsync<V1Secret>(async (@event) =>
-            {
-                await SyncContext.Clear;
+            _ = K8s.WatchAsync<V1Secret>(
+                async (@event) =>
+                {
+                    await SyncContext.Clear;
 
-                var rootUser = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(@event.Value.Data["root"]));
-                var authString = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{rootUser.Name}:{rootUser.Password}"));
+                    var rootUser   = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(@event.Value.Data["root"]));
+                    var authString = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{rootUser.Name}:{rootUser.Password}"));
 
-                harborHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authString);
+                    harborHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authString);
 
-                Logger.LogInformationEx("Updated Harbor Client");
-            },
-            KubeNamespace.NeonSystem,
-            fieldSelector: $"metadata.name=glauth-users");
+                    Logger.LogInformationEx("Updated Harbor Client");
+                },
+                KubeNamespace.NeonSystem,
+                fieldSelector: $"metadata.name=glauth-users");
         }
     }
 }

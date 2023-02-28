@@ -466,15 +466,16 @@ namespace Neon.Kube.Operator.ResourceManager
                 {
                     crdName = dependent.GetEntityType().GetKubernetesCrdName();
 
-                    _ = k8s.WatchAsync<V1CustomResourceDefinition>(async (@event) =>
-                    {
-                        await SyncContext.Clear;
+                    _ = k8s.WatchAsync<V1CustomResourceDefinition>(
+                        async (@event) =>
+                        {
+                            await SyncContext.Clear;
 
-                        crdCache.Upsert(@event.Value);
-                        logger?.LogInformationEx(() => $"Updated {dependent.GetEntityType()} CRD.");
-                    },
-                    fieldSelector:     $"metadata.name={crdName}",
-                    cancellationToken: cancellationToken);
+                            crdCache.Upsert(@event.Value);
+                            logger?.LogInformationEx(() => $"Updated {dependent.GetEntityType()} CRD.");
+                        },
+                        fieldSelector:     $"metadata.name={crdName}",
+                        cancellationToken: cancellationToken);
 
                     crdCache.Upsert(await k8s.ApiextensionsV1.ReadCustomResourceDefinitionAsync(crdName));
                 }

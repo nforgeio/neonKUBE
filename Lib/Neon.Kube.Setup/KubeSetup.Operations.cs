@@ -4575,13 +4575,14 @@ $@"- name: StorageType
                 {
                     V1NeonClusterOperator clusterOperator = null;
 
-                    _ = k8s.WatchAsync<V1NeonClusterOperator>(async (@event) =>
-                    {
-                        await SyncContext.Clear;
+                    _ = k8s.WatchAsync<V1NeonClusterOperator>(
+                        async (@event) =>
+                        {
+                            await SyncContext.Clear;
 
-                        clusterOperator = @event.Value;
-                    },
-                    fieldSelector: $"metadata.name={KubeService.NeonClusterOperator}");
+                            clusterOperator = @event.Value;
+                        },
+                        fieldSelector: $"metadata.name={KubeService.NeonClusterOperator}");
 
                     // Wait for cron schedule to run.
                     await NeonHelper.WaitForAsync(async () =>
