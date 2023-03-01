@@ -162,12 +162,12 @@ namespace Neon.Kube.ClusterDef
         public bool Minio { get; set; } = true;
 
         /// <summary>
-        /// Optionally installs Tempo.  This defaults to <c>false</c>.
+        /// Optionally installs Tempo.  This defaults to <c>true</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Tempo", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "tempo", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool Tracing { get; set; } = false;
+        public bool Tracing { get; set; } = true;
 
         /// <summary>
         /// Validates the options.
