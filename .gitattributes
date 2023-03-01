@@ -71,7 +71,6 @@
 
 /Images/**/*.cfg        text=lf
 /Images/**/*.conf       text=lf
-/Images/**/Dockerfile   text=lf
 /Images/**/*.js         text=lf
 /Images/**/*.json       text=lf
 /Images/**/*.md         text=lf
