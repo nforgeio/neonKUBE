@@ -136,10 +136,10 @@ namespace Neon.Kube
         public const string HarborCredentials = "harbor-credentials";
 
         /// <summary>
-        /// Property name for a <c>bool</c> value indicating that we're generating a ready-to-go 
+        /// Property name for a <c>bool</c> value indicating that we're building a ready-to-go 
         /// desktop image.
         /// </summary>
-        public const string DesktopImage = "desktop-image";
+        public const string BuildDesktopImage = "build-desktop-image";
 
         /// <summary>
         /// Property name for a <c>bool</c> value indicating whether cluster using a ready-to-go desktop

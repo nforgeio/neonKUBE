@@ -433,7 +433,7 @@ spec:
                     controller.ThrowIfCancelled();
                     await InstallContainerRegistryResourcesAsync(controller, controlNode);
 
-                    if (controller.Get<bool>(KubeSetupProperty.DesktopImage, false))
+                    if (controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo))
                     {
                         controller.ThrowIfCancelled();
                         await WaitForHarborImagePushAsync(controller, controlNode);
@@ -441,10 +441,10 @@ spec:
 
                     // IMPORTANT!
                     //
-                    // This must be the last cluster setup steps.
+                    // This must be the last cluster setup step.
 
                     controller.ThrowIfCancelled();
-                    await WriteClusterConfigMapsAsync(controller, controlNode);
+                    await SaveClusterConfigMapsAsync(controller, controlNode);
                 });
         }
 
@@ -5749,7 +5749,7 @@ $@"- name: StorageType
         /// <param name="controller">The setup controller.</param>
         /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task WriteClusterConfigMapsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        public static async Task SaveClusterConfigMapsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             await SyncContext.Clear;
 

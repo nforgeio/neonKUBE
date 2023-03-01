@@ -214,7 +214,7 @@ namespace Neon.Kube.Setup
             controller.Add(KubeSetupProperty.DisableImageDownload, !string.IsNullOrEmpty(options.NodeImagePath));
             controller.Add(KubeSetupProperty.Redact, !options.Unredacted);
             controller.Add(KubeSetupProperty.DesktopReadyToGo, options.DesktopReadyToGo);
-            controller.Add(KubeSetupProperty.DesktopImage, options.DesktopImage);
+            controller.Add(KubeSetupProperty.BuildDesktopImage, options.BuildDesktopImage);
             controller.Add(KubeSetupProperty.DesktopServiceProxy, desktopServiceProxy);
 
             // Configure the cluster preparation steps.
@@ -464,7 +464,7 @@ namespace Neon.Kube.Setup
                         headendClient.HttpClient.DefaultRequestHeaders.Authorization =
                             new AuthenticationHeaderValue("Bearer", clusterLogin.ClusterDefinition.NeonCloudToken);
 
-                        if (options.DesktopImage)
+                        if (options.BuildDesktopImage)
                         {
                             clusterLogin.ClusterDefinition.Domain = KubeConst.DesktopClusterDomain;
                         }

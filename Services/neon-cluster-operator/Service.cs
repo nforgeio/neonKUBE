@@ -217,7 +217,7 @@ namespace NeonClusterOperator
                 this.PortForwardManager = new PortForwardManager(K8s, TelemetryHub.LoggerFactory);
             }
 
-            await WaitForClusterInfoAsync();
+            await WatchClusterInfoAsync();
             await ConfigureDexAsync();
             await ConfigureHarborAsync();
 
@@ -316,9 +316,29 @@ namespace NeonClusterOperator
         /// Waits for the cluster info config map.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task WaitForClusterInfoAsync()
+        private async Task WatchClusterInfoAsync()
         {
             await SyncContext.Clear;
+
+            //###########################################################################
+            // $todo(jefflill): Remove this hack once we've figured out the watcher info.
+            //
+            // We need to ensure that wa have the initial cluster information before this
+            // method returns.
+            //
+            // Marcus originally started the nwatcher and then used a [WaitFor()] call to
+            // wait for the watcher to report and set the [ClusterInfo] property.  Unfortunately,
+            // watchers don't seem to always report on objects that already exist.  We're
+            // going to hack around this for now by explicitly waiting for the cluster info
+            // before staring the watcher.
+
+            var retry = new LinearRetryPolicy(e => true, retryInterval: TimeSpan.FromSeconds(1), timeout: TimeSpan.FromSeconds(60));
+
+            ClusterInfo = await retry.InvokeAsync(async () => (await K8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterInfo>(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus)).Data);
+
+            //###########################################################################
+
+            // Start the watcher.
 
             _ = K8s.WatchAsync<V1ConfigMap>(async (@event) =>
             {
@@ -331,16 +351,9 @@ namespace NeonClusterOperator
             KubeNamespace.NeonStatus,
             fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
 
-            // Wait for cluster info to be set.
+            // Wait for the watcher to see the [ClusterInfo].
 
-            await NeonHelper.WaitForAsync(async () =>
-            {
-                await SyncContext.Clear;
-
-                return (ClusterInfo != null);
-            },
-            timeout:      TimeSpan.FromSeconds(60),
-            pollInterval: TimeSpan.FromMilliseconds(250));
+            NeonHelper.WaitFor(() => ClusterInfo != null, timeout: TimeSpan.FromSeconds(60), timeoutMessage: "Timeout obtaining: cluster-info.");
         }
 
         /// <summary>

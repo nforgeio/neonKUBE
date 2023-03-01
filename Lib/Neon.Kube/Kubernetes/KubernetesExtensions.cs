@@ -997,10 +997,11 @@ namespace Neon.Kube
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(typedConfigMap != null, nameof(typedConfigMap));
 
-            return TypedConfigMap<TConfigMapData>.From(await k8sCoreV1.CreateNamespacedConfigMapAsync(
-                body:               typedConfigMap.UntypedConfigMap, 
-                namespaceParameter: typedConfigMap.UntypedConfigMap.Namespace(), 
-                cancellationToken:  cancellationToken));
+            return TypedConfigMap<TConfigMapData>.From(
+                await k8sCoreV1.CreateNamespacedConfigMapAsync(
+                    body:               typedConfigMap.UntypedConfigMap, 
+                    namespaceParameter: typedConfigMap.UntypedConfigMap.Namespace(), 
+                    cancellationToken:  cancellationToken));
         }
 
         /// <summary>
@@ -1041,9 +1042,15 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated <see cref="TypedConfigMap{TConfigMap}"/>.</returns>
         /// <remarks>
+        /// <note>
+        /// This method calls <see cref="TypedConfigMap{TConfigMapData}.Update()"/> to ensure that
+        /// the untyped configmap data is up-to-date before persisting the changes.
+        /// </note>
+        /// <para>
         /// Typed configmaps are <see cref="V1ConfigMap"/> objects that wrap a strongly typed
         /// object formatted using the <see cref="TypedConfigMap{TConfigMap}"/> class.  This
         /// makes it easy to persist and retrieve typed data to a Kubernetes cluster.
+        /// </para>
         /// </remarks>
         public static async Task<TypedConfigMap<TConfigMapData>> ReplaceNamespacedTypedConfigMapAsync<TConfigMapData>(
             this ICoreV1Operations          k8sCoreV1,
@@ -1054,6 +1061,8 @@ namespace Neon.Kube
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(configmap != null, nameof(configmap));
+
+            configmap.Update();
 
             return TypedConfigMap<TConfigMapData>.From(await k8sCoreV1.ReplaceNamespacedConfigMapAsync(
                 body:               configmap.UntypedConfigMap, 
@@ -1091,9 +1100,9 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
 
-            var typedConfig = new TypedConfigMap<TConfigMapData>(name, namespaceParameter, data);
+            var configmap = new TypedConfigMap<TConfigMapData>(name, namespaceParameter, data);
 
-            return TypedConfigMap<TConfigMapData>.From(await k8sCoreV1.ReplaceNamespacedConfigMapAsync(typedConfig.UntypedConfigMap, name, namespaceParameter, cancellationToken: cancellationToken));
+            return TypedConfigMap<TConfigMapData>.From(await k8sCoreV1.ReplaceNamespacedConfigMapAsync(configmap.UntypedConfigMap, name, namespaceParameter, cancellationToken: cancellationToken));
         }
 
         /// <summary>
