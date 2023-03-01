@@ -33,6 +33,7 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.Kube.Kube;
 using Neon.Retry;
 using Neon.Tasks;
 
@@ -430,7 +431,7 @@ namespace Neon.Kube
         /// <summary>
         /// Waits for a service deployment to start successfully.
         /// </summary>
-        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
+        /// <param name="k8sAppsV1">The <see cref="Kubernetes"/> client's <see cref="IAppsV1Operations"/>.</param>
         /// <param name="namespaceParameter">The namespace.</param>
         /// <param name="name">The deployment name.</param>
         /// <param name="labelSelector">Optionally specifies a label selector.</param>
@@ -444,14 +445,14 @@ namespace Neon.Kube
         /// must be specified.
         /// </remarks>
         public static async Task WaitForDeploymentAsync(
-            this IKubernetes    k8s, 
-            string              namespaceParameter, 
-            string              name              = null, 
-            string              labelSelector     = null,
-            string              fieldSelector     = null,
-            TimeSpan            pollInterval      = default,
-            TimeSpan            timeout           = default,
-            CancellationToken   cancellationToken = default)
+            this IAppsV1Operations  k8sAppsV1, 
+            string                  namespaceParameter, 
+            string                  name              = null, 
+            string                  labelSelector     = null,
+            string                  fieldSelector     = null,
+            TimeSpan                pollInterval      = default,
+            TimeSpan                timeout           = default,
+            CancellationToken       cancellationToken = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
@@ -484,7 +485,7 @@ namespace Neon.Kube
                 {
                     try
                     {
-                        var deployments = await k8s.AppsV1.ListNamespacedDeploymentAsync(namespaceParameter, fieldSelector: fieldSelector, labelSelector: labelSelector);
+                        var deployments = await k8sAppsV1.ListNamespacedDeploymentAsync(namespaceParameter, fieldSelector: fieldSelector, labelSelector: labelSelector);
 
                         if (deployments == null || deployments.Items.Count == 0)
                         {
@@ -507,7 +508,7 @@ namespace Neon.Kube
         /// <summary>
         /// Waits for a stateful set to start successfully.
         /// </summary>
-        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
+        /// <param name="k8sAppsV1">The <see cref="Kubernetes"/> client's <see cref="IAppsV1Operations"/>.</param>
         /// <param name="namespaceParameter">The namespace.</param>
         /// <param name="name">The statefulset name.</param>
         /// <param name="labelSelector">Optionally specifies a label selector.</param>
@@ -521,14 +522,14 @@ namespace Neon.Kube
         /// must be specified.
         /// </remarks>
         public static async Task WaitForStatefulSetAsync(
-            this IKubernetes    k8s,
-            string              namespaceParameter,
-            string              name              = null,
-            string              labelSelector     = null,
-            string              fieldSelector     = null,
-            TimeSpan            pollInterval      = default,
-            TimeSpan            timeout           = default,
-            CancellationToken   cancellationToken = default)
+            this IAppsV1Operations  k8sAppsV1,
+            string                  namespaceParameter,
+            string                  name              = null,
+            string                  labelSelector     = null,
+            string                  fieldSelector     = null,
+            TimeSpan                pollInterval      = default,
+            TimeSpan                timeout           = default,
+            CancellationToken       cancellationToken = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
@@ -561,7 +562,7 @@ namespace Neon.Kube
                 {
                     try
                     {
-                        var statefulsets = await k8s.AppsV1.ListNamespacedStatefulSetAsync(namespaceParameter, fieldSelector: fieldSelector, labelSelector: labelSelector);
+                        var statefulsets = await k8sAppsV1.ListNamespacedStatefulSetAsync(namespaceParameter, fieldSelector: fieldSelector, labelSelector: labelSelector);
 
                         if (statefulsets == null || statefulsets.Items.Count == 0)
                         {
@@ -583,7 +584,7 @@ namespace Neon.Kube
         /// <summary>
         /// Waits for a daemon set to start successfully.
         /// </summary>
-        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
+        /// <param name="k8sAppsV1">The <see cref="Kubernetes"/> client's <see cref="IAppsV1Operations"/>.</param>
         /// <param name="namespaceParameter">The namespace.</param>
         /// <param name="name">The daemonset name.</param>
         /// <param name="labelSelector">Optionally specifies a label selector.</param>
@@ -598,14 +599,14 @@ namespace Neon.Kube
         /// </remarks>
         public static async Task WaitForDaemonsetAsync(
 
-            this IKubernetes    k8s,
-            string              namespaceParameter,
-            string              name              = null,
-            string              labelSelector     = null,
-            string              fieldSelector     = null,
-            TimeSpan            pollInterval      = default,
-            TimeSpan            timeout           = default,
-            CancellationToken   cancellationToken = default)
+            this IAppsV1Operations  k8sAppsV1,
+            string                  namespaceParameter,
+            string                  name              = null,
+            string                  labelSelector     = null,
+            string                  fieldSelector     = null,
+            TimeSpan                pollInterval      = default,
+            TimeSpan                timeout           = default,
+            CancellationToken       cancellationToken = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
@@ -637,7 +638,7 @@ namespace Neon.Kube
                 {
                     try
                     {
-                        var daemonsets = await k8s.AppsV1.ListNamespacedDaemonSetAsync(namespaceParameter, fieldSelector: fieldSelector, labelSelector: labelSelector);
+                        var daemonsets = await k8sAppsV1.ListNamespacedDaemonSetAsync(namespaceParameter, fieldSelector: fieldSelector, labelSelector: labelSelector);
 
                         if (daemonsets == null || daemonsets.Items.Count == 0)
                         {
@@ -659,7 +660,7 @@ namespace Neon.Kube
         /// <summary>
         /// Waits for a pod to start successfully.
         /// </summary>
-        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
+        /// <param name="k8sCoreV1">The <see cref="Kubernetes"/> client's <see cref="ICoreV1Operations"/>.</param>
         /// <param name="namespaceParameter">The namespace.</param>
         /// <param name="name">The pod name.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
@@ -667,12 +668,12 @@ namespace Neon.Kube
         /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>x
         public static async Task WaitForPodAsync(
-            this IKubernetes    k8s, 
-            string              namespaceParameter, 
-            string              name              = null, 
-            TimeSpan            pollInterval      = default,
-            TimeSpan            timeout           = default,
-            CancellationToken   cancellationToken = default)
+            this ICoreV1Operations  k8sCoreV1, 
+            string                  namespaceParameter, 
+            string                  name              = null, 
+            TimeSpan                pollInterval      = default,
+            TimeSpan                timeout           = default,
+            CancellationToken       cancellationToken = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
@@ -693,7 +694,7 @@ namespace Neon.Kube
                 {
                     try
                     {
-                        var pod = await k8s.CoreV1.ReadNamespacedPodAsync(name, namespaceParameter, cancellationToken: cancellationToken);
+                        var pod = await k8sCoreV1.ReadNamespacedPodAsync(name, namespaceParameter, cancellationToken: cancellationToken);
 
                         return pod.Status.Phase == "Running";
                     }
@@ -712,16 +713,16 @@ namespace Neon.Kube
         /// Waits for a custom resource definition to be created in the API server.
         /// </summary>
         /// <typeparam name="TEntity">Specifies the custom resource type.</typeparam>
-        /// <param name="k8s">Specifies the Kubernetes client.</param>
+        /// <param name="k8sApiextensionsV1">The <see cref="Kubernetes"/> client's <see cref="IApiextensionsV1Operations"/>.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 5 seconds.</param>
         /// <param name="timeout">Optionally specifies the maximum time to wait.  This defaults to 90 seconds.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task WaitForCustomResourceDefinitionAsync<TEntity>(
-            this IKubernetes    k8s,
-            TimeSpan            pollInterval      = default,
-            TimeSpan            timeout           = default,
-            CancellationToken   cancellationToken = default)
+            this IApiextensionsV1Operations k8sApiextensionsV1,
+            TimeSpan                        pollInterval      = default,
+            TimeSpan                        timeout           = default,
+            CancellationToken               cancellationToken = default)
 
             where TEntity : IKubernetesObject<V1ObjectMeta>
         {
@@ -740,14 +741,13 @@ namespace Neon.Kube
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     try
                     {
-                        var typeMetadata = typeof(TEntity).GetKubernetesTypeMetadata();
-                        var pluralNameGroup = string.IsNullOrEmpty(typeMetadata.Group) ? typeMetadata.PluralName : $"{typeMetadata.PluralName}.{typeMetadata.Group}";
-
-                        var existingList = await k8s.ApiextensionsV1.ListCustomResourceDefinitionAsync(
-                           fieldSelector: $"metadata.name={pluralNameGroup}");
-
+                        var typeMetadata                     = typeof(TEntity).GetKubernetesTypeMetadata();
+                        var pluralNameGroup                  = string.IsNullOrEmpty(typeMetadata.Group) ? typeMetadata.PluralName : $"{typeMetadata.PluralName}.{typeMetadata.Group}";
+                        var existingList                     = await k8sApiextensionsV1.ListCustomResourceDefinitionAsync(fieldSelector: $"metadata.name={pluralNameGroup}");
                         var existingCustomResourceDefinition = existingList?.Items?.SingleOrDefault();
 
                         if (existingCustomResourceDefinition != null)
@@ -764,14 +764,14 @@ namespace Neon.Kube
                         return false;
                     }
                 },
-                timeout: timeout,
+                timeout:      timeout,
                 pollInterval: pollInterval);
         }
 
         /// <summary>
         /// Returns a running pod within the specified namespace that matches a label selector. 
         /// </summary>
-        /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
+        /// <param name="k8sCoreV1">The <see cref="Kubernetes"/> client's <see cref="ICoreV1Operations"/>.</param>
         /// <param name="namespaceParameter">Specifies the namespace hosting the pod.</param>
         /// <param name="labelSelector">
         /// Specifies the label selector to constrain the set of pods to be targeted.
@@ -780,15 +780,15 @@ namespace Neon.Kube
         /// <returns>The <see cref="V1Pod"/>.</returns>
         /// <exception cref="KubernetesException">Thrown when no healthy pods exist.</exception>
         public static async Task<V1Pod> GetNamespacedRunningPodAsync(
-            this IKubernetes    k8s,
-            string              namespaceParameter,
-            string              labelSelector)
+            this ICoreV1Operations  k8sCoreV1,
+            string                  namespaceParameter,
+            string                  labelSelector)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(labelSelector), nameof(labelSelector));
 
-            var pods = (await k8s.CoreV1.ListNamespacedPodAsync(namespaceParameter, labelSelector: labelSelector)).Items;
+            var pods = (await k8sCoreV1.ListNamespacedPodAsync(namespaceParameter, labelSelector: labelSelector)).Items;
             var pod  =  pods.FirstOrDefault(pod => pod.Status.Phase == "Running");
 
             if (pod == null)
@@ -812,13 +812,13 @@ namespace Neon.Kube
         /// <returns>An <see cref="ExecuteResponse"/> with the command exit code and output and error text.</returns>
         /// <exception cref="ExecuteException">Thrown if the exit code isn't zero and <paramref name="noSuccessCheck"/><c>=false</c>.</exception>
         public static async Task<ExecuteResponse> NamespacedPodExecAsync(
-            this IKubernetes    k8s,
-            string              namespaceParameter,
-            string              name,
-            string              container,
-            string[]            command,
-            bool                noSuccessCheck    = false,
-            CancellationToken   cancellationToken = default)
+            this IKubernetes        k8s,
+            string                  namespaceParameter,
+            string                  name,
+            string                  container,
+            string[]                command,
+            bool                    noSuccessCheck    = false,
+            CancellationToken       cancellationToken = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
@@ -935,10 +935,12 @@ namespace Neon.Kube
         /// <summary>
         /// Lists pods from all cluster namespaces.
         /// </summary>
-        /// <param name="k8s">The <see cref="IKubernetes"/> instance.</param>
+        /// <param name="k8sCoreV1">The <see cref="IKubernetes"/> instance.</param>
         /// <returns>The <see cref="V1PodList"/>.</returns>
-        public static async Task<V1PodList> ListAllPodsAsync(this IKubernetes k8s)
+        public static async Task<V1PodList> ListAllPodsAsync(this ICoreV1Operations k8sCoreV1)
         {
+            await SyncContext.Clear;
+
             // Clusters may have hundreds or even thousands of namespaces, so we don't
             // want to query for pods one namespace at a time because that may take too
             // long.  But we also don't want to slam the API server with potentially
@@ -949,13 +951,13 @@ namespace Neon.Kube
 
             const int podListConcurency = 100;
 
-            var namespaces = (await k8s.CoreV1.ListNamespaceAsync()).Items;
+            var namespaces = (await k8sCoreV1.ListNamespaceAsync()).Items;
             var pods       = new V1PodList() { Items = new List<V1Pod>() };
 
             await Parallel.ForEachAsync(namespaces, new ParallelOptions() { MaxDegreeOfParallelism = podListConcurency },
                 async (@namespace, cancellationToken) =>
                 {
-                    var namespacedPods = await k8s.CoreV1.ListNamespacedPodAsync(@namespace.Name());
+                    var namespacedPods = await k8sCoreV1.ListNamespacedPodAsync(@namespace.Name());
 
                     lock (pods)
                     {
@@ -967,6 +969,157 @@ namespace Neon.Kube
                 });
 
             return pods;
+        }
+
+        //---------------------------------------------------------------------
+        // Namespaced typed configmap extensions.
+
+        /// <summary>
+        /// Creates a namespace scoped typed configmap.
+        /// </summary>
+        /// <typeparam name="TConfigMapData">Specifies the configmap data type.</typeparam>
+        /// <param name="k8sCoreV1">The <see cref="Kubernetes"/> client's <see cref="ICoreV1Operations"/>.</param>
+        /// <param name="typedConfigMap">Specifies the typed configmap.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <returns>The new <see cref="TypedConfigMap{TConfigMap}"/>.</returns>
+        /// <remarks>
+        /// Typed configmaps are <see cref="V1ConfigMap"/> objects that wrap a strongly typed
+        /// object formatted using the <see cref="TypedConfigMap{TConfigMap}"/> class.  This
+        /// makes it easy to persist and retrieve typed data to a Kubernetes cluster.
+        /// </remarks>
+        public static async Task<TypedConfigMap<TConfigMapData>> CreateNamespacedTypedConfigMapAsync<TConfigMapData>(
+            this ICoreV1Operations          k8sCoreV1,
+            TypedConfigMap<TConfigMapData>  typedConfigMap,
+            CancellationToken               cancellationToken = default)
+
+            where TConfigMapData: class, new()
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(typedConfigMap != null, nameof(typedConfigMap));
+
+            return TypedConfigMap<TConfigMapData>.From(await k8sCoreV1.CreateNamespacedConfigMapAsync(
+                body:               typedConfigMap.UntypedConfigMap, 
+                namespaceParameter: typedConfigMap.UntypedConfigMap.Namespace(), 
+                cancellationToken:  cancellationToken));
+        }
+
+        /// <summary>
+        /// Retrieves a namespace scoped typed configmap.
+        /// </summary>
+        /// <typeparam name="TConfigMapData">Specifies the configmap data type.</typeparam>
+        /// <param name="k8sCoreV1">The <see cref="Kubernetes"/> client's <see cref="ICoreV1Operations"/>.</param>
+        /// <param name="name">Specifies the object name.</param>
+        /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <returns>The retrieved <see cref="TypedConfigMap{TConfigMap}"/>.</returns>
+        /// <remarks>
+        /// Typed configmaps are <see cref="V1ConfigMap"/> objects that wrap a strongly typed
+        /// object formatted using the <see cref="TypedConfigMap{TConfigMap}"/> class.  This
+        /// makes it easy to persist and retrieve typed data to a Kubernetes cluster.
+        /// </remarks>
+        public static async Task<TypedConfigMap<TConfigMapData>> ReadNamespacedTypedConfigMapAsync<TConfigMapData>(
+            this ICoreV1Operations      k8sCoreV1,
+            string                      name,
+            string                      namespaceParameter,
+            CancellationToken           cancellationToken = default)
+
+            where TConfigMapData : class, new()
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
+
+            return TypedConfigMap<TConfigMapData>.From(await k8sCoreV1.ReadNamespacedConfigMapAsync(name, namespaceParameter, pretty: false, cancellationToken: cancellationToken));
+        }
+
+        /// <summary>
+        /// Replaces an existing typed configmap.
+        /// </summary>
+        /// <typeparam name="TConfigMapData">Specifies the configmap data type.</typeparam>
+        /// <param name="k8sCoreV1">The <see cref="Kubernetes"/> client's <see cref="ICoreV1Operations"/>.</param>
+        /// <param name="configmap">Specifies the replacement configmap data.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <returns>The updated <see cref="TypedConfigMap{TConfigMap}"/>.</returns>
+        /// <remarks>
+        /// Typed configmaps are <see cref="V1ConfigMap"/> objects that wrap a strongly typed
+        /// object formatted using the <see cref="TypedConfigMap{TConfigMap}"/> class.  This
+        /// makes it easy to persist and retrieve typed data to a Kubernetes cluster.
+        /// </remarks>
+        public static async Task<TypedConfigMap<TConfigMapData>> ReplaceNamespacedTypedConfigMapAsync<TConfigMapData>(
+            this ICoreV1Operations          k8sCoreV1,
+            TypedConfigMap<TConfigMapData>  configmap,
+            CancellationToken               cancellationToken = default)
+
+            where TConfigMapData : class, new()
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(configmap != null, nameof(configmap));
+
+            return TypedConfigMap<TConfigMapData>.From(await k8sCoreV1.ReplaceNamespacedConfigMapAsync(
+                body:               configmap.UntypedConfigMap, 
+                name:               configmap.UntypedConfigMap.Name(), 
+                namespaceParameter: configmap.UntypedConfigMap.Namespace(), 
+                cancellationToken:  cancellationToken));
+        }
+
+        /// <summary>
+        /// Replaces an existing typed configmap with new data.
+        /// </summary>
+        /// <typeparam name="TConfigMapData">Specifies the configmap data type.</typeparam>
+        /// <param name="k8sCoreV1">The <see cref="Kubernetes"/> client's <see cref="ICoreV1Operations"/>.</param>
+        /// <param name="data">Specifies the replacement configmap data.</param>
+        /// <param name="name">Specifies the object name.</param>
+        /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <returns>The updated <see cref="TypedConfigMap{TConfigMap}"/>.</returns>
+        /// <remarks>
+        /// Typed configmaps are <see cref="V1ConfigMap"/> objects that wrap a strongly typed
+        /// object formatted using the <see cref="TypedConfigMap{TConfigMap}"/> class.  This
+        /// makes it easy to persist and retrieve typed data to a Kubernetes cluster.
+        /// </remarks>
+        public static async Task<TypedConfigMap<TConfigMapData>> ReplaceNamespacedTypedConfigMapAsync<TConfigMapData>(
+            this ICoreV1Operations      k8sCoreV1,
+            TConfigMapData              data,
+            string                      name,
+            string                      namespaceParameter,
+            CancellationToken           cancellationToken = default)
+
+            where TConfigMapData : class, new()
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(data != null, nameof(data));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
+
+            var typedConfig = new TypedConfigMap<TConfigMapData>(name, namespaceParameter, data);
+
+            return TypedConfigMap<TConfigMapData>.From(await k8sCoreV1.ReplaceNamespacedConfigMapAsync(typedConfig.UntypedConfigMap, name, namespaceParameter, cancellationToken: cancellationToken));
+        }
+
+        /// <summary>
+        /// Deletes a namespaced typed configmap.
+        /// </summary>
+        /// <param name="k8sCoreV1">The <see cref="Kubernetes"/> client's <see cref="ICoreV1Operations"/>.</param>
+        /// <param name="name">Specifies the object name.</param>
+        /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <remarks>
+        /// Typed configmaps are <see cref="V1ConfigMap"/> objects that wrap a strongly typed
+        /// object formatted using the <see cref="TypedConfigMap{TConfigMap}"/> class.  This
+        /// makes it easy to persist and retrieve typed data to a Kubernetes cluster.
+        /// </remarks>
+        public static async Task DeleteNamespacedTypedConfigMapAsync(
+            this ICoreV1Operations  k8sCoreV1,
+            string                  name,
+            string                  namespaceParameter,
+            CancellationToken       cancellationToken = default)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
+
+            await k8sCoreV1.DeleteNamespacedConfigMapAsync(name, namespaceParameter, cancellationToken: cancellationToken);
         }
     }
 }

@@ -52,9 +52,11 @@ using Neon.IO;
 using Neon.Kube.BuildInfo;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Glauth;
+using Neon.Kube.Kube;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Tasks;
+
 using SharpCompress.Readers;
 
 namespace Neon.Kube
@@ -3096,14 +3098,7 @@ TCPKeepAlive yes
 
                 try
                 {
-                    var configMap = await k8s.CoreV1.ReadNamespacedConfigMapAsync(
-                        name:               KubeConfigMapName.ClusterHealth,
-                        namespaceParameter: KubeNamespace.NeonStatus,
-                        cancellationToken:  cancellationToken);
-
-                    var statusConfig = new TypeSafeConfigMap<ClusterHealth>(configMap);
-
-                    return statusConfig.Config;
+                    return (await k8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterHealth>(KubeConfigMapName.ClusterHealth, KubeNamespace.NeonStatus)).Data;
                 }
                 catch (OperationCanceledException)
                 {

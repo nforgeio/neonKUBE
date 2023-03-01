@@ -1173,22 +1173,22 @@ ff02::2         ip6-allrouters
                     {
                         var proxyServiceScript =
 $@"
-	set -eou pipefail	# Enable full failure detection
+set -eou pipefail	# Enable full failure detection
 
-	{KubeNodeFolder.Bin}/safe-apt-get update
-	{KubeNodeFolder.Bin}/safe-apt-get install -yq apt-cacher-ng
+{KubeNodeFolder.Bin}/safe-apt-get update
+{KubeNodeFolder.Bin}/safe-apt-get install -yq apt-cacher-ng
 
-	# Configure the cache to pass-thru SSL requests
-	# and then restart.
+# Configure the cache to pass-thru SSL requests
+# and then restart.
 
-	echo ""PassThroughPattern:^.*:443$"" >> /etc/apt-cacher-ng/acng.conf
-	systemctl restart apt-cacher-ng
+echo ""PassThroughPattern:^.*:443$"" >> /etc/apt-cacher-ng/acng.conf
+systemctl restart apt-cacher-ng
 
-	set -eo pipefail	# Revert back to partial failure detection
+set -eo pipefail	# Revert back to partial failure detection
 
-	# Give the proxy service a chance to start.
+# Give the proxy service a chance to start.
 
-	sleep 5
+sleep 5
 ";
                         SudoCommand(CommandBundle.FromScript(proxyServiceScript), RunOptions.FaultOnError);
                     }

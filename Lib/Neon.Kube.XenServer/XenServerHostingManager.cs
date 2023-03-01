@@ -550,7 +550,7 @@ namespace Neon.Kube.Hosting.XenServer
             await SyncContext.Clear;
 
             var xenClient    = xenSshProxy.Metadata;
-            var templateName = $"neonkube-{KubeVersions.NeonKube}";
+            var templateName = $"neonkube-{KubeVersions.NeonKubeWithBranchPart}";
 
             // Download the node template to the workstation if it's not already present.
 
@@ -562,7 +562,7 @@ namespace Neon.Kube.Hosting.XenServer
             }
             else
             {
-                xenSshProxy.Status = $"download: node image {templateName}";
+                xenSshProxy.Status = $"download: node image [{templateName}]";
                 xenController.SetGlobalStepStatus();
 
                 string driveTemplateName;
@@ -613,7 +613,7 @@ namespace Neon.Kube.Hosting.XenServer
             }
             else
             {
-                xenSshProxy.Status = $"compute: node image MD5: {templateMd5Path}";
+                xenSshProxy.Status = $"compute: node image MD5 [{templateMd5Path}]";
                 xenController.SetGlobalStepStatus();
 
                 using (var templateStream = File.OpenRead(driveTemplatePath))
@@ -768,7 +768,7 @@ namespace Neon.Kube.Hosting.XenServer
 
                 xenSshProxy.Status = FormatVmStatus(vmName, "create: virtual machine");
 
-                var vm = xenClient.Machine.Create(vmName, $"neonkube-{KubeVersions.NeonKube}",
+                var vm = xenClient.Machine.Create(vmName, $"neonkube-{KubeVersions.NeonKubeWithBranchPart}",
                     cores:                      cores,
                     memoryBytes:                memoryBytes,
                     diskBytes:                  osDiskBytes,

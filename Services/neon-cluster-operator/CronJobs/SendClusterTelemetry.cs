@@ -27,6 +27,7 @@ using Microsoft.Extensions.Logging;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.Kube;
 using Neon.Kube.Operator.Util;
 using Neon.Net;
 using Neon.Kube.Resources.Cluster;
@@ -72,21 +73,15 @@ namespace NeonClusterOperator
                 {
                     logger.LogInformationEx(() => "Sending cluster telemetry.");
 
-                    var dataMap = context.MergedJobDataMap;
-                    var k8s = (IKubernetes)dataMap["Kubernetes"];
-
+                    var dataMap          = context.MergedJobDataMap;
+                    var k8s              = (IKubernetes)dataMap["Kubernetes"];
                     var clusterTelemetry = new ClusterTelemetry();
+                    var nodes            = await k8s.CoreV1.ListNodeAsync();
 
-                    var nodes = await k8s.CoreV1.ListNodeAsync();
-                    clusterTelemetry.Nodes = nodes.Items.ToList();
+                    clusterTelemetry.Nodes       = nodes.Items.ToList();
+                    clusterTelemetry.ClusterInfo = (await k8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterInfo>(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus)).Data;
 
-                    var configMap = await k8s.CoreV1.ReadNamespacedConfigMapAsync(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus);
-                    clusterTelemetry.ClusterInfo = TypeSafeConfigMap<ClusterInfo>.From(configMap).Config;
-
-                    using (var jsonClient = new JsonClient()
-                    {
-                        BaseAddress = KubeEnv.HeadendUri
-                    })
+                    using (var jsonClient = new JsonClient() { BaseAddress = KubeEnv.HeadendUri })
                     {
                         await jsonClient.PostAsync("/telemetry/cluster", clusterTelemetry);
                     }
@@ -104,7 +99,7 @@ namespace NeonClusterOperator
 
                     await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterOperator>(
                         patch: OperatorHelper.ToV1Patch<V1NeonClusterOperator>(patch),
-                        name: clusterOperator.Name());
+                        name:  clusterOperator.Name());
                 }
                 catch (Exception e)
                 {

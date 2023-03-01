@@ -60,7 +60,7 @@ namespace NeonClusterOperator
             Covenant.Requires(k8s != null, nameof(k8s));
 
             this.logger = logger;
-            this.k8s = k8s;
+            this.k8s    = k8s;
         }
 
         /// <inheritdoc/>
@@ -91,14 +91,14 @@ namespace NeonClusterOperator
         {
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                var tenant = await k8s.CustomObjects.ReadNamespacedCustomObjectAsync<V1MinioTenant>(resource.Namespace(), resource.Spec.Tenant);
+                var tenant        = await k8s.CustomObjects.ReadNamespacedCustomObjectAsync<V1MinioTenant>(resource.Namespace(), resource.Spec.Tenant);
                 var minioEndpoint = $"{tenant.Name()}.{tenant.Namespace()}";
-                var secretName = ((JsonElement)(tenant.Spec)).GetProperty("credsSecret").GetProperty("name").GetString();
-                var secret = await k8s.CoreV1.ReadNamespacedSecretAsync(secretName, resource.Namespace());
-                var minioClient = new MinioClient()
-                                      .WithEndpoint(minioEndpoint)
-                                      .WithCredentials(Encoding.UTF8.GetString(secret.Data["accesskey"]), Encoding.UTF8.GetString(secret.Data["secretkey"]))
-                                      .Build();
+                var secretName    = ((JsonElement)(tenant.Spec)).GetProperty("credsSecret").GetProperty("name").GetString();
+                var secret        = await k8s.CoreV1.ReadNamespacedSecretAsync(secretName, resource.Namespace());
+                var minioClient    = new MinioClient()
+                    .WithEndpoint(minioEndpoint)
+                    .WithCredentials(Encoding.UTF8.GetString(secret.Data["accesskey"]), Encoding.UTF8.GetString(secret.Data["secretkey"]))
+                    .Build();
 
                 return minioClient;
             }

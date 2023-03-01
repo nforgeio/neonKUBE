@@ -25,7 +25,12 @@ using System.Threading.Tasks;
 namespace Neon.Kube.Resources
 {
     /// <summary>
-    /// Defines the scope of a kubernetes resource.
+    /// <para>
+    /// Enumerates the possible the scopes for a Kubernetes resource.
+    /// </para>
+    /// <note>
+    /// You may also use <b>"*"</b> to indicate that there's no scope restriction.
+    /// </note>
     /// </summary>
     public enum EntityScope
     {

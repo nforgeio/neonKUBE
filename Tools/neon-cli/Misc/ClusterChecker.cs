@@ -218,7 +218,7 @@ namespace NeonCli
 
                     // $note(jefflill):
                     //
-                    // Images pulled from Harbor are considered to by FOUND.  These are
+                    // Images pulled from Harbor are considered to be FOUND.  These are
                     // typically the base Kubernetes cluster images plus HAPROXY, which
                     // we use to implement etcd high-availability.
 

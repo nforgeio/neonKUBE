@@ -35,6 +35,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.Kube;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Kube.Resources.Istio;
@@ -153,7 +154,7 @@ namespace NeonDashboard
             {
                 await SyncContext.Clear;
 
-                ClusterInfo = TypeSafeConfigMap<ClusterInfo>.From(@event.Value).Config;
+                ClusterInfo = TypedConfigMap<ClusterInfo>.From(@event.Value).Data;
                 
                 if (PrometheusClient.JsonClient.DefaultRequestHeaders.Contains("X-Scope-OrgID"))
                 {
@@ -161,7 +162,6 @@ namespace NeonDashboard
                 }
 
                 PrometheusClient.JsonClient.DefaultRequestHeaders.Add("X-Scope-OrgID", ClusterInfo.Name);
-
                 Logger.LogInformationEx("Updated cluster info");
             },
             KubeNamespace.NeonStatus,

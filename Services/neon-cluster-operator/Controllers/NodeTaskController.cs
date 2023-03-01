@@ -45,13 +45,14 @@ using k8s;
 using k8s.Autorest;
 using k8s.Models;
 
+using Neon.Kube.Operator.Controller;
+using Neon.Kube.Operator.Rbac;
+
 using Newtonsoft.Json;
 
 using OpenTelemetry.Trace;
 
 using Prometheus;
-using Neon.Kube.Operator.Controller;
-using Neon.Kube.Operator.Rbac;
 
 namespace NeonClusterOperator
 {
@@ -218,6 +219,7 @@ namespace NeonClusterOperator
                             break;
 
                         default:
+
                             break;
                     }
                 }
@@ -253,6 +255,7 @@ namespace NeonClusterOperator
                     }
 
                     var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
                     expirations.Add(parts[0], int.Parse(parts[6].TrimEnd('d')));
                 }
 
@@ -264,18 +267,18 @@ namespace NeonClusterOperator
                         {
                             Metadata = new V1ObjectMeta()
                             {
-                                Name = $"control-plane-cert-update-{NeonHelper.CreateBase36Uuid()}",
+                                Name   = $"control-plane-cert-update-{NeonHelper.CreateBase36Uuid()}",
                                 Labels = new Dictionary<string, string>
-                            {
-                                { NeonLabel.ManagedBy, KubeService.NeonClusterOperator },
-                                { NeonLabel.NodeTaskType, NeonNodeTaskType.ControlPlaneCertUpdate }
-                            }
-                            },
-                            Spec = new V1NeonNodeTask.TaskSpec()
-                            {
-                                Node = resource.Spec.Node,
-                                StartAfterTimestamp = DateTime.UtcNow,
-                                BashScript = @"
+                                {
+                                    { NeonLabel.ManagedBy, KubeService.NeonClusterOperator },
+                                    { NeonLabel.NodeTaskType, NeonNodeTaskType.ControlPlaneCertUpdate }
+                                }
+                                },
+                                Spec = new V1NeonNodeTask.TaskSpec()
+                                {
+                                    Node                = resource.Spec.Node,
+                                    StartAfterTimestamp = DateTime.UtcNow,
+                                    BashScript          = @"
 set -e
 
 /usr/bin/kubeadm certs renew all
@@ -286,17 +289,14 @@ do
     crictl rmp $pod;
 done
 ",
-                                CaptureOutput = true,
-                                RetentionSeconds = TimeSpan.FromDays(1).Seconds
-                            }
-                        };
+                                    CaptureOutput = true,
+                                    RetentionSeconds = TimeSpan.FromDays(1).Seconds
+                                }
+                            };
 
                         var tasks = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>(labelSelector: $"{NeonLabel.NodeTaskType}={NeonNodeTaskType.ControlPlaneCertUpdate}");
 
-                        if (!tasks.Items.Any(
-                                        task => task.Spec.Node == nodeTask.Spec.Node
-                                                && (task.Status.Phase <= V1NeonNodeTask.Phase.Running
-                                                    || task.Status == null)))
+                        if (!tasks.Items.Any(task => task.Spec.Node == nodeTask.Spec.Node && (task.Status.Phase <= V1NeonNodeTask.Phase.Running || task.Status == null)))
                         {
                             await k8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonNodeTask>(nodeTask, name: nodeTask.Name());
                         }

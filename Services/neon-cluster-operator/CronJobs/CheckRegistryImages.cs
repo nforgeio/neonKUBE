@@ -89,19 +89,17 @@ namespace NeonClusterOperator
 
                 try
                 {
-                    var dataMap  = context.MergedJobDataMap;
+                    var dataMap = context.MergedJobDataMap;
+
                     k8s          = (IKubernetes)dataMap["Kubernetes"];
                     harborClient = (HarborClient)dataMap["HarborClient"];
 
                     await CheckProjectAsync(KubeConst.LocalClusterRegistryProject);
 
-                    var nodes     = await k8s.CoreV1.ListNodeAsync();
-                    var startTime = DateTime.UtcNow.AddSeconds(10);
-
-                    var clusterManifestJson = Program.Resources.GetFile("/cluster-manifest.json").ReadAllText();
-                    var clusterManifest = NeonHelper.JsonDeserialize<ClusterManifest>(clusterManifestJson);
-
-                    var masters = await k8s.CoreV1.ListNodeAsync(labelSelector: "node-role.kubernetes.io/control-plane=");
+                    var nodes           = await k8s.CoreV1.ListNodeAsync();
+                    var startTime       = DateTime.UtcNow.AddSeconds(10);
+                    var clusterManifest = (await k8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterManifest>(KubeConfigMapName.ClusterManifest, KubeNamespace.NeonSystem)).Data;
+                    var masters         = await k8s.CoreV1.ListNodeAsync(labelSelector: "node-role.kubernetes.io/control-plane=");
 
                     foreach (var image in clusterManifest.ContainerImages)
                     {

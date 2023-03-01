@@ -924,8 +924,6 @@ apt-mark hold cri-o cri-o-runc
             // so we're going to retry the operation in the hope that it may work
             // eventually.
 
-            var retry = new LinearRetryPolicy(typeof(ExecuteException), maxAttempts: 3, retryInterval: TimeSpan.FromMinutes(1));
-
             try
             {
                 retry.Invoke(
@@ -1075,8 +1073,6 @@ apt-mark hold skopeo
                     // The PODMAN apt package mirror has been quite unreliable over the years, 
                     // so we're going to retry the operation in the hope that it may work
                     // eventually.
-
-                    var retry = new LinearRetryPolicy(typeof(ExecuteException), maxAttempts: 3, retryInterval: TimeSpan.FromMinutes(1));
 
                     try
                     {
@@ -1304,9 +1300,25 @@ rm  install-kustomize.sh
                 {
                     var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
 
-                    // Perform the install.
+                    // We ran into a problem downloading the Google [apt-key.gpg] file which
+                    // caused node image build failures:
+                    //
+                    //      https://github.com/nforgeio/neonKUBE/issues/1754
+                    //      https://github.com/kubernetes/kubernetes/issues/116068
+                    //
+                    // It looks like Kubernetes has an alternate URI for this key that hits
+                    // their release website, so it should be safe.  We're going to use this
+                    // alternate URI if the primary fails.
+                    //
+                    // The Kubernetes package mirror can have problems, so we're going to 
+                    // workaround this with a retry policy.
 
-                    var mainScript =
+                    retry.Invoke(
+                        () =>
+                        {
+                            // Perform the install.
+
+                            var mainScript =
 $@"
 # $todo(jefflill):
 #
@@ -1331,7 +1343,19 @@ $@"
 
 set -euo pipefail
 
+set +e                                                                                                                                              # <--- HACK: disable error checks
 curl {KubeHelper.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+haveKey=$? 
+
+if [ ! $haveKey ]; then
+    
+    # The primary apt-key URI failed, so we're going to use the alternate, after
+    # re-enabling error checking.
+
+    set -euo pipefail
+    curl {KubeHelper.CurlOptions} https://dl.k8s.io/apt/doc/apt-key.gpg | apt-key add -    
+fi
+
 echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/sources.list.d/kubernetes.list
 {KubeNodeFolder.Bin}/safe-apt-get update
 
@@ -1370,9 +1394,10 @@ systemctl daemon-reload
 systemctl stop kubelet
 systemctl disable kubelet
 ";
-                    controller.LogProgress(this, verb: "setup", message: "kubernetes");
+                            controller.LogProgress(this, verb: "setup", message: "kubernetes");
 
-                    SudoCommand(CommandBundle.FromScript(mainScript), RunOptions.Defaults | RunOptions.FaultOnError);
+                            SudoCommand(CommandBundle.FromScript(mainScript), RunOptions.Defaults | RunOptions.FaultOnError);
+                        });
                 });
         }
     }

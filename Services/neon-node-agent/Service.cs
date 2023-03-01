@@ -42,6 +42,7 @@ using Neon.Common;
 using Neon.Data;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.Kube;
 using Neon.Kube.Operator;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.CertManager;
@@ -295,16 +296,17 @@ namespace NeonNodeAgent
         {
             await SyncContext.Clear;
 
-            _ = K8s.WatchAsync<V1ConfigMap>(async (@event) =>
-            {
-                await SyncContext.Clear;
+            _ = K8s.WatchAsync<V1ConfigMap>(
+                async (@event) =>
+                {
+                    await SyncContext.Clear;
 
-                ClusterInfo = TypeSafeConfigMap<ClusterInfo>.From(@event.Value).Config;
+                    ClusterInfo = TypedConfigMap<ClusterInfo>.From(@event.Value).Data;
 
-                Logger.LogInformationEx("Updated cluster info");
-            },
-            KubeNamespace.NeonStatus,
-            fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
+                    Logger.LogInformationEx("Updated cluster info");
+                },
+                KubeNamespace.NeonStatus,
+                fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
         }
     }
 }
