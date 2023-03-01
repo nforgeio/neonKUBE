@@ -120,6 +120,7 @@ namespace NeonSsoSessionProxy
             else
             {
                 var configFile = GetConfigFilePath("/etc/neonkube/neon-sso-session-proxy/config.yaml");
+
                 using (StreamReader reader = new StreamReader(new FileStream(configFile, FileMode.Open, FileAccess.Read)))
                 {
                     Config = NeonHelper.YamlDeserializeViaJson<DexConfig>(await reader.ReadToEndAsync());
@@ -139,33 +140,32 @@ namespace NeonSsoSessionProxy
 
             Clients = new List<V1NeonSsoClient>();
 
-            _ = k8s.WatchAsync<V1NeonSsoClient>(async (@event) =>
-            {
-                await SyncContext.Clear;
-
-                switch (@event.Type)
+            _ = k8s.WatchAsync<V1NeonSsoClient>(
+                async (@event) =>
                 {
-                    case WatchEventType.Added:
+                    switch (@event.Type)
+                    {
+                        case WatchEventType.Added:
 
-                        await AddClientAsync(@event.Value);
-                        break;
+                            await AddClientAsync(@event.Value);
+                            break;
 
-                    case WatchEventType.Deleted:
+                        case WatchEventType.Deleted:
 
-                        await RemoveClientAsync(@event.Value);
-                        break;
+                            await RemoveClientAsync(@event.Value);
+                            break;
 
-                    case WatchEventType.Modified:
+                        case WatchEventType.Modified:
 
-                        await RemoveClientAsync(@event.Value);
-                        await AddClientAsync(@event.Value);
-                        break;
+                            await RemoveClientAsync(@event.Value);
+                            await AddClientAsync(@event.Value);
+                            break;
 
-                    default:
+                        default:
 
-                        break;
-                }
-            });
+                            break;
+                    }
+                });
 
             int port = 80;
 
@@ -212,10 +212,10 @@ namespace NeonSsoSessionProxy
                 .AddOtlpExporter(
                     options =>
                     {
-                        options.ExportProcessorType = ExportProcessorType.Batch;
+                        options.ExportProcessorType         = ExportProcessorType.Batch;
                         options.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>();
-                        options.Endpoint = new Uri(NeonHelper.NeonKubeOtelCollectorUri);
-                        options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
+                        options.Endpoint                    = new Uri(NeonHelper.NeonKubeOtelCollectorUri);
+                        options.Protocol                    = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
                     });
 
             return true;
@@ -236,11 +236,7 @@ namespace NeonSsoSessionProxy
         {
             await SyncContext.Clear;
 
-            Clients.Remove(
-                Clients.Where(
-                    c => c.Spec.Id == client.Spec.Id
-                    && c.Spec.Secret == client.Spec.Secret).First());
-
+            Clients.Remove(Clients.Where(client => client.Spec.Id == client.Spec.Id && client.Spec.Secret == client.Spec.Secret).First());
             DexClient.AuthHeaders.Remove(client.Spec.Id);
 
             Logger.LogDebugEx(() => $"Removed client: {client.Name()}");

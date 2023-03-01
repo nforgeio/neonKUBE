@@ -150,22 +150,22 @@ namespace NeonDashboard
             
             PrometheusClient = new PrometheusClient($"{metricsHost}/prometheus/");
 
-            _ = Kubernetes.WatchAsync<V1ConfigMap>(async (@event) =>
-            {
-                await SyncContext.Clear;
-
-                ClusterInfo = TypedConfigMap<ClusterInfo>.From(@event.Value).Data;
-                
-                if (PrometheusClient.JsonClient.DefaultRequestHeaders.Contains("X-Scope-OrgID"))
+            _ = Kubernetes.WatchAsync<V1ConfigMap>(
+                async (@event) =>
                 {
-                    PrometheusClient.JsonClient.DefaultRequestHeaders.Remove("X-Scope-OrgID");
-                }
+                    ClusterInfo = TypedConfigMap<ClusterInfo>.From(@event.Value).Data;
+                
+                    if (PrometheusClient.JsonClient.DefaultRequestHeaders.Contains("X-Scope-OrgID"))
+                    {
+                        PrometheusClient.JsonClient.DefaultRequestHeaders.Remove("X-Scope-OrgID");
+                    }
 
-                PrometheusClient.JsonClient.DefaultRequestHeaders.Add("X-Scope-OrgID", ClusterInfo.Name);
-                Logger.LogInformationEx("Updated cluster info");
-            },
-            KubeNamespace.NeonStatus,
-            fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
+                    PrometheusClient.JsonClient.DefaultRequestHeaders.Add("X-Scope-OrgID", ClusterInfo.Name);
+                    Logger.LogInformationEx("Updated cluster info");
+                    await Task.CompletedTask;
+                },
+                KubeNamespace.NeonStatus,
+                fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
 
             Dashboards = new List<Dashboard>();
             Dashboards.Add(
@@ -174,36 +174,37 @@ namespace NeonDashboard
                     name:         "neonKUBE",
                     displayOrder: 0));
 
-            _ = Kubernetes.WatchAsync<V1NeonDashboard>(async (@event) =>
-            {
-                await SyncContext.Clear;
-
-                switch (@event.Type)
+            _ = Kubernetes.WatchAsync<V1NeonDashboard>(
+                async (@event) =>
                 {
-                    case WatchEventType.Added:
+                    await SyncContext.Clear;
 
-                        await AddDashboardAsync(@event.Value);
-                        break;
+                    switch (@event.Type)
+                    {
+                        case WatchEventType.Added:
 
-                    case WatchEventType.Deleted:
+                            await AddDashboardAsync(@event.Value);
+                            break;
 
-                        await RemoveDashboardAsync(@event.Value);
-                        break;
+                        case WatchEventType.Deleted:
 
-                    case WatchEventType.Modified:
+                            await RemoveDashboardAsync(@event.Value);
+                            break;
 
-                        await RemoveDashboardAsync(@event.Value);
-                        await AddDashboardAsync(@event.Value);
-                        break;
+                        case WatchEventType.Modified:
 
-                    default:
+                            await RemoveDashboardAsync(@event.Value);
+                            await AddDashboardAsync(@event.Value);
+                            break;
 
-                        break;
-                }
+                        default:
 
-                Dashboards = Dashboards.OrderBy(d => d.DisplayOrder)
-                                        .ThenBy(d => d.Name).ToList();
-            });
+                            break;
+                    }
+
+                    Dashboards = Dashboards.OrderBy(d => d.DisplayOrder)
+                                            .ThenBy(d => d.Name).ToList();
+                });
 
             if (NeonHelper.IsDevWorkstation)
             {
@@ -295,15 +296,11 @@ namespace NeonDashboard
 
             Logger.LogInformationEx("Configuring cluster SSO for development.");
 
-            // wait for cluster info to be set
-            await NeonHelper.WaitForAsync(async () =>
-            {
-                await SyncContext.Clear;
+            // Wait for cluster info to be set.
 
-                return (ClusterInfo != null);
-            }, 
-            timeout: TimeSpan.FromSeconds(60),
-            pollInterval: TimeSpan.FromMilliseconds(250));
+            NeonHelper.WaitFor(() => ClusterInfo != null,
+                timeout:      TimeSpan.FromSeconds(60),
+                pollInterval: TimeSpan.FromMilliseconds(250));
 
             try
             {

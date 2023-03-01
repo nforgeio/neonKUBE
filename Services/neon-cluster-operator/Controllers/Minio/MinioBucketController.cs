@@ -108,9 +108,9 @@ namespace NeonClusterOperator
             Covenant.Requires(logger != null, nameof(logger));
             Covenant.Requires(service != null, nameof(service));
 
-            this.k8s              = k8s;
-            this.logger           = logger;
-            this.service          = service;
+            this.k8s     = k8s;
+            this.logger  = logger;
+            this.service = service;
         }
 
         /// <summary>

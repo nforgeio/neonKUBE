@@ -127,7 +127,7 @@ namespace NeonSsoSessionProxy
                         }
                         else
                         {
-                          throw new HttpRequestException("No redirect_uri specified.");
+                            throw new HttpRequestException("No redirect_uri specified.");
                         }
                     }
                 }

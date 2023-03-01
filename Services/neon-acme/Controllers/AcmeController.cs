@@ -98,9 +98,9 @@ namespace NeonAcme.Controllers
             Logger.LogDebugEx(() => NeonHelper.JsonSerialize(challenge));
             
             var args = new ArgDictionary()
-                {
-                    { "api-version", "0.2" },
-                };
+            {
+                { "api-version", "0.2" },
+            };
             
             var response = await headendClient.PostAsync<ChallengePayload>(uri: "acme/challenge", document: challenge, args: args);
 
