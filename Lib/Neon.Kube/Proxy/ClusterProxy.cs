@@ -658,8 +658,8 @@ namespace Neon.Kube.Proxy
             {
                 return await K8s.NamespacedPodExecWithRetryAsync(
                     retryPolicy:        retryPolicy,
-                    namespaceParameter: minioPod.Namespace(),
                     name:               minioPod.Name(),
+                    namespaceParameter: minioPod.Namespace(),
                     container:          "minio-operator",
                     command:            command,
                     cancellationToken:  cancellationToken);
@@ -667,8 +667,8 @@ namespace Neon.Kube.Proxy
             else
             {
                 return await K8s.NamespacedPodExecAsync(
-                    namespaceParameter: minioPod.Namespace(),
                     name:               minioPod.Name(),
+                    namespaceParameter: minioPod.Namespace(),
                     container:          "minio-operator",
                     command:            command,
                     noSuccessCheck:     noSuccessCheck,
@@ -717,8 +717,8 @@ namespace Neon.Kube.Proxy
             {
                 return await K8s.NamespacedPodExecWithRetryAsync(
                     retryPolicy:        retryPolicy,
-                    namespaceParameter: sysDbPod.Namespace(),
                     name:               sysDbPod.Name(),
+                    namespaceParameter: sysDbPod.Namespace(),
                     container:          "postgres",
                     command:            command,
                     cancellationToken:  cancellationToken);
@@ -726,8 +726,8 @@ namespace Neon.Kube.Proxy
             else
             {
                 return await K8s.NamespacedPodExecAsync(
-                    namespaceParameter: sysDbPod.Namespace(),
                     name:               sysDbPod.Name(),
+                    namespaceParameter: sysDbPod.Namespace(),
                     container:          "postgres",
                     command:            command,
                     noSuccessCheck:     noSuccessCheck,

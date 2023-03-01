@@ -1453,10 +1453,12 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                 },
                                 KubeNamespace.NeonSystem);
 
-                            await k8s.CoreV1.WaitForPodAsync(pod.Namespace(), pod.Name(),
-                                timeout:           clusterOpTimeout,
-                                pollInterval:      clusterOpPollInterval,
-                                cancellationToken: controller.CancellationToken);
+                            await k8s.CoreV1.WaitForPodAsync(
+                                name:               pod.Name(),
+                                namespaceParameter: pod.Namespace(),
+                                timeout:            clusterOpTimeout,
+                                pollInterval:       clusterOpPollInterval,
+                                cancellationToken:  controller.CancellationToken);
                         });
 
                     controller.ThrowIfCancelled();
@@ -1484,8 +1486,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                     {
                                         var result = await k8s.NamespacedPodExecWithRetryAsync(
                                             retryPolicy:        podExecRetry,
-                                            namespaceParameter: pod.Namespace(),
                                             name:               pod.Name(),
+                                            namespaceParameter: pod.Namespace(),
                                             container:          "dnsutils",
                                             command:            cmd);
 
@@ -1581,8 +1583,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                         await k8s.CustomObjects.CreateNamespacedCustomObjectAsync<V1ServiceMonitor>(
                             body:               serviceMonitor, 
-                            namespaceParameter: serviceMonitor.Namespace(), 
-                            name:               serviceMonitor.Name());
+                            name:               serviceMonitor.Name(),
+                            namespaceParameter: serviceMonitor.Namespace());
                     });
             }
         }
@@ -1868,7 +1870,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         }
                     };
 
-                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<V1Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
+                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<V1Telemetry>(telemetry, name: telemetry.Name(), namespaceParameter: telemetry.Namespace());
 
                     // turn down tracing in neon namespaces.
 
@@ -1876,13 +1878,13 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     telemetry.Metadata.NamespaceProperty                    = KubeNamespace.NeonMonitor;
                     telemetry.Spec.Tracing.First().RandomSamplingPercentage = 1.0;
 
-                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<V1Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
+                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<V1Telemetry>(telemetry, name: telemetry.Name(), namespaceParameter: telemetry.Namespace());
 
                     telemetry.Metadata.Name                                 = "neon-system-default";
                     telemetry.Metadata.NamespaceProperty                    = KubeNamespace.NeonSystem;
                     telemetry.Spec.Tracing.First().RandomSamplingPercentage = 1.0;
 
-                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<V1Telemetry>(telemetry, telemetry.Namespace(), telemetry.Name());
+                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync<V1Telemetry>(telemetry, name: telemetry.Name(), namespaceParameter: telemetry.Namespace());
                 });
         }
 
@@ -2759,8 +2761,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     await k8s.CustomObjects.CreateNamespacedCustomObjectAsync(
                         body:               cStorPoolCluster,
-                        namespaceParameter: cStorPoolCluster.Namespace(), 
-                        name:               cStorPoolCluster.Name());
+                        name:               cStorPoolCluster.Name(),
+                        namespaceParameter: cStorPoolCluster.Namespace());
                 });
 
             controller.ThrowIfCancelled();
@@ -3944,8 +3946,8 @@ $@"- name: StorageType
 
                         (await k8s.NamespacedPodExecWithRetryAsync(
                                     retryPolicy:        podExecRetry,
-                                    namespaceParameter: pod.Namespace(),
                                     name:               pod.Name(),
+                                    namespaceParameter: pod.Namespace(),
                                     container:          "grafana",
                                     command:            cmd)).EnsureSuccess();
                     });
@@ -3976,8 +3978,8 @@ $@"- name: StorageType
                                 {
                                     var defaultDashboard = (await k8s.NamespacedPodExecWithRetryAsync(
                                         retryPolicy:        podExecRetry,
-                                        namespaceParameter: grafanaPod.Namespace(),
                                         name:               grafanaPod.Name(),
+                                        namespaceParameter: grafanaPod.Namespace(),
                                         container:          "grafana",
                                         command:            cmd)).EnsureSuccess();
 
@@ -4002,8 +4004,8 @@ $@"- name: StorageType
 
                     (await k8s.NamespacedPodExecWithRetryAsync(
                                 retryPolicy:        podExecRetry,
-                                namespaceParameter: grafanaPod.Namespace(),
                                 name:               grafanaPod.Name(),
+                                namespaceParameter: grafanaPod.Namespace(),
                                 container:          "grafana",
                                 command:            cmd)).EnsureSuccess();
                 });
@@ -4165,8 +4167,8 @@ $@"- name: StorageType
 
                                     (await k8s.NamespacedPodExecWithRetryAsync(
                                         retryPolicy:        podExecRetry,
-                                        namespaceParameter: minioPod.Namespace(),
                                         name:               minioPod.Name(),
+                                        namespaceParameter: minioPod.Namespace(),
                                         container:          "minio-operator",
                                         command:            new string[] {
                                             "/bin/bash",

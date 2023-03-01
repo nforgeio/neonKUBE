@@ -265,7 +265,10 @@ namespace Neon.Kube.Operator
                     }
                 };
 
-                await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync(certificate, certificate.Namespace(), certificate.Name());
+                await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync(
+                    body:               certificate, 
+                    name:               certificate.Name(),
+                    namespaceParameter: certificate.Namespace());
 
                 logger?.LogInformationEx(() => "Webhook certificate created.");
             }

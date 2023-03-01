@@ -421,8 +421,8 @@ namespace Neon.Kube
         /// <typeparam name="T">The custom object type.</typeparam>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
         /// <param name="body">The object data.</param>
-        /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
         /// <param name="name">Specifies the object name.</param>
+        /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
         /// <param name="dryRun">
         /// When present, indicates that modifications should not be persisted. An invalid
         /// or unrecognized dryRun directive will result in an error response and no further
@@ -439,8 +439,8 @@ namespace Neon.Kube
         public static async Task<T> CreateNamespacedCustomObjectAsync<T>(
             this ICustomObjectsOperations k8s,
             T                   body,
-            string              namespaceParameter,
             string              name,
+            string              namespaceParameter,
             string              dryRun            = null,
             string              fieldManager      = null,
             CancellationToken   cancellationToken = default) 
@@ -474,14 +474,14 @@ namespace Neon.Kube
         /// </summary>
         /// <typeparam name="T">The custom object type.</typeparam>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
-        /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
         /// <param name="name">Specifies the object name.</param>
+        /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object.</returns>
         public static async Task<T> ReadNamespacedCustomObjectAsync<T>(
             this ICustomObjectsOperations k8s,
-            string              namespaceParameter,
             string              name,
+            string              namespaceParameter,
             CancellationToken   cancellationToken = default)
             
             where T : IKubernetesObject, new()
@@ -508,8 +508,8 @@ namespace Neon.Kube
         /// <typeparam name="T">The custom object type.</typeparam>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
         /// <param name="body">Specifies the new object data.</param>
-        /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
         /// <param name="name">Specifies the object name.</param>
+        /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
         /// <param name="dryRun">
         /// When present, indicates that modifications should not be persisted. An invalid
         /// or unrecognized dryRun directive will result in an error response and no further
@@ -526,8 +526,8 @@ namespace Neon.Kube
         public static async Task<T> ReplaceNamespacedCustomObjectAsync<T>(
             this ICustomObjectsOperations k8s,
             T                   body, 
-            string              namespaceParameter, 
             string              name, 
+            string              namespaceParameter, 
             string              dryRun            = null,
             string              fieldManager      = null,
             CancellationToken   cancellationToken = default)
@@ -536,8 +536,8 @@ namespace Neon.Kube
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(body != null, nameof(body));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
 
             var typeMetadata = body.GetKubernetesTypeMetadata();
             var result       = await k8s.ReplaceNamespacedCustomObjectAsync(
@@ -561,8 +561,8 @@ namespace Neon.Kube
         /// <typeparam name="T">The custom object type.</typeparam>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
         /// <param name="body">Specifies the new object data.</param>
-        /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
         /// <param name="name">Specifies the object name.</param>
+        /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
         /// <param name="dryRun">
         /// When present, indicates that modifications should not be persisted. An invalid
         /// or unrecognized dryRun directive will result in an error response and no further
@@ -579,8 +579,8 @@ namespace Neon.Kube
         public static async Task<T> UpsertNamespacedCustomObjectAsync<T>(
             this ICustomObjectsOperations k8s,
             T                   body,
-            string              namespaceParameter,
             string              name, 
+            string              namespaceParameter,
             string              dryRun            = null,
             string              fieldManager      = null,
             CancellationToken   cancellationToken = default)
@@ -589,8 +589,8 @@ namespace Neon.Kube
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(body != null, nameof(body));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
 
             // $todo(jefflill): Investigate fixing race condition:
             // 
@@ -601,7 +601,10 @@ namespace Neon.Kube
 
             try
             {
-                await k8s.ReadNamespacedCustomObjectAsync<T>(namespaceParameter, name, cancellationToken);
+                await k8s.ReadNamespacedCustomObjectAsync<T>(
+                    name:               name,
+                    namespaceParameter: namespaceParameter,
+                    cancellationToken:  cancellationToken);
             }
             catch (HttpOperationException e)
             {
@@ -609,8 +612,8 @@ namespace Neon.Kube
                 {
                     return await k8s.CreateNamespacedCustomObjectAsync<T>(
                         body:               body,
-                        namespaceParameter: namespaceParameter,
                         name:               name,
+                        namespaceParameter: namespaceParameter,
                         dryRun:             dryRun, 
                         fieldManager:       fieldManager, 
                         cancellationToken:  cancellationToken);
@@ -623,8 +626,8 @@ namespace Neon.Kube
 
             return await k8s.ReplaceNamespacedCustomObjectAsync<T>(
                 body:               body,
-                namespaceParameter: namespaceParameter,
                 name:               name, 
+                namespaceParameter: namespaceParameter,
                 dryRun:             dryRun,
                 fieldManager:       fieldManager, 
                 cancellationToken:  cancellationToken);
@@ -640,8 +643,8 @@ namespace Neon.Kube
         /// Specifies the patch to be applied to the object status.  This is typically a 
         /// <see cref="V1Patch"/> instance but additional patch types may be supported in 
         /// </param>
-        /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
         /// <param name="name">Specifies the object name.</param>
+        /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
         /// <param name="dryRun">
         /// When present, indicates that modifications should not be persisted. An invalid
         /// or unrecognized dryRun directive will result in an error response and no further
@@ -662,8 +665,8 @@ namespace Neon.Kube
         public static async Task<T> PatchNamespacedCustomObjectStatusAsync<T>(
             this ICustomObjectsOperations k8s,
             V1Patch              patch,
-            string               namespaceParameter, 
             string               name,
+            string               namespaceParameter, 
             string               dryRun            = null,
             string               fieldManager      = null,
             bool?                force             = null,
@@ -673,8 +676,8 @@ namespace Neon.Kube
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(patch != null, nameof(patch));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
 
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
             var result       = await k8s.PatchNamespacedCustomObjectStatusAsync(
@@ -698,8 +701,8 @@ namespace Neon.Kube
         /// </summary>
         /// <typeparam name="T">The custom object type.</typeparam>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
-        /// <param name="namespaceParameter">Specifies the target Kubernetes namespace.</param>
         /// <param name="name">Specifies the object name.</param>
+        /// <param name="namespaceParameter">Specifies the target Kubernetes namespace.</param>
         /// <param name="body">Optionally specifies deletion options.</param>
         /// <param name="gracePeriodSeconds">
         /// Optionally specifies the duration in seconds before the object should be deleted. Value must be
@@ -729,8 +732,8 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task DeleteNamespacedCustomObjectAsync<T>(
             this ICustomObjectsOperations k8s,
-            string              namespaceParameter,
             string              name,
+            string              namespaceParameter,
             V1DeleteOptions     body               = null,
             int?                gracePeriodSeconds = null,
             bool?               orphanDependents   = null,
@@ -741,8 +744,8 @@ namespace Neon.Kube
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
             await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentNullException>(body != null, nameof(body));
 
             try
