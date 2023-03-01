@@ -235,6 +235,7 @@ namespace NeonClusterOperator
                 Dictionary<string, int> expirations = new Dictionary<string, int>();
 
                 var reading = false;
+
                 foreach (var line in resource.Status.Output.ToLines())
                 {
                     if (reading && line.StartsWith("CERTIFICATE AUTHORITY") || line.IsEmpty())

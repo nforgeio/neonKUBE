@@ -101,9 +101,8 @@ namespace Neon.Kube.Operator.ResourceManager
 
             Metrics.DefaultRegistry.AddBeforeCollectCallback(async (cancel) =>
             {
-                await SyncContext.Clear;
-
                 var values = currentEvents.Values.Select(v => (DateTime.UtcNow - v).TotalSeconds);
+
                 metrics.UnfinishedWorkSeconds.IncTo(values.Sum());
 
                 if (values.Count() > 0)

@@ -25,6 +25,9 @@ using System.Net.Http.Headers;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
+using k8s;
+using k8s.Models;
+
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -38,9 +41,6 @@ using Neon.Diagnostics;
 using Neon.Net;
 using Neon.Service;
 using Neon.Kube;
-
-using k8s;
-using k8s.Models;
 
 using OpenTelemetry.Trace;
 using OpenTelemetry;
@@ -189,10 +189,10 @@ namespace NeonAcme
                 .AddOtlpExporter(
                     options =>
                     {
-                        options.ExportProcessorType = ExportProcessorType.Batch;
+                        options.ExportProcessorType         = ExportProcessorType.Batch;
                         options.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>();
-                        options.Endpoint = new Uri(NeonHelper.NeonKubeOtelCollectorUri);
-                        options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
+                        options.Endpoint                    = new Uri(NeonHelper.NeonKubeOtelCollectorUri);
+                        options.Protocol                    = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
                     });
 
             return true;

@@ -77,15 +77,16 @@ namespace NeonAcme
             services
                 .AddSingleton(NeonAcmeService)
                 .AddSingleton<ILogger>(Program.Service.Logger)
-                .AddSwaggerGen(options =>
-                {
-                    options.SwaggerDoc("v3",
-                        new OpenApiInfo
-                        {
-                            Title   = "v1",
-                            Version = "v1"
-                        });
-                });
+                .AddSwaggerGen(
+                    options =>
+                    {
+                        options.SwaggerDoc("v3",
+                            new OpenApiInfo
+                            {
+                                Title   = "v1",
+                                Version = "v1"
+                            });
+                    });
 
             services.AddControllers()
                 .AddNeon();
@@ -98,22 +99,23 @@ namespace NeonAcme
         /// <param name="env">Specifies the web hosting environment.</param>
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (NeonHelper.IsDevWorkstation
-                || !string.IsNullOrEmpty(NeonAcmeService.GetEnvironmentVariable("DEBUG")))
+            if (NeonHelper.IsDevWorkstation || !string.IsNullOrEmpty(NeonAcmeService.GetEnvironmentVariable("DEBUG")))
             {
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseSwagger(options =>
-            {
-                options.RouteTemplate = "/openapi/{documentName}";
-            });
+            app.UseSwagger(
+                options =>
+                {
+                    options.RouteTemplate = "/openapi/{documentName}";
+                });
             app.UseRouting();
             app.UseHttpMetrics();
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
+            app.UseEndpoints
+                (endpoints =>
+                {
+                    endpoints.MapControllers();
+                });
         }
     }
 }

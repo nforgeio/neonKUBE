@@ -469,8 +469,6 @@ namespace Neon.Kube.Operator.ResourceManager
                     _ = k8s.WatchAsync<V1CustomResourceDefinition>(
                         async (@event) =>
                         {
-                            await SyncContext.Clear;
-
                             crdCache.Upsert(@event.Value);
                             logger?.LogInformationEx(() => $"Updated {dependent.GetEntityType()} CRD.");
                         },
@@ -740,8 +738,6 @@ namespace Neon.Kube.Operator.ResourceManager
             var actionAsync =
                 async (WatchEvent<TEntity> @event) =>
                 {
-                    await SyncContext.Clear;
-
                     using (var activity = TraceContext.ActivitySource?.StartActivity("ActionAsync"))
                     {
                         var result            = (ResourceControllerResult)null;
@@ -1003,8 +999,6 @@ namespace Neon.Kube.Operator.ResourceManager
             var enqueueAsync =
                 async (WatchEvent<TEntity> @event) =>
                 {
-                    await SyncContext.Clear;
-
                     using (var activity = TraceContext.ActivitySource?.StartActivity("EnqueueResourceEvent", ActivityKind.Server))
                     {
                         var resource     = @event.Value;
@@ -1072,8 +1066,6 @@ namespace Neon.Kube.Operator.ResourceManager
             var enqueueDependentAsync =
                 async (dynamic @event) =>
                 {
-                    await SyncContext.Clear;
-
                     using (var activity = TraceContext.ActivitySource?.StartActivity("EnqueueDependentResourceEvent", ActivityKind.Server))
                     {
                         var resource     = (IKubernetesObject<V1ObjectMeta>)@event.Value;

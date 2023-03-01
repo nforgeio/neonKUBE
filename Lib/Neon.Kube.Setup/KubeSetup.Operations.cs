@@ -1322,9 +1322,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 async () =>
                 {
                     var coreDnsDeployment = await k8s.AppsV1.ReadNamespacedDeploymentAsync("coredns", KubeNamespace.KubeSystem);
-
-                    var spec = NeonHelper.JsonSerialize(coreDnsDeployment.Spec);
-                    var coreDnsDaemonset = new V1DaemonSet()
+                    var spec              = NeonHelper.JsonSerialize(coreDnsDeployment.Spec);
+                    var coreDnsDaemonset  = new V1DaemonSet()
                     {
                         Metadata = new V1ObjectMeta()
                         {
@@ -1484,14 +1483,13 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                     try
                                     {
                                         var result = await k8s.NamespacedPodExecWithRetryAsync(
-                                            retryPolicy: podExecRetry,
+                                            retryPolicy:        podExecRetry,
                                             namespaceParameter: pod.Namespace(),
-                                            name: pod.Name(),
-                                            container: "dnsutils",
-                                            command: cmd);
+                                            name:               pod.Name(),
+                                            container:          "dnsutils",
+                                            command:            cmd);
 
                                         result.EnsureSuccess();
-
                                         return true;
                                     }
                                     catch
@@ -1517,18 +1515,18 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             await controlNode.InvokeIdempotentAsync("setup/calico-metrics",
                 async () =>
                 {
-                    await NeonHelper.WaitForAsync(async () =>
-                    {
-                        var configs = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1FelixConfiguration>();
+                    await NeonHelper.WaitForAsync(
+                        async () =>
+                        {
+                            var configs = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1FelixConfiguration>();
 
-                        return configs.Items.Count() > 0;
-                    },
-                    timeout:           clusterOpTimeout,
-                    pollInterval:      clusterOpPollInterval,
-                    cancellationToken: controller.CancellationToken);
+                            return configs.Items.Count() > 0;
+                        },
+                        timeout:           clusterOpTimeout,
+                        pollInterval:      clusterOpPollInterval,
+                        cancellationToken: controller.CancellationToken);
 
-                    var configs = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1FelixConfiguration>();
-
+                    var configs          = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1FelixConfiguration>();
                     dynamic patchContent = new JObject();
 
                     patchContent.spec                          = new JObject();
@@ -2087,8 +2085,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     {
                         controller.LogProgress(controlNode, verb: "setup", message: "neon-cluster-certificate");
 
-                        var cert = await headencClient.NeonDesktop.GetNeonDesktopCertificateAsync();
-
+                        var cert   = await headencClient.NeonDesktop.GetNeonDesktopCertificateAsync();
                         var secret = new V1Secret()
                         {
                             Metadata = new V1ObjectMeta()
@@ -2334,7 +2331,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     await controlNode.InstallHelmChartAsync(controller, "crd-cluster",
                         releaseName: "crd-cluster",
-                        @namespace: KubeNamespace.NeonSystem);
+                        @namespace:  KubeNamespace.NeonSystem);
                 });
         }
 
@@ -2379,6 +2376,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
                     int i = 0;
+
                     foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelIstio, "true"))
                     {
                         values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
@@ -2557,9 +2555,9 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         {
                             controller.LogProgress(controlNode, verb: "setup", message: "openebs-jiva");
 
-                            var values = new Dictionary<string, object>();
-                            
+                            var values       = new Dictionary<string, object>();
                             var jivaReplicas = Math.Min(3, (cluster.Definition.Nodes.Where(node => node.Labels.OpenEbs).Count()));
+
                             if (jivaReplicas < 1) 
                             {
                                 jivaReplicas = 1;
@@ -2852,7 +2850,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         {
                             Metadata = new V1ObjectMeta()
                             {
-                                Name = name,
+                                Name   = name,
                                 Labels = new Dictionary<string, string>()
                                 {
                                     { "istio-injection", istioInjectionEnabled ? "enabled" : "disabled" }
@@ -2892,7 +2890,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             await controlNode.InvokeIdempotentAsync($"setup/storage-class-jiva-{name}",
                 async () =>
                 {
-
                     if (controlNode.Cluster.Definition.Nodes.Count() < replicaCount)
                     {
                         replicaCount = controlNode.Cluster.Definition.Nodes.Count();
@@ -3126,7 +3123,7 @@ $@"- name: StorageType
                     controller.LogProgress(controlNode, verb: "setup", message: "prometheus");
 
                     var values = new Dictionary<string, object>();
-                    var i = 0;
+                    var i      = 0;
 
                     values.Add($"cluster.name", cluster.Definition.Name);
                     values.Add($"cluster.domain", cluster.Definition.Domain);
@@ -3325,8 +3322,7 @@ $@"- name: StorageType
                     var queryFrontendAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirQueryFrontend);
                     var rulerAdvice         = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirRuler);
                     var storeGatewayAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirStoreGateway);
-                    
-                    var values        = new Dictionary<string, object>();
+                    var values              = new Dictionary<string, object>();
 
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("cluster.domain", cluster.Definition.Domain);
@@ -3396,7 +3392,6 @@ $@"- name: StorageType
                     await controlNode.InvokeIdempotentAsync("setup/monitoring-mimir-secret",
                         async () =>
                         {
-
                             var dbSecret = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespace.NeonSystem);
 
                             var citusSecret = new V1Secret()
@@ -4239,8 +4234,6 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/redis",
                 async () =>
                 {
-                    await SyncContext.Clear;
-
                     controller.LogProgress(controlNode, verb: "setup", message: "redis");
 
                     var values = new Dictionary<string, object>();
@@ -4279,8 +4272,6 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/redis-ready",
                 async () =>
                 {
-                    await SyncContext.Clear;
-
                     controller.LogProgress(controlNode, verb: "wait for", message: "redis");
 
                     await k8s.AppsV1.WaitForStatefulSetAsync(KubeNamespace.NeonSystem, "neon-redis-server", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
@@ -4312,8 +4303,7 @@ $@"- name: StorageType
                     controller.LogProgress(controlNode, verb: "configure", message: "minio secret");
 
                     var minioSecret = await k8s.CoreV1.ReadNamespacedSecretAsync("minio", KubeNamespace.NeonSystem);
-
-                    var secret = new V1Secret()
+                    var secret      = new V1Secret()
                     {
                         Metadata = new V1ObjectMeta()
                         {
@@ -4585,39 +4575,36 @@ $@"- name: StorageType
                         fieldSelector: $"metadata.name={KubeService.NeonClusterOperator}");
 
                     // Wait for cron schedule to run.
+
                     await NeonHelper.WaitForAsync(async () =>
                     {
                         await SyncContext.Clear;
 
                         return clusterOperator?.Status?.ContainerImages?.LastCompleted != null;
                     },
-                    timeout: TimeSpan.FromMinutes(10),
+                    timeout:      TimeSpan.FromMinutes(10),
                     pollInterval: TimeSpan.FromMilliseconds(250));
 
                     // Wait for node tasks to complete.
+
                     await NeonHelper.WaitForAsync(async () =>
                     {
-                        await SyncContext.Clear;
-
                         var labels = new Dictionary<string, string>
                         {
-                    { NeonLabel.ManagedBy, KubeService.NeonClusterOperator },
-                    { NeonLabel.NodeTaskType, NeonNodeTaskType.ContainerImageSync }
+                            { NeonLabel.ManagedBy, KubeService.NeonClusterOperator },
+                            { NeonLabel.NodeTaskType, NeonNodeTaskType.ContainerImageSync }
                         };
-                        var selector = labels.Keys.Select(k => $"{k}={labels[k]}");
+                        var selector       = labels.Keys.Select(k => $"{k}={labels[k]}");
                         var selectorString = string.Join(",", selector.ToArray());
+                        var tasks          = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>(labelSelector: selectorString);
 
-                        var tasks = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>(
-                            labelSelector: selectorString);
-
-                        return !tasks.Items.Any(
-                            nt => nt.Status == null
-                            || nt.Status.Phase != V1NeonNodeTask.Phase.Success);
+                        return !tasks.Items.Any(nodeTask => nodeTask.Status == null || nodeTask.Status.Phase != V1NeonNodeTask.Phase.Success);
                     },
-                    timeout: TimeSpan.FromMinutes(10),
+                    timeout:      TimeSpan.FromMinutes(10),
                     pollInterval: TimeSpan.FromSeconds(5));
 
                     // Reset schedule to default value after completion.
+
                     clusterOperator.Spec.Updates.ContainerImages.Schedule = "0 0 0 ? * *";
 
                     await k8s.CustomObjects.UpsertClusterCustomObjectAsync(clusterOperator, clusterOperator.Name());
@@ -4733,27 +4720,27 @@ $@"- name: StorageType
                             {
                                 ContainerImages = new V1NeonClusterOperator.UpdateSpec()
                                 {
-                                    Enabled = true,
+                                    Enabled  = true,
                                     Schedule = cluster.Definition.IsDesktop ? "0 * * ? * *" : "0 0 0 ? * *"
                                 },
                                 ControlPlaneCertificates = new V1NeonClusterOperator.UpdateSpec()
                                 {
-                                    Enabled = true,
+                                    Enabled  = true,
                                     Schedule = "0 0 0 ? * 1"
                                 },
                                 NodeCaCertificates = new V1NeonClusterOperator.UpdateSpec()
                                 {
-                                    Enabled = true,
+                                    Enabled  = true,
                                     Schedule = "0 0 0 ? * *"
                                 },
                                 SecurityPatches = new V1NeonClusterOperator.UpdateSpec()
                                 {
-                                    Enabled = true,
+                                    Enabled  = true,
                                     Schedule = "0 0 0 ? * *"
                                 },
                                 Telemetry = new V1NeonClusterOperator.UpdateSpec()
                                 {
-                                    Enabled = true,
+                                    Enabled  = true,
                                     Schedule = "0 0 0 ? * *"
                                 }
                             }
@@ -4764,7 +4751,7 @@ $@"- name: StorageType
                     {
                         nco.Spec.Updates.NeonDesktopCertificate = new V1NeonClusterOperator.UpdateSpec()
                         {
-                            Enabled = true,
+                            Enabled  = true,
                             Schedule = "0 0 * ? * *"
                         };
                     }
@@ -4888,7 +4875,6 @@ $@"- name: StorageType
                 async () =>
                 {
                     controller.LogProgress(controlNode, verb: "wait for", message: "neon-node-agent");
-
                     await k8s.AppsV1.WaitForDaemonsetAsync(KubeNamespace.NeonSystem, "neon-node-agent", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
         }
@@ -4945,7 +4931,6 @@ $@"- name: StorageType
                 async () =>
                 {
                     controller.LogProgress(controlNode, verb: "wait for", message: "neon-dashboard");
-
                     await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-dashboard", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
         }
@@ -5422,7 +5407,6 @@ $@"- name: StorageType
                 async () =>
                 {
                     controller.LogProgress(controlNode, verb: "wait for", message: "neon-sso-session-proxy");
-
                     await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-sso-session-proxy", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
         }
@@ -5481,7 +5465,6 @@ $@"- name: StorageType
                 async () =>
                 {
                     controller.LogProgress(controlNode, verb: "wait for", message: "glauth");
-
                     await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-sso-glauth", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
 
                     // Wait for the [glauth postgres.so] plugin to initialize its database
@@ -5732,7 +5715,7 @@ $@"- name: StorageType
             var k8s     = GetK8sClient(controller);
 
             await controlNode.InvokeIdempotentAsync("setup/cluster-info",
-                (Func<Task>)(async () =>
+                async () =>
                 {
                     var clusterInfoMap = new TypedConfigMap<ClusterInfo>(
                         name:       KubeConfigMapName.ClusterInfo,
@@ -5740,7 +5723,7 @@ $@"- name: StorageType
                         data:       new ClusterInfo(cluster.Definition));
 
                     await k8s.CoreV1.CreateNamespacedTypedConfigMapAsync(clusterInfoMap);
-                }));
+                });
         }
 
         /// <summary>
@@ -5774,7 +5757,7 @@ $@"- name: StorageType
                 });
 
             await controlNode.InvokeIdempotentAsync("setup/cluster-health",
-                (Func<Task>)(async () =>
+                async () =>
                 {
                     var clusterHealthMap = new TypedConfigMap<ClusterHealth>(
                         name:       KubeConfigMapName.ClusterHealth,
@@ -5786,7 +5769,7 @@ $@"- name: StorageType
                         });
 
                     await k8s.CoreV1.CreateNamespacedTypedConfigMapAsync(clusterHealthMap);
-                }));
+                });
         }
 
         /// <summary>
