@@ -411,20 +411,20 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
         /// <param name="secret">The secret.</param>
-        /// <param name="namespace">Optionally overrides the default namespace.</param>
+        /// <param name="namespaceParameter">Optionally overrides the default namespace.</param>
         /// <returns>The updated secret.</returns>
-        public static async Task<V1Secret> UpsertSecretAsync(this ICoreV1Operations k8s, V1Secret secret, string @namespace = null)
+        public static async Task<V1Secret> UpsertSecretAsync(this ICoreV1Operations k8s, V1Secret secret, string namespaceParameter = null)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(secret != null, nameof(secret));
 
-            if ((await k8s.ListNamespacedSecretAsync(@namespace)).Items.Any(s => s.Metadata.Name == secret.Name()))
+            if ((await k8s.ListNamespacedSecretAsync(namespaceParameter)).Items.Any(s => s.Metadata.Name == secret.Name()))
             {
-                return await k8s.ReplaceNamespacedSecretAsync(secret, secret.Name(), @namespace);
+                return await k8s.ReplaceNamespacedSecretAsync(secret, secret.Name(), namespaceParameter);
             }
             else
             {
-                return await k8s.CreateNamespacedSecretAsync(secret, @namespace);
+                return await k8s.CreateNamespacedSecretAsync(secret, namespaceParameter);
             }
         }
 

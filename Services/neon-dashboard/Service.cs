@@ -374,7 +374,10 @@ namespace NeonDashboard
                     }
                 };
 
-                await Kubernetes.CustomObjects.CreateNamespacedCustomObjectAsync<V1VirtualService>(virtualService, virtualService.Name(), KubeNamespace.NeonIngress);
+                await Kubernetes.CustomObjects.CreateNamespacedCustomObjectAsync<V1VirtualService>(
+                    body:               virtualService, 
+                    namespaceParameter: KubeNamespace.NeonIngress, 
+                    name:               virtualService.Name());
             }
             SetEnvironmentVariable("METRICS_HOST", $"https://metrics.{ClusterInfo.Domain}");
         }

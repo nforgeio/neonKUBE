@@ -110,13 +110,13 @@ namespace Neon.Kube
 
             // Initialize the properties.
 
-            this.Namespace        = @namespace;
-            this.LeaseName        = leaseName;
-            this.LeaseRef         = $"{@namespace}/{leaseName}";
-            this.Identity         = identity;
-            this.LeaseDuration    = leaseDuration;
-            this.RenewDeadline    = renewDeadline;
-            this.RetryPeriod      = retryPeriod;
+            this.Namespace     = @namespace;
+            this.LeaseName     = leaseName;
+            this.LeaseRef      = $"{@namespace}/{leaseName}";
+            this.Identity      = identity;
+            this.LeaseDuration = leaseDuration;
+            this.RenewDeadline = renewDeadline;
+            this.RetryPeriod   = retryPeriod;
             
             var labelValues = new string[] { @namespace, leaseName, leaseDuration.TotalSeconds.ToString() };
 

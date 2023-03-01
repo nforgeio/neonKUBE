@@ -1597,15 +1597,19 @@ namespace Neon.Kube
         /// <returns>The <see cref="ExecuteResponse"/>.</returns>
         public static void PortForward(string serviceName, int remotePort, int localPort, string @namespace, Process process)
         {
-            Task.Run(() => NeonHelper.ExecuteAsync("kubectl",
-                args: new string[]
+            Task.Run(
+                () =>
                 {
-                    "--namespace", @namespace,
-                    "port-forward",
-                    $"svc/{serviceName}",
-                    $"{localPort}:{remotePort}"
-                },
-                process: process));
+                    NeonHelper.ExecuteAsync("kubectl",
+                        args: new string[]
+                        {
+                            "--namespace", @namespace,
+                            "port-forward",
+                            $"svc/{serviceName}",
+                            $"{localPort}:{remotePort}"
+                        },
+                        process: process);
+                });
         }
 
         /// <summary>
@@ -3254,8 +3258,7 @@ TCPKeepAlive yes
 
             using (var reader = File.OpenText("/var/run/secrets/kubernetes.io/serviceaccount/namespace"))
             {
-                var @namespace = await reader.ReadToEndAsync();
-                return @namespace;
+                return await reader.ReadToEndAsync();
             }
         }
 

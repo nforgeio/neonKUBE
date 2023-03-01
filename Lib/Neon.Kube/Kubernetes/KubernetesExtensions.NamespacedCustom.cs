@@ -421,8 +421,8 @@ namespace Neon.Kube
         /// <typeparam name="T">The custom object type.</typeparam>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
         /// <param name="body">The object data.</param>
-        /// <param name="name">Specifies the object name.</param>
         /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
+        /// <param name="name">Specifies the object name.</param>
         /// <param name="dryRun">
         /// When present, indicates that modifications should not be persisted. An invalid
         /// or unrecognized dryRun directive will result in an error response and no further
@@ -439,8 +439,8 @@ namespace Neon.Kube
         public static async Task<T> CreateNamespacedCustomObjectAsync<T>(
             this ICustomObjectsOperations k8s,
             T                   body,
-            string              name,
             string              namespaceParameter,
+            string              name,
             string              dryRun            = null,
             string              fieldManager      = null,
             CancellationToken   cancellationToken = default) 
@@ -609,8 +609,8 @@ namespace Neon.Kube
                 {
                     return await k8s.CreateNamespacedCustomObjectAsync<T>(
                         body:               body,
-                        name:               name,
                         namespaceParameter: namespaceParameter,
+                        name:               name,
                         dryRun:             dryRun, 
                         fieldManager:       fieldManager, 
                         cancellationToken:  cancellationToken);

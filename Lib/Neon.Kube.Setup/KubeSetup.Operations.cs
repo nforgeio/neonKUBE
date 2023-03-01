@@ -1579,7 +1579,10 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             }
                         };
 
-                        await k8s.CustomObjects.CreateNamespacedCustomObjectAsync<V1ServiceMonitor>(serviceMonitor, serviceMonitor.Name(), serviceMonitor.Namespace());
+                        await k8s.CustomObjects.CreateNamespacedCustomObjectAsync<V1ServiceMonitor>(
+                            body:               serviceMonitor, 
+                            namespaceParameter: serviceMonitor.Namespace(), 
+                            name:               serviceMonitor.Name());
                     });
             }
         }
@@ -2754,7 +2757,10 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         cStorPoolCluster.Spec.Pools.Add(pool);
                     }
 
-                    await k8s.CustomObjects.CreateNamespacedCustomObjectAsync(cStorPoolCluster, cStorPoolCluster.Name(), cStorPoolCluster.Namespace());
+                    await k8s.CustomObjects.CreateNamespacedCustomObjectAsync(
+                        body:               cStorPoolCluster,
+                        namespaceParameter: cStorPoolCluster.Namespace(), 
+                        name:               cStorPoolCluster.Name());
                 });
 
             controller.ThrowIfCancelled();
