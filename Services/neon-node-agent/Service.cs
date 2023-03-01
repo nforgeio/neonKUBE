@@ -302,6 +302,7 @@ namespace NeonNodeAgent
                     ClusterInfo = TypedConfigMap<ClusterInfo>.From(@event.Value).Data;
 
                     Logger.LogInformationEx("Updated cluster info");
+                    await Task.CompletedTask;
                 },
                 KubeNamespace.NeonStatus,
                 fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");

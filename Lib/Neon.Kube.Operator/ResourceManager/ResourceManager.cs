@@ -471,6 +471,7 @@ namespace Neon.Kube.Operator.ResourceManager
                         {
                             crdCache.Upsert(@event.Value);
                             logger?.LogInformationEx(() => $"Updated {dependent.GetEntityType()} CRD.");
+                            await Task.CompletedTask;
                         },
                         fieldSelector:     $"metadata.name={crdName}",
                         cancellationToken: cancellationToken);

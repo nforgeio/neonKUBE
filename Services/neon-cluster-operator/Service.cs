@@ -313,23 +313,16 @@ namespace NeonClusterOperator
         }
 
         /// <summary>
-        /// <para>
-        /// Retrieves the cluster information configmap.
-        /// </para>
-        /// <note>
-        /// The cluster information may not exist yet during cluster setup.  This method
-        /// mitigates that by waiting for a period of time before failing with a 
-        /// <see cref="TimeoutException"/>.
-        /// </note>
+        /// Starts the <see cref="ClusterInfo"/> watcher.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TimeoutException">Thrown if the cluster information could not be retrieved after a grace period.</exception>
-        private async Task WaitForClusterInfoAsync()
+        private async Task WatchClusterInfoAsync()
         {
             await SyncContext.Clear;
 
             //###########################################################################
-            // $todo(jefflill): Remove this hack once we've figured out the watcher info.
+            // $todo(jefflill): Remove this hack once we've figured out the watcher issue.
             //
             // We need to ensure that wa have the initial cluster information before this
             // method returns.
@@ -362,11 +355,6 @@ namespace NeonClusterOperator
             // Wait for the watcher to see the [ClusterInfo].
 
             NeonHelper.WaitFor(() => ClusterInfo != null, timeout: TimeSpan.FromSeconds(60), timeoutMessage: "Timeout obtaining: cluster-info.");
-
-                return (ClusterInfo != null);
-            },
-            timeout:      TimeSpan.FromSeconds(60),
-            pollInterval: TimeSpan.FromMilliseconds(250));
         }
 
         /// <summary>
