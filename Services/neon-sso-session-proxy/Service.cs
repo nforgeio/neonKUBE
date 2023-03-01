@@ -120,6 +120,7 @@ namespace NeonSsoSessionProxy
             else
             {
                 var configFile = GetConfigFilePath("/etc/neonkube/neon-sso-session-proxy/config.yaml");
+
                 using (StreamReader reader = new StreamReader(new FileStream(configFile, FileMode.Open, FileAccess.Read)))
                 {
                     Config = NeonHelper.YamlDeserializeViaJson<DexConfig>(await reader.ReadToEndAsync());
@@ -142,8 +143,6 @@ namespace NeonSsoSessionProxy
             _ = k8s.WatchAsync<V1NeonSsoClient>(
                 async (@event) =>
                 {
-                    await SyncContext.Clear;
-
                     switch (@event.Type)
                     {
                         case WatchEventType.Added:
@@ -213,10 +212,10 @@ namespace NeonSsoSessionProxy
                 .AddOtlpExporter(
                     options =>
                     {
-                        options.ExportProcessorType = ExportProcessorType.Batch;
+                        options.ExportProcessorType         = ExportProcessorType.Batch;
                         options.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>();
-                        options.Endpoint = new Uri(NeonHelper.NeonKubeOtelCollectorUri);
-                        options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
+                        options.Endpoint                    = new Uri(NeonHelper.NeonKubeOtelCollectorUri);
+                        options.Protocol                    = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
                     });
 
             return true;
@@ -237,11 +236,7 @@ namespace NeonSsoSessionProxy
         {
             await SyncContext.Clear;
 
-            Clients.Remove(
-                Clients.Where(
-                    c => c.Spec.Id == client.Spec.Id
-                    && c.Spec.Secret == client.Spec.Secret).First());
-
+            Clients.Remove(Clients.Where(client => client.Spec.Id == client.Spec.Id && client.Spec.Secret == client.Spec.Secret).First());
             DexClient.AuthHeaders.Remove(client.Spec.Id);
 
             Logger.LogDebugEx(() => $"Removed client: {client.Name()}");

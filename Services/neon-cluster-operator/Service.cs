@@ -217,7 +217,7 @@ namespace NeonClusterOperator
                 this.PortForwardManager = new PortForwardManager(K8s, TelemetryHub.LoggerFactory);
             }
 
-            await WaitForClusterInfoAsync();
+            await WatchClusterInfoAsync();
             await ConfigureDexAsync();
             await ConfigureHarborAsync();
 
@@ -313,26 +313,48 @@ namespace NeonClusterOperator
         }
 
         /// <summary>
-        /// <para>
-        /// Retrieves the cluster information configmap.
-        /// </para>
-        /// <note>
-        /// The cluster information may not exist yet during cluster setup.  This method
-        /// mitigates that by waiting for a period of time before failing with a 
-        /// <see cref="TimeoutException"/>.
-        /// </note>
+        /// Starts the <see cref="ClusterInfo"/> watcher.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TimeoutException">Thrown if the cluster information could not be retrieved after a grace period.</exception>
-        private async Task WaitForClusterInfoAsync()
+        private async Task WatchClusterInfoAsync()
         {
             await SyncContext.Clear;
 
-            // Wait for cluster info to be set.
+            //###########################################################################
+            // $todo(jefflill): Remove this hack once we've figured out the watcher issue.
+            //
+            // We need to ensure that wa have the initial cluster information before this
+            // method returns.
+            //
+            // Marcus originally started the nwatcher and then used a [WaitFor()] call to
+            // wait for the watcher to report and set the [ClusterInfo] property.  Unfortunately,
+            // watchers don't seem to always report on objects that already exist.  We're
+            // going to hack around this for now by explicitly waiting for the cluster info
+            // before staring the watcher.
 
             var retry = new LinearRetryPolicy(e => true, retryInterval: TimeSpan.FromSeconds(1), timeout: TimeSpan.FromSeconds(60));
 
             ClusterInfo = await retry.InvokeAsync(async () => (await K8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterInfo>(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus)).Data);
+
+            //###########################################################################
+
+            // Start the watcher.
+
+            _ = K8s.WatchAsync<V1ConfigMap>(async (@event) =>
+            {
+                await SyncContext.Clear;
+
+                ClusterInfo = TypedConfigMap<ClusterInfo>.From(@event.Value).Data;
+
+                Logger.LogInformationEx("Updated cluster info");
+            },
+            KubeNamespace.NeonStatus,
+            fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
+
+            // Wait for the watcher to see the [ClusterInfo].
+
+            NeonHelper.WaitFor(() => ClusterInfo != null, timeout: TimeSpan.FromSeconds(60), timeoutMessage: "Timeout obtaining: cluster-info.");
         }
 
         /// <summary>
@@ -389,14 +411,13 @@ namespace NeonClusterOperator
             _ = K8s.WatchAsync<V1Secret>(
                 async (@event) =>
                 {
-                    await SyncContext.Clear;
-
                     var rootUser   = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(@event.Value.Data["root"]));
                     var authString = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{rootUser.Name}:{rootUser.Password}"));
 
                     harborHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authString);
 
                     Logger.LogInformationEx("Updated Harbor Client");
+                    await Task.CompletedTask;
                 },
                 KubeNamespace.NeonSystem,
                 fieldSelector: $"metadata.name=glauth-users");

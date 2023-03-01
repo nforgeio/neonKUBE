@@ -1173,15 +1173,13 @@ rm  install-kustomize.sh
                     controller.LogProgress(this, verb: "load", message: "container images (debug mode)");
 
                     var dockerPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), $@"DockerDesktop\version-bin\docker.exe");
-
-                    var images = new List<NodeImageInfo>();
+                    var images     = new List<NodeImageInfo>();
 
                     var setupImageFolders = Directory.EnumerateDirectories($"{Environment.GetEnvironmentVariable("NC_ROOT")}/Images/setup")
                         .Select(path => Path.GetFullPath(path))
                         .ToArray();
 
-                    var registry = controller.Get<bool>(KubeSetupProperty.ReleaseMode) ? "ghcr.io/neonkube" : "ghcr.io/neonkube-dev";
-
+                    var registry       = controller.Get<bool>(KubeSetupProperty.ReleaseMode) ? "ghcr.io/neonkube" : "ghcr.io/neonkube-dev";
                     var pullImageTasks = new List<Task>();
 
                     foreach (var imageFolder in setupImageFolders)

@@ -456,6 +456,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                 if (File.Exists(configMountPath))
                 {
                     currentConfigText = File.ReadAllText(configMountPath);
+
                     var currentConfig = Toml.Parse(currentConfigText);
                     var existingLocations = new List<string>();
 

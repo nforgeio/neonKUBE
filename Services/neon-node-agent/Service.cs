@@ -299,11 +299,10 @@ namespace NeonNodeAgent
             _ = K8s.WatchAsync<V1ConfigMap>(
                 async (@event) =>
                 {
-                    await SyncContext.Clear;
-
                     ClusterInfo = TypedConfigMap<ClusterInfo>.From(@event.Value).Data;
 
                     Logger.LogInformationEx("Updated cluster info");
+                    await Task.CompletedTask;
                 },
                 KubeNamespace.NeonStatus,
                 fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");

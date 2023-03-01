@@ -144,11 +144,12 @@ namespace NeonSsoSessionProxy
             app.UseRouting();
             app.UseHttpMetrics();
             app.UseSsoSessionMiddleware();
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapHealthChecks("/healthz");
-                endpoints.MapControllers();
-            });
+            app.UseEndpoints(
+                endpoints =>
+                {
+                    endpoints.MapHealthChecks("/healthz");
+                    endpoints.MapControllers();
+                });
         }
     }
 }

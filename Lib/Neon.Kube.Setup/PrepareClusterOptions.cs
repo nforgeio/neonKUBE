@@ -111,7 +111,7 @@ namespace Neon.Kube.Setup
         /// <summary>
         /// Optionally indicates that we're building a ready-to-go neon desktop image.
         /// </summary>
-        public bool DesktopImage { get; set; } = false;
+        public bool BuildDesktopImage { get; set; } = false;
 
         /// <summary>
         /// Optionally indicates that we're setting up a neon-desktop built-in cluster
