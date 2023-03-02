@@ -1179,7 +1179,7 @@ rm  install-kustomize.sh
                         .Select(path => Path.GetFullPath(path))
                         .ToArray();
 
-                    var registry       = controller.Get<bool>(KubeSetupProperty.ReleaseMode) ? "ghcr.io/neonkube" : "ghcr.io/neonkube-dev";
+                    var registry       = controller.Get<bool>(KubeSetupProperty.ReleaseMode) ? "ghcr.io/neonkube" : "ghcr.io/neonkube-stage";
                     var pullImageTasks = new List<Task>();
 
                     foreach (var imageFolder in setupImageFolders)

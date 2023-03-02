@@ -43,7 +43,7 @@ function Build
 		[switch]$latest = $false
 	)
 
-	$registry    = GetKubeSetupRegistry "neon-dashboard"
+	$registry    = GetKubeStageRegistry "neon-dashboard"
 	$tag         = "$version"
 	$tagAsLatest = TagAsLatest
 	$tagOverride = $env:DEBUG_TAG

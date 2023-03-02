@@ -31,8 +31,7 @@ param
     [switch]$services    = $false,      # Rebuild all cluster service images
     [switch]$nopush      = $false,      # Don't push to the registry
     [switch]$noprune     = $false,      # Don't prune the local Docker cache
-    [switch]$allVersions = $false,      # Rebuild all image versions
-    [switch]$public      = $false       # Publish to [ghcr.io/neonkube] instead of [ghcr.io/neonkube-dev] (the default)
+    [switch]$allVersions = $false       # Rebuild all image versions
 )
 
 #----------------------------------------------------------
@@ -115,10 +114,6 @@ try
         $other    = $true
         $services = $true
     }
-
-    # This controls whether we're publishing a public release.
-    
-    $publishAsPubic = $public
 
     # Verify that the user has the required environment variables.  These will
     # be available only for maintainers and are intialized by the neonCLOUD

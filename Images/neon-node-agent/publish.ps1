@@ -43,7 +43,7 @@ function Build
 		[switch]$latest = $false
 	)
 
-	$registry    = GetKubeSetupRegistry "neon-node-agent"
+	$registry    = GetKubeStageRegistry "neon-node-agent"
 	$tag         = "$version"
 	$tagAsLatest = TagAsLatest
 	$tagOverride = $env:DEBUG_TAG

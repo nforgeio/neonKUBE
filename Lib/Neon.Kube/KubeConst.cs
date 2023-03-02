@@ -273,31 +273,31 @@ namespace Neon.Kube
         public const string ClusterRegistryProjectName = "neon-internal";
 
         /// <summary>
-        /// Identifies the GitHub organization where we host published neonKUBE container images.
+        /// Identifies the GitHub organization where we host released neonKUBE container images.
         /// </summary>
-        public const string NeonKubeProdOrganization = "neonkube-release";
+        public const string NeonKubeReleaseOrganization = "neonkube-release";
 
         /// <summary>
         /// Identifies the GitHub organization where we host staged neonKUBE container images.
         /// </summary>
-        public const string NeonKubeDevOrganization = "neonkube-dev";
+        public const string NeonKubeStageOrganization = "neonkube-stage";
 
         /// <summary>
-        /// Identifies the production neonKUBE container image registry.
+        /// Identifies the neonKUBE release container image registry.
         /// </summary>
-        public const string NeonKubeProdRegistry = $"ghcr.io/{NeonKubeProdOrganization}";
+        public const string NeonKubeReleaseRegistry = $"ghcr.io/{NeonKubeReleaseOrganization}";
 
         /// <summary>
-        /// Identifies the development neonKUBE container image registry.
+        /// Identifies the neonKUBE stage container image registry.
         /// </summary>
-        public const string NeonKubeDevRegistry = $"ghcr.io/{NeonKubeDevOrganization}";
+        public const string NeonKubeStageRegistry = $"ghcr.io/{NeonKubeStageOrganization}";
 
         /// <summary>
         /// Returns the appropriate public container neonKUBE registry to be used for the git 
-        /// branch the assembly was built from.  This returns <see cref="NeonKubeProdRegistry"/> for
-        /// release branches and <see cref="NeonKubeDevRegistry"/> for all other branches.
+        /// branch the assembly was built from.  This returns <see cref="NeonKubeReleaseRegistry"/> for
+        /// release branches and <see cref="NeonKubeStageRegistry"/> for all other branches.
         /// </summary>
-        public static string NeonKubeBranchRegistry => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase) ? NeonKubeProdRegistry : NeonKubeDevRegistry;
+        public static string NeonKubeBranchRegistry => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase) ? NeonKubeReleaseRegistry : NeonKubeStageRegistry;
 
         /// <summary>
         /// Identifies the username of the neon-system-db superuser.

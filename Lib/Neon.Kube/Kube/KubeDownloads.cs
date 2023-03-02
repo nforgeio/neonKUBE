@@ -64,7 +64,7 @@ namespace Neon.Kube
         /// <summary>
         /// The GitHub organization hosting neonKUBE staged container images.
         /// </summary>
-        public const string NeonKubeStagePackageOrg = "neonkube-dev";
+        public const string NeonKubeStagePackageOrg = "neonkube-stage";
 
         /// <summary>
         /// The name of the AWS bucket used for published neonKUBE releases.

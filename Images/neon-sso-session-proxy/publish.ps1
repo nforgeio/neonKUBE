@@ -43,7 +43,7 @@ function Build
 		[switch]$latest = $false
 	)
 
-	$registry    = GetKubeSetupRegistry "neon-sso-session-proxy"
+	$registry    = GetKubeStageRegistry "neon-sso-session-proxy"
 	$tag         = "$version"
 	$tagAsLatest = TagAsLatest
 
