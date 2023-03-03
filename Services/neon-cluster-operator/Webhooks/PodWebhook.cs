@@ -84,11 +84,14 @@ namespace NeonClusterOperator
             {
                 try
                 {
-                    logger?.LogInformationEx(() => $"Received request for pod {pod.Namespace()}/{pod.Name()}");
+                    var @namespace = pod.Namespace();
+                    var name       = pod.Name() ?? pod.EnsureMetadata().GenerateName;
+
+                    logger?.LogInformationEx(() => $"Received request for pod {@namespace}/{name}");
 
                     if (!pod.EnsureMetadata().NamespaceProperty.StartsWith("neon-"))
                     {
-                        logger?.LogDebugEx(() => $"Pod not in a neonKUBE namespace.");
+                        logger?.LogInformationEx(() => $"Pod not in a neonKUBE namespace.");
 
                         return MutationResult.NoChanges();
                     }
@@ -109,40 +112,6 @@ namespace NeonClusterOperator
             }
         }
 
-        /// <inheritdoc/>
-        public async Task<MutationResult> UpdateAsync(V1Pod pod, V1Pod oldPod, bool dryRun)
-        {
-            await SyncContext.Clear;
-
-            using (var activity = TelemetryHub.ActivitySource?.StartActivity())
-            {
-                try
-                {
-                    logger?.LogInformationEx(() => $"Received request for pod {pod.Namespace()}/{pod.Name()}");
-
-                    if (!pod.EnsureMetadata().NamespaceProperty.StartsWith("neon-"))
-                    {
-                        logger?.LogInformationEx(() => $"Pod not in neon- namespace.");
-
-                        return MutationResult.NoChanges();
-                    }
-
-                    CheckPriorityClass(pod);
-
-                    if (modified)
-                    {
-                        return MutationResult.Modified(pod);
-                    }
-                }
-                catch (Exception e) 
-                { 
-                    logger?.LogErrorEx(e);
-                }
-                
-                return MutationResult.NoChanges();
-            }
-        }
-
         /// <summary>
         /// Used to check whether a pod within a neonKUBE namespace has a priority class
         /// assigned and sets the priority class and also <see cref="modified"/> when the
@@ -153,26 +122,42 @@ namespace NeonClusterOperator
         /// <param name="pod">Specifies the target pod.</param>
         private void CheckPriorityClass(V1Pod pod)
         {
+            using var activity = TelemetryHub.ActivitySource?.StartActivity();
+
             try
             {
+                var @namespace = pod.Namespace();
+                var name       = pod.Name() ?? pod.EnsureMetadata().GenerateName;
+
                 if (string.IsNullOrEmpty(pod.Spec.PriorityClassName) || pod.Spec.PriorityClassName == PriorityClass.UserMedium.Name)
                 {
                     modified = true;
 
                     if (pod.Metadata.Labels != null && pod.Metadata.Labels.ContainsKey("goharbor.io/operator-version"))
                     {
-                        logger?.LogInformationEx(() => $"Setting priority class for Harbor pod to: {PriorityClass.NeonStorage.Name}");
+                        logger?.LogInformationEx(() => $"Setting priority class to [{PriorityClass.NeonStorage.Name}] for pod/{@namespace}/{name}");
 
                         pod.Spec.PriorityClassName = PriorityClass.NeonStorage.Name;
                         pod.Spec.Priority          = null;
                     }
+                    else if (pod.Metadata.NamespaceProperty == "neon-storage"
+                                || pod.Metadata.Name.StartsWith("init-pvc-"))
+                    {
+                        logger?.LogInformationEx(() => $"Ignoring pod/{@namespace}/{name}");
+
+                        return;
+                    }
                     else
                     {
-                        logger?.LogInformationEx(() => $"Setting default priority class to: {PriorityClass.NeonMin.Name}.");
+                        logger?.LogInformationEx(() => $"Setting priority class to [{PriorityClass.NeonMin.Name}] for pod/{@namespace}/{name}.");
 
                         pod.Spec.PriorityClassName = PriorityClass.NeonMin.Name;
                         pod.Spec.Priority          = null;
                     }
+                }
+                else
+                {
+                    logger?.LogInformationEx(() => $"Priority class exists: [{pod.Spec.PriorityClassName}] for pod/{@namespace}/{name}.");
                 }
             }
             catch (Exception e) 

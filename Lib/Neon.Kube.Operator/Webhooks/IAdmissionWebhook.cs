@@ -52,12 +52,17 @@ namespace Neon.Kube.Operator.Webhook
         where TResult : AdmissionResult, new()
     {
         /// <summary>
+        /// The number of seconds to apply to timeouts when using Dev Tunnels.
+        /// </summary>
+        internal int DevTimeoutSeconds => 30;
+
+        /// <summary>
         /// Returns the webhook name.
         /// </summary>
         internal string Name => $"{GetType().Namespace ?? "root"}.{typeof(TEntity).Name}.{GetType().Name}".ToLowerInvariant();
 
         /// <summary>
-        /// Returns the nwebhook endpoiunt.
+        /// Returns the webhook endpoint.
         /// </summary>
         internal string Endpoint { get; }
 

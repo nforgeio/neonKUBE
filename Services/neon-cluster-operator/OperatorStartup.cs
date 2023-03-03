@@ -78,7 +78,7 @@ namespace NeonClusterOperator
         }
 
         /// <summary>
-        /// Configures depdendency injection.
+        /// Configures dependency injection.
         /// </summary>
         /// <param name="services">The service collection.</param>
         public void ConfigureServices(IServiceCollection services)

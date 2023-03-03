@@ -99,17 +99,17 @@ namespace Neon.Kube.Operator.Webhook
             {
                 new V1MutatingWebhook()
                 {
-                    Name = hook.Name,
-                    Rules = new List<V1RuleWithOperations>(),
-                    ClientConfig = clientConfig,
+                    Name                    = hook.Name,
+                    Rules                   = new List<V1RuleWithOperations>(),
+                    ClientConfig            = clientConfig,
                     AdmissionReviewVersions = hook.AdmissionReviewVersions,
-                    FailurePolicy = hook.FailurePolicy,
-                    SideEffects = hook.SideEffects,
-                    TimeoutSeconds = hook.TimeoutSeconds,
-                    NamespaceSelector = NamespaceSelector,
-                    MatchPolicy = hook.MatchPolicy,
-                    ObjectSelector = ObjectSelector,
-                    ReinvocationPolicy = hook.ReinvocationPolicy
+                    FailurePolicy           = hook.FailurePolicy,
+                    SideEffects             = hook.SideEffects,
+                    TimeoutSeconds          = useTunnel ? DevTimeoutSeconds : hook.TimeoutSeconds,
+                    NamespaceSelector       = NamespaceSelector,
+                    MatchPolicy             = hook.MatchPolicy,
+                    ObjectSelector          = ObjectSelector,
+                    ReinvocationPolicy      = hook.ReinvocationPolicy
                 }
             };
 

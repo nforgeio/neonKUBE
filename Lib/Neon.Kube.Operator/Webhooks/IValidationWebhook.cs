@@ -105,7 +105,7 @@ namespace Neon.Kube.Operator.Webhook
                     AdmissionReviewVersions = hook.AdmissionReviewVersions,
                     FailurePolicy           = hook.FailurePolicy,
                     SideEffects             = hook.SideEffects,
-                    TimeoutSeconds          = hook.TimeoutSeconds,
+                    TimeoutSeconds          = useTunnel ? DevTimeoutSeconds : hook.TimeoutSeconds,
                     NamespaceSelector       = NamespaceSelector,
                     MatchPolicy             = hook.MatchPolicy,
                     ObjectSelector          = ObjectSelector,
