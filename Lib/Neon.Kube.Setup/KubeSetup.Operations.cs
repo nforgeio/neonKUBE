@@ -4671,11 +4671,9 @@ $@"- name: StorageType
 
                     var values = new Dictionary<string, object>();
 
-                    //values.Add("image.registry", KubeConst.LocalClusterRegistry);
-                    values.Add("image.registry", "ghcr.io/neonkube-stage");
+                    values.Add("image.registry", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
-                    //values.Add("image.pullPolicy", "IfNotPresent");
-                    values.Add("image.pullPolicy", "Always");
+                    values.Add("image.pullPolicy", "IfNotPresent");
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
                     values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
                     values.Add("resources.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
