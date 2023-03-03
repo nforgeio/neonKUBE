@@ -277,7 +277,7 @@ namespace NeonClusterOperator
             builder.AddHttpClientInstrumentation(
                 options =>
                 {
-                    options.Filter = (httpcontext) =>
+                    options.FilterHttpRequestMessage = (httpcontext) =>
                     {
                         if (GetEnvironmentVariable("LOG_LEVEL").ToLower() == "trace")
                         {

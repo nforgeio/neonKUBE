@@ -35,15 +35,15 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="OpenTelemetry" Version="1.4.0-beta.1" />
+        <PackageReference Include="OpenTelemetry" Version="1.4.0" />
         <PackageReference Include="OpenTelemetry.Instrumentation.GrpcCore" Version="1.0.0-beta.5" />
         <PackageReference Include="OpenTelemetry.Instrumentation.Quartz" Version="1.0.0-alpha.1" />
         <PackageReference Include="Npgsql.OpenTelemetry" Version="6.0.7" />
         <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="7.0.3" />
         <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
         <PackageReference Include="Quartz" Version="3.5.0" />
-        <PackageReference Include="Neon.Common" Version="10000.0.2911-dev-master" />
-        <PackageReference Include="Neon.Service" Version="10000.0.2911-dev-master" />
+        <PackageReference Include="Neon.Common" Version="10000.0.2916-dev-master" />
+        <PackageReference Include="Neon.Service" Version="10000.0.2916-dev-master" />
     </ItemGroup>
 
     <ItemGroup>

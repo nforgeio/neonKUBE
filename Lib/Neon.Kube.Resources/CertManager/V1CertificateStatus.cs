@@ -28,8 +28,6 @@ using k8s.Models;
 using Neon.JsonConverters;
 using Newtonsoft.Json;
 using OpenTelemetry.Resources;
-using Org.BouncyCastle.Asn1.Ocsp;
-using Org.BouncyCastle.Crypto.Tls;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace Neon.Kube.Resources.CertManager

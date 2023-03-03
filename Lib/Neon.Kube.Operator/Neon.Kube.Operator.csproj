@@ -22,14 +22,14 @@
 
     <ItemGroup>
         <PackageReference Include="AsyncKeyedLock" Version="6.2.0" />
-        <PackageReference Include="CompareNETObjects" Version="4.78.0" />
-        <PackageReference Include="KubernetesClient" Version="9.0.38" />
-        <PackageReference Include="KubernetesClient.Models" Version="9.0.38" />
+        <PackageReference Include="CompareNETObjects" Version="4.79.0" />
+        <PackageReference Include="KubernetesClient" Version="10.0.31" />
+        <PackageReference Include="KubernetesClient.Models" Version="10.0.31" />
         <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="7.0.3" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
         <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.24" />
-        <PackageReference Include="Neon.Common" Version="10000.0.2911-dev-master" />
-        <PackageReference Include="Neon.Service" Version="10000.0.2911-dev-master" />
+        <PackageReference Include="Neon.Common" Version="10000.0.2916-dev-master" />
+        <PackageReference Include="Neon.Service" Version="10000.0.2916-dev-master" />
         <PackageReference Include="NgrokSharp" Version="1.0.13" />
         <PackageReference Include="NJsonSchema" Version="10.8.0" />
         <PackageReference Include="prometheus-net" Version="8.0.0" />

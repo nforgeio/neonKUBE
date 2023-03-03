@@ -24,7 +24,6 @@ using System.Linq;
 using System.Text;
 
 using k8s;
-using k8s.Autorest;
 using k8s.Models;
 
 using Newtonsoft.Json;
