@@ -102,74 +102,6 @@ namespace Neon.Kube
         /// </summary>
         public const string PrivateNodeImagesRepo = "nforgeio/neonKUBE-images-dev";
 
-        //############################################################################################
-        // $debug(jefflill): DELETE THIS AND ANY CALLS BELOW TO THESE AFTER DEPLOYING HEADEND SERVICE!
-
-        private static string GetNodeImageUri(
-            HostingEnvironment  hostingEnvironment,
-            CpuArchitecture     architecture = CpuArchitecture.amd64,
-            string              stageBranch  = null)
-        {
-            var version   = KubeVersions.NeonKube;
-            var extension = string.Empty;
-
-            switch (hostingEnvironment)
-            {
-                case HostingEnvironment.HyperV:
-
-                    extension = "vhdx";
-                    break;
-
-                case HostingEnvironment.XenServer:
-
-                    extension = "xva";
-                    break;
-
-                default:
-
-                    Covenant.Assert(false, $"[{nameof(architecture)}={architecture}] is not supported.");
-                    break;
-            }
-
-            if (!string.IsNullOrEmpty(stageBranch) && !stageBranch.StartsWith("release-"))
-            {
-                version = $"{version}.{stageBranch}";
-            }
-
-            return $"{KubeDownloads.NeonKubeStageBucketUri}/images/{hostingEnvironment.ToMemberString()}/node/neonkube-node-{version}.{hostingEnvironment.ToMemberString()}.{architecture}.{extension}.gz.manifest";
-        }
-
-        private static string GetDesktopImageUri(
-            HostingEnvironment  hostingEnvironment,
-            CpuArchitecture     architecture = CpuArchitecture.amd64,
-            string              stageBranch  = null)
-        {
-            var version   = KubeVersions.NeonKube;
-            var extension = string.Empty;
-
-            switch (hostingEnvironment)
-            {
-                case HostingEnvironment.HyperV:
-
-                    extension = "vhdx";
-                    break;
-
-                default:
-
-                    Covenant.Assert(false, $"[{nameof(architecture)}={architecture}] is not supported.");
-                    break;
-            }
-
-            if (!string.IsNullOrEmpty(stageBranch) && !stageBranch.StartsWith("release-"))
-            {
-                version = $"{version}.{stageBranch}";
-            }
-
-            return $"{KubeDownloads.NeonKubeStageBucketUri}/images/{hostingEnvironment.ToMemberString()}/desktop/neonkube-desktop-{version}.{hostingEnvironment.ToMemberString()}.{architecture}.{extension}.gz.manifest";
-        }
-
-        //############################################################################################
-
         /// <summary>
         /// Returns the URI of the download manifest for a neonKUBE node image.
         /// </summary>
@@ -207,8 +139,6 @@ namespace Neon.Kube
             string              stageBranch  = null)
         {
             await SyncContext.Clear;
-
-            return GetNodeImageUri(hostingEnvironment, architecture, stageBranch);
 
             using (var headendClient = HeadendClient.Create())
             {
@@ -254,8 +184,6 @@ namespace Neon.Kube
             string              stageBranch  = null)
         {
             await SyncContext.Clear;
-
-            return GetDesktopImageUri(hostingEnvironment, architecture, stageBranch);
 
             using (var headendClient = HeadendClient.Create())
             {
