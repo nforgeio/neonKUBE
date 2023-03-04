@@ -22,8 +22,10 @@ $shouldRunInstall = $false
 if($LastExitCode -eq 1)
 {
   Write-Information -MessageData "[NPM Package Check] Installing node packages ^_^" 
-  npm i --silent
+  npm install --save --silent
 }
 else{
   Write-Information -MessageData ('[NPM Package Check] npm packages found ^_^ continuing build') 
 }
+
+npm run build

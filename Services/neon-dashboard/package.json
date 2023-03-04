@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "dependencies": {},
+    "dependencies": {},
   "devDependencies": {
     "autoprefixer": "^10.4.7",
     "cross-env": "^7.0.3",
