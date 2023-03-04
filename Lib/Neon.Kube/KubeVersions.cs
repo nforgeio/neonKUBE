@@ -125,7 +125,7 @@ namespace Neon.Kube
         /// the tool will append the branch name to the release like:
         /// </para>
         /// <para>
-        /// 0.8.8-alpha.BRANCH
+        /// 0.8.9-alpha.BRANCH
         /// </para>
         /// <note>
         /// <b>IMPORTANT: </b>This convention allows multiple developers to work with their 
@@ -133,7 +133,7 @@ namespace Neon.Kube
         /// caused by differing per-developer version numbers.
         /// </note>
         /// </remarks>
-        public const string NeonKube = "0.8.8-alpha";
+        public const string NeonKube = "0.8.9-alpha";
 
         /// <summary>
         /// Returns the branch part of the neonKUBE version.  This will be blank for release
