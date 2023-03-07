@@ -1072,6 +1072,11 @@ namespace Neon.Kube.Operator.ResourceManager
                         var resource     = (IKubernetesObject<V1ObjectMeta>)@event.Value;
                         var resourceName = resource.Metadata.Name;
 
+                        if (resource.Metadata.OwnerReferences == null)
+                        {
+                            return;
+                        }
+
                         dependentResourceCache.Compare(resource, out var modifiedEventType);
 
                         if (resource.Metadata.OwnerReferences.Any(r => resourceCache.TryGet(r.Uid, out _)))
