@@ -215,6 +215,7 @@ namespace Neon.Kube
                     catch (OperationCanceledException)
                     {
                         // This is the signal to quit.
+                        logger?.LogDebugEx(() => "Operation canceled, restarting watch.");
 
                         return;
                     }
@@ -278,6 +279,8 @@ namespace Neon.Kube
                     WatchEvent<T> @event;
 
                     @event = await eventChannel.Reader.ReadAsync();
+
+                    logger?.LogDebugEx(() => $"Processing watch event: {@event.Value.Uid()}");
 
                     switch (@event.Type)
                     {
