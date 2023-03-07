@@ -746,7 +746,6 @@ namespace Neon.Kube
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
-            Covenant.Requires<ArgumentNullException>(body != null, nameof(body));
 
             try
             {
