@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ServiceEntry.cs
+// FILE:	    V1AuthorizationPolicy.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -15,25 +15,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Text;
-
 using k8s;
 using k8s.Models;
-
 using Newtonsoft.Json;
+using System.ComponentModel.DataAnnotations;
 
 namespace Neon.Kube.Resources.Istio
 {
     /// <summary>
-    /// ServiceEntry enables adding additional entries into Istio’s internal service registry.
+    /// Enables access control on workloads.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
-    public class ServiceEntry : IKubernetesObject<V1ObjectMeta>, ISpec<V1ServiceEntrySpec>, IValidate
+    public class V1AuthorizationPolicy : IKubernetesObject<V1ObjectMeta>, ISpec<V1AuthorizationPolicySpec>, IValidate
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
@@ -43,25 +36,25 @@ namespace Neon.Kube.Resources.Istio
         /// <summary>
         /// The Kubernetes named schema this object is based on.
         /// </summary>
-        public const string KubeKind = "ServiceEntry";
+        public const string KubeKind = "AuthorizationPolicy";
 
         /// <summary>
         /// The Group this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeGroup = "networking.istio.io";
+        public const string KubeGroup = "security.istio.io";
 
         /// <summary>
         /// The plural name of the entity.
         /// </summary>
-        public const string KubePlural = "serviceentries";
+        public const string KubePlural = "authorizationpolicies";
 
         /// <summary>
-        /// Initializes a new instance of the ServiceEntry class.
+        /// Initializes a new instance of the V1AuthorizationPolicy class.
         /// </summary>
-        public ServiceEntry()
+        public V1AuthorizationPolicy()
         {
-            ApiVersion = "networking.istio.io/v1beta1";
-            Kind       = "ServiceEntry";
+            ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
+            Kind       = KubeKind;
         }
 
         /// <summary>
@@ -71,7 +64,6 @@ namespace Neon.Kube.Resources.Istio
         /// values. More info:
         /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
         /// </summary>
-        [JsonProperty(PropertyName = "apiVersion")]
         public string ApiVersion { get; set; }
 
         /// <summary>
@@ -81,21 +73,18 @@ namespace Neon.Kube.Resources.Istio
         /// More info:
         /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
         /// </summary>
-        [JsonProperty(PropertyName = "kind")]
         public string Kind { get; set; }
 
         /// <summary>
         /// Gets or sets standard object metadata.
         /// </summary>
-        [JsonProperty(PropertyName = "metadata")]
         public V1ObjectMeta Metadata { get; set; }
 
         /// <summary>
         /// Gets or sets specification of the desired behavior of the
-        /// ServiceEntry.
+        /// V1AuthorizationPolicy.
         /// </summary>
-        [JsonProperty(PropertyName = "spec")]
-        public V1ServiceEntrySpec Spec { get; set; }
+        public V1AuthorizationPolicySpec Spec { get; set; }
 
         /// <summary>
         /// Validate the object.
@@ -103,7 +92,6 @@ namespace Neon.Kube.Resources.Istio
         /// <exception cref="ValidationException">Thrown if validation fails.</exception>
         public virtual void Validate()
         {
-            Covenant.Assert(Spec.WorkloadSelector != null && Spec.Location != Location.MeshInternal, "Workload selector is only applicable for MESH_INTERNAL services");
         }
     }
 }

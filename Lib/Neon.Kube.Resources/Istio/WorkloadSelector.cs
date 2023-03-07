@@ -49,7 +49,11 @@ namespace Neon.Kube.Resources.Istio
         /// to DNS, and must be fully-qualified without wildcards. Use the form unix:///absolute/path/to/socket for Unix domain socket 
         /// endpoints.
         /// </summary>
-        [JsonProperty(PropertyName = "labels", Required = Required.Always)]
-        public Dictionary<string, string> Labels { get; set; }
+        public Dictionary<string, string> Labels { get; set; } = null;
+        
+        /// <summary>
+        /// <see cref="Labels"/>.
+        /// </summary>
+        public Dictionary<string, string> MatchLabels { get; set; } = null;
     }
 }
