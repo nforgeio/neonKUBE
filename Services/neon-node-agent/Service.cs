@@ -252,8 +252,7 @@ namespace NeonNodeAgent
                         }
 
                         // filter out leader election since it's really chatty
-                        if (httpcontext.RequestUri.Host == "10.253.0.1"
-                        & httpcontext.RequestUri.AbsolutePath.StartsWith("/apis/coordination.k8s.io"))
+                        if (httpcontext.RequestUri.Host == "10.253.0.1")
                         {
                             return false;
                         }

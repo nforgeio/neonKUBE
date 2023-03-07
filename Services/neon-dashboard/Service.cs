@@ -165,7 +165,8 @@ namespace NeonDashboard
                     await Task.CompletedTask;
                 },
                 KubeNamespace.NeonStatus,
-                fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
+                fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}",
+                logger: Logger);
 
             Dashboards = new List<Dashboard>();
             Dashboards.Add(
@@ -204,7 +205,8 @@ namespace NeonDashboard
 
                     Dashboards = Dashboards.OrderBy(d => d.DisplayOrder)
                                             .ThenBy(d => d.Name).ToList();
-                });
+                },
+                logger: Logger);
 
             if (NeonHelper.IsDevWorkstation)
             {
@@ -251,7 +253,24 @@ namespace NeonDashboard
         /// <inheritdoc/>
         protected override bool OnTracerConfig(TracerProviderBuilder builder)
         {
-            builder.AddHttpClientInstrumentation()
+            builder.AddHttpClientInstrumentation(
+                options =>
+                {
+                    options.FilterHttpRequestMessage = (httpcontext) =>
+                    {
+                        if (GetEnvironmentVariable("LOG_LEVEL").ToLower() == "trace")
+                        {
+                            return true;
+                        }
+
+                        if (httpcontext.RequestUri.Host == "10.253.0.1")
+                        {
+                            return false;
+                        }
+
+                        return true;
+                    };
+                })
                 .AddAspNetCoreInstrumentation()
                 .AddOtlpExporter(
                     options =>

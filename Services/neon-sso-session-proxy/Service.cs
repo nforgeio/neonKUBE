@@ -207,7 +207,24 @@ namespace NeonSsoSessionProxy
         /// <inheritdoc/>
         protected override bool OnTracerConfig(TracerProviderBuilder builder)
         {
-            builder.AddHttpClientInstrumentation()
+            builder.AddHttpClientInstrumentation(
+                options =>
+                {
+                    options.FilterHttpRequestMessage = (httpcontext) =>
+                    {
+                        if (GetEnvironmentVariable("LOG_LEVEL").ToLower() == "trace")
+                        {
+                            return true;
+                        }
+
+                        if (httpcontext.RequestUri.Host == "10.253.0.1")
+                        {
+                            return false;
+                        }
+
+                        return true;
+                    };
+                })
                 .AddAspNetCoreInstrumentation()
                 .AddOtlpExporter(
                     options =>

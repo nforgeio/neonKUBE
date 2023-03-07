@@ -25,8 +25,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
-    <PackageReference Include="Neon.Common" Version="10000.0.2918-dev-master" />
-    <PackageReference Include="Neon.Xunit" Version="10000.0.2918-dev-master" />
+    <PackageReference Include="Neon.Common" Version="10000.0.2919-dev-master" />
+    <PackageReference Include="Neon.Xunit" Version="10000.0.2919-dev-master" />
     <PackageReference Include="xunit" Version="2.4.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
