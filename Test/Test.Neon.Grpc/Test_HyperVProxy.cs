@@ -85,19 +85,19 @@ namespace TestGrpc
 
             using (var hyperv = new HyperVClient())
             {
-                if (hyperv.GetVm(machineName: TestMachineName1) != null)
+                if (hyperv.FindVm(machineName: TestMachineName1) != null)
                 {
                     hyperv.StopVm(TestMachineName1, turnOff: true);
                     hyperv.RemoveVm(TestMachineName1);
                 }
 
-                if (hyperv.GetVm(machineName: TestMachineName2) != null)
+                if (hyperv.FindVm(machineName: TestMachineName2) != null)
                 {
                     hyperv.StopVm(TestMachineName2, turnOff: true);
                     hyperv.RemoveVm(TestMachineName2);
                 }
 
-                if (hyperv.GetSwitch(switchName: TestSwitchName) != null)
+                if (hyperv.FindSwitch(switchName: TestSwitchName) != null)
                 {
                     hyperv.RemoveSwitch(TestSwitchName);
                 }
@@ -184,7 +184,7 @@ namespace TestGrpc
                         templateDrivePath: templatePath,
                         switchName:        "External");
 
-                    var vm = hyperVProxy.GetVm(machineName: TestMachineName1);
+                    var vm = hyperVProxy.FindVm(machineName: TestMachineName1);
 
                     Assert.NotNull(vm);
                     Assert.Equal(TestMachineName1, vm.Name);
@@ -195,14 +195,14 @@ namespace TestGrpc
 
                     hyperVProxy.StartVm(machineName: TestMachineName1);
 
-                    vm = hyperVProxy.GetVm(machineName: TestMachineName1);
+                    vm = hyperVProxy.FindVm(machineName: TestMachineName1);
 
                     Assert.NotNull(vm);
                     Assert.Equal(VirtualMachineState.Running, vm.State);
 
                     // Fetch the VM network adapters.
 
-                    var adapters = hyperVProxy.GetVmNetworkAdapters(TestMachineName1);
+                    var adapters = hyperVProxy.ListVmNetworkAdapters(TestMachineName1);
 
                     Assert.NotNull(adapters);
                     Assert.NotEmpty(adapters);
@@ -211,7 +211,7 @@ namespace TestGrpc
 
                     hyperVProxy.SaveVm(machineName: TestMachineName1);
 
-                    vm = hyperVProxy.GetVm(machineName: TestMachineName1);
+                    vm = hyperVProxy.FindVm(machineName: TestMachineName1);
 
                     Assert.NotNull(vm);
                     Assert.Equal(VirtualMachineState.Saved, vm.State);
@@ -227,7 +227,7 @@ namespace TestGrpc
                         templateDrivePath: templatePath,
                         switchName:        "External");
 
-                    vm = hyperVProxy.GetVm(machineName: TestMachineName2);
+                    vm = hyperVProxy.FindVm(machineName: TestMachineName2);
 
                     Assert.NotNull(vm);
                     Assert.Equal(TestMachineName2, vm.Name);
@@ -236,7 +236,7 @@ namespace TestGrpc
 
                     hyperVProxy.StartVm(machineName: TestMachineName2);
 
-                    vm = hyperVProxy.GetVm(machineName: TestMachineName2);
+                    vm = hyperVProxy.FindVm(machineName: TestMachineName2);
 
                     Assert.Equal(VirtualMachineState.Running, vm.State);
 
@@ -273,7 +273,7 @@ namespace TestGrpc
 
                     hyperVProxy.StopVm(machineName: TestMachineName2, turnOff: true);
 
-                    vm = hyperVProxy.GetVm(machineName: TestMachineName2);
+                    vm = hyperVProxy.FindVm(machineName: TestMachineName2);
 
                     Assert.Equal(VirtualMachineState.Off, vm.State);
 
@@ -287,7 +287,7 @@ namespace TestGrpc
                             IsDynamic = true
                         });
 
-                    var drives = hyperVProxy.GetVmDrives(machineName: TestMachineName1);
+                    var drives = hyperVProxy.ListVmDrives(machineName: TestMachineName1);
 
                     // $todo(jefflill): We should be seeing two drives here:
                     //
@@ -304,7 +304,7 @@ namespace TestGrpc
 
                     hyperVProxy.RemoveVm(machineName: TestMachineName1, keepDrives: false);
 
-                    Assert.Null(hyperVProxy.GetVm(machineName: TestMachineName1));
+                    Assert.Null(hyperVProxy.FindVm(machineName: TestMachineName1));
                 }
             }
             finally
@@ -332,7 +332,7 @@ namespace TestGrpc
 
                     foreach (var item in switches)
                     {
-                        var @switch = hyperVProxy.GetSwitch(item.Name);
+                        var @switch = hyperVProxy.FindSwitch(item.Name);
 
                         Assert.NotNull(@switch);
                         Assert.Equal(item.Name, @switch.Name);

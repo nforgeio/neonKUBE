@@ -232,7 +232,7 @@ namespace Neon.Kube.Hosting.HyperV
                             controller.SetGlobalStepStatus($"check: [{KubeConst.HyperVInternalSwitchName}] virtual switch");
 
                             var localHyperVOptions = cluster.Definition.Hosting.HyperV;
-                            var @switch            = hyperv.GetSwitch(KubeConst.HyperVInternalSwitchName);
+                            var @switch            = hyperv.FindSwitch(KubeConst.HyperVInternalSwitchName);
                             var address            = hyperv.GetIPAddress(localHyperVOptions.NeonDesktopNodeAddress.ToString());
                             var nat                = hyperv.GetNatByName(KubeConst.HyperVInternalSwitchName);
 
@@ -339,7 +339,7 @@ namespace Neon.Kube.Hosting.HyperV
 
                         node.Status = "openebs: checking";
 
-                        if (hyperv.GetVmDrives(vmName).Count < 2)
+                        if (hyperv.ListVmDrives(vmName).Count() < 2)
                         {
                             // The cStor disk doesn't already exist.
 
@@ -662,7 +662,7 @@ namespace Neon.Kube.Hosting.HyperV
                     // We're going to create an internal switch named [neonkube] configured
                     // with the standard private subnet and a NAT to enable external routing.
 
-                    var @switch = hyperv.GetSwitch(switchName);
+                    var @switch = hyperv.FindSwitch(switchName);
 
                     if (@switch == null)
                     {
@@ -1134,7 +1134,7 @@ namespace Neon.Kube.Hosting.HyperV
                     node =>
                     {
                         var vmName = GetVmName(node);
-                        var vm     = hyperv.GetVm(vmName);
+                        var vm     = hyperv.FindVm(vmName);
 
                         if (vm == null)
                         {
@@ -1181,7 +1181,7 @@ namespace Neon.Kube.Hosting.HyperV
                     node =>
                     {
                         var vmName = GetVmName(node);
-                        var vm     = hyperv.GetVm(vmName);
+                        var vm     = hyperv.FindVm(vmName);
 
                         if (vm == null)
                         {
@@ -1277,7 +1277,7 @@ namespace Neon.Kube.Hosting.HyperV
                     node =>
                     {
                         var vmName = GetVmName(node);
-                        var vm     = hyperv.GetVm(vmName);
+                        var vm     = hyperv.FindVm(vmName);
 
                         if (vm == null)
                         {
