@@ -32,8 +32,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Neon.Common" Version="3.0.0-preview0" />
-	  <PackageReference Include="Neon.SSH" Version="3.0.0-preview0" />
+	  <PackageReference Include="Neon.Common" Version="10000.0.2933-dev-master" />
+	  <PackageReference Include="Neon.SSH" Version="10000.0.2933-dev-master" />
 	</ItemGroup>
 
 </Project>

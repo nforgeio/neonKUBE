@@ -61,6 +61,7 @@ ARGUMENTS:
 
         /// <inheritdoc/>
         public override string[] Words => new string[] { "login" };
+
         /// <inheritdoc/>
         public override bool NeedsHostingManager => true;
 

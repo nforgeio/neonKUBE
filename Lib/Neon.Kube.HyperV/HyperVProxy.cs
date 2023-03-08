@@ -311,16 +311,16 @@ namespace Neon.Kube.Hosting.HyperV
         /// </summary>
         /// <param name="machineName">The machine name.</param>
         /// <returns>The <see cref="VirtualMachine"/> or <c>null</c> when the virtual machine doesn't exist.</returns>
-        public VirtualMachine GetVm(string machineName)
+        public VirtualMachine FindVm(string machineName)
         {
             if (isAdmin)
             {
-                return hypervClient.GetVm(machineName: machineName);
+                return hypervClient.FindVm(machineName: machineName);
             }
             else
             {
                 var request = new GrpcGetVmRequest(machineName: machineName);
-                var reply   = desktopService.GetVmAsync(request).Result;
+                var reply   = desktopService.FindVmAsync(request).Result;
 
                 reply.Error.EnsureSuccess();
 
@@ -422,16 +422,16 @@ namespace Neon.Kube.Hosting.HyperV
         /// </summary>
         /// <param name="machineName">The machine name.</param>
         /// <returns>The list of fully qualified virtual drive file paths.</returns>
-        public List<string> GetVmDrives(string machineName)
+        public IEnumerable<string> ListVmDrives(string machineName)
         {
             if (isAdmin)
             {
-                return hypervClient.GetVmDrives(machineName: machineName);
+                return hypervClient.ListVmDrives(machineName: machineName);
             }
             else
             {
                 var request = new GrpcGetVmDrivesRequest(machineName: machineName);
-                var reply   = desktopService.GetVmDrivesAsync(request).Result;
+                var reply   = desktopService.ListVmDrivesAsync(request).Result;
 
                 reply.Error.EnsureSuccess();
 
@@ -527,11 +527,11 @@ namespace Neon.Kube.Hosting.HyperV
         /// Returns the virtual network switches.
         /// </summary>
         /// <returns>The list of switches.</returns>
-        public List<VirtualSwitch> ListSwitches()
+        public IEnumerable<VirtualSwitch> ListSwitches()
         {
             if (isAdmin)
             {
-                return hypervClient.ListSwitches();
+                return hypervClient.ListSwitches().ToList();
             }
             else
             {
@@ -540,7 +540,7 @@ namespace Neon.Kube.Hosting.HyperV
 
                 reply.Error.EnsureSuccess();
 
-                return reply.Switches.Select(@switch => @switch.ToLocal()).ToList();
+                return reply.Switches.Select(@switch => @switch.ToLocal());
             }
         }
 
@@ -549,16 +549,16 @@ namespace Neon.Kube.Hosting.HyperV
         /// </summary>
         /// <param name="switchName">The switch name.</param>
         /// <returns>The <see cref="VirtualSwitch"/> when present or <c>null</c>.</returns>
-        public VirtualSwitch GetSwitch(string switchName)
+        public VirtualSwitch FindSwitch(string switchName)
         {
             if (isAdmin)
             {
-                return hypervClient.GetSwitch(switchName: switchName);
+                return hypervClient.FindSwitch(switchName: switchName);
             }
             else
             {
                 var request = new GrpcGetSwitchRequest(switchName: switchName);
-                var reply   = desktopService.GetSwitchAsync(request).Result;
+                var reply   = desktopService.FindSwitchAsync(request).Result;
 
                 reply.Error.EnsureSuccess();
 
@@ -634,20 +634,20 @@ namespace Neon.Kube.Hosting.HyperV
         /// <param name="machineName">The machine name.</param>
         /// <param name="waitForAddresses">Optionally wait until at least one adapter has been able to acquire at least one IPv4 address.</param>
         /// <returns>The list of network adapters.</returns>
-        public List<VirtualNetworkAdapter> GetVmNetworkAdapters(string machineName, bool waitForAddresses = false)
+        public IEnumerable<VirtualNetworkAdapter> ListVmNetworkAdapters(string machineName, bool waitForAddresses = false)
         {
             if (isAdmin)
             {
-                return hypervClient.GetVmNetworkAdapters(machineName: machineName, waitForAddresses: waitForAddresses);
+                return hypervClient.ListVmNetworkAdapters(machineName: machineName, waitForAddresses: waitForAddresses);
             }
             else
             {
                 var request = new GrpcGetVmNetworkAdaptersRequest(machineName: machineName, waitForAddresses: waitForAddresses);
-                var reply   = desktopService.GetVmNetworkAdaptersAsync(request).Result;
+                var reply   = desktopService.ListVmNetworkAdaptersAsync(request).Result;
 
                 reply.Error.EnsureSuccess();
 
-                return reply.Adapters.Select(adapter => adapter.ToLocal()).ToList();
+                return reply.Adapters.Select(adapter => adapter.ToLocal());
             }
         }
 
@@ -655,7 +655,7 @@ namespace Neon.Kube.Hosting.HyperV
         /// Lists the virtual NATs.
         /// </summary>
         /// <returns>A list of <see cref="VirtualNat"/>.</returns>
-        public List<VirtualNat> ListNats()
+        public IEnumerable<VirtualNat> ListNats()
         {
             if (isAdmin)
             {
@@ -668,24 +668,24 @@ namespace Neon.Kube.Hosting.HyperV
 
                 reply.Error.EnsureSuccess();
 
-                return reply.Nats.Select(nat => nat.ToLocal()).ToList();
+                return reply.Nats.Select(nat => nat.ToLocal());
             }
         }
 
         /// <summary>
         /// Looks for a virtual NAT by name.
         /// </summary>
-        /// <param name="name">The desired NAT name.</param>
+        /// <param name="natName">The desired NAT name.</param>
         /// <returns>The <see cref="VirtualNat"/> or <c>null</c> if the NAT doesn't exist.</returns>
-        public VirtualNat GetNatByName(string name)
+        public VirtualNat GetNatByName(string natName)
         {
             if (isAdmin)
             {
-                return hypervClient.GetNatByName(name: name);
+                return hypervClient.GetNatByName(natName: natName);
             }
             else
             {
-                var request = new GrpcGetNatByNameRequest(name: name);
+                var request = new GrpcGetNatByNameRequest(name: natName);
                 var reply   = desktopService.GetNatByNameAsync(request).Result;
 
                 reply.Error.EnsureSuccess();
