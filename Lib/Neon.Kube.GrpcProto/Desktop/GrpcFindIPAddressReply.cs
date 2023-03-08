@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GrpcGetNatBySubnetRequest.cs
+// FILE:	    GrpcFindIPAddressReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -30,31 +30,46 @@ using ProtoBuf.Grpc;
 namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Returns information about a virtual Hyper-V NAT by subnet.  This returns a <see cref="GrpcGetNatReply"/>.
+    /// Returns information about a virtual IP address.
     /// </summary>
     [DataContract]
-    public class GrpcGetNatBySubnetRequest
+    public class GrpcFindIPAddressReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public GrpcGetNatBySubnetRequest()
+        public GrpcFindIPAddressReply()
         {
+        }
+
+        /// <summary>
+        /// Error constructor.
+        /// </summary>
+        /// <param name="e">The exception.</param>
+        public GrpcFindIPAddressReply(Exception e)
+        {
+            this.Error = new GrpcError(e);
         }
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="subnet">Specifies the NAT subnet.</param>
-        public GrpcGetNatBySubnetRequest(string subnet)
+        /// <param name="address">The virtual IP address.</param>
+        public GrpcFindIPAddressReply(GrpcVirtualIPAddress? address)
         {
-            this.Subnet = subnet;
+            this.Address = address;
         }
 
         /// <summary>
-        /// Identifies the target NAT by subnet.
+        /// Set to a non-null error when the request failed.
         /// </summary>
         [DataMember(Order = 1)]
-        public string? Subnet { get; set; }
+        public GrpcError? Error { get; set; }
+
+        /// <summary>
+        /// Describes the switch or <c>null</c> when the switch doesn't exist.
+        /// </summary>
+        [DataMember(Order = 2)]
+        public GrpcVirtualIPAddress? Address { get; set; }
     }
 }

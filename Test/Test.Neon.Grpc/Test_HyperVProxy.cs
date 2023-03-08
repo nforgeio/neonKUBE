@@ -369,13 +369,13 @@ namespace TestGrpc
 
                     foreach (var item in nats)
                     {
-                        var nat = hyperVProxy.GetNatByName(item.Name);
+                        var nat = hyperVProxy.FindNatByName(item.Name);
 
                         Assert.NotNull(nat);
                         Assert.Equal(item.Name, nat.Name);
                         Assert.Equal(item.Subnet, nat.Subnet);
 
-                        nat = hyperVProxy.GetNatBySubnet(item.Subnet);
+                        nat = hyperVProxy.FindNatBySubnet(item.Subnet);
 
                         Assert.NotNull(nat);
                         Assert.Equal(item.Name, nat.Name);

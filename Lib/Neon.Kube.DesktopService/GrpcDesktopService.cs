@@ -154,32 +154,32 @@ namespace Neon.Kube.DesktopService
         }
 
         /// <inheritdoc/>
-        public async Task<GrpcGetNatReply> GetNatByNameAsync(GrpcGetNatByNameRequest request, CallContext context = default)
+        public async Task<GrpcFindNatReply> FindNatByNameAsync(GrpcFindNatByNameRequest request, CallContext context = default)
         {
             await SyncContext.Clear;
 
             try
             {
-                return new GrpcGetNatReply(nat: hyperv.GetNatByName(request.Name).ToProto());
+                return new GrpcFindNatReply(nat: hyperv.FindNatByName(request.Name).ToProto());
             }
             catch (Exception e)
             {
-                return new GrpcGetNatReply(e);
+                return new GrpcFindNatReply(e);
             }
         }
 
         /// <inheritdoc/>
-        public async Task<GrpcGetNatReply> GetNatByNameSubnetAsync(GrpcGetNatBySubnetRequest request, CallContext context = default)
+        public async Task<GrpcFindNatReply> FindNatByNameSubnetAsync(GrpcFindNatBySubnetRequest request, CallContext context = default)
         {
             await SyncContext.Clear;
 
             try
             {
-                return new GrpcGetNatReply(nat: hyperv.GetNatBySubnet(request.Subnet).ToProto());
+                return new GrpcFindNatReply(nat: hyperv.FindNatBySubnet(request.Subnet).ToProto());
             }
             catch (Exception e)
             {
-                return new GrpcGetNatReply(e);
+                return new GrpcFindNatReply(e);
             }
         }
 
@@ -475,17 +475,17 @@ namespace Neon.Kube.DesktopService
         }
 
         /// <inheritdoc/>
-        public async Task<GrpcGetIPAddressReply> GetIPAddressAsync(GrpcGetIPAddressRequest request, CallContext context = default)
+        public async Task<GrpcFindIPAddressReply> FindIPAddressAsync(GrpcFindIPAddressRequest request, CallContext context = default)
         {
             await SyncContext.Clear;
 
             try
             {
-                return new GrpcGetIPAddressReply(hyperv.GetIPAddress(request.Address).ToProto());
+                return new GrpcFindIPAddressReply(hyperv.FindIPAddress(request.Address).ToProto());
             }
             catch (Exception e)
             {
-                return new GrpcGetIPAddressReply(e);
+                return new GrpcFindIPAddressReply(e);
             }
         }
 

@@ -677,16 +677,16 @@ namespace Neon.Kube.Hosting.HyperV
         /// </summary>
         /// <param name="natName">The desired NAT name.</param>
         /// <returns>The <see cref="VirtualNat"/> or <c>null</c> if the NAT doesn't exist.</returns>
-        public VirtualNat GetNatByName(string natName)
+        public VirtualNat FindNatByName(string natName)
         {
             if (isAdmin)
             {
-                return hypervClient.GetNatByName(natName: natName);
+                return hypervClient.FindNatByName(natName: natName);
             }
             else
             {
-                var request = new GrpcGetNatByNameRequest(name: natName);
-                var reply   = desktopService.GetNatByNameAsync(request).Result;
+                var request = new GrpcFindNatByNameRequest(name: natName);
+                var reply   = desktopService.FindNatByNameAsync(request).Result;
 
                 reply.Error.EnsureSuccess();
 
@@ -699,16 +699,16 @@ namespace Neon.Kube.Hosting.HyperV
         /// </summary>
         /// <param name="subnet">The desired NAT subnet.</param>
         /// <returns>The <see cref="VirtualNat"/> or <c>null</c> if the NAT doesn't exist.</returns>
-        public VirtualNat GetNatBySubnet(string subnet)
+        public VirtualNat FindNatBySubnet(string subnet)
         {
             if (isAdmin)
             {
-                return hypervClient.GetNatBySubnet(subnet: subnet);
+                return hypervClient.FindNatBySubnet(subnet: subnet);
             }
             else
             {
-                var request = new GrpcGetNatBySubnetRequest(subnet: subnet);
-                var reply   = desktopService.GetNatByNameSubnetAsync(request).Result;
+                var request = new GrpcFindNatBySubnetRequest(subnet: subnet);
+                var reply   = desktopService.FindNatByNameSubnetAsync(request).Result;
 
                 reply.Error.EnsureSuccess();
 
@@ -721,16 +721,16 @@ namespace Neon.Kube.Hosting.HyperV
         /// </summary>
         /// <param name="address">The desired IP address.</param>
         /// <returns>The <see cref="VirtualIPAddress"/> or <c>null</c> when it doesn't exist.</returns>
-        public VirtualIPAddress GetIPAddress(string address)
+        public VirtualIPAddress FindIPAddress(string address)
         {
             if (isAdmin)
             {
-                return hypervClient.GetIPAddress(address: address);
+                return hypervClient.FindIPAddress(address: address);
             }
             else
             {
-                var request = new GrpcGetIPAddressRequest(address: address);
-                var reply   = desktopService.GetIPAddressAsync(request).Result;
+                var request = new GrpcFindIPAddressRequest(address: address);
+                var reply   = desktopService.FindIPAddressAsync(request).Result;
 
                 reply.Error.EnsureSuccess();
 

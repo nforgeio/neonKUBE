@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GrpcGetIPAddressReply.cs
+// FILE:	    GrpcFindIPAddressRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -33,43 +33,28 @@ namespace Neon.Kube.GrpcProto.Desktop
     /// Returns information about a virtual IP address.
     /// </summary>
     [DataContract]
-    public class GrpcGetIPAddressReply
+    public class GrpcFindIPAddressRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public GrpcGetIPAddressReply()
+        public GrpcFindIPAddressRequest()
         {
         }
 
         /// <summary>
-        /// Error constructor.
+        /// Constructor
         /// </summary>
-        /// <param name="e">The exception.</param>
-        public GrpcGetIPAddressReply(Exception e)
-        {
-            this.Error = new GrpcError(e);
-        }
-
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        /// <param name="address">The virtual IP address.</param>
-        public GrpcGetIPAddressReply(GrpcVirtualIPAddress? address)
+        /// <param name="address">The desired IP address.</param>
+        public GrpcFindIPAddressRequest(string address)
         {
             this.Address = address;
         }
 
         /// <summary>
-        /// Set to a non-null error when the request failed.
+        /// The desired IP addess.
         /// </summary>
         [DataMember(Order = 1)]
-        public GrpcError? Error { get; set; }
-
-        /// <summary>
-        /// Describes the switch or <c>null</c> when the switch doesn't exist.
-        /// </summary>
-        [DataMember(Order = 2)]
-        public GrpcVirtualIPAddress? Address { get; set; }
+        public string? Address { get; set; }
     }
 }
