@@ -39,9 +39,6 @@ param
     [switch]$restore = $false     # Just restore the CSPROJ files after cancelling publish
 )
 
-Write-Error "neonKUBE nuget publication is currently disabled."
-exit 1
-
 # Import the global solution include file.
 
 . $env:NK_ROOT/Powershell/includes.ps1
@@ -50,7 +47,7 @@ exit 1
 # build configuration conflicts because this script builds the
 # RELEASE configuration and we normally have VS in DEBUG mode.
 
-Ensure-VisualStudioNotRunning
+#Ensure-VisualStudioNotRunning
 
 # Verify that the user has the required environment variables.  These will
 # be available only for maintainers and are intialized by the neonCLOUD
@@ -103,7 +100,11 @@ function Publish
 
     $projectPath = [io.path]::combine($env:NK_ROOT, "Lib", "$project", "$project" + ".csproj")
 
-	dotnet pack $projectPath -c Release -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -o "$env:NK_BUILD\nuget"
+    # Disabling symbol packages now that we're embedding PDB files.
+    #
+    # dotnet pack $projectPath -c Release -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -o "$env:NK_BUILD\nuget"
+
+    dotnet pack $projectPath -c Release -o "$env:NK_BUILD\nuget"
     ThrowOnExitCode
 
     if (Test-Path "$env:NK_ROOT\Lib\$project\prerelease.txt")
@@ -121,12 +122,16 @@ function Publish
         $prerelease = ""
     }
 
-	nuget push -Source nuget.org -ApiKey $nugetApiKey "$env:NK_BUILD\nuget\$project.$neonSdkVersion.nupkg" -SkipDuplicate -Timeout 600
+	nuget push -Source nuget.org -ApiKey $nugetApiKey "$env:NK_BUILD\nuget\$project.$version.nupkg" -SkipDuplicate -Timeout 600
     ThrowOnExitCode
 }
 
 try
 {
+	# We're going to build the RELEASE configuration.
+
+    $config = "Release"
+	
     #------------------------------------------------------------------------------
     # Load the library and neonKUBE versions.
 
@@ -224,7 +229,6 @@ try
         SetVersion Neon.Kube.Models               $neonkubeVersion
         SetVersion Neon.Kube.Operator             $neonkubeVersion
         SetVersion Neon.Kube.Operator.Templates   $neonkubeVersion
-        SetVersion Neon.Kube.ResourceDefinitions  $neonkubeVersion
         SetVersion Neon.Kube.Resources            $neonkubeVersion
         SetVersion Neon.Kube.Setup                $neonkubeVersion
         SetVersion Neon.Kube.XenServer            $neonkubeVersion
@@ -246,7 +250,6 @@ try
         Publish Neon.Kube.Models                  $neonkubeVersion
         Publish Neon.Kube.Operator                $neonkubeVersion
         Publish Neon.Kube.Operator.Templates      $neonkubeVersion
-        Publish Neon.Kube.ResourceDefinitions     $neonkubeVersion
         Publish Neon.Kube.Resources               $neonkubeVersion
         Publish Neon.Kube.Setup                   $neonkubeVersion
         Publish Neon.Kube.XenServer               $neonkubeVersion

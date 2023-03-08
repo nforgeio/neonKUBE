@@ -31,16 +31,15 @@ using Neon.Tasks;
 
 using k8s;
 using k8s.Models;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace Neon.Kube.Xunit.Operator
 {
     /// <summary>
     /// Generic resource API controller.
     /// </summary>
-    [Route("apis/{group}/{version}/{plural}")]
-    [Route("apis/{group}/{version}/{plural}/{name}")]
-    [Route("apis/{group}/{version}/namespaces/{namespace}/{plural}")]
-    public class ResourceApiGroupController : Microsoft.AspNetCore.Mvc.Controller
+    [Route("apis/{group}/{version}/{plural}/{name}/status")]
+    public class ResourceApiGroupStatusController : Microsoft.AspNetCore.Mvc.Controller
     {
         private readonly ITestApiServer testApiServer;
         private readonly JsonSerializerOptions jsonSerializerOptions;
@@ -50,7 +49,7 @@ namespace Neon.Kube.Xunit.Operator
         /// </summary>
         /// <param name="testApiServer"></param>
         /// <param name="jsonSerializerOptions"></param>
-        public ResourceApiGroupController(
+        public ResourceApiGroupStatusController(
             ITestApiServer testApiServer,
             JsonSerializerOptions jsonSerializerOptions)
         {
@@ -80,12 +79,6 @@ namespace Neon.Kube.Xunit.Operator
         /// The namespace name of the <see cref="IKubernetesObject"/>.
         /// </summary>
         [FromRoute]
-        public string Namespace { get; set; }
-
-        /// <summary>
-        /// The name name of the <see cref="IKubernetesObject"/>.
-        /// </summary>
-        [FromRoute]
         public string Name { get; set; }
 
         /// <summary>
@@ -102,11 +95,22 @@ namespace Neon.Kube.Xunit.Operator
             {
                 var typeMetadata = type.GetKubernetesTypeMetadata();
 
-                var resource = testApiServer.Resources.Where(
-                    r => r.Kind == typeMetadata.Kind
-                    && r.Metadata.Name == Name).Single();
+                var resources = testApiServer.Resources.Where(r => r.GetType() == type);
 
-                return Ok(resource);
+                var d1 = typeof(V1CustomObjectList<>);
+                Type[] typeArgs = { type };
+                var makeme = d1.MakeGenericType(typeArgs);
+                dynamic o = Activator.CreateInstance(makeme);
+
+                var d2 = typeof(IList<>);
+                var makeme2 = d2.MakeGenericType(typeArgs);
+
+                var s = NeonHelper.JsonSerialize(resources);
+                var instance = (dynamic)JsonSerializer.Deserialize(s, makeme2, jsonSerializerOptions);
+
+                o.Items = instance;
+
+                return Ok(o);
             }
 
             return NotFound();
@@ -139,33 +143,28 @@ namespace Neon.Kube.Xunit.Operator
         }
 
         /// <summary>
-        /// Replaces a resource and stores it in <see cref="TestApiServer.Resources"/>
+        /// Patches resource and stores it in <see cref="TestApiServer.Resources"/>
         /// </summary>
-        /// <param name="resource"></param>
+        /// <param name="patch"></param>
         /// <returns>An action result containing the resource.</returns>
-        [HttpPut]
-        public async Task<ActionResult<ResourceObject>> UpdateAsync([FromBody] object resource)
+        [HttpPatch]
+        public async Task<ActionResult<ResourceObject>> PatchAsync([FromBody] object patch)
         {
             await SyncContext.Clear;
+
+            var s = KubernetesJson.Serialize(patch);
+            var p0 = NeonHelper.JsonDeserialize<JsonPatchDocument>(s);
 
             var key = $"{Group}/{Version}/{Plural}";
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
                 var typeMetadata = type.GetKubernetesTypeMetadata();
 
-                var s = JsonSerializer.Serialize(resource);
-                var instance = JsonSerializer.Deserialize(s, type, jsonSerializerOptions);
-
-                var resources = testApiServer.Resources.Where(
+                var resource = testApiServer.Resources.Where(
                     r => r.Kind == typeMetadata.Kind
-                    && r.Metadata.Name == Name).ToList();
+                    && r.Metadata.Name == Name).Single();
 
-                foreach (var r in resources)
-                {
-                    testApiServer.Resources.Remove(r);
-                }
-
-                testApiServer.AddResource(Group, Version, Plural, instance);
+                p0.ApplyTo(resource);
 
                 return Ok(resource);
             }

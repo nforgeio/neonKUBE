@@ -4,7 +4,7 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <OutputType>Library</OutputType>
         <RootNamespace>Neon.Kube.BuildInfo</RootNamespace>
-        <Version>10000.0.3469-dev-marcus-operator-rbac</Version>
+        <Version>0.8.9-alpha</Version>
         <Description>INTERNAL USE ONLY: neonKUBE build information</Description>
         <IsPackable>true</IsPackable>
         <PackageProjectUrl></PackageProjectUrl>

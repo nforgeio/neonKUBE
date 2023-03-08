@@ -1,10 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<RootNamespace>Neon.Kube.Hosting.XenServer</RootNamespace>
-		<Version>10000.0.3469-dev-marcus-operator-rbac</Version>
+		<Version>0.8.9-alpha</Version>
 		<Description>INTERNAL USE ONLY: neonKUBE hosting manager for XenServer/XCP-ng envirojnhments.</Description>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
@@ -32,8 +32,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Neon.Common" Version="10000.0.2918-dev-master" />
-	  <PackageReference Include="Neon.SSH" Version="10000.0.2918-dev-master" />
+	  <PackageReference Include="Neon.Common" Version="3.0.0-preview0" />
+	  <PackageReference Include="Neon.SSH" Version="3.0.0-preview0" />
 	</ItemGroup>
 
 </Project>
