@@ -184,13 +184,13 @@ namespace Neon.Kube.DesktopService
         }
 
         /// <inheritdoc/>
-        public async Task<GrpcGetSwitchReply> GetSwitchAsync(GrpcGetSwitchRequest request, CallContext context = default)
+        public async Task<GrpcGetSwitchReply> FindSwitchAsync(GrpcGetSwitchRequest request, CallContext context = default)
         {
             await SyncContext.Clear;
 
             try
             {
-                return new GrpcGetSwitchReply(@switch: hyperv.GetSwitch(request.SwitchName).ToProto());
+                return new GrpcGetSwitchReply(@switch: hyperv.FindSwitch(request.SwitchName).ToProto());
             }
             catch (Exception e)
             {
@@ -199,13 +199,13 @@ namespace Neon.Kube.DesktopService
         }
 
         /// <inheritdoc/>
-        public async Task<GrpcGetVmReply> GetVmAsync(GrpcGetVmRequest request, CallContext context = default)
+        public async Task<GrpcGetVmReply> FindVmAsync(GrpcGetVmRequest request, CallContext context = default)
         {
             await SyncContext.Clear;
 
             try
             {
-                return new GrpcGetVmReply(machine: hyperv.GetVm(request.MachineName).ToProto());
+                return new GrpcGetVmReply(machine: hyperv.FindVm(request.MachineName).ToProto());
             }
             catch (Exception e)
             {
@@ -214,13 +214,13 @@ namespace Neon.Kube.DesktopService
         }
 
         /// <inheritdoc/>
-        public async Task<GrpGetVmDrivesReply> GetVmDrivesAsync(GrpcGetVmDrivesRequest request, CallContext context = default)
+        public async Task<GrpGetVmDrivesReply> ListVmDrivesAsync(GrpcGetVmDrivesRequest request, CallContext context = default)
         {
             await SyncContext.Clear;
 
             try
             {
-                return new GrpGetVmDrivesReply(hyperv.GetVmDrives(request.MachineName));
+                return new GrpGetVmDrivesReply(hyperv.ListVmDrives(request.MachineName).ToList());
             }
             catch (Exception e)
             {
@@ -229,13 +229,13 @@ namespace Neon.Kube.DesktopService
         }
 
         /// <inheritdoc/>
-        public async Task<GrpcGetVmNetworkAdaptersReply> GetVmNetworkAdaptersAsync(GrpcGetVmNetworkAdaptersRequest request, CallContext context = default)
+        public async Task<GrpcGetVmNetworkAdaptersReply> ListVmNetworkAdaptersAsync(GrpcGetVmNetworkAdaptersRequest request, CallContext context = default)
         {
             await SyncContext.Clear;
 
             try
             {
-                var adapters = hyperv.GetVmNetworkAdapters(machineName: request.MachineName, waitForAddresses: request.WaitForAddresses);
+                var adapters = hyperv.ListVmNetworkAdapters(machineName: request.MachineName, waitForAddresses: request.WaitForAddresses);
 
                 return new GrpcGetVmNetworkAdaptersReply(adapters: adapters.Select(adapter => adapter.ToProto()).ToList());
             }

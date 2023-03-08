@@ -89,7 +89,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// <param name="context">Optionally specifies the gRPC call context.</param>
         /// <returns>A <see cref="GrpcGetVmReply"/> with the results.</returns>
         [OperationContract]
-        Task<GrpcGetVmReply> GetVmAsync(GrpcGetVmRequest request, CallContext context = default);
+        Task<GrpcGetVmReply> FindVmAsync(GrpcGetVmRequest request, CallContext context = default);
 
         /// <summary>
         /// Determines whether a virtual machine exists.
@@ -134,7 +134,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// <param name="context">Optionally specifies the gRPC call context.</param>
         /// <returns>A <see cref="GrpGetVmDrivesReply"/>.</returns>
         [OperationContract]
-        Task<GrpGetVmDrivesReply> GetVmDrivesAsync(GrpcGetVmDrivesRequest request, CallContext context = default);
+        Task<GrpGetVmDrivesReply> ListVmDrivesAsync(GrpcGetVmDrivesRequest request, CallContext context = default);
 
         /// <summary>
         /// Adds a drive to a virtual machine.
@@ -188,7 +188,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// <param name="context">Optionally specifies the gRPC call context.</param>
         /// <returns>A <see cref="GrpcGetSwitchReply"/>.</returns>
         [OperationContract]
-        Task<GrpcGetSwitchReply> GetSwitchAsync(GrpcGetSwitchRequest request, CallContext context = default);
+        Task<GrpcGetSwitchReply> FindSwitchAsync(GrpcGetSwitchRequest request, CallContext context = default);
 
         /// <summary>
         /// Creates a new external Hyper-V virtual switch.
@@ -224,7 +224,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// <param name="context">Optionally specifies the gRPC call context.</param>
         /// <returns>A <see cref="GrpcGetVmNetworkAdaptersReply"/>.</returns>
         [OperationContract]
-        Task<GrpcGetVmNetworkAdaptersReply> GetVmNetworkAdaptersAsync(GrpcGetVmNetworkAdaptersRequest request, CallContext context = default);
+        Task<GrpcGetVmNetworkAdaptersReply> ListVmNetworkAdaptersAsync(GrpcGetVmNetworkAdaptersRequest request, CallContext context = default);
 
         /// <summary>
         /// Lists the virtual Hyper-V NATs.
