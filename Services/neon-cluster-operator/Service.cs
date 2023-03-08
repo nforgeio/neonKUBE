@@ -208,9 +208,7 @@ namespace NeonClusterOperator
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
-            K8s = new Kubernetes(
-                KubernetesClientConfiguration.BuildDefaultConfig(), 
-                new KubernetesRetryHandler());
+            K8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig(), new KubernetesRetryHandler());
             
             LogContext.SetCurrentLogProvider(TelemetryHub.LoggerFactory);
 
