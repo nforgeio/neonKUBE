@@ -115,13 +115,7 @@ function Get-DotnetBaseImage
         [string]$globalJsonPath
     )
 
-	# NOTE: This command writes the SDK version to the first output line and
-	#       the runtime version to the second line.
-
-	$command  = "neon-build dotnet-version " + '"' + $globalJsonPath + '"'
-	$response = Invoke-CaptureStreams $command
-	$lines    = $response.stdout -split '\r?\n'
-	$runtime  = $lines[1].Trim()
+	$runtime  = (Get-Content $globalJsonPath | ConvertFrom-Json).sdk.version.Trim('0')
 
 	return "mcr.microsoft.com/dotnet/aspnet:$runtime-jammy-amd64"
 }
