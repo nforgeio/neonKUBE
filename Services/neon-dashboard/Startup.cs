@@ -176,6 +176,7 @@ namespace NeonDashboard
                 .AddHttpContextAccessor()
                 .AddHttpClient()
                 .AddBlazoredLocalStorage()
+                .AddResponseCompression()
                 .AddTailwind()
                 .AddSingleton<ILogger>(Program.Service.Logger)
                 .AddGoogleAnalytics("G-PYMLFS3FX4")
@@ -219,6 +220,7 @@ namespace NeonDashboard
                 ForwardedHeaders = ForwardedHeaders.XForwardedProto
             });
 
+            app.UseResponseCompression();
             app.UseStaticFiles();
             app.UseRouting();
             app.UseHttpMetrics();
