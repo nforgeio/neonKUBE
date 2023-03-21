@@ -21,9 +21,9 @@
 .main {
     grid-row: 1;
     height: 100%;
-    border-radius: var(--f1);
-    border: 2px solid var(--c-bg-dark);
-    height: 94vh;
+    border-radius: 0;
+    border-bottom: 2px solid var(--c-bg-dark);
+    height: 93vh;
 }
 
 .bottom {
@@ -33,7 +33,5 @@
     display: flex;
     justify-content: flex-end;
     color: var(--c-fg);
-
-    height: 6vh;
-        
+    height: 7vh;
 }

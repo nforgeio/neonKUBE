@@ -1,89 +1,67 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-	<PropertyGroup>
-		<TargetFramework>net7.0</TargetFramework>
-		<OutputType>Exe</OutputType>
-		<RootNamespace>NeonDashboard</RootNamespace>
-		<IsPackable>false</IsPackable>
-		<ServerGarbageCollection>true</ServerGarbageCollection>
-		<ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
-		<AssemblyName>neon-dashboard</AssemblyName>
-		<Configurations>Debug;Release</Configurations>
-		<GenerateDocumentationFile>false</GenerateDocumentationFile>
-	</PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <OutputType>Exe</OutputType>
+        <RootNamespace>NeonDashboard</RootNamespace>
+        <IsPackable>false</IsPackable>
+        <ServerGarbageCollection>true</ServerGarbageCollection>
+        <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+        <AssemblyName>neon-dashboard</AssemblyName>
+        <Configurations>Debug;Release</Configurations>
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    </PropertyGroup>
 
-	<ItemGroup>
-		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
-		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
-	</ItemGroup>
+    <ItemGroup>
+        <Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+        <Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+    </ItemGroup>
 
-	<ItemGroup>
-		<None Remove="Shared\Components\LoadingCircle.razor.css" />
-	</ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Analytics" Version="3.8.1" />
+        <PackageReference Include="Blazor-Analytics" Version="3.11.0" />
+        <PackageReference Include="Blazored.LocalStorage" Version="4.3.0" />
+        <PackageReference Include="ChartJs.Blazor.Fork" Version="2.0.2" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="7.0.3" />
+        <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="7.0.3" />
+        <PackageReference Include="Neon.Common" Version="10000.0.2943-dev-master" />
+        <PackageReference Include="Neon.Service" Version="10000.0.2943-dev-master" />
+        <PackageReference Include="Neon.Tailwind" Version="10000.0.2943-dev-master" />
+        <PackageReference Include="Neon.Web" Version="10000.0.2943-dev-master" />
+        <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.4.0" />
+        <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.4.0" />
+        <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.0.0-rc9.14" />
+        <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.0.0-rc9.14" />
+        <PackageReference Include="prometheus-net" Version="8.0.0" />
+        <PackageReference Include="prometheus-net.AspNetCore" Version="8.0.0" />
+        <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
+        <PackageReference Include="Tailwind.Extensions.AspNetCore" Version="1.0.0-beta3" />
+    </ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="Analytics" Version="3.8.1" />
-		<PackageReference Include="Blazor-Analytics" Version="3.11.0" />
-		<PackageReference Include="Blazored.LocalStorage" Version="4.3.0" />
-		<PackageReference Include="ChartJs.Blazor.Fork" Version="2.0.2" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="7.0.3" />
-		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="7.0.3" />
-		<PackageReference Include="Neon.Common" Version="10000.0.2943-dev-master" />
-		<PackageReference Include="Neon.Service" Version="10000.0.2943-dev-master" />
-		<PackageReference Include="Neon.Tailwind" Version="10000.0.2943-dev-master" />
-		<PackageReference Include="Neon.Web" Version="10000.0.2943-dev-master" />
-		<PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.4.0" />
-		<PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.4.0" />
-		<PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.0.0-rc9.14" />
-		<PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.0.0-rc9.14" />
-		<PackageReference Include="prometheus-net" Version="8.0.0" />
-		<PackageReference Include="prometheus-net.AspNetCore" Version="8.0.0" />
-		<PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
-		<PackageReference Include="Tailwind.Extensions.AspNetCore" Version="1.0.0-beta3" />
-	</ItemGroup>
+    <ItemGroup>
+        <!-- extends watching group to include *.js files -->
+        <Watch Include="**\*.razor" />
+        <Watch Include="**\*.cs" />
+        <Watch Include="**\*.razor.cs" />
+        <Watch Include="**\*.razor.css" />
+        <Watch Include="**\*.css" />
+        <Watch Include="**\*.cshtml" />
+        <Watch Include="**\*.js" Exclude="node_modules\**\*;**\*.js.map;obj\**\*;bin\**\*" />
+    </ItemGroup>
 
-	<ItemGroup>
-		<Content Update="wwwroot\favicon.ico">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
-	</ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
+        <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
+    </ItemGroup>
 
-	<ItemGroup>
-		<Content Include="Shared\Components\LoadingCircle.razor.css" />
-	</ItemGroup>
+    <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+        <Exec Command="pwsh -f prebuild.ps1" ContinueOnError="true" />
+    </Target>
 
-	<ItemGroup>
-		<Folder Include="wwwroot\css\" />
-		<Folder Include="wwwroot\fonts\" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Include="wwwroot\fonts\PPPangramSans-Bold.otf" />
-		<None Include="wwwroot\fonts\PPPangramSans-Medium.otf" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<!-- extends watching group to include *.js files -->
-		<Watch Include="**\*.razor" />
-		<Watch Include="**\*.cs" />
-		<Watch Include="**\*.razor.cs" />
-		<Watch Include="**\*.cshtml" />
-		<Watch Include="**\*.js" Exclude="node_modules\**\*;**\*.js.map;obj\**\*;bin\**\*" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
-		<ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
-	</ItemGroup>
-
-	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-		<Exec Command="pwsh -f prebuild.ps1" ContinueOnError="true" />
-	</Target>
-
-	<Target Name="NodeCheck" BeforeTargets="PreBuild">
-		<Exec Command="npm --version" ContinueOnError="true">
-			<Output TaskParameter="ExitCode" PropertyName="ErrorCodeNode" />
-		</Exec>
-		<Error Condition="'$(ErrorCodeNode)' != '0'" Text="NPM is required for this project. please install Node.js" />
-	</Target>
+    <Target Name="NodeCheck" BeforeTargets="PreBuild">
+        <Exec Command="npm --version" ContinueOnError="true">
+            <Output TaskParameter="ExitCode" PropertyName="ErrorCodeNode" />
+        </Exec>
+        <Error Condition="'$(ErrorCodeNode)' != '0'" Text="NPM is required for this project. please install Node.js" />
+    </Target>
 </Project>

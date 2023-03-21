@@ -4,7 +4,6 @@
     align-items: center;
     gap: var(--f2);
     cursor: pointer;
-
     p {
         font-size: var(--f2);
     }
@@ -12,8 +11,21 @@
     &:hover {
         background: #555;
     }
+}
 
-    
+.dropup__button {
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    gap: var(--f2);
+    cursor: pointer;
+    p {
+        font-size: var(--f2);
+    }
+
+&:hover {
+    background: #555;
+}
 }
 
 .button__icon {
