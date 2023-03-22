@@ -398,7 +398,15 @@ namespace NeonDashboard
                     name:               virtualService.Name(),
                     namespaceParameter: KubeNamespace.NeonIngress);
             }
-            SetEnvironmentVariable("METRICS_HOST", $"https://metrics.{ClusterInfo.Domain}");
+
+            PrometheusClient = new PrometheusClient($"https://metrics.{ClusterInfo.Domain}/prometheus/");
+
+            if (PrometheusClient.JsonClient.DefaultRequestHeaders.Contains("X-Scope-OrgID"))
+            {
+                PrometheusClient.JsonClient.DefaultRequestHeaders.Remove("X-Scope-OrgID");
+            }
+
+            PrometheusClient.JsonClient.DefaultRequestHeaders.Add("X-Scope-OrgID", ClusterInfo.Name);
         }
     }
 }

@@ -39,13 +39,11 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Folder Include="wwwroot\css\" />
+    </ItemGroup>
+
+    <ItemGroup>
         <!-- extends watching group to include *.js files -->
-        <Watch Include="**\*.razor" />
-        <Watch Include="**\*.cs" />
-        <Watch Include="**\*.razor.cs" />
-        <Watch Include="**\*.razor.css" />
-        <Watch Include="**\*.css" />
-        <Watch Include="**\*.cshtml" />
         <Watch Include="**\*.js" Exclude="node_modules\**\*;**\*.js.map;obj\**\*;bin\**\*" />
     </ItemGroup>
 

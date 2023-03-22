@@ -110,3 +110,4 @@ KubernetesWithRetry.cs
 /ToolBin/nuget.config
 **/Protos/**/*.cs
 /services/neon-dashboard/wwwroot/css/index.css
+/Services/neon-dashboard/wwwroot/css/isolated.css

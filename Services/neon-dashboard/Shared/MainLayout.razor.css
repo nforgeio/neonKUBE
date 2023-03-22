@@ -5,33 +5,17 @@
 
 
 .mainlayout {
-    margin: 0;
-    background: var(--c-bg-dark);
+    @apply bg-bg-dark m-0;
 }
 
 .containermain {
-    display: grid;
-    grid-template-rows: 1fr auto;
-    overflow: hidden;
-    height: 100vh;
-    width: 100vw;
-
+    @apply relative grid  min-h-screen w-screen;
 }
 
 .main {
-    grid-row: 1;
-    height: 100%;
-    border-radius: 0;
-    border-bottom: 2px solid var(--c-bg-dark);
-    height: 93vh;
+    @apply row-span-full min-h-screen;
 }
 
 .bottom {
-    padding: 0 var(--f3);
-    grid-row: 2;
-    background: var(--c-bg);
-    display: flex;
-    justify-content: flex-end;
-    color: var(--c-fg);
-    height: 7vh;
+    @apply flex bg-bg justify-end sticky w-full inset-x-0 bottom-0 h-16 pr-8;
 }

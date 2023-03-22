@@ -4,12 +4,9 @@
 // COPYRIGHT: Copyright © 2005-2022 by NEONFORGE LLC. All rights reserved.*/
 
 .dashboard-container {
-    display: grid;
-    height: 100%;
-    position: relative;
+    @apply grid h-full relative;
 }
 
 .dashboard-frame {
-    grid-column: 1;
-    grid-row: 1;
+    @apply row-span-full col-span-full;
 }
