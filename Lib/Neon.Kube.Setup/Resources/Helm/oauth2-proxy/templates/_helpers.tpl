@@ -91,5 +91,13 @@ Create the name of the service account to use
 Calculate the config from structured and unstructred text input
 */}}
 {{- define "calculatedAlphaConfig" -}}
+{{ include (print $.Template.BasePath "/_alphaConfig-render.tpl") . }}
+{{- end -}}
+
+{{/*
+Calculate the config from structured and unstructred text input
+*/}}
+{{- define "calculatedConfig" -}}
 {{ include (print $.Template.BasePath "/_config-render.tpl") . }}
 {{- end -}}
+

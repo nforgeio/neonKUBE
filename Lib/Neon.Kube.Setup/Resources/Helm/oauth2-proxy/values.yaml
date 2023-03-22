@@ -16,6 +16,7 @@ config:
   # The name of the cookie that oauth2-proxy will create
   # If left empty, it will default to the release name
   cookieName: "neon-sso"
+  sessionStoreType: cookie
   extraAudiences:
     - grafana
     - minio
@@ -27,11 +28,11 @@ config:
     # Example:
     # existingSecret: google-secret
   # Default configuration, to be overridden
-  configFile: |-
-    cookie_name="neon-sso"
+  configFile: |
+    cookie_name={{ .Values.config.cookieName | quote }}
     cookie_refresh="1h"
     cookie_expire="168h"
-    session_store_type = "redis"
+    session_store_type = {{ .Values.config.sessionStoreType | quote }}
     redis_sentinel_connection_urls=[ "redis://neon-redis.neon-system:26379" ]
     redis_sentinel_master_name = "master" 
     redis_use_sentinel = true
