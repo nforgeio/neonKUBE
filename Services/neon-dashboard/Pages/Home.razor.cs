@@ -142,8 +142,8 @@ namespace NeonDashboard.Pages
 
             if (firstRender)
             {
-                await GetNodeStatusAsync();
-                await AppState.Kube.GetCertExpirationAsync();
+                _ = GetNodeStatusAsync();
+                _ = AppState.Kube.GetCertExpirationAsync();
             }
         }
 
