@@ -115,11 +115,6 @@ namespace Neon.Kube.Operator.ResourceManager
             }
         }
 
-        // $todo(marcusbooyah):
-        //
-        // Does this method make sense?  I would have thought that folks would stop
-        // a controller by cancelling the cancellation token passed to StartAsync().
-
         /// <summary>
         /// Stops the controller.
         /// </summary>

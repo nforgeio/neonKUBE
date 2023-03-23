@@ -1,1 +1,1 @@
-{{- tpl .Values.config.alphaConfigFile . -}}
+{{- tpl .Values.config.configFile . -}}

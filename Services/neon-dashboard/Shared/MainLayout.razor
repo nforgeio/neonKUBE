@@ -8,10 +8,10 @@
 <Portal Name="modal-root"/>
 <div class="mainlayout " >
   <div class="containermain text-slate-50  font-sans antialiased tracking-wide">
-      <main class="main bg-bg justify-center @((AppState.CurrentDashboard == "neonkube") ? "grid" : "")">
+        <main class="main bg-bg justify-center @((AppState.CurrentDashboard == "neonkube") ? "grid pb-8" : "")">
               @Body
       </main>
-       <div class="bottom">
+       <div class="bottom ">
           <BottomMenu />
       </div>
   </div>
