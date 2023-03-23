@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GrpcVirtualNetworkAdapter.cs
+// FILE:	    GrpcVirtualMachineNetworkAdapter.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -33,12 +33,12 @@ namespace Neon.Kube.GrpcProto.Desktop
     /// Describes a network adaptor attached to a virtual machine.
     /// </summary>
     [DataContract]
-    public class GrpcVirtualNetworkAdapter
+    public class GrpcVirtualMachineNetworkAdapter
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public GrpcVirtualNetworkAdapter()
+        public GrpcVirtualMachineNetworkAdapter()
         {
         }
 
@@ -52,7 +52,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// <param name="macAddress">The adapter's MAC address.</param>
         /// <param name="status">The adapter status.</param>
         /// <param name="addresses">The IP addresses assigned to the adapter.</param>
-        public GrpcVirtualNetworkAdapter(
+        public GrpcVirtualMachineNetworkAdapter(
             string          name,
             bool            isManagementOs,
             string          vmName,

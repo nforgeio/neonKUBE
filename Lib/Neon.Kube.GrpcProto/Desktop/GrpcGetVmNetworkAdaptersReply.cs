@@ -55,7 +55,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Constructor.
         /// </summary>
         /// <param name="adapters">The attached network adapters.</param>
-        public GrpcGetVmNetworkAdaptersReply(List<GrpcVirtualNetworkAdapter> adapters)
+        public GrpcGetVmNetworkAdaptersReply(List<GrpcVirtualMachineNetworkAdapter> adapters)
         {
             this.Adapters = adapters;
         }
@@ -70,6 +70,6 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Returns information about the attached network adapters.
         /// </summary>
         [DataMember(Order = 2)]
-        public List<GrpcVirtualNetworkAdapter>? Adapters { get; set; }
+        public List<GrpcVirtualMachineNetworkAdapter>? Adapters { get; set; }
     }
 }

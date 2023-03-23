@@ -46,11 +46,9 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Constructor.
         /// </summary>
         /// <param name="machineName">Specifies the machine name.</param>
-        /// <param name="waitForAddresses">Optionally wait until at least one adapter has been able to acquire at least one IPv4 address.</param>
-        public GrpcGetVmNetworkAdaptersRequest(string machineName, bool waitForAddresses = false)
+        public GrpcGetVmNetworkAdaptersRequest(string machineName)
         {
-            this.MachineName      = machineName;
-            this.WaitForAddresses = waitForAddresses;
+            this.MachineName = machineName;
         }
 
         /// <summary>
@@ -58,11 +56,5 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// </summary>
         [DataMember(Order = 1)]
         public string? MachineName { get; set; }
-
-        /// <summary>
-        /// Optionally wait until at least one adapter has been able to acquire at least one IPv4 address.
-        /// </summary>
-        [DataMember(Order = 2)]
-        public bool WaitForAddresses { get; set; }
     }
 }

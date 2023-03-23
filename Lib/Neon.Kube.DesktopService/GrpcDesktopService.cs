@@ -235,7 +235,7 @@ namespace Neon.Kube.DesktopService
 
             try
             {
-                var adapters = hyperv.ListVmNetworkAdapters(machineName: request.MachineName, waitForAddresses: request.WaitForAddresses);
+                var adapters = hyperv.ListVmNetworkAdapters(machineName: request.MachineName);
 
                 return new GrpcGetVmNetworkAdaptersReply(adapters: adapters.Select(adapter => adapter.ToProto()).ToList());
             }

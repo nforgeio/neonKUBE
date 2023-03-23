@@ -632,17 +632,16 @@ namespace Neon.Kube.Hosting.HyperV
         /// Returns the virtual network adapters attached to the named virtual machine.
         /// </summary>
         /// <param name="machineName">The machine name.</param>
-        /// <param name="waitForAddresses">Optionally wait until at least one adapter has been able to acquire at least one IPv4 address.</param>
         /// <returns>The list of network adapters.</returns>
-        public IEnumerable<VirtualNetworkAdapter> ListVmNetworkAdapters(string machineName, bool waitForAddresses = false)
+        public IEnumerable<VirtualMachineNetworkAdapter> ListVmNetworkAdapters(string machineName)
         {
             if (isAdmin)
             {
-                return hypervClient.ListVmNetworkAdapters(machineName: machineName, waitForAddresses: waitForAddresses);
+                return hypervClient.ListVmNetworkAdapters(machineName: machineName);
             }
             else
             {
-                var request = new GrpcGetVmNetworkAdaptersRequest(machineName: machineName, waitForAddresses: waitForAddresses);
+                var request = new GrpcGetVmNetworkAdaptersRequest(machineName: machineName);
                 var reply   = desktopService.ListVmNetworkAdaptersAsync(request).Result;
 
                 reply.Error.EnsureSuccess();

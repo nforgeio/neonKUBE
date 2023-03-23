@@ -38,7 +38,7 @@ namespace TestGrpc
     /// library is able to perform <see cref="HyperVClient"/> operations directly when running in simulated 
     /// admin mode as well indirectly via the neon desktop server when running in simulated non-admin mode.
     /// </summary>
-    [Trait(TestTrait.Category, TestArea.NeonDesktop)]
+    [Trait(TestTrait.Category, TestArea.NeonHyperV)]
     public class Test_HyperVProxy
     {
         //---------------------------------------------------------------------
@@ -61,11 +61,8 @@ namespace TestGrpc
         private const string TestMachineName2 = "test-hypervproxy-2";
         private const string TestSwitchName   = "test-hypervproxy";
 
-        private static readonly string socketPath    = Path.Combine(Path.GetTempPath(), $"hypervproxy-test-{Guid.NewGuid().ToString("d")}.sock");
-        private static readonly string templatePath  = TestHelper.GetUbuntuTestVhdxPath();
-        private static readonly string test1VhdxPath = Path.Combine(Path.GetTempPath(), "neonkube-test1.vhdx");
-        private static readonly string test2VhdxPath = Path.Combine(Path.GetTempPath(), "neonkube-test2.vhdx");
-        private static readonly string extraVhdxPath = Path.Combine(Path.GetTempPath(), "neonkube-extra.vhdx");
+        private static readonly string socketPath   = Path.Combine(Path.GetTempPath(), $"hypervproxy-test-{Guid.NewGuid().ToString("d")}.sock");
+        private static readonly string templatePath = TestHelper.GetUbuntuTestVhdxPath();
 
         /// <summary>
         /// Constructor.
@@ -76,7 +73,7 @@ namespace TestGrpc
         }
 
         /// <summary>
-        /// Clears and test related state.
+        /// Clears any test related state.
         /// </summary>
         private void ClearState()
         {
@@ -101,9 +98,6 @@ namespace TestGrpc
                 {
                     hyperv.RemoveSwitch(TestSwitchName);
                 }
-
-                NeonHelper.DeleteFile(test1VhdxPath);
-                NeonHelper.DeleteFile(test2VhdxPath);
             }
         }
 
@@ -127,7 +121,7 @@ namespace TestGrpc
             }
         }
 
-        [Theory]
+        [MaintainerTheory]
         [InlineData(true)]
         [InlineData(false)]
         public void GetWindowsOptionalFeatures(bool isAdmin)
@@ -141,7 +135,7 @@ namespace TestGrpc
             }
         }
 
-        [Theory]
+        [MaintainerTheory]
         [InlineData(true)]
         [InlineData(false)]
         public void IsNestedVirtualization(bool isAdmin)
@@ -157,103 +151,133 @@ namespace TestGrpc
             }
         }
 
-        [Theory]
+        [MaintainerTheory]
         [InlineData(true)]
         [InlineData(false)]
         public void VirtualMachines(bool isAdmin)
         {
             try
             {
-                using (CreateService(isAdmin))
+                using (var tempFolder = new TempFolder())
                 {
-                    var hyperVProxy = new HyperVProxy(isAdmin, socketPath);
-
-                    // List VMs before we create any below.  We had an issue once where we'd see
-                    // a [NullReferenceException] when there were no VMs.
-
-                    var vms = hyperVProxy.ListVms();
-
-                    // Create a VM and verify.
-                
-                    hyperVProxy.AddVm(
-                        machineName:       TestMachineName1,
-                        memorySize:        "1 GiB",
-                        processorCount:    2,
-                        drivePath:         test1VhdxPath,
-                        checkpointDrives:  false,
-                        templateDrivePath: templatePath,
-                        switchName:        "External");
-
-                    var vm = hyperVProxy.FindVm(machineName: TestMachineName1);
-
-                    Assert.NotNull(vm);
-                    Assert.Equal(TestMachineName1, vm.Name);
-                    Assert.Equal(VirtualMachineState.Off, vm.State);
-                    Assert.Equal("External", vm.SwitchName);
-
-                    // Start the VM and verify.
-
-                    hyperVProxy.StartVm(machineName: TestMachineName1);
-
-                    vm = hyperVProxy.FindVm(machineName: TestMachineName1);
-
-                    Assert.NotNull(vm);
-                    Assert.Equal(VirtualMachineState.Running, vm.State);
-
-                    // Fetch the VM network adapters.
-
-                    var adapters = hyperVProxy.ListVmNetworkAdapters(TestMachineName1);
-
-                    Assert.NotNull(adapters);
-                    Assert.NotEmpty(adapters);
-
-                    // Save the VM and verify.
-
-                    hyperVProxy.SaveVm(machineName: TestMachineName1);
-
-                    vm = hyperVProxy.FindVm(machineName: TestMachineName1);
-
-                    Assert.NotNull(vm);
-                    Assert.Equal(VirtualMachineState.Saved, vm.State);
-
-                    // Create and start another VM and verify.
-
-                    hyperVProxy.AddVm(
-                        machineName:       TestMachineName2,
-                        memorySize:        "1 GiB",
-                        processorCount:    2,
-                        drivePath:         test2VhdxPath,
-                        checkpointDrives:  false,
-                        templateDrivePath: templatePath,
-                        switchName:        "External");
-
-                    vm = hyperVProxy.FindVm(machineName: TestMachineName2);
-
-                    Assert.NotNull(vm);
-                    Assert.Equal(TestMachineName2, vm.Name);
-                    Assert.Equal(VirtualMachineState.Off, vm.State);
-                    Assert.Equal("External", vm.SwitchName);
-
-                    hyperVProxy.StartVm(machineName: TestMachineName2);
-
-                    vm = hyperVProxy.FindVm(machineName: TestMachineName2);
-
-                    Assert.Equal(VirtualMachineState.Running, vm.State);
-
-                    // List and check the VM existence.
-
-                    var list = hyperVProxy.ListVms();
-
-                    Assert.Contains(list, item => item.Name == TestMachineName1);
-                    Assert.Contains(list, item => item.Name == TestMachineName2);
-                    Assert.True(hyperVProxy.VmExists(TestMachineName1));
-                    Assert.True(hyperVProxy.VmExists(TestMachineName2));
-                    Assert.False(hyperVProxy.VmExists(Guid.NewGuid().ToString("d")));
-
-                    // Test DVD/CD insert and eject operations.
-
-                    using (var tempFolder = new TempFolder())
+                    using (CreateService(isAdmin))
                     {
+                        var hyperVProxy = new HyperVProxy(isAdmin, socketPath);
+
+                        // List VMs before we create any below.  We had an issue once where we'd see
+                        // a [NullReferenceException] when there were no VMs.
+
+                        var vms = hyperVProxy.ListVms();
+
+                        vms = hyperVProxy.ListVms();
+
+                        // Scan for a switch with external access creating one if necessary.
+
+                        var externalSwitchName = hyperVProxy.ListSwitches()
+                            .FirstOrDefault(@switch => @switch.Type == VirtualSwitchType.External)
+                            ?.Name;
+
+                        if (externalSwitchName == null)
+                        {
+                            externalSwitchName = "External";
+
+                            var connectedInterface = NetHelper.GetConnectedInterface();
+
+                            hyperVProxy.NewExternalSwitch(externalSwitchName, NetHelper.GetConnectedGatewayAddress());
+                        }
+
+                        foreach (var @switch in hyperVProxy.ListSwitches())
+                        {
+                            if (@switch.Type == VirtualSwitchType.External)
+                            {
+                                externalSwitchName = @switch.Name;
+                                break;
+                            }
+                        }
+
+                        // Create a VM and verify.
+
+                        var test1VhdxPath = Path.Combine(tempFolder.Path, "boot1.vhdx");
+
+                        hyperVProxy.AddVm(
+                            machineName:       TestMachineName1,
+                            memorySize:        "1 GiB",
+                            processorCount:    2,
+                            drivePath:         test1VhdxPath,
+                            checkpointDrives:  false,
+                            templateDrivePath: templatePath,
+                            switchName:        externalSwitchName);
+
+                        var vm = hyperVProxy.FindVm(machineName: TestMachineName1);
+
+                        Assert.NotNull(vm);
+                        Assert.Equal(TestMachineName1, vm.Name);
+                        Assert.Equal(VirtualMachineState.Off, vm.State);
+                        Assert.Equal(externalSwitchName, vm.SwitchName);
+
+                        // Start the VM and verify.
+
+                        hyperVProxy.StartVm(machineName: TestMachineName1);
+
+                        vm = hyperVProxy.FindVm(machineName: TestMachineName1);
+
+                        Assert.NotNull(vm);
+                        Assert.Equal(VirtualMachineState.Running, vm.State);
+
+                        // Fetch the VM network adapters.
+
+                        var adapters = hyperVProxy.ListVmNetworkAdapters(TestMachineName1);
+
+                        Assert.NotNull(adapters);
+                        Assert.NotEmpty(adapters);
+
+                        // Save the VM and verify.
+
+                        hyperVProxy.SaveVm(machineName: TestMachineName1);
+
+                        vm = hyperVProxy.FindVm(machineName: TestMachineName1);
+
+                        Assert.NotNull(vm);
+                        Assert.Equal(VirtualMachineState.Saved, vm.State);
+
+                        // Create and start another VM and verify.
+
+                        var test2VhdxPath = Path.Combine(tempFolder.Path, "boot2.vhdx");
+
+                        hyperVProxy.AddVm(
+                            machineName:       TestMachineName2,
+                            memorySize:        "1 GiB",
+                            processorCount:    2,
+                            drivePath:         test2VhdxPath,
+                            checkpointDrives:  false,
+                            templateDrivePath: templatePath,
+                            switchName:        externalSwitchName);
+
+                        vm = hyperVProxy.FindVm(machineName: TestMachineName2);
+
+                        Assert.NotNull(vm);
+                        Assert.Equal(TestMachineName2, vm.Name);
+                        Assert.Equal(VirtualMachineState.Off, vm.State);
+                        Assert.Equal(externalSwitchName, vm.SwitchName);
+
+                        hyperVProxy.StartVm(machineName: TestMachineName2);
+
+                        vm = hyperVProxy.FindVm(machineName: TestMachineName2);
+
+                        Assert.Equal(VirtualMachineState.Running, vm.State);
+
+                        // List and check the VM existence.
+
+                        var list = hyperVProxy.ListVms();
+
+                        Assert.Contains(list, item => item.Name == TestMachineName1);
+                        Assert.Contains(list, item => item.Name == TestMachineName2);
+                        Assert.True(hyperVProxy.VmExists(TestMachineName1));
+                        Assert.True(hyperVProxy.VmExists(TestMachineName2));
+                        Assert.False(hyperVProxy.VmExists(Guid.NewGuid().ToString("d")));
+
+                        // Test DVD/CD insert and eject operations.
+
                         var isoFolder = Path.Combine(tempFolder.Path, "iso-contents");
                         var isoPath   = Path.Combine(tempFolder.Path, "data.iso");
 
@@ -261,50 +285,23 @@ namespace TestGrpc
                         File.WriteAllText(Path.Combine(isoFolder, "hello.txt"), "HELLO WORLD!");
                         KubeHelper.CreateIsoFile(isoFolder, isoPath);
 
-                        // $todo(jefflill): Eject is failing:
-                        //
-                        //      https://github.com/nforgeio/neonKUBE/issues/1456
+                        hyperVProxy.InsertVmDvd(TestMachineName2, isoPath);
+                        hyperVProxy.EjectVmDvd(TestMachineName2);
 
-                        // hyperVProxy.InsertVmDvd(TestMachineName2, isoPath);
-                        // hyperVProxy.EjectVmDvd(TestMachineName2);
+                        // Stop the second VM and verify.
+
+                        hyperVProxy.StopVm(machineName: TestMachineName2, turnOff: true);
+
+                        vm = hyperVProxy.FindVm(machineName: TestMachineName2);
+
+                        Assert.Equal(VirtualMachineState.Off, vm.State);
+
+                        // Remove the VMs and verify.
+
+                        hyperVProxy.RemoveVm(machineName: TestMachineName1, keepDrives: false);
+
+                        Assert.Null(hyperVProxy.FindVm(machineName: TestMachineName1));
                     }
-
-                    // Stop the second VM and verify.
-
-                    hyperVProxy.StopVm(machineName: TestMachineName2, turnOff: true);
-
-                    vm = hyperVProxy.FindVm(machineName: TestMachineName2);
-
-                    Assert.Equal(VirtualMachineState.Off, vm.State);
-
-                    // Add a drive to the second VM and verify.
-
-                    hyperVProxy.AddVmDrive(TestMachineName2,
-                        new VirtualDrive()
-                        {
-                            Path      = extraVhdxPath,
-                            Size      = 1 * ByteUnits.GibiBytes,
-                            IsDynamic = true
-                        });
-
-                    var drives = hyperVProxy.ListVmDrives(machineName: TestMachineName1);
-
-                    // $todo(jefflill): We should be seeing two drives here:
-                    //
-                    //      https://github.com/nforgeio/neonKUBE/issues/1455
-
-                    Assert.NotEmpty(drives);
-                    // Assert.Equal(2, drives.Count);
-
-                    // Compact the extra drive we added to the second VM.
-
-                    hyperVProxy.CompactDrive(extraVhdxPath);
-
-                    // Remove the VMs and verify.
-
-                    hyperVProxy.RemoveVm(machineName: TestMachineName1, keepDrives: false);
-
-                    Assert.Null(hyperVProxy.FindVm(machineName: TestMachineName1));
                 }
             }
             finally
@@ -313,7 +310,7 @@ namespace TestGrpc
             }
         }
 
-        [Theory]
+        [MaintainerTheory]
         [InlineData(true)]
         [InlineData(false)]
         public void Switches(bool isAdmin)
@@ -351,7 +348,7 @@ namespace TestGrpc
             }
         }
 
-        [Theory]
+        [MaintainerTheory]
         [InlineData(true)]
         [InlineData(false)]
         public void Nats(bool isAdmin)

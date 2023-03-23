@@ -1634,7 +1634,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Packages the files within a folder into an ISO file.
+        /// Packages files within a folder into an ISO file.
         /// </para>
         /// <note>
         /// This requires Powershell to be installed and this will favor using the version of

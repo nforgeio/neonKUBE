@@ -168,10 +168,10 @@ namespace Neon.Kube.GrpcProto.Desktop
 
             return new VirtualMachine()
             {
-                Name          = grpcVirtualMachine.Name,
-                State         = NeonHelper.ParseEnum<VirtualMachineState>(grpcVirtualMachine.State),
-                InterfaceName = grpcVirtualMachine.InterfaceName,
-                SwitchName    = grpcVirtualMachine.SwitchName
+                Name           = grpcVirtualMachine.Name,
+                State          = NeonHelper.ParseEnum<VirtualMachineState>(grpcVirtualMachine.State),
+                NetAdapterName = grpcVirtualMachine.InterfaceName,
+                SwitchName     = grpcVirtualMachine.SwitchName
             };
         }
 
@@ -188,52 +188,52 @@ namespace Neon.Kube.GrpcProto.Desktop
             }
 
             return new GrpcVirtualMachine(
-                name:          virtualMachine.Name,
-                state:         NeonHelper.EnumToString(virtualMachine.State),
-                interfaceName: virtualMachine.InterfaceName,
-                switchName:    virtualMachine.SwitchName);
+                name:           virtualMachine.Name,
+                state:          NeonHelper.EnumToString(virtualMachine.State),
+                netAdapterName: virtualMachine.NetAdapterName,
+                switchName:     virtualMachine.SwitchName);
         }
 
         //---------------------------------------------------------------------
-        // VirtualNetworkAdapter
+        // VirtualMachineNetworkAdapter
 
         /// <summary>
-        /// Converts a <see cref="GrpcVirtualNetworkAdapter"/> into a <see cref="VirtualNetworkAdapter"/>.
+        /// Converts a <see cref="GrpcVirtualMachineNetworkAdapter"/> into a <see cref="VirtualMachineNetworkAdapter"/>.
         /// </summary>
-        /// <param name="grpcVirtualNetworkAdapter">The input.</param>
+        /// <param name="grpcVirtualMachineNetworkAdapter">The input.</param>
         /// <returns>The output.</returns>
-        public static VirtualNetworkAdapter? ToLocal(this GrpcVirtualNetworkAdapter grpcVirtualNetworkAdapter)
+        public static VirtualMachineNetworkAdapter? ToLocal(this GrpcVirtualMachineNetworkAdapter grpcVirtualMachineNetworkAdapter)
         {
-            if (grpcVirtualNetworkAdapter == null)
+            if (grpcVirtualMachineNetworkAdapter == null)
             {
                 return null;
             }
 
-            return new VirtualNetworkAdapter()
+            return new VirtualMachineNetworkAdapter()
             {
-                Name           = grpcVirtualNetworkAdapter.Name,
-                SwitchName     = grpcVirtualNetworkAdapter.SwitchName,
-                IsManagementOs = grpcVirtualNetworkAdapter.IsManagementOs,
-                MacAddress     = grpcVirtualNetworkAdapter.MacAddress,
-                Addresses      = grpcVirtualNetworkAdapter.Addresses?.Select(address => IPAddress.Parse(address)).ToList(),
-                Status         = grpcVirtualNetworkAdapter.Status,
-                VMName         = grpcVirtualNetworkAdapter.VMName
+                Name           = grpcVirtualMachineNetworkAdapter.Name,
+                SwitchName     = grpcVirtualMachineNetworkAdapter.SwitchName,
+                IsManagementOs = grpcVirtualMachineNetworkAdapter.IsManagementOs,
+                MacAddress     = grpcVirtualMachineNetworkAdapter.MacAddress,
+                Addresses      = grpcVirtualMachineNetworkAdapter.Addresses?.Select(address => IPAddress.Parse(address)).ToList(),
+                Status         = grpcVirtualMachineNetworkAdapter.Status,
+                VMName         = grpcVirtualMachineNetworkAdapter.VMName
             };
         }
 
         /// <summary>
-        /// Convertsa <see cref="VirtualNetworkAdapter"/> int a <see cref="GrpcVirtualNetworkAdapter"/>.
+        /// Convertsa <see cref="VirtualMachineNetworkAdapter"/> int a <see cref="GrpcVirtualMachineNetworkAdapter"/>.
         /// </summary>
         /// <param name="virtualNat">The input.</param>
         /// <returns>The output.</returns>
-        public static GrpcVirtualNetworkAdapter? ToProto(this VirtualNetworkAdapter virtualNat)
+        public static GrpcVirtualMachineNetworkAdapter? ToProto(this VirtualMachineNetworkAdapter virtualNat)
         {
             if (virtualNat == null)
             {
                 return null;
             }
 
-            return new GrpcVirtualNetworkAdapter(
+            return new GrpcVirtualMachineNetworkAdapter(
                 name:           virtualNat.Name,
                 switchName:     virtualNat.SwitchName,
                 isManagementOs: virtualNat.IsManagementOs,
