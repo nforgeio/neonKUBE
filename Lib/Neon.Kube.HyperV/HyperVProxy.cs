@@ -83,7 +83,12 @@ namespace Neon.Kube.Hosting.HyperV
         /// is used for testing purposes.  This defaults to <see cref="KubeHelper.WinDesktopServiceSocketPath"/>
         /// where <b>neon-desktop</b> and <b>neon-cli</b> expect it to be.
         /// </param>
-        public HyperVProxy(bool? isAdminOverride = null, string socketPath = null)
+        /// <param name="driverType">
+        /// Optionally specifies the low-level Hyper-V driver implementation.  This defaults 
+        /// to <see cref="HyperVDriverType.Wmi"/>.  This only matters when the proxy is
+        /// running in admin mode and is directily manipulating Hyper-V.
+        /// </param>
+        public HyperVProxy(bool? isAdminOverride = null, string socketPath = null, HyperVDriverType driverType = HyperVDriverType.Wmi)
         {
             if (isAdminOverride.HasValue)
             {
@@ -96,7 +101,7 @@ namespace Neon.Kube.Hosting.HyperV
 
             if (isAdmin)
             {
-                hypervClient = new HyperVClient();
+                hypervClient = new HyperVClient(driverType);
             }
             else
             {
