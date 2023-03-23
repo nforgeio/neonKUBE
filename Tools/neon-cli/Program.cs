@@ -58,6 +58,7 @@ using OpenTelemetry.Resources;
 
 using ProtoBuf.Grpc.Client;
 using OpenTelemetry;
+using System.Diagnostics.CodeAnalysis;
 
 namespace NeonCli
 {
@@ -626,6 +627,7 @@ NOTE: Command line arguments and options may include references to
         /// Exits the program returning the specified process exit code.
         /// </summary>
         /// <param name="exitCode">The exit code.</param>
+        [DoesNotReturn]
         public static void Exit(int exitCode)
         {
             throw new ProgramExitException(exitCode);
