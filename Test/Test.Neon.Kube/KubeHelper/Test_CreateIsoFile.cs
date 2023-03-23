@@ -23,6 +23,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using DiscUtils.Iso9660;
+
 using Neon.Common;
 using Neon.IO;
 using Neon.Kube;
@@ -47,16 +49,52 @@ namespace TestKube
             {
                 using (var tempIso = new TempFile(suffix: ".iso"))
                 {
+                    // Create the ISO.
+
                     for (int i = 0; i < 10; i++)
                     {
                         File.WriteAllText(Path.Combine(tempFolder.Path, $"{i}.txt"), $"{i}");
                     }
 
-                    KubeHelper.CreateIsoFile(tempFolder.Path, tempIso.Path, "TEST");
+                    Directory.CreateDirectory(Path.Combine(tempFolder.Path, "subfolder"));
+
+                    for (int i = 0; i < 10; i++)
+                    {
+                        File.WriteAllText(Path.Combine(tempFolder.Path, "subfolder", $"{i}.txt"), $"{i}");
+                    }
+
+                    KubeHelper.CreateIsoFile(tempFolder.Path, tempIso.Path, "TEST-LABEL");
+                    
+                    // Validate the ISO.
 
                     using (var file = new FileStream(tempIso.Path, FileMode.Open, FileAccess.Read))
                     {
                         Assert.True(file.Length > 0);
+
+                        using (var reader = new CDReader(file, joliet: false))
+                        {
+                            Assert.Equal("TEST-LABEL", reader.VolumeLabel);
+
+                            for (int i = 0; i < 10; i++)
+                            {
+                                using (var stream = reader.OpenFile($"{i}.txt", FileMode.Open))
+                                {
+                                    Assert.Equal(i.ToString(), Encoding.UTF8.GetString(stream.ReadToEnd()));
+                                }
+                            }
+
+                            Assert.True(reader.DirectoryExists("subfolder"));
+
+                            for (int i = 0; i < 10; i++)
+                            {
+                                var path = $@"subfolder\{i}.txt";
+
+                                using (var stream = reader.OpenFile($@"subfolder\{i}.txt", FileMode.Open))
+                                {
+                                    Assert.Equal(i.ToString(), Encoding.UTF8.GetString(stream.ReadToEnd()));
+                                }
+                            }
+                        }
                     }
                 }
             }
