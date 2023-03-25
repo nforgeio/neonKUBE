@@ -86,7 +86,7 @@ namespace Neon.Kube.Hosting.HyperV
         /// <param name="driverType">
         /// Optionally specifies the low-level Hyper-V driver implementation.  This defaults 
         /// to <see cref="HyperVDriverType.Wmi"/>.  This only matters when the proxy is
-        /// running in admin mode and is directily manipulating Hyper-V.
+        /// running in admin mode and is directly manipulating Hyper-V.
         /// </param>
         public HyperVProxy(bool? isAdminOverride = null, string socketPath = null, HyperVDriverType driverType = HyperVDriverType.Wmi)
         {

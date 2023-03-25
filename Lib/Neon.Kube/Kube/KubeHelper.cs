@@ -1651,7 +1651,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sourceFolder), nameof(sourceFolder));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(isoPath), nameof(isoPath));
-            Covenant.Requires<ArgumentException>(!sourceFolder.Contains('"'), nameof(sourceFolder));      // We don't escape quotes below so we'll
+            Covenant.Requires<ArgumentException>(!sourceFolder.Contains('"'), nameof(sourceFolder));    // We don't escape quotes below so we'll
             Covenant.Requires<ArgumentException>(!isoPath.Contains('"'), nameof(isoPath));              // Reject paths including quotes.
 
             sourceFolder = Path.GetFullPath(sourceFolder);
