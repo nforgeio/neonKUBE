@@ -2589,10 +2589,8 @@ TCPKeepAlive yes
             using (var client = new HttpClient())
             {
                 var request     = new HttpRequestMessage(HttpMethod.Get, imageUri);
-                var response    = await client.SendAsync(request, cancellationToken: cancellationToken);
+                var response    = await client.SendSafeAsync(request, cancellationToken: cancellationToken);
                 var contentType = response.Content.Headers.ContentType.MediaType;
-
-                response.EnsureSuccessStatusCode();
 
                 if (!string.Equals(contentType, DeploymentHelper.DownloadManifestContentType, StringComparison.InvariantCultureIgnoreCase))
                 {
