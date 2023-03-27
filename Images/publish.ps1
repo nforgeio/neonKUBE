@@ -131,6 +131,12 @@ try
 
     # We need to do a solution build to ensure that any tools or other dependencies 
     # are built before we build and publish the individual container images.
+    
+    # $note(jefflill):
+    #
+    # We're currently building DEBUG code since our services don't really have tight
+    # inner loops and also to get better stack traces on failures, making it easier
+    # to debug any issues we encounter.
 
     $config     = "Debug"
     $msbuild    = $env:MSBUILDPATH
