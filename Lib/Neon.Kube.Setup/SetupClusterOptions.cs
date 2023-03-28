@@ -96,5 +96,13 @@ namespace Neon.Kube.Setup
         /// enabled for non-console applications.
         /// </summary>
         public bool DisableConsoleOutput { get; set; } = false;
+
+        /// <summary>
+        /// Optionally indicates that we're setting up a neon-desktop built-in cluster
+        /// from a completely prebuilt desktop image.  In this case, the controller
+        /// returned will fully deploy the cluster (so no setup controller needs to
+        /// be created and run afterwards).
+        /// </summary>
+        public bool DesktopReadyToGo { get; set; } = false;
     }
 }

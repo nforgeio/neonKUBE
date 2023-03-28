@@ -43,6 +43,7 @@ using Neon.Cryptography;
 using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.ClusterDef;
 using Neon.Kube.Setup;
 using Neon.Net;
 using Neon.Retry;
@@ -239,6 +240,12 @@ OPTIONS:
                 UploadCharts         = uploadCharts,
                 DisableConsoleOutput = quiet
             };
+
+            if (clusterDefinition.Hosting.Environment == HostingEnvironment.HyperV &&
+                clusterDefinition.Hosting.HyperV.NeonDesktopBuiltIn)
+            {
+                setupOptions.DesktopReadyToGo = true;
+            }
 
             var controller = KubeSetup.CreateClusterSetupController(
                 clusterDefinition,
