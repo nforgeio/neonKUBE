@@ -4179,7 +4179,7 @@ $@"- name: StorageType
                                     controller.ThrowIfCancelled();
                                     (await cluster.ExecMinioCommandAsync(
                                         retryPolicy:    podExecRetry,
-                                        mcCommand:      "admin policy add minio superadmin /tmp/superadmin.json")).EnsureSuccess();
+                                        mcCommand:      "admin policy create minio superadmin /tmp/superadmin.json")).EnsureSuccess();
                                 });
                         });
                 });

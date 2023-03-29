@@ -1124,7 +1124,7 @@ spec:
       "timepicker": {},
       "timezone": "",
       "title": "Neon dashboard",
-      "uid": "O7__VdbVz",
+      "uid": "neonkube-default-dashboard",
       "version": 3,
       "weekStart": ""
     }`}}

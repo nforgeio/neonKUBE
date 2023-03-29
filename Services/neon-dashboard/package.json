@@ -5,13 +5,13 @@
   "main": "index.js",
     "dependencies": {},
   "devDependencies": {
-    "autoprefixer": "^10.4.7",
+    "autoprefixer": "^10.4.14",
     "cross-env": "^7.0.3",
-    "cssnano": "^5.1.11",
-    "postcss": "^8.4.14",
-    "postcss-cli": "^9.1.0",
-    "postcss-import": "^14.1.0",
-    "tailwindcss": "^3.0.24"
+    "cssnano": "^6.0.0",
+    "postcss": "^8.4.21",
+    "postcss-cli": "^10.1.0",
+    "postcss-import": "^15.1.0",
+    "tailwindcss": "^3.3.0"
   },
     "scripts": {
         "dev": "npm run watch",

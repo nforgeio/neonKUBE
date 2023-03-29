@@ -160,12 +160,20 @@ namespace Neon.Kube.ClusterDef
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            SearchRegistries = SearchRegistries ?? new List<string>() { "docker.io" };
+            SearchRegistries = SearchRegistries ?? new List<string>() { defaultRegistry };
             Registries       = Registries ?? new List<Registry>();
 
-            // Ensure that [SearchRegistries] references are formatted correctly.
-
-            SearchRegistries = SearchRegistries ?? new List<string>() { defaultRegistry };
+            if (!Registries.Any(r => r.Location == defaultRegistry))
+            {
+                Registries.Add(new Registry()
+                {
+                    Name     = "docker",
+                    Blocked  = false,
+                    Insecure = false,
+                    Location = defaultRegistry,
+                    Prefix   = defaultRegistry,
+                });
+            }
 
             foreach (var registry in SearchRegistries)
             {
