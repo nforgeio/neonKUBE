@@ -2089,8 +2089,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add("certficateDuration", cluster.Definition.Network.AcmeOptions.CertificateDuration);
                     values.Add("certificateRenewBefore", cluster.Definition.Network.AcmeOptions.CertificateRenewBefore);
                     values.Add("isNeonDesktop", cluster.Definition.IsDesktop);
-                    values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
-                    values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
+                    values.Add($"resources.requests.memory", ToSiString(acmeAdvice.PodMemoryRequest));
+                    values.Add($"resources.limits.memory", ToSiString(acmeAdvice.PodMemoryLimit));
                     values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 9 : 3);
                     values.Add("dotnetGcServer", cluster.Definition.Nodes.Count() == 1 ? 0 : 1);
                     values.Add("dotnetGcHighMemPercent", cluster.Definition.Nodes.Count() == 1 ? 15.ToString("x") : 50.ToString("x"));
