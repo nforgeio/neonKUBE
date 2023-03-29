@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GrpcGetIPAddressRequest.cs
+// FILE:	    GrpcFindNatBySubnetRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -30,31 +30,31 @@ using ProtoBuf.Grpc;
 namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Returns information about a virtual IP address.
+    /// Returns information about a virtual Hyper-V NAT by subnet.  This returns a <see cref="GrpcFindNatReply"/>.
     /// </summary>
     [DataContract]
-    public class GrpcGetIPAddressRequest
+    public class GrpcFindNatBySubnetRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public GrpcGetIPAddressRequest()
+        public GrpcFindNatBySubnetRequest()
         {
         }
 
         /// <summary>
-        /// Constructor
+        /// Constructor.
         /// </summary>
-        /// <param name="address">The desired IP address.</param>
-        public GrpcGetIPAddressRequest(string address)
+        /// <param name="subnet">Specifies the NAT subnet.</param>
+        public GrpcFindNatBySubnetRequest(string subnet)
         {
-            this.Address = address;
+            this.Subnet = subnet;
         }
 
         /// <summary>
-        /// The desired IP addess.
+        /// Identifies the target NAT by subnet.
         /// </summary>
         [DataMember(Order = 1)]
-        public string? Address { get; set; }
+        public string? Subnet { get; set; }
     }
 }

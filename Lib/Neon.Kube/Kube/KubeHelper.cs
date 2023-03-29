@@ -36,6 +36,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using DiscUtils.Iso9660;
+
 using k8s;
 using k8s.Models;
 
@@ -1634,167 +1636,64 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Packages the files within a folder into an ISO file.
+        /// Packages files within a folder into an ISO file.
         /// </para>
         /// <note>
         /// This requires Powershell to be installed and this will favor using the version of
         /// Powershell installed along with the neon-cli, if present.
         /// </note>
         /// </summary>
-        /// <param name="inputFolder">Path to the input folder.</param>
+        /// <param name="sourceFolder">Path to the input folder.</param>
         /// <param name="isoPath">Path to the output ISO file.</param>
         /// <param name="label">Optionally specifies a volume label.</param>
         /// <exception cref="ExecuteException">Thrown if the operation failed.</exception>
-        public static void CreateIsoFile(string inputFolder, string isoPath, string label = null)
+        public static void CreateIsoFile(string sourceFolder, string isoPath, string label = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(inputFolder), nameof(inputFolder));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sourceFolder), nameof(sourceFolder));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(isoPath), nameof(isoPath));
-            Covenant.Requires<ArgumentException>(!inputFolder.Contains('"'), nameof(inputFolder));      // We don't escape quotes below so we'll
-            Covenant.Requires<ArgumentException>(!isoPath.Contains('"'), nameof(isoPath));              // reject paths including quotes.
+            Covenant.Requires<ArgumentException>(!sourceFolder.Contains('"'), nameof(sourceFolder));    // We don't escape quotes below so we'll
+            Covenant.Requires<ArgumentException>(!isoPath.Contains('"'), nameof(isoPath));              // Reject paths including quotes.
 
-            label = label ?? string.Empty;
+            sourceFolder = Path.GetFullPath(sourceFolder);
+            label        = label ?? string.Empty;
 
-            // We're going to use a function from the Microsoft Technet Script Center:
-            //
-            //      https://gallery.technet.microsoft.com/scriptcenter/New-ISOFile-function-a8deeffd
-
-            const string newIsoFileFunc =
-@"function New-IsoFile  
-{  
-  <#  
-   .Synopsis  
-    Creates a new .iso file  
-   .Description  
-    The New-IsoFile cmdlet creates a new .iso file containing content from chosen folders  
-   .Example  
-    New-IsoFile ""c:\tools"",""c:Downloads\utils""  
-    This command creates a .iso file in $env:temp folder (default location) that contains c:\tools and c:\downloads\utils folders. The folders themselves are included at the root of the .iso image.  
-   .Example 
-    New-IsoFile -FromClipboard -Verbose 
-    Before running this command, select and copy (Ctrl-C) files/folders in Explorer first.  
-   .Example  
-    dir c:\WinPE | New-IsoFile -Path c:\temp\WinPE.iso -BootFile ""${env:ProgramFiles(x86)}\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\amd64\Oscdimg\efisys.bin"" -Media DVDPLUSR -Title ""WinPE"" 
-    This command creates a bootable .iso file containing the content from c:\WinPE folder, but the folder itself isn't included. Boot file etfsboot.com can be found in Windows ADK. Refer to IMAPI_MEDIA_PHYSICAL_TYPE enumeration for possible media types: http://msdn.microsoft.com/en-us/library/windows/desktop/aa366217(v=vs.85).aspx  
-   .Notes 
-    NAME:  New-IsoFile  
-    AUTHOR: Chris Wu 
-    LASTEDIT: 03/23/2016 14:46:50  
-#>  
-  
-  [CmdletBinding(DefaultParameterSetName='Source')]Param( 
-    [parameter(Position=1,Mandatory=$true,ValueFromPipeline=$true, ParameterSetName='Source')]$Source,  
-    [parameter(Position=2)][string]$Path = ""$env:temp\$((Get-Date).ToString('yyyyMMdd-HHmmss.ffff')).iso"",  
-    [ValidateScript({Test-Path -LiteralPath $_ -PathType Leaf})][string]$BootFile = $null, 
-    [ValidateSet('CDR','CDRW','DVDRAM','DVDPLUSR','DVDPLUSRW','DVDPLUSR_DUALLAYER','DVDDASHR','DVDDASHRW','DVDDASHR_DUALLAYER','DISK','DVDPLUSRW_DUALLAYER','BDR','BDRE')][string] $Media = 'DVDPLUSRW_DUALLAYER', 
-    [string]$Title = (Get-Date).ToString(""yyyyMMdd-HHmmss.ffff""),  
-    [switch]$Force, 
-    [parameter(ParameterSetName='Clipboard')][switch]$FromClipboard 
-  ) 
- 
-  Begin {  
-    ($cp = new-object System.CodeDom.Compiler.CompilerParameters).CompilerOptions = '/unsafe' 
-    if (!('ISOFile' -as [type])) {  
-      Add-Type -CompilerParameters $cp -TypeDefinition @' 
-public class ISOFile  
-{ 
-  public unsafe static void Create(string Path, object Stream, int BlockSize, int TotalBlocks)  
-  {  
-    int bytes = 0;  
-    byte[] buf = new byte[BlockSize];  
-    var ptr = (System.IntPtr)(&bytes);  
-    var o = System.IO.File.OpenWrite(Path);  
-    var i = Stream as System.Runtime.InteropServices.ComTypes.IStream;  
-  
-    if (o != null) { 
-      while (TotalBlocks-- > 0) {  
-        i.Read(buf, BlockSize, ptr); o.Write(buf, 0, bytes);  
-      }  
-      o.Flush(); o.Close();  
-    } 
-  } 
-}  
-'@  
-    } 
-  
-    if ($BootFile) { 
-      if('BDR','BDRE' -contains $Media) { Write-Warning ""Bootable image doesn't seem to work with media type $Media"" } 
-      ($Stream = New-Object -ComObject ADODB.Stream -Property @{Type=1}).Open()  # adFileTypeBinary 
-      $Stream.LoadFromFile((Get-Item -LiteralPath $BootFile).Fullname) 
-      ($Boot = New-Object -ComObject IMAPI2FS.BootOptions).AssignBootImage($Stream) 
-    } 
- 
-    $MediaType = @('UNKNOWN','CDROM','CDR','CDRW','DVDROM','DVDRAM','DVDPLUSR','DVDPLUSRW','DVDPLUSR_DUALLAYER','DVDDASHR','DVDDASHRW','DVDDASHR_DUALLAYER','DISK','DVDPLUSRW_DUALLAYER','HDDVDROM','HDDVDR','HDDVDRAM','BDROM','BDR','BDRE') 
- 
-    Write-Verbose -Message ""Selected media type is $Media with value $($MediaType.IndexOf($Media))"" 
-    ($Image = New-Object -com IMAPI2FS.MsftFileSystemImage -Property @{VolumeName=$Title}).ChooseImageDefaultsForMediaType($MediaType.IndexOf($Media)) 
-  
-    if (!($Target = New-Item -Path $Path -ItemType File -Force:$Force -ErrorAction SilentlyContinue)) { Write-Error -Message ""Cannot create file $Path. Use -Force parameter to overwrite if the target file already exists.""; break } 
-  }  
- 
-  Process { 
-    if($FromClipboard) { 
-      if($PSVersionTable.PSVersion.Major -lt 5) { Write-Error -Message 'The -FromClipboard parameter is only supported on PowerShell v5 or higher'; break } 
-      $Source = Get-Clipboard -Format FileDropList 
-    } 
- 
-    foreach($item in $Source) { 
-      if($item -isnot [System.IO.FileInfo] -and $item -isnot [System.IO.DirectoryInfo]) { 
-        $item = Get-Item -LiteralPath $item 
-      } 
- 
-      if($item) { 
-        Write-Verbose -Message ""Adding item to the target image: $($item.FullName)"" 
-        try { $Image.Root.AddTree($item.FullName, $true) } catch { Write-Error -Message ($_.Exception.Message.Trim() + ' Try a different media type.') } 
-      } 
-    } 
-  } 
- 
-  End {  
-    if ($Boot) { $Image.BootImageOptions=$Boot }  
-    $Result = $Image.CreateResultImage()  
-    [ISOFile]::Create($Target.FullName,$Result.ImageStream,$Result.BlockSize,$Result.TotalBlocks) 
-    Write-Verbose -Message ""Target image ($($Target.FullName)) has been created"" 
-    $Target 
-  } 
-} 
-";
             // Delete any existing ISO file.
 
-            File.Delete(isoPath);
+            NeonHelper.DeleteFile(isoPath);
 
-            // Use the version of Powershell installed along with the neon-cli or desktop, if present,
-            // otherwise just launch Powershell from the PATH.
+            // Build the ISO.
 
-            var neonKubeProgramFolder = Environment.GetEnvironmentVariable("NEON_INSTALL_FOLDER");
-            var powershellPath        = "powershell";
+            var isoBuilder = new CDBuilder();
+            var streams    = new List<Stream>();
 
-            if (neonKubeProgramFolder != null)
+            try
             {
-                var path = Path.Combine(neonKubeProgramFolder, powershellPath);
+                isoBuilder.VolumeIdentifier = label;
 
-                if (File.Exists(path))
+                foreach (var directory in Directory.GetDirectories(sourceFolder, "*", SearchOption.AllDirectories))
                 {
-                    powershellPath = path;
+                    var relativePath = directory.Substring(sourceFolder.Length + 1);
+
+                    isoBuilder.AddDirectory(relativePath);
                 }
+
+                foreach (var file in Directory.GetFiles(sourceFolder, "*", SearchOption.AllDirectories))
+                {
+                    var relativePath = file.Substring(sourceFolder.Length + 1);
+                    var stream       = File.OpenRead(file);
+
+                    streams.Add(stream);
+                    isoBuilder.AddFile(relativePath, stream);
+                }
+
+                isoBuilder.Build(isoPath);
             }
-
-            // Generate a temporary script file and run it.
-
-            using (var tempFile = new TempFile(suffix: ".ps1"))
+            finally
             {
-                var script = newIsoFileFunc;
-
-                script += $"Get-ChildItem \"{inputFolder}\" | New-ISOFile -path \"{isoPath}\" -Title \"{label}\"";
-
-                File.WriteAllText(tempFile.Path, script);
-
-                var result = NeonHelper.ExecuteCapture(powershellPath,
-                    new object[]
-                    {
-                        "-f", tempFile.Path
-                    });
-
-                result.EnsureSuccess();
+                foreach (var stream in streams)
+                {
+                    stream.Dispose();
+                }
             }
         }
 
@@ -2690,10 +2589,8 @@ TCPKeepAlive yes
             using (var client = new HttpClient())
             {
                 var request     = new HttpRequestMessage(HttpMethod.Get, imageUri);
-                var response    = await client.SendAsync(request, cancellationToken: cancellationToken);
+                var response    = await client.SendSafeAsync(request, cancellationToken: cancellationToken);
                 var contentType = response.Content.Headers.ContentType.MediaType;
-
-                response.EnsureSuccessStatusCode();
 
                 if (!string.Equals(contentType, DeploymentHelper.DownloadManifestContentType, StringComparison.InvariantCultureIgnoreCase))
                 {

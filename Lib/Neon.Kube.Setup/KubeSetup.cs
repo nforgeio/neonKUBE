@@ -116,7 +116,7 @@ namespace Neon.Kube.Setup
 
                 if (File.Exists(localClusterManifestPath))
                 {
-                    return cachedClusterManifest = NeonHelper.JsonDeserialize<ClusterManifest>(localClusterManifestPath);
+                    return cachedClusterManifest = NeonHelper.JsonDeserialize<ClusterManifest>(File.ReadAllText(localClusterManifestPath));
                 }
                 else
                 {

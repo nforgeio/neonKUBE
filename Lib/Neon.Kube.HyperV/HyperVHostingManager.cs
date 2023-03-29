@@ -233,8 +233,8 @@ namespace Neon.Kube.Hosting.HyperV
 
                             var localHyperVOptions = cluster.Definition.Hosting.HyperV;
                             var @switch            = hyperv.FindSwitch(KubeConst.HyperVInternalSwitchName);
-                            var address            = hyperv.GetIPAddress(localHyperVOptions.NeonDesktopNodeAddress.ToString());
-                            var nat                = hyperv.GetNatByName(KubeConst.HyperVInternalSwitchName);
+                            var address            = hyperv.FindIPAddress(localHyperVOptions.NeonDesktopNodeAddress.ToString());
+                            var nat                = hyperv.FindNatByName(KubeConst.HyperVInternalSwitchName);
 
                             if (@switch != null)
                             {

@@ -205,7 +205,7 @@ namespace Neon.Kube.Setup
             controller.Add(KubeSetupProperty.HostingEnvironment, cluster.HostingManager.HostingEnvironment);
             controller.Add(KubeSetupProperty.NeonCloudHeadendClient, HeadendClient.Create());
             controller.Add(KubeSetupProperty.Redact, !options.Unredacted);
-            controller.Add(KubeSetupProperty.DesktopReadyToGo, false);   // This is always FALSE for the setup controller.
+            controller.Add(KubeSetupProperty.DesktopReadyToGo, options.DesktopReadyToGo);
             controller.Add(KubeSetupProperty.DesktopServiceProxy, desktopServiceProxy);
 
             // Configure the setup steps.
@@ -332,7 +332,21 @@ namespace Neon.Kube.Setup
                     (controller, node) => node.Metadata.IsWorker);
             }
 
+            //-----------------------------------------------------------------
+            // Give the hosting manager a chance to perform and post setup steps.
+
             cluster.HostingManager.AddPostSetupSteps(controller);
+
+            //-----------------------------------------------------------------
+            // Ensure that required pods are running for [neon-desktop] clusters.
+            // This is required because no pods will be running when the [neon-desktop]
+            // image first boots and it may take some time for the pods to start
+            // and stablize.
+
+            if (options.DesktopReadyToGo)
+            {
+                controller.AddGlobalStep("wait for stable cluster...", StabilizeClusterAsync);
+            }
 
             // We need to dispose these after the setup controller runs.
 

@@ -240,27 +240,27 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// </summary>
         /// <param name="request">The request.</param>
         /// <param name="context">Optionally specifies the gRPC call context.</param>
-        /// <returns>A <see cref="GrpcGetNatReply"/>.</returns>
+        /// <returns>A <see cref="GrpcFindNatReply"/>.</returns>
         [OperationContract]
-        Task<GrpcGetNatReply> GetNatByNameAsync(GrpcGetNatByNameRequest request, CallContext context = default);
+        Task<GrpcFindNatReply> FindNatByNameAsync(GrpcFindNatByNameRequest request, CallContext context = default);
 
         /// <summary>
         /// Looks up a virtual Hyper-V NAT by subnet.
         /// </summary>
         /// <param name="request">The request.</param>
         /// <param name="context">Optionally specifies the gRPC call context.</param>
-        /// <returns>A <see cref="GrpcGetNatReply"/>.</returns>
+        /// <returns>A <see cref="GrpcFindNatReply"/>.</returns>
         [OperationContract]
-        Task<GrpcGetNatReply> GetNatByNameSubnetAsync(GrpcGetNatBySubnetRequest request, CallContext context = default);
+        Task<GrpcFindNatReply> FindNatByNameSubnetAsync(GrpcFindNatBySubnetRequest request, CallContext context = default);
 
         /// <summary>
         /// Returns information about a virtual IP address.
         /// </summary>
         /// <param name="request">The request.</param>
         /// <param name="context">Optionally specifies the gRPC call context.</param>
-        /// <returns>A <see cref="GrpcGetIPAddressReply"/>.</returns>
+        /// <returns>A <see cref="GrpcFindIPAddressReply"/>.</returns>
         [OperationContract]
-        Task<GrpcGetIPAddressReply> GetIPAddressAsync(GrpcGetIPAddressRequest request, CallContext context = default);
+        Task<GrpcFindIPAddressReply> FindIPAddressAsync(GrpcFindIPAddressRequest request, CallContext context = default);
 
         /// <summary>
         /// Sends a batch of telemetry logs to the <b>neon-desktop-service</b> which will then forward them on to the headend.

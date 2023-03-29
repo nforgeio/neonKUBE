@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GrpcGetNatReply.cs
+// FILE:	    GrpcFindNatReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -33,12 +33,12 @@ namespace Neon.Kube.GrpcProto.Desktop
     /// Returns information about a specific virtual Hyper-V NAT.
     /// </summary>
     [DataContract]
-    public class GrpcGetNatReply
+    public class GrpcFindNatReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public GrpcGetNatReply()
+        public GrpcFindNatReply()
         {
         }
 
@@ -46,7 +46,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Error constructor.
         /// </summary>
         /// <param name="e">The exception.</param>
-        public GrpcGetNatReply(Exception e)
+        public GrpcFindNatReply(Exception e)
         {
             this.Error = new GrpcError(e);
         }
@@ -55,7 +55,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Constructor.
         /// </summary>
         /// <param name="nat">The NAT details.</param>
-        public GrpcGetNatReply(GrpcVirtualNat nat)
+        public GrpcFindNatReply(GrpcVirtualNat nat)
         {
             this.Nat = nat;
         }

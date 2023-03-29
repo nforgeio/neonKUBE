@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GrpcGetNatByNameRequest.cs
+// FILE:	    GrpcFindNatByNameRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -30,15 +30,15 @@ using ProtoBuf.Grpc;
 namespace Neon.Kube.GrpcProto.Desktop
 {
     /// <summary>
-    /// Returns information about a virtual Hyper-V NAT by name.  This returns a <see cref="GrpcGetNatReply"/>.
+    /// Returns information about a virtual Hyper-V NAT by name.  This returns a <see cref="GrpcFindNatReply"/>.
     /// </summary>
     [DataContract]
-    public class GrpcGetNatByNameRequest
+    public class GrpcFindNatByNameRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public GrpcGetNatByNameRequest()
+        public GrpcFindNatByNameRequest()
         {
         }
 
@@ -46,7 +46,7 @@ namespace Neon.Kube.GrpcProto.Desktop
         /// Constructor.
         /// </summary>
         /// <param name="name">Specifies the desired NAT name.</param>
-        public GrpcGetNatByNameRequest(string name)
+        public GrpcFindNatByNameRequest(string name)
         {
             this.Name = name;
         }

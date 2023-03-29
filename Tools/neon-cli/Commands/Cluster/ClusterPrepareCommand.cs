@@ -319,6 +319,12 @@ OPTIONS:
                 DisableConsoleOutput  = quiet
             };
 
+            if (clusterDefinition.Hosting.Environment == HostingEnvironment.HyperV &&
+                clusterDefinition.Hosting.HyperV.NeonDesktopBuiltIn)
+            {
+                prepareOptions.DesktopReadyToGo = true;
+            }
+
             var controller = KubeSetup.CreateClusterPrepareController(
                 clusterDefinition, 
                 cloudMarketplace: !useStaged,

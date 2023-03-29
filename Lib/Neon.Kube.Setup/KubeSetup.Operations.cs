@@ -67,6 +67,36 @@ namespace Neon.Kube.Setup
         private static IRetryPolicy operationRetryPolicy = new LinearRetryPolicy(e => true, maxAttempts: 10, retryInterval: TimeSpan.FromSeconds(30));
 
         /// <summary>
+        /// Converts a <c>decimal</c> into a nice byte units string.
+        /// </summary>
+        /// <param name="value">The input value (or <c>null</c>).</param>
+        /// <returns>The formatted output (or <c>null</c>).</returns>
+        public static string ToSiString(decimal? value)
+        {
+            if (!value.HasValue)
+            {
+                return null;
+            }
+
+            return new ResourceQuantity(value.GetValueOrDefault(), 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
+        }
+
+        /// <summary>
+        /// Converts a <c>double</c> value into a nice byte units string.
+        /// </summary>
+        /// <param name="value">The input value (or <c>null</c>).</param>
+        /// <returns>The formatted output (or <c>null</c>).</returns>
+        public static string ToSiString(double? value)
+        {
+            if (!value.HasValue)
+            {
+                return null;
+            }
+
+            return new ResourceQuantity((decimal)value.GetValueOrDefault(), 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
+        }
+
+        /// <summary>
         /// Configures a local HAProxy container that makes the Kubernetes etcd
         /// cluster highly available.
         /// </summary>
@@ -5671,7 +5701,6 @@ $@"- name: StorageType
             int                             displayOrder = int.MaxValue)
         {
             await SyncContext.Clear;
-
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
@@ -5716,7 +5745,6 @@ $@"- name: StorageType
         public static async Task WriteClusterInfoAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             await SyncContext.Clear;
-
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
@@ -5744,7 +5772,6 @@ $@"- name: StorageType
         public static async Task SaveClusterConfigMapsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             await SyncContext.Clear;
-
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
@@ -5781,33 +5808,27 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Converts a <c>decimal</c> into a nice byte units string.
+        /// Waits for the a <b>neon-desktop</b> to stablize.
         /// </summary>
-        /// <param name="value">The input value (or <c>null</c>).</param>
-        /// <returns>The formatted output (or <c>null</c>).</returns>
-        public static string ToSiString(decimal? value)
+        /// <param name="controller">The setup controller.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task StabilizeClusterAsync(ISetupController controller)
         {
-            if (!value.HasValue)
-            {
-                return null;
-            }
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Assert(!controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo), $"[{nameof(StabilizeClusterAsync)}()] cannot be used for non neon-desktop clusters.");
 
-            return new ResourceQuantity(value.GetValueOrDefault(), 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
-        }
+            var k8s = GetK8sClient(controller);
 
-        /// <summary>
-        /// Converts a <c>double</c> value into a nice byte units string.
-        /// </summary>
-        /// <param name="value">The input value (or <c>null</c>).</param>
-        /// <returns>The formatted output (or <c>null</c>).</returns>
-        public static string ToSiString(double? value)
-        {
-            if (!value.HasValue)
-            {
-                return null;
-            }
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    var pods = await k8s.CoreV1.ListAllPodsAsync();
 
-            return new ResourceQuantity((decimal)value.GetValueOrDefault(), 0, ResourceQuantity.SuffixFormat.BinarySI).CanonicalizeString();
+                    return pods.Items.All(pod => pod.Status.Phase.Equals("Running", StringComparison.InvariantCultureIgnoreCase));
+                },
+                timeout:      TimeSpan.FromMinutes(10),
+                pollInterval: TimeSpan.FromSeconds(5));
         }
     }
 }

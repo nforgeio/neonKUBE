@@ -142,7 +142,7 @@ namespace Neon.Kube
         public const string BuildDesktopImage = "build-desktop-image";
 
         /// <summary>
-        /// Property name for a <c>bool</c> value indicating whether cluster using a ready-to-go desktop
+        /// Property name for a <c>bool</c> value indicating whether a cluster using a ready-to-go desktop
         /// image is being deployed.
         /// </summary>
         public const string DesktopReadyToGo = "desktop-readytogo";
