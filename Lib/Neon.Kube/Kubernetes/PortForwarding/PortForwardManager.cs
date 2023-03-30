@@ -74,6 +74,7 @@ namespace Neon.Kube.PortForward
             string                           @namespace,
             int                              localPort,
             int                              remotePort,
+            IPAddress                        localAddress      = null,
             Dictionary<string, List<string>> customHeaders     = null,
             CancellationToken                cancellationToken = default)
         {
@@ -87,10 +88,15 @@ namespace Neon.Kube.PortForward
                 return;
             }
 
+            if (localAddress == null)
+            {
+                localAddress = IPAddress.Loopback;
+            }
+
             var forwardingTask = Task.Run(
                 async () =>
                 {
-                    using (var portListener = new PortListener(localPort, loggerFactory, cancellationToken))
+                    using (var portListener = new PortListener(localPort, localAddress, loggerFactory, cancellationToken))
                     {
                         try
                         {

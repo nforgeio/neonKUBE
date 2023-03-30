@@ -28,6 +28,11 @@ namespace Neon.Kube
         public const string Mimir = "mimir";
 
         /// <summary>
+        /// Mimir.
+        /// </summary>
+        public const string MimirQueryFrontend = "mimir-query-frontend";
+
+        /// <summary>
         /// Minio.
         /// </summary>
         public const string Minio = "minio";

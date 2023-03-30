@@ -33,31 +33,35 @@ namespace Neon.Kube.PortForward
         private bool                            disposed = false;
         private readonly ILogger<PortListener>  logger;
         private int                             localPort;
+        private IPAddress                       localAddress;
         private CancellationTokenRegistration   ctr;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="localPort">Specifies the local port.</param>
+        /// <param name="localAddress">The local IP Address. Defaults to <see cref="IPAddress.Loopback"/>.</param>
         /// <param name="loggerFactory">Optionally specifies the logger factory.</param>
         /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
         public PortListener(
             int               localPort, 
+            IPAddress         localAddress      = null,
             ILoggerFactory    loggerFactory     = null,
             CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort), nameof(localPort), $"Invalid TCP port: {localPort}");
 
-            this.localPort = localPort;
-            this.logger    = loggerFactory?.CreateLogger<PortListener>();
+            this.localPort    = localPort;
+            this.localAddress = localAddress ?? IPAddress.Loopback;
+            this.logger       = loggerFactory?.CreateLogger<PortListener>();
 
-            Listener = new TcpListener(IPAddress.Loopback, localPort);
-            logger?.LogDebug($"PortListener created on: {localPort}");
+            Listener = new TcpListener(localAddress, localPort);
+            logger?.LogDebug($"PortListener created on: {localAddress}:{localPort}");
 
             ctr = cancellationToken.Register(() => this.Dispose());
 
             Listener.Start(512);
-            logger?.LogDebug($"PortListener started on: {localPort}");
+            logger?.LogDebug($"PortListener started on: {localAddress}:{localPort}");
         }
 
         /// <inheritdoc/>
@@ -70,7 +74,7 @@ namespace Neon.Kube.PortForward
 
             disposed = true;
 
-            logger?.LogDebug($"PortListener stopped on: {localPort}");
+            logger?.LogDebug($"PortListener stopped on: {localAddress}:{localPort}");
             Listener.Stop();
             ctr.Dispose();
         }
