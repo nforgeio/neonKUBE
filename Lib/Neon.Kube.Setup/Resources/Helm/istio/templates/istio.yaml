@@ -145,6 +145,8 @@ spec:
       proxy:
         tracer: openCensusAgent
         holdApplicationUntilProxyStarts: true
+        proxyMetadata:
+          SECRET_TTL: 90d
         resources:
           requests:
             cpu: "{{ .Values.resources.proxy.requests.cpu }}"
