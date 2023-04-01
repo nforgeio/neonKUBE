@@ -108,31 +108,13 @@ namespace Neon.Kube
         /// <param name="hostingEnvironment">Identifies the hosting environment.</param>
         /// <param name="architecture">Specifies the target CPU architecture.</param>
         /// <param name="stageBranch">
-        /// To obtain the URI for a staged node image, pass this as the name of the
-        /// branch from which neonKUBE libraries were built.
+        /// To obtain the URI for a specific staged node image, pass this as the name of the
+        /// branch from which neonKUBE libraries were built.  When <c>null</c> is passed, 
+        /// the URI for the release image for the current build will be returned when the
+        /// public release has been published, otherwise this will return the URI for the
+        /// staged image.
         /// </param>
         /// <returns>The action result.</returns>
-        /// <remarks>
-        /// <para>
-        /// When <paramref name="stageBranch"/> is <c>null</c>, the URI for the published node
-        /// image will be returned.
-        /// </para>
-        /// <para>
-        /// Otherwise, <paramref name="stageBranch"/> should be passed as the name of the branch
-        /// from which the <b>Neon.Kube</b> libraries were built.  In this case, this
-        /// method will return a URI to the staged node image built from that branch.
-        /// </para>
-        /// <para>
-        /// For non-release branches, this method will append a dot and the branch name
-        /// to <see cref="KubeVersions.NeonKube"/> and include that in the URI.  This allows
-        /// us to have multiple development versions of any given image for development and 
-        /// testing purposes.  For release branches, the URI returned will reference the staged 
-        /// node image including the <see cref="KubeVersions.NeonKube"/> without any branch part.
-        /// </para>
-        /// <note>
-        /// Release branch names always start with: <b>"release-"</b>
-        /// </note>
-        /// </remarks>
         public static async Task<string> GetNodeImageUriAsync(
             HostingEnvironment  hostingEnvironment, 
             CpuArchitecture     architecture = CpuArchitecture.amd64,
@@ -152,32 +134,13 @@ namespace Neon.Kube
         /// <param name="hostingEnvironment">Identifies the hosting environment.</param>
         /// <param name="architecture">Specifies the target CPU architecture.</param>
         /// <param name="stageBranch">
-        /// To obtain the URI for a staged desktop image, pass this as the name of the
-        /// branch from which neonKUBE libraries were built.
+        /// To obtain the URI for a specific staged node image, pass this as the name of the
+        /// branch from which neonKUBE libraries were built.  When <c>null</c> is passed, 
+        /// the URI for the release image for the current build will be returned when they
+        /// public release has been published, otherwise this will return the URI for the
+        /// staged image.
         /// </param>
         /// <returns>The action result.</returns>
-        /// <remarks>
-        /// <para>
-        /// When <paramref name="stageBranch"/> is <c>null</c>, the URI for the published node
-        /// image will be returned.
-        /// </para>
-        /// <para>
-        /// Otherwise, <paramref name="stageBranch"/> should be passed as the name of the branch
-        /// from which the <b>Neon.Kube</b> libraries were built.  In this case, this
-        /// method will return a URI to the staged desktop image built from that branch.
-        /// </para>
-        /// <para>
-        /// For non-release branches, this method will append a dot and the branch name
-        /// to <see cref="KubeVersions.NeonKube"/> and include that in the URI.  This allows
-        /// us to have multiple development versions of any given image for development and 
-        /// testing purposes.  For release branches, the URI returned will reference the 
-        /// staged desktop image including the <see cref="KubeVersions.NeonKube"/> without
-        /// any branch part.
-        /// </para>
-        /// <note>
-        /// Release branch names always start with: <b>"release-"</b>
-        /// </note>
-        /// </remarks>
         public static async Task<string> GetDesktopImageUriAsync(
             HostingEnvironment  hostingEnvironment,
             CpuArchitecture     architecture = CpuArchitecture.amd64,
