@@ -15,7 +15,9 @@
   },
     "scripts": {
         "dev": "npm run watch",
-        "build": "cross-env NODE_ENV=production postcss ./Styles/index.css -o ./wwwroot/css/index.css ",
+        "build": "concurrently \"npm:build-*\"",
+        "build-tailwind": "postcss --verbose ./Styles/index.css -o ./wwwroot/css/index.css",
+        "build-isolated": "postcss --verbose ./obj/Debug/net7.0/scopedcss/bundle/neon-dashboard.styles.css -o ./wwwroot/css/isolated.css",
         "watch": "concurrently --kill-others \"npm:watch-*\"",
         "watch-tailwind": "postcss --verbose ./Styles/index.css -o ./wwwroot/css/index.css --watch",
         "watch-isolated": "postcss --verbose ./obj/Debug/net7.0/scopedcss/bundle/neon-dashboard.styles.css -o ./wwwroot/css/isolated.css --watch"

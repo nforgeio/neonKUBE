@@ -455,9 +455,6 @@ spec:
                     await InstallMonitoringAsync(controller);
 
                     controller.ThrowIfCancelled();
-                    await InstallNeonDashboardAsync(controller, controlNode);
-
-                    controller.ThrowIfCancelled();
                     await InstallNodeAgentAsync(controller, controlNode);
 
                     controller.ThrowIfCancelled();
