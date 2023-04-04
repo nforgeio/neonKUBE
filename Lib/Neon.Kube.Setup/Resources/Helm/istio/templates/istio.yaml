@@ -74,6 +74,8 @@ spec:
         tolerations:
           - operator: Exists
             effect: NoSchedule
+          - operator: Exists
+            effect: NoExecute
         resources:
           requests:
             cpu: "{{ .Values.resources.pilot.requests.cpu }}"
@@ -94,6 +96,8 @@ spec:
         tolerations:
           - operator: Exists
             effect: NoSchedule
+          - operator: Exists
+            effect: NoExecute
         overlays:
           - apiVersion: apps/v1
             kind: Deployment
@@ -121,6 +125,8 @@ spec:
         tolerations:
           - operator: Exists
             effect: NoSchedule
+          - operator: Exists
+            effect: NoExecute
         env:
           - name: "GOGC"
             value: "25"
@@ -128,7 +134,7 @@ spec:
       namespace: kube-system
   values:
     sidecarInjectorWebhook:
-      enableNamespacesByDefault: true
+      enableNamespacesByDefault: false
     global:
       istioNamespace: {{ .Release.Namespace }}
       logging:
@@ -139,6 +145,8 @@ spec:
       proxy:
         tracer: openCensusAgent
         holdApplicationUntilProxyStarts: true
+        proxyMetadata:
+          SECRET_TTL: 90d
         resources:
           requests:
             cpu: "{{ .Values.resources.proxy.requests.cpu }}"

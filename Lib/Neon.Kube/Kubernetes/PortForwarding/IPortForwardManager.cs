@@ -28,6 +28,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
+using System.Net;
 
 namespace Neon.Kube.PortForward
 {
@@ -44,6 +45,7 @@ namespace Neon.Kube.PortForward
         /// <param name="podName">Specifies the remote pod name.</param>
         /// <param name="localPort">Specifies the local port on the workstation.</param>
         /// <param name="remotePort">Specifies the target port for the remotye pod.</param>
+        /// <param name="localAddress">Specifies the listen port. If not set, <see cref="IPAddress.Loopback"/> is used.</param>
         /// <param name="customHeaders">Optionally specifies any custom connection headers.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         void StartPodPortForward(
@@ -51,6 +53,7 @@ namespace Neon.Kube.PortForward
             string                           podName,
             int                              localPort,
             int                              remotePort,
+            IPAddress                        localAddress      = null,
             Dictionary<string, List<string>> customHeaders     = null,
             CancellationToken                cancellationToken = default);
     }

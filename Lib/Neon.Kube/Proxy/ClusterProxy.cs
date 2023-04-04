@@ -760,8 +760,10 @@ namespace Neon.Kube.Proxy
 
             foreach (var registry in localRegistries)
             {
-                var clusterRegistry = new V1NeonContainerRegistry();
-
+                var clusterRegistry              = new V1NeonContainerRegistry();
+                clusterRegistry.Metadata         = new V1ObjectMeta();
+                clusterRegistry.Metadata.Name    = registry.Name;
+                clusterRegistry.Spec             = new V1NeonContainerRegistry.RegistrySpec();
                 clusterRegistry.Spec.SearchOrder = Definition.Container.SearchRegistries.IndexOf(registry.Location);
                 clusterRegistry.Spec.Prefix      = registry.Prefix;
                 clusterRegistry.Spec.Location    = registry.Location;
