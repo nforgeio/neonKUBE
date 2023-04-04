@@ -718,7 +718,7 @@ cat <<EOF > {KubeNodeFolder.Bin}/neon-init
 #          [neon-init.sh] on it and uploads this to the Hyper-V
 #          or XenServer host machine.
 #
-#       3. Setup inserts the VFD into the VM's DVD drive and starts the VM.
+#       3. Setup inserts the ISO into the VM's DVD drive and starts the VM.
 #
 #       4. The VM boots, eventually running this script (via the
 #          [neon-init] service).
@@ -754,7 +754,8 @@ if ! mkdir -p /media/neon-init ; then
 fi
 
 # Wait up to 120 seconds for for the DVD to be discovered.  It can
-# take some time for this to happen.
+# take some time for this to happen and we don't want to spin forever
+# for scenarios where no DVD is ever inserted.
 
 mounted=$false
 

@@ -59,16 +59,22 @@ namespace NeonCli
     public class ClusterDeleteCommand : CommandBase
     {
         private const string usage = @"
-Removes the current cluster.  This is not supported by all hosting environments.
+Removes the current cluster or a named cluster.  This is not supported by all 
+hosting environments.
 
 USAGE:
 
-    neon cluster remove [--force]
+    neon cluster remove [CLUSTER-NAME] [--force]
+
+ARGUMENTS:
+
+    CLUSTER-NAME    - Optionally specifies the name of the cluster to be
+                      removed as opposed to the current cluster
 
 OPTIONS:
 
-    --force     - forces cluster removal without user confirmation and
-                  also without checking the cluster lock status
+    --force         - forces cluster removal without user confirmation and
+                      also without checking the cluster lock status
 
 REMARKS:
 
@@ -106,8 +112,20 @@ cluster definition or by executing this command on your cluster:
                 Program.Exit(0);
             }
 
+            var clusterName = commandLine.Arguments.ElementAtOrDefault(0);
+            var contextName = $"root@{clusterName}";
+            var force       = commandLine.HasOption("--force");
+            var orgContext  = (KubeConfigContext)null;
+
             Console.WriteLine();
 
+            if (!string.IsNullOrEmpty(clusterName))
+            {
+                orgContext = KubeHelper.CurrentContext;
+
+                KubeHelper.SetCurrentContext(contextName);
+            }
+            
             var context = KubeHelper.CurrentContext;
 
             if (context == null)
@@ -116,52 +134,69 @@ cluster definition or by executing this command on your cluster:
                 Program.Exit(1);
             }
 
-            var force = commandLine.HasOption("--force");
-
-            using (var cluster = new ClusterProxy(context, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
+            try
             {
-                var capabilities = cluster.Capabilities;
-
-                if ((capabilities & HostingCapabilities.Removable) == 0)
+                using (var cluster = new ClusterProxy(context, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
                 {
-                    Console.Error.WriteLine($"*** ERROR: Cluster is not removable.");
-                    Program.Exit(1);
-                }
+                    var capabilities = cluster.Capabilities;
 
-                if (!force)
-                {
-                    var isLocked = await cluster.IsLockedAsync();
-
-                    if (!isLocked.HasValue)
+                    if ((capabilities & HostingCapabilities.Removable) == 0)
                     {
-                        Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] lock status is unknown.");
+                        Console.Error.WriteLine($"*** ERROR: Cluster is not removable.");
                         Program.Exit(1);
                     }
 
-                    if (isLocked.Value)
+                    if (!force)
                     {
-                        Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] is locked.");
-                        Program.Exit(1);
+                        var isLocked = await cluster.IsLockedAsync();
+
+                        if (!isLocked.HasValue)
+                        {
+                            Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] lock status is unknown.");
+                            Program.Exit(1);
+                        }
+
+                        if (isLocked.Value)
+                        {
+                            Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] is locked.");
+                            Program.Exit(1);
+                        }
+
+                        if (!Program.PromptYesNo($"Are you sure you want to remove: {cluster.Name}?"))
+                        {
+                            Program.Exit(0);
+                        }
                     }
 
-                    if (!Program.PromptYesNo($"Are you sure you want to remove: {cluster.Name}?"))
+                    try
                     {
-                        Program.Exit(0);
+                        // $todo(jefflill):
+                        //
+                        // We should probably look for other contexts that reference this cluster
+                        // and remove those as will.
+
+                        Console.WriteLine($"Removing: {cluster.Name}...");
+                        await cluster.DeleteAsync();
+                        KubeHelper.Config.RemoveContext(context);
+
+                        Console.WriteLine($"REMOVED:  {cluster.Name}");
+                    }
+                    catch (TimeoutException)
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine($"*** ERROR: Timeout waiting for cluster.");
                     }
                 }
+            }
+            finally
+            {
+                // Restore the original context if we switched clusters.
 
-                try
+                if (orgContext != null && 
+                    !string.IsNullOrEmpty(clusterName) && 
+                    !orgContext.Name.Equals(contextName))
                 {
-                    Console.WriteLine($"Removing: {cluster.Name}...");
-                    await cluster.DeleteAsync();
-                    KubeHelper.Config.RemoveContext(context);
-
-                    Console.WriteLine($"REMOVED:  {cluster.Name}");
-                }
-                catch (TimeoutException)
-                {
-                    Console.WriteLine();
-                    Console.WriteLine($"*** ERROR: Timeout waiting for cluster.");
+                    KubeHelper.SetCurrentContext(orgContext.Name);
                 }
             }
         }

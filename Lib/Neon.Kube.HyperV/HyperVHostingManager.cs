@@ -1194,12 +1194,9 @@ namespace Neon.Kube.Hosting.HyperV
                         switch (vm.State)
                         {
                             case VirtualMachineState.Off:
-
-                                break;
-
                             case VirtualMachineState.Saved:
 
-                                throw new NotSupportedException($"Cannot shutdown the saved (hibernating) virtual machine: {vmName}");
+                                break;
 
                             case VirtualMachineState.Paused:
                             case VirtualMachineState.Running: 
@@ -1311,13 +1308,6 @@ namespace Neon.Kube.Hosting.HyperV
                                 hyperv.RemoveVm(vm.Name);
                             }
                         });
-                }
-
-                // Remove the internal switch and NAT when deployed.
-
-                if (cluster.Definition.Hosting.HyperV.UseInternalSwitch)
-                {
-                    hyperv.RemoveSwitch(KubeConst.HyperVInternalSwitchName, ignoreMissing: true);
                 }
             }
         }

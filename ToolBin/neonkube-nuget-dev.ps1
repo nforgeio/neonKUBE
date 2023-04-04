@@ -27,7 +27,7 @@
 # OPTIONS:
 #
 #       -local          - Publishes to C:\nc-nuget-local
-#       -localversion   - Use the local version number
+#       -localversion   - Use the local version number (emergency only)
 #       -dirty          - Use GitHub sources for SourceLink even if local repo is dirty
 #       -release        - Do a RELEASE build instead of DEBUG (the default)
 #       -restore        - Just restore the CSPROJ files after cancelling publish
@@ -265,7 +265,7 @@ try
         $version = [int](Get-Content -TotalCount 1 $nkVersionPath).Trim()
         $version++
         [System.IO.File]::WriteAllText($nkVersionPath, $version)
-        $neonSdkVersion = "10000.0.$version-dev-$branch"
+        $neonKubeVersion = "10000.0.$version-dev-$branch"
     }
     else
     {
@@ -299,7 +299,7 @@ try
         # atomically increment the counter and return the next value.
 
         $reply           = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonKUBE-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
-        $neonkubeVersion = "10000.0.$reply-dev-$branch"
+        $neonkubeVersion = "10000.1.$reply-dev-$branch"
     }
 
     #------------------------------------------------------------------------------
