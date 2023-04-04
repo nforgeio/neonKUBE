@@ -37,6 +37,8 @@ spec:
           resources:
             requests:
               storage: {{ .size }}
+      annotations:
+        sidecar.istio.io/inject: "false"
       {{- with .tolerations }}
       tolerations:
         {{ toYaml . | nindent 8 }}

@@ -24,7 +24,7 @@ spec:
   template:
     metadata:
       annotations:
-        sidecar.istio.io/inject: "{{ .Values.serviceMesh.enabled }}"
+        sidecar.istio.io/inject: "false"
         traffic.sidecar.istio.io/excludeInboundPorts: "7946"
         traffic.sidecar.istio.io/excludeOutboundPorts: "7946"
         checksum/config: {{ include (print .Template.BasePath "/configmap.yaml") . | sha256sum }}
