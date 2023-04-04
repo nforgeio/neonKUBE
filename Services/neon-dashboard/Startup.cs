@@ -41,6 +41,8 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.Proxy;
+using Neon.Tailwind;
 using Neon.Web;
 
 using Blazor.Analytics;
@@ -55,8 +57,6 @@ using Prometheus;
 using Segment;
 
 using StackExchange.Redis;
-
-using Neon.Tailwind;
 
 namespace NeonDashboard
 {

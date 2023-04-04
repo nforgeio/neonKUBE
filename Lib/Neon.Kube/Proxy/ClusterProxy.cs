@@ -776,6 +776,26 @@ namespace Neon.Kube.Proxy
             }
         }
 
+        /// <summary>
+        /// Returns a dictionary mapping case-insensitive dashboard names to the
+        /// dashboard information.
+        /// </summary>
+        /// <returns>The dashboard dictionary.</returns>
+        public async Task<Dictionary<string, V1NeonDashboard>> ListClusterDashboardsAsync()
+        {
+            await SyncContext.Clear;
+
+            var nameToDashboard = new Dictionary<string, V1NeonDashboard>(StringComparer.InvariantCultureIgnoreCase);
+            var dashboards      = await K8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonDashboard>();
+
+            foreach (var dashboard in dashboards)
+            {
+                nameToDashboard.Add(dashboard.Metadata.Name, dashboard);
+            }
+
+            return nameToDashboard;
+        }
+
         //---------------------------------------------------------------------
         // Cluster life cycle methods.
 
