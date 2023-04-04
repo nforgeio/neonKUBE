@@ -100,7 +100,7 @@ namespace Neon.Kube.ClusterDef
                 throw new ClusterDefinitionException($"[{hypervisorHostPrefix}.{nameof(Address)}] is required when specifying a hypervisor host.");
             }
 
-            if (!IPAddress.TryParse(Address, out var ipAddress) && !NetHelper.IsValidHost(Address))
+            if (!IPAddress.TryParse(Address, out var ipAddress) && !NetHelper.IsValidDnsHost(Address))
             {
                 throw new ClusterDefinitionException($"[{hypervisorHostPrefix}.{nameof(Address)}={Address}] is not a valid IP address or hostname.");
             }

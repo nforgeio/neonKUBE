@@ -133,6 +133,18 @@ OPTIONS:
                                   so you can base your cluster off of a specific image
                                   build.
 
+    --cluster-id=CLUSTER-ID     - MAINTAINERS ONLY: Specifies the ID to be assigned to the
+                                  cluster as opposed to automatically generating a UUID. 
+                                  This may be used for deploying neonKUBE infrastructure 
+                                  clusters.
+
+                                  This must be a valid DNS label.
+
+                                  NOTE: The CLUSTER-ID.neoncluster.io DNS entry must
+                                        already exist and needs to resolve to the cluster
+                                        IP address before executing this command.  Only
+                                        maintainers will be able to accomplish this.
+
 ";
 
         /// <inheritdoc/>
@@ -151,7 +163,8 @@ OPTIONS:
             "--debug",
             "--quiet",
             "--base-image-name",
-            "--use-staged"
+            "--use-staged",
+            "--cluster-id"
         };
 
         /// <inheritdoc/>
@@ -204,6 +217,7 @@ OPTIONS:
             var disablePending    = commandLine.HasOption("--disable-pending");
             var useStaged         = commandLine.HasOption("--use-staged");
             var stageBranch       = commandLine.GetOption("--use-staged", KubeVersions.BuildBranch);
+            var clusterId         = commandLine.GetOption("--cluster-id");
 
             if (useStaged && string.IsNullOrEmpty(stageBranch))
             {
@@ -219,6 +233,16 @@ OPTIONS:
             if (debug && string.IsNullOrEmpty(baseImageName))
             {
                 Console.Error.WriteLine($"*** ERROR: [--base-image-name] is required for [--debug] mode.");
+                Program.Exit(1);
+            }
+
+            if (string.IsNullOrEmpty(clusterId))
+            {
+                clusterId = null;
+            }
+            else if (!NetHelper.IsValidDnsLabel(clusterId))
+            {
+                Console.Error.WriteLine($"*** ERROR: Cluster ID [{clusterId}] is not a valid DNS label.");
                 Program.Exit(1);
             }
 
