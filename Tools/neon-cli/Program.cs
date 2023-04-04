@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
@@ -58,7 +59,6 @@ using OpenTelemetry.Resources;
 
 using ProtoBuf.Grpc.Client;
 using OpenTelemetry;
-using System.Diagnostics.CodeAnalysis;
 
 namespace NeonCli
 {
