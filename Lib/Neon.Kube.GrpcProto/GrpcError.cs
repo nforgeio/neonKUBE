@@ -18,9 +18,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.Threading.Tasks;
+
+using Microsoft.ApplicationInsights.DataContracts;
 
 using Neon.Common;
 using Neon.Net;
@@ -83,9 +86,21 @@ namespace Neon.Kube.GrpcProto
         /// <param name="error">The error.</param>
         public static void EnsureSuccess(this GrpcError error)
         {
-            if (error != null)
+            if (error == null)
             {
-                throw new GrpcServiceException($"[{error.ExceptionType}]: {error.Message}");
+                return;
+            }
+
+            var e = new GrpcServiceException($"[{error.ExceptionType}]: {error.Message}");
+
+            if (string.IsNullOrEmpty(error.StackTrace))
+            {
+                throw e;
+            }
+            else
+            {
+                ExceptionDispatchInfo.SetRemoteStackTrace(e, error.StackTrace);
+                ExceptionDispatchInfo.Throw(e);
             }
         }
     }
