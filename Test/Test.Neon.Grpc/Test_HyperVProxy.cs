@@ -247,7 +247,7 @@ namespace TestGrpc
                         hyperVProxy.AddVm(
                             machineName:       TestMachineName2,
                             memorySize:        "1 GiB",
-                            processorCount:    2,
+                            processorCount:    4,
                             drivePath:         test2VhdxPath,
                             checkpointDrives:  false,
                             templateDrivePath: templatePath,
