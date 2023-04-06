@@ -1,0 +1,32 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: neon-dashboard
+  namespace: {{ .Release.Namespace }}
+spec:
+  gateways:
+    - neon-ingress/neoncluster-gateway
+  hosts:
+    - {{ .Values.neonkube.clusterDomain.neonDashboard }}.{{ .Values.cluster.domain }}
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: {{ include "neon-dashboard.fullname" . }}.neon-system.svc.cluster.local
+            port:
+              number: {{ .Values.service.port }}
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+    name: neon-dashboard
+spec:
+  host: {{ include "neon-dashboard.fullname" . }}
+  trafficPolicy:
+    loadBalancer:
+      consistentHash: 
+        httpCookie:
+          name: X-User-Session
+          ttl: 0s

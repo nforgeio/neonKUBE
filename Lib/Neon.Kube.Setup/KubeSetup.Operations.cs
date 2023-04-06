@@ -412,6 +412,9 @@ spec:
                     await InstallCertManagerAsync(controller, controlNode);
 
                     controller.ThrowIfCancelled();
+                    await InstallKubeDashboardAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
                     if (cluster.Definition.Features.NodeProblemDetector)
                     {
                         await InstallNodeProblemDetectorAsync(controller, controlNode);
@@ -2268,6 +2271,51 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     };
 
                     await k8s.RbacAuthorizationV1.CreateClusterRoleBindingAsync(clusterRoleBinding);
+                });
+        }
+
+        /// <summary>
+        /// Configures the root Kubernetes user.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InstallKubeDashboardAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
+
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s           = GetK8sClient(controller);
+            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.KubernetesDashboard);
+
+            controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/kube-dashboard",
+                async () =>
+                {
+                    controller.LogProgress(controlNode, verb: "setup", message: "kubernetes dashboard");
+
+                    var values = new Dictionary<string, object>();
+
+                    values.Add("replicas", serviceAdvice.ReplicaCount);
+                    values.Add("cluster.name", cluster.Definition.Name);
+                    values.Add("settings.clusterName", cluster.Definition.Name);
+                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("neonkube.clusterDomain.kubernetesDashboard", ClusterHost.KubernetesDashboard);
+                    values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
+                    values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
+                    values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
+                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+
+                    await controlNode.InstallHelmChartAsync(controller, "kubernetes-dashboard",
+                        releaseName:     "kubernetes-dashboard",
+                        @namespace:      KubeNamespace.NeonSystem,
+                        prioritySpec:    PriorityClass.NeonApp.Name,
+                        values:          values,
+                        progressMessage: "kubernetes-dashboard");
+
                 });
         }
 
