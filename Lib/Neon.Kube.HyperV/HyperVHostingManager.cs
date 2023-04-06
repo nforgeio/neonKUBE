@@ -229,7 +229,7 @@ namespace Neon.Kube.Hosting.HyperV
                     {
                         using (var hyperv = new HyperVProxy())
                         {
-                            controller.SetGlobalStepStatus($"check: [{KubeConst.HyperVInternalSwitchName}] virtual switch");
+                            controller.SetGlobalStepStatus($"check: [{KubeConst.HyperVInternalSwitchName}] virtual switch/NAT");
 
                             var localHyperVOptions = cluster.Definition.Hosting.HyperV;
                             var @switch            = hyperv.FindSwitch(KubeConst.HyperVInternalSwitchName);
@@ -247,11 +247,11 @@ namespace Neon.Kube.Hosting.HyperV
                                 {
                                     throw new NeonKubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  The [{address}] IP address is not assigned to this switch.");
                                 }
+                            }
 
-                                if (nat.Subnet != localHyperVOptions.NeonKubeInternalSubnet)
-                                {
-                                    throw new NeonKubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  The [{nat.Name}] NAT subnet is not set to [{localHyperVOptions.NeonKubeInternalSubnet}].");
-                                }
+                            if (nat != null && nat.Subnet != localHyperVOptions.NeonKubeInternalSubnet)
+                            {
+                                throw new NeonKubeException($"The existing [{@switch.Name}] Hyper-V virtual switch is misconfigured.  The [{nat.Name}] NAT subnet is not set to [{localHyperVOptions.NeonKubeInternalSubnet}].");
                             }
                         }
                     }
