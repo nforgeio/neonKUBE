@@ -355,6 +355,9 @@ spec:
                     controller.SetGlobalStepStatus();
 
                     controller.ThrowIfCancelled();
+                    UploadCopyright(controller);
+
+                    controller.ThrowIfCancelled();
                     ConfigureKubernetes(controller, controlNode);
 
                     controller.ThrowIfCancelled();
@@ -622,6 +625,32 @@ kind: KubeProxyConfiguration
 mode: {kubeProxyMode}");
 
             return clusterConfig.ToString();
+        }
+
+        /// <summary>
+        /// Uploads a copyright/trademark text files to all of the cluster nodes.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        public static void UploadCopyright(ISetupController controller)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            const string folder        = "/usr/share/doc/neonkube/copyright";
+            const string copyrightText =
+@"Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+NeonKube™, Neon Desktop™, and NeonCli™ are trademarked by NEONFORGE LLC.
+";
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+
+            foreach (var node in cluster.Nodes)
+            {
+                node.InvokeIdempotent("setup/copyright",
+                    () =>
+                    {
+                        node.SudoCommand($"mkdir -p {folder}").EnsureSuccess();
+                        node.UploadText($"{folder}/copyright.txt", NeonHelper.ToLinuxLineEndings(copyrightText), permissions: "644");
+                    });
+            }
         }
 
         /// <summary>
@@ -1350,9 +1379,9 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     {
                         Metadata = new V1ObjectMeta()
                         {
-                            Name = "coredns",
+                            Name              = "coredns",
                             NamespaceProperty = KubeNamespace.KubeSystem,
-                            Labels = coreDnsDeployment.Metadata.Labels
+                            Labels            = coreDnsDeployment.Metadata.Labels
                         },
                         Spec = NeonHelper.JsonDeserialize<V1DaemonSetSpec>(spec)
                     };

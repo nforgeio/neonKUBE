@@ -26,11 +26,15 @@
 
 	<ItemGroup>
 		<None Remove="app.ico" />
+		<None Remove="copyright.txt" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<Content Include="app.ico">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="copyright.txt">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
 
