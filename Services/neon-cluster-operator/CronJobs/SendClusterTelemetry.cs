@@ -43,6 +43,7 @@ using OpenTelemetry.Trace;
 using Prometheus;
 
 using Quartz;
+using System.Net.Http.Headers;
 
 namespace NeonClusterOperator
 {
@@ -75,15 +76,45 @@ namespace NeonClusterOperator
 
                     var dataMap          = context.MergedJobDataMap;
                     var k8s              = (IKubernetes)dataMap["Kubernetes"];
+                    var authHeader       = (AuthenticationHeaderValue)dataMap["AuthHeader"];
                     var clusterTelemetry = new ClusterTelemetry();
                     var nodes            = await k8s.CoreV1.ListNodeAsync();
 
-                    clusterTelemetry.Nodes       = nodes.Items.ToList();
-                    clusterTelemetry.ClusterInfo = (await k8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterInfo>(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus)).Data;
-
-                    using (var jsonClient = new JsonClient() { BaseAddress = KubeEnv.HeadendUri })
+                    foreach (var k8sNode in nodes) 
                     {
-                        await jsonClient.PostAsync("/telemetry/cluster", clusterTelemetry);
+                        var node                          = new Node();
+                        node.KernelVersion                = k8sNode.Status.NodeInfo.KernelVersion;
+                        node.OsImage                      = k8sNode.Status.NodeInfo.OsImage;
+                        node.ContainerRuntimeVersion      = k8sNode.Status.NodeInfo.ContainerRuntimeVersion;
+                        node.KubeletVersion               = k8sNode.Status.NodeInfo.KubeletVersion;
+                        node.KubeProxyVersion             = k8sNode.Status.NodeInfo.KubeProxyVersion;
+                        node.OperatingSystem              = k8sNode.Status.NodeInfo.OperatingSystem;
+                        node.CpuArchitecture              = k8sNode.Status.NodeInfo.Architecture;
+                        node.Role                         = k8sNode.Metadata.GetLabel("neonkube.io/node.role");
+
+                        if (k8sNode.Status.Capacity.TryGetValue("cpu", out var cores))
+                        {
+                            node.Cores = cores.ToInt32();
+                        }
+
+                        if (k8sNode.Status.Capacity.TryGetValue("memory", out var memory))
+                        {
+                            node.Memory = memory.ToString();
+                        }
+
+                        clusterTelemetry.Nodes.Add(node);
+                    }
+
+                    clusterTelemetry.ClusterInfo             = (await k8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterInfo>(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus)).Data;
+                    clusterTelemetry.ClusterInfo.Description = null;
+
+                    using (var jsonClient = new JsonClient() 
+                    { 
+                        BaseAddress = KubeEnv.HeadendUri 
+                    })
+                    {
+                        jsonClient.DefaultRequestHeaders.Authorization = authHeader;
+                        await jsonClient.PostAsync("/telemetry/cluster?api-version=2023-04-06", clusterTelemetry);
                     }
 
                     var clusterOperator = await k8s.CustomObjects.ReadClusterCustomObjectAsync<V1NeonClusterOperator>(KubeService.NeonClusterOperator);

@@ -209,7 +209,7 @@ namespace NeonSsoSessionProxy
                 new CookieOptions()
                 {
                     Path     = "/",
-                    Expires  = DateTime.UtcNow.AddHours(24),
+                    Expires  = DateTime.UtcNow.AddHours(4),
                     Secure   = true,
                     SameSite = SameSiteMode.Strict
                 });

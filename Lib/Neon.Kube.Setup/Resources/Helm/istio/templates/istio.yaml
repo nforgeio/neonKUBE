@@ -11,6 +11,8 @@ spec:
     rootNamespace: {{ .Release.Namespace }}
     enablePrometheusMerge: false
     defaultConfig:
+      proxyMetadata:
+        SECRET_TTL: 2160h
       tracing:
         sampling: 1.0
         openCensusAgent:
@@ -145,8 +147,6 @@ spec:
       proxy:
         tracer: openCensusAgent
         holdApplicationUntilProxyStarts: true
-        proxyMetadata:
-          SECRET_TTL: 90d
         resources:
           requests:
             cpu: "{{ .Values.resources.proxy.requests.cpu }}"
