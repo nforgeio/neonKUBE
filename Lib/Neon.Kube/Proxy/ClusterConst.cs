@@ -27,7 +27,7 @@ using Neon.Collections;
 using Neon.Common;
 using Neon.Net;
 
-namespace Neon.Kube
+namespace Neon.Kube.Proxy
 {
     /// <summary>
     /// Important cluster constants.

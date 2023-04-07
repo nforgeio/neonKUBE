@@ -802,7 +802,7 @@ namespace Neon.Kube.ClusterDef
 
                 if (domain != null)
                 {
-                    if (!NetHelper.IsValidHost(domain))
+                    if (!NetHelper.IsValidDnsHost(domain))
                     {
                         throw new ClusterDefinitionException($"Custom node label [{item.Key}] has an invalid reverse domain prefix.");
                     }

@@ -30,6 +30,8 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.Kube;
+using Neon.Kube.Proxy;
+using Neon.Kube.Hosting;
 
 namespace NeonCli
 {
@@ -40,15 +42,20 @@ namespace NeonCli
     public class ClusterDashboardCommand : CommandBase
     {
         private const string usage = @"
-Displays the current cluster's dashboard using the default web browser.
+Lists the dashboards available for the current cluster or displays a named
+dashboard in a browser window.
 
 USAGE:
 
-    neon cluster dashboard
+    neon cluster dashboard         - Lists available dashboard names
+    neon cluster dashboard NAME    - Displays the named dashboard
 ";
 
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "dashboard" };
+
+        /// <inheritdoc/>
+        public override bool NeedsHostingManager => true;
 
         /// <inheritdoc/>
         public override void Help()
@@ -61,18 +68,55 @@ USAGE:
         {
             Console.WriteLine();
 
-            var currentContextName = KubeHelper.CurrentContextName;
+            var currentContext = KubeHelper.CurrentContext;
 
-            if (currentContextName == null)
+            if (currentContext == null)
             {
                 Console.Error.WriteLine("*** ERROR: No cluster selected.");
                 Program.Exit(1);
             }
 
-            var currentLogin = KubeHelper.GetClusterLogin(currentContextName);
+            var dashboardName = commandLine.Arguments.ElementAtOrDefault(0);
 
-            NeonHelper.OpenPlatformBrowser($"https://{currentLogin.ClusterDefinition.Domain}", newWindow: true);
-            await Task.CompletedTask;
+            using (var cluster = new ClusterProxy(currentContext, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
+            {
+                var dashboards = await cluster.ListClusterDashboardsAsync();
+
+                if (string.IsNullOrEmpty(dashboardName))
+                {
+                    if (dashboards.Count > 0)
+                    {
+                        Console.WriteLine("Available Dashboards:");
+                        Console.WriteLine("---------------------");
+                    }
+                    else
+                    {
+                        Console.WriteLine("*** No dashboards are available.");
+                        Console.WriteLine();
+                        return;
+                    }
+
+                    foreach (var item in dashboards
+                        .OrderBy(item => item.Key, StringComparer.CurrentCultureIgnoreCase))
+                    {
+                        Console.WriteLine(item.Key);
+                    }
+
+                    Console.WriteLine();
+                }
+                else
+                {
+                    if (dashboards.TryGetValue(dashboardName, out var dashboard))
+                    {
+                        NeonHelper.OpenPlatformBrowser(dashboard.Spec.Url, newWindow: true);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"*** ERROR: Dashboard [{dashboardName}] does not exist.");
+                        Program.Exit(1);
+                    }
+                }
+            }
         }
     }
 }

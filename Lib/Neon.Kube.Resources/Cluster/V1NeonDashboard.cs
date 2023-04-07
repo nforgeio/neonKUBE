@@ -111,6 +111,11 @@ namespace Neon.Kube.Resources.Cluster
             public string DisplayName { get; set; }
 
             /// <summary>
+            /// Describes the dashboard.
+            /// </summary>
+            public string Description { get; set; }
+
+            /// <summary>
             /// <para>
             /// Optionally indicates that the order in which the dashboard will be displayed.
             /// </para>

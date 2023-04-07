@@ -1283,7 +1283,7 @@ namespace Neon.Kube.ClusterDef
                 {
                     var fields = endpoint.Split(':');
 
-                    if (!NetHelper.TryParseIPv4Address(fields[0], out var address) && !NetHelper.IsValidHost(fields[0]))
+                    if (!NetHelper.TryParseIPv4Address(fields[0], out var address) && !NetHelper.IsValidDnsHost(fields[0]))
                     {
                         throw new ClusterDefinitionException($"Invalid IP address or HOSTNAME [{fields[0]}] in [{nameof(PackageProxy)}={PackageProxy}].");
                     }
