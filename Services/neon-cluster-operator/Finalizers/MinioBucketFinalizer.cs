@@ -36,6 +36,7 @@ using k8s.Models;
 
 using Minio;
 using Neon.Kube.Operator.Finalizer;
+using System.Reactive.Linq;
 
 namespace NeonClusterOperator
 {
@@ -77,7 +78,12 @@ namespace NeonClusterOperator
 
                 if (exists)
                 {
-                    await minioClient.RemoveBucketAsync(new RemoveBucketArgs().WithBucket(resource.Name()));
+                    var headers = new Dictionary<string, string>()
+                    {
+                        { "X-Minio-Force-Delete", "true" }
+                    };
+
+                    await minioClient.RemoveBucketAsync(new RemoveBucketArgs().WithBucket(resource.Name()).WithHeaders(headers));
                     logger.LogInformationEx(() => $"Bucket {resource.Name()} deleted.");
                 }
                 else
