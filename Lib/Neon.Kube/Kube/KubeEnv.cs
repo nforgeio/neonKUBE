@@ -50,12 +50,20 @@ namespace Neon.Kube
         public const string TelemetryUriVariable = "NEONKUBE_TELEMETRY_URI";
 
         /// <summary>
-        /// Returns the OTEL Collector endpoint URI where neonKUBE related clients should direct
+        /// Returns the OTEL Collector Log endpoint URI where neonKUBE related clients should direct
         /// their telemetry.  This defaults to <b>https://telemetry.neoncloud.io</b> but can
         /// be modified by developers for testing purposes by setting the <c>NEONKUBE_TELEMETRY_URI</c>
         /// environment variable.
         /// </summary>
-        public static Uri TelemetryUri => new Uri(Environment.GetEnvironmentVariable(TelemetryUriVariable) ?? "https://telemetry.neoncloud.io", UriKind.Absolute);
+        public static Uri TelemetryLogsUri => new Uri(Environment.GetEnvironmentVariable(TelemetryUriVariable) ?? "https://telemetry.neoncloud.io/v1/logs", UriKind.Absolute);
+
+        /// <summary>
+        /// Returns the OTEL Collector Trace endpoint URI where neonKUBE related clients should direct
+        /// their telemetry.  This defaults to <b>https://telemetry.neoncloud.io</b> but can
+        /// be modified by developers for testing purposes by setting the <c>NEONKUBE_TELEMETRY_URI</c>
+        /// environment variable.
+        /// </summary>
+        public static Uri TelemetryTracesUri => new Uri(Environment.GetEnvironmentVariable(TelemetryUriVariable) ?? "https://telemetry.neoncloud.io/v1/traces", UriKind.Absolute);
 
         /// <summary>
         /// Environment variable used by developers to redirect cloent application headend service
