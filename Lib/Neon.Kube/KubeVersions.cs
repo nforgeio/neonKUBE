@@ -21,6 +21,7 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 using Neon.BuildInfo;
 using Neon.Common;
 using Neon.Net;
@@ -180,7 +181,7 @@ namespace Neon.Kube
         /// <summary>
         /// The version of Kubernetes to be installed.
         /// </summary>
-        public const string Kubernetes = "1.24.0";
+        public const string Kubernetes = "1.24.12";
 
         /// <summary>
         /// The version of the Kubernetes dashboard to be installed.
@@ -220,7 +221,7 @@ namespace Neon.Kube
         /// <para>
         /// CRI-O is tied to specific Kubernetes releases and the CRI-O major and minor
         /// versions must match the Kubernetes major and minor version numbers.  The 
-        /// revision/patch properties may be different.
+        /// revision/patch properties may differ.
         /// </para>
         /// <para>
         /// Versions can be seen here: https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/
@@ -228,7 +229,7 @@ namespace Neon.Kube
         /// </para>
         /// </note>
         /// </summary>
-        public const string Crio = Kubernetes;
+        public static readonly string Crio = PatchVersion(Kubernetes, 5);   // 1.24.5 is the CRI-O release for Kubernetes 1.24.*
 
         /// <summary>
         /// The version of Podman to be installed.
@@ -312,6 +313,35 @@ namespace Neon.Kube
             if (version.Major != MinXenServerVersion.Major || version.Minor != MinXenServerVersion.Minor)
             {
                 throw new NotSupportedException($"XenServer version [{version}] is not supported for building neonKUBE VM images.  Only versions like [{MinXenServerVersion.Major}.{MinXenServerVersion.Minor}.*] are allowed.");
+            }
+        }
+
+        /// <summary>
+        /// Optionally modifies the patch component of a <see cref="SemanticVersion"/> string.
+        /// </summary>
+        /// <param name="version">The source <see cref="SemanticVersion"/> string.</param>
+        /// <param name="patch">Optionally specifies the new patch commponent.</param>
+        /// <returns>The updated version.</returns>
+        /// <remarks>
+        /// This is used for situations like when the Kubernetes and CRI-O versions differ
+        /// by just a patch version.
+        /// </remarks>
+        private static string PatchVersion(string version, int? patch = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(version), nameof(version));
+            Covenant.Requires<ArgumentException>(patch == null || patch >= 0, nameof(patch));
+
+            var semanticVersion = SemanticVersion.Parse(version);
+
+            if (patch == null)
+            {
+                return version;
+            }
+            else
+            {
+                semanticVersion.Patch = patch.Value;
+
+                return semanticVersion.ToString();
             }
         }
     }
