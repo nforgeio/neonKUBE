@@ -182,12 +182,9 @@ ARGUMENTS:
                 var user     = result.User;
                 var userName = user.Identity.Name.Split("via").First().Trim();
                 var config   = KubeHelper.Config;
-                var configHasChanged = false;
 
                 if (!config.Clusters.Any(cluster => cluster.Properties.Server == server))
                 {
-                    configHasChanged = true;
-
                     config.Clusters.Add(new KubeConfigCluster()
                     {
                         Name = clusterId,
@@ -202,7 +199,6 @@ ARGUMENTS:
 
                 if (!config.Users.Any(user => user.Name == $"{userName}@{clusterId}"))
                 {
-                    configHasChanged = true;
                     config.Users.Add(new KubeConfigUser()
                     {
                         Name = $"{userName}@{clusterId}",
@@ -215,7 +211,6 @@ ARGUMENTS:
 
                 if (!config.Contexts.Any(context => context.Name == $"{userName}@{clusterId}"))
                 {
-                    configHasChanged = true;
                     config.Contexts.Add(new KubeConfigContext()
                     {
                         Name = $"{userName}@{clusterId}",
@@ -227,10 +222,9 @@ ARGUMENTS:
                     });
                 }
 
-                if (configHasChanged)
-                {
-                    config.Save();
-                }
+                config.CurrentContext = $"{userName}@{clusterId}";
+
+                config.Save();
             }
             catch (Exception e)
             {
