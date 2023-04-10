@@ -63,6 +63,62 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "Nodes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public List<V1Node> Nodes { get; set; }
+        public List<Node> Nodes { get; set; } = new List<Node>();
+    }
+
+    /// <summary>
+    /// Node Telemetry
+    /// </summary>
+    public class Node
+    {
+        /// <summary>
+        /// Node role
+        /// </summary>
+        public string Role { get; set; }
+        
+        /// <summary>
+        /// The CUP Arch.
+        /// </summary>
+        public string CpuArchitecture { get; set; }
+        
+        /// <summary>
+        /// The number of cores.
+        /// </summary>
+        public int Cores { get; set; }
+
+        /// <summary>
+        /// The memory available.
+        /// </summary>
+        public string Memory { get; set; }
+
+        /// <summary>
+        /// The current kernel version.
+        /// </summary>
+        public string KernelVersion { get; set; }
+
+        /// <summary>
+        /// the current OS Image.
+        /// </summary>
+        public string OsImage { get; set; }
+
+        /// <summary>
+        /// The current Container runtime version.
+        /// </summary>
+        public string ContainerRuntimeVersion { get; set; }
+
+        /// <summary>
+        /// The current Kubelet version.
+        /// </summary>
+        public string KubeletVersion { get; set; }
+        
+        /// <summary>
+        /// the current kube proxy version.
+        /// </summary>
+        public string KubeProxyVersion { get; set; }
+
+        /// <summary>
+        /// The current OS.
+        /// </summary>
+        public string OperatingSystem { get; set; }
     }
 }

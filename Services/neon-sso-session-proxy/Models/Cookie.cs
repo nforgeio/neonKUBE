@@ -96,5 +96,26 @@ namespace NeonSsoSessionProxy
         [JsonProperty(PropertyName = "TokenResponse", Required = Required.Default)]
         [DefaultValue(null)]
         public TokenResponse TokenResponse { get; set; }
+
+        /// <summary>
+        /// The Code Challenge.
+        /// </summary>
+        [JsonProperty(PropertyName = "CodeChallenge", Required = Required.Default)]
+        [DefaultValue(null)]
+        public string CodeChallenge { get; set; }
+
+        /// <summary>
+        /// The Code Challenge.
+        /// </summary>
+        [JsonProperty(PropertyName = "CodeChallengeMethod", Required = Required.Default)]
+        [DefaultValue(null)]
+        public string CodeChallengeMethod { get; set; }
+
+        /// <summary>
+        /// The Code Challenge.
+        /// </summary>
+        [JsonProperty(PropertyName = "CodeVerifier", Required = Required.Default)]
+        [DefaultValue(null)]
+        public string CodeVerifier { get; set; }
     }
 }
