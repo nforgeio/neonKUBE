@@ -26,11 +26,11 @@ using Neon.ModelGen;
 
 namespace Neon.Kube.Models.Headend
 {
+    [ApiVersion("2023-04-06")]
+    [Route("cluster-setup")]
     [Target("all")]
     [Target("headend")]
     [ServiceModel(name: "Headend", group: "ClusterSetup")]
-    [Route("cluster-setup")]
-    [ApiVersion("0.2")]
     public interface IClusterSetupController
     {
         [HttpPost]
@@ -74,11 +74,10 @@ namespace Neon.Kube.Models.Headend
     /// <summary>
     /// Implements cluster methods.
     /// </summary>
+    [Route("cluster")]
     [Target("all")]
     [Target("headend")]
     [ServiceModel(name: "Headend", group: "Cluster")]
-    [Route("cluster")]
-    [ApiVersion("0.2")]
     public interface IClusterController
     {
         [HttpPut]
@@ -101,11 +100,10 @@ namespace Neon.Kube.Models.Headend
     /// <summary>
     /// Implements cluster methods.
     /// </summary>
+    [Route("")]
     [Target("all")]
     [Target("headend")]
     [ServiceModel(name: "Headend", group: "NeonDesktop")]
-    [Route("")]
-    [ApiVersion("0.2")]
     public interface INeonDesktopController
     {
         [HttpGet]
