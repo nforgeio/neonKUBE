@@ -137,12 +137,14 @@ namespace NeonSsoSessionProxy
 
                 if (!string.IsNullOrEmpty(code))
                 {
+                    logger.LogDebugEx(() => $"Code present.");
+
                     if (cookie != null)
                     {
                         logger.LogDebugEx(() => $"cookie.ClientId: [{cookie.ClientId}].");
 
                         var redirect = cookie.RedirectUri;
-                        var token    = await dexClient.GetTokenAsync(cookie.ClientId, code, redirect, "authorization_code");
+                        var token    = await dexClient.GetTokenAsync(cookie.ClientId, code, redirect, "authorization_code", cookie.CodeVerifier);
                         
                         logger.LogDebugEx(() => $"Redirect: [{redirect}] token: [{token}].");
 
@@ -201,6 +203,27 @@ namespace NeonSsoSessionProxy
                 logger.LogDebugEx(() => $"Response Type: [{responseType}]");
 
                 cookie.ResponseType = responseType;
+            }
+
+            if (httpContext.Request.Query.TryGetValue("code_challenge", out var codeChallenge))
+            {
+                logger.LogDebugEx(() => $"Code Challenge: [{codeChallenge}]");
+
+                cookie.CodeChallenge = codeChallenge;
+            }
+
+            if (httpContext.Request.Query.TryGetValue("code_challenge_method", out var codeChallengeMethod))
+            {
+                logger.LogDebugEx(() => $"Code Challenge Method: [{codeChallengeMethod}]");
+
+                cookie.CodeChallengeMethod = codeChallengeMethod;
+            }
+
+            if (httpContext.Request.Query.TryGetValue("code_verifier", out var codeVerifier))
+            {
+                logger.LogDebugEx(() => $"Code verifier: [{codeVerifier}]");
+
+                cookie.CodeVerifier = codeVerifier;
             }
 
             httpContext.Response.Cookies.Append(

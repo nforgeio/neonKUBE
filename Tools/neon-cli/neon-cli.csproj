@@ -39,12 +39,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="IdentityModel.OidcClient" Version="5.2.1" />
 		<PackageReference Include="KubernetesClient" Version="10.0.31" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
 		<PackageReference Include="Microsoft.Windows.Compatibility" Version="7.0.0" />
-		<PackageReference Include="Neon.Common" Version="10000.1.3001-dev-master" />
-		<PackageReference Include="Neon.Deployment" Version="10000.1.3001-dev-master" />
-		<PackageReference Include="Neon.WinTTY" Version="10000.1.3001-dev-master" />
+		<PackageReference Include="Neon.Common" Version="10000.1.3003-dev-master" />
+		<PackageReference Include="Neon.Deployment" Version="10000.1.3003-dev-master" />
+		<PackageReference Include="Neon.WinTTY" Version="10000.1.3003-dev-master" />
 		<PackageReference Include="System.Diagnostics.StackTrace" Version="4.3.0" />
 		<PackageReference Include="System.Runtime" Version="4.3.1" />
 		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />

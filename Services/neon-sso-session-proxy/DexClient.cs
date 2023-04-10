@@ -130,6 +130,7 @@ namespace NeonSsoSessionProxy
         /// <param name="code"></param>
         /// <param name="redirectUri">The redirect URI.</param>
         /// <param name="grantType">Specifies the required grant.</param>
+        /// <param name="codeVerifier">Specifies the optional code verifier.</param>
         /// <param name="cancellationToken">Optionally specifies a <see cref="CancellationToken"/>.</param>
         /// <returns>The token response.</returns>
         public async Task<TokenResponse> GetTokenAsync(
@@ -137,14 +138,17 @@ namespace NeonSsoSessionProxy
             string              code, 
             string              redirectUri, 
             string              grantType, 
+            string              codeVerifier = null,
             CancellationToken   cancellationToken = default)
         {
             jsonClient.DefaultRequestHeaders.Authorization = AuthHeaders[authHeader];
+
             var args = new
             {
-                code         = code,
-                redirect_uri = redirectUri,
-                grant_type   = grantType
+                code          = code,
+                redirect_uri  = redirectUri,
+                grant_type    = grantType,
+                code_verifier = codeVerifier
             };
 
             var result = await PostFormAsync<TokenResponse>("/token", args, cancellationToken: cancellationToken);
