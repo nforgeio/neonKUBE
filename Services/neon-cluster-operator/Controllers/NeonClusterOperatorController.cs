@@ -172,6 +172,8 @@ namespace NeonClusterOperator
             {
                 Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("customresource", nameof(V1NeonClusterOperator)));
 
+                logger?.LogInformationEx("[RECONCILING]");
+
                 // Ignore all events when the controller hasn't been started.
 
                 if (resource.Name() != KubeService.NeonClusterOperator)
@@ -218,7 +220,14 @@ namespace NeonClusterOperator
                     CronExpression.ValidateExpression(clusterTelemetryExpression);
 
                     await sendClusterTelemetry.DeleteFromSchedulerAsync(scheduler);
-                    await sendClusterTelemetry.AddToSchedulerAsync(scheduler, k8s, clusterTelemetryExpression);
+                    await sendClusterTelemetry.AddToSchedulerAsync(
+                        scheduler, 
+                        k8s, 
+                        clusterTelemetryExpression,
+                        new Dictionary<string, object>()
+                        {
+                            { "AuthHeader", headendClient.DefaultRequestHeaders.Authorization }
+                        });
                 }
 
                 if (resource.Spec.Updates.NeonDesktopCertificate.Enabled)

@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterConst.cs
-// CONTRIBUTOR: Marcus Bowyer
+// FILE:	    KubePort.cs
+// CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,31 +17,27 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using k8s.Models;
 
-using Neon.Collections;
-using Neon.Common;
 using Neon.Net;
 
-namespace Neon.Kube.Proxy
+namespace Neon.Kube
 {
     /// <summary>
-    /// Important cluster constants.
+    /// Defines reserved neonKUBE ports.
     /// </summary>
-    public static class ClusterConst
+    public static class KubePort
     {
         /// <summary>
-        /// Neon SSO client ID.
+        /// The first port reserved by NeonKUBE SSO redirects.
         /// </summary>
-        public const string NeonSsoClientId = "neon-sso";
+        public const int KubeFirstSsoPort = 13051;
 
         /// <summary>
-        /// Neon SSO Public client ID.
+        /// The last port reserved by NeonKUBE SSO redirects.
         /// </summary>
-        public const string NeonSsoPublicClientId = "neon-sso-public";
+        public const int KubeLastSsoPort = 13074;
     }
 }

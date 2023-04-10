@@ -5360,6 +5360,30 @@ $@"- name: StorageType
                     await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "neon-sso-dex", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
 
+            controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/dex-sso-clients",
+                async () =>
+                {
+                    controller.LogProgress(controlNode, verb: "wait for", message: "neon-sso-clients");
+
+                    var publicClient           = new V1NeonSsoClient().Initialize();
+                    publicClient.Metadata.Name = ClusterConst.NeonSsoPublicClientId;
+                    publicClient.Spec          = new V1SsoClientSpec()
+                    {
+                        Id           = ClusterConst.NeonSsoPublicClientId,
+                        Name         = ClusterConst.NeonSsoPublicClientId,
+                        Public       = true,
+                        RedirectUris = new List<string>()
+                    };
+
+                    for (int port = KubePort.KubeFirstSsoPort; port <= KubePort.KubeFirstSsoPort; port++)
+                    {
+                        publicClient.Spec.RedirectUris.Add($"http://localhost:{port}");
+                    }
+
+                    await k8s.CustomObjects.UpsertClusterCustomObjectAsync(publicClient, publicClient.Name());
+                });
+
             // $todo(jefflill):
             //
             // I'm commenting this out for now after removing the [SsoConnectors] property from

@@ -53,9 +53,12 @@ namespace Neon.Kube.Operator
         /// <param name="services">The <see cref="IServiceCollection"/>.</param>
         /// <param name="settings">Optional options</param>
         /// <returns>The <see cref="OperatorBuilder"/>.</returns>
-        public static IOperatorBuilder AddKubernetesOperator(this IServiceCollection services, OperatorSettings settings)
+        public static IOperatorBuilder AddKubernetesOperator(this IServiceCollection services, Action<OperatorSettings> options)
         {
-            // $todo(marcusbooyah): Should we be doing something with [settings] here?
+            var settings = new OperatorSettings();
+            options?.Invoke(settings);
+
+            services.AddSingleton(settings);
 
             return new OperatorBuilder(services).AddOperatorBase();
         }

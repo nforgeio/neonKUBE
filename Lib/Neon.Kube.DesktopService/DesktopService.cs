@@ -66,7 +66,7 @@ namespace Neon.Kube.DesktopService
         {
             // Initialize the log and trace exporters we'll use to relay logs
             // and traces from neon-desktop and neon-cli to the headend.
-            
+
             // $note(jefflill):
             //
             // We're not using any batch processors here, so logs and traces will
@@ -84,16 +84,26 @@ namespace Neon.Kube.DesktopService
             // But frankly, I think that sending logs and traces as soon as we
             // get them is probably the correct behavior anyway.
 
-            var exporterOptions = 
+            var logExporterOptions =
                 new OtlpExporterOptions()
                 {
-                    Endpoint            = KubeEnv.TelemetryUri,
+                    Endpoint            = KubeEnv.TelemetryLogsUri,
                     ExportProcessorType = ExportProcessorType.Simple,
+                    Protocol            = OtlpExportProtocol.Grpc,
                     TimeoutMilliseconds = 1000
                 };
 
-            LogExporter   = OtlpLogExporterWrapper.Create(exporterOptions);
-            TraceExporter = new OtlpTraceExporter(exporterOptions);
+            var traceExporterOptions =
+                new OtlpExporterOptions()
+                {
+                    Endpoint            = KubeEnv.TelemetryTracesUri,
+                    ExportProcessorType = ExportProcessorType.Simple,
+                    Protocol            = OtlpExportProtocol.Grpc,
+                    TimeoutMilliseconds = 1000
+                };
+
+            LogExporter   = OtlpLogExporterWrapper.Create(logExporterOptions);
+            TraceExporter = new OtlpTraceExporter(traceExporterOptions);
         }
 
         //---------------------------------------------------------------------

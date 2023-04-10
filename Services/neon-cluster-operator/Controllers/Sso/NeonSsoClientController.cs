@@ -210,8 +210,15 @@ namespace NeonClusterOperator
                     client.LogoUrl = resource.Spec.LogoUrl;
                 }
 
-                client.RedirectUris.AddRange(resource.Spec.RedirectUris);
-                client.TrustedPeers.AddRange(resource.Spec.TrustedPeers);
+                if (resource.Spec.RedirectUris != null)
+                {
+                    client.RedirectUris.AddRange(resource.Spec.RedirectUris);
+                }
+
+                if (resource.Spec.TrustedPeers != null)
+                {
+                    client.TrustedPeers.AddRange(resource.Spec.TrustedPeers);
+                }
 
                 var createClientResp = await dexClient.CreateClientAsync(new CreateClientReq()
                 {
