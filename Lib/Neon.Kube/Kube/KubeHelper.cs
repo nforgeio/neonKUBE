@@ -3278,7 +3278,7 @@ TCPKeepAlive yes
 
             // Generate start URL, state, nonce, code challenge.
 
-            var state = await client.PrepareLoginAsync(new IdentityModel.Client.Parameters();
+            var state = await client.PrepareLoginAsync(new IdentityModel.Client.Parameters());
 
             NeonHelper.OpenBrowser($"{state.StartUrl}&code_verifier={state.CodeVerifier}");
 
