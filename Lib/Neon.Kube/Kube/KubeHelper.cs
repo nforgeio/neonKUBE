@@ -3256,13 +3256,13 @@ TCPKeepAlive yes
         }
 
         public static async Task<LoginResult> LoginOidcAsync(
-            string authority,
-            string clientId,
-            string[] scopes = null)
+            string      authority,
+            string      clientId,
+            string[]    scopes = null)
         {
-            var port = NetHelper.GetUnusedTcpPort(KubePort.KubeFirstSsoPort, KubePort.KubeLastSsoPort, IPAddress.Loopback);
-
+            var port     = NetHelper.GetUnusedTcpPort(KubePort.KubeFirstSsoPort, KubePort.KubeLastSsoPort, IPAddress.Loopback);
             var listener = new HttpListener();
+
             listener.Prefixes.Add($"http://localhost:{port}/");
             listener.Start();
 
@@ -3276,22 +3276,24 @@ TCPKeepAlive yes
 
             var client = new OidcClient(options);
 
-            // generate start URL, state, nonce, code challenge
-            var state = await client.PrepareLoginAsync(new IdentityModel.Client.Parameters()
-            {
-                
-            });
+            // Generate start URL, state, nonce, code challenge.
+
+            var state = await client.PrepareLoginAsync(new IdentityModel.Client.Parameters();
 
             NeonHelper.OpenBrowser($"{state.StartUrl}&code_verifier={state.CodeVerifier}");
 
-            // wait for the authorization response.
-            var context = await listener.GetContextAsync();
-            string responseString = string.Format("<html><head><meta http-equiv='refresh'></head><body>Please return to the app.</body></html>");
-            var buffer = Encoding.UTF8.GetBytes(responseString);
+            // Wait for the authorization response.
+
+            var context        = await listener.GetContextAsync();
+            var responseString = string.Format("<html><head><meta http-equiv='refresh'></head><body>Please return to the app.</body></html>");
+            var buffer         = Encoding.UTF8.GetBytes(responseString);
+
             context.Response.ContentLength64 = buffer.Length;
-            var responseOutput = context.Response.OutputStream;
-            await responseOutput.WriteAsync(buffer, 0, buffer.Length);
-            responseOutput.Close();
+
+            using (var responseOutput = context.Response.OutputStream)
+            {
+                await responseOutput.WriteAsync(buffer, 0, buffer.Length);
+            }
 
             var result = await client.ProcessResponseAsync($"?state={state.State}&code={context.Request.QueryString["code"]}", state);
 
