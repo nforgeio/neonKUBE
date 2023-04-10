@@ -141,11 +141,11 @@ ARGUMENTS:
                         NeonHelper.Execute(NeonHelper.DockerCli,
                             new object[]
                             {
-                            "login",
-                            $"{ClusterHost.HarborRegistry}.{login.ClusterDefinition.Domain}",
-                            "--username",
-                            "root",
-                            "--password-stdin"
+                                "login",
+                                $"{ClusterHost.HarborRegistry}.{login.ClusterDefinition.Domain}",
+                                "--username",
+                                "root",
+                                "--password-stdin"
                             },
                             input: new StringReader(login.SsoPassword));
                     }
@@ -167,8 +167,8 @@ ARGUMENTS:
                 var server    = commandLine.Arguments.First();
                 var uri       = new Uri(server);
                 var clusterId = uri.Host.Split('.').FirstOrDefault();
-
                 var ssoHost   = uri.Host;
+
                 if (!ssoHost.StartsWith(ClusterHost.Sso))
                 {
                     ssoHost = $"{ClusterHost.Sso}.{uri.Host}";
@@ -176,8 +176,8 @@ ARGUMENTS:
 
                 var result = await KubeHelper.LoginOidcAsync(
                     authority: $"https://{ssoHost}",
-                    ClusterConst.NeonSsoPublicClientId,
-                    new string[] { "openid", "email", "profile", "groups", "offline_access", "audience:server:client_id:neon-sso" });
+                    clientId:  ClusterConst.NeonSsoPublicClientId,
+                    scopes:    new string[] { "openid", "email", "profile", "groups", "offline_access", "audience:server:client_id:neon-sso" });
 
                 var user     = result.User;
                 var userName = user.Identity.Name.Split("via").First().Trim();
@@ -187,12 +187,11 @@ ARGUMENTS:
                 {
                     config.Clusters.Add(new KubeConfigCluster()
                     {
-                        Name = clusterId,
+                        Name       = clusterId,
                         Properties = new KubeConfigClusterProperties()
                         {
-                            Server = $"{server}:6443",
+                            Server                = $"{server}:6443",
                             InsecureSkipTlsVerify = true
-
                         }
                     });
                 }
@@ -201,7 +200,7 @@ ARGUMENTS:
                 {
                     config.Users.Add(new KubeConfigUser()
                     {
-                        Name = $"{userName}@{clusterId}",
+                        Name       = $"{userName}@{clusterId}",
                         Properties = new KubeConfigUserProperties()
                         {
                             Token = result.AccessToken
@@ -213,11 +212,11 @@ ARGUMENTS:
                 {
                     config.Contexts.Add(new KubeConfigContext()
                     {
-                        Name = $"{userName}@{clusterId}",
+                        Name       = $"{userName}@{clusterId}",
                         Properties = new KubeConfigContextProperties
                         {
                             Cluster = clusterId,
-                            User = $"{userName}@{clusterId}"
+                            User    = $"{userName}@{clusterId}"
                         }
                     });
                 }
@@ -228,7 +227,7 @@ ARGUMENTS:
             }
             catch (Exception)
             {
-                Console.Error.WriteLine($"*** error logging into cluster.");
+                Console.Error.WriteLine($"*** ERROR: Cannot log into cluster.");
                 Program.Exit(1);
             }
 
