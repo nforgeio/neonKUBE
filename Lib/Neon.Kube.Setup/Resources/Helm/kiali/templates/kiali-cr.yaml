@@ -22,7 +22,7 @@ spec:
   auth:
     strategy: header
     openid:
-      client_id: "kubernetes"
+      client_id: "neon-sso"
       issuer_uri: "https://{{ .Values.neonkube.clusterDomain.sso }}.{{ .Values.cluster.domain }}"
       username_claim: "email"
       scopes:

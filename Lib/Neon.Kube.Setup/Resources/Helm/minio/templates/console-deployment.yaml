@@ -80,7 +80,7 @@ spec:
                 name:  neon-sso-dex
                 key: MINIO_CLIENT_SECRET
           - name: CONSOLE_IDP_SCOPES
-            value: "openid,email,profile,groups"
+            value: "openid,email,profile,groups,offline_access,audience:server:client_id:neon-sso"
           - name: CONSOLE_IDP_CLAIM_NAME
             value: groups
           resources:
