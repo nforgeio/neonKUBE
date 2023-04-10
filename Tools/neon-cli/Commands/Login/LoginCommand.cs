@@ -162,7 +162,7 @@ ARGUMENTS:
                 }
 
             }
-            catch (FormatException e)
+            catch (FormatException)
             {
                 var server    = commandLine.Arguments.First();
                 var uri       = new Uri(server);
@@ -226,7 +226,7 @@ ARGUMENTS:
 
                 config.Save();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 Console.Error.WriteLine($"*** error logging into cluster.");
                 Program.Exit(1);
