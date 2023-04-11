@@ -412,6 +412,9 @@ spec:
                     await InstallCertManagerAsync(controller, controlNode);
 
                     controller.ThrowIfCancelled();
+                    await ConfigureApiserverIngressAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
                     await InstallKubeDashboardAsync(controller, controlNode);
 
                     controller.ThrowIfCancelled();
@@ -2164,6 +2167,135 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         await k8s.CoreV1.CreateNamespacedSecretAsync(secret, secret.Namespace());
                     });
             }
+        }
+
+        /// <summary>
+        /// Configures external apiserver access.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task ConfigureApiserverIngressAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        {
+            await SyncContext.Clear;
+
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
+
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s     = GetK8sClient(controller);
+
+            controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/apiserver-ingress-service",
+                async () =>
+                {
+                    controller.LogProgress(controlNode, verb: "setup", message: "apiserver ingress service");
+
+                    var service                        = new V1Service().Initialize();
+                    service.Metadata.Name              = "kubernetes-apiserver";
+                    service.Metadata.NamespaceProperty = KubeNamespace.NeonIngress;
+
+                    service.Spec = new V1ServiceSpec()
+                    {
+                        Ports = new List<V1ServicePort>()
+                        {
+                            new V1ServicePort()
+                            {
+                                Name       = "https",
+                                Protocol   = "TCP",
+                                Port       = 443,
+                                TargetPort = 443
+                            }
+                        },
+                        Type         = "ExternalName",
+                        ExternalName = "kubernetes.default.svc.cluster.local"
+                    };
+
+                    await k8s.CoreV1.CreateNamespacedServiceAsync(service, service.Namespace());
+
+                });
+
+            controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/apiserver-ingress-destination-rule",
+                async () =>
+                {
+                    controller.LogProgress(controlNode, verb: "setup", message: "apiserver ingress destination rule");
+
+                    var destinationRule                        = new V1DestinationRule().Initialize();
+                    destinationRule.Metadata.Name              = "tls-kubernetes-apiserver";
+                    destinationRule.Metadata.NamespaceProperty = KubeNamespace.NeonIngress;
+
+                    destinationRule.Spec = new V1DestinationRuleSpec()
+                    {
+                        Host          = "kubernetes-apiserver",
+                        TrafficPolicy = new TrafficPolicy()
+                        {
+                            Tls = new ClientTLSSettings()
+                            {
+                                Mode               = TLSMode.Simple,
+                                InsecureSkipVerify = false
+                            }
+                        }
+                    };
+
+                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync(
+                        body: destinationRule,
+                        name: destinationRule.Name(),
+                        namespaceParameter: destinationRule.Namespace());
+
+                });
+
+            controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/apiserver-ingress-virtual-service",
+                async () =>
+                {
+                    controller.LogProgress(controlNode, verb: "setup", message: "apiserver ingress virtual service");
+
+                    var virtualService                        = new V1VirtualService().Initialize();
+                    virtualService.Metadata.Name              = "kubernetes-apiserver";
+                    virtualService.Metadata.NamespaceProperty = KubeNamespace.NeonIngress;
+
+                    virtualService.Spec = new V1VirtualServiceSpec()
+                    {
+                        Gateways = new List<string>() { $"{KubeNamespace.NeonIngress}/neoncluster-gateway" },
+                        Hosts    = new List<string>() { cluster.Definition.Domain },
+                        Http     = new List<HTTPRoute>()
+                        {
+                            new HTTPRoute()
+                            {
+                                Match = new List<HTTPMatchRequest>()
+                                {
+                                    new HTTPMatchRequest()
+                                    {
+                                        Uri = new StringMatch()
+                                        {
+                                            Prefix = "/"
+                                        }
+                                    }
+                                },
+                                Route = new List<HTTPRouteDestination>()
+                                {
+                                    new HTTPRouteDestination()
+                                    {
+                                        Destination = new Destination()
+                                        {
+                                            Host = "kubernetes-apiserver.neon-ingress.svc.cluster.local",
+                                            Port = new PortSelector()
+                                            {
+                                                Number = 443
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    };
+
+                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync(
+                        body: virtualService,
+                        name: virtualService.Name(),
+                        namespaceParameter: virtualService.Namespace());
+                });
         }
 
         /// <summary>

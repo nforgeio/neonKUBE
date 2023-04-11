@@ -52,7 +52,7 @@ namespace Neon.Kube
         /// The optional cluster nickname.
         /// </summary>
         [JsonProperty(PropertyName = "cluster", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "cluster", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "cluster", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public string Cluster { get; set; }
 
@@ -60,7 +60,7 @@ namespace Neon.Kube
         /// The optional namespace.
         /// </summary>
         [JsonProperty(PropertyName = "namespace", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "namespace", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "namespace", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public string Namespace { get; set; }
 
@@ -68,7 +68,7 @@ namespace Neon.Kube
         /// The optional user nickname.
         /// </summary>
         [JsonProperty(PropertyName = "user", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "user", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "user", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public string User { get; set; }
     }
