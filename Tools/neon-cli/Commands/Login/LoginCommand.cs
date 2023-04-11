@@ -34,6 +34,11 @@ using Neon.Kube;
 using Neon.Kube.Proxy;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Octokit;
+using System.Security.Cryptography.X509Certificates;
+using k8s.Models;
+using Neon.Kube.Kube;
+using Neon.Tasks;
+using Neon.Kube.Glauth;
 
 namespace NeonCli
 {
@@ -90,32 +95,62 @@ ARGUMENTS:
             try
             {
                 var server    = commandLine.Arguments.First();
-                var uri       = new Uri(server);
-                var clusterId = uri.Host.Split('.').FirstOrDefault();
 
-                var ssoHost   = uri.Host;
-                if (!ssoHost.StartsWith(ClusterHost.Sso))
+                if (!server.StartsWith("https://"))
                 {
-                    ssoHost = $"{ClusterHost.Sso}.{uri.Host}";
+                    server = $"https://{server}";
                 }
 
+                var serverUri       = new Uri(server);
+                var clusterId       = serverUri.Host.Split('.').FirstOrDefault();
+                var ssoUri          = new Uri($"https://{ClusterHost.Sso}.{serverUri.Host}");
+
                 var result = await KubeHelper.LoginOidcAsync(
-                    authority: $"https://{ssoHost}",
-                    ClusterConst.NeonSsoPublicClientId,
-                    new string[] { "openid", "email", "profile", "groups", "offline_access", "audience:server:client_id:neon-sso" });
+                    authority: ssoUri.ToString(),
+                    clientId: ClusterConst.NeonSsoPublicClientId,
+                    scopes: new string[] { "openid", "email", "profile", "groups", "offline_access", "audience:server:client_id:neon-sso" });
+                
+                ClusterInfo clusterInfo;
+                GlauthUser  registryUser = null;
+
+                using var store = new X509Store(
+                            StoreName.CertificateAuthority,
+                            StoreLocation.CurrentUser);
+
+                using (var k8s = new Kubernetes(new KubernetesClientConfiguration()
+                {
+                    AccessToken   = result.AccessToken,
+                    SslCaCerts    = store.Certificates,
+                    SkipTlsVerify = false,
+                    Host          = serverUri.ToString(),
+                }, new KubernetesRetryHandler()))
+                {
+                    var configMap = await k8s.CoreV1.ReadNamespacedConfigMapAsync(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus);
+                    
+                    clusterInfo = TypedConfigMap<ClusterInfo>.From(configMap).Data;
+
+                    try
+                    {
+                        registryUser = await KubeHelper.GetClusterLdapUserAsync(k8s, "root");
+                    }
+                    catch
+                    {
+                        // not allowed
+                    }
+                }
 
                 var user     = result.User;
                 var userName = user.Identity.Name.Split("via").First().Trim();
                 var config   = KubeHelper.Config;
 
-                var newContextName = $"{userName}@{clusterId}";
+                var newContextName = $"{userName}@{clusterInfo.Name}";
 
                 Console.WriteLine($"Login: {newContextName}...");
 
-                var configCluster = config.Clusters.Where(cluster => cluster.Name == clusterId).FirstOrDefault();
+                var configCluster = config.Clusters.Where(cluster => cluster.Name == clusterInfo.Name).FirstOrDefault();
                 var clusterProperties = new KubeConfigClusterProperties()
                 {
-                    Server = $"{server}:443",
+                    Server                = serverUri.ToString(),
                     InsecureSkipTlsVerify = false
                 };
 
@@ -123,7 +158,7 @@ ARGUMENTS:
                 {
                     config.Clusters.Add(new KubeConfigCluster()
                     {
-                        Name = clusterId,
+                        Name       = clusterInfo.Name,
                         Properties = clusterProperties
                     });
                 }
@@ -132,16 +167,16 @@ ARGUMENTS:
                     configCluster.Properties = clusterProperties;
                 }
 
-                var configUser = config.Users.Where(user => user.Name == newContextName).FirstOrDefault();
+                var configUser   = config.Users.Where(user => user.Name == newContextName).FirstOrDefault();
                 var authProvider = new KubeConfigAuthProvider()
                 {
-                    Name = "oidc",
+                    Name       = "oidc",
                     Properties = new KubeConfigAuthProviderProperties()
                     {
-                        ClientId = ClusterConst.NeonSsoPublicClientId,
-                        IdpIssuerUrl = $"https://{ssoHost}",
+                        ClientId     = ClusterConst.NeonSsoPublicClientId,
+                        IdpIssuerUrl = ssoUri.ToString(),
                         RefreshToken = result.RefreshToken,
-                        IdToken = result.IdentityToken
+                        IdToken      = result.IdentityToken
                     }
                 };
                 var userProperties = new KubeConfigUserProperties()
@@ -154,7 +189,7 @@ ARGUMENTS:
                 {
                     config.Users.Add(new KubeConfigUser()
                     {
-                        Name = newContextName,
+                        Name       = newContextName,
                         Properties = userProperties,
                     });
                 }
@@ -166,8 +201,8 @@ ARGUMENTS:
                 var configContext = config.Contexts.Where(context => context.Name == newContextName).FirstOrDefault();
                 var contextProperties = new KubeConfigContextProperties
                 {
-                    Cluster = clusterId,
-                    User = newContextName
+                    Cluster = clusterInfo.Name,
+                    User    = newContextName
                 };
 
                 if (configContext == null)
@@ -186,6 +221,32 @@ ARGUMENTS:
                 config.CurrentContext = newContextName;
 
                 config.Save();
+
+                if (registryUser != null)
+                {
+                    try
+                    {
+                        if (!string.IsNullOrEmpty(NeonHelper.DockerCli))
+                        {
+                            Console.WriteLine($"Login: Docker to Harbor...");
+
+                            NeonHelper.Execute(NeonHelper.DockerCli,
+                                new object[]
+                                {
+                                    "login",
+                                    $"{ClusterHost.HarborRegistry}.{serverUri.Host}",
+                                    "--username",
+                                    "root",
+                                    "--password-stdin"
+                                },
+                                input: new StringReader(registryUser.Password));
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.Error.WriteLine($"*** error logging into cluster registry.");
+                    }
+                }
             }
             catch (Exception e)
             {
