@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeConfigClusterProperties.cs
+// FILE:	    KubeConfigUser.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -29,7 +29,6 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 
 using Neon.Common;
@@ -38,38 +37,29 @@ using Neon.Cryptography;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Describes a Kubernetes cluster's properties.
+    /// Describes a Kubernetes user configuration.
     /// </summary>
-    public class KubeConfigClusterProperties
+    public class KubeConfigAuthProvider
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public KubeConfigClusterProperties()
+        public KubeConfigAuthProvider()
         {
         }
 
         /// <summary>
-        /// Fully qualified URL to the cluster's API server.
+        /// The local nickname for the user.
         /// </summary>
-        [JsonProperty(PropertyName = "server", Required = Required.Always)]
-        [YamlMember(Alias = "server", ApplyNamingConventions = false)]
-        public string Server { get; set; }
+        [JsonProperty(PropertyName = "name", Required = Required.Always)]
+        [YamlMember(Alias = "name", ApplyNamingConventions = false)]
+        public string Name { get; set; }
 
         /// <summary>
-        /// Optional path to the cluster certificate authority file.
+        /// The user properties.
         /// </summary>
-        [JsonProperty(PropertyName = "certificate-authority-data", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "certificate-authority-data", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
-        [DefaultValue(null)]
-        public string CertificateAuthorityData { get; set; }
-
-        /// <summary>
-        /// Optionally disables TLS verification of the server.
-        /// </summary>
-        [JsonProperty(PropertyName = "insecure-skip-tls-verify", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "insecure-skip-tls-verify", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
-        [DefaultValue(false)]
-        public bool InsecureSkipTlsVerify { get; set; } = false;
+        [JsonProperty(PropertyName = "config", Required = Required.Always)]
+        [YamlMember(Alias = "config", ApplyNamingConventions = false)]
+        public KubeConfigAuthProviderProperties Properties { get; set; }
     }
 }

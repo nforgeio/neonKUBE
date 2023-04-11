@@ -53,7 +53,7 @@ namespace Neon.Kube
         /// The optional authentication token (or <c>null</c>).
         /// </summary>
         [JsonProperty(PropertyName = "token", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "token", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "token", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public string Token { get; set; }
 
@@ -61,7 +61,7 @@ namespace Neon.Kube
         /// The optional path to the client certificate (or <c>null</c>).
         /// </summary>
         [JsonProperty(PropertyName = "client-certificate-data", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "client-certificate-data", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "client-certificate-data", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public string ClientCertificateData { get; set; }
 
@@ -69,7 +69,7 @@ namespace Neon.Kube
         /// The optional client key data.
         /// </summary>
         [JsonProperty(PropertyName = "client-key-data", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "client-key-data", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "client-key-data", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public string ClientKeyData { get; set; }
 
@@ -77,7 +77,7 @@ namespace Neon.Kube
         /// The optional username (or <c>null</c>).
         /// </summary>
         [JsonProperty(PropertyName = "username", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "username", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "username", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public string Username { get; set; }
 
@@ -85,8 +85,16 @@ namespace Neon.Kube
         /// The optional password (or <c>null</c>).
         /// </summary>
         [JsonProperty(PropertyName = "password", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "password", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "password", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public string Password { get; set; }
+
+        /// <summary>
+        /// The optional auth provider.
+        /// </summary>
+        [JsonProperty(PropertyName = "auth-provider", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "auth-provider", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
+        [DefaultValue(null)]
+        public KubeConfigAuthProvider AuthProvider { get; set; }
     }
 }

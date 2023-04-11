@@ -21,7 +21,7 @@
 	</ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="AsyncKeyedLock" Version="6.2.0" />
+        <PackageReference Include="AsyncKeyedLock" Version="6.2.1" />
         <PackageReference Include="CompareNETObjects" Version="4.79.0" />
         <PackageReference Include="KubernetesClient" Version="10.0.31" />
         <PackageReference Include="KubernetesClient.Models" Version="10.0.31" />

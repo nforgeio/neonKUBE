@@ -48,8 +48,12 @@
         <ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube.Xunit\Neon.Kube.Xunit.csproj" />
         <ProjectReference Include="..\..\Services\neon-node-agent\neon-node-agent.csproj" />
-        <!--<Reference Include="Telerik.JustMock">
-            <HintPath>C:\Program Files (x86)\Progress\Telerik JustMock\Libraries\netcoreapp2.0\Telerik.JustMock.dll</HintPath>
-        </Reference>-->
     </ItemGroup>
+    
+    <ItemGroup Condition="'$(JUSTMOCK_ENABLED)' != ''">
+        <Reference Include="Telerik.JustMock">
+            <HintPath>C:\Program Files (x86)\Progress\Telerik JustMock\Libraries\netcoreapp2.0\Telerik.JustMock.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+    
 </Project>

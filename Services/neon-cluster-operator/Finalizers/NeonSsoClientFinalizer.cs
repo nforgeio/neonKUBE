@@ -86,19 +86,6 @@ namespace NeonClusterOperator
                     Id = resource.Spec.Id
                 });
 
-                var oauth2ProxyConfig = await k8s.CoreV1.ReadNamespacedConfigMapAsync("neon-sso-oauth2-proxy", KubeNamespace.NeonSystem);
-                var alphaConfig       = NeonHelper.YamlDeserialize<Oauth2ProxyConfig>(oauth2ProxyConfig.Data["oauth2_proxy_alpha.cfg"]);
-                var provider          = alphaConfig.Providers.Where(p => p.ClientId == "neon-sso").Single();
-
-                if (provider.OidcConfig.ExtraAudiences.Contains(resource.Spec.Id))
-                {
-                    provider.OidcConfig.ExtraAudiences.Remove(resource.Spec.Id);
-                }
-
-                oauth2ProxyConfig.Data["oauth2_proxy_alpha.cfg"] = NeonHelper.YamlSerialize(alphaConfig);
-
-                await k8s.CoreV1.ReplaceNamespacedConfigMapAsync(oauth2ProxyConfig, oauth2ProxyConfig.Name(), KubeNamespace.NeonSystem);
-
                 logger.LogInformationEx(() => $"Finalized: {resource.Name()}");
             }
         }

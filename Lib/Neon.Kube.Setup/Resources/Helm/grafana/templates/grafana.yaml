@@ -27,7 +27,7 @@ spec:
       client_id: $__env{CLIENT_ID}
       client_secret: $__env{CLIENT_SECRET}
       enabled: true
-      scopes: openid email profile groups
+      scopes: openid email profile groups offline_access audience:server:client_id:neon-sso
       token_url: >-
         https://{{ .Values.neonkube.clusterDomain.sso }}.{{ .Values.cluster.domain }}/token
       role_attribute_path: >-
