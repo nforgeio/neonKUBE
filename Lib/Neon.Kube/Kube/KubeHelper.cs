@@ -42,6 +42,7 @@ using DiscUtils.Iso9660;
 using IdentityModel.OidcClient;
 
 using k8s;
+using k8s.KubeConfigModels;
 using k8s.Models;
 
 using Microsoft.Extensions.Logging;
@@ -72,6 +73,39 @@ namespace Neon.Kube
     /// </summary>
     public static class KubeHelper
     {
+        //---------------------------------------------------------------------
+        // Extension methods
+
+        /// <summary>
+        /// Searches <param name="extensions"/> for an extension with the name passed and
+        /// returns its value when found, otherwise returns <paramref name="default"/>.
+        /// </summary>
+        /// <typeparam name="T">Specifies the property value type.</typeparam>
+        /// <param name="name">The extension name.</param>
+        /// <param name="default">The value to be returned when the extension doesn't exist.</param>
+        /// <returns>The extension value when found, otherwise <paramref name="default"/>.</returns>
+        /// <exception cref="InvalidCastException">Thrown when the extension value cannot be cast to <typeparamref name="T"/>.</exception>
+        public static T Get<T>(this IEnumerable<NamedExtension> extensions, string name, T @default)
+        {
+            if (extensions == null)
+            {
+                return @default;
+            }
+
+            foreach (var item in extensions)
+            {
+                if (item.Name == name)
+                {
+                    return (T)item.Extension;
+                }
+            }
+
+            return @default;
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
         private static Guid                 clientId;
         private static KubeConfig           cachedConfig;
         private static KubeConfigContext    cachedContext;

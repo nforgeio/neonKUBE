@@ -26,6 +26,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s.KubeConfigModels;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -63,5 +65,16 @@ namespace Neon.Kube.Login
         [JsonProperty(PropertyName = "cluster", Required = Required.Always)]
         [YamlMember(Alias = "cluster", ApplyNamingConventions = false)]
         public KubeConfigClusterProperties Properties { get; set; }
+
+        /// <summary>
+        /// Lists any custom extension properties.  Extensions are name/value pairs added
+        /// by vendors to hold arbitrary information.  Take care to choose property names
+        /// that are unlikely to conflict with properties created by other vendors by adding
+        /// a custom sffix like <b>my-property.neonkube.io</b>, where <b>my-property</b> 
+        /// identifies the property and <b>neonkibe.io</b> helps avoid conflicts.
+        /// </summary>
+        [JsonProperty(PropertyName = "Extensions", Required = Required.Default)]
+        [YamlMember(Alias = "extensions", ApplyNamingConventions = false)]
+        public List<NamedExtension> Extensions { get; set; } = new List<NamedExtension>();
     }
 }

@@ -37,7 +37,6 @@ using Neon.Cryptography;
 using Neon.Kube;
 using Neon.Kube.ClusterDef;
 using Neon.SSH;
-using Neon.Kube;
 
 namespace Neon.Kube.Login
 {

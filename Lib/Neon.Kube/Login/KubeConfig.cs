@@ -26,6 +26,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s.KubeConfigModels;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -105,7 +107,7 @@ namespace Neon.Kube.Login
         }
 
         /// <summary>
-        /// The cluster API server protocol version (defaults to <b>v1</b>).
+        /// Specifies cluster API server protocol version (defaults to <b>v1</b>).
         /// </summary>
         [JsonProperty(PropertyName = "apiVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "apiVersion", ApplyNamingConventions = false)]
@@ -121,21 +123,21 @@ namespace Neon.Kube.Login
         public string Kind { get; set; } = "Config";
 
         /// <summary>
-        /// The list of cluster configurations.
+        /// Lists cluster configurations.
         /// </summary>
         [JsonProperty(PropertyName = "clusters", Required = Required.Always)]
         [YamlMember(Alias = "clusters", ApplyNamingConventions = false)]
         public List<KubeConfigCluster> Clusters { get; set; } = new List<KubeConfigCluster>();
 
         /// <summary>
-        /// The list of config contexts.
+        /// Lists config contexts.
         /// </summary>
         [JsonProperty(PropertyName = "contexts", Required = Required.Always)]
         [YamlMember(Alias = "contexts", ApplyNamingConventions = false)]
         public List<KubeConfigContext> Contexts { get; set; } = new List<KubeConfigContext>();
 
         /// <summary>
-        /// The name of the current context or <c>null</c> when there is no current context.
+        /// Specifies the name of the current context or <c>null</c> when there is no current context.
         /// </summary>
         [JsonProperty(PropertyName = "current-context", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "current-context", ApplyNamingConventions = false)]
@@ -143,7 +145,7 @@ namespace Neon.Kube.Login
         public string CurrentContext { get; set; }
 
         /// <summary>
-        /// The optional dictionary of preferences.
+        /// Optional dictionary of preferences.
         /// </summary>
         [JsonProperty(PropertyName = "preferences", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "preferences", ApplyNamingConventions = false)]
@@ -151,11 +153,22 @@ namespace Neon.Kube.Login
         public Dictionary<string, string> Preferences { get; set; } = null;
 
         /// <summary>
-        /// The list of user configurations.
+        /// Lists the user configurations.
         /// </summary>
         [JsonProperty(PropertyName = "users", Required = Required.Always)]
         [YamlMember(Alias = "users", ApplyNamingConventions = false)]
         public List<KubeConfigUser> Users { get; set; } = new List<KubeConfigUser>();
+
+        /// <summary>
+        /// Lists any custom extension properties.  Extensions are name/value pairs added
+        /// by vendors to hold arbitrary information.  Take care to choose property names
+        /// that are unlikely to conflict with properties created by other vendors by adding
+        /// a custom sffix like <b>my-property.neonkube.io</b>, where <b>my-property</b> 
+        /// identifies the property and <b>neonkibe.io</b> helps avoid conflicts.
+        /// </summary>
+        [JsonProperty(PropertyName = "Extensions", Required = Required.Default)]
+        [YamlMember(Alias = "extensions", ApplyNamingConventions = false)]
+        public List<NamedExtension> Extensions { get; set; } = new List<NamedExtension>();
 
         /// <summary>
         /// Returns the current context or <c>null</c>.

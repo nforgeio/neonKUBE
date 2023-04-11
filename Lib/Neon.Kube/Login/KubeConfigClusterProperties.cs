@@ -51,7 +51,7 @@ namespace Neon.Kube.Login
         }
 
         /// <summary>
-        /// Fully qualified URL to the cluster's API server.
+        /// Specifies the qualified URL to the cluster's API server.
         /// </summary>
         [JsonProperty(PropertyName = "server", Required = Required.Always)]
         [YamlMember(Alias = "server", ApplyNamingConventions = false)]

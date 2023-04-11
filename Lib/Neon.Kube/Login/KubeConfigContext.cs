@@ -26,14 +26,16 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
-using YamlDotNet.Serialization;
+using k8s.KubeConfigModels;
 
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube.Login
 {
@@ -78,6 +80,17 @@ namespace Neon.Kube.Login
         [JsonProperty(PropertyName = "context", Required = Required.Always)]
         [YamlMember(Alias = "context", ApplyNamingConventions = false)]
         public KubeConfigContextProperties Properties { get; set; }
+
+        /// <summary>
+        /// Lists any custom extension properties.  Extensions are name/value pairs added
+        /// by vendors to hold arbitrary information.  Take care to choose property names
+        /// that are unlikely to conflict with properties created by other vendors by adding
+        /// a custom sffix like <b>my-property.neonkube.io</b>, where <b>my-property</b> 
+        /// identifies the property and <b>neonkibe.io</b> helps avoid conflicts.
+        /// </summary>
+        [JsonProperty(PropertyName = "Extensions", Required = Required.Default)]
+        [YamlMember(Alias = "extensions", ApplyNamingConventions = false)]
+        public List<NamedExtension> Extensions { get; set; } = new List<NamedExtension>();
 
         /// <summary>
         /// Indicates whether the Kubernetes context references a neonKUBE cluster.
