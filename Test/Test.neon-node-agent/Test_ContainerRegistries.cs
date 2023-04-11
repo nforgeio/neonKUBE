@@ -15,6 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if JUSTMOCK
+
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -30,12 +32,10 @@ using NeonNodeAgent;
 using k8s;
 using k8s.Models;
 
-#if JUSTMOCK_ENABLED
 using Telerik.JustMock;
-#endif
+
 using Tomlyn;
 
-#if JUSTMOCK_ENABLED
 namespace TestNeonNodeAgent
 {
     public class Test_ContainerRegistries : IClassFixture<TestOperatorFixture>

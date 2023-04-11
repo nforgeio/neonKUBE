@@ -326,7 +326,7 @@ namespace NeonClusterOperator
             // We need to ensure that wa have the initial cluster information before this
             // method returns.
             //
-            // Marcus originally started the nwatcher and then used a [WaitFor()] call to
+            // Marcus originally started the watcher and then used a [WaitFor()] call to
             // wait for the watcher to report and set the [ClusterInfo] property.  Unfortunately,
             // watchers don't seem to always report on objects that already exist.  We're
             // going to hack around this for now by explicitly waiting for the cluster info
