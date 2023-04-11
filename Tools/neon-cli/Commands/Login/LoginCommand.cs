@@ -94,7 +94,7 @@ ARGUMENTS:
 
             try
             {
-                var server    = commandLine.Arguments.First();
+                var server = commandLine.Arguments.First();
 
                 if (!server.StartsWith("https://"))
                 {
@@ -107,23 +107,22 @@ ARGUMENTS:
 
                 var result = await KubeHelper.LoginOidcAsync(
                     authority: ssoUri.ToString(),
-                    clientId: ClusterConst.NeonSsoPublicClientId,
-                    scopes: new string[] { "openid", "email", "profile", "groups", "offline_access", "audience:server:client_id:neon-sso" });
+                    clientId:  ClusterConst.NeonSsoPublicClientId,
+                    scopes:    new string[] { "openid", "email", "profile", "groups", "offline_access", "audience:server:client_id:neon-sso" });
                 
                 ClusterInfo clusterInfo;
                 GlauthUser  registryUser = null;
 
-                using var store = new X509Store(
-                            StoreName.CertificateAuthority,
-                            StoreLocation.CurrentUser);
+                using var store = new X509Store(StoreName.CertificateAuthority,StoreLocation.CurrentUser);
 
                 using (var k8s = new Kubernetes(new KubernetesClientConfiguration()
-                {
-                    AccessToken   = result.AccessToken,
-                    SslCaCerts    = store.Certificates,
-                    SkipTlsVerify = false,
-                    Host          = serverUri.ToString(),
-                }, new KubernetesRetryHandler()))
+                    {
+                        AccessToken   = result.AccessToken,
+                        SslCaCerts    = store.Certificates,
+                        SkipTlsVerify = false,
+                        Host          = serverUri.ToString(),
+                    },
+                    new KubernetesRetryHandler()))
                 {
                     var configMap = await k8s.CoreV1.ReadNamespacedConfigMapAsync(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus);
                     
@@ -135,19 +134,19 @@ ARGUMENTS:
                     }
                     catch
                     {
-                        // not allowed
+                        // We're going to ignore any errors here and drop through to
+                        // the code below to see if it can do something else.
                     }
                 }
 
-                var user     = result.User;
-                var userName = user.Identity.Name.Split("via").First().Trim();
-                var config   = KubeHelper.Config;
-
+                var user           = result.User;
+                var userName       = user.Identity.Name.Split("via").First().Trim();
+                var config         = KubeHelper.Config;
                 var newContextName = $"{userName}@{clusterInfo.Name}";
 
                 Console.WriteLine($"Login: {newContextName}...");
 
-                var configCluster = config.Clusters.Where(cluster => cluster.Name == clusterInfo.Name).FirstOrDefault();
+                var configCluster     = config.Clusters.Where(cluster => cluster.Name == clusterInfo.Name).FirstOrDefault();
                 var clusterProperties = new KubeConfigClusterProperties()
                 {
                     Server                = serverUri.ToString(),
@@ -181,7 +180,7 @@ ARGUMENTS:
                 };
                 var userProperties = new KubeConfigUserProperties()
                 {
-                    Token = result.AccessToken,
+                    Token        = result.AccessToken,
                     AuthProvider = authProvider
                 };
 
@@ -198,7 +197,7 @@ ARGUMENTS:
                     configUser.Properties = userProperties;
                 }
 
-                var configContext = config.Contexts.Where(context => context.Name == newContextName).FirstOrDefault();
+                var configContext     = config.Contexts.Where(context => context.Name == newContextName).FirstOrDefault();
                 var contextProperties = new KubeConfigContextProperties
                 {
                     Cluster = clusterInfo.Name,
@@ -209,7 +208,7 @@ ARGUMENTS:
                 {
                     config.Contexts.Add(new KubeConfigContext()
                     {
-                        Name = newContextName,
+                        Name       = newContextName,
                         Properties = contextProperties
                     });
                 }
@@ -244,7 +243,7 @@ ARGUMENTS:
                     }
                     catch (Exception e)
                     {
-                        Console.Error.WriteLine($"*** error logging into cluster registry.");
+                        Console.Error.WriteLine($"*** ERROR: logging into cluster registry: {NeonHelper.ExceptionError(e)}");
                     }
                 }
             }
@@ -252,12 +251,12 @@ ARGUMENTS:
             {
                 KubeHelper.SetCurrentContext(orgContext?.Name);
 
-                Console.Error.WriteLine($"*** error logging into cluster.");
+                Console.Error.WriteLine($"*** ERROR: logging into cluster: {NeonHelper.ExceptionError(e)}");
                 Program.Exit(1);
             }
 
             Console.WriteLine();
-            Console.WriteLine($"Now logged into: {commandLine.Arguments.First()}");
+            Console.WriteLine($"Logged into: {commandLine.Arguments.First()}");
 
             await Task.CompletedTask;
         }
