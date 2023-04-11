@@ -185,7 +185,7 @@ try
 
     # Publish binaries.
 
-    pubcore "$nkRoot\Tools\neon-cli\neon-cli.csproj" Release "$nkBuild/neon" win10-x64
+    pubcore "$nkRoot\Tools\neon-cli\neon-cli.csproj" Release "$nkBuild/neoncli" win10-x64
     ThrowOnExitCode
 
     # Build the code documentation if requested.

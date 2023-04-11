@@ -30,9 +30,9 @@ using NeonNodeAgent;
 using k8s;
 using k8s.Models;
 
-
+#if JUSTMOCK_ENABLED
 using Telerik.JustMock;
-
+#endif
 using Tomlyn;
 
 #if JUSTMOCK_ENABLED

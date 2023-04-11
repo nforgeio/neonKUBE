@@ -57,7 +57,7 @@ helm install my-release deliveryhero/node-problem-detector -f values.yaml
 | hostNetwork | bool | `false` | Run pod on host network Flag to run Node Problem Detector on the host's network. This is typically not recommended, but may be useful for certain use cases. |
 | hostPID | bool | `false` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
-| image.repository | string | `"k8s.gcr.io/node-problem-detector/node-problem-detector"` |  |
+| image.repository | string | `"registry.k8s.io/node-problem-detector/node-problem-detector"` |  |
 | image.tag | string | `"v0.8.10"` |  |
 | imagePullSecrets | list | `[]` |  |
 | labels | object | `{}` |  |
