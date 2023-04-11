@@ -330,6 +330,12 @@ namespace Neon.Kube.Proxy
         public IReadOnlyList<NodeSshProxy<NodeDefinition>> Nodes { get; private set; }
 
         /// <summary>
+        /// Set to the setup details while the cluster is being provisioned,
+        /// <c>null</c> otherwise.
+        /// </summary>
+        public KubeSetupDetails SetupDetails { get; set; }
+
+        /// <summary>
         /// Returns the list of node host proxies for hosting managers that
         /// need to manipulate host machines. 
         /// </summary>

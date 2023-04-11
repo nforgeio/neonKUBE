@@ -189,7 +189,7 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            if (kubeCluster != null && !clusterLogin.SetupDetails.SetupPending)
+            if (kubeCluster != null && clusterLogin.SetupDetails.DeploymentStatus != ClusterDeploymentStatus.Ready)
             {
                 if (commandLine.GetOption("--force") == null && !Program.PromptYesNo($"One or more logins reference [{kubeCluster.Name}].  Do you wish to delete these?"))
                 {

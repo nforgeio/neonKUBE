@@ -274,9 +274,9 @@ namespace Neon.Kube.Hosting.BareMetal
         /// <inheritdoc/>
         public override IEnumerable<string> GetClusterAddresses()
         {
-            if (!(cluster.Definition.PublicAddresses?.Any() ?? false))
+            if (!(cluster.SetupDetails.PublicAddresses?.Any() ?? false))
             {
-                return cluster.Definition.PublicAddresses;
+                return cluster.SetupDetails.PublicAddresses;
             }
 
             return cluster.Definition.ControlNodes.Select(controlPlane => controlPlane.Address);

@@ -36,6 +36,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube.ClusterDef;
 using Neon.SSH;
+using Neon.Kube.Kube;
 
 namespace Neon.Kube
 {
@@ -99,6 +100,14 @@ namespace Neon.Kube
         [YamlMember(Alias = "clusterId", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public Guid ClusterId { get; set; } = Guid.NewGuid();
+
+        /// <summary>
+        /// Set to the cluster domain.
+        /// </summary>
+        [JsonProperty(PropertyName = "ClusterDomain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "clusterDomain", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string ClusterDomain { get; set; } = null;
 
         /// <summary>
         /// The cluster definition.

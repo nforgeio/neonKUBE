@@ -53,7 +53,7 @@ namespace NeonCli
 
                 if (context.Extension != null &&
                     context.Extension.SetupDetails != null && 
-                    context.Extension.SetupDetails.SetupPending)
+                    context.Extension.SetupDetails.DeploymentStatus != ClusterDeploymentStatus.Ready)
                 {
                     sbInfo.AppendWithSeparator("setup");
                 }

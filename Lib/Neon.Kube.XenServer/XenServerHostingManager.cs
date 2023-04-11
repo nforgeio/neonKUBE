@@ -877,9 +877,9 @@ namespace Neon.Kube.Hosting.XenServer
         /// <inheritdoc/>
         public override IEnumerable<string> GetClusterAddresses()
         {
-            if (cluster.Definition.PublicAddresses?.Any() ?? false)
+            if (cluster.SetupDetails.PublicAddresses?.Any() ?? false)
             {
-                return cluster.Definition.PublicAddresses;
+                return cluster.SetupDetails.PublicAddresses;
             }
 
             return cluster.Definition.ControlNodes.Select(controlPlane => controlPlane.Address);
@@ -1282,7 +1282,7 @@ namespace Neon.Kube.Hosting.XenServer
                     }
                 }
 
-                if (clusterLogin != null && clusterLogin.SetupDetails.SetupPending)
+                if (clusterLogin != null && clusterLogin.SetupDetails.DeploymentStatus != ClusterDeploymentStatus.Ready)
                 {
                     clusterHealth.State   = ClusterState.Configuring;
                     clusterHealth.Summary = "Cluster is partially configured";

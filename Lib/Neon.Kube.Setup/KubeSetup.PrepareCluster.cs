@@ -45,6 +45,7 @@ using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
 using Namotion.Reflection;
+using Neon.Kube.Kube;
 
 namespace Neon.Kube.Setup
 {
@@ -178,13 +179,13 @@ namespace Neon.Kube.Setup
             var clusterLoginPath = KubeHelper.GetClusterLoginPath((KubeContextName)contextName);
             var clusterLogin     = ClusterLogin.Load(clusterLoginPath);
 
-            if (clusterLogin == null || !clusterLogin.SetupDetails.SetupPending)
+            if (clusterLogin == null || clusterLogin.SetupDetails.DeploymentStatus != ClusterDeploymentStatus.Ready)
             {
                 clusterLogin = new ClusterLogin(clusterLoginPath)
                 {
                     ClusterDefinition = clusterDefinition,
                     SshUsername       = KubeConst.SysAdminUser,
-                    SetupDetails      = new KubeSetupDetails() { SetupPending = true }
+                    SetupDetails      = new KubeSetupDetails()
                 };
 
                 clusterLogin.Save();
@@ -444,8 +445,8 @@ namespace Neon.Kube.Setup
 
                     if (options.DesktopReadyToGo)
                     {
-                        clusterLogin.ClusterDefinition.Id     = KubeHelper.GenerateClusterId();
-                        clusterLogin.ClusterDefinition.Domain = KubeConst.DesktopClusterDomain;
+                        clusterLogin.SetupDetails.ClusterId     = KubeHelper.GenerateClusterId();
+                        clusterLogin.SetupDetails.ClusterDomain = KubeConst.DesktopClusterDomain;
 
                         hostName    = KubeConst.DesktopClusterDomain;
                         hostAddress = IPAddress.Parse(cluster.Definition.NodeDefinitions.Values.Single().Address);
@@ -458,24 +459,24 @@ namespace Neon.Kube.Setup
 
                         var result = await headendClient.ClusterSetup.CreateClusterAsync();
 
-                        clusterLogin.ClusterDefinition.Id             = result["Id"];
-                        clusterLogin.ClusterDefinition.NeonCloudToken = result["Token"];
+                        clusterLogin.SetupDetails.ClusterId      = result["Id"];
+                        clusterLogin.SetupDetails.NeonCloudToken = result["Token"];
 
                         headendClient.HttpClient.DefaultRequestHeaders.Authorization =
                             new AuthenticationHeaderValue("Bearer", clusterLogin.ClusterDefinition.NeonCloudToken);
 
                         if (options.BuildDesktopImage)
                         {
-                            clusterLogin.ClusterDefinition.Domain = KubeConst.DesktopClusterDomain;
+                            clusterLogin.SetupDetails.ClusterDomain = KubeConst.DesktopClusterDomain;
                         }
                         else
                         {
-                            clusterLogin.ClusterDefinition.Domain = await headendClient.Cluster.UpdateClusterDomainAsync(
-                                clusterLogin.ClusterDefinition.Id,
+                            clusterLogin.SetupDetails.ClusterDomain = await headendClient.Cluster.UpdateClusterDomainAsync(
+                                clusterId: clusterLogin.SetupDetails.ClusterId,
                                 addresses: clusterAddresses);
                         }
 
-                        hostName    = clusterLogin.ClusterDefinition.Id;
+                        hostName    = clusterLogin.SetupDetails.ClusterId;
                         hostAddress = IPAddress.Parse(cluster.HostingManager.GetClusterAddresses().First());
                     }
 
@@ -529,7 +530,7 @@ namespace Neon.Kube.Setup
                 {
                     if (options.DesktopReadyToGo)
                     {
-                        clusterLogin.SetupDetails.SetupPending = false;
+                        clusterLogin.SetupDetails.DeploymentStatus = ClusterDeploymentStatus.Prepared;
                         clusterLogin.Save();
                     }
                     else

@@ -4100,7 +4100,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                     }
                 }
 
-                if (clusterLogin != null && clusterLogin.SetupDetails.SetupPending)
+                if (clusterLogin != null && clusterLogin.SetupDetails.DeploymentStatus != ClusterDeploymentStatus.Ready)
                 {
                     clusterHealth.State   = ClusterState.Configuring;
                     clusterHealth.Summary = "Cluster is partially configured";

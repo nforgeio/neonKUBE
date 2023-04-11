@@ -254,17 +254,6 @@ namespace Neon.Kube.ClusterDef
         {
             Covenant.Requires<ArgumentNullException>(definition != null, nameof(definition));
 
-            // The Id, domain, public addresses aren't important to [ClusterFixture].
-
-            definition.Id              = null;
-            definition.Domain          = null;
-            definition.PublicAddresses = null;
-
-            // The network ACME options change after provisioning so we're going
-            // to ignore that too.
-
-            definition.Network.AcmeOptions = null;
-
             // Ensure that computed peroperties are set.
 
             definition.Validate();
@@ -336,8 +325,6 @@ namespace Neon.Kube.ClusterDef
         //---------------------------------------------------------------------
         // Instance members
 
-        private object syncLock = new object();
-
         /// <summary>
         /// Default constructor.
         /// </summary>
@@ -404,77 +391,12 @@ namespace Neon.Kube.ClusterDef
         public string Name { get; set; }
 
         /// <summary>
-        /// The unique cluster ID.  This is generated during cluster setup and must not be specified by the user.
-        /// </summary>
-        [JsonProperty(PropertyName = "Id", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "id", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string Id { get; set; }
-
-        /// <summary>
         /// Optionally describes the cluster for humans.  This may be a string up to 256 characters long.
         /// </summary>
         [JsonProperty(PropertyName = "Description", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "description", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Description { get; set; } = null;
-
-        /// <summary>
-        /// <para>
-        /// The cluster DNS domain.  neonKUBE generates a domain like <b>GUID.neoncluster.io</b>
-        /// for your cluster by default when this is not set.
-        /// </para>
-        /// <note>
-        /// Setting this to a specific domain that you've already registered is not supported at
-        /// this time and will be ignored.
-        /// </note>
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// The idea here is that neonKUBE will be use the generated domain to deploy a fully
-        /// functional cluster out-of-the-box, with real DNS records and a SSL certificate.
-        /// This works even for clusters deployed behind a firewall or neonDESKTOP built-in
-        /// clusters running on a workstation or laptop.
-        /// </para>
-        /// <para>
-        /// In the future, we plan to support custom DNS domains where these are pre-registered
-        /// by the customer or we manage the DNS hosts on behalf of the customer via a domain
-        /// registar API.
-        /// </para>
-        /// </remarks>
-        [JsonProperty(PropertyName = "Domain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "domain", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string Domain { get; set; }
-
-        /// <summary>
-        /// Returns the <b>neoncluster.io</b> domain for this cluster.
-        /// </summary>
-        [JsonIgnore]
-        [YamlIgnore]
-        public string NeonClusterDomain => $"{Id}.neoncluster.io";
-
-        /// <summary>
-        /// <para>
-        /// Optionally specifies the public IP addresses for the cluster.
-        /// </para>
-        /// <note>
-        /// <para>
-        /// For cloud clusters, this will default to the public IP address assigned to the cluster
-        /// load balancer and for on-premise clusters, this defaults to the IP addresses assigned
-        /// to the control-plane nodes.
-        /// </para>
-        /// <para>
-        /// This can also be specified explicitly here in the cluster definition.  This is useful
-        /// for things like documenting the public IP address for a router that directs traffic
-        /// into the cluster.
-        /// </para>
-        /// </note>
-        /// </summary>
-        [JsonProperty(PropertyName = "PublicAddresses", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "publicAddresses", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public List<string> PublicAddresses { get; set; } = null;
 
         /// <summary>
         /// Optionally specifies the semantic version of the neonKUBE cluster being created.
@@ -726,33 +648,6 @@ namespace Neon.Kube.ClusterDef
         public Dictionary<string, NodeDefinition> NodeDefinitions { get; set; } = new Dictionary<string, NodeDefinition>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
-        /// <para>
-        /// Holds temporary state required by various components during cluster setup.  This is a case-insensitive
-        /// string dictionary that will be maintained during cluster setup and is persisted to disk to support 
-        /// restarting and continuing cluster setup when necessary.  This property will be set to <c>null</c>
-        /// after cluster setup is complete, so this is a suitable place for storing generated secure credentials.
-        /// </para>
-        /// <para>
-        /// As a convention, dictionary keys should use a dot notation like <b>neon-cluster-operator.connstring</b>
-        /// to avoid naming conflicts and to make it clear what's what during debugging.
-        /// </para>
-        /// <note>
-        /// <b>IMPORTANT:</b> Do not reference this dictionary directly.  Use <see cref="SetSetupState(string, string)"/>,
-        /// <see cref="GetSetupState(string)"/>, and <see cref="RemoveSetupState(string)"/>.  This will protect the
-        /// dictionary when multiple threads try to access it which is entirely possible since <see cref="SetupController{NodeMetadata}"/>
-        /// implicitly performs operations using multiple threads.
-        /// </note>
-        /// <note>
-        /// <b>IMPORTANT:</b> Any changes to this state <b>persisted automatically</b>.  You'll need to call
-        /// <see cref="ClusterLogin.Save()"/> on the cluster login holding the cluster definition.
-        /// </note>
-        /// </summary>
-        [JsonProperty(PropertyName = "SetupState", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "setupState", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public Dictionary<string, string> SetupState { get; set; } = null;
-
-        /// <summary>
         /// Optionally specifies the cluster root single sign-on (SSO) password.  A random password
         /// with of <see cref="SecurityOptions.PasswordLength"/> will be created by default when no
         /// password is specified here.
@@ -763,116 +658,13 @@ namespace Neon.Kube.ClusterDef
         public string RootPassword { get; set; } = null;
 
         /// <summary>
-        /// Adds or updates an item in <see cref="SetupState"/>.  Use this instead of accessing the dictionary
-        /// directly for thread safety.
-        /// </summary>
-        /// <param name="key">The item key.</param>
-        /// <param name="value">The item value.</param>
-        public void SetSetupState(string key, string value)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(key), nameof(key));
-            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
-
-            lock (syncLock)
-            {
-                if (SetupState == null)
-                {
-                    SetupState = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
-                }
-
-                SetupState[key] = value;
-            }
-        }
-
-        /// <summary>
-        /// Retrieves the value of an item from <see cref="SetupState"/> when it exists, or 
-        /// <c>null</c> when it does not exist.  Use this instead of accessing the dictionary
-        /// directly for thread safety.
-        /// </summary>
-        /// <param name="key">The item key.</param>
-        /// <returns>The item value or <c>null</c> if the item doesn't exist.</returns>
-        public string GetSetupState(string key)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(key), nameof(key));
-
-            lock (syncLock)
-            {
-                if (SetupState == null)
-                {
-                    SetupState = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
-                }
-
-                if (SetupState.TryGetValue(key, out var value))
-                {
-                    return value;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Removes an item from <see cref="SetupState"/> if it exists and does notthing
-        /// when the item doesn't exist.  Use this instead of accessing the dictionary
-        /// directly for thread safety.
-        /// </summary>
-        /// <param name="key">The item key.</param>
-        public void RemoveSetupState(string key)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(key), nameof(key));
-
-            lock (syncLock)
-            {
-                if (SetupState == null)
-                {
-                    SetupState = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
-                }
-
-                if (SetupState.ContainsKey(key))
-                {
-                    SetupState.Remove(key);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Removes any temporary setup related state including <see cref="SetupState"/>, hosting
-        /// related secrets, as well as temporary state used by the hosting managers.
-        /// </summary>
-        /// <returns>The redacted cluster definition.</returns>
-        public ClusterDefinition ClearSetupState()
-        {
-            lock (syncLock)
-            {
-                SetupState = null;
-
-                // $todo(jefflill):
-                //
-                // I'm temporarily commenting this out because neon-desktop needs
-                // the hosting related secrets in some circumstances.  We need to
-                // think about a comprehensive solution:
-                //
-                //      https://github.com/nforgeio/neonKUBE/issues/1482
-
-                // Hosting?.ClearSecrets(this);
-            }
-
-            return this;
-        }
-
-        /// <summary>
-        /// Clones the current cluster definition and then removes any temporary setup related state 
-        /// including <see cref="SetupState"/>, hosting related secrets, as well as temporary state
-        /// used by the hosting managers.
+        /// Clones the current cluster definition and then removes any hosting related 
+        /// secrets, as well as temporary state used by the hosting managers.
         /// </summary>
         /// <returns>The redacted cluster definition.</returns>
         public ClusterDefinition Redact()
         {
             var redacted = NeonHelper.JsonClone(this);
-
-            redacted.SetupState = null;
 
             redacted.Hosting?.ClearSecrets(this);
 
@@ -1167,32 +959,6 @@ namespace Neon.Kube.ClusterDef
             if (!FeatureGates.ContainsKey("EphemeralContainers"))
             {
                 FeatureGates["EphemeralContainers"] = true;
-            }
-
-            // Validate/initialize the public addresses.
-
-            PublicAddresses ??= new List<string>();
-
-            PublicAddresses = PublicAddresses
-                .Where(address => !string.IsNullOrEmpty(address))
-                .ToList();
-
-            foreach (var address in PublicAddresses)
-            {
-                if (!IPAddress.TryParse(address, out var ip))
-                {
-                    throw new ClusterDefinitionException($"[{nameof(PublicAddresses)}={address}] is not a valid IPv4 address.");
-                }
-            }
-
-            if (PublicAddresses.Count == 0 && !KubeHelper.IsCloudEnvironment(Hosting.Environment))
-            {
-                // Default to the control-plane node addresses for non-cloud environments.
-
-                foreach (var node in SortedControlNodes)
-                {
-                    PublicAddresses.Add(node.Address);
-                }
             }
 
             // Validate the NTP time sources.

@@ -142,7 +142,7 @@ ARGUMENTS:
                             new object[]
                             {
                                 "login",
-                                $"{ClusterHost.HarborRegistry}.{login.ClusterDefinition.Domain}",
+                                $"{ClusterHost.HarborRegistry}.{login.ClusterDomain}",
                                 "--username",
                                 "root",
                                 "--password-stdin"

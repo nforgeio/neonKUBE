@@ -368,7 +368,6 @@ namespace Neon.Kube.Setup
             if (clusterDefinition != null)
             {
                 clusterDefinition = NeonHelper.JsonClone(clusterDefinition);
-                clusterDefinition.ClearSetupState();
                 clusterDefinition.Hosting?.ClearSecrets(clusterDefinition);
             }
 

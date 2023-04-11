@@ -30,7 +30,7 @@ using Neon.Net;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Important cluster host names.
+    /// Important external cluster host names.
     /// </summary>
     public static class ClusterHost
     {

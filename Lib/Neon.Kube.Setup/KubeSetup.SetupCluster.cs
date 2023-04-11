@@ -42,6 +42,7 @@ using Neon.Kube;
 using Neon.Kube.Clients;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Hosting;
+using Neon.Kube.Kube;
 using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
 using Neon.Retry;
@@ -166,13 +167,13 @@ namespace Neon.Kube.Setup
             var clusterLoginPath = KubeHelper.GetClusterLoginPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
             var clusterLogin     = ClusterLogin.Load(clusterLoginPath);
 
-            if (clusterLogin == null || !clusterLogin.SetupDetails.SetupPending)
+            if (clusterLogin == null || clusterLogin.SetupDetails.DeploymentStatus != ClusterDeploymentStatus.Ready)
             {
                 clusterLogin = new ClusterLogin(clusterLoginPath)
                 {
                     ClusterDefinition = clusterDefinition,
                     SshUsername       = KubeConst.SysAdminUser,
-                    SetupDetails      = new KubeSetupDetails() { SetupPending = true }
+                    SetupDetails      = new KubeSetupDetails()
                 };
 
                 clusterLogin.Save();
@@ -307,8 +308,7 @@ namespace Neon.Kube.Setup
                 {
                     // Indicate that setup is complete.
 
-                    clusterLogin.ClusterDefinition.ClearSetupState();
-                    clusterLogin.SetupDetails.SetupPending = false;
+                    clusterLogin.SetupDetails.DeploymentStatus = ClusterDeploymentStatus.Ready;
                     clusterLogin.Save();
                 });
 

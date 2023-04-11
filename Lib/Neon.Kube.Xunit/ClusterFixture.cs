@@ -608,7 +608,7 @@ namespace Neon.Kube.Xunit
             var clusterContext     = KubeHelper.Config.GetContext(clusterContextName);
             var clusterLogin       = KubeHelper.GetClusterLogin(clusterContextName);
 
-            if (clusterContext != null && clusterLogin != null && !clusterLogin.SetupDetails.SetupPending)
+            if (clusterContext != null && clusterLogin != null && clusterLogin.SetupDetails.DeploymentStatus != ClusterDeploymentStatus.Ready)
             {
                 clusterExists = ClusterDefinition.AreSimilar(clusterDefinition, clusterLogin.ClusterDefinition);
             }

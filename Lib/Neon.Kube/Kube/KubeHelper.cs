@@ -79,7 +79,7 @@ namespace Neon.Kube
         private static string               cachedLogFolder;
         private static string               cachedLogDetailsFolder;
         private static string               cachedTempFolder;
-        private static string               cachedLoginsFolder;
+        private static string               cachedSetupFolder;
         private static string               cachedPasswordsFolder;
         private static string               cachedCacheFolder;
         private static string               cachedDesktopCommonFolder;
@@ -116,7 +116,7 @@ namespace Neon.Kube
             cachedLogFolder                 = null;
             cachedLogDetailsFolder          = null;
             cachedTempFolder                = null;
-            cachedLoginsFolder              = null;
+            cachedSetupFolder              = null;
             cachedPasswordsFolder           = null;
             cachedCacheFolder               = null;
             cachedDesktopCommonFolder       = null;
@@ -631,33 +631,28 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path the folder containing cluster login files, creating the folder 
+        /// Returns the path the folder containing the temporary setup details files, creating the folder 
         /// if it doesn't already exist.
         /// </summary>
         /// <returns>The folder path.</returns>
         /// <remarks>
-        /// <para>
-        /// This folder will exist on developer/operator workstations that have used the <b>neon-cli</b>
-        /// to deploy and manage clusters.  Each known cluster will have a JSON file named
-        /// <b><i>NAME</i>.context.json</b> holding the serialized <see cref="ClusterLogin"/> 
-        /// information for the cluster, where <i>NAME</i> maps to a cluster configuration name
-        /// within the <c>kubeconfig</c> file.
-        /// </para>
+        /// This folder holds <see cref="KubeSetupDetails"/> for clusters in the process of being prepared and setup. 
+        /// Files will be  named like <b><i>CLUSTER-NAME</i>.json</b>
         /// </remarks>
-        public static string LoginsFolder
+        public static string SetupFolder
         {
             get
             {
-                if (cachedLoginsFolder != null)
+                if (cachedSetupFolder != null)
                 {
-                    return cachedLoginsFolder;
+                    return cachedSetupFolder;
                 }
 
-                var path = Path.Combine(NeonKubeUserFolder, "logins");
+                var path = Path.Combine(NeonKubeUserFolder, "setup");
 
                 Directory.CreateDirectory(path);
 
-                return cachedLoginsFolder = path;
+                return cachedSetupFolder = path;
             }
         }
 
@@ -975,7 +970,7 @@ namespace Neon.Kube
 
             var rawName = (string)contextName;
 
-            return Path.Combine(LoginsFolder, $"{rawName.Replace("/", "~")}.login.yaml");
+            return Path.Combine(SetupFolder, $"{rawName.Replace("/", "~")}.login.yaml");
         }
 
         /// <summary>
@@ -3255,6 +3250,13 @@ TCPKeepAlive yes
             return true;
         }
 
+        /// <summary>
+        /// Attempts to login to the cluster using OAuth.
+        /// </summary>
+        /// <param name="authority">Specifies the OAuth authority.</param>
+        /// <param name="clientId">Specifies the client ID.</param>
+        /// <param name="scopes">Optionally specifies any authentication scopes.</param>
+        /// <returns>A <see cref="LoginResult"/>.</returns>
         public static async Task<LoginResult> LoginOidcAsync(
             string      authority,
             string      clientId,

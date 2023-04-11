@@ -2057,7 +2057,7 @@ namespace Neon.Kube.Hosting.Azure
                     publicIngressAddress = (await publicAddressCollection.CreateOrUpdateAsync(WaitUntil.Completed, publicIngressAddressName, WithNetworkTags(ingressAddressData))).Value;
                     clusterAddress       = NetHelper.ParseIPv4Address(publicIngressAddress.Data.IPAddress);
 
-                    cluster.Definition.PublicAddresses = new List<string>() { publicIngressAddress.Data.IPAddress };
+                    cluster.SetupDetails.PublicAddresses = new List<string>() { publicIngressAddress.Data.IPAddress };
                 }
             }
 
@@ -3348,7 +3348,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                     }
                 }
 
-                if (clusterLogin != null && clusterLogin.SetupDetails.SetupPending)
+                if (clusterLogin != null && clusterLogin.SetupDetails.DeploymentStatus != ClusterDeploymentStatus.Ready)
                 {
                     clusterHealth.State   = ClusterState.Configuring;
                     clusterHealth.Summary = "Cluster is partially configured";

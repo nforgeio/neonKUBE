@@ -73,7 +73,7 @@ namespace Neon.Kube
 
                 foreach (var context in config.Contexts)
                 {
-                    var extensionPath = Path.Combine(KubeHelper.LoginsFolder, $"{context.Name}.login.yaml");
+                    var extensionPath = Path.Combine(KubeHelper.SetupFolder, $"{context.Name}.login.yaml");
 
                     if (File.Exists(extensionPath))
                     {
@@ -375,7 +375,7 @@ namespace Neon.Kube
 
                 // We need to remove the extension file too (if one exists).
 
-                var extensionPath = Path.Combine(KubeHelper.LoginsFolder, $"{context.Name}.login.yaml");
+                var extensionPath = Path.Combine(KubeHelper.SetupFolder, $"{context.Name}.login.yaml");
 
                 try
                 {
@@ -494,7 +494,7 @@ namespace Neon.Kube
 
                 foreach (var context in Contexts.Where(context => context.Extension != null))
                 {
-                    var extensionPath = Path.Combine(KubeHelper.LoginsFolder, $"{context.Name}.login.yaml");
+                    var extensionPath = Path.Combine(KubeHelper.SetupFolder, $"{context.Name}.login.yaml");
 
                     File.WriteAllText(extensionPath, NeonHelper.YamlSerialize(context.Extension));
                 }
@@ -504,7 +504,7 @@ namespace Neon.Kube
 
                 var fileExtension = ".login.yaml";
 
-                foreach (var extensionPath in Directory.GetFiles(KubeHelper.LoginsFolder, $"*{fileExtension}"))
+                foreach (var extensionPath in Directory.GetFiles(KubeHelper.SetupFolder, $"*{fileExtension}"))
                 {
                     var fileName    = Path.GetFileName(extensionPath);
                     var contextName = fileName.Substring(0, fileName.Length - fileExtension.Length);

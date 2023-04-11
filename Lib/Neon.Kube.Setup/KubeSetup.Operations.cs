@@ -482,7 +482,7 @@ spec:
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <returns>The YAML with the Kubernetes config used to initialize the cluster.</returns>
         public static string GenerateKubernetesClusterConfig(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -500,12 +500,12 @@ spec:
 
             sanNames["kubernetes-control-plane"] = null;
 
-            if (!string.IsNullOrEmpty(cluster.Definition.Domain))
+            if (!string.IsNullOrEmpty(cluster.SetupDetails.ClusterDomain))
             {
-                sanNames[cluster.Definition.Domain] = null;
+                sanNames[cluster.SetupDetails.ClusterDomain] = null;
             }
 
-            foreach (var address in cluster.Definition.PublicAddresses)
+            foreach (var address in cluster.SetupDetails.PublicAddresses)
             {
                 sanNames[address] = null;
             }
@@ -556,7 +556,7 @@ apiServer:
     service-account-issuer: https://kubernetes.default.svc
     service-account-key-file: /etc/kubernetes/pki/sa.key
     service-account-signing-key-file: /etc/kubernetes/pki/sa.key
-    oidc-issuer-url: https://{ClusterHost.Sso}.{cluster.Definition.Domain}
+    oidc-issuer-url: https://{ClusterHost.Sso}.{cluster.SetupDetails.ClusterDomain}
     oidc-client-id: {ClusterConst.NeonSsoClientId}
     oidc-username-claim: email
     oidc-groups-claim: groups
@@ -1256,7 +1256,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             var configText = clusterLogin.SetupDetails.ControlNodeFiles["/etc/kubernetes/admin.conf"].Text;
             var port       = NetworkPorts.KubernetesApiServer;
 
-            configText = configText.Replace("https://kubernetes-control-plane:6442", $"https://{cluster.Definition.Domain}:{port}");
+            configText = configText.Replace("https://kubernetes-control-plane:6442", $"https://{cluster.SetupDetails.ClusterDomain}:{port}");
 
             if (!File.Exists(kubeConfigPath))
             {
@@ -1813,7 +1813,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     var values = new Dictionary<string, object>();
 
                     values.Add("cluster.name", clusterLogin.ClusterDefinition.Name);
-                    values.Add("cluster.domain", clusterLogin.ClusterDefinition.Domain);
+                    values.Add("cluster.domain", cluster.SetupDetails.ClusterDomain);
 
                     var i = 0;
 
@@ -2110,7 +2110,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add("image.registry", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
                     values.Add("cluster.name", cluster.Definition.Name);
-                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("cluster.domain", cluster.SetupDetails.ClusterDomain);
                     values.Add("certficateDuration", cluster.Definition.Network.AcmeOptions.CertificateDuration);
                     values.Add("certificateRenewBefore", cluster.Definition.Network.AcmeOptions.CertificateRenewBefore);
                     values.Add("isNeonDesktop", cluster.Definition.IsDesktop);
@@ -2302,7 +2302,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add("replicas", serviceAdvice.ReplicaCount);
                     values.Add("cluster.name", cluster.Definition.Name);
                     values.Add("settings.clusterName", cluster.Definition.Name);
-                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("cluster.domain", cluster.SetupDetails.ClusterDomain);
                     values.Add("neonkube.clusterDomain.kubernetesDashboard", ClusterHost.KubernetesDashboard);
                     values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
@@ -2427,7 +2427,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add("image.kiali.registry", KubeConst.LocalClusterRegistry);
                     values.Add("image.kiali.repository", "kiali-kiali");
                     values.Add("cluster.name", cluster.Definition.Name);
-                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("cluster.domain", cluster.SetupDetails.ClusterDomain);
                     values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
                     values.Add("neonkube.clusterDomain.kiali", ClusterHost.Kiali);
                     values.Add($"neonkube.clusterDomain.grafana", ClusterHost.Grafana);
@@ -2511,7 +2511,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             var values = new Dictionary<string, object>();
 
             values.Add("cluster.name", cluster.Definition.Name);
-            values.Add("cluster.domain", cluster.Definition.Domain);
+            values.Add("cluster.domain", cluster.SetupDetails.ClusterDomain);
             values.Add($"metrics.serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
             values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
             values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
@@ -3189,7 +3189,7 @@ $@"- name: StorageType
                     var i      = 0;
 
                     values.Add($"cluster.name", cluster.Definition.Name);
-                    values.Add($"cluster.domain", cluster.Definition.Domain);
+                    values.Add($"cluster.domain", cluster.SetupDetails.ClusterDomain);
                     values.Add($"cluster.datacenter", cluster.Definition.Datacenter);
                     values.Add($"cluster.version", cluster.Definition.ClusterVersion);
                     values.Add($"cluster.hostingEnvironment", cluster.Definition.Hosting.Environment);
@@ -3388,7 +3388,7 @@ $@"- name: StorageType
                     var values              = new Dictionary<string, object>();
 
                     values.Add("cluster.name", cluster.Definition.Name);
-                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("cluster.domain", cluster.SetupDetails.ClusterDomain);
 
                     values.Add($"alertmanager.replicas", alertmanagerAdvice.ReplicaCount);
                     values.Add($"alertmanager.resources.requests.memory", ToSiString(alertmanagerAdvice.PodMemoryRequest));
@@ -3553,7 +3553,7 @@ $@"- name: StorageType
                     var values = new Dictionary<string, object>();
 
                     values.Add("cluster.name", cluster.Definition.Name);
-                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("cluster.domain", cluster.SetupDetails.ClusterDomain);
 
                     values.Add($"compactor.replicas", compactorAdvice.ReplicaCount);
                     values.Add($"compactor.resources.requests.memory", ToSiString(compactorAdvice.PodMemoryRequest));
@@ -3694,7 +3694,7 @@ $@"- name: StorageType
                     var values = new Dictionary<string, object>();
 
                     values.Add("cluster.name", cluster.Definition.Name);
-                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("cluster.domain", cluster.SetupDetails.ClusterDomain);
 
                     values.Add($"compactor.replicas", compactorAdvice.ReplicaCount);
                     values.Add($"compactor.resources.requests.memory", ToSiString(compactorAdvice.PodMemoryRequest));
@@ -3897,7 +3897,7 @@ $@"- name: StorageType
                     var values = new Dictionary<string, object>();
 
                     values.Add("cluster.name", cluster.Definition.Name);
-                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("cluster.domain", cluster.SetupDetails.ClusterDomain);
                     values.Add($"cluster.datacenter", cluster.Definition.Datacenter);
                     values.Add($"cluster.version", cluster.Definition.ClusterVersion);
                     values.Add($"cluster.hostingEnvironment", cluster.Definition.Hosting.Environment);
@@ -4099,7 +4099,7 @@ $@"- name: StorageType
                             var values = new Dictionary<string, object>();
 
                             values.Add("cluster.name", cluster.Definition.Name);
-                            values.Add("cluster.domain", cluster.Definition.Domain);
+                            values.Add("cluster.domain", cluster.SetupDetails.ClusterDomain);
                             values.Add("neonkube.clusterDomain.minio", ClusterHost.Minio);
                             values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
                             values.Add($"metrics.serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
@@ -4455,7 +4455,7 @@ $@"- name: StorageType
                     var values = new Dictionary<string, object>();
 
                     values.Add("cluster.name", cluster.Definition.Name);
-                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("cluster.domain", cluster.SetupDetails.ClusterDomain);
                     values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
@@ -4470,7 +4470,7 @@ $@"- name: StorageType
                     values.Add($"storage.s3.accessKey", Encoding.UTF8.GetString(minioSecret.Data["accesskey"]));
                     values.Add($"storage.s3.secretKeyRef", "registry-minio");
 
-                    var baseDN = $@"dc={string.Join($@"\,dc=", cluster.Definition.Domain.Split('.'))}";
+                    var baseDN = $@"dc={string.Join($@"\,dc=", cluster.SetupDetails.ClusterDomain.Split('.'))}";
 
                     values.Add($"ldap.baseDN", baseDN);
                     values.Add($"ldap.secret", serviceUser.Password);
@@ -4598,7 +4598,7 @@ $@"- name: StorageType
                             new object[]
                             {
                                 "login",
-                                $"{ClusterHost.HarborRegistry}.{login.ClusterDefinition.Domain}",
+                                $"{ClusterHost.HarborRegistry}.{cluster.SetupDetails.ClusterDomain}",
                                 "--username",
                                 "root",
                                 "--password-stdin"
@@ -4850,7 +4850,7 @@ $@"- name: StorageType
                             controller,
                             controlNode,
                             name: "kubernetes",
-                            url: $"https://{ClusterHost.KubernetesDashboard}.{cluster.Definition.Domain}",
+                            url: $"https://{ClusterHost.KubernetesDashboard}.{cluster.SetupDetails.ClusterDomain}",
                             displayName: "Kubernetes",
                             enabled: true,
                             displayOrder: 1);
@@ -4861,7 +4861,7 @@ $@"- name: StorageType
                             controller,
                             controlNode,
                             name:         "grafana",
-                            url:          $"https://{ClusterHost.Grafana}.{cluster.Definition.Domain}",
+                            url:          $"https://{ClusterHost.Grafana}.{cluster.SetupDetails.ClusterDomain}",
                             displayName:  "Grafana",
                             enabled:      true,
                             displayOrder: 10);
@@ -4872,7 +4872,7 @@ $@"- name: StorageType
                             controller,
                             controlNode,
                             name:         "minio",
-                            url:          $"https://{ClusterHost.Minio}.{cluster.Definition.Domain}",
+                            url:          $"https://{ClusterHost.Minio}.{cluster.SetupDetails.ClusterDomain}",
                             displayName:  "Minio",
                             enabled:      true,
                             displayOrder: 10);
@@ -4883,7 +4883,7 @@ $@"- name: StorageType
                             controller,
                             controlNode,
                             name:         "harbor",
-                            url:          $"https://{ClusterHost.HarborRegistry}.{cluster.Definition.Domain}",
+                            url:          $"https://{ClusterHost.HarborRegistry}.{cluster.SetupDetails.ClusterDomain}",
                             displayName:  "Harbor",
                             enabled:      true,
                             displayOrder: 10);
@@ -4894,7 +4894,7 @@ $@"- name: StorageType
                             controller,
                             controlNode,
                             name:         "kiali",
-                            url:          $"https://{ClusterHost.Kiali}.{cluster.Definition.Domain}",
+                            url:          $"https://{ClusterHost.Kiali}.{cluster.SetupDetails.ClusterDomain}",
                             displayName:  "Kiali",
                             enabled:      true,
                             displayOrder: 10);
@@ -4912,7 +4912,7 @@ $@"- name: StorageType
                     values.Add("image.registry", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
                     values.Add("cluster.name", cluster.Definition.Name);
-                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("cluster.domain", cluster.SetupDetails.ClusterDomain);
                     values.Add($"cluster.datacenter", cluster.Definition.Datacenter);
                     values.Add($"cluster.version", cluster.Definition.ClusterVersion);
                     values.Add($"cluster.hostingEnvironment", cluster.Definition.Hosting.Environment);
@@ -4970,7 +4970,7 @@ $@"- name: StorageType
                     values.Add("image.registry", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
                     values.Add("cluster.name", cluster.Definition.Name);
-                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("cluster.domain", cluster.SetupDetails.ClusterDomain);
                     values.Add("neonkube.clusterDomain.neonDashboard", ClusterHost.NeonDashboard);
                     values.Add("secrets.cipherKey", AesCipher.GenerateKey(256));
                     values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
@@ -5307,7 +5307,7 @@ $@"- name: StorageType
             var values = new Dictionary<string, object>();
 
             values.Add("cluster.name", cluster.Definition.Name);
-            values.Add("cluster.domain", cluster.Definition.Domain);
+            values.Add("cluster.domain", cluster.SetupDetails.ClusterDomain);
             values.Add("neonkube.clusterDomain.grafana", ClusterHost.Grafana);
             values.Add("neonkube.clusterDomain.kiali", ClusterHost.Kiali);
             values.Add("neonkube.clusterDomain.minio", ClusterHost.Minio);
@@ -5323,11 +5323,11 @@ $@"- name: StorageType
             values.Add("secrets.minio", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
             values.Add("secrets.ldap", serviceUser.Password);
 
-            values.Add("config.issuer", $"https://{ClusterHost.Sso}.{cluster.Definition.Domain}");
+            values.Add("config.issuer", $"https://{ClusterHost.Sso}.{cluster.SetupDetails.ClusterDomain}");
 
             // LDAP
 
-            var baseDN = $@"dc={string.Join($@"\,dc=", cluster.Definition.Domain.Split('.'))}";
+            var baseDN = $@"dc={string.Join($@"\,dc=", cluster.SetupDetails.ClusterDomain.Split('.'))}";
 
             values.Add("config.ldap.bindDN", $@"cn=serviceuser\,ou=admin\,{baseDN}");
             values.Add("config.ldap.userSearch.baseDN", $@"cn=users\,{baseDN}");
@@ -5467,7 +5467,7 @@ $@"- name: StorageType
             values.Add("image.registry", KubeConst.LocalClusterRegistry);
             values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
             values.Add("cluster.name", cluster.Definition.Name);
-            values.Add("cluster.domain", cluster.Definition.Domain);
+            values.Add("cluster.domain", cluster.SetupDetails.ClusterDomain);
             values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
             values.Add("secrets.cipherKey", AesCipher.GenerateKey(256));
             values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
@@ -5520,10 +5520,10 @@ $@"- name: StorageType
             var dbPassword    = Encoding.UTF8.GetString(dbSecret.Data["password"]);
 
             values.Add("cluster.name", cluster.Definition.Name);
-            values.Add("cluster.domain", cluster.Definition.Domain);
+            values.Add("cluster.domain", cluster.SetupDetails.ClusterDomain);
             values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
 
-            values.Add("config.backend.baseDN", $"dc={string.Join($@"\,dc=", cluster.Definition.Domain.Split('.'))}");
+            values.Add("config.backend.baseDN", $"dc={string.Join($@"\,dc=", cluster.SetupDetails.ClusterDomain.Split('.'))}");
             values.Add("config.backend.database.user", KubeConst.NeonSystemDbServiceUser);
             values.Add("config.backend.database.password", dbPassword);
 
@@ -5626,7 +5626,7 @@ $@"- name: StorageType
                         var userData     = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(users.Data[user]));
                         var name         = userData.Name;
                         var givenname    = userData.Name;
-                        var mail         = $"{userData.Name}@{cluster.Definition.Domain}";
+                        var mail         = $"{userData.Name}@{cluster.SetupDetails.ClusterDomain}";
                         var uidnumber    = userData.UidNumber;
                         var primarygroup = userData.PrimaryGroup;
                         var passsha256   = CryptoHelper.ComputeSHA256String(userData.Password);
@@ -5682,7 +5682,7 @@ $@"- name: StorageType
                     var values = new Dictionary<string, object>();
 
                     values.Add("cluster.name", cluster.Definition.Name);
-                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("cluster.domain", cluster.SetupDetails.ClusterDomain);
                     values.Add("config.cookieSecret", NeonHelper.ToBase64(NeonHelper.GetCryptoRandomPassword(24)));
                     values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
                     values.Add("client.id", ClusterConst.NeonSsoClientId);
@@ -5805,7 +5805,7 @@ $@"- name: StorageType
                     var clusterInfoMap = new TypedConfigMap<ClusterInfo>(
                         name:       KubeConfigMapName.ClusterInfo,
                         @namespace: KubeNamespace.NeonStatus,
-                        data:       new ClusterInfo(cluster.Definition));
+                        data:       new ClusterInfo(cluster));
 
                     await k8s.CoreV1.CreateNamespacedTypedConfigMapAsync(clusterInfoMap);
                 });
