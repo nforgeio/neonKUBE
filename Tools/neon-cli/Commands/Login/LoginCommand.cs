@@ -186,45 +186,6 @@ ARGUMENTS:
                 config.CurrentContext = newContextName;
 
                 config.Save();
-
-                try
-                {
-                    using (var k8s = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(KubeHelper.KubeConfigPath), new KubernetesRetryHandler()))
-                    {
-                        await k8s.CoreV1.ListNamespaceAsync();
-                    }
-
-                    var login      = KubeHelper.GetClusterLogin(KubeHelper.CurrentContextName);
-                    var sshKeyPath = Path.Combine(NeonHelper.UserHomeFolder, ".ssh", KubeHelper.CurrentContextName.ToString());
-
-                    Directory.CreateDirectory(Path.GetDirectoryName(sshKeyPath));
-                    File.WriteAllText(sshKeyPath, login.SshKey.PrivatePEM);
-
-                    if (!string.IsNullOrEmpty(NeonHelper.DockerCli))
-                    {
-                        Console.WriteLine($"Login: Docker to Harbor...");
-
-                        NeonHelper.Execute(NeonHelper.DockerCli,
-                            new object[]
-                            {
-                            "login",
-                            $"{ClusterHost.HarborRegistry}.{login.ClusterDefinition.Domain}",
-                            "--username",
-                            "root",
-                            "--password-stdin"
-                            },
-                            input: new StringReader(login.SsoPassword));
-                    }
-                }
-                catch (Exception e)
-                {
-                    
-
-                    Console.WriteLine("*** ERROR: Cluster registry is not responding.");
-                    Console.WriteLine();
-                    Console.WriteLine(NeonHelper.ExceptionError(e));
-                    Console.WriteLine();
-                }
             }
             catch (Exception e)
             {
