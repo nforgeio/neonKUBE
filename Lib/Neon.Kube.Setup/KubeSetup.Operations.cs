@@ -2258,7 +2258,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     virtualService.Spec = new V1VirtualServiceSpec()
                     {
                         Gateways = new List<string>() { $"{KubeNamespace.NeonIngress}/neoncluster-gateway" },
-                        Hosts    = new List<string>() { cluster.Definition.Domain },
+                        Hosts    = new List<string>() { cluster.SetupDetails.ClusterDomain },
                         Http     = new List<HTTPRoute>()
                         {
                             new HTTPRoute()
