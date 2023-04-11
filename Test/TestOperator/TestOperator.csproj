@@ -4,10 +4,10 @@
         <RootNamespace>TestOperator</RootNamespace>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-      <WarningLevel>0</WarningLevel>
+        <WarningLevel>0</WarningLevel>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-      <WarningLevel>0</WarningLevel>
+        <WarningLevel>0</WarningLevel>
     </PropertyGroup>
 
     <ItemGroup>
@@ -16,4 +16,11 @@
         <ProjectReference Include="..\..\Lib\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
     </ItemGroup>
+    
+    <ItemGroup Condition="'$(JUSTMOCK_ENABLED)' != ''">
+        <Reference Include="Telerik.JustMock">
+            <HintPath>C:\Program Files (x86)\Progress\Telerik JustMock\Libraries\netcoreapp2.0\Telerik.JustMock.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+
 </Project>
