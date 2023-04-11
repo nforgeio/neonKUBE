@@ -35,8 +35,9 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.IO;
+using Neon.Kube;
 
-namespace Neon.Kube
+namespace Neon.Kube.Login
 {
     /// <summary>
     /// Describes a client key used for SSH public key authentication.

@@ -33,8 +33,9 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Kube;
 
-namespace Neon.Kube
+namespace Neon.Kube.Login
 {
     /// <summary>
     /// Describes a Kubernetes context properties.

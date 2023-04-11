@@ -27,7 +27,6 @@ using Microsoft.Extensions.Logging;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
-using Neon.Kube.Kube;
 using Neon.Kube.Operator.Util;
 using Neon.Net;
 using Neon.Kube.Resources.Cluster;

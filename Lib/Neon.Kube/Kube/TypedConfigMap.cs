@@ -40,7 +40,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
-namespace Neon.Kube.Kube
+namespace Neon.Kube
 {
     /// <summary>
     /// <para>

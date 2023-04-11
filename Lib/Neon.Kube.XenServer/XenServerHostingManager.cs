@@ -36,6 +36,7 @@ using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.Login;
 using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
 using Neon.Net;

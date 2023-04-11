@@ -37,8 +37,9 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.IO;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.Login;
 
-namespace Neon.Kube.Kube
+namespace Neon.Kube
 {
     /// <summary>
     /// Holds details required during setup or for provisioning 

@@ -34,11 +34,12 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Kube;
 using Neon.Kube.ClusterDef;
 using Neon.SSH;
-using Neon.Kube.Kube;
+using Neon.Kube;
 
-namespace Neon.Kube
+namespace Neon.Kube.Login
 {
     /// <summary>
     /// Holds extended cluster information such as the cluster definition and

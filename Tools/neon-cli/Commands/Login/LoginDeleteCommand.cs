@@ -30,7 +30,7 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.Kube;
-using AutoMapper.Features;
+using Neon.Kube.Login;
 
 namespace NeonCli
 {

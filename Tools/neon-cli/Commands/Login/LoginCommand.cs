@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,13 +32,8 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.Kube;
+using Neon.Kube.Login;
 using Neon.Kube.Proxy;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Octokit;
-using System.Security.Cryptography.X509Certificates;
-using k8s.Models;
-using Neon.Kube.Kube;
-using Neon.Tasks;
 using Neon.Kube.Glauth;
 
 namespace NeonCli

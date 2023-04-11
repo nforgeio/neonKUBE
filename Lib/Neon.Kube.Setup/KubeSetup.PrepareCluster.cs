@@ -37,15 +37,15 @@ using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Clients;
 using Neon.Kube.ClusterDef;
-using Neon.Kube.Proxy;
+using Neon.Kube.Login;
 using Neon.Kube.Hosting;
+using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
 using Namotion.Reflection;
-using Neon.Kube.Kube;
 
 namespace Neon.Kube.Setup
 {

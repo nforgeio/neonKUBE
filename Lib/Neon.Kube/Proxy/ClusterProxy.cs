@@ -37,7 +37,7 @@ using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Hosting;
-using Neon.Kube.Kube;
+using Neon.Kube.Login;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Kube.Setup;

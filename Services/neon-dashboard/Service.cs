@@ -35,7 +35,6 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Kube;
-using Neon.Kube.Kube;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Kube.Resources.Istio;

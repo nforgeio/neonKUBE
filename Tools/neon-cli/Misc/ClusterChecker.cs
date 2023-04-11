@@ -43,6 +43,7 @@ using Neon.Cryptography;
 using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Login;
 using Neon.Kube.Setup;
 using Neon.Net;
 using Neon.Retry;

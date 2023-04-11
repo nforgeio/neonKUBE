@@ -43,6 +43,7 @@ using Neon.Cryptography;
 using Neon.HyperV;
 using Neon.IO;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.Login;
 using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
 using Neon.Net;
