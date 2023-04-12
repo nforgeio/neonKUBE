@@ -35,6 +35,7 @@ using k8s.Models;
 using Telerik.JustMock;
 
 using Tomlyn;
+using System.Diagnostics;
 
 namespace TestNeonNodeAgent
 {
@@ -48,10 +49,6 @@ namespace TestNeonNodeAgent
 
             Mock.SetupStatic(typeof(Node), Behavior.CallOriginal, StaticConstructor.NonMocked);
             Mock.Arrange(() => Node.ExecuteCaptureAsync("pkill", new object[] { "-HUP", "crio" }, null, null, null, null, null, null)).ReturnsAsync(new ExecuteResponse(0));
-
-
-            Mock.SetupStatic(typeof(Node), Behavior.CallOriginal, StaticConstructor.NonMocked);
-            Mock.Arrange(() => Task.Delay(TimeSpan.FromSeconds(15))).Returns(Task.CompletedTask);
 
             fixture.Operator.AddController<ContainerRegistryController>();
             fixture.Start();
@@ -102,6 +99,13 @@ namespace TestNeonNodeAgent
                     "--password", containerRegistry.Spec.Password
                 },
                 null, null, null, null, null, null)).ReturnsAsync(new ExecuteResponse(0));
+
+            if (!Debugger.IsAttached)
+            {
+                // Mocking this with the debugger causes it to hang.
+                Mock.SetupStatic(typeof(Task), Behavior.CallOriginal, StaticConstructor.NonMocked);
+                Mock.Arrange(() => Task.Delay(TimeSpan.FromSeconds(15))).Returns(Task.CompletedTask);
+            }
 
             await controller.IdleAsync();
 

@@ -100,7 +100,7 @@ namespace NeonNodeAgent
     public class ContainerRegistryController : IResourceController<V1NeonContainerRegistry>
     {
         /// <inheritdoc/>
-        public string LeaseName { get; } = $"{Program.Service.Name}.containerregistry-{Node.Name}";
+        public string LeaseName { get; } = $"{KubeService.NeonNodeAgent}.containerregistry-{Node.Name}";
 
         //---------------------------------------------------------------------
         // Local types

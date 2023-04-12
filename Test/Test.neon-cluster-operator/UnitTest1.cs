@@ -52,11 +52,11 @@ namespace TestNeonClusterOperator
             ssoClient.Metadata.Name = "foo";
             ssoClient.Spec = new V1SsoClientSpec()
             {
-                Id = "foo",
-                Name = "foo",
-                Public = true,
+                Id           = "foo",
+                Name         = "foo",
+                Public       = true,
                 RedirectUris = new List<string>(),
-                Secret = "afgvkjdfhn",
+                Secret       = "afgvkjdfhn",
                 TrustedPeers = new List<string>()
             };
 
