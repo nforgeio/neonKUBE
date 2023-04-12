@@ -100,12 +100,9 @@ namespace TestNeonNodeAgent
                 },
                 null, null, null, null, null, null)).ReturnsAsync(new ExecuteResponse(0));
 
-            if (!Debugger.IsAttached)
-            {
-                // Mocking this with the debugger causes it to hang.
-                Mock.SetupStatic(typeof(Task), Behavior.CallOriginal, StaticConstructor.NonMocked);
-                Mock.Arrange(() => Task.Delay(TimeSpan.FromSeconds(15))).Returns(Task.CompletedTask);
-            }
+            // This may hang if the debug window is enabled.
+            Mock.SetupStatic(typeof(Task), Behavior.CallOriginal, StaticConstructor.NonMocked);
+            Mock.Arrange(() => Task.Delay(TimeSpan.FromSeconds(15))).Returns(Task.CompletedTask);
 
             await controller.IdleAsync();
 
