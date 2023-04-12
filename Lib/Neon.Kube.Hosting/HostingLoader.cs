@@ -177,12 +177,12 @@ namespace Neon.Kube.Hosting
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
             Covenant.Assert(environmentToHostingManager != null, $"[{nameof(HostingLoader)}] is not initialized.  You must call [{nameof(HostingLoader)}.{nameof(HostingLoader.Initialize)}()] first.");
 
-            if (environmentToHostingManager.TryGetValue(cluster.SetupDetails.ClusterDefinition.Hosting.Environment, out var managerType))
+            if (environmentToHostingManager.TryGetValue(cluster.SetupState.ClusterDefinition.Hosting.Environment, out var managerType))
             {
                 return (HostingManager)Activator.CreateInstance(managerType, cluster, cloudMarketplace, (string)null, (string)null, logFolder);
             }
 
-            throw new NotImplementedException($"[{nameof(HostingEnvironment)}={cluster.SetupDetails.ClusterDefinition.Hosting.Environment}]");
+            throw new NotImplementedException($"[{nameof(HostingEnvironment)}={cluster.SetupState.ClusterDefinition.Hosting.Environment}]");
         }
 
         /// <inheritdoc/>
@@ -191,28 +191,28 @@ namespace Neon.Kube.Hosting
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
             Covenant.Assert(environmentToHostingManager != null, $"[{nameof(HostingLoader)}] is not initialized.  You must call [{nameof(HostingLoader)}.{nameof(HostingLoader.Initialize)}()] first.");
 
-            if (environmentToHostingManager.TryGetValue(cluster.SetupDetails.ClusterDefinition.Hosting.Environment, out var managerType))
+            if (environmentToHostingManager.TryGetValue(cluster.SetupState.ClusterDefinition.Hosting.Environment, out var managerType))
             {
                 return (HostingManager)Activator.CreateInstance(managerType, cluster, cloudMarketplace, nodeImageUri, (string)null, logFolder);
             }
 
-            throw new NotImplementedException($"[{nameof(HostingEnvironment)}={cluster.SetupDetails.ClusterDefinition.Hosting.Environment}]");
+            throw new NotImplementedException($"[{nameof(HostingEnvironment)}={cluster.SetupState.ClusterDefinition.Hosting.Environment}]");
         }
 
         /// <inheritdoc/>
         public HostingManager GetManagerWithNodeImageFile(ClusterProxy cluster, string nodeImagePath, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
-            Covenant.Requires<InvalidOperationException>(!IsCloudEnvironment(cluster.SetupDetails.ClusterDefinition.Hosting.Environment), "This method does not support cloud hosting environments.");
+            Covenant.Requires<InvalidOperationException>(!IsCloudEnvironment(cluster.SetupState.ClusterDefinition.Hosting.Environment), "This method does not support cloud hosting environments.");
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImagePath), nameof(nodeImagePath));
             Covenant.Assert(environmentToHostingManager != null, $"[{nameof(HostingLoader)}] is not initialized.  You must call [{nameof(HostingLoader)}.{nameof(HostingLoader.Initialize)}()] first.");
 
-            if (environmentToHostingManager.TryGetValue(cluster.SetupDetails.ClusterDefinition.Hosting.Environment, out var managerType))
+            if (environmentToHostingManager.TryGetValue(cluster.SetupState.ClusterDefinition.Hosting.Environment, out var managerType))
             {
                 return (HostingManager)Activator.CreateInstance(managerType, cluster, false, (string)null, nodeImagePath, logFolder);
             }
 
-            throw new NotImplementedException($"[{nameof(HostingEnvironment)}={cluster.SetupDetails.ClusterDefinition.Hosting.Environment}]");
+            throw new NotImplementedException($"[{nameof(HostingEnvironment)}={cluster.SetupState.ClusterDefinition.Hosting.Environment}]");
         }
     }
 }

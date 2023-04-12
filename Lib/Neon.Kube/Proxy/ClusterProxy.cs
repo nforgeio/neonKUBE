@@ -251,7 +251,7 @@ namespace Neon.Kube.Proxy
 
             var nodes = new List<NodeSshProxy<NodeDefinition>>();
 
-            foreach (var nodeDefinition in SetupDetails.ClusterDefinition.SortedNodes)
+            foreach (var nodeDefinition in SetupState.ClusterDefinition.SortedNodes)
             {
                 var node = nodeProxyCreator(nodeDefinition.Name, NetHelper.ParseIPv4Address(nodeDefinition.Address ?? "0.0.0.0"));
 
@@ -304,7 +304,7 @@ namespace Neon.Kube.Proxy
         /// <summary>
         /// Returns the cluster name.
         /// </summary>
-        public string Name => context != null ? context.Name : SetupDetails.ClusterDefinition.Name;
+        public string Name => context != null ? context.Name : SetupState.ClusterDefinition.Name;
 
         /// <summary>
         /// The associated <see cref="IHostingManager"/>.
@@ -322,10 +322,10 @@ namespace Neon.Kube.Proxy
         public IReadOnlyList<NodeSshProxy<NodeDefinition>> Nodes { get; private set; }
 
         /// <summary>
-        /// Set to the setup details while the cluster is being provisioned,
+        /// Set to the setup state while the cluster is being provisioned,
         /// <c>null</c> otherwise.
         /// </summary>
-        public KubeSetupDetails SetupDetails { get; set; }
+        public KubeSetupState SetupState { get; set; }
 
         /// <summary>
         /// Returns the list of node host proxies for hosting managers that
@@ -379,7 +379,7 @@ namespace Neon.Kube.Proxy
         /// <exception cref="AssertException">Thrown when the proxy is not configured to provision the cluster.</exception>
         private void EnsureSetupMode()
         {
-            Covenant.Assert(SetupDetails != null, $"[{nameof(ClusterProxy)}] is not configured for provisioning the cluster.");
+            Covenant.Assert(SetupState != null, $"[{nameof(ClusterProxy)}] is not configured for provisioning the cluster.");
         }
 
         /// <summary>
@@ -426,7 +426,7 @@ namespace Neon.Kube.Proxy
 
             HostingManager hostingManager;
 
-            if (KubeHelper.IsOnPremiseHypervisorEnvironment(SetupDetails.ClusterDefinition.Hosting.Environment))
+            if (KubeHelper.IsOnPremiseHypervisorEnvironment(SetupState.ClusterDefinition.Hosting.Environment))
             {
                 if (!string.IsNullOrEmpty(nodeImageUri))
                 {
@@ -463,7 +463,7 @@ namespace Neon.Kube.Proxy
 
             if (hostingManager == null)
             {
-                throw new NeonKubeException($"No hosting manager for the [{SetupDetails.ClusterDefinition.Hosting.Environment}] environment could be located.");
+                throw new NeonKubeException($"No hosting manager for the [{SetupState.ClusterDefinition.Hosting.Environment}] environment could be located.");
             }
 
             return hostingManager;
@@ -761,7 +761,7 @@ namespace Neon.Kube.Proxy
 
             // Add registries from the cluster definition.
 
-            foreach (var registry in SetupDetails.ClusterDefinition.Container.Registries)
+            foreach (var registry in SetupState.ClusterDefinition.Container.Registries)
             {
                 localRegistries.Add(registry);
             }
@@ -774,7 +774,7 @@ namespace Neon.Kube.Proxy
                 clusterRegistry.Metadata         = new V1ObjectMeta();
                 clusterRegistry.Metadata.Name    = registry.Name;
                 clusterRegistry.Spec             = new V1NeonContainerRegistry.RegistrySpec();
-                clusterRegistry.Spec.SearchOrder = SetupDetails.ClusterDefinition.Container.SearchRegistries.IndexOf(registry.Location);
+                clusterRegistry.Spec.SearchOrder = SetupState.ClusterDefinition.Container.SearchRegistries.IndexOf(registry.Location);
                 clusterRegistry.Spec.Prefix      = registry.Prefix;
                 clusterRegistry.Spec.Location    = registry.Location;
                 clusterRegistry.Spec.Blocked     = registry.Blocked;
@@ -807,9 +807,9 @@ namespace Neon.Kube.Proxy
         }
 
         /// <summary>
-        /// Persists the setup details for the cluster.
+        /// Persists the setup state for the cluster.
         /// </summary>
-        public void SaveSetupDetails()
+        public void SaveSetupState()
         {
             EnsureSetupMode();
 
@@ -954,20 +954,20 @@ namespace Neon.Kube.Proxy
             {
                 CreationTimestamp = DateTime.UtcNow,
 
-                ClusterVersion    = SetupDetails.ClusterDefinition.ClusterVersion,
-                Name              = SetupDetails.ClusterDefinition.Name,
-                Description       = SetupDetails.ClusterDefinition.Description,
-                Environment       = SetupDetails.ClusterDefinition.Hosting.Environment,
-                Purpose           = SetupDetails.ClusterDefinition.Purpose,
-                Datacenter        = SetupDetails.ClusterDefinition.Datacenter,
-                IsDesktop         = SetupDetails.ClusterDefinition.IsDesktop,
-                Latitude          = SetupDetails.ClusterDefinition.Latitude,
-                Longitude         = SetupDetails.ClusterDefinition.Longitude,
-                FeatureOptions    = SetupDetails.ClusterDefinition.Features,
+                ClusterVersion    = SetupState.ClusterDefinition.ClusterVersion,
+                Name              = SetupState.ClusterDefinition.Name,
+                Description       = SetupState.ClusterDefinition.Description,
+                Environment       = SetupState.ClusterDefinition.Hosting.Environment,
+                Purpose           = SetupState.ClusterDefinition.Purpose,
+                Datacenter        = SetupState.ClusterDefinition.Datacenter,
+                IsDesktop         = SetupState.ClusterDefinition.IsDesktop,
+                Latitude          = SetupState.ClusterDefinition.Latitude,
+                Longitude         = SetupState.ClusterDefinition.Longitude,
+                FeatureOptions    = SetupState.ClusterDefinition.Features,
 
-                ClusterId         = SetupDetails.ClusterId,
-                Domain            = SetupDetails.ClusterDomain,
-                PublicAddresses   = SetupDetails.PublicAddresses
+                ClusterId         = SetupState.ClusterId,
+                Domain            = SetupState.ClusterDomain,
+                PublicAddresses   = SetupState.PublicAddresses
             };
         }
 

@@ -445,7 +445,7 @@ namespace Neon.Kube.Setup
                         MaxDegreeOfParallelism = 20
                     };
 
-                    Parallel.ForEach(cluster.SetupDetails.ClusterDefinition.NodeDefinitions.Values, parallelOptions,
+                    Parallel.ForEach(cluster.SetupState.ClusterDefinition.NodeDefinitions.Values, parallelOptions,
                         node =>
                         {
                             using (var pinger = new Pinger())

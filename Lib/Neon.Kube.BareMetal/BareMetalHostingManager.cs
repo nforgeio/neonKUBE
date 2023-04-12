@@ -274,12 +274,12 @@ namespace Neon.Kube.Hosting.BareMetal
         /// <inheritdoc/>
         public override IEnumerable<string> GetClusterAddresses()
         {
-            if (!(cluster.SetupDetails.PublicAddresses?.Any() ?? false))
+            if (!(cluster.SetupState.PublicAddresses?.Any() ?? false))
             {
-                return cluster.SetupDetails.PublicAddresses;
+                return cluster.SetupState.PublicAddresses;
             }
 
-            return cluster.SetupDetails.ClusterDefinition.ControlNodes.Select(controlPlane => controlPlane.Address);
+            return cluster.SetupState.ClusterDefinition.ControlNodes.Select(controlPlane => controlPlane.Address);
         }
 
         /// <inheritdoc/>

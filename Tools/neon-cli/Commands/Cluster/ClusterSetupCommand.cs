@@ -112,9 +112,6 @@ OPTIONS:
                           
 ";
 
-        private KubeConfigContext   kubeContext;
-        private KubeClusterInfo        clusterLogin;
-
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "setup" };
 
@@ -161,7 +158,7 @@ OPTIONS:
 
             var contextName       = KubeContextName.Parse(commandLine.Arguments[0]);
             var context           = KubeHelper.Config.GetCluster(contextName.Cluster);
-            var setupState        = KubeSetupDetails.Load((string)contextName, nullIfMissing: true);
+            var setupState        = KubeSetupState.Load((string)contextName, nullIfMissing: true);
             var unredacted        = commandLine.HasOption("--unredacted");
             var debug             = commandLine.HasOption("--debug");
             var quiet             = commandLine.HasOption("--quiet");
@@ -223,8 +220,6 @@ OPTIONS:
 
                 KubeHelper.Config.Save();
             }
-
-            kubeContext = new KubeConfigContext((string)contextName);
 
             // Create and run the cluster setup controller.
 

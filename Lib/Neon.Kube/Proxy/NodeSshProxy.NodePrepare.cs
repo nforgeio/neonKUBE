@@ -151,7 +151,7 @@ chmod 600 $HOME/.ssh/authorized_keys
                     bundle = new CommandBundle("./addkeys.sh");
 
                     bundle.AddFile("addkeys.sh", addKeyScript, isExecutable: true);
-                    bundle.AddFile("ssh-key.ssh2", cluster.SetupDetails.SshKey.PublicPUB);
+                    bundle.AddFile("ssh-key.ssh2", cluster.SetupState.SshKey.PublicPUB);
 
                     // $note(jefflill):
                     //
@@ -189,7 +189,7 @@ systemctl restart sshd
             controller.LogProgress(this, verb: "verify", message: "ssh keys");
 
             Disconnect();
-            UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, cluster.SetupDetails.SshKey.PrivatePEM));
+            UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, cluster.SetupState.SshKey.PrivatePEM));
             WaitForBoot();
         }
 
@@ -289,7 +289,7 @@ systemctl restart rsyslog.service
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var hostingManager    = controller.Get<IHostingManager>(KubeSetupProperty.HostingManager);
-            var clusterDefinition = cluster.SetupDetails.ClusterDefinition;
+            var clusterDefinition = cluster.SetupState.ClusterDefinition;
 
             InvokeIdempotent("base/prepare-node",
                 () =>

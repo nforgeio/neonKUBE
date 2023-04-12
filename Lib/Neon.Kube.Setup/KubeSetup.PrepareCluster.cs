@@ -168,17 +168,17 @@ namespace Neon.Kube.Setup
                 LogFailedMarker = "# CLUSTER-END-PREPARE-FAILED ##################################################"
             };
 
-            // Initialize the setup details state.  This is backed by a file and is used
-            // to persist setup related state across the cluster prepare and setup phases.
+            // Initialize the setup state.  This is backed by a file and is used to
+            // persist setup related state across the cluster prepare and setup phases.
 
-            var contextName  = $"{KubeConst.RootUser}@{clusterDefinition.Name}";
-            var setupDetails = (KubeSetupDetails)null;
+            var contextName = $"{KubeConst.RootUser}@{clusterDefinition.Name}";
+            var setupState  = (KubeSetupState)null;
 
-            if (KubeSetupDetails.Exists(contextName))
+            if (KubeSetupState.Exists(contextName))
             {
-                setupDetails = KubeSetupDetails.Load(contextName);
+                setupState = KubeSetupState.Load(contextName);
 
-                switch (setupDetails.DeploymentStatus)
+                switch (setupState.DeploymentStatus)
                 {
                     case ClusterDeploymentStatus.Prepared:
                     case ClusterDeploymentStatus.Ready:
@@ -186,21 +186,21 @@ namespace Neon.Kube.Setup
                         // We must have details left over from a previous run so 
                         // we'll start out fresh.
 
-                        setupDetails = KubeSetupDetails.Create(contextName);
+                        setupState = KubeSetupState.Create(contextName);
                         break;
                 }
             }
             else
             {
-                setupDetails = KubeSetupDetails.Create(contextName);
+                setupState = KubeSetupState.Create(contextName);
             }
 
-            setupDetails.ClusterDefinition = clusterDefinition;
-            setupDetails.SshUsername       = KubeConst.SysAdminUser;
+            setupState.ClusterDefinition = clusterDefinition;
+            setupState.SshUsername       = KubeConst.SysAdminUser;
 
-            cluster.SetupDetails = setupDetails;
+            cluster.SetupState = setupState;
 
-            setupDetails.Save();
+            setupState.Save();
 
             // Create a [DesktopService] proxy so setup can perform some privileged operations 
             // from a non-privileged process.
@@ -289,15 +289,15 @@ namespace Neon.Kube.Setup
                     {
                         // We're going to configure a fixed password for built-in desktop clusters.
 
-                        setupDetails.SshPassword = KubeConst.SysAdminPassword;
+                        setupState.SshPassword = KubeConst.SysAdminPassword;
                     }
                     else
                     {
                         // Generate a secure SSH password and append a string that guarantees that
                         // the generated password meets minimum cloud requirements.
 
-                        setupDetails.SshPassword  = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
-                        setupDetails.SshPassword += ".Aa0";
+                        setupState.SshPassword  = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
+                        setupState.SshPassword += ".Aa0";
                     }
 
                     // We're also going to generate the server's SSH key here and pass that to the hosting
@@ -311,17 +311,17 @@ namespace Neon.Kube.Setup
 
                     if (desktopReadyToGo || clusterDefinition.IsDesktop)
                     {
-                        setupDetails.SshKey = KubeHelper.GetBuiltinDesktopSshKey();
+                        setupState.SshKey = KubeHelper.GetBuiltinDesktopSshKey();
                     }
                     else
                     {
-                        if (setupDetails.SshKey == null)
+                        if (setupState.SshKey == null)
                         {
                             // Generate a 2048 bit SSH key pair.
 
                             controller.SetGlobalStepStatus("generate: SSH client key pair");
 
-                            setupDetails.SshKey = KubeHelper.GenerateSshKey(cluster.Name, KubeConst.SysAdminUser);
+                            setupState.SshKey = KubeHelper.GenerateSshKey(cluster.Name, KubeConst.SysAdminUser);
                         }
                     }
 
@@ -330,10 +330,10 @@ namespace Neon.Kube.Setup
 
                     controller.SetGlobalStepStatus("generate: SSO password");
 
-                    setupDetails.SsoUsername = KubeConst.RootUser;
-                    setupDetails.SsoPassword = clusterDefinition.RootPassword ?? NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
+                    setupState.SsoUsername = KubeConst.RootUser;
+                    setupState.SsoPassword = clusterDefinition.RootPassword ?? NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
 
-                    setupDetails.Save();
+                    setupState.Save();
                 });
 
             // Give the hosting manager a chance to add any additional provisioning steps.
@@ -415,7 +415,7 @@ namespace Neon.Kube.Setup
 
                     // Update node proxies with the generated SSH credentials.
 
-                    node.UpdateCredentials(setupDetails.SshCredentials);
+                    node.UpdateCredentials(setupState.SshCredentials);
 
                     // Remove the [sysadmin] user password; we support only SSH key authentication.
 
@@ -450,8 +450,8 @@ namespace Neon.Kube.Setup
 
                     if (options.DesktopReadyToGo)
                     {
-                        setupDetails.ClusterId     = KubeHelper.GenerateClusterId();
-                        setupDetails.ClusterDomain = KubeConst.DesktopClusterDomain;
+                        setupState.ClusterId     = KubeHelper.GenerateClusterId();
+                        setupState.ClusterDomain = KubeConst.DesktopClusterDomain;
 
                         hostName    = KubeConst.DesktopClusterDomain;
                         hostAddress = IPAddress.Parse(clusterDefinition.NodeDefinitions.Values.Single().Address);
@@ -464,24 +464,24 @@ namespace Neon.Kube.Setup
 
                         var result = await headendClient.ClusterSetup.CreateClusterAsync();
 
-                        setupDetails.ClusterId      = result["Id"];
-                        setupDetails.NeonCloudToken = result["Token"];
+                        setupState.ClusterId      = result["Id"];
+                        setupState.NeonCloudToken = result["Token"];
 
                         headendClient.HttpClient.DefaultRequestHeaders.Authorization =
                             new AuthenticationHeaderValue("Bearer", clusterDefinition.NeonCloudToken);
 
                         if (options.BuildDesktopImage)
                         {
-                            setupDetails.ClusterDomain = KubeConst.DesktopClusterDomain;
+                            setupState.ClusterDomain = KubeConst.DesktopClusterDomain;
                         }
                         else
                         {
-                            setupDetails.ClusterDomain = await headendClient.Cluster.UpdateClusterDomainAsync(
-                                clusterId: setupDetails.ClusterId,
+                            setupState.ClusterDomain = await headendClient.Cluster.UpdateClusterDomainAsync(
+                                clusterId: setupState.ClusterId,
                                 addresses: clusterAddresses);
                         }
 
-                        hostName    = setupDetails.ClusterId;
+                        hostName    = setupState.ClusterId;
                         hostAddress = IPAddress.Parse(cluster.HostingManager.GetClusterAddresses().First());
                     }
 
@@ -505,8 +505,8 @@ namespace Neon.Kube.Setup
                         node.UploadText("/etc/hosts", sbHosts, permissions: "644");
                     }
 
-                    setupDetails.SshPassword = null;    // We're no longer allowing SSH password authentication so we can clear this.
-                    setupDetails.Save();
+                    setupState.SshPassword = null;    // We're no longer allowing SSH password authentication so we can clear this.
+                    setupState.Save();
                 });
 
             // Some hosting managers may have to do some additional work after
@@ -535,8 +535,8 @@ namespace Neon.Kube.Setup
                 {
                     if (options.DesktopReadyToGo)
                     {
-                        setupDetails.DeploymentStatus = ClusterDeploymentStatus.Prepared;
-                        setupDetails.Save();
+                        setupState.DeploymentStatus = ClusterDeploymentStatus.Prepared;
+                        setupState.Save();
                     }
                     else
                     {

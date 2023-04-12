@@ -363,7 +363,7 @@ namespace Neon.Kube.Setup
 
             var headendClient     = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
             var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterDefinition = cluster?.SetupDetails.ClusterDefinition;
+            var clusterDefinition = cluster?.SetupState.ClusterDefinition;
 
             if (clusterDefinition != null)
             {

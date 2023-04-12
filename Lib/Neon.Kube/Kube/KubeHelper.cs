@@ -712,12 +712,12 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path the folder containing the temporary setup details files, creating the folder 
+        /// Returns the path the folder containing the temporary setup state files, creating the folder 
         /// if it doesn't already exist.
         /// </summary>
         /// <returns>The folder path.</returns>
         /// <remarks>
-        /// This folder holds <see cref="KubeSetupDetails"/> for clusters in the process of being prepared and setup. 
+        /// This folder holds <see cref="KubeSetupState"/> for clusters in the process of being prepared and setup. 
         /// Files will be  named like <b><i>CLUSTER-NAME</i>.json</b>
         /// </remarks>
         public static string SetupFolder

@@ -141,14 +141,14 @@ namespace Neon.Kube.Hosting.HyperV
             this.cluster        = cluster;
             this.nodeImageUri   = nodeImageUri;
             this.nodeImagePath  = nodeImagePath;
-            this.hostingOptions = cluster.SetupDetails.ClusterDefinition.Hosting.HyperV;
+            this.hostingOptions = cluster.SetupState.ClusterDefinition.Hosting.HyperV;
 
             // Determine where we're going to place the VM hard drive files and
             // ensure that the directory exists.
 
-            if (!string.IsNullOrEmpty(cluster.SetupDetails.ClusterDefinition.Hosting.Vm.DiskLocation))
+            if (!string.IsNullOrEmpty(cluster.SetupState.ClusterDefinition.Hosting.Vm.DiskLocation))
             {
-                vmDriveFolder = cluster.SetupDetails.ClusterDefinition.Hosting.Vm.DiskLocation;
+                vmDriveFolder = cluster.SetupState.ClusterDefinition.Hosting.Vm.DiskLocation;
             }
             else
             {
@@ -191,21 +191,21 @@ namespace Neon.Kube.Hosting.HyperV
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
 
             this.controller        = controller;
-            this.secureSshPassword = cluster.SetupDetails.SshPassword;
+            this.secureSshPassword = cluster.SetupState.SshPassword;
 
             // We need to ensure that the cluster has at least one ingress node.
 
-            KubeHelper.EnsureIngressNodes(cluster.SetupDetails.ClusterDefinition);
+            KubeHelper.EnsureIngressNodes(cluster.SetupState.ClusterDefinition);
 
             // Update the node labels with the actual capabilities of the 
             // virtual machines being provisioned.
 
-            foreach (var node in cluster.SetupDetails.ClusterDefinition.Nodes)
+            foreach (var node in cluster.SetupState.ClusterDefinition.Nodes)
             {
                 node.Labels.PhysicalMachine = Environment.MachineName;
-                node.Labels.ComputeCores    = cluster.SetupDetails.ClusterDefinition.Hosting.Vm.Cores;
-                node.Labels.ComputeRam      = (int)(ClusterDefinition.ValidateSize(cluster.SetupDetails.ClusterDefinition.Hosting.Vm.Memory, typeof(HostingOptions), nameof(HostingOptions.Vm.Memory))/ ByteUnits.MebiBytes);
-                node.Labels.StorageSize     = ByteUnits.ToGiB(node.Vm.GetMemory(cluster.SetupDetails.ClusterDefinition));
+                node.Labels.ComputeCores    = cluster.SetupState.ClusterDefinition.Hosting.Vm.Cores;
+                node.Labels.ComputeRam      = (int)(ClusterDefinition.ValidateSize(cluster.SetupState.ClusterDefinition.Hosting.Vm.Memory, typeof(HostingOptions), nameof(HostingOptions.Vm.Memory))/ ByteUnits.MebiBytes);
+                node.Labels.StorageSize     = ByteUnits.ToGiB(node.Vm.GetMemory(cluster.SetupState.ClusterDefinition));
             }
 
             // Add the provisioning steps to the controller.
@@ -215,20 +215,20 @@ namespace Neon.Kube.Hosting.HyperV
             controller.AddGlobalStep("check hyper-v",
                 controller =>
                 {
-                    this.secureSshPassword = cluster.SetupDetails.SshPassword;
+                    this.secureSshPassword = cluster.SetupState.SshPassword;
 
                     // If the cluster is being deployed to the internal [neonkube] switch, we need to
                     // check to see whether the switch already exists, and if it does, we'll need to
                     // ensure that it's configured correctly with a virtual address and NAT.  We're
                     // going to fail setup when an existing switch isn't configured correctly.
 
-                    if (cluster.SetupDetails.ClusterDefinition.Hosting.HyperV.UseInternalSwitch)
+                    if (cluster.SetupState.ClusterDefinition.Hosting.HyperV.UseInternalSwitch)
                     {
                         using (var hyperv = new HyperVProxy())
                         {
                             controller.SetGlobalStepStatus($"check: [{KubeConst.HyperVInternalSwitchName}] virtual switch/NAT");
 
-                            var localHyperVOptions = cluster.SetupDetails.ClusterDefinition.Hosting.HyperV;
+                            var localHyperVOptions = cluster.SetupState.ClusterDefinition.Hosting.HyperV;
                             var @switch            = hyperv.FindSwitch(KubeConst.HyperVInternalSwitchName);
                             var address            = hyperv.FindIPAddress(localHyperVOptions.NeonDesktopNodeAddress.ToString());
                             var nat                = hyperv.FindNatByName(KubeConst.HyperVInternalSwitchName);
@@ -301,7 +301,7 @@ namespace Neon.Kube.Hosting.HyperV
             var typedController = (SetupController<NodeDefinition>)controller;
             var createVmLabel   = "create virtual machine";
 
-            if (cluster.SetupDetails.ClusterDefinition.Nodes.Count() > 1)
+            if (cluster.SetupState.ClusterDefinition.Nodes.Count() > 1)
             {
                 createVmLabel += "(s)";
             }
@@ -315,7 +315,7 @@ namespace Neon.Kube.Hosting.HyperV
         {
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            if (cluster.SetupDetails.ClusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.cStor)
+            if (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.cStor)
             {
                 // We need to add any required OpenEBS cStor disks after the node has been otherwise
                 // prepared.  We need to do this here because if we created the data and OpenEBS disks
@@ -331,7 +331,7 @@ namespace Neon.Kube.Hosting.HyperV
                     using (var hyperv = new HyperVProxy())
                     {
                         var vmName   = GetVmName(node.Metadata);
-                        var diskSize = node.Metadata.Vm.GetOpenEbsDiskSizeBytes(cluster.SetupDetails.ClusterDefinition);
+                        var diskSize = node.Metadata.Vm.GetOpenEbsDiskSizeBytes(cluster.SetupState.ClusterDefinition);
                         var diskPath = Path.Combine(vmDriveFolder, $"{vmName}-openebs.vhdx");
 
                         node.Status = "openebs: checking";
@@ -380,12 +380,12 @@ namespace Neon.Kube.Hosting.HyperV
         /// <inheritdoc/>
         public override IEnumerable<string> GetClusterAddresses()
         {
-            if (cluster.SetupDetails.PublicAddresses?.Any() ?? false)
+            if (cluster.SetupState.PublicAddresses?.Any() ?? false)
             {
-                return cluster.SetupDetails.PublicAddresses;
+                return cluster.SetupState.PublicAddresses;
             }
 
-            return cluster.SetupDetails.ClusterDefinition.ControlNodes.Select(controlPlane => controlPlane.Address);
+            return cluster.SetupState.ClusterDefinition.ControlNodes.Select(controlPlane => controlPlane.Address);
         }
 
         /// <inheritdoc/>
@@ -396,7 +396,7 @@ namespace Neon.Kube.Hosting.HyperV
             Covenant.Requires<ArgumentNullException>(reserveDisk >= 0, nameof(reserveDisk));
 
             var hostMachineName = Environment.MachineName;
-            var allNodeNames    = cluster.SetupDetails.ClusterDefinition.NodeDefinitions.Keys.ToList();
+            var allNodeNames    = cluster.SetupState.ClusterDefinition.NodeDefinitions.Keys.ToList();
             var deploymentCheck = new HostingResourceAvailability();
 
             // Verify that no VMs are already running that will conflict with VMs
@@ -404,7 +404,7 @@ namespace Neon.Kube.Hosting.HyperV
 
             var clusterVmNames = new Dictionary<string, NodeDefinition>(StringComparer.InvariantCultureIgnoreCase);
 
-            foreach (var node in cluster.SetupDetails.ClusterDefinition.Nodes)
+            foreach (var node in cluster.SetupState.ClusterDefinition.Nodes)
             {
                 clusterVmNames.Add(GetVmName(node), node);
             }
@@ -447,18 +447,18 @@ namespace Neon.Kube.Hosting.HyperV
 
             var requiredDisk = 0L;
 
-            foreach (var node in cluster.SetupDetails.ClusterDefinition.NodeDefinitions.Values)
+            foreach (var node in cluster.SetupState.ClusterDefinition.NodeDefinitions.Values)
             {
-                requiredDisk += node.Vm.GetOsDisk(cluster.SetupDetails.ClusterDefinition);
+                requiredDisk += node.Vm.GetOsDisk(cluster.SetupState.ClusterDefinition);
 
                 if (node.OpenEbsStorage)
                 {
-                    switch (cluster.SetupDetails.ClusterDefinition.Storage.OpenEbs.Engine)
+                    switch (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine)
                     {
                         case OpenEbsEngine.cStor:
                         case OpenEbsEngine.Mayastor:
 
-                            requiredDisk += node.Vm.GetOpenEbsDiskSizeBytes(cluster.SetupDetails.ClusterDefinition);
+                            requiredDisk += node.Vm.GetOpenEbsDiskSizeBytes(cluster.SetupState.ClusterDefinition);
                             break;
 
                         default:
@@ -471,7 +471,7 @@ namespace Neon.Kube.Hosting.HyperV
             // Determine the free disk space on the drive where the cluster node
             // VHDX files will be deployed.
 
-            var diskLocation = cluster.SetupDetails.ClusterDefinition.Hosting.Vm.DiskLocation;
+            var diskLocation = cluster.SetupState.ClusterDefinition.Hosting.Vm.DiskLocation;
 
             if (string.IsNullOrEmpty(diskLocation))
             {
@@ -517,13 +517,13 @@ namespace Neon.Kube.Hosting.HyperV
 
             var requiredMemory = 0L;
 
-            foreach (var node in cluster.SetupDetails.ClusterDefinition.NodeDefinitions.Values)
+            foreach (var node in cluster.SetupState.ClusterDefinition.NodeDefinitions.Values)
             {
                 var vmMemory = node.Vm.Memory;
 
                 if (string.IsNullOrEmpty(vmMemory))
                 {
-                    vmMemory = cluster.SetupDetails.ClusterDefinition.Hosting.Vm.Memory;
+                    vmMemory = cluster.SetupState.ClusterDefinition.Hosting.Vm.Memory;
                 }
 
                 requiredMemory += (long)ByteUnits.Parse(vmMemory);
@@ -595,7 +595,7 @@ namespace Neon.Kube.Hosting.HyperV
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
-            return $"{cluster.SetupDetails.ClusterDefinition.Hosting.Vm.GetVmNamePrefix(cluster.SetupDetails.ClusterDefinition)}{node.Name}";
+            return $"{cluster.SetupState.ClusterDefinition.Hosting.Vm.GetVmNamePrefix(cluster.SetupState.ClusterDefinition)}{node.Name}";
         }
 
         /// <summary>
@@ -609,14 +609,14 @@ namespace Neon.Kube.Hosting.HyperV
 
             // Special case the built-in neon-desktop cluster.
 
-            if (cluster.SetupDetails.ClusterDefinition.IsDesktop && 
+            if (cluster.SetupState.ClusterDefinition.IsDesktop && 
                 vmName.Equals(KubeConst.NeonDesktopHyperVBuiltInVmName, StringComparison.InvariantCultureIgnoreCase) &&
-                cluster.SetupDetails.ClusterDefinition.NodeDefinitions.TryGetValue(vmName, out var nodeDefinition))
+                cluster.SetupState.ClusterDefinition.NodeDefinitions.TryGetValue(vmName, out var nodeDefinition))
             {
                 return nodeDefinition;
             }
 
-            var prefix = cluster.SetupDetails.ClusterDefinition.Hosting.Vm.GetVmNamePrefix(cluster.SetupDetails.ClusterDefinition);
+            var prefix = cluster.SetupState.ClusterDefinition.Hosting.Vm.GetVmNamePrefix(cluster.SetupState.ClusterDefinition);
 
             if (!vmName.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
             {
@@ -625,7 +625,7 @@ namespace Neon.Kube.Hosting.HyperV
 
             var nodeName = vmName.Substring(prefix.Length);
 
-            if (cluster.SetupDetails.ClusterDefinition.NodeDefinitions.TryGetValue(nodeName, out nodeDefinition))
+            if (cluster.SetupState.ClusterDefinition.NodeDefinitions.TryGetValue(nodeName, out nodeDefinition))
             {
                 return nodeDefinition;
             }
@@ -684,7 +684,7 @@ namespace Neon.Kube.Hosting.HyperV
 
                     if (externalSwitch == null)
                     {
-                        hyperv.NewExternalSwitch(switchName = defaultSwitchName, NetHelper.ParseIPv4Address(cluster.SetupDetails.ClusterDefinition.Network.Gateway));
+                        hyperv.NewExternalSwitch(switchName = defaultSwitchName, NetHelper.ParseIPv4Address(cluster.SetupState.ClusterDefinition.Network.Gateway));
                     }
                     else
                     {
@@ -812,9 +812,9 @@ namespace Neon.Kube.Hosting.HyperV
 
                 // Create the virtual machine.
 
-                var processors  = node.Metadata.Vm.GetCores(cluster.SetupDetails.ClusterDefinition);
-                var memoryBytes = node.Metadata.Vm.GetMemory(cluster.SetupDetails.ClusterDefinition);
-                var osDiskBytes = node.Metadata.Vm.GetOsDisk(cluster.SetupDetails.ClusterDefinition);
+                var processors  = node.Metadata.Vm.GetCores(cluster.SetupState.ClusterDefinition);
+                var memoryBytes = node.Metadata.Vm.GetMemory(cluster.SetupState.ClusterDefinition);
+                var osDiskBytes = node.Metadata.Vm.GetOsDisk(cluster.SetupState.ClusterDefinition);
 
                 node.Status = $"create: virtual machine";
                 hyperv.AddVm(
@@ -844,7 +844,7 @@ namespace Neon.Kube.Hosting.HyperV
                     controller.ThrowIfCancelled();
 
                     node.Status = $"mount: neon-init iso";
-                    tempIso     = KubeHelper.CreateNeonInitIso(node.Cluster.SetupDetails.ClusterDefinition, node.Metadata, nodeMtu: NodeMtu, newPassword: secureSshPassword);
+                    tempIso     = KubeHelper.CreateNeonInitIso(node.Cluster.SetupState.ClusterDefinition, node.Metadata, nodeMtu: NodeMtu, newPassword: secureSshPassword);
 
                     hyperv.InsertVmDvd(vmName, tempIso.Path);
 
@@ -930,7 +930,7 @@ namespace Neon.Kube.Hosting.HyperV
                 // We're going to infer the cluster provisiong status by examining the
                 // cluster login and the state of the VMs deployed in the local Hyper-V.
 
-                var contextName = $"root@{cluster.SetupDetails.ClusterDefinition.Name}";
+                var contextName = $"root@{cluster.SetupState.ClusterDefinition.Name}";
                 var context     = KubeHelper.Config.GetContext(contextName);
 
                 // Create a hashset with the names of the nodes that map to deployed Hyper-V
@@ -966,7 +966,7 @@ namespace Neon.Kube.Hosting.HyperV
                         Summary = "Cluster does not exist"
                     };
 
-                    foreach (var node in cluster.SetupDetails.ClusterDefinition.NodeDefinitions.Values)
+                    foreach (var node in cluster.SetupState.ClusterDefinition.NodeDefinitions.Values)
                     {
                         clusterHealth.Nodes.Add(node.Name, existingNodes.Contains(node.Name) ? ClusterNodeState.Conflict : ClusterNodeState.NotProvisioned);
                     }
@@ -981,7 +981,7 @@ namespace Neon.Kube.Hosting.HyperV
 
                     var clusterHealth = new ClusterHealth();
 
-                    foreach (var node in cluster.SetupDetails.ClusterDefinition.NodeDefinitions.Values)
+                    foreach (var node in cluster.SetupState.ClusterDefinition.NodeDefinitions.Values)
                     {
                         var nodeState = ClusterNodeState.NotProvisioned;
 
@@ -1053,7 +1053,7 @@ namespace Neon.Kube.Hosting.HyperV
                         }
                     }
 
-                    if (cluster.SetupDetails.DeploymentStatus != ClusterDeploymentStatus.Ready)
+                    if (cluster.SetupState.DeploymentStatus != ClusterDeploymentStatus.Ready)
                     {
                         clusterHealth.State   = ClusterState.Configuring;
                         clusterHealth.Summary = "Cluster is partially configured";
@@ -1126,7 +1126,7 @@ namespace Neon.Kube.Hosting.HyperV
 
             using (var hyperv = new HyperVProxy())
             {
-                Parallel.ForEach(cluster.SetupDetails.ClusterDefinition.Nodes, parallelOptions,
+                Parallel.ForEach(cluster.SetupState.ClusterDefinition.Nodes, parallelOptions,
                     node =>
                     {
                         var vmName = GetVmName(node);
@@ -1173,7 +1173,7 @@ namespace Neon.Kube.Hosting.HyperV
 
             using (var hyperv = new HyperVProxy())
             {
-                Parallel.ForEach(cluster.SetupDetails.ClusterDefinition.Nodes, parallelOptions,
+                Parallel.ForEach(cluster.SetupState.ClusterDefinition.Nodes, parallelOptions,
                     node =>
                     {
                         var vmName = GetVmName(node);
@@ -1238,7 +1238,7 @@ namespace Neon.Kube.Hosting.HyperV
                 // VM name prefix, then we'll simply remove all VMs with that prefix.
                 // Otherwise, we'll do a normal remove.
 
-                var vmPrefix = cluster.SetupDetails.ClusterDefinition.Hosting.Vm.GetVmNamePrefix(cluster.SetupDetails.ClusterDefinition);
+                var vmPrefix = cluster.SetupState.ClusterDefinition.Hosting.Vm.GetVmNamePrefix(cluster.SetupState.ClusterDefinition);
 
                 if (removeOrphans && !string.IsNullOrEmpty(vmPrefix))
                 {
@@ -1266,7 +1266,7 @@ namespace Neon.Kube.Hosting.HyperV
 
                 // Remove all of the cluster VMs.
 
-                Parallel.ForEach(cluster.SetupDetails.ClusterDefinition.Nodes, parallelOptions,
+                Parallel.ForEach(cluster.SetupState.ClusterDefinition.Nodes, parallelOptions,
                     node =>
                     {
                         var vmName = GetVmName(node);
@@ -1292,9 +1292,9 @@ namespace Neon.Kube.Hosting.HyperV
 
                 // Remove any potentially orphaned VMs when enabled and a prefix is specified.
 
-                if (removeOrphans && !string.IsNullOrEmpty(cluster.SetupDetails.ClusterDefinition.Deployment.Prefix))
+                if (removeOrphans && !string.IsNullOrEmpty(cluster.SetupState.ClusterDefinition.Deployment.Prefix))
                 {
-                    var prefix = cluster.SetupDetails.ClusterDefinition.Deployment.Prefix + "-";
+                    var prefix = cluster.SetupState.ClusterDefinition.Deployment.Prefix + "-";
 
                     Parallel.ForEach(hyperv.ListVms(), parallelOptions,
                         vm =>

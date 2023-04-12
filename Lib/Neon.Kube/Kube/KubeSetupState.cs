@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeSetupDetails.cs
+// FILE:	    KubeSetupState.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -43,7 +43,7 @@ using Neon.SSH;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Holds details required during cluster setup.
+    /// Holds cluster provisioning related state.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -61,14 +61,14 @@ namespace Neon.Kube
     /// Kubernetes context name for the cluster.
     /// </para>
     /// </remarks>
-    public class KubeSetupDetails
+    public class KubeSetupState
     {
         //---------------------------------------------------------------------
         // Static members
 
         /// <summary>
-        /// Creates a new <see cref="KubeSetupDetails"/> instance to be used to persist
-        /// setup details about the named cluster.
+        /// Creates a new <see cref="KubeSetupState"/> instance to be used to persist
+        /// setup state about the named cluster.
         /// </summary>
         /// <param name="contextName">Specifies the Kubernetes context name for the cluster.</param>
         /// <returns>The new instance.</returns>
@@ -77,7 +77,7 @@ namespace Neon.Kube
         /// This removes any existing file persisting this information.
         /// </note>
         /// </remarks>
-        public static KubeSetupDetails Create(string contextName)
+        public static KubeSetupState Create(string contextName)
         {
             Covenant.Requires<ArgumentNullException>(contextName != null, nameof(contextName));
 
@@ -88,17 +88,17 @@ namespace Neon.Kube
                 File.Delete(path);
             }
 
-            return new KubeSetupDetails() { path = path };
+            return new KubeSetupState() { path = path };
         }
 
         /// <summary>
-        /// Loads setup details for the named cluster from its file.
+        /// Loads setup state for the named cluster from its file.
         /// </summary>
         /// <param name="contextName">Specifies the Kubernetes context name for the cluster.</param>
         /// <param name="nullIfMissing">Optionally return <c>null</c> instead of throwing an exception when the setup state file doesn't exist.</param>
         /// <returns>The instance loaded from the file.</returns>
         /// <exception cref="FileNotFoundException">Thrown when the file doesn't exist and <paramref name="nullIfMissing"/> is <c>false</c>.</exception>
-        public static KubeSetupDetails Load(string contextName, bool nullIfMissing = false)
+        public static KubeSetupState Load(string contextName, bool nullIfMissing = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(contextName), nameof(contextName));
 
@@ -116,21 +116,21 @@ namespace Neon.Kube
                 }
             }
 
-            var setupDetails = NeonHelper.JsonDeserialize<KubeSetupDetails>(File.ReadAllBytes(path));
+            var setupState = NeonHelper.JsonDeserialize<KubeSetupState>(File.ReadAllBytes(path));
 
-            setupDetails.path = path;
+            setupState.path = path;
 
-            return setupDetails;
+            return setupState;
         }
 
         /// <summary>
-        /// Loads setup details for the named cluster from its file when that exists, otherwise
+        /// Loads setup state for the named cluster from its file when that exists, otherwise
         /// creates an unintialized instance.
         /// </summary>
         /// <param name="contextName">Specifies the Kubernetes context name for the cluster.</param>
         /// <returns>The instance loaded or created instance.</returns>
         /// <exception cref="FileNotFoundException">Thrown when the file doesn't exist.</exception>
-        public static KubeSetupDetails LoadOrCreate(string contextName)
+        public static KubeSetupState LoadOrCreate(string contextName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(contextName), nameof(contextName));
 
@@ -138,11 +138,11 @@ namespace Neon.Kube
 
             if (File.Exists(path))
             {
-                var setupDetails = NeonHelper.JsonDeserialize<KubeSetupDetails>(File.ReadAllBytes(path));
+                var setupState = NeonHelper.JsonDeserialize<KubeSetupState>(File.ReadAllBytes(path));
 
-                setupDetails.path = path;
+                setupState.path = path;
 
-                return setupDetails;
+                return setupState;
             }
             else
             {
@@ -151,7 +151,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Determines whether a setup details file exists for a cluster.
+        /// Determines whether a setup state file exists for a cluster.
         /// </summary>
         /// <param name="contextName">Specifies the Kubernetes context name for the cluster.</param>
         /// <returns><c>true</c> when the file exists.</returns>
@@ -163,7 +163,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Deletes the setup details file for a cluster, if it exists.
+        /// Deletes the setup state file for a cluster, if it exists.
         /// </summary>
         /// <param name="contextName">Specifies the Kubernetes context name for the cluster.</param>
         /// <returns><c>true</c> when the file exists.</returns>
@@ -199,7 +199,7 @@ namespace Neon.Kube
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public KubeSetupDetails()
+        public KubeSetupState()
         {
         }
 

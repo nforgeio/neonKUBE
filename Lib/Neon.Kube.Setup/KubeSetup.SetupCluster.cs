@@ -144,7 +144,7 @@ namespace Neon.Kube.Setup
                     var logStream      = new FileStream(Path.Combine(logFolder, $"{nodeName}.log"), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
                     var logWriter      = new StreamWriter(logStream);
                     var context        = KubeHelper.CurrentContext;
-                    var sshCredentials = cluster.SetupDetails.SshCredentials ?? SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
+                    var sshCredentials = cluster.SetupState.SshCredentials ?? SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
 
                     return new NodeSshProxy<NodeDefinition>(nodeName, nodeAddress, sshCredentials, logWriter: logWriter);
                 });
@@ -154,21 +154,21 @@ namespace Neon.Kube.Setup
                 cluster.SecureRunOptions = RunOptions.None;
             }
 
-            // Load the setup details for the cluster.  This should have been already been
+            // Load the setup state for the cluster.  This should have been already been
             // created during cluster preparation.
 
             var contextNameString = contextName.ToString();
 
-            if (!KubeSetupDetails.Exists(contextNameString))
+            if (!KubeSetupState.Exists(contextNameString))
             {
-                throw new NeonKubeException($"Cluster prepare/setup state not found at: {KubeSetupDetails.GetPath(contextNameString)}");
+                throw new NeonKubeException($"Cluster prepare/setup state not found at: {KubeSetupState.GetPath(contextNameString)}");
             }
 
-            var setupDetails = KubeSetupDetails.Load(contextNameString);
+            var setupState = KubeSetupState.Load(contextNameString);
 
             // Configure the setup controller.
 
-            var controller = new SetupController<NodeDefinition>($"Setup [{cluster.SetupDetails.ClusterDefinition.Name}] cluster", cluster.Nodes, KubeHelper.LogFolder, disableConsoleOutput: options.DisableConsoleOutput)
+            var controller = new SetupController<NodeDefinition>($"Setup [{cluster.SetupState.ClusterDefinition.Name}] cluster", cluster.Nodes, KubeHelper.LogFolder, disableConsoleOutput: options.DisableConsoleOutput)
             {
                 MaxParallel     = options.MaxParallel > 0 ? options.MaxParallel: cluster.HostingManager.MaxParallel,
                 LogBeginMarker  = "# CLUSTER-BEGIN-SETUP #########################################################",
@@ -241,7 +241,7 @@ namespace Neon.Kube.Setup
 
             // Perform common configuration for the remaining nodes (if any).
 
-            if (cluster.SetupDetails.ClusterDefinition.Nodes.Count() > 1)
+            if (cluster.SetupState.ClusterDefinition.Nodes.Count() > 1)
             {
                 controller.AddNodeStep("setup other nodes",
                     (controller, node) =>
@@ -294,8 +294,8 @@ namespace Neon.Kube.Setup
                 {
                     // Indicate that setup is complete.
 
-                    setupDetails.DeploymentStatus = ClusterDeploymentStatus.Ready;
-                    setupDetails.Save();
+                    setupState.DeploymentStatus = ClusterDeploymentStatus.Ready;
+                    setupState.Save();
                 });
 
             //-----------------------------------------------------------------
@@ -304,7 +304,7 @@ namespace Neon.Kube.Setup
             controller.AddNodeStep("check control-plane nodes",
                 (controller, node) =>
                 {
-                    KubeDiagnostics.CheckControlNode(node, cluster.SetupDetails.ClusterDefinition);
+                    KubeDiagnostics.CheckControlNode(node, cluster.SetupState.ClusterDefinition);
                 },
                 (controller, node) => node.Metadata.IsControlPane);
 
@@ -313,7 +313,7 @@ namespace Neon.Kube.Setup
                 controller.AddNodeStep("check workers",
                     (controller, node) =>
                     {
-                        KubeDiagnostics.CheckWorker(node, cluster.SetupDetails.ClusterDefinition);
+                        KubeDiagnostics.CheckWorker(node, cluster.SetupState.ClusterDefinition);
                     },
                     (controller, node) => node.Metadata.IsWorker);
             }
@@ -351,9 +351,9 @@ namespace Neon.Kube.Setup
 
             controller.Finished += (s, a) => UploadDeploymentLogs((ISetupController)s, a);
 
-            // Add a [Finished] event handler that removes the cluster setup details.
+            // Add a [Finished] event handler that removes the cluster setup state.
 
-            controller.Finished += (a, s) => setupDetails.Delete();
+            controller.Finished += (a, s) => setupState.Delete();
 
             return controller;
         }
@@ -371,7 +371,7 @@ namespace Neon.Kube.Setup
 
             var controller                = (SetupController<NodeDefinition>)sender;
             var clusterProxy              = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var redactedClusterDefinition = clusterProxy.SetupDetails.ClusterDefinition.Redact();
+            var redactedClusterDefinition = clusterProxy.SetupState.ClusterDefinition.Redact();
             var logFolder                 = KubeHelper.LogFolder;
             var logDetailsFolder          = KubeHelper.LogDetailsFolder;
 

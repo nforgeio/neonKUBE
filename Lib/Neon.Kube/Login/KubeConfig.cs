@@ -234,10 +234,10 @@ namespace Neon.Kube.Login
 
             if (!noSave)
             {
-                // Also the setup details file for this cluster if it exists.  This may be
+                // Also the setup state file for this cluster if it exists.  This may be
                 // present if cluster prepare/setup was interrupted for the cluster.
 
-                KubeSetupDetails.Delete(name.ToString());
+                KubeSetupState.Delete(name.ToString());
             }
         }
 
