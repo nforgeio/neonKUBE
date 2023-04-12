@@ -152,7 +152,7 @@ ARGUMENTS:
                 if (configCluster == null)
                 {
                     config.Clusters.Add(
-                        new KubeConfigContext()
+                        new KubeConfigCluster()
                         {
                             Name       = clusterInfo.Name,
                             Properties = clusterProperties

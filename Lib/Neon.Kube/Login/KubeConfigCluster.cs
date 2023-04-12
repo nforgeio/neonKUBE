@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeConfigUser.cs
+// FILE:	    KubeConfigCluster.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -40,30 +40,30 @@ using Neon.Kube;
 namespace Neon.Kube.Login
 {
     /// <summary>
-    /// Describes a Kubernetes user configuration.
+    /// Describes a Kubernetes cluster configuration.
     /// </summary>
-    public class KubeConfigUser
+    public class KubeConfigCluster
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public KubeConfigUser()
+        public KubeConfigCluster()
         {
         }
 
         /// <summary>
-        /// The local nickname for the user.
+        /// The local nickname for the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "name", Required = Required.Always)]
         [YamlMember(Alias = "name", ApplyNamingConventions = false)]
         public string Name { get; set; }
 
         /// <summary>
-        /// The user properties.
+        /// The cluster properties.
         /// </summary>
         [JsonProperty(PropertyName = "user", Required = Required.Always)]
         [YamlMember(Alias = "user", ApplyNamingConventions = false)]
-        public KubeConfigUserProperties Properties { get; set; }
+        public KubeConfigClusterProperties Properties { get; set; }
 
         /// <summary>
         /// Lists any custom extension properties.  Extensions are name/value pairs added

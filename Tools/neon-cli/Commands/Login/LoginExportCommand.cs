@@ -129,10 +129,9 @@ REMARKS:
 
             var login = new ClusterLoginExport()
             {
-                Cluster    = cluster,
-                Context    = context,
-                Extensions = KubeHelper.GetClusterLogin(contextName),
-                User       = user
+                Cluster = cluster,
+                Context = context,
+                User    = user
             };
 
             var yaml = NeonHelper.YamlSerialize(login);

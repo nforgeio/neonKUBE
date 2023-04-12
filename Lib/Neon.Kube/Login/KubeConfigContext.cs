@@ -50,7 +50,7 @@ namespace Neon.Kube.Login
         /// </summary>
         public KubeConfigContext()
         {
-            this.Properties = new KubeConfigClusterProperties();
+            this.Properties = new KubeConfigContextProperties();
             this.Extensions = new List<NamedExtension>();
         }
 
@@ -83,7 +83,7 @@ namespace Neon.Kube.Login
         /// Lists any custom extension properties.  Extensions are name/value pairs added
         /// by vendors to hold arbitrary information.  Take care to choose property names
         /// that are unlikely to conflict with properties created by other vendors by adding
-        /// a custom sffix like <b>my-property.neonkube.io</b>, where <b>my-property</b> 
+        /// a custom suffix like <b>my-property.neonkube.io</b>, where <b>my-property</b> 
         /// identifies the property and <b>neonkibe.io</b> helps avoid conflicts.
         /// </summary>
         [JsonProperty(PropertyName = "Extensions", Required = Required.Default)]

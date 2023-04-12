@@ -105,7 +105,7 @@ namespace Neon.Kube.Login
         /// </summary>
         [JsonProperty(PropertyName = "clusters", Required = Required.Always)]
         [YamlMember(Alias = "clusters", ApplyNamingConventions = false)]
-        public List<KubeConfigContext> Clusters { get; set; } = new List<KubeConfigContext>();
+        public List<KubeConfigCluster> Clusters { get; set; } = new List<KubeConfigCluster>();
 
         /// <summary>
         /// Lists config contexts.
@@ -141,7 +141,7 @@ namespace Neon.Kube.Login
         /// Lists any custom extension properties.  Extensions are name/value pairs added
         /// by vendors to hold arbitrary information.  Take care to choose property names
         /// that are unlikely to conflict with properties created by other vendors by adding
-        /// a custom sffix like <b>my-property.neonkube.io</b>, where <b>my-property</b> 
+        /// a custom suffix like <b>my-property.neonkube.io</b>, where <b>my-property</b> 
         /// identifies the property and <b>neonkibe.io</b> helps avoid conflicts.
         /// </summary>
         [JsonProperty(PropertyName = "Extensions", Required = Required.Default)]
@@ -172,8 +172,8 @@ namespace Neon.Kube.Login
         /// Returns a Kubernetes context by name.
         /// </summary>
         /// <param name="name">The cluster name.</param>
-        /// <returns>The <see cref="KubeConfigContext"/> or <c>null</c>.</returns>
-        public KubeConfigContext GetCluster(string name)
+        /// <returns>The <see cref="KubeConfigCluster"/> or <c>null</c>.</returns>
+        public KubeConfigCluster GetCluster(string name)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
@@ -322,7 +322,7 @@ namespace Neon.Kube.Login
             // Prune any non-neonKUBE clusters that are not referenced by a 
             // neonKUBE context.
 
-            var prunedClusters = new List<KubeConfigContext>();
+            var prunedClusters = new List<KubeConfigCluster>();
 
             foreach (var cluster in Clusters)
             {

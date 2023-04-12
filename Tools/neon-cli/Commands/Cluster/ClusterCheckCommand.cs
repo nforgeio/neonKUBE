@@ -138,17 +138,17 @@ This command returns a non-zero exit code when one or more checks fail.
             var k8s    = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(KubeHelper.KubeConfigPath), new KubernetesRetryHandler());
             var error = false;
 
-            if (containerImages && !await ClusterChecker.CheckNodeContainerImagesAsync(clusterLogin, k8s, details: details))
+            if (containerImages && !await ClusterChecker.CheckNodeContainerImagesAsync(k8s, details: details))
             {
                 error = true;
             }
 
-            if (priorityClass && !await ClusterChecker.CheckPodPrioritiesAsync(clusterLogin, k8s, details: details))
+            if (priorityClass && !await ClusterChecker.CheckPodPrioritiesAsync(k8s, details: details))
             {
                 error = true;
             }
 
-            if (resources && !await ClusterChecker.CheckResourcesAsync(clusterLogin, k8s, details: details))
+            if (resources && !await ClusterChecker.CheckResourcesAsync(k8s, details: details))
             {
                 error = true;
             }

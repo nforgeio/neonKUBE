@@ -56,7 +56,7 @@ namespace Neon.Kube.Login
         /// </summary>
         [JsonProperty(PropertyName = "Cluster", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "cluster", ApplyNamingConventions = false)]
-        public KubeConfigContext Cluster { get; set; }
+        public KubeConfigCluster Cluster { get; set; }
 
         /// <summary>
         /// The Kubernetes context.

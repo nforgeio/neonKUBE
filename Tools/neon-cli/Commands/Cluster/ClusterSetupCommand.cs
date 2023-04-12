@@ -300,7 +300,7 @@ OPTIONS:
                     {
                         var k8s = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(KubeHelper.KubeConfigPath), new KubernetesRetryHandler());
 
-                        if (!await ClusterChecker.CheckAsync(clusterLogin, k8s))
+                        if (!await ClusterChecker.CheckAsync(k8s))
                         {
                             Program.Exit(1);
                         }
