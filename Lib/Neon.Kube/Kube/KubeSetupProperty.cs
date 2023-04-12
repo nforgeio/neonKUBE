@@ -84,11 +84,6 @@ namespace Neon.Kube
         public const string ClusterProxy = "cluster-proxy";
 
         /// <summary>
-        /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <see cref="ClusterLogin"/> property.
-        /// </summary>
-        public const string ClusterLogin = "cluster-login";
-
-        /// <summary>
         /// Property name for accessing the <see cref="SetupController{NodeMetadata}"/>'s <see cref="IHostingManager"/> property.
         /// </summary>
         public const string HostingManager = "hosting-manager";

@@ -56,7 +56,7 @@ namespace Neon.Kube.Login
         /// </summary>
         [JsonProperty(PropertyName = "Cluster", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "cluster", ApplyNamingConventions = false)]
-        public KubeConfigCluster Cluster { get; set; }
+        public KubeConfigContext Cluster { get; set; }
 
         /// <summary>
         /// The Kubernetes context.
@@ -70,7 +70,7 @@ namespace Neon.Kube.Login
         /// </summary>
         [JsonProperty(PropertyName = "Extensions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "extensions", ApplyNamingConventions = false)]
-        public ClusterLogin Extensions { get; set; }
+        public KubeClusterInfo Extensions { get; set; }
 
         /// <summary>
         /// The Kubernetes user.

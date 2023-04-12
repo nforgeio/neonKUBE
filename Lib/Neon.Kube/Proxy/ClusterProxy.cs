@@ -24,6 +24,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -33,6 +34,7 @@ using k8s;
 using k8s.Models;
 
 using Neon.Common;
+using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.ClusterDef;
@@ -146,7 +148,6 @@ namespace Neon.Kube.Proxy
             RunOptions              defaultRunOptions = RunOptions.None)
             
             : this(
-                clusterDefinition:        context.Extension.ClusterDefinition,
                 hostingManagerFactory:    hostingManagerFactory, 
                 cloudMarketplace:         cloudMarketplace,
                 operation:                operation, 
@@ -161,7 +162,6 @@ namespace Neon.Kube.Proxy
         /// <summary>
         /// Constructs a cluster proxy from a cluster definition.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="hostingManagerFactory">The hosting manager factory,</param>
         /// <param name="cloudMarketplace">
         /// <para>
@@ -201,7 +201,6 @@ namespace Neon.Kube.Proxy
         /// </para>
         /// </remarks>
         public ClusterProxy(
-            ClusterDefinition       clusterDefinition,
             IHostingManagerFactory  hostingManagerFactory,
             bool                    cloudMarketplace,
             Operation               operation         = Operation.LifeCycle,
@@ -210,7 +209,6 @@ namespace Neon.Kube.Proxy
             NodeProxyCreator        nodeProxyCreator  = null,
             RunOptions              defaultRunOptions = RunOptions.None)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentNullException>(hostingManagerFactory != null, nameof(hostingManagerFactory));
 
             if (!string.IsNullOrEmpty(nodeImageUri))
@@ -229,9 +227,9 @@ namespace Neon.Kube.Proxy
                     {
                         var context = KubeHelper.CurrentContext;
 
-                        if (context != null && context.Extension != null)
+                        if (context != null && context.IsNeonKube)
                         {
-                            return new NodeSshProxy<NodeDefinition>(name, address, context.Extension.SshCredentials);
+                            return new NodeSshProxy<NodeDefinition>(name, address, context.ClusterInfo.SshCredentials);
                         }
                         else
                         {
@@ -245,7 +243,6 @@ namespace Neon.Kube.Proxy
                     };
             }
 
-            this.Definition        = clusterDefinition;
             this.KubeContext       = KubeHelper.CurrentContext;
             this.defaultRunOptions = defaultRunOptions;
             this.nodeProxyCreator  = nodeProxyCreator;
@@ -254,7 +251,7 @@ namespace Neon.Kube.Proxy
 
             var nodes = new List<NodeSshProxy<NodeDefinition>>();
 
-            foreach (var nodeDefinition in Definition.SortedNodes)
+            foreach (var nodeDefinition in SetupDetails.ClusterDefinition.SortedNodes)
             {
                 var node = nodeProxyCreator(nodeDefinition.Name, NetHelper.ParseIPv4Address(nodeDefinition.Address ?? "0.0.0.0"));
 
@@ -307,7 +304,7 @@ namespace Neon.Kube.Proxy
         /// <summary>
         /// Returns the cluster name.
         /// </summary>
-        public string Name => Definition.Name;
+        public string Name => context != null ? context.Name : SetupDetails.ClusterDefinition.Name;
 
         /// <summary>
         /// The associated <see cref="IHostingManager"/>.
@@ -318,11 +315,6 @@ namespace Neon.Kube.Proxy
         /// Returns the cluster context.
         /// </summary>
         public KubeConfigContext KubeContext { get; set; }
-
-        /// <summary>
-        /// Returns the cluster definition.
-        /// </summary>
-        public ClusterDefinition Definition { get; private set; }
 
         /// <summary>
         /// Returns a read-only list of cluster node proxies.
@@ -382,6 +374,15 @@ namespace Neon.Kube.Proxy
         }
 
         /// <summary>
+        /// Ensures that the proxy is configured for provisioning cluster.
+        /// </summary>
+        /// <exception cref="AssertException">Thrown when the proxy is not configured to provision the cluster.</exception>
+        private void EnsureSetupMode()
+        {
+            Covenant.Assert(SetupDetails != null, $"[{nameof(ClusterProxy)}] is not configured for provisioning the cluster.");
+        }
+
+        /// <summary>
         /// Returns the hosting manager to use for provisioning and deploying the cluster as well
         /// as setting the <see cref="HostingManager"/> property.
         /// </summary>
@@ -419,11 +420,13 @@ namespace Neon.Kube.Proxy
         /// </remarks>
         private IHostingManager GetHostingManager(IHostingManagerFactory hostingManagerFactory, bool cloudMarketplace, Operation operation = Operation.LifeCycle, string logFolder = null)
         {
+            EnsureSetupMode();
+
             hostingManagerFactory ??= new HostingManagerFactory();
 
             HostingManager hostingManager;
 
-            if (KubeHelper.IsOnPremiseHypervisorEnvironment(Definition.Hosting.Environment))
+            if (KubeHelper.IsOnPremiseHypervisorEnvironment(SetupDetails.ClusterDefinition.Hosting.Environment))
             {
                 if (!string.IsNullOrEmpty(nodeImageUri))
                 {
@@ -460,7 +463,7 @@ namespace Neon.Kube.Proxy
 
             if (hostingManager == null)
             {
-                throw new NeonKubeException($"No hosting manager for the [{this.Definition.Hosting.Environment}] environment could be located.");
+                throw new NeonKubeException($"No hosting manager for the [{SetupDetails.ClusterDefinition.Hosting.Environment}] environment could be located.");
             }
 
             return hostingManager;
@@ -749,6 +752,7 @@ namespace Neon.Kube.Proxy
         public async Task AddContainerRegistryResourcesAsync()
         {
             await SyncContext.Clear;
+            EnsureSetupMode();
 
             // We need to add the implict local cluster Harbor registry.
 
@@ -757,7 +761,7 @@ namespace Neon.Kube.Proxy
 
             // Add registries from the cluster definition.
 
-            foreach (var registry in Definition.Container.Registries)
+            foreach (var registry in SetupDetails.ClusterDefinition.Container.Registries)
             {
                 localRegistries.Add(registry);
             }
@@ -770,7 +774,7 @@ namespace Neon.Kube.Proxy
                 clusterRegistry.Metadata         = new V1ObjectMeta();
                 clusterRegistry.Metadata.Name    = registry.Name;
                 clusterRegistry.Spec             = new V1NeonContainerRegistry.RegistrySpec();
-                clusterRegistry.Spec.SearchOrder = Definition.Container.SearchRegistries.IndexOf(registry.Location);
+                clusterRegistry.Spec.SearchOrder = SetupDetails.ClusterDefinition.Container.SearchRegistries.IndexOf(registry.Location);
                 clusterRegistry.Spec.Prefix      = registry.Prefix;
                 clusterRegistry.Spec.Location    = registry.Location;
                 clusterRegistry.Spec.Blocked     = registry.Blocked;
@@ -800,6 +804,16 @@ namespace Neon.Kube.Proxy
             }
 
             return nameToDashboard;
+        }
+
+        /// <summary>
+        /// Persists the setup details for the cluster.
+        /// </summary>
+        public void SaveSetupDetails()
+        {
+            EnsureSetupMode();
+
+            throw new NotImplementedException("$todo(jefflill)");
         }
 
         //---------------------------------------------------------------------
@@ -927,6 +941,34 @@ namespace Neon.Kube.Proxy
             Covenant.Assert(HostingManager != null);
 
             return await HostingManager.GetResourceAvailabilityAsync(reserveMemory: reserveMemory, reserveDisk: reserveDisk);
+        }
+
+        /// <summary>
+        /// Creates a <see cref="ClusterInfo"/> instance from information held by the cluster proxy.
+        /// </summary>
+        public ClusterInfo CreateClusterInfo()
+        {
+            EnsureSetupMode();
+
+            return new ClusterInfo()
+            {
+                CreationTimestamp = DateTime.UtcNow,
+
+                ClusterVersion    = SetupDetails.ClusterDefinition.ClusterVersion,
+                Name              = SetupDetails.ClusterDefinition.Name,
+                Description       = SetupDetails.ClusterDefinition.Description,
+                Environment       = SetupDetails.ClusterDefinition.Hosting.Environment,
+                Purpose           = SetupDetails.ClusterDefinition.Purpose,
+                Datacenter        = SetupDetails.ClusterDefinition.Datacenter,
+                IsDesktop         = SetupDetails.ClusterDefinition.IsDesktop,
+                Latitude          = SetupDetails.ClusterDefinition.Latitude,
+                Longitude         = SetupDetails.ClusterDefinition.Longitude,
+                FeatureOptions    = SetupDetails.ClusterDefinition.Features,
+
+                ClusterId         = SetupDetails.ClusterId,
+                Domain            = SetupDetails.ClusterDomain,
+                PublicAddresses   = SetupDetails.PublicAddresses
+            };
         }
 
         /// <summary>
@@ -1281,20 +1323,14 @@ namespace Neon.Kube.Proxy
             await SyncContext.Clear;
             Covenant.Assert(HostingManager != null);
 
-            var contextName = KubeContextName.Parse($"{KubeConst.RootUser}@{Definition.Name}");
+            var contextName = KubeContextName.Parse($"{KubeConst.RootUser}@{Name}");
             var context     = KubeHelper.Config.GetContext(contextName);
-            var login       = KubeHelper.GetClusterLogin(contextName);
 
             await HostingManager.DeleteClusterAsync(deleteOrphans);
 
             if (context != null)
             {
                 KubeHelper.Config.RemoveContext(context);
-            }
-
-            if (login != null)
-            {
-                login.Delete();
             }
         }
     }

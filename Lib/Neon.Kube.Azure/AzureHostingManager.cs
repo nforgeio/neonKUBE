@@ -916,16 +916,16 @@ namespace Neon.Kube.Hosting.Azure
             this.cloudMarketplace      = cloudMarketplace;
             this.cluster               = cluster;
             this.clusterName           = cluster.Name;
-            this.clusterEnvironment    = NeonHelper.EnumToString(cluster.Definition.Purpose);
-            this.hostingOptions        = cluster.Definition.Hosting;
+            this.clusterEnvironment    = NeonHelper.EnumToString(cluster.SetupDetails.ClusterDefinition.Purpose);
+            this.hostingOptions        = cluster.SetupDetails.ClusterDefinition.Hosting;
             this.cloudOptions          = hostingOptions.Cloud;
             this.azureOptions          = hostingOptions.Azure;
             this.cloudOptions          = hostingOptions.Cloud;
-            this.networkOptions        = cluster.Definition.Network;
+            this.networkOptions        = cluster.SetupDetails.ClusterDefinition.Network;
             this.nameToAvailabilitySet = new Dictionary<string, AvailabilitySetResource>(StringComparer.InvariantCultureIgnoreCase);
             this.region                = azureOptions.Region;
             this.azureLocation         = new AzureLocation(azureOptions.Region);
-            this.resourceGroupName     = cluster.Definition.Deployment.GetPrefixedName(azureOptions.ResourceGroup ?? $"neon-{clusterName}");
+            this.resourceGroupName     = cluster.SetupDetails.ClusterDefinition.Deployment.GetPrefixedName(azureOptions.ResourceGroup ?? $"neon-{clusterName}");
 
             switch (cloudOptions.PrefixResourceNames)
             {
@@ -1089,7 +1089,7 @@ namespace Neon.Kube.Hosting.Azure
             Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
 
             resource.Tags[neonClusterTagKey]     = clusterName;
-            resource.Tags[neonEnvironmentTagKey] = NeonHelper.EnumToString(cluster.Definition.Purpose);
+            resource.Tags[neonEnvironmentTagKey] = NeonHelper.EnumToString(cluster.SetupDetails.ClusterDefinition.Purpose);
 
             foreach (var tag in tags)
             {
@@ -1110,8 +1110,8 @@ namespace Neon.Kube.Hosting.Azure
         {
             Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
 
-            resource.Tags[neonClusterTagKey] = clusterName;
-            resource.Tags[neonEnvironmentTagKey] = NeonHelper.EnumToString(cluster.Definition.Purpose);
+            resource.Tags[neonClusterTagKey]     = clusterName;
+            resource.Tags[neonEnvironmentTagKey] = NeonHelper.EnumToString(cluster.SetupDetails.ClusterDefinition.Purpose);
 
             foreach (var tag in tags)
             {
@@ -1168,11 +1168,11 @@ namespace Neon.Kube.Hosting.Azure
 
             // We need to ensure that the cluster has at least one ingress node.
 
-            KubeHelper.EnsureIngressNodes(cluster.Definition);
+            KubeHelper.EnsureIngressNodes(cluster.SetupDetails.ClusterDefinition);
 
             // Initialize and run the [SetupController].
 
-            var operation = $"Provisioning [{cluster.Definition.Name}] on Azure [{region}/{resourceGroupName}]";
+            var operation = $"Provisioning [{cluster.SetupDetails.ClusterDefinition.Name}] on Azure [{region}/{resourceGroupName}]";
 
             controller.AddGlobalStep("AZURE connect", state => ConnectAzureAsync());
             controller.AddGlobalStep("locate node image", state => LocateNodeImageAsync());
@@ -1237,9 +1237,7 @@ namespace Neon.Kube.Hosting.Azure
                 {
                     // Update the node SSH proxies to use the secure SSH password.
 
-                    var clusterLogin = controller?.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
-
-                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, clusterLogin.SshPassword));
+                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, cluster.SetupDetails.SshPassword));
                 },
                 quiet: true);
             controller.AddNodeStep("virtual machines", CreateVmAsync);
@@ -1251,7 +1249,7 @@ namespace Neon.Kube.Hosting.Azure
         {
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            if (cluster.Definition.Storage.OpenEbs.Engine == OpenEbsEngine.cStor)
+            if (cluster.SetupDetails.ClusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.cStor)
             {
                 // We need to add any required OpenEBS cStor disks after the node has been otherwise
                 // prepared.  We need to do this here because if we created the data and OpenEBS disks
@@ -1841,7 +1839,7 @@ namespace Neon.Kube.Hosting.Azure
 
             controller.SetGlobalStepStatus("verify: Azure region and VM size availability");
 
-            var regionName = cluster.Definition.Hosting.Azure.Region;
+            var regionName = cluster.SetupDetails.ClusterDefinition.Hosting.Azure.Region;
 
             await LoadVmSizeMetadataAsync();
 
@@ -2255,7 +2253,7 @@ namespace Neon.Kube.Hosting.Azure
                         NetworkSecurityGroup = new NetworkSecurityGroupData() { Id = subnetNsg.Id }
                     });
 
-                var nameservers = cluster.Definition.Network.Nameservers;
+                var nameservers = cluster.SetupDetails.ClusterDefinition.Network.Nameservers;
 
                 if (nameservers != null)
                 {
@@ -2435,7 +2433,6 @@ namespace Neon.Kube.Hosting.Azure
 
             node.Status = "create: virtual machine";
 
-            var clusterLogin         = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
             var azureNodeOptions     = azureVm.Node.Metadata.Azure;
             var azureOSStorageType   = ToAzureStorageType(azureNodeOptions.StorageType, osDisk: true);
             var azureDataStorageType = ToAzureStorageType(azureNodeOptions.StorageType);
@@ -2479,7 +2476,7 @@ chmod 600 /etc/neonkube/cloud-init/boot-script-path
 #------------------------------------------------------------------------------
 # Update the [sysadmin] user password:
 
-echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
+echo 'sysadmin:{cluster.SetupDetails.SshPassword}' | chpasswd
 ";
             var encodedBootScript        = Convert.ToBase64String(Encoding.UTF8.GetBytes(NeonHelper.ToLinuxLineEndings(bootScript)));
             var virtualMachineCollection = resourceGroup.GetVirtualMachines();
@@ -2493,7 +2490,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                 {
                     ComputerName  = "ubuntu",
                     AdminUsername = KubeConst.SysAdminUser,
-                    AdminPassword = clusterLogin.SshPassword
+                    AdminPassword = cluster.SetupDetails.SshPassword
                 },
                 NetworkProfile    = new NetworkProfile(),
                 StorageProfile    = new StorageProfile(),
@@ -2597,7 +2594,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             // defines some ingress rules and then ensure that the load balancer's backend
             // pool includes those node VMs.
 
-            KubeHelper.EnsureIngressNodes(cluster.Definition);
+            KubeHelper.EnsureIngressNodes(cluster.SetupDetails.ClusterDefinition);
 
             //-----------------------------------------------------------------
             // Backend pools:
@@ -3163,7 +3160,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                     {
                         ResourceType = HostingConstrainedResourceType.VmHost,
                         Details      = $"Azure region [{regionName}] does not exist or is not available to your subscription.",
-                        Nodes        = cluster.Definition.NodeDefinitions.Keys.ToList()
+                        Nodes        = cluster.SetupDetails.ClusterDefinition.NodeDefinitions.Keys.ToList()
                     };
 
                 return new HostingResourceAvailability()
@@ -3270,9 +3267,8 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
             // We're going to infer the cluster provisiong status by examining the
             // cluster login and the state of the VMs deployed to Azure.
 
-            var contextName  = $"root@{cluster.Definition.Name}";
-            var context      = KubeHelper.Config.GetContext(contextName);
-            var clusterLogin = KubeHelper.GetClusterLogin((KubeContextName)contextName);
+            var contextName = $"root@{cluster.SetupDetails.ClusterDefinition.Name}";
+            var context     = KubeHelper.Config.GetContext(contextName);
 
             // Create a hashset with the names of the nodes that map to deployed Azure
             // virtual machines.
@@ -3281,7 +3277,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
             foreach (var item in nameToVm)
             {
-                var nodeDefinition = cluster.Definition.NodeDefinitions[item.Key];
+                var nodeDefinition = cluster.SetupDetails.ClusterDefinition.NodeDefinitions[item.Key];
 
                 if (nodeDefinition != null)
                 {
@@ -3291,7 +3287,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
             // Build the cluster status.
 
-            if (context == null && clusterLogin == null)
+            if (context == null)
             {
                 // The Kubernetes context for this cluster doesn't exist, so we know that any
                 // virtual machines with names matching the virtual machines that would be
@@ -3300,7 +3296,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                 clusterHealth.State   = ClusterState.NotFound;
                 clusterHealth.Summary = "Cluster does not exist";
 
-                foreach (var node in cluster.Definition.NodeDefinitions.Values)
+                foreach (var node in cluster.SetupDetails.ClusterDefinition.NodeDefinitions.Values)
                 {
                     clusterHealth.Nodes.Add(node.Name, existingNodes.Contains(node.Name) ? ClusterNodeState.Conflict : ClusterNodeState.NotProvisioned);
                 }
@@ -3314,7 +3310,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
                 await GetAllClusterVmStatus();
 
-                foreach (var node in cluster.Definition.NodeDefinitions.Values)
+                foreach (var node in cluster.SetupDetails.ClusterDefinition.NodeDefinitions.Values)
                 {
                     var nodePowerState = ClusterNodeState.NotProvisioned;
 
@@ -3349,7 +3345,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
                     }
                 }
 
-                if (clusterLogin != null && clusterLogin.SetupDetails.DeploymentStatus != ClusterDeploymentStatus.Ready)
+                if (cluster.SetupDetails.DeploymentStatus != ClusterDeploymentStatus.Ready)
                 {
                     clusterHealth.State   = ClusterState.Configuring;
                     clusterHealth.Summary = "Cluster is partially configured";
@@ -3415,7 +3411,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
             await ConnectAzureAsync();
 
-            await Parallel.ForEachAsync(cluster.Definition.SortedControlThenWorkerNodes, parallelOptions,
+            await Parallel.ForEachAsync(cluster.SetupDetails.ClusterDefinition.SortedControlThenWorkerNodes, parallelOptions,
                 async (node, cancellationToken) =>
                 {
                     var azureVm = nameToVm[node.Name];
@@ -3437,7 +3433,7 @@ echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
 
             await ConnectAzureAsync();
 
-            await Parallel.ForEachAsync(cluster.Definition.SortedControlThenWorkerNodes, parallelOptions,
+            await Parallel.ForEachAsync(cluster.SetupDetails.ClusterDefinition.SortedControlThenWorkerNodes, parallelOptions,
                 async (node, cancellationToken) =>
                 {
                     var azureVm = nameToVm[node.Name];

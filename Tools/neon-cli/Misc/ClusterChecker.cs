@@ -140,27 +140,25 @@ namespace NeonCli
         /// Performs development related cluster checks with information on potential
         /// problems being written to STDOUT.
         /// </summary>
-        /// <param name="clusterLogin">Specifies the target cluster login.</param>
         /// <param name="k8s">Specifies the cluster's Kubernertes client.</param>
         /// <returns><c>true</c> when there are no problems, <c>false</c> otherwise.</returns>
-        public static async Task<bool> CheckAsync(ClusterLogin clusterLogin, IKubernetes k8s)
+        public static async Task<bool> CheckAsync(IKubernetes k8s)
         {
-            Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
             var error = false;
 
-            if (!await CheckNodeContainerImagesAsync(clusterLogin, k8s))
+            if (!await CheckNodeContainerImagesAsync(k8s))
             {
                 error = true;
             }
 
-            if (!await CheckPodPrioritiesAsync(clusterLogin, k8s))
+            if (!await CheckPodPrioritiesAsync(k8s))
             {
                 error = true;
             }
 
-            if (!await CheckResourcesAsync(clusterLogin, k8s))
+            if (!await CheckResourcesAsync(k8s))
             {
                 error = true;
             }
@@ -180,7 +178,6 @@ namespace NeonCli
         /// Details about any issues will be written to STDOUT.
         /// </para>
         /// </summary>
-        /// <param name="clusterLogin">Specifies the target cluster login.</param>
         /// <param name="k8s">Specifies the cluster's Kubernertes client.</param>
         /// <param name="details">Optionally specifies that status should be written to STDOUT when there's no errors.</param>
         /// <returns><c>true</c> when there are no problems, <c>false</c> otherwise.</returns>
@@ -191,9 +188,8 @@ namespace NeonCli
         /// setup experience but also makes air gapped cluster possible.
         /// </para>
         /// </remarks>
-        public static async Task<bool> CheckNodeContainerImagesAsync(ClusterLogin clusterLogin, IKubernetes k8s, bool details = false)
+        public static async Task<bool> CheckNodeContainerImagesAsync(IKubernetes k8s, bool details = false)
         {
-            Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
             Console.WriteLine();
@@ -294,7 +290,6 @@ namespace NeonCli
         /// Details about any issues will be written to STDOUT.
         /// </para>
         /// </summary>
-        /// <param name="clusterLogin">Specifies the target cluster login.</param>
         /// <param name="k8s">Specifies the cluster's Kubernertes client.</param>
         /// <param name="details">Optionally specifies that status should be written to STDOUT when there's no errors.</param>
         /// <returns><c>true</c> when there are no problems, <c>false</c> otherwise.</returns>
@@ -317,9 +312,8 @@ namespace NeonCli
         /// and also that we've done the same for pods created by third-party operators.
         /// </para>
         /// </remarks>
-        public static async Task<bool> CheckPodPrioritiesAsync(ClusterLogin clusterLogin, IKubernetes k8s, bool details = false)
+        public static async Task<bool> CheckPodPrioritiesAsync(IKubernetes k8s, bool details = false)
         {
-            Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
             Console.WriteLine();
@@ -516,13 +510,11 @@ namespace NeonCli
         /// <summary>
         /// Verifies that all pod container specifications include resource requests and limits.
         /// </summary>
-        /// <param name="clusterLogin">Specifies the target cluster login.</param>
         /// <param name="k8s">Specifies the cluster's Kubernertes client.</param>
         /// <param name="details">Optionally specifies that status should be written to STDOUT when there's no errors.</param>
         /// <returns><c>true</c> when there are no problems, <c>false</c> otherwise.</returns>
-        public static async Task<bool> CheckResourcesAsync(ClusterLogin clusterLogin, IKubernetes k8s, bool details = false)
+        public static async Task<bool> CheckResourcesAsync(IKubernetes k8s, bool details = false)
         {
-            Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
             Console.WriteLine();

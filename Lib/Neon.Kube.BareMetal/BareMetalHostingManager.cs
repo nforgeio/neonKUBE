@@ -279,7 +279,7 @@ namespace Neon.Kube.Hosting.BareMetal
                 return cluster.SetupDetails.PublicAddresses;
             }
 
-            return cluster.Definition.ControlNodes.Select(controlPlane => controlPlane.Address);
+            return cluster.SetupDetails.ClusterDefinition.ControlNodes.Select(controlPlane => controlPlane.Address);
         }
 
         /// <inheritdoc/>

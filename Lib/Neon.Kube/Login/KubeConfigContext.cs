@@ -28,57 +28,55 @@ using System.Threading.Tasks;
 
 using k8s.KubeConfigModels;
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Serialization;
+
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
-using YamlDotNet.Serialization;
-
 namespace Neon.Kube.Login
 {
     /// <summary>
-    /// Describes a Kubernetes context.
+    /// Describes a Kubernetes cluster configuration.
     /// </summary>
     public class KubeConfigContext
     {
-        private bool            loginsLoaded;
-        private ClusterLogin    cachedLogins;
-
         /// <summary>
         /// Default constructor.
         /// </summary>
         public KubeConfigContext()
         {
-            Properties = new KubeConfigContextProperties();
+            this.Properties = new KubeConfigClusterProperties();
+            this.Extensions = new List<NamedExtension>();
         }
 
         /// <summary>
-        /// Constructs a configuration from a structured name.
+        /// Specifies the cluster name.
         /// </summary>
-        /// <param name="contextName">The structured context name.</param>
-        public KubeConfigContext(KubeContextName contextName)
-            : this()
+        /// <param name="clusterName">Specifies the cluster name.</param>
+        public KubeConfigContext(string clusterName)
         {
-            Covenant.Requires<ArgumentNullException>(contextName != null, nameof(contextName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName), nameof(clusterName));
 
-            this.Name = contextName.ToString();
+            this.Name = clusterName;
         }
 
         /// <summary>
-        /// The local nickname for the context.
+        /// Specifies cluster name.
         /// </summary>
         [JsonProperty(PropertyName = "name", Required = Required.Always)]
         [YamlMember(Alias = "name", ApplyNamingConventions = false)]
         public string Name { get; set; }
 
         /// <summary>
-        /// The context properties.
+        /// The cluster properties.
         /// </summary>
-        [JsonProperty(PropertyName = "context", Required = Required.Always)]
-        [YamlMember(Alias = "context", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "cluster", Required = Required.Always)]
+        [YamlMember(Alias = "cluster", ApplyNamingConventions = false)]
         public KubeConfigContextProperties Properties { get; set; }
 
         /// <summary>
@@ -93,66 +91,33 @@ namespace Neon.Kube.Login
         public List<NamedExtension> Extensions { get; set; } = new List<NamedExtension>();
 
         /// <summary>
-        /// Indicates whether the Kubernetes context references a neonKUBE cluster.
+        /// Indicates that this is a neonKUBE cluster.
         /// </summary>
         [JsonIgnore]
-        [YamlIgnore]
-        public bool IsNeonKube => KubeContextName.Parse(Name).IsNeonKube && Extension != null;
-
-        /// <summary>
-        /// Indicates whether the Kubernetes context references a neon-desktop built-in cluster.
-        /// </summary>
-        [JsonIgnore]
-        [YamlIgnore]
-        public bool IsDesktop => IsNeonKube && Extension != null && Extension.ClusterDefinition.IsDesktop;
-
-        /// <summary>
-        /// The cluster login information for the context.
-        /// </summary>
-        [JsonIgnore]
-        [YamlIgnore]
-        public ClusterLogin Extension
+        public bool IsNeonKube
         {
-            get
-            {
-                if (cachedLogins != null)
-                {
-                    return cachedLogins;
-                }
+            get => Extensions.Get<bool>(NeonKubeExtensionName.IsNeonKube, false);
+            set => Extensions.Set<bool>(NeonKubeExtensionName.IsNeonKube, value);
+        }
 
-                if (loginsLoaded)
-                {
-                    return null;
-                }
+        /// <summary>
+        /// Indicates that this is a neon-desktop cluster.
+        /// </summary>
+        [JsonIgnore]
+        public bool IsNeonDesktop
+        {
+            get => Extensions.Get<bool>(NeonKubeExtensionName.IsNeonDesktop, false);
+            set => Extensions.Set<bool>(NeonKubeExtensionName.IsNeonDesktop, value);
+        }
 
-                var loginPath = KubeHelper.GetClusterLoginPath((KubeContextName)Name);
-
-                if (File.Exists(loginPath))
-                {
-                    cachedLogins = NeonHelper.YamlDeserializeViaJson<ClusterLogin>(KubeHelper.ReadFileTextWithRetry(loginPath));
-
-                    // Validate the extension's cluster definition.
-
-                    cachedLogins.ClusterDefinition?.Validate();
-
-                    // We need to fixup some references.
-
-                    foreach (var nodeDefinition in cachedLogins.ClusterDefinition.NodeDefinitions.Values)
-                    {
-                        nodeDefinition.Labels.Node = nodeDefinition;
-                    }
-                }
-
-                loginsLoaded = true;
-
-                return cachedLogins;
-            }
-
-            set
-            {
-                loginsLoaded = true;
-                cachedLogins       = value;
-            }
+        /// <summary>
+        /// Holds additional information about neonKUBE clusters.  This will be
+        /// <c>null</c> for non-neonKUBE clusters.
+        /// </summary>
+        public KubeClusterInfo ClusterInfo
+        {
+            get => Extensions.Get<KubeClusterInfo>(NeonKubeExtensionName.ClusterInfo, null);
+            set => Extensions.Set<KubeClusterInfo>(NeonKubeExtensionName.ClusterInfo, value);
         }
     }
 }

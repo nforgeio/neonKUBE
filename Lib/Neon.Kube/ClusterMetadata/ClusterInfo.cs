@@ -43,33 +43,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Used to construct an instance, picking up common properties from a
-        /// cluster definition.
-        /// </summary>
-        /// <param name="cluster">Specifies the cluster proxy.</param>
-        public ClusterInfo(ClusterProxy cluster)
-        {
-            Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
-            
-            CreationTimestamp = DateTime.UtcNow;
-
-            ClusterVersion    = cluster.Definition.ClusterVersion;
-            Name              = cluster.Definition.Name;
-            Description       = cluster.Definition.Description;
-            Environment       = cluster.Definition.Hosting.Environment;
-            Purpose           = cluster.Definition.Purpose;
-            Datacenter        = cluster.Definition.Datacenter;
-            IsDesktop         = cluster.Definition.IsDesktop;
-            Latitude          = cluster.Definition.Latitude;
-            Longitude         = cluster.Definition.Longitude;
-            FeatureOptions    = cluster.Definition.Features;
-
-            ClusterId         = cluster.SetupDetails.ClusterId;
-            Domain            = cluster.SetupDetails.ClusterDomain;
-            PublicAddresses   = cluster.SetupDetails.PublicAddresses;
-        }
-
-        /// <summary>
         /// Globally unique cluster identifier.  This is set during cluster setup and is 
         /// used to distinguish between customer clusters.
         /// </summary>

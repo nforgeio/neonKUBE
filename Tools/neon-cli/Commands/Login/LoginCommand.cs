@@ -151,11 +151,12 @@ ARGUMENTS:
 
                 if (configCluster == null)
                 {
-                    config.Clusters.Add(new KubeConfigCluster()
-                    {
-                        Name       = clusterInfo.Name,
-                        Properties = clusterProperties
-                    });
+                    config.Clusters.Add(
+                        new KubeConfigContext()
+                        {
+                            Name       = clusterInfo.Name,
+                            Properties = clusterProperties
+                        });
                 }
                 else
                 {
@@ -202,11 +203,12 @@ ARGUMENTS:
 
                 if (configContext == null)
                 {
-                    config.Contexts.Add(new KubeConfigContext()
-                    {
-                        Name       = newContextName,
-                        Properties = contextProperties
-                    });
+                    config.Contexts.Add(
+                        new KubeConfigContext()
+                        {
+                            Name       = newContextName,
+                            Properties = contextProperties
+                        });
                 }
                 else
                 {

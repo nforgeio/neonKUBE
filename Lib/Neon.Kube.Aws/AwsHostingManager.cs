@@ -908,11 +908,11 @@ namespace Neon.Kube.Hosting.Aws
             this.cloudMarketplace   = cloudMarketplace;
             this.cluster            = cluster;
             this.clusterName        = cluster.Name;
-            this.clusterEnvironment = NeonHelper.EnumToString(cluster.Definition.Purpose);
-            this.hostingOptions     = cluster.Definition.Hosting;
+            this.clusterEnvironment = NeonHelper.EnumToString(cluster.SetupDetails.ClusterDefinition.Purpose);
+            this.hostingOptions     = cluster.SetupDetails.ClusterDefinition.Hosting;
             this.cloudOptions       = hostingOptions.Cloud;
             this.awsOptions         = hostingOptions.Aws;
-            this.networkOptions     = cluster.Definition.Network;
+            this.networkOptions     = cluster.SetupDetails.ClusterDefinition.Network;
             this.region             = awsOptions.Region;
             this.availabilityZone   = awsOptions.AvailabilityZone;
             this.clusterFilter      = new List<Filter>()
@@ -929,7 +929,7 @@ namespace Neon.Kube.Hosting.Aws
             //
             //      https://github.com/nforgeio/neonKUBE/issues/1627
 
-            this.resourceGroupName = cluster.Definition.Deployment.GetPrefixedName(awsOptions.ResourceGroup);
+            this.resourceGroupName = cluster.SetupDetails.ClusterDefinition.Deployment.GetPrefixedName(awsOptions.ResourceGroup);
 
             if (this.resourceGroupName.StartsWith("aws", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -1063,9 +1063,9 @@ namespace Neon.Kube.Hosting.Aws
             tagList.Add(new Tag<T>(neonClusterTagKey, clusterName).ToAws());
             tagList.Add(new Tag<T>(neonEnvironmentTagKey, clusterEnvironment).ToAws());
 
-            if (cluster.Definition.ResourceTags != null)
+            if (cluster.SetupDetails.ClusterDefinition.ResourceTags != null)
             {
-                foreach (var tag in cluster.Definition.ResourceTags)
+                foreach (var tag in cluster.SetupDetails.ClusterDefinition.ResourceTags)
                 {
                     tagList.Add(new Tag<T>(tag.Key, tag.Value).ToAws());
                 }
@@ -1171,15 +1171,13 @@ namespace Neon.Kube.Hosting.Aws
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Assert(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");
 
-            var clusterLogin = controller?.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
-
             this.controller = controller;
 
             // We need to ensure that the cluster has at least one ingress node.
 
-            KubeHelper.EnsureIngressNodes(cluster.Definition);
+            KubeHelper.EnsureIngressNodes(cluster.SetupDetails.ClusterDefinition);
 
-            var operation = $"Provisioning [{cluster.Definition.Name}] on AWS [{availabilityZone}/{resourceGroupName}]";
+            var operation = $"Provisioning [{cluster.SetupDetails.ClusterDefinition.Name}] on AWS [{availabilityZone}/{resourceGroupName}]";
 
             controller.AddGlobalStep("AWS connect", ConnectAwsAsync);
             controller.AddGlobalStep("region check", VerifyRegionAndInstanceTypesAsync);
@@ -1195,7 +1193,7 @@ namespace Neon.Kube.Hosting.Aws
                 {
                     // Update the node SSH proxies to use the private SSH key.
 
-                    node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, clusterLogin.SshKey.PrivatePEM));
+                    node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, cluster.SetupDetails.SshKey.PrivatePEM));
                 },
                 quiet: true);
             controller.AddGlobalStep("load balancer", ConfigureLoadBalancerAsync);
@@ -1211,7 +1209,7 @@ namespace Neon.Kube.Hosting.Aws
 
             var cluster = this.controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            if (cluster.Definition.Storage.OpenEbs.Engine == OpenEbsEngine.cStor)
+            if (cluster.SetupDetails.ClusterDefinition.Storage.OpenEbs.Engine == OpenEbsEngine.cStor)
             {
                 // We need to add any required OpenEBS cStor disks after the node has been otherwise
                 // prepared.  We need to do this here because if we created the data and OpenEBS disks
@@ -2805,8 +2803,6 @@ namespace Neon.Kube.Hosting.Aws
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
-
             //-----------------------------------------------------------------
             // Create the instance if it doesn't already exist.
 
@@ -2845,7 +2841,7 @@ namespace Neon.Kube.Hosting.Aws
                             partitionAssignmentCounts.Add(0);
                         }
 
-                        foreach (var controlNode in cluster.Definition.SortedControlNodes.ToList())
+                        foreach (var controlNode in cluster.SetupDetails.ClusterDefinition.SortedControlNodes.ToList())
                         {
                             if (controlNode.Aws.PlacementPartition > 0)
                             {
@@ -2888,7 +2884,7 @@ namespace Neon.Kube.Hosting.Aws
                             partitionAssignmentCounts.Add(0);
                         }
 
-                        foreach (var worker in cluster.Definition.SortedWorkerNodes.ToList())
+                        foreach (var worker in cluster.SetupDetails.ClusterDefinition.SortedWorkerNodes.ToList())
                         {
                             if (worker.Aws.PlacementPartition > 0)
                             {
@@ -2959,13 +2955,13 @@ namespace Neon.Kube.Hosting.Aws
 
                 var sbNameServers = new StringBuilder();
 
-                if (cluster.Definition.Network.Nameservers.Count == 0)
+                if (cluster.SetupDetails.ClusterDefinition.Network.Nameservers.Count == 0)
                 {
                     sbNameServers.Append("169.254.169.253");
                 }
                 else
                 {
-                    foreach (var nameserver in cluster.Definition.Network.Nameservers)
+                    foreach (var nameserver in cluster.SetupDetails.ClusterDefinition.Network.Nameservers)
                     {
                         sbNameServers.AppendWithSeparator(nameserver, ", ");
                     }
@@ -2973,7 +2969,7 @@ namespace Neon.Kube.Hosting.Aws
 
                 var nodeMtu          = NodeMtu == 0 ? NetConst.DefaultMTU : NodeMtu;
                 var netInterfacePath = LinuxPath.Combine(KubeNodeFolder.Bin, "net-interface");
-                var privateSubnet    = NetworkCidr.Parse(cluster.Definition.Hosting.Aws.Network.NodeSubnet);
+                var privateSubnet    = NetworkCidr.Parse(cluster.SetupDetails.ClusterDefinition.Hosting.Aws.Network.NodeSubnet);
                 var bootScript       =
 $@"#cloud-boothook
 #!/bin/bash
@@ -3007,12 +3003,12 @@ chmod 600 /etc/neonkube/cloud-init/boot-script-path
 #------------------------------------------------------------------------------
 # Update the [sysadmin] user password:
 
-echo 'sysadmin:{clusterLogin.SshPassword}' | chpasswd
+echo 'sysadmin:{cluster.SetupDetails.SshPassword}' | chpasswd
 
 #------------------------------------------------------------------------------
 # Enable the [sysadmin] SSH public key:
 
-echo '{clusterLogin.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_keys
+echo '{cluster.SetupDetails.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_keys
 
 #------------------------------------------------------------------------------
 # Configure the node's static IP address:
@@ -3493,7 +3489,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
         {
             await SyncContext.Clear;
 
-            KubeHelper.EnsureIngressNodes(cluster.Definition);
+            KubeHelper.EnsureIngressNodes(cluster.SetupDetails.ClusterDefinition);
 
             // We need to add a special ingress rule for the Kubernetes API on port 6442 and
             // load balance this traffic to the control-plane nodes.
@@ -3813,7 +3809,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
-            return $"{cluster.Definition.Hosting.Vm.GetVmNamePrefix(cluster.Definition)}{node.Name}";
+            return $"{cluster.SetupDetails.ClusterDefinition.Hosting.Vm.GetVmNamePrefix(cluster.SetupDetails.ClusterDefinition)}{node.Name}";
         }
 
         /// <summary>
@@ -3834,7 +3830,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
             var nodeName = vmName.Substring(prefix.Length);
 
-            if (cluster.Definition.NodeDefinitions.TryGetValue(nodeName, out var nodeDefinition))
+            if (cluster.SetupDetails.ClusterDefinition.NodeDefinitions.TryGetValue(nodeName, out var nodeDefinition))
             {
                 return nodeDefinition;
             }
@@ -3879,7 +3875,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                     {
                         ResourceType = HostingConstrainedResourceType.VmHost,
                         Details      = $"AWS region [{regionName}] not found or available.",
-                        Nodes        = cluster.Definition.NodeDefinitions.Keys.ToList()
+                        Nodes        = cluster.SetupDetails.ClusterDefinition.NodeDefinitions.Keys.ToList()
                     };
 
                 return new HostingResourceAvailability()
@@ -3986,9 +3982,8 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             // We're going to infer the cluster provisiong status by examining the
             // cluster login and the state of the VMs deployed to AWS.
 
-            var contextName  = $"root@{cluster.Definition.Name}";
-            var context      = KubeHelper.Config.GetContext(contextName);
-            var clusterLogin = KubeHelper.GetClusterLogin((KubeContextName)contextName);
+            var contextName = $"root@{cluster.SetupDetails.ClusterDefinition.Name}";
+            var context     = KubeHelper.Config.GetContext(contextName);
 
             // Create a hashset with the names of the nodes that map to deployed AWS
             // machine instances.
@@ -4007,7 +4002,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
             // Build the cluster status.
 
-            if (context == null && clusterLogin == null)
+            if (context == null)
             {
                 // The Kubernetes context for this cluster doesn't exist, so we know that any
                 // virtual machines with names matching the virtual machines that would be
@@ -4016,7 +4011,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 clusterHealth.State   = ClusterState.NotFound;
                 clusterHealth.Summary = "Cluster does not exist";
 
-                foreach (var node in cluster.Definition.NodeDefinitions.Values)
+                foreach (var node in cluster.SetupDetails.ClusterDefinition.NodeDefinitions.Values)
                 {
                     clusterHealth.Nodes.Add(node.Name, existingNodes.Contains(node.Name) ? ClusterNodeState.Conflict : ClusterNodeState.NotProvisioned);
                 }
@@ -4029,7 +4024,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 // (after stripping off any cluster prefix) belong to the cluster and we'll
                 // map the actual VM states to public node states.
 
-                foreach (var node in cluster.Definition.NodeDefinitions.Values)
+                foreach (var node in cluster.SetupDetails.ClusterDefinition.NodeDefinitions.Values)
                 {
                     var nodeState = ClusterNodeState.NotProvisioned;
 
@@ -4101,7 +4096,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                     }
                 }
 
-                if (clusterLogin != null && clusterLogin.SetupDetails.DeploymentStatus != ClusterDeploymentStatus.Ready)
+                if (cluster.SetupDetails.DeploymentStatus != ClusterDeploymentStatus.Ready)
                 {
                     clusterHealth.State   = ClusterState.Configuring;
                     clusterHealth.Summary = "Cluster is partially configured";
@@ -4500,7 +4495,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             //-----------------------------------------------------------------
             // Step 8: Release Elastic IPs created for the cluster
 
-            if (!cluster.Definition.Hosting.Aws.Network.HasCustomElasticIPs)
+            if (!cluster.SetupDetails.ClusterDefinition.Hosting.Aws.Network.HasCustomElasticIPs)
             {
                 if (ingressAddress != null)
                 {

@@ -110,19 +110,11 @@ This command returns a non-zero exit code when one or more checks fail.
 
             Console.WriteLine();
 
-            var contextName = KubernetesClientConfiguration.BuildDefaultConfig().CurrentContext;
+            var context = KubeHelper.CurrentContext;
 
-            if (string.IsNullOrEmpty(contextName))
+            if (context == null)
             {
-                Console.Error.WriteLine($"*** ERROR: There is no current cluster.");
-                Program.Exit(1);
-            }
-
-            var clusterLogin = KubeHelper.GetClusterLogin(KubeContextName.Parse(contextName));
-
-            if (clusterLogin == null)
-            {
-                Console.Error.WriteLine($"*** ERROR: There is no current cluster or the current cluster is not a neonKUBE cluster.");
+                Console.Error.WriteLine($"*** ERROR: No Kubernetes context is currently selected.");
                 Program.Exit(1);
             }
 

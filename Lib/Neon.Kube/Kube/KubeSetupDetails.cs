@@ -38,15 +38,164 @@ using Neon.Common;
 using Neon.IO;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Login;
+using Neon.SSH;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// Holds details required during setup or for provisioning 
-    /// additional cluster nodes.
+    /// Holds details required during cluster setup.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// neonKUBE cluster provisioning includes two major phases, **prepare** and **setup**,
+    /// where preparing the cluster involves initializing infrastructure, including configuring
+    /// the network and creating the virtual machines that will host the cluster.  Cluster
+    /// setup is where we configure Kubernetes, install the necessary components, and then
+    /// wrap up any network configuration.
+    /// </para>
+    /// <para>
+    /// The prepare and setup steps need a temporary place to persist information that will
+    /// bew required later.  For example, prepare generates the SSH credentials that setup
+    /// will need to perform node operations.  This class persists its state to YAML files
+    /// located in the <see cref="KubeHelper.SetupFolder"/>, with the file names set to the
+    /// Kubernetes context name for the cluster.
+    /// </para>
+    /// </remarks>
     public class KubeSetupDetails
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Creates a new <see cref="KubeSetupDetails"/> instance to be used to persist
+        /// setup details about the named cluster.
+        /// </summary>
+        /// <param name="contextName">Specifies the Kubernetes context name for the cluster.</param>
+        /// <returns>The new instance.</returns>
+        /// <remarks>
+        /// <note>
+        /// This removes any existing file persisting this information.
+        /// </note>
+        /// </remarks>
+        public static KubeSetupDetails Create(string contextName)
+        {
+            Covenant.Requires<ArgumentNullException>(contextName != null, nameof(contextName));
+
+            var path = GetPath(contextName);
+
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+
+            return new KubeSetupDetails() { path = path };
+        }
+
+        /// <summary>
+        /// Loads setup details for the named cluster from its file.
+        /// </summary>
+        /// <param name="contextName">Specifies the Kubernetes context name for the cluster.</param>
+        /// <param name="nullIfMissing">Optionally return <c>null</c> instead of throwing an exception when the setup state file doesn't exist.</param>
+        /// <returns>The instance loaded from the file.</returns>
+        /// <exception cref="FileNotFoundException">Thrown when the file doesn't exist and <paramref name="nullIfMissing"/> is <c>false</c>.</exception>
+        public static KubeSetupDetails Load(string contextName, bool nullIfMissing = false)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(contextName), nameof(contextName));
+
+            var path = GetPath(contextName);
+
+            if (!File.Exists(path))
+            {
+                if (nullIfMissing)
+                {
+                    return null;
+                }
+                else
+                {
+                    throw new FileNotFoundException($"File not found: {path}");
+                }
+            }
+
+            var setupDetails = NeonHelper.JsonDeserialize<KubeSetupDetails>(File.ReadAllBytes(path));
+
+            setupDetails.path = path;
+
+            return setupDetails;
+        }
+
+        /// <summary>
+        /// Loads setup details for the named cluster from its file when that exists, otherwise
+        /// creates an unintialized instance.
+        /// </summary>
+        /// <param name="contextName">Specifies the Kubernetes context name for the cluster.</param>
+        /// <returns>The instance loaded or created instance.</returns>
+        /// <exception cref="FileNotFoundException">Thrown when the file doesn't exist.</exception>
+        public static KubeSetupDetails LoadOrCreate(string contextName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(contextName), nameof(contextName));
+
+            var path = GetPath(contextName);
+
+            if (File.Exists(path))
+            {
+                var setupDetails = NeonHelper.JsonDeserialize<KubeSetupDetails>(File.ReadAllBytes(path));
+
+                setupDetails.path = path;
+
+                return setupDetails;
+            }
+            else
+            {
+                return Create(contextName);
+            }
+        }
+
+        /// <summary>
+        /// Determines whether a setup details file exists for a cluster.
+        /// </summary>
+        /// <param name="contextName">Specifies the Kubernetes context name for the cluster.</param>
+        /// <returns><c>true</c> when the file exists.</returns>
+        public static bool Exists(string contextName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(contextName), nameof(contextName));
+
+            return File.Exists(GetPath(contextName));
+        }
+
+        /// <summary>
+        /// Deletes the setup details file for a cluster, if it exists.
+        /// </summary>
+        /// <param name="contextName">Specifies the Kubernetes context name for the cluster.</param>
+        /// <returns><c>true</c> when the file exists.</returns>
+        public static void Delete(string contextName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(contextName), nameof(contextName));
+
+            var path = GetPath(contextName);
+
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+
+        /// <summary>
+        /// Returns the file path where the details will be persisted.
+        /// </summary>
+        /// <param name="contextName">Specifies the Kubernetes context name for the cluster.</param>
+        /// <returns>The file path.</returns>
+        public static string GetPath(string contextName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(contextName), nameof(contextName));
+
+            return Path.Combine(KubeHelper.SetupFolder, $"{contextName}.yaml");
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
+        private string  path;
+
         /// <summary>
         /// Default constructor.
         /// </summary>
@@ -149,11 +298,87 @@ namespace Neon.Kube
         public string NeonCloudToken { get; set; }
 
         /// <summary>
+        /// The single sign-on (SSO) cluster username.
+        /// </summary>
+        [JsonProperty(PropertyName = "SsoUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ssoUsername", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string SsoUsername { get; set; }
+
+        /// <summary>
+        /// The single sign-on (SSO) cluster password.
+        /// </summary>
+        [JsonProperty(PropertyName = "SsoPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ssoPassword", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string SsoPassword { get; set; }
+
+        /// <summary>
+        /// The SSH root username.
+        /// </summary>
+        [JsonProperty(PropertyName = "SshUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "sshUsername", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string SshUsername { get; set; }
+
+        /// <summary>
+        /// The SSH root password.
+        /// </summary>
+        [JsonProperty(PropertyName = "SshPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "sshPassword", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string SshPassword { get; set; }
+
+        /// <summary>
         /// Specifies the public and private parts of the SSH client key used to authenticate a SSH session with a cluster node.
         /// </summary>
         [JsonProperty(PropertyName = "SshClientKey", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "sshClientKey", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public KubeSshKey SshKey { get; set; }
+
+        /// <summary>
+        /// Returns a <see cref="SshCredentials"/> instance suitable for connecting to a cluster node.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public SshCredentials SshCredentials
+        {
+            get
+            {
+                if (SshKey.PrivatePEM != null)
+                {
+                    return SshCredentials.FromPrivateKey(SshUsername, SshKey.PrivatePEM);
+                }
+                else if (SshUsername != null && SshPassword != null)
+                {
+                    return SshCredentials.FromUserPassword(SshUsername, SshPassword);
+                }
+                else
+                {
+                    return SshCredentials.None;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Persists the details to its associated file.
+        /// </summary>
+        public void Save()
+        {
+            File.WriteAllText(path, NeonHelper.JsonSerialize(this, Formatting.Indented));
+        }
+
+        /// <summary>
+        /// Removes the file associated with the details, if it exists.
+        /// </summary>
+        public void Delete()
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
     }
 }
+

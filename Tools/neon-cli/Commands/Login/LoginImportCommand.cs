@@ -87,12 +87,6 @@ OPTIONS:
             var newLogin        = NeonHelper.YamlDeserialize<ClusterLoginExport>(File.ReadAllText(commandLine.Arguments.First()));
             var existingContext = KubeHelper.Config.GetContext(newLogin.Context.Name);
 
-            // $todo(jefflill():
-            //
-            // This is a bit odd.  Why didn't we serialize this here originally?
-
-            newLogin.Context.Extension = newLogin.Extensions;
-
             // Add/replace the context.
 
             if (existingContext != null)

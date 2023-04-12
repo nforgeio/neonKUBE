@@ -292,7 +292,7 @@ namespace Neon.Kube.Proxy
         /// <exception cref="InvalidOperationException">Thrown when there is no associated cluster proxy.</exception>
         public string GetNtpSources()
         {
-            var clusterDefinition  = Cluster.Definition;
+            var clusterDefinition  = Cluster.SetupDetails.ClusterDefinition;
             var nodeDefinition     = NodeDefinition;
             var sortedControlNodes = clusterDefinition.SortedControlNodes.ToArray();
             var firstControlNode   = sortedControlNodes.First();
