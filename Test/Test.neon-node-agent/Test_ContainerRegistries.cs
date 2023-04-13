@@ -36,6 +36,7 @@ using Telerik.JustMock;
 
 using Tomlyn;
 using System.Diagnostics;
+using System.Linq;
 
 namespace TestNeonNodeAgent
 {
@@ -47,9 +48,6 @@ namespace TestNeonNodeAgent
         {
             this.fixture = fixture;
 
-            Mock.SetupStatic(typeof(Node), Behavior.CallOriginal, StaticConstructor.NonMocked);
-            Mock.Arrange(() => Node.ExecuteCaptureAsync("pkill", new object[] { "-HUP", "crio" }, null, null, null, null, null, null)).ReturnsAsync(new ExecuteResponse(0));
-
             fixture.Operator.AddController<ContainerRegistryController>();
             fixture.Start();
         }
@@ -59,6 +57,9 @@ namespace TestNeonNodeAgent
         {
             fixture.ClearResources();
             fixture.RegisterType<V1NeonContainerRegistry>();
+
+            Mock.SetupStatic(typeof(Node), Behavior.CallOriginal, StaticConstructor.NonMocked);
+            Mock.Arrange(() => Node.ExecuteCaptureAsync("pkill", new object[] { "-HUP", "crio" }, null, null, null, null, null, null)).ReturnsAsync(new ExecuteResponse(0));
 
             Mock.SetupStatic(typeof(NeonHelper), Behavior.CallOriginal, StaticConstructor.NonMocked);
             Mock.Arrange(() => NeonHelper.IsLinux).Returns(true);
@@ -110,6 +111,100 @@ namespace TestNeonNodeAgent
             var currentConfig = Toml.Parse(result);
 
             // todo(marcusbooyah): verify result
+        }
+
+        [Fact]
+        public async void AddRegistryWithNoCrioConfig()
+        {
+            fixture.ClearResources();
+            fixture.RegisterType<V1NeonContainerRegistry>();
+            fixture.RegisterType<V1CrioConfiguration>();
+
+            var controller = fixture.Operator.GetController<ContainerRegistryController>();
+
+            var containerRegistry = new V1NeonContainerRegistry()
+            {
+                Metadata = new V1ObjectMeta()
+                {
+                    Name = "test"
+                },
+                Spec = new V1NeonContainerRegistry.RegistrySpec()
+                {
+                    Username = "user",
+                    Password = "password",
+                    Location = "docker.io",
+                    SearchOrder = -1
+                }
+            };
+
+            await controller.ReconcileAsync(containerRegistry);
+
+            var crioConfigList = fixture.Resources.OfType<V1CrioConfiguration>();
+
+            Assert.Single(crioConfigList);
+
+            var crioConfig = crioConfigList.FirstOrDefault();
+
+            Assert.Single(crioConfig.Spec.Registries);
+            Assert.Equal(containerRegistry.Spec, crioConfig.Spec.Registries.FirstOrDefault().Value);
+        }
+
+        [Fact]
+        public async void UpdateExistingRegistry()
+        {
+            fixture.ClearResources();
+            fixture.RegisterType<V1NeonContainerRegistry>();
+            fixture.RegisterType<V1CrioConfiguration>();
+
+            var controller = fixture.Operator.GetController<ContainerRegistryController>();
+
+            var containerRegistry = new V1NeonContainerRegistry()
+            {
+                Metadata = new V1ObjectMeta()
+                {
+                    Name = "test"
+                },
+                Spec = new V1NeonContainerRegistry.RegistrySpec()
+                {
+                    Username = "user",
+                    Password = "password",
+                    Location = "docker.io",
+                    SearchOrder = -1
+                }
+            };
+
+            await controller.ReconcileAsync(containerRegistry);
+
+            var crioConfigList = fixture.Resources.OfType<V1CrioConfiguration>();
+
+            Assert.Single(crioConfigList);
+
+            var crioConfig = crioConfigList.FirstOrDefault();
+
+            Assert.Single(crioConfig.Spec.Registries);
+
+            var registry = crioConfig.Spec.Registries.FirstOrDefault();
+
+            Assert.Equal(containerRegistry.Spec.Username, registry.Value.Username);
+            Assert.Equal(containerRegistry.Spec.Password, registry.Value.Password);
+
+            containerRegistry.Spec.Username = "bob";
+            containerRegistry.Spec.Password = "drowssap";
+
+            await controller.ReconcileAsync(containerRegistry);
+
+            crioConfigList = fixture.Resources.OfType<V1CrioConfiguration>();
+
+            Assert.Single(crioConfigList);
+
+            crioConfig = crioConfigList.FirstOrDefault();
+
+            Assert.Single(crioConfig.Spec.Registries);
+
+            registry = crioConfig.Spec.Registries.FirstOrDefault();
+
+            Assert.Equal(containerRegistry.Spec.Username, registry.Value.Username);
+            Assert.Equal(containerRegistry.Spec.Password, registry.Value.Password);
         }
     }
 }

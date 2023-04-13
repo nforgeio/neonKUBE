@@ -117,8 +117,13 @@ namespace Neon.Kube.Xunit.Operator
                 else
                 {
                     var resource = testApiServer.Resources.Where(
-                    r => r.Kind == typeMetadata.Kind
-                    && r.Metadata.Name == Name).Single();
+                        r => r.Kind == typeMetadata.Kind
+                        && r.Metadata.Name == Name).FirstOrDefault();
+
+                    if (resource == null)
+                    {
+                        return NotFound();
+                    }
 
                     return Ok(resource);
                 }

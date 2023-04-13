@@ -100,7 +100,7 @@ namespace Neon.Kube.Resources.Cluster
         /// <summary>
         /// The container registry specification.
         /// </summary>
-        public class RegistrySpec
+        public class RegistrySpec : IEquatable<RegistrySpec>
         {
             private const string prefixRegex = @"^(\*\.)?([a-zA-Z0-9-_]+\.)*([a-zA-Z0-9-_]+)(/[a-zA-Z0-9-\._~\[\]@\!&'\(\)\*+,;%=\$]+)*$";
 
@@ -163,6 +163,22 @@ namespace Neon.Kube.Resources.Cluster
             /// Optionally specifies the password to be used to authenticate against the upstream registry.
             /// </summary>
             public string Password { get; set; } = null;
+
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="other"></param>
+            /// <returns></returns>
+            public bool Equals(RegistrySpec other)
+            {
+                return this.Prefix == other.Prefix &&
+                       this.SearchOrder == other.SearchOrder &&
+                       this.Insecure == other.Insecure &&
+                       this.Blocked == other.Blocked &&
+                       this.Location == other.Location &&
+                       this.Username == other.Username &&
+                       this.Password == other.Password;
+            }
         }
     }
 }
