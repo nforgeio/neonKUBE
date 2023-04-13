@@ -10,6 +10,7 @@
         <AssemblyName>neon-dashboard</AssemblyName>
         <Configurations>Debug;Release</Configurations>
         <GenerateDocumentationFile>false</GenerateDocumentationFile>
+        <NoWarn>$(NoWarn);RZ10012</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
