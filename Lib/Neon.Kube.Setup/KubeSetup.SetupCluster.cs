@@ -242,7 +242,7 @@ namespace Neon.Kube.Setup
 
             if (options.DebugMode)
             {
-                controller.AddNodeStep("load images", (controller, node) => node.NodeLoadImagesAsync(controller, downloadParallel: 5, loadParallel: 3));
+                controller.AddNodeStep("load container images", (controller, node) => node.NodeLoadImagesAsync(controller, downloadParallel: 5, loadParallel: 3));
             }
 
             controller.AddNodeStep("install helm",

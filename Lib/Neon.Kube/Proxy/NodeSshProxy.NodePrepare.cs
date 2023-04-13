@@ -1173,7 +1173,7 @@ rm  install-kustomize.sh
 
                     controller.LogProgress(this, verb: "load", message: "container images (debug mode)");
 
-                    var dockerPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), $@"DockerDesktop\version-bin\docker.exe");
+                    var dockerPath = NeonHelper.VerifiedDockerCli;
                     var images     = new List<NodeImageInfo>();
 
                     var setupImageFolders = Directory.EnumerateDirectories($"{Environment.GetEnvironmentVariable("NC_ROOT")}/Images/setup")
@@ -1247,7 +1247,7 @@ rm  install-kustomize.sh
             await SyncContext.Clear;
             await Task.Yield();
 
-            var dockerPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), $@"DockerDesktop\version-bin\docker.exe");
+            var dockerPath = NeonHelper.VerifiedDockerCli;
 
             await InvokeIdempotentAsync($"setup/debug-load-images-{image.Name}",
                 async () =>
