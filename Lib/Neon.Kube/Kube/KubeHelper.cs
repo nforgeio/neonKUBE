@@ -3302,7 +3302,31 @@ TCPKeepAlive yes
             // Wait for the authorization response.
 
             var context        = await listener.GetContextAsync();
-            var responseString = string.Format("<html><head><meta http-equiv='refresh'></head><body>Please return to the app.</body></html>");
+
+            var result = await client.ProcessResponseAsync($"?state={state.State}&code={context.Request.QueryString["code"]}", state);
+
+            if (result.IsError)
+            {
+                throw new Exception(result.Error);
+            }
+
+            var responseString = @"
+<!DOCTYPE html>
+<html lang=""en"">
+<head>
+<meta charset=""UTF-8"">
+<title>Success</title>
+</head>
+<body style=""background-color: #979797;"">
+<div style=""background-color: #c3c3c3; border-radius: 1em; margin: 1em; padding: 1em;"">
+	<h1>Success!</h1>
+	<p>You are now logged in. This window will close automatically in 5 seconds...</p>
+</div>
+<script>
+	setTimeout(""window.close()"",5000) 
+</script>
+</body>
+</html>";
             var buffer         = Encoding.UTF8.GetBytes(responseString);
 
             context.Response.ContentLength64 = buffer.Length;
@@ -3312,7 +3336,7 @@ TCPKeepAlive yes
                 await responseOutput.WriteAsync(buffer, 0, buffer.Length);
             }
 
-            var result = await client.ProcessResponseAsync($"?state={state.State}&code={context.Request.QueryString["code"]}", state);
+            context.Response.Close();
 
             listener.Stop();
 
