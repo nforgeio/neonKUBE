@@ -23,9 +23,9 @@
 
     <ItemGroup>
         <PackageReference Include="DnsClient" Version="1.6.1" />
-        <PackageReference Include="Google.Protobuf" Version="3.22.0" />
-        <PackageReference Include="Grpc.Net.Client" Version="2.51.0" />
-        <PackageReference Include="Grpc.Tools" Version="2.52.0">
+        <PackageReference Include="Google.Protobuf" Version="3.22.3" />
+        <PackageReference Include="Grpc.Net.Client" Version="2.52.0" />
+        <PackageReference Include="Grpc.Tools" Version="2.53.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -39,11 +39,11 @@
         <PackageReference Include="OpenTelemetry.Instrumentation.GrpcCore" Version="1.0.0-beta.5" />
         <PackageReference Include="OpenTelemetry.Instrumentation.Quartz" Version="1.0.0-alpha.1" />
         <PackageReference Include="Npgsql.OpenTelemetry" Version="7.0.2" />
-        <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="7.0.3" />
+        <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="7.0.5" />
         <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
         <PackageReference Include="Quartz" Version="3.6.2" />
-        <PackageReference Include="Neon.Common" Version="10000.1.3017-dev-master" />
-        <PackageReference Include="Neon.Service" Version="10000.1.3017-dev-master" />
+        <PackageReference Include="Neon.Common" Version="10000.1.3018-dev-master" />
+        <PackageReference Include="Neon.Service" Version="10000.1.3018-dev-master" />
     </ItemGroup>
 
     <ItemGroup>
