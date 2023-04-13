@@ -37,7 +37,7 @@ using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Clients;
 using Neon.Kube.ClusterDef;
-using Neon.Kube.Login;
+using Neon.Kube.Config;
 using Neon.Kube.Hosting;
 using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
@@ -114,10 +114,10 @@ namespace Neon.Kube.Setup
             // Initialize the cluster proxy.
 
             var cluster = new ClusterProxy(
-                clusterDefinition:     clusterDefinition,
                 hostingManagerFactory: new HostingManagerFactory(() => HostingLoader.Initialize()),
                 cloudMarketplace:      cloudMarketplace,
                 operation:             ClusterProxy.Operation.Prepare,
+                setupState:            new KubeSetupState() { ClusterDefinition = clusterDefinition },
                 nodeImageUri:          options.NodeImageUri,
                 nodeImagePath:         options.NodeImagePath,
                 nodeProxyCreator:      (nodeName, nodeAddress) =>
@@ -464,7 +464,7 @@ namespace Neon.Kube.Setup
                         setupState.ClusterId      = result["Id"];
                         setupState.NeonCloudToken = result["Token"];
 
-                        headendClient.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", clusterDefinition.NeonCloudToken);
+                        headendClient.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", setupState.NeonCloudToken);
 
                         if (options.BuildDesktopImage)
                         {

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeConfigCluster.cs
+// FILE:	    KubeConfigContextProperties.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -26,8 +26,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using k8s.KubeConfigModels;
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -37,43 +35,42 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube;
 
-namespace Neon.Kube.Login
+namespace Neon.Kube.Config
 {
     /// <summary>
-    /// Describes a Kubernetes cluster configuration.
+    /// Describes a Kubernetes context properties.
     /// </summary>
-    public class KubeConfigCluster
+    public class KubeConfigContextProperties
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public KubeConfigCluster()
+        public KubeConfigContextProperties()
         {
         }
 
         /// <summary>
-        /// The local nickname for the cluster.
+        /// Optionally specifies the cluster nickname.
         /// </summary>
-        [JsonProperty(PropertyName = "name", Required = Required.Always)]
-        [YamlMember(Alias = "name", ApplyNamingConventions = false)]
-        public string Name { get; set; }
+        [JsonProperty(PropertyName = "cluster", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "cluster", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
+        [DefaultValue(null)]
+        public string Cluster { get; set; }
 
         /// <summary>
-        /// The cluster properties.
+        /// Optionally specifies the namespace.
         /// </summary>
-        [JsonProperty(PropertyName = "user", Required = Required.Always)]
-        [YamlMember(Alias = "user", ApplyNamingConventions = false)]
-        public KubeConfigClusterProperties Properties { get; set; }
+        [JsonProperty(PropertyName = "namespace", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "namespace", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
+        [DefaultValue(null)]
+        public string Namespace { get; set; }
 
         /// <summary>
-        /// Lists any custom extension properties.  Extensions are name/value pairs added
-        /// by vendors to hold arbitrary information.  Take care to choose property names
-        /// that are unlikely to conflict with properties created by other vendors by adding
-        /// a custom suffix like <b>my-property.neonkube.io</b>, where <b>my-property</b> 
-        /// identifies the property and <b>neonkibe.io</b> helps avoid conflicts.
+        /// Optionally specifies the user nickname.
         /// </summary>
-        [JsonProperty(PropertyName = "Extensions", Required = Required.Default)]
-        [YamlMember(Alias = "extensions", ApplyNamingConventions = false)]
-        public List<NamedExtension> Extensions { get; set; } = new List<NamedExtension>();
+        [JsonProperty(PropertyName = "user", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "user", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
+        [DefaultValue(null)]
+        public string User { get; set; }
     }
 }

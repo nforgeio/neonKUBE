@@ -37,7 +37,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube;
 
-namespace Neon.Kube.Login
+namespace Neon.Kube.Config
 {
     /// <summary>
     /// Used to manage serialization of Kubernetes <b>kubeconfig</b> files. 

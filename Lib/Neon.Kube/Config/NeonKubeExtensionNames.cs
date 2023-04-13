@@ -17,7 +17,7 @@
 
 using System;
 
-namespace Neon.Kube.Login
+namespace Neon.Kube.Config
 {
     /// <summary>
     /// Defines our custom Kubernetes context extension names.

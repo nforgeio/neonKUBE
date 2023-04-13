@@ -36,7 +36,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube;
 
-namespace Neon.Kube.Login
+namespace Neon.Kube.Config
 {
     /// <summary>
     /// Describes a Kubernetes cluster's properties.

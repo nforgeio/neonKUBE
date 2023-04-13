@@ -42,7 +42,7 @@ using Neon.Kube;
 using Neon.Kube.Clients;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Hosting;
-using Neon.Kube.Login;
+using Neon.Kube.Config;
 using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
 using Neon.Retry;
@@ -135,10 +135,10 @@ namespace Neon.Kube.Setup
             var cluster = (ClusterProxy)null;
 
             cluster = new ClusterProxy(
-                clusterDefinition:     null,
                 hostingManagerFactory: new HostingManagerFactory(() => HostingLoader.Initialize()),
                 cloudMarketplace:      cloudMarketplace,
                 operation:             ClusterProxy.Operation.Setup,
+                setupState:            setupState,
                 nodeProxyCreator:      (nodeName, nodeAddress) =>
                 {
                     var logStream      = new FileStream(Path.Combine(logFolder, $"{nodeName}.log"), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
@@ -148,8 +148,6 @@ namespace Neon.Kube.Setup
 
                     return new NodeSshProxy<NodeDefinition>(nodeName, nodeAddress, sshCredentials, logWriter: logWriter);
                 });
-
-            cluster.SetupState = setupState;
 
             if (options.Unredacted)
             {

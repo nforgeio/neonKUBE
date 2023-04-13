@@ -44,7 +44,7 @@ using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.ClusterDef;
-using Neon.Kube.Login;
+using Neon.Kube.Config;
 using Neon.Kube.Setup;
 using Neon.Net;
 using Neon.Retry;
@@ -180,15 +180,19 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            if (context == null)
+            // Verify that it looks like the cluster has already been prepared.
+
+            if (setupState == null || setupState.DeploymentStatus != ClusterDeploymentStatus.Prepared)
             {
                 Console.Error.WriteLine($"*** ERROR: Be sure to prepare the cluster first via: neon cluster prepare...");
                 Program.Exit(1);
             }
 
+            // Check for conflicting clusters and remove them when allowed by the user.
+
             if (context != null && setupState != null && setupState.DeploymentStatus != ClusterDeploymentStatus.Ready)
             {
-                if (commandLine.GetOption("--force") == null && !Program.PromptYesNo($"One or more logins reference [{context.Name}].  Do you wish to delete these?"))
+                if (commandLine.GetOption("--force") == null && !Program.PromptYesNo($"One or more clusters reference [context={context.Name}].  Do you wish to delete these?"))
                 {
                     Program.Exit(0);
                 }

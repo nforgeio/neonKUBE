@@ -40,7 +40,7 @@ using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube.ClusterDef;
-using Neon.Kube.Login;
+using Neon.Kube.Config;
 using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
 using Neon.Net;

@@ -44,7 +44,7 @@ using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Hosting;
-using Neon.Kube.Login;
+using Neon.Kube.Config;
 using Neon.Kube.Proxy;
 using Neon.Net;
 using Neon.Retry;

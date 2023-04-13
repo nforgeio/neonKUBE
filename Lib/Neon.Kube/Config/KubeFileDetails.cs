@@ -38,7 +38,7 @@ using Neon.Common;
 using Neon.IO;
 using Neon.Kube;
 
-namespace Neon.Kube.Login
+namespace Neon.Kube.Config
 {
     /// <summary>
     /// Holds the contents and permissions for a downloaded Kubernetes text file.

@@ -32,7 +32,7 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.Kube;
-using Neon.Kube.Login;
+using Neon.Kube.Config;
 using Neon.Kube.Proxy;
 using Neon.Kube.Glauth;
 

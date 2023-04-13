@@ -533,14 +533,6 @@ namespace Neon.Kube.ClusterDef
         public string Datacenter { get; set; } = String.Empty;
 
         /// <summary>
-        /// The JWT used by the cluster to interact with the headend.
-        /// </summary>
-        [JsonProperty(PropertyName = "NeonCloudToken", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "neonCloudToken", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string NeonCloudToken { get; set; }
-
-        /// <summary>
         /// <para>
         /// Optionally specifies the latitude of the cluster location.  This is a value
         /// between -90 and +90 degrees.

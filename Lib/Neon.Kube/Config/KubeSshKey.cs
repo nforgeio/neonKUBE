@@ -37,7 +37,7 @@ using Neon.Common;
 using Neon.IO;
 using Neon.Kube;
 
-namespace Neon.Kube.Login
+namespace Neon.Kube.Config
 {
     /// <summary>
     /// Describes a client key used for SSH public key authentication.

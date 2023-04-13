@@ -59,7 +59,7 @@ using Neon.Kube;
 using Neon.Kube.BuildInfo;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Glauth;
-using Neon.Kube.Login;
+using Neon.Kube.Config;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Tasks;

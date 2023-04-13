@@ -34,7 +34,7 @@ using Neon.Kube.Clients;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Glauth;
 using Neon.Kube.Hosting;
-using Neon.Kube.Login;
+using Neon.Kube.Config;
 using Neon.Kube.Operator;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Calico;
@@ -2327,7 +2327,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         },
                         StringData = new Dictionary<string, string>()
                         {
-                            { "token", cluster.SetupState.ClusterDefinition.NeonCloudToken }
+                            { "token", cluster.SetupState.NeonCloudToken }
                         }
                     };
 

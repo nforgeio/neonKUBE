@@ -39,7 +39,7 @@ using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Hosting;
-using Neon.Kube.Login;
+using Neon.Kube.Config;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Kube.Setup;
@@ -125,6 +125,7 @@ namespace Neon.Kube.Proxy
         /// </note>
         /// </param>
         /// <param name="operation">Optionally identifies the operations that will be performed using the proxy.  This defaults to <see cref="Operation.LifeCycle"/>.</param>
+        /// <param name="setupState">Optionally specifies cluster setup state.</param>
         /// <param name="nodeImageUri">Optionally passed as the URI to the (GZIP compressed) node image.</param>
         /// <param name="nodeImagePath">Optionally passed as the local path to the (GZIP compressed) node image file.</param>
         /// <param name="nodeProxyCreator">
@@ -142,16 +143,17 @@ namespace Neon.Kube.Proxy
             IHostingManagerFactory  hostingManagerFactory,
             bool                    cloudMarketplace,
             Operation               operation         = Operation.LifeCycle,
+            KubeSetupState          setupState        = null,
             string                  nodeImageUri      = null,
             string                  nodeImagePath     = null,
             NodeProxyCreator        nodeProxyCreator  = null,
             RunOptions              defaultRunOptions = RunOptions.None)
             
             : this(
-                clusterDefinition:        null,
                 hostingManagerFactory:    hostingManagerFactory, 
                 cloudMarketplace:         cloudMarketplace,
-                operation:                operation, 
+                operation:                operation,
+                setupState:               setupState,
                 nodeImageUri:             nodeImageUri, 
                 nodeImagePath:            nodeImagePath, 
                 nodeProxyCreator:         nodeProxyCreator, 
@@ -161,11 +163,8 @@ namespace Neon.Kube.Proxy
         }
 
         /// <summary>
-        /// Constructs a cluster proxy from a cluster definition.
+        /// Constructs a cluster proxy.
         /// </summary>
-        /// <param name="clusterDefinition">
-        /// Optionally specifies the cluster definition.  This may be passed as <c>null</c>.
-        /// </param>
         /// <param name="hostingManagerFactory">The hosting manager factory,</param>
         /// <param name="cloudMarketplace">
         /// <para>
@@ -179,6 +178,7 @@ namespace Neon.Kube.Proxy
         /// </note>
         /// </param>
         /// <param name="operation">Optionally identifies the operations that will be performed using the proxy.  This defaults to <see cref="Operation.LifeCycle"/>.</param>
+        /// <param name="setupState">Optionally specifies cluster setup state.</param>
         /// <param name="nodeImageUri">Optionally passed as the URI to the (GZIP compressed) node image.</param>
         /// <param name="nodeImagePath">Optionally passed as the local path to the (GZIP compressed) node image file.</param>
         /// <param name="nodeProxyCreator">
@@ -205,10 +205,10 @@ namespace Neon.Kube.Proxy
         /// </para>
         /// </remarks>
         public ClusterProxy(
-            ClusterDefinition       clusterDefinition,
             IHostingManagerFactory  hostingManagerFactory,
             bool                    cloudMarketplace,
             Operation               operation         = Operation.LifeCycle,
+            KubeSetupState          setupState        = null,
             string                  nodeImageUri      = null,
             string                  nodeImagePath     = null,
             NodeProxyCreator        nodeProxyCreator  = null,
@@ -248,11 +248,7 @@ namespace Neon.Kube.Proxy
                     };
             }
 
-            if (clusterDefinition != null)
-            {
-                this.SetupState = new KubeSetupState() { ClusterDefinition = clusterDefinition };
-            }
-
+            this.SetupState        = setupState;
             this.KubeContext       = KubeHelper.CurrentContext;
             this.defaultRunOptions = defaultRunOptions;
             this.nodeProxyCreator  = nodeProxyCreator;

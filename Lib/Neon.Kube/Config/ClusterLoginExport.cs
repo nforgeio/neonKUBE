@@ -35,7 +35,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube;
 
-namespace Neon.Kube.Login
+namespace Neon.Kube.Config
 {
     /// <summary>
     /// Holds all of the information required to import/export a cluster

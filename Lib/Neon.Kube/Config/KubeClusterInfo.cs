@@ -38,7 +38,7 @@ using Neon.Kube;
 using Neon.Kube.ClusterDef;
 using Neon.SSH;
 
-namespace Neon.Kube.Login
+namespace Neon.Kube.Config
 {
     /// <summary>
     /// Holds extended neonKUBE related cluster information.
