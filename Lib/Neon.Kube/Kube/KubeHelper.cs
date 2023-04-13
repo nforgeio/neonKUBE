@@ -2987,6 +2987,16 @@ TCPKeepAlive yes
 
             if (config == null)
             {
+                if (config.SkipTlsVerify == false
+                    && config.SslCaCerts == null)
+                {
+                    var store = new X509Store(
+                            StoreName.CertificateAuthority,
+                            StoreLocation.CurrentUser);
+
+                    config.SslCaCerts = store.Certificates;
+                }
+
                 return new ClusterHealth()
                 {
                     Version = "0",
@@ -3300,6 +3310,41 @@ TCPKeepAlive yes
             listener.Stop();
 
             return result;
+        }
+
+        /// <summary>
+        /// Helper to get a Kubernetes client.
+        /// </summary>
+        /// <param name="kubeConfigPath"></param>
+        /// <param name="currentContext"></param>
+        /// <returns></returns>
+        public static IKubernetes GetKubernetesClient(
+            string kubeConfigPath = null,
+            string currentContext = null)
+        {
+            KubernetesClientConfiguration config = null;
+
+            if (kubeConfigPath == null)
+            {
+                config = KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath: kubeConfigPath, currentContext: currentContext);
+            }
+            else
+            {
+                config = KubernetesClientConfiguration.BuildDefaultConfig();
+            }
+
+            if (config.SslCaCerts == null)
+            {
+                var store = new X509Store(
+                            StoreName.CertificateAuthority,
+                            StoreLocation.CurrentUser);
+
+                config.SslCaCerts = store.Certificates;
+            }
+
+            var k8s = new Kubernetes(config, new KubernetesRetryHandler());
+
+            return k8s;
         }
     }
 }

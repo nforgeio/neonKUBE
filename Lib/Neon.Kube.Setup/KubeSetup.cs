@@ -300,10 +300,8 @@ namespace Neon.Kube.Setup
             // modifying the built-in base retry policy.  We're really just trying to handle
             // the transients that happen during setup when the API server is unavailable for
             // some reaon (like it's being restarted).
-            
-            var k8s = new Kubernetes(
-                KubernetesClientConfiguration.BuildConfigFromConfigFile(configPath, currentContext: cluster.KubeContext.Name),
-                new KubernetesRetryHandler());
+
+            var k8s = KubeHelper.GetKubernetesClient(kubeConfigPath: configPath, currentContext: cluster.KubeContext.Name);
 
             controller.Add(KubeSetupProperty.K8sClient, k8s);
         }
