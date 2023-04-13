@@ -610,7 +610,7 @@ namespace Neon.Kube.Xunit
 
             if (context != null)
             {
-                var existingClusterDefinition = context.Extensions.Get<ClusterDefinition>(NeonKubeExtensionName.TestClusterDefinition, null);
+                var existingClusterDefinition = context.Extensions.Get<ClusterDefinition>(NeonKubeExtensionNames.TestClusterDefinition, null);
 
                 if (existingClusterDefinition == null)
                 {

@@ -96,8 +96,8 @@ namespace Neon.Kube.Login
         [JsonIgnore]
         public bool IsNeonKube
         {
-            get => Extensions.Get<bool>(NeonKubeExtensionName.IsNeonKube, false);
-            set => Extensions.Set<bool>(NeonKubeExtensionName.IsNeonKube, value);
+            get => Extensions.Get<bool>(NeonKubeExtensionNames.IsNeonKube, false);
+            set => Extensions.Set<bool>(NeonKubeExtensionNames.IsNeonKube, value);
         }
 
         /// <summary>
@@ -106,8 +106,8 @@ namespace Neon.Kube.Login
         [JsonIgnore]
         public bool IsNeonDesktop
         {
-            get => Extensions.Get<bool>(NeonKubeExtensionName.IsNeonDesktop, false);
-            set => Extensions.Set<bool>(NeonKubeExtensionName.IsNeonDesktop, value);
+            get => Extensions.Get<bool>(NeonKubeExtensionNames.IsNeonDesktop, false);
+            set => Extensions.Set<bool>(NeonKubeExtensionNames.IsNeonDesktop, value);
         }
 
         /// <summary>
@@ -116,8 +116,8 @@ namespace Neon.Kube.Login
         /// </summary>
         public KubeClusterInfo ClusterInfo
         {
-            get => Extensions.Get<KubeClusterInfo>(NeonKubeExtensionName.ClusterInfo, null);
-            set => Extensions.Set<KubeClusterInfo>(NeonKubeExtensionName.ClusterInfo, value);
+            get => Extensions.Get<KubeClusterInfo>(NeonKubeExtensionNames.ClusterInfo, null);
+            set => Extensions.Set<KubeClusterInfo>(NeonKubeExtensionNames.ClusterInfo, value);
         }
     }
 }

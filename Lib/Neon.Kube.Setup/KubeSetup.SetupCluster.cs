@@ -88,34 +88,35 @@ namespace Neon.Kube.Setup
 
             var logFolder = KubeHelper.LogFolder;
 
-            // Ensure that the [prepare-ok] file in the log folder exists, indicating that
-            // the last prepare operation succeeded.
+            // Ensure that the cluster's setup state file exists and that it
+            // indicates that tyhe cluster was prepared.
 
-            var prepareOkPath = Path.Combine(logFolder, "prepare-ok");
+            var contextName    = KubeContextName.Parse($"root@{clusterDefinition.Name}");
+            var setupStatePath = KubeSetupState.GetPath((string)contextName);
+            var setupState     = (KubeSetupState)null;
 
-            if (!File.Exists(prepareOkPath))
+            if (!File.Exists(setupStatePath))
             {
-                throw new NeonKubeException($"Cannot locate the [{prepareOkPath}] file.  Cluster prepare must have failed.");
+                throw new NeonKubeException($"Cannot locate the [{setupStatePath}] file.  Cluster hasn't been prepared.");
             }
 
-            // Clear the log folder except for the [prepare-ok] file.
+            try
+            {
+                setupState = KubeSetupState.Load((string)contextName);
+            }
+            catch (Exception e)
+            {
+                throw new NeonKubeException($"[{setupStatePath}] file is invalid.", e);
+            }
+
+            // Clear the log folder.
 
             if (Directory.Exists(logFolder))
             {
-                foreach (var file in Directory.GetFiles(logFolder, "*", SearchOption.TopDirectoryOnly))
-                {
-                    if (Path.GetFileName(file) != "prepare-ok")
-                    {
-                        NeonHelper.DeleteFile(file);
-                    }
-                }
-            }
-            else
-            {
-                throw new DirectoryNotFoundException(logFolder);
+                NeonHelper.DeleteFolderContents(logFolder);
             }
 
-            // Reload the any KubeConfig file to ensure we're up-to-date.
+            // Reload the the KubeConfig file to ensure we're up-to-date.
 
             KubeHelper.LoadConfig();
 
@@ -131,9 +132,7 @@ namespace Neon.Kube.Setup
 
             // Initialize the cluster proxy.
 
-            var contextName = KubeContextName.Parse($"root@{clusterDefinition.Name}");
-
-            ClusterProxy cluster = null;
+            var cluster = (ClusterProxy)null;
 
             cluster = new ClusterProxy(
                 hostingManagerFactory: new HostingManagerFactory(() => HostingLoader.Initialize()),
@@ -144,27 +143,17 @@ namespace Neon.Kube.Setup
                     var logStream      = new FileStream(Path.Combine(logFolder, $"{nodeName}.log"), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
                     var logWriter      = new StreamWriter(logStream);
                     var context        = KubeHelper.CurrentContext;
-                    var sshCredentials = cluster.SetupState.SshCredentials ?? SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
+                    var sshCredentials = setupState.SshCredentials ?? SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
 
                     return new NodeSshProxy<NodeDefinition>(nodeName, nodeAddress, sshCredentials, logWriter: logWriter);
                 });
+
+            cluster.SetupState = setupState;
 
             if (options.Unredacted)
             {
                 cluster.SecureRunOptions = RunOptions.None;
             }
-
-            // Load the setup state for the cluster.  This should have been already been
-            // created during cluster preparation.
-
-            var contextNameString = contextName.ToString();
-
-            if (!KubeSetupState.Exists(contextNameString))
-            {
-                throw new NeonKubeException($"Cluster prepare/setup state not found at: {KubeSetupState.GetPath(contextNameString)}");
-            }
-
-            var setupState = KubeSetupState.Load(contextNameString);
 
             // Configure the setup controller.
 

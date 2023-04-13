@@ -526,22 +526,22 @@ namespace Neon.Kube.Setup
                 controller.AddNodeStep("configure: workstation", KubeSetup.ConfigureWorkstation, (controller, node) => node == cluster.FirstControlNode); ;
             }
 
-            // Indicate that cluster prepare succeeded by creating [prepare-ok] file to
-            // the log folder.  Cluster setup will verify that this file exists before
-            // proceeding.
+            // Indicate that cluster prepare succeeded in the cluster setup state.  Cluster setup
+            // will use this to verify that the cluster was prepared successfully before proceeding.
 
             controller.AddGlobalStep("finish",
                 controller =>
                 {
                     if (options.DesktopReadyToGo)
                     {
-                        setupState.DeploymentStatus = ClusterDeploymentStatus.Prepared;
-                        setupState.Save();
+                        setupState.DeploymentStatus = ClusterDeploymentStatus.Ready;
                     }
                     else
                     {
-                        File.Create(Path.Combine(logFolder, "prepare-ok"));
+                        setupState.DeploymentStatus = ClusterDeploymentStatus.Prepared;
                     }
+
+                    setupState.Save();
                 },
                 quiet: true);
 

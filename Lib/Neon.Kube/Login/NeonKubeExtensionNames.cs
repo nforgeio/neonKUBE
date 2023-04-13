@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonKubeExtensionName.cs
+// FILE:	    NeonKubeExtensionNames.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -22,34 +22,34 @@ namespace Neon.Kube.Login
     /// <summary>
     /// Defines our custom Kubernetes context extension names.
     /// </summary>
-    public static class NeonKubeExtensionName
+    public static class NeonKubeExtensionNames
     {
         /// <summary>
         /// Suffix added to neonKUBE related KubeContext extension property names used
         /// to avoid conflicts with other vendor extensions.
         /// </summary>
-        private const string Suffix = "neonkube.io";
+        private const string Suffix = "-neonkube-io";
 
         /// <summary>
         /// <c>bool</c>: Used to indicate that the parent object belongs to neonKUBE.
         /// </summary>
-        public const string IsNeonKube = $"isNeonKube.{Suffix}";
+        public const string IsNeonKube = $"is-neonkube{Suffix}";
 
         /// <summary>
         /// <c>bool</c>: Used to indicate that the parent object belongs to neon-desktop.
         /// </summary>
-        public const string IsNeonDesktop = $"isNeonDesktop.{Suffix}";
+        public const string IsNeonDesktop = $"is-neon-desktop{Suffix}";
 
         /// <summary>
         /// <see cref="KubeClusterInfo"/>: Holds additional information for neonKUBE clusters.
         /// </summary>
-        public const string ClusterInfo = $"clusterInfo.{Suffix}";
+        public const string ClusterInfo = $"cluster-info{Suffix}";
 
         /// <summary>
         /// Used by our xUnit <b>ClusterFixture</b> to persist the cluster definition so
         /// the fixture can determine when to provision a new cluster when the definition
         /// has changed.
         /// </summary>
-        public const string TestClusterDefinition = $"testClusterDefinition.{Suffix}";
+        public const string TestClusterDefinition = $"test-cluster-definition{Suffix}";
     }
 }
