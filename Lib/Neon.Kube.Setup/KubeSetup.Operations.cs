@@ -32,9 +32,9 @@ using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Clients;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.Config;
 using Neon.Kube.Glauth;
 using Neon.Kube.Hosting;
-using Neon.Kube.Config;
 using Neon.Kube.Operator;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Calico;
@@ -4721,7 +4721,7 @@ $@"- name: StorageType
                     {
                         controller.LogProgress(controlNode, verb: "login", message: "workstation to Harbor");
 
-                        NeonHelper.ExecuteCapture(NeonHelper.DockerCli,
+                        NeonHelper.ExecuteCapture(NeonHelper.VerifiedDockerCli,
                             new object[]
                             {
                                 "login",

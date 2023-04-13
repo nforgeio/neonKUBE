@@ -227,7 +227,7 @@ ARGUMENTS:
                         {
                             Console.WriteLine($"Login: Docker to Harbor...");
 
-                            NeonHelper.Execute(NeonHelper.DockerCli,
+                            NeonHelper.Execute(NeonHelper.VerifiedDockerCli,
                                 new object[]
                                 {
                                     "login",

@@ -30,8 +30,8 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.Kube;
-using Neon.Kube.Hosting;
 using Neon.Kube.Config;
+using Neon.Kube.Hosting;
 
 namespace NeonCli
 {
