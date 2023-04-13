@@ -39,12 +39,16 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="wwwroot\css\" />
+        <Watch Include="**\*.razor" />
+        <Watch Include="**\*.cs" />
+        <Watch Include="**\*.razor.cs" />
+        <Watch Include="**\*.css" />
+        <Watch Include="**\*.cshtml" />
+        <Watch Include="**\*.js" Exclude="node_modules\**\*;**\*.js.map;obj\**\*;bin\**\*" />
     </ItemGroup>
 
     <ItemGroup>
-        <!-- extends watching group to include *.js files -->
-        <Watch Include="**\*.js" Exclude="node_modules\**\*;**\*.js.map;obj\**\*;bin\**\*" />
+        <Folder Include="wwwroot\css\" />
     </ItemGroup>
 
     <ItemGroup>
@@ -52,14 +56,17 @@
         <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
     </ItemGroup>
 
-    <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-        <Exec Command="pwsh -f prebuild.ps1" ContinueOnError="true" />
-    </Target>
-
-    <Target Name="NodeCheck" BeforeTargets="PreBuild">
-        <Exec Command="npm --version" ContinueOnError="true">
+    <Target Name="NodeCheck" BeforeTargets="PreBuildEvent">
+        <Exec Command="npm --version" ContinueOnError="false">
             <Output TaskParameter="ExitCode" PropertyName="ErrorCodeNode" />
         </Exec>
         <Error Condition="'$(ErrorCodeNode)' != '0'" Text="NPM is required for this project. please install Node.js" />
+    </Target>
+
+    <Target Name="NpmInstall" BeforeTargets="PreBuildEvent" DependsOnTargets="NodeCheck" Inputs="package.json" Outputs="node_modules/.install-stamp">
+        <Exec Command="npm install" ContinueOnError="false" />
+
+        <!-- Write the stamp file, so incremental builds work -->
+        <Touch Files="node_modules/.install-stamp" AlwaysCreate="true" />
     </Target>
 </Project>

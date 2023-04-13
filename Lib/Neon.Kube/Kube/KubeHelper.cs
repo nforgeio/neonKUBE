@@ -3265,6 +3265,13 @@ TCPKeepAlive yes
             return true;
         }
 
+        /// <summary>
+        /// Performs Open IC Connect Login.
+        /// </summary>
+        /// <param name="authority"></param>
+        /// <param name="clientId"></param>
+        /// <param name="scopes"></param>
+        /// <returns></returns>
         public static async Task<LoginResult> LoginOidcAsync(
             string      authority,
             string      clientId,
