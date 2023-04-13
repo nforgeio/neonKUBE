@@ -120,6 +120,11 @@ namespace Neon.Kube
 
             setupState.path = path;
 
+            if (setupState.PublicAddresses == null)
+            {
+                setupState.PublicAddresses = new List<string>();
+            }
+
             return setupState;
         }
 
@@ -141,6 +146,11 @@ namespace Neon.Kube
                 var setupState = NeonHelper.JsonDeserialize<KubeSetupState>(File.ReadAllBytes(path));
 
                 setupState.path = path;
+
+                if (setupState.PublicAddresses == null)
+                {
+                    setupState.PublicAddresses = new List<string>();
+                }
 
                 return setupState;
             }
@@ -261,7 +271,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "PublicAddresses", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "publicAddresses", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public List<string> PublicAddresses { get; set; } = null;
+        public List<string> PublicAddresses { get; set; } = new List<string>();
 
         /// <summary>
         /// Indicates the cluster deployment state.

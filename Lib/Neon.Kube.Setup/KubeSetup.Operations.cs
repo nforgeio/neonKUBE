@@ -56,7 +56,6 @@ using k8s.Models;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Octokit;
 
 namespace Neon.Kube.Setup
 {
@@ -525,9 +524,19 @@ spec:
                 sanNames[cluster.SetupState.ClusterDefinition.Name] = null;
             }
 
-            foreach (var name in sanNames.Keys)
+            for (int i = 0; i < sanNames.Count; i++)
             {
-                sbCertSANs.AppendLine($"  - \"{name}\"");
+                // Don't include line endings on the last entry line to
+                // make the generated file look a bit nicer.
+
+                if (i < sanNames.Count - 1)
+                {
+                    sbCertSANs.AppendLine($"  - \"{sanNames.ElementAt(i)}\"");
+                }
+                else
+                {
+                    sbCertSANs.Append($"  - \"{sanNames.ElementAt(i)}\"");
+                }
             }
 
             // Append the InitConfiguration
@@ -542,6 +551,7 @@ kind: InitConfiguration
 nodeRegistration:
   criSocket: unix://{KubeConst.CrioSocketPath}
   imagePullPolicy: IfNotPresent
+
 ---
 apiVersion: kubeadm.k8s.io/v1beta3
 kind: ClusterConfiguration
@@ -597,30 +607,29 @@ runtimeRequestTimeout: 5m
 maxPods: {cluster.SetupState.ClusterDefinition.Kubernetes.MaxPodsPerNode}
 shutdownGracePeriod: {cluster.SetupState.ClusterDefinition.Kubernetes.ShutdownGracePeriodSeconds}s
 shutdownGracePeriodCriticalPods: {cluster.SetupState.ClusterDefinition.Kubernetes.ShutdownGracePeriodCriticalPodsSeconds}s
-
 rotateCertificates: true");
 
-            clusterConfig.AppendLine($@"
-systemReserved:");
+            clusterConfig.AppendLine($"systemReserved:");
+
             foreach (var systemReservedkey in cluster.SetupState.ClusterDefinition.Kubernetes.SystemReserved.Keys)
             {
-                clusterConfig.AppendLine($@"
-  {systemReservedkey}: {cluster.SetupState.ClusterDefinition.Kubernetes.SystemReserved[systemReservedkey]}");
+                clusterConfig.AppendLine($"  {systemReservedkey}: {cluster.SetupState.ClusterDefinition.Kubernetes.SystemReserved[systemReservedkey]}");
             }
-                clusterConfig.AppendLine($@"
-kubeReserved:");
+               
+            clusterConfig.AppendLine($"kubeReserved:");
+
             foreach (var kubeReservedKey in cluster.SetupState.ClusterDefinition.Kubernetes.KubeReserved.Keys)
             {
-                clusterConfig.AppendLine($@"
-  {kubeReservedKey}: {cluster.SetupState.ClusterDefinition.Kubernetes.KubeReserved[kubeReservedKey]}");
+                clusterConfig.AppendLine($"  {kubeReservedKey}: {cluster.SetupState.ClusterDefinition.Kubernetes.KubeReserved[kubeReservedKey]}");
             }
-                clusterConfig.AppendLine($@"
-evictionHard:");
+
+            clusterConfig.AppendLine($"evictionHard:");
+
             foreach (var evictionHardKey in cluster.SetupState.ClusterDefinition.Kubernetes.EvictionHard.Keys)
             {
-                clusterConfig.AppendLine($@"
-  {evictionHardKey}: {cluster.SetupState.ClusterDefinition.Kubernetes.EvictionHard[evictionHardKey]}");
+                clusterConfig.AppendLine($"  {evictionHardKey}: {cluster.SetupState.ClusterDefinition.Kubernetes.EvictionHard[evictionHardKey]}");
             }
+
             // Append the KubeProxyConfiguration
 
             var kubeProxyMode = "ipvs";
@@ -740,7 +749,16 @@ if ! systemctl enable kubelet.service; then
     exit 1
 fi
 
-# The first call doesn't specify [--ignore-preflight-errors=all]
+################################
+# $debug(jefflill): DELETE THIS!
+if kubeadm init --config cluster.yaml --ignore-preflight-errors=all; then
+    exit 0
+else
+    exit 1
+fi
+################################
+
+]# The first call doesn't specify [--ignore-preflight-errors=all]
 
 if kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable; then
     exit 0
@@ -761,7 +779,13 @@ exit 1
 ";
                             controller.LogProgress(firstControlNode, verb: "initialize", message: "kubernetes");
 
-                            var response = firstControlNode.SudoCommand(CommandBundle.FromScript(kubeInitScript).AddFile("cluster.yaml", clusterConfig.ToString()));
+                            //###############################
+                            // $debug(jefflill): DELETE THIS!
+                            firstControlNode.UploadText("/tmp/cluster.yaml", NeonHelper.ToLinuxLineEndings(clusterConfig));
+                            firstControlNode.UploadText("/tmp/init.sh", "kubeadm init --config cluster.yaml --ignore-preflight-errors=all", permissions: "777");
+                            //###############################
+
+                            var response = firstControlNode.SudoCommand(CommandBundle.FromScript(kubeInitScript).AddFile("cluster.yaml", clusterConfig));
 
                             // Extract the cluster join command from the response.  We'll need this to join
                             // other nodes to the cluster.
