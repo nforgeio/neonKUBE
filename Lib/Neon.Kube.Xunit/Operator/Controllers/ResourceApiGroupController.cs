@@ -15,22 +15,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using k8s;
+using Microsoft.AspNetCore.Mvc;
+using Neon.Common;
+using Neon.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-
-using Microsoft.AspNetCore.Mvc;
-
-using Neon.Common;
-using Neon.Tasks;
-
-using k8s;
-using k8s.Models;
 
 namespace Neon.Kube.Xunit.Operator
 {
@@ -93,7 +86,7 @@ namespace Neon.Kube.Xunit.Operator
         /// </summary>
         /// <returns>An action result containing the resources.</returns>
         [HttpGet]
-        public async Task<ActionResult<ResourceObject>> GetAsync()
+        public async Task<ActionResult> GetAsync()
         {
             await SyncContext.Clear;
 
@@ -102,11 +95,33 @@ namespace Neon.Kube.Xunit.Operator
             {
                 var typeMetadata = type.GetKubernetesTypeMetadata();
 
-                var resource = testApiServer.Resources.Where(
+                if (Name == null)
+                {
+                    var resources = testApiServer.Resources.Where(r => r.GetType() == type);
+
+                    var CustomObjectListType        = typeof(V1CustomObjectList<>);
+                    Type[] typeArgs                 = { type };
+                    var customObjectListGenericType = CustomObjectListType.MakeGenericType(typeArgs);
+                    dynamic customObjectList        = Activator.CreateInstance(customObjectListGenericType);
+
+                    var iListType        = typeof(IList<>);
+                    var iListGenericType = iListType.MakeGenericType(typeArgs);
+
+                    var stringList = NeonHelper.JsonSerialize(resources);
+                    var result     = (dynamic)JsonSerializer.Deserialize(stringList, iListGenericType, jsonSerializerOptions);
+
+                    customObjectList.Items = result;
+
+                    return Ok(customObjectList);
+                }
+                else
+                {
+                    var resource = testApiServer.Resources.Where(
                     r => r.Kind == typeMetadata.Kind
                     && r.Metadata.Name == Name).Single();
 
-                return Ok(resource);
+                    return Ok(resource);
+                }
             }
 
             return NotFound();

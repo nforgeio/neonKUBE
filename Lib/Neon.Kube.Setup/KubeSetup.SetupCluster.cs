@@ -405,9 +405,9 @@ namespace Neon.Kube.Setup
             //
             // The log files will include logs from any failed pod containers.
 
-            using (var k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig(), new KubernetesRetryHandler()))
+            using (var k8s = KubeHelper.GetKubernetesClient())
             {
-                var pods = k8s.ListAllPodsAsync().Result;
+                var pods = k8s.CoreV1.ListAllPodsAsync().Result;
 
                 foreach (var failedPod in pods.Items.Where(pod => pod.Status.Phase == "Error"))
                 {
@@ -441,7 +441,7 @@ namespace Neon.Kube.Setup
                                     writer.WriteLine($"# FAILED CONTAINER: name={failedContainerStatus.Name} image={failedContainerStatus.Image}");
                                     writer.WriteLine();
 
-                                    using (var logStream = k8s.ReadNamespacedPodLog(failedPod.Name(), failedPod.Namespace(), failedContainerStatus.Name))
+                                    using (var logStream = k8s.CoreV1.ReadNamespacedPodLog(failedPod.Name(), failedPod.Namespace(), failedContainerStatus.Name))
                                     {
                                         using (var reader = new StreamReader(logStream, Encoding.UTF8))
                                         {

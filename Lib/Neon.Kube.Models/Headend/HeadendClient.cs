@@ -30,7 +30,7 @@ namespace Neon.Kube.Models.Headend
     [Target("headend")]
     [ServiceModel(name: "Headend", group: "ClusterSetup")]
     [Route("cluster-setup")]
-    [ApiVersion("0.2")]
+    [ApiVersion("2023-04-06")]
     public interface IClusterSetupController
     {
         [HttpPost]
@@ -78,7 +78,7 @@ namespace Neon.Kube.Models.Headend
     [Target("headend")]
     [ServiceModel(name: "Headend", group: "Cluster")]
     [Route("cluster")]
-    [ApiVersion("0.2")]
+    [ApiVersion("2023-04-06")]
     public interface IClusterController
     {
         [HttpPut]
@@ -105,7 +105,7 @@ namespace Neon.Kube.Models.Headend
     [Target("headend")]
     [ServiceModel(name: "Headend", group: "NeonDesktop")]
     [Route("")]
-    [ApiVersion("0.2")]
+    [ApiVersion("2023-04-06")]
     public interface INeonDesktopController
     {
         [HttpGet]

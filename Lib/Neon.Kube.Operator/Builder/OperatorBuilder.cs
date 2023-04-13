@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -101,6 +102,17 @@ namespace Neon.Kube.Operator.Builder
             if (!Services.Any(service => service.ServiceType == typeof(IKubernetes)))
             {
                 var k8sClientConfig = operatorSettings.KubernetesClientConfiguration ?? KubernetesClientConfiguration.BuildDefaultConfig();
+
+                if (k8sClientConfig.SkipTlsVerify == false
+                    && k8sClientConfig.SslCaCerts == null)
+                {
+                    var store = new X509Store(
+                            StoreName.CertificateAuthority,
+                            StoreLocation.CurrentUser);
+
+                    k8sClientConfig.SslCaCerts = store.Certificates;
+                }
+
                 var k8s             = new Kubernetes(k8sClientConfig, new KubernetesRetryHandler());
 
                 if (NeonHelper.IsDevWorkstation || Debugger.IsAttached)

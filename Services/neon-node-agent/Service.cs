@@ -199,7 +199,7 @@ namespace NeonNodeAgent
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
-            K8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig(), new KubernetesRetryHandler());
+            K8s = KubeHelper.GetKubernetesClient();
 
             await WatchClusterInfoAsync();
             

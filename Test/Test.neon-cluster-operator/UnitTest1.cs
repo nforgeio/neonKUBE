@@ -48,15 +48,15 @@ namespace TestNeonClusterOperator
 
             var controller = fixture.Operator.GetController<NeonSsoCallbackUrlController>();
 
-            var ssoClient = new V1NeonSsoClient().Initialize();
+            var ssoClient           = new V1NeonSsoClient().Initialize();
             ssoClient.Metadata.Name = "foo";
-            ssoClient.Spec = new V1SsoClientSpec()
+            ssoClient.Spec          = new V1SsoClientSpec()
             {
-                Id = "foo",
-                Name = "foo",
-                Public = true,
+                Id           = "foo",
+                Name         = "foo",
+                Public       = true,
                 RedirectUris = new List<string>(),
-                Secret = "afgvkjdfhn",
+                Secret       = "afgvkjdfhn",
                 TrustedPeers = new List<string>()
             };
 
@@ -92,18 +92,18 @@ namespace TestNeonClusterOperator
             ssoClient.Metadata.Name = "bar";
             ssoClient.Spec = new V1SsoClientSpec()
             {
-                Id = "bar",
-                Name = "bar",
-                Public = true,
+                Id           = "bar",
+                Name         = "bar",
+                Public       = true,
                 RedirectUris = new List<string>(),
-                Secret = "jkhyfkhgdf",
+                Secret       = "jkhyfkhgdf",
                 TrustedPeers = new List<string>()
             };
 
             fixture.Resources.Add(ssoClient);
 
             callbackUrl.Spec.SsoClient = "bar";
-            callbackUrl.Spec.Url = "bar.com/callback";
+            callbackUrl.Spec.Url       = "bar.com/callback";
 
             await controller.ReconcileAsync(callbackUrl);
 

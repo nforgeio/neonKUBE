@@ -143,7 +143,7 @@ namespace NeonDashboard
 
             KubeHelper.InitializeJson();
 
-            Kubernetes = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig(), new KubernetesRetryHandler());
+            Kubernetes = KubeHelper.GetKubernetesClient();
 
             var metricsHost = GetEnvironmentVariable("METRICS_HOST", $"http://{KubeService.MimirQueryFrontend}.{KubeNamespace.NeonMonitor}:8080");
             

@@ -71,12 +71,17 @@ namespace NeonSsoSessionProxy
         /// <param name="httpContext">Specifies the request context.</param>
         /// <param name="proxyRequest">Specifies the proxy request.</param>
         /// <param name="destinationPrefix">Specifies the desitnation prefix.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>Returns the tracking <see cref="ValueTask"/>.</returns>
-        public override async ValueTask TransformRequestAsync(HttpContext httpContext, HttpRequestMessage proxyRequest, string destinationPrefix)
+        public override async ValueTask TransformRequestAsync(
+            HttpContext httpContext,
+            HttpRequestMessage proxyRequest,
+            string destinationPrefix,
+            CancellationToken cancellationToken = default)
         {
-            logger.LogDebugEx(() => $"Transform request");
+                logger.LogDebugEx(() => $"Transform request");
 
-            await base.TransformRequestAsync(httpContext, proxyRequest, destinationPrefix);
+                await base.TransformRequestAsync(httpContext, proxyRequest, destinationPrefix, cancellationToken);
         }
 
         /// <summary>
@@ -91,16 +96,20 @@ namespace NeonSsoSessionProxy
         /// </summary>
         /// <param name="httpContext">Specifies the request context.</param>
         /// <param name="proxyResponse">Specifies the proxy response.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>
         /// A bool indicating if the response should be proxied to the client or not. A derived
         ///  implementation that returns false may send an alternate response inline or return
         ///  control to the caller for it to retry, respond, etc.
         /// </returns>
-        public override async ValueTask<bool> TransformResponseAsync(HttpContext httpContext, HttpResponseMessage proxyResponse)
+        public override async ValueTask<bool> TransformResponseAsync(
+            HttpContext httpContext,
+            HttpResponseMessage proxyResponse,
+            CancellationToken cancellationToken = default)
         {
             logger.LogDebugEx(() => $"Transform response");
 
-            await base.TransformResponseAsync(httpContext, proxyResponse);
+            await base.TransformResponseAsync(httpContext, proxyResponse, cancellationToken);
 
             Cookie cookie = null;
 

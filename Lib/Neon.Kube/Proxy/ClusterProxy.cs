@@ -633,9 +633,7 @@ namespace Neon.Kube.Proxy
 
                     kubeConfigPath = kubeConfigPath.Trim();
 
-                    var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath: kubeConfigPath, currentContext: context.Name);
-
-                    cachedK8s = new Kubernetes(config, new KubernetesRetryHandler());
+                    cachedK8s = KubeHelper.GetKubernetesClient(kubeConfigPath: kubeConfigPath, currentContext: context.Name);
 
                     return cachedK8s;
                 }
