@@ -104,20 +104,17 @@ namespace Neon.Kube.Setup
                 }
             }
 
-            // Determine where the log files should go.
+            // Determine where the log files should go and remove any log files
+            // that might left over from previous operations.
 
             var logFolder = KubeHelper.LogFolder;
 
-            // Remove any log files left over from a previous prepare/setup operation.
-
-            foreach (var file in Directory.GetFiles(logFolder, "*.*", SearchOption.AllDirectories))
-            {
-                File.Delete(file);
-            }
+            NeonHelper.DeleteFolderContents(logFolder);
 
             // Initialize the cluster proxy.
 
             var cluster = new ClusterProxy(
+                clusterDefinition:     clusterDefinition,
                 hostingManagerFactory: new HostingManagerFactory(() => HostingLoader.Initialize()),
                 cloudMarketplace:      cloudMarketplace,
                 operation:             ClusterProxy.Operation.Prepare,
@@ -467,8 +464,7 @@ namespace Neon.Kube.Setup
                         setupState.ClusterId      = result["Id"];
                         setupState.NeonCloudToken = result["Token"];
 
-                        headendClient.HttpClient.DefaultRequestHeaders.Authorization =
-                            new AuthenticationHeaderValue("Bearer", clusterDefinition.NeonCloudToken);
+                        headendClient.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", clusterDefinition.NeonCloudToken);
 
                         if (options.BuildDesktopImage)
                         {

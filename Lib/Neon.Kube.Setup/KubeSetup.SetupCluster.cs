@@ -135,6 +135,7 @@ namespace Neon.Kube.Setup
             var cluster = (ClusterProxy)null;
 
             cluster = new ClusterProxy(
+                clusterDefinition:     null,
                 hostingManagerFactory: new HostingManagerFactory(() => HostingLoader.Initialize()),
                 cloudMarketplace:      cloudMarketplace,
                 operation:             ClusterProxy.Operation.Setup,

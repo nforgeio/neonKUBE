@@ -148,6 +148,7 @@ namespace Neon.Kube.Proxy
             RunOptions              defaultRunOptions = RunOptions.None)
             
             : this(
+                clusterDefinition:        null,
                 hostingManagerFactory:    hostingManagerFactory, 
                 cloudMarketplace:         cloudMarketplace,
                 operation:                operation, 
@@ -162,6 +163,9 @@ namespace Neon.Kube.Proxy
         /// <summary>
         /// Constructs a cluster proxy from a cluster definition.
         /// </summary>
+        /// <param name="clusterDefinition">
+        /// Optionally specifies the cluster definition.  This may be passed as <c>null</c>.
+        /// </param>
         /// <param name="hostingManagerFactory">The hosting manager factory,</param>
         /// <param name="cloudMarketplace">
         /// <para>
@@ -201,6 +205,7 @@ namespace Neon.Kube.Proxy
         /// </para>
         /// </remarks>
         public ClusterProxy(
+            ClusterDefinition       clusterDefinition,
             IHostingManagerFactory  hostingManagerFactory,
             bool                    cloudMarketplace,
             Operation               operation         = Operation.LifeCycle,
@@ -241,6 +246,11 @@ namespace Neon.Kube.Proxy
                             return new NodeSshProxy<NodeDefinition>(name, address, SshCredentials.None);
                         }
                     };
+            }
+
+            if (clusterDefinition != null)
+            {
+                this.SetupState = new KubeSetupState() { ClusterDefinition = clusterDefinition };
             }
 
             this.KubeContext       = KubeHelper.CurrentContext;

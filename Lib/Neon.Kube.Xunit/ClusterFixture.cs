@@ -628,7 +628,7 @@ namespace Neon.Kube.Xunit
                 // otherwise we'll remove the cluster as well as its context/login,
                 // and deploy a new cluster below.
 
-                using (var cluster = new ClusterProxy(new HostingManagerFactory(), options.CloudMarketplace))
+                using (var cluster = new ClusterProxy(clusterDefinition: null, new HostingManagerFactory(), options.CloudMarketplace))
                 {
                     KubeHelper.SetCurrentContext(contextName);
 
@@ -663,7 +663,7 @@ namespace Neon.Kube.Xunit
                 // deployed by another machine or fragments of a partially deployed cluster,
                 // so we need to do a preemptive cluster remove.
 
-                using (var cluster = new ClusterProxy(new HostingManagerFactory(), options.CloudMarketplace))
+                using (var cluster = new ClusterProxy(clusterDefinition: null, new HostingManagerFactory(), options.CloudMarketplace))
                 {
                     cluster.DeleteAsync(deleteOrphans: true).WaitWithoutAggregate();
                 }
