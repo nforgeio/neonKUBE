@@ -531,11 +531,11 @@ spec:
 
                 if (i < sanNames.Count - 1)
                 {
-                    sbCertSANs.AppendLine($"  - \"{sanNames.ElementAt(i)}\"");
+                    sbCertSANs.AppendLine($"  - \"{sanNames.Keys.ElementAt(i)}\"");
                 }
                 else
                 {
-                    sbCertSANs.Append($"  - \"{sanNames.ElementAt(i)}\"");
+                    sbCertSANs.Append($"  - \"{sanNames.Keys.ElementAt(i)}\"");
                 }
             }
 
@@ -603,11 +603,12 @@ nodeStatusReportFrequency: 4s
 volumePluginDir: /var/lib/kubelet/volume-plugins
 cgroupDriver: systemd
 runtimeRequestTimeout: 5m
-{kubeletFailSwapOnLine}
 maxPods: {cluster.SetupState.ClusterDefinition.Kubernetes.MaxPodsPerNode}
 shutdownGracePeriod: {cluster.SetupState.ClusterDefinition.Kubernetes.ShutdownGracePeriodSeconds}s
 shutdownGracePeriodCriticalPods: {cluster.SetupState.ClusterDefinition.Kubernetes.ShutdownGracePeriodCriticalPodsSeconds}s
-rotateCertificates: true");
+rotateCertificates: true
+{kubeletFailSwapOnLine}
+");
 
             clusterConfig.AppendLine($"systemReserved:");
 
