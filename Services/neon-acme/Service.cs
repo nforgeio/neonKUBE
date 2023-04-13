@@ -115,7 +115,7 @@ namespace NeonAcme
                     "Bearer",
                     GetEnvironmentVariable("NEONCLOUD_HEADEND_TOKEN"));
 
-            Kubernetes = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig(),new KubernetesRetryHandler());
+            Kubernetes = KubeHelper.GetKubernetesClient();
             Resources  = new V1APIResourceList()
             {
                 ApiVersion   = "v1",

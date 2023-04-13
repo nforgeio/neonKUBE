@@ -2987,6 +2987,16 @@ TCPKeepAlive yes
 
             if (config == null)
             {
+                if (config.SkipTlsVerify == false
+                    && config.SslCaCerts == null)
+                {
+                    var store = new X509Store(
+                            StoreName.CertificateAuthority,
+                            StoreLocation.CurrentUser);
+
+                    config.SslCaCerts = store.Certificates;
+                }
+
                 return new ClusterHealth()
                 {
                     Version = "0",
@@ -3258,7 +3268,7 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Handles SSO login.
+        /// Performs Open IC Connect Login
         /// </summary>
         /// <param name="authority">Specifies the authority.</param>
         /// <param name="clientId">Specifies the client ID.</param>
@@ -3298,7 +3308,31 @@ TCPKeepAlive yes
             // Wait for the authorization response.
 
             var context        = await listener.GetContextAsync();
-            var responseString = string.Format("<html><head><meta http-equiv='refresh'></head><body>Please return to the app.</body></html>");
+
+            var result = await client.ProcessResponseAsync($"?state={state.State}&code={context.Request.QueryString["code"]}", state);
+
+            if (result.IsError)
+            {
+                throw new Exception(result.Error);
+            }
+
+            var responseString = @"
+<!DOCTYPE html>
+<html lang=""en"">
+<head>
+<meta charset=""UTF-8"">
+<title>Success</title>
+</head>
+<body style=""background-color: #979797;"">
+<div style=""background-color: #c3c3c3; border-radius: 1em; margin: 1em; padding: 1em;"">
+	<h1>Success!</h1>
+	<p>You are now logged in. This window will close automatically in 5 seconds...</p>
+</div>
+<script>
+	setTimeout(""window.close()"",5000) 
+</script>
+</body>
+</html>";
             var buffer         = Encoding.UTF8.GetBytes(responseString);
 
             context.Response.ContentLength64 = buffer.Length;
@@ -3308,11 +3342,46 @@ TCPKeepAlive yes
                 await responseOutput.WriteAsync(buffer, 0, buffer.Length);
             }
 
-            var result = await client.ProcessResponseAsync($"?state={state.State}&code={context.Request.QueryString["code"]}", state);
+            context.Response.Close();
 
             listener.Stop();
 
             return result;
+        }
+
+        /// <summary>
+        /// Helper to get a Kubernetes client.
+        /// </summary>
+        /// <param name="kubeConfigPath"></param>
+        /// <param name="currentContext"></param>
+        /// <returns></returns>
+        public static IKubernetes GetKubernetesClient(
+            string kubeConfigPath = null,
+            string currentContext = null)
+        {
+            KubernetesClientConfiguration config = null;
+
+            if (kubeConfigPath == null)
+            {
+                config = KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath: kubeConfigPath, currentContext: currentContext);
+            }
+            else
+            {
+                config = KubernetesClientConfiguration.BuildDefaultConfig();
+            }
+
+            if (config.SslCaCerts == null)
+            {
+                var store = new X509Store(
+                            StoreName.CertificateAuthority,
+                            StoreLocation.CurrentUser);
+
+                config.SslCaCerts = store.Certificates;
+            }
+
+            var k8s = new Kubernetes(config, new KubernetesRetryHandler());
+
+            return k8s;
         }
     }
 }

@@ -24,9 +24,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Grpc.Net.Client" Version="2.51.0" />
-		<PackageReference Include="Neon.Common" Version="10000.1.3014-dev-master" />
-		<PackageReference Include="Neon.HyperV" Version="10000.1.3014-dev-master" />
+		<PackageReference Include="Grpc.Net.Client" Version="2.52.0" />
+		<PackageReference Include="Neon.Common" Version="10000.1.3018-dev-master" />
+		<PackageReference Include="Neon.HyperV" Version="10000.1.3018-dev-master" />
 		<PackageReference Include="protobuf-net.Grpc" Version="1.1.1" />
 	</ItemGroup>
 

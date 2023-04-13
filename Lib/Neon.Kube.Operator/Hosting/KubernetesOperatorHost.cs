@@ -110,7 +110,7 @@ namespace Neon.Kube.Operator
 
                 if (NeonHelper.IsDevWorkstation || Debugger.IsAttached)
                 {
-                    k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig(), new KubernetesRetryHandler());
+                    k8s = KubeHelper.GetKubernetesClient();
 
                     ConfigureRbacAsync().RunSynchronously();
                 }
@@ -176,7 +176,7 @@ namespace Neon.Kube.Operator
 
                 if (NeonHelper.IsDevWorkstation || Debugger.IsAttached)
                 {
-                    k8s = new Kubernetes(KubernetesClientConfiguration.BuildDefaultConfig(),new KubernetesRetryHandler());
+                    k8s = KubeHelper.GetKubernetesClient();
 
                     await ConfigureRbacAsync();
                 }

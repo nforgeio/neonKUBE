@@ -18,7 +18,6 @@
         <EnableNETAnalyzers>true</EnableNETAnalyzers>
         <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
         <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-        <WarningsAsErrors>NU1605</WarningsAsErrors>
         <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
         <NoWarn>1701;1702;NETSDK1138;CS8892;ASP0014;IDE0063;IDE0090;IDE0017;IDE0079;IDE0066</NoWarn>
 

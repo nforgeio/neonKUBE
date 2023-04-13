@@ -5,6 +5,8 @@
 
 @inject NavigationManager UriHelper
 
+@using Microsoft.AspNetCore.Components.Authorization
+
 <CascadingAuthenticationState>
   <Router AppAssembly="@typeof(Program).Assembly" PreferExactMatches="@true">
       <Found Context="routeData">

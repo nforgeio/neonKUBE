@@ -42,7 +42,6 @@ namespace Neon.Kube.Xunit.Operator
     {
         private KubernetesOperatorTestHost          host;
         private KubernetesOperatorTestHostBuilder   hostBuilder;
-        private KubernetesClientConfiguration       k8sConfig;
         private IOperatorBuilder                    operatorBuilder;
 
         /// <summary>

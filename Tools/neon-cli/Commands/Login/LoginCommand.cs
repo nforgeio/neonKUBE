@@ -244,6 +244,7 @@ ARGUMENTS:
                     }
                     catch (Exception e)
                     {
+                        Console.Error.WriteLine(e.Message);
                         Console.Error.WriteLine($"*** error logging into cluster registry.");
                     }
                 }
@@ -252,6 +253,7 @@ ARGUMENTS:
             {
                 KubeHelper.SetCurrentContext(orgContext?.Name);
 
+                Console.Error.WriteLine(e.Message);
                 Console.Error.WriteLine($"*** error logging into cluster.");
                 Program.Exit(1);
             }
