@@ -3248,6 +3248,8 @@ TCPKeepAlive yes
         /// </returns>
         public static bool EditNeonKubeVersion(SemanticVersion version)
         {
+            Covenant.Requires<ArgumentNullException>(version != null, nameof(version));
+
             if (GetNeonKubeVersion() == version)
             {
                 return false;
@@ -3266,30 +3268,34 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Performs Open IC Connect Login.
+        /// Performs Open IC Connect Login
         /// </summary>
-        /// <param name="authority"></param>
-        /// <param name="clientId"></param>
-        /// <param name="scopes"></param>
-        /// <returns></returns>
+        /// <param name="authority">Specifies the authority.</param>
+        /// <param name="clientId">Specifies the client ID.</param>
+        /// <param name="scopes">Optionally specieis any scopes.</param>
+        /// <returns>A <see cref="LoginResult"/>.</returns>
         public static async Task<LoginResult> LoginOidcAsync(
             string      authority,
             string      clientId,
             string[]    scopes = null)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(authority), nameof(authority));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clientId), nameof(clientId));
+
             var port     = NetHelper.GetUnusedTcpPort(KubePort.KubeFirstSsoPort, KubePort.KubeLastSsoPort, IPAddress.Loopback);
             var listener = new HttpListener();
 
             listener.Prefixes.Add($"http://localhost:{port}/");
             listener.Start();
 
-            var options = new OidcClientOptions
-            {
-                Authority   = authority,
-                ClientId    = clientId,
-                RedirectUri = $"http://localhost:{port}",
-                Scope       = string.Join(" ", scopes),
-            };
+            var options = 
+                new OidcClientOptions
+                {
+                    Authority   = authority,
+                    ClientId    = clientId,
+                    RedirectUri = $"http://localhost:{port}",
+                    Scope       = string.Join(" ", scopes),
+                };
 
             var client = new OidcClient(options);
 
