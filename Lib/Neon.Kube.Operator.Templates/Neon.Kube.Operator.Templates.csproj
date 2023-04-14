@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.0</TargetFrameworks>
-		<Version>0.8.9-alpha</Version>
+		<Version>0.9.0-alpha</Version>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Operator.Templates/README.md</PackageProjectUrl>
 		<PackageTags>kubernetes operator sdk neonkube template templates</PackageTags>

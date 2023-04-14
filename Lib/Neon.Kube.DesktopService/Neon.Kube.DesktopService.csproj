@@ -5,7 +5,7 @@
 		<OutputType>Library</OutputType>
 		<RootNamespace>Neon.Kube.DesktopService</RootNamespace>
 		<IsPackable>true</IsPackable>
-		<Version>0.8.9-alpha</Version>
+		<Version>0.9.0-alpha</Version>
 		<Description>INTERNAL USE ONLY: Implements the Neon Desktop (gRPC) Service</Description>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>

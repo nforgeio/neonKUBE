@@ -4,7 +4,7 @@
         <TargetFramework>netstandard2.1</TargetFramework>
         <OutputType>Library</OutputType>
         <RootNamespace>Neon.Kube.Resources</RootNamespace>
-        <Version>0.8.9-alpha</Version>
+        <Version>0.9.0-alpha</Version>
         <Description>INTERNAL USE ONLY: neonKUBE Kubernetes CRDs and implementations.</Description>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
