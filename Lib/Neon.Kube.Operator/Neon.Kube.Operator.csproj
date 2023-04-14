@@ -7,11 +7,11 @@
 		<Version>0.9.0-alpha</Version>
 		<Description>Kubernetes Operator SDK.</Description>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
-		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Operator/README.md</PackageProjectUrl>
+		<PackageProjectUrl>https://operatorsdk.com</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
 		<PackageIcon>nuget-icon.png</PackageIcon>
 		<RepositoryType>git</RepositoryType>
-		<PackageTags>kubernetes operator sdk neonkube</PackageTags>
+		<PackageTags>kubernetes operator sdk neonkube k8s</PackageTags>
 		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
 	</PropertyGroup>
 

@@ -15,7 +15,7 @@
 		<RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
 		<Configurations>Debug;Release</Configurations>
 		<PackageIcon>nuget-icon.png</PackageIcon>
-		<PackageTags>xunit kubernetes</PackageTags>
+		<PackageTags>xunit kubernetes operator sdk neonkube k8s</PackageTags>
 	</PropertyGroup>
 
 	<ItemGroup>

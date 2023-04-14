@@ -14,25 +14,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 using System;
-using System.Net.Http;
+using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Text.Json.Serialization;
 
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
-using k8s;
-using k8s.KubeConfigModels;
-using System.Text.Json.Serialization;
-using System.Diagnostics.Contracts;
-using Microsoft.AspNetCore.Mvc.Formatters;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using System.Linq;
 
 namespace Neon.Kube.Xunit.Operator
 {
@@ -95,8 +89,16 @@ namespace Neon.Kube.Xunit.Operator
             app.Run(apiServer.UnhandledRequest);
         }
     }
+
+    /// <summary>
+    /// Used for getting <see cref="JsonPatchDocument"/> Formatter.
+    /// </summary>
     public static class JPIF
     {
+        /// <summary>
+        /// Gets a <see cref="JsonPatchDocument"/> formatter.
+        /// </summary>
+        /// <returns></returns>
         public static NewtonsoftJsonPatchInputFormatter GetJsonPatchInputFormatter()
         {
             var builder = new ServiceCollection()
