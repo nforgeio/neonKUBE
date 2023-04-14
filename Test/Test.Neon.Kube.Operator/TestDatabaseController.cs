@@ -46,7 +46,7 @@ using k8s.Models;
 
 namespace Test.Neon.Kube.Operator
 {
-    public class TestDatabaseController : IResourceController<V1TestDatabase>
+    public class TestDatabaseController : ResourceControllerBase<V1TestDatabase>
     {
         //---------------------------------------------------------------------
         // Instance members
@@ -125,7 +125,7 @@ namespace Test.Neon.Kube.Operator
 
             await k8s.CoreV1.CreateNamespacedServiceAsync(service, service.Namespace());
 
-            return await Task.FromResult<ResourceControllerResult>(null);
+            return Ok();
         }
     }
 }
