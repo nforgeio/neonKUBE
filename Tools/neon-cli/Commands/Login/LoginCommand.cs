@@ -103,7 +103,7 @@ ARGUMENTS:
 
                 var result = await KubeHelper.LoginOidcAsync(
                     authority: ssoUri.ToString(),
-                    clientId:  ClusterConst.NeonSsoPublicClientId,
+                    clientId:  KubeConst.NeonSsoPublicClientId,
                     scopes:    new string[] { "openid", "email", "profile", "groups", "offline_access", "audience:server:client_id:neon-sso" });
                 
                 ClusterInfo clusterInfo;
@@ -169,7 +169,7 @@ ARGUMENTS:
                     Name       = "oidc",
                     Properties = new KubeConfigAuthProviderProperties()
                     {
-                        ClientId     = ClusterConst.NeonSsoPublicClientId,
+                        ClientId     = KubeConst.NeonSsoPublicClientId,
                         IdpIssuerUrl = ssoUri.ToString(),
                         RefreshToken = result.RefreshToken,
                         IdToken      = result.IdentityToken

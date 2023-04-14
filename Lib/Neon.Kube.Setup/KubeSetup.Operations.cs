@@ -571,7 +571,7 @@ apiServer:
     service-account-key-file: /etc/kubernetes/pki/sa.key
     service-account-signing-key-file: /etc/kubernetes/pki/sa.key
     oidc-issuer-url: https://{ClusterHost.Sso}.{cluster.SetupState.ClusterDomain}
-    oidc-client-id: {ClusterConst.NeonSsoClientId}
+    oidc-client-id: {KubeConst.NeonSsoClientId}
     oidc-username-claim: email
     oidc-groups-claim: groups
     oidc-username-prefix: ""-""
@@ -5522,11 +5522,11 @@ $@"- name: StorageType
                     controller.LogProgress(controlNode, verb: "wait for", message: "neon-sso-clients");
 
                     var publicClient           = new V1NeonSsoClient().Initialize();
-                    publicClient.Metadata.Name = ClusterConst.NeonSsoPublicClientId;
+                    publicClient.Metadata.Name = KubeConst.NeonSsoPublicClientId;
                     publicClient.Spec          = new V1SsoClientSpec()
                     {
-                        Id           = ClusterConst.NeonSsoPublicClientId,
-                        Name         = ClusterConst.NeonSsoPublicClientId,
+                        Id           = KubeConst.NeonSsoPublicClientId,
+                        Name         = KubeConst.NeonSsoPublicClientId,
                         Public       = true,
                         RedirectUris = new List<string>()
                     };
@@ -5839,7 +5839,7 @@ $@"- name: StorageType
                     values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
                     values.Add("config.cookieSecret", NeonHelper.ToBase64(NeonHelper.GetCryptoRandomPassword(24)));
                     values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
-                    values.Add("client.id", ClusterConst.NeonSsoClientId);
+                    values.Add("client.id", KubeConst.NeonSsoClientId);
                     values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 

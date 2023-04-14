@@ -446,5 +446,15 @@ namespace Neon.Kube
         /// images file will be uploaded when creating a node image.
         /// </summary>
         public const string RemoteNodePackedImagePath = "/tmp/container-images.tar.gz";
+
+        /// <summary>
+        /// Neon SSO client ID.
+        /// </summary>
+        public const string NeonSsoClientId = "neon-sso";
+
+        /// <summary>
+        /// Neon SSO Public client ID.
+        /// </summary>
+        public const string NeonSsoPublicClientId = "neon-sso-public";
     }
 }

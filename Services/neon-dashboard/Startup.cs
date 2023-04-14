@@ -131,7 +131,7 @@ namespace NeonDashboard
             })
             .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
             {
-                options.ClientId                      = ClusterConst.NeonSsoClientId;
+                options.ClientId                      = KubeConst.NeonSsoClientId;
                 options.ClientSecret                  = NeonDashboardService.SsoClientSecret;
                 options.Authority                     = $"https://{ClusterHost.Sso}.{NeonDashboardService.ClusterInfo.Domain}";
                 options.ResponseType                  = OpenIdConnectResponseType.Code;
