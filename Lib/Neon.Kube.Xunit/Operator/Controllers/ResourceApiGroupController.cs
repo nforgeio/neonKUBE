@@ -223,10 +223,53 @@ namespace Neon.Kube.Xunit.Operator
                 }
 
                 patchDoc.ApplyTo(resource);
-                
+
                 return Ok(resource);
             }
 
+            return NotFound();
+        }
+
+        /// <summary>
+        /// Deletes a resource in <see cref="TestApiServer.Resources"/>
+        /// </summary>
+        /// <returns>An action result containing the resource.</returns>
+        [HttpDelete]
+        public async Task<ActionResult> DeleteAsync()
+        {
+            await SyncContext.Clear;
+
+            var key = $"{Group}/{Version}/{Plural}";
+            if (testApiServer.Types.TryGetValue(key, out Type type))
+            {
+                var typeMetadata = type.GetKubernetesTypeMetadata();
+
+                var resources = testApiServer.Resources.Where(
+                    r => r.Kind == typeMetadata.Kind
+                    && r.Metadata.Name == Name).ToList();
+
+                if (resources.IsEmpty())
+                {
+                    return NotFound();
+                }
+
+                foreach (var r in resources)
+                {
+                    testApiServer.Resources.Remove(r);
+
+                    if (r.Metadata.OwnerReferences != null)
+                    {
+                        foreach (var child in r.Metadata.OwnerReferences)
+                        {
+                            testApiServer.Resources.Remove(
+                                testApiServer.Resources.Where(r => r.Uid() == child.Uid).Single());
+                        }
+                    }
+                }
+
+                return NoContent();
+
+            }
             return NotFound();
         }
     }
