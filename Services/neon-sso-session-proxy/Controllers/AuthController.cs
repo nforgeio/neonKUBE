@@ -17,8 +17,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.CommandLine.Help;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
@@ -57,6 +60,7 @@ namespace NeonSsoSessionProxy.Controllers
         private AesCipher                       cipher;
         private DexClient                       dexClient;
         private DistributedCacheEntryOptions    cacheOptions;
+        private ForwarderRequestConfig          forwarderRequestConfig;
 
         /// <summary>
         /// Constructor.
@@ -69,6 +73,7 @@ namespace NeonSsoSessionProxy.Controllers
         /// <param name="dexClient"></param>
         /// <param name="sessionTransformer"></param>
         /// <param name="cacheOptions"></param>
+        /// <param name="forwarderRequestConfig"></param>
         public AuthController(
             Service   NeonSsoSessionProxyService,
             HttpMessageInvoker           httpClient,
@@ -77,7 +82,8 @@ namespace NeonSsoSessionProxy.Controllers
             AesCipher                    aesCipher,
             DexClient                    dexClient,
             SessionTransformer           sessionTransformer,
-            DistributedCacheEntryOptions cacheOptions
+            DistributedCacheEntryOptions cacheOptions,
+            ForwarderRequestConfig       forwarderRequestConfig
             )
         {
             this.NeonSsoSessionProxyService = NeonSsoSessionProxyService;
@@ -88,6 +94,7 @@ namespace NeonSsoSessionProxy.Controllers
             this.transformer                = sessionTransformer;
             this.dexClient                  = dexClient;
             this.cacheOptions               = cacheOptions;
+            this.forwarderRequestConfig     = forwarderRequestConfig;
         }
 
         /// <summary>
@@ -99,7 +106,7 @@ namespace NeonSsoSessionProxy.Controllers
         {
             Logger.LogDebugEx(() => $"Processing catch-all request");
 
-            var error = await forwarder.SendAsync(HttpContext, $"http://{KubeService.Dex}:5556", httpClient, new ForwarderRequestConfig(), transformer);
+            var error = await forwarder.SendAsync(HttpContext, $"http://{KubeService.Dex}:5556", httpClient, forwarderRequestConfig, transformer);
 
             if (error != ForwarderError.None)
             {
@@ -114,19 +121,45 @@ namespace NeonSsoSessionProxy.Controllers
         /// Token request endpoint. Returns the token from cache with given code.
         /// </summary>
         /// <param name="code"></param>
-        /// <returns>The requested <see cref="TokenResponse"/>.</returns>
+        /// <param name="grant_type"></param>
         [Route("/token")]
-        public async Task<ActionResult<TokenResponse>> TokenAsync([FromForm] string code)
+        public async Task TokenAsync([FromForm] string code, [FromForm] string grant_type)
         {
             Logger.LogDebugEx(() => $"Processing request for code: [{code}]");
-            
-            var responseJson = NeonHelper.JsonDeserialize<TokenResponse>(cipher.DecryptBytesFrom(await cache.GetAsync(code)));
-            
-            Logger.LogDebugEx(() => $"[{code}]: [{NeonHelper.JsonSerialize(responseJson)}]");
 
-            _ = cache.RemoveAsync(code);
+            if (grant_type == "refresh_token")
+            {
+                var error = await forwarder.SendAsync(
+                HttpContext,
+                NeonSsoSessionProxyService.DexUri.ToString(),
+                httpClient,
+                forwarderRequestConfig,
+                transformer);
 
-            return Ok(responseJson);
+                if (error != ForwarderError.None)
+                {
+                    var errorFeature = HttpContext.GetForwarderErrorFeature();
+                    var exception    = errorFeature.Exception;
+
+                    Logger.LogErrorEx(exception, "Token");
+                }
+
+                return;
+            }
+            else
+            {
+                HttpContext.Response.ContentType = "application/json";
+                
+                var response = cipher.DecryptBytesFrom(await cache.GetAsync(code));
+
+                _ = cache.RemoveAsync(code);
+
+                await HttpContext.Response.BodyWriter.WriteAsync(response);
+
+                return;
+            }
+
+            
         }
     }
 }

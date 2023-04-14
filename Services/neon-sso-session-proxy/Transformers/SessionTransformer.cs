@@ -79,9 +79,9 @@ namespace NeonSsoSessionProxy
             string destinationPrefix,
             CancellationToken cancellationToken = default)
         {
-                logger.LogDebugEx(() => $"Transform request");
+            logger.LogDebugEx(() => $"Transform request");
 
-                await base.TransformRequestAsync(httpContext, proxyRequest, destinationPrefix, cancellationToken);
+            await base.TransformRequestAsync(httpContext, proxyRequest, destinationPrefix, cancellationToken);
         }
 
         /// <summary>
@@ -154,7 +154,7 @@ namespace NeonSsoSessionProxy
 
                         var redirect = cookie.RedirectUri;
                         var token    = await dexClient.GetTokenAsync(cookie.ClientId, code, redirect, "authorization_code", cookie.CodeVerifier);
-                        
+
                         logger.LogDebugEx(() => $"Redirect: [{redirect}] token: [{token}].");
 
                         await cache.SetAsync(code, cipher.EncryptToBytes(NeonHelper.JsonSerializeToBytes(token)), cacheOptions);

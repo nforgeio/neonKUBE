@@ -3355,7 +3355,7 @@ TCPKeepAlive yes
         {
             KubernetesClientConfiguration config = null;
 
-            if (kubeConfigPath == null)
+            if (kubeConfigPath != null)
             {
                 config = KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath: kubeConfigPath, currentContext: currentContext);
             }

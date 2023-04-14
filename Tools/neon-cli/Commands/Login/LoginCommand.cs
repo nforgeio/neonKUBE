@@ -119,14 +119,14 @@ ARGUMENTS:
 
                 using (var k8s = new Kubernetes(new KubernetesClientConfiguration()
                 {
-                    AccessToken   = result.AccessToken,
-                    SslCaCerts    = store.Certificates,
+                    AccessToken = result.AccessToken,
+                    SslCaCerts = store.Certificates,
                     SkipTlsVerify = false,
-                    Host          = serverUri.ToString(),
+                    Host = serverUri.ToString(),
                 }, new KubernetesRetryHandler()))
                 {
                     var configMap = await k8s.CoreV1.ReadNamespacedConfigMapAsync(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus);
-                    
+
                     clusterInfo = TypedConfigMap<ClusterInfo>.From(configMap).Data;
 
                     try
@@ -174,14 +174,13 @@ ARGUMENTS:
                     Properties = new KubeConfigAuthProviderProperties()
                     {
                         ClientId     = ClusterConst.NeonSsoPublicClientId,
-                        IdpIssuerUrl = ssoUri.ToString(),
+                        IdpIssuerUrl = ssoUri.ToString().TrimEnd('/'),
                         RefreshToken = result.RefreshToken,
                         IdToken      = result.IdentityToken
                     }
                 };
                 var userProperties = new KubeConfigUserProperties()
                 {
-                    Token = result.AccessToken,
                     AuthProvider = authProvider
                 };
 

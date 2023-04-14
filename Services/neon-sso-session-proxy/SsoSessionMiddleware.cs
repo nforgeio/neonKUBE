@@ -72,6 +72,8 @@ namespace NeonSsoSessionProxy
         {
             try
             {
+                context.Request.EnableBuffering();
+
                 if (context.Request.Cookies.TryGetValue(Service.SessionCookieName, out var requestCookieBase64))
                 {
                     var requestCookie = NeonHelper.JsonDeserialize<Cookie>(cipher.DecryptBytesFrom(requestCookieBase64));
