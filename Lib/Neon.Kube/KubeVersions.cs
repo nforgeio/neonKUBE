@@ -181,7 +181,7 @@ namespace Neon.Kube
         /// <summary>
         /// The version of Kubernetes to be installed.
         /// </summary>
-        public const string Kubernetes = "1.24.12";
+        public const string Kubernetes = "1.24.0";
 
         /// <summary>
         /// The version of the Kubernetes dashboard to be installed.
@@ -229,7 +229,7 @@ namespace Neon.Kube
         /// </para>
         /// </note>
         /// </summary>
-        public static readonly string Crio = PatchVersion(Kubernetes, 5);   // 1.24.5 is the CRI-O release for Kubernetes 1.24.*
+        public static readonly string Crio = PatchVersion(Kubernetes, 0);
 
         /// <summary>
         /// The version of Podman to be installed.

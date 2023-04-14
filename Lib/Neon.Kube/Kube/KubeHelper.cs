@@ -65,7 +65,6 @@ using Neon.Retry;
 using Neon.Tasks;
 
 using SharpCompress.Readers;
-using Namotion.Reflection;
 
 namespace Neon.Kube
 {
