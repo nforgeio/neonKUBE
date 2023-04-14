@@ -57,14 +57,25 @@ namespace Neon.Kube.Xunit.Operator
         /// <inheritdoc/>
         public virtual void AddResource(string group, string version, string plural, object resource)
         {
-            Resources.Add((IKubernetesObject<V1ObjectMeta>)resource);
+            Resources.Add(EnsureMetadata(resource));
         }
 
         /// <inheritdoc/>
         public virtual void AddResource<T>(string group, string version, string plural, T resource)
             where T : IKubernetesObject<V1ObjectMeta>
         {
-            Resources.Add(resource);
+            Resources.Add(EnsureMetadata(resource));
+        }
+
+        private IKubernetesObject<V1ObjectMeta> EnsureMetadata(object _object)
+        {
+            var resource = (IKubernetesObject<V1ObjectMeta>)_object;
+            if (resource.Uid() == null)
+            {
+                resource.Metadata.Uid = Guid.NewGuid().ToString();
+            }
+
+            return resource;
         }
     }
 }

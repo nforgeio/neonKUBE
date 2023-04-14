@@ -16,6 +16,8 @@
 // limitations under the License.
 
 using k8s;
+using k8s.Models;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Neon.Common;
 using Neon.Tasks;
@@ -117,8 +119,13 @@ namespace Neon.Kube.Xunit.Operator
                 else
                 {
                     var resource = testApiServer.Resources.Where(
-                    r => r.Kind == typeMetadata.Kind
-                    && r.Metadata.Name == Name).Single();
+                        r => r.Kind == typeMetadata.Kind
+                        && r.Metadata.Name == Name).FirstOrDefault();
+
+                    if (resource == null)
+                    {
+                        return NotFound();
+                    }
 
                     return Ok(resource);
                 }
@@ -182,6 +189,41 @@ namespace Neon.Kube.Xunit.Operator
 
                 testApiServer.AddResource(Group, Version, Plural, instance);
 
+                return Ok(resource);
+            }
+
+            return NotFound();
+        }
+
+        /// <summary>
+        /// Patches a resource in <see cref="TestApiServer.Resources"/>
+        /// </summary>
+        /// <param name="patchDoc"></param>
+        /// <returns>An action result containing the resource.</returns>
+        [HttpPatch]
+        public async Task<ActionResult<ResourceObject>> PatchAsync(
+            [FromBody] JsonPatchDocument<IKubernetesObject<V1ObjectMeta>> patchDoc)
+        {
+            await SyncContext.Clear;
+
+            var key = $"{Group}/{Version}/{Plural}";
+            if (testApiServer.Types.TryGetValue(key, out Type type))
+            {
+                var typeMetadata = type.GetKubernetesTypeMetadata();
+
+                var resources = testApiServer.Resources.Where(
+                    r => r.Kind == typeMetadata.Kind
+                    && r.Metadata.Name == Name).ToList();
+
+                var resource = resources.FirstOrDefault();
+
+                if (resource == null)
+                {
+                    return NotFound();
+                }
+
+                patchDoc.ApplyTo(resource);
+                
                 return Ok(resource);
             }
 

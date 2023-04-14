@@ -15,26 +15,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+using System.Net;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
 
 using Neon.Kube.Operator;
 using Neon.Kube.Operator.Builder;
-
-using k8s.Models;
-using k8s;
-using Neon.Common;
-using Neon.Kube.Resources.CertManager;
+using Neon.Net;
 
 namespace Neon.Kube.Xunit.Operator
 {
@@ -69,7 +57,12 @@ namespace Neon.Kube.Xunit.Operator
                         {
                             services.Add(s);
                         }
-                    }).UseStartup<TestKubernetesStartup>().UseKestrel();
+                    })
+                .UseStartup<TestKubernetesStartup>()
+                .UseKestrel(options =>
+                    {
+                        options.Listen(IPAddress.Loopback, NetHelper.GetUnusedTcpPort());
+                    });
 
             this.operatorHost.Host = this.operatorHost.HostBuilder.Build();
             return operatorHost;

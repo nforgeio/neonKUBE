@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ContainerRegistryController.cs
-// CONTRIBUTOR: Jeff Lill
+// FILE:	    CrioConfigController.cs
+// CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,18 +48,15 @@ using Newtonsoft.Json;
 using Prometheus;
 using Tomlyn;
 using Neon.Kube.Operator.Rbac;
-using OpenTelemetry.Trace;
-using Neon.Kube.Operator.Util;
-using Neon.Kube.Resources.Minio;
 
 namespace NeonNodeAgent
 {
     /// <summary>
     /// <para>
-    /// Manages <see cref="V1NeonContainerRegistry"/> resources on the Kubernetes API Server.
+    /// Manages <see cref="V1CrioConfiguration"/> resources on the Kubernetes API Server.
     /// </para>
     /// <note>
-    /// This controller relies on a lease named like <b>neon-node-agent.containerregistry-NODENAME</b>
+    /// This controller relies on a lease named like <b>neon-node-agent.crioconfiguration-NODENAME</b>
     /// where <b>NODENAME</b> is the name of the node where the <b>neon-node-agent</b> operator
     /// is running.  This lease will be persisted in the <see cref="KubeNamespace.NeonSystem"/> 
     /// namespace and will be used to elect a leader for the node in case there happens to be two
@@ -80,7 +77,7 @@ namespace NeonNodeAgent
     /// </para>
     /// <list type="bullet">
     /// <item>
-    /// Monitoring the <see cref="V1NeonContainerRegistry"/> resources for potential changes
+    /// Monitoring the <see cref="V1CrioConfiguration"/> resources for potential changes
     /// and then performing the steps below a change is detected.
     /// </item>
     /// <item>
@@ -99,11 +96,11 @@ namespace NeonNodeAgent
     /// Node tasks on the host node will be simulated in this case by simply doing nothing.
     /// </note>
     /// </remarks>
-    [RbacRule<V1NeonContainerRegistry>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
-    public class ContainerRegistryController : IResourceController<V1NeonContainerRegistry>
+    [RbacRule<V1CrioConfiguration>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
+    public class CrioConfigController : IResourceController<V1CrioConfiguration>
     {
         /// <inheritdoc/>
-        public string LeaseName { get; } = $"{KubeService.NeonNodeAgent}.containerregistry-{Node.Name}";
+        public string LeaseName { get; } = $"{KubeService.NeonNodeAgent}.crioconfiguration-{Node.Name}";
 
         //---------------------------------------------------------------------
         // Local types
@@ -264,7 +261,7 @@ namespace NeonNodeAgent
 
         private const string podmanPath = "/usr/bin/podman";
 
-        private static readonly ILogger     log             = TelemetryHub.CreateLogger<ContainerRegistryController>();
+        private static readonly ILogger     log             = TelemetryHub.CreateLogger<CrioConfigController>();
         internal static string              configMountPath { get; } = LinuxPath.Combine(Node.HostMount, "etc/containers/registries.conf.d/00-neon-cluster.conf");
         private static readonly string      metricsPrefix   = "neonnodeagent";
         private static TimeSpan             reloginInterval;
@@ -277,13 +274,13 @@ namespace NeonNodeAgent
 
         // Metrics counters
 
-        private static readonly Counter configUpdateCounter = Metrics.CreateCounter($"{metricsPrefix}_containerregistry_node_updated", "Number of node config updates.");
-        private static readonly Counter loginErrorCounter   = Metrics.CreateCounter($"{metricsPrefix}_containerregistry_login_error", "Number of failed container registry logins.");
+        private static readonly Counter configUpdateCounter = Metrics.CreateCounter($"{metricsPrefix}_crioconfiguration_node_updated", "Number of node config updates.");
+        private static readonly Counter loginErrorCounter   = Metrics.CreateCounter($"{metricsPrefix}_crioconfiguration_login_error", "Number of failed container registry logins.");
 
         /// <summary>
         /// Static constructor.
         /// </summary>
-        static ContainerRegistryController()
+        static CrioConfigController()
         {
             if (NeonHelper.IsLinux)
             {
@@ -366,7 +363,7 @@ rm $0
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ContainerRegistryController(
+        public CrioConfigController(
             IKubernetes k8s)
         {
             Covenant.Requires(k8s != null, nameof(k8s));
@@ -378,102 +375,16 @@ rm $0
         public async Task IdleAsync()
         {
             log.LogInformationEx("IDLE");
-            await UpdateContainerRegistriesAsync();
 
             return;
         }
 
         /// <inheritdoc/>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonContainerRegistry resource)
+        public async Task<ResourceControllerResult> ReconcileAsync(V1CrioConfiguration resource)
         {
             await SyncContext.Clear;
 
-            using var activity = TelemetryHub.ActivitySource?.StartActivity();
-
-            Tracer.CurrentSpan?.AddEvent("reconcile", attributes => attributes.Add("resource", nameof(V1NeonContainerRegistry)));
-
-            log?.LogInformationEx(() => $"Reconciling {typeof(V1NeonContainerRegistry)} [{resource.Namespace()}/{resource.Name()}].");
-
-            var crioConfigList = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1CrioConfiguration>();
-
-            V1CrioConfiguration crioConfig;
-            if (crioConfigList.Items.IsEmpty())
-            {
-                crioConfig                 = new V1CrioConfiguration().Initialize();
-                crioConfig.Metadata.Name   = KubeConst.ClusterCrioConfigName;
-                crioConfig.Spec            = new V1CrioConfiguration.CrioConfigurationSpec();
-                crioConfig.Spec.Registries = new List<KeyValuePair<string, V1NeonContainerRegistry.RegistrySpec>>();
-            }
-            else
-            {
-                crioConfig                   = crioConfigList.Items.Where(cfg => cfg.Metadata.Name == KubeConst.ClusterCrioConfigName).Single();
-                crioConfig.Spec            ??= new V1CrioConfiguration.CrioConfigurationSpec();
-                crioConfig.Spec.Registries ??= new List<KeyValuePair<string, V1NeonContainerRegistry.RegistrySpec>>();
-            }
-
-            if (crioConfig.Spec.Registries.IsEmpty())
-            {
-                crioConfig.Spec.Registries.Add(new KeyValuePair<string, V1NeonContainerRegistry.RegistrySpec>(resource.Uid(), resource.Spec));
-
-                await k8s.CustomObjects.UpsertClusterCustomObjectAsync(body: crioConfig, name: crioConfig.Name());
-
-                return null;
-            }
-
-            if (!crioConfig.Spec.Registries.Any(kvp => kvp.Key == resource.Uid()))
-            {
-                log?.LogInformationEx(() => $"Registry [{resource.Namespace()}/{resource.Name()}] deos not exist, adding.");
-
-                var addPatch = OperatorHelper.CreatePatch<V1CrioConfiguration>();
-                addPatch.Add(path => path.Spec.Registries, new KeyValuePair<string, V1NeonContainerRegistry.RegistrySpec>(resource.Uid(), resource.Spec));
-
-                await k8s.CustomObjects.PatchClusterCustomObjectAsync<V1CrioConfiguration>(
-                    patch: OperatorHelper.ToV1Patch<V1CrioConfiguration>(addPatch),
-                    name:  crioConfig.Name());
-            }
-            else
-            {
-                log?.LogInformationEx(() => $"Registry [{resource.Namespace()}/{resource.Name()}] exists, checking for changes.");
-                
-                var registry = crioConfig.Spec.Registries.Where(kvp => kvp.Key == resource.Uid()).Single();
-
-                if (registry.Value != resource.Spec)
-                {
-                    log?.LogInformationEx(() => $"Registry [{resource.Namespace()}/{resource.Name()}] changed, upserting.");
-                 
-                    crioConfig.Spec.Registries.Remove(registry);
-                    crioConfig.Spec.Registries.Add(new KeyValuePair<string, V1NeonContainerRegistry.RegistrySpec>(resource.Uid(), resource.Spec));
-
-                    var patch =  OperatorHelper.CreatePatch<V1CrioConfiguration>();
-                    patch.Replace(path => path.Spec.Registries, crioConfig.Spec.Registries);
-
-                    await k8s.CustomObjects.PatchClusterCustomObjectAsync<V1CrioConfiguration>(
-                        patch: OperatorHelper.ToV1Patch<V1CrioConfiguration>(patch),
-                        name: crioConfig.Name());
-                }
-            }
-
-            log.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
-
-            return null;
-        }
-
-        /// <inheritdoc/>
-        public async Task DeletedAsync(V1NeonContainerRegistry resource)
-        {
-            await SyncContext.Clear;
-            
-            log.LogInformationEx(() => $"DELETED: {resource.Name()}");
-        }
-
-        /// <summary>
-        /// Rebuilds the host node's <b>/etc/containers/registries.conf.d/00-neon-cluster.conf</b> file,
-        /// using the container registries passed, signals CRI-O to reload any changes and also manages
-        /// container registry logins.
-        /// </summary>
-        private async Task UpdateContainerRegistriesAsync()
-        {
-            var registries = (await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonContainerRegistry>()).Items;
+            var registries = resource.Spec.Registries.Select(kvp => kvp.Value);
 
             // NOTE: Here's the documentation for the config file we're generating:
             //
@@ -486,10 +397,10 @@ rm $0
             // Configure any unqualified search registries.
 
             foreach (var registry in registries
-                .Where(registry => registry.Spec.SearchOrder >= 0)
-                .OrderBy(registry => registry.Spec.SearchOrder))
+                .Where(registry => registry.SearchOrder >= 0)
+                .OrderBy(registry => registry.SearchOrder))
             {
-                sbSearchRegistries.AppendWithSeparator($"\"{registry.Spec.Prefix}\"", ", ");
+                sbSearchRegistries.AppendWithSeparator($"\"{registry.Prefix}\"", ", ");
             }
 
             sbRegistryConfig.Append(
@@ -503,14 +414,14 @@ $@"unqualified-search-registries = [{sbSearchRegistries}]
                 sbRegistryConfig.Append(
 $@"
 [[registry]]
-prefix   = ""{registry.Spec.Prefix}""
-insecure = {NeonHelper.ToBoolString(registry.Spec.Insecure)}
-blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
+prefix   = ""{registry.Prefix}""
+insecure = {NeonHelper.ToBoolString(registry.Insecure)}
+blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
 ");
 
-                if (!string.IsNullOrEmpty(registry.Spec.Location))
+                if (!string.IsNullOrEmpty(registry.Location))
                 {
-                    sbRegistryConfig.AppendLine($"location = \"{registry.Spec.Location}\"");
+                    sbRegistryConfig.AppendLine($"location = \"{registry.Location}\"");
                 }
             }
 
@@ -538,7 +449,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                         }
                     }
                 }
-               
+
                 // Convert the generated config to Linux line endings and then compare the new
                 // config against what's already configured on the host node.  We'll rewrite the
                 // host file and then signal CRI-O to reload its config when the files differ.
@@ -575,9 +486,9 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
 
             var shaToRequiredLogins = new Dictionary<string, LoginFile>();
 
-            foreach (var registry in registries.Where(registry => !string.IsNullOrEmpty(registry.Spec.Username)))
+            foreach (var registry in registries.Where(registry => !string.IsNullOrEmpty(registry.Username)))
             {
-                var loginFile = LoginFile.Create(hostContainerRegistriesFolder, registry.Spec.Location, registry.Spec.Username, registry.Spec.Password);
+                var loginFile = LoginFile.Create(hostContainerRegistriesFolder, registry.Location, registry.Username, registry.Password);
 
                 shaToRequiredLogins.Add(loginFile.Sha256, loginFile);
             }
@@ -615,7 +526,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                             // logged-in which is OK: we don't want to see that error.
 
                             log.LogInformationEx(() => $"{podmanPath} logout {loginFile.Location}");
-                            
+
                             if (NeonHelper.IsLinux)
                             {
                                 await Node.ExecuteCaptureAsync(podmanPath, new object[] { "logout", loginFile.Location });
@@ -677,15 +588,15 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
 
                 // Update the login with the password from the corresponding container registry resource.
 
-                var registry = registries.FirstOrDefault(registry => registry.Spec.Location == loginFile.Location);
+                var registry = registries.FirstOrDefault(registry => registry.Location == loginFile.Location);
 
                 if (registry == null)
                 {
-                    log.LogWarningEx(() => $"Cannot locate [{nameof(V1NeonContainerRegistry)}] resource for [location={loginFile.Location}].");
+                    log.LogWarningEx(() => $"Cannot locate [{nameof(V1CrioConfiguration)}] resource for [location={loginFile.Location}].");
                     continue;
                 }
 
-                loginFile.Password = registry.Spec.Password;
+                loginFile.Password = registry.Password;
 
                 // Perform the login.
 
@@ -715,6 +626,18 @@ blocked  = {NeonHelper.ToBoolString(registry.Spec.Blocked)}
                     }
                 }
             }
+
+            log.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
+
+            return null;
+        }
+
+        /// <inheritdoc/>
+        public async Task DeletedAsync(V1CrioConfiguration resource)
+        {
+            await SyncContext.Clear;
+            
+            log.LogInformationEx(() => $"DELETED: {resource.Name()}");
         }
     }
 }

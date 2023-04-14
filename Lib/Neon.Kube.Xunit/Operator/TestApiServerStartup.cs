@@ -29,6 +29,10 @@ using k8s;
 using k8s.KubeConfigModels;
 using System.Text.Json.Serialization;
 using System.Diagnostics.Contracts;
+using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using System.Linq;
 
 namespace Neon.Kube.Xunit.Operator
 {
@@ -45,7 +49,10 @@ namespace Neon.Kube.Xunit.Operator
         {
             Covenant.Requires<ArgumentNullException>(services != null, nameof(services));
 
-            services.AddControllers()
+            services.AddControllers(options =>
+            {
+                options.InputFormatters.Insert(0, JPIF.GetJsonPatchInputFormatter());
+            })
                 .AddJsonOptions(
                     options => 
                     {
@@ -86,6 +93,24 @@ namespace Neon.Kube.Xunit.Operator
             app.UseRouting();
             app.UseEndpoints(endpoints => endpoints.MapControllers());
             app.Run(apiServer.UnhandledRequest);
+        }
+    }
+    public static class JPIF
+    {
+        public static NewtonsoftJsonPatchInputFormatter GetJsonPatchInputFormatter()
+        {
+            var builder = new ServiceCollection()
+            .AddLogging()
+            .AddMvc()
+            .AddNewtonsoftJson()
+            .Services.BuildServiceProvider();
+
+            return builder
+                .GetRequiredService<IOptions<MvcOptions>>()
+                .Value
+                .InputFormatters
+                .OfType<NewtonsoftJsonPatchInputFormatter>()
+                .First();
         }
     }
 }

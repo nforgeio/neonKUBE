@@ -446,5 +446,10 @@ namespace Neon.Kube
         /// images file will be uploaded when creating a node image.
         /// </summary>
         public const string RemoteNodePackedImagePath = "/tmp/container-images.tar.gz";
+
+        /// <summary>
+        /// Returns the cluster wide crio config name.
+        /// </summary>
+        public const string ClusterCrioConfigName = "cluster";
     }
 }

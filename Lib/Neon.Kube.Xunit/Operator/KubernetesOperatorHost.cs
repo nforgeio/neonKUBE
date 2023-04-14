@@ -16,37 +16,13 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Builder;
-using System.CommandLine.Parsing;
-using System.Linq;
-using System.Reflection;
-using System.Text;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Hosting;
 
-using Neon.Diagnostics;
-using Neon.Kube.Operator.Commands.Generate;
 using Neon.Kube.Operator;
 using Neon.Kube.Operator.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Neon.Common;
-using System.Net;
-using System.Security.Cryptography.X509Certificates;
-using k8s.Models;
-using Microsoft.Extensions.Logging;
-using Neon.Kube.Resources.CertManager;
-using Neon.Tasks;
-using System.Xml.Linq;
-using k8s;
-using Neon.Kube.Operator.Rbac;
-using OpenTelemetry.Resources;
-using System.Diagnostics;
 
 namespace Neon.Kube.Xunit.Operator
 {
