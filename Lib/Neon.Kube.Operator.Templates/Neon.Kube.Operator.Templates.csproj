@@ -1,24 +1,24 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0</TargetFrameworks>
-		<Version>0.8.9-alpha</Version>
-		<PackageLicenseFile>LICENSE</PackageLicenseFile>
-		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Operator.Templates/README.md</PackageProjectUrl>
-		<PackageTags>kubernetes operator sdk neonkube template templates</PackageTags>
-		<Description>Kubernetes Operator SDK templates.</Description>
-		<RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
-		<PackageIcon>nuget-icon.png</PackageIcon>
-		<RepositoryType>git</RepositoryType>
-		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
-		<IsPackable>true</IsPackable>
-		<PackageType>Template</PackageType>
-		<PackageId>Neon.Kube.Operator.Templates</PackageId>
-		<IncludeContentInPack>true</IncludeContentInPack>
-		<IncludeBuildOutput>false</IncludeBuildOutput>
-		<ContentTargetFolders>content</ContentTargetFolders>
-		<NoWarn>$(NoWarn);1591;CS2008</NoWarn>
-	</PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.0</TargetFrameworks>
+        <Version>0.9.2-alpha</Version>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageProjectUrl>https://docs.neonforge.com/docs/operator-sdk</PackageProjectUrl>
+        <PackageTags>kubernetes operator sdk neonkube k8s template templates</PackageTags>
+        <Description>Kubernetes Operator SDK templates.</Description>
+        <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
+        <PackageIcon>nuget-icon.png</PackageIcon>
+        <RepositoryType>git</RepositoryType>
+        <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
+        <IsPackable>true</IsPackable>
+        <PackageType>Template</PackageType>
+        <PackageId>Neon.Kube.Operator.Templates</PackageId>
+        <IncludeContentInPack>true</IncludeContentInPack>
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+        <ContentTargetFolders>content</ContentTargetFolders>
+        <NoWarn>$(NoWarn);1591;CS2008</NoWarn>
+    </PropertyGroup>
 
     <ItemGroup>
         <Content Include="OperatorTemplate\**\*" Exclude="OperatorTemplate\**\bin\**;OperatorTemplate\**\obj\**" />
@@ -26,7 +26,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="OperatorTemplate\appsettings.json" />
+        <None Remove="OperatorTemplate\appsettings.json" />
     </ItemGroup>
 
     <ItemGroup>

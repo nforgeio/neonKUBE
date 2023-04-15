@@ -448,6 +448,11 @@ namespace Neon.Kube
         public const string RemoteNodePackedImagePath = "/tmp/container-images.tar.gz";
 
         /// <summary>
+        /// Returns the cluster wide crio config name.
+        /// </summary>
+        public const string ClusterCrioConfigName = "cluster";
+
+        /// <summary>
         /// Neon SSO client ID.
         /// </summary>
         public const string NeonSsoClientId = "neon-sso";

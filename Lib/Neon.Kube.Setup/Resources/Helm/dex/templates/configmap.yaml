@@ -15,6 +15,14 @@ data:
       http: 0.0.0.0:5556
       tlsCert: /etc/dex/tls/tls.crt
       tlsKey: /etc/dex/tls/tls.key
+    expiry:
+      deviceRequests: "5m"
+      signingKeys: "6h"
+      idTokens: "24h"
+      refreshTokens:
+        reuseInterval: "3s"
+        validIfNotUsedFor: "2160h" # 90 days
+        absoluteLifetime: "3960h" # 165 days    
     grpc:
       http: 0.0.0.0:5557
     frontend:

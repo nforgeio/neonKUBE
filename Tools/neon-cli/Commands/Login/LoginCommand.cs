@@ -121,7 +121,7 @@ ARGUMENTS:
                     new KubernetesRetryHandler()))
                 {
                     var configMap = await k8s.CoreV1.ReadNamespacedConfigMapAsync(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus);
-                    
+
                     clusterInfo = TypedConfigMap<ClusterInfo>.From(configMap).Data;
 
                     try
@@ -169,7 +169,7 @@ ARGUMENTS:
                 var authProvider = new KubeConfigAuthProvider() { Name = "oidc" };
 
                 authProvider.Config["client-id"]      = KubeConst.NeonSsoPublicClientId;
-                authProvider.Config["idp-issuer-url"] = ssoUri.ToString();
+                authProvider.Config["idp-issuer-url"] = ssoUri.ToString().TrimEnd("/");
                 authProvider.Config["refresh-token"]  = result.RefreshToken;
                 authProvider.Config["id-token"]       = result.IdentityToken;
 

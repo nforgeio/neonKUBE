@@ -36,6 +36,8 @@ using Telerik.JustMock;
 
 using Tomlyn;
 using System.Diagnostics;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace TestNeonNodeAgent
 {
@@ -47,56 +49,54 @@ namespace TestNeonNodeAgent
         {
             this.fixture = fixture;
 
-            Mock.SetupStatic(typeof(Node), Behavior.CallOriginal, StaticConstructor.NonMocked);
-            Mock.Arrange(() => Node.ExecuteCaptureAsync("pkill", new object[] { "-HUP", "crio" }, null, null, null, null, null, null)).ReturnsAsync(new ExecuteResponse(0));
-
-            fixture.Operator.AddController<ContainerRegistryController>();
+            fixture.Operator.AddController<CrioConfigController>();
             fixture.Start();
         }
 
         [Fact]
-        public async void Test1()
+        public async void TestCrioConfigurationSingleRegistry()
         {
             fixture.ClearResources();
-            fixture.RegisterType<V1NeonContainerRegistry>();
+            fixture.RegisterType<V1CrioConfiguration>();
+
+            Mock.SetupStatic(typeof(Node), Behavior.CallOriginal, StaticConstructor.NonMocked);
+            Mock.Arrange(() => Node.ExecuteCaptureAsync("pkill", new object[] { "-HUP", "crio" }, null, null, null, null, null, null)).ReturnsAsync(new ExecuteResponse(0));
 
             Mock.SetupStatic(typeof(NeonHelper), Behavior.CallOriginal, StaticConstructor.NonMocked);
             Mock.Arrange(() => NeonHelper.IsLinux).Returns(true);
 
             var tempFile = new TempFile();
 
-            Mock.SetupStatic(typeof(ContainerRegistryController), Behavior.Loose);
-            Mock.Arrange(() => ContainerRegistryController.configMountPath).Returns(tempFile.Path);
+            Mock.SetupStatic(typeof(CrioConfigController), Behavior.Loose);
+            Mock.Arrange(() => CrioConfigController.configMountPath).Returns(tempFile.Path);
 
             var linux = NeonHelper.IsLinux;
 
-            var controller = fixture.Operator.GetController<ContainerRegistryController>();
+            var controller = fixture.Operator.GetController<CrioConfigController>();
 
-            var containerRegistry = new V1NeonContainerRegistry()
+            var crioConfig             = new V1CrioConfiguration().Initialize();
+            crioConfig.Metadata.Name   = Neon.Kube.KubeConst.ClusterCrioConfigName;
+            crioConfig.Spec            = new V1CrioConfiguration.CrioConfigurationSpec();
+            crioConfig.Spec.Registries = new List<KeyValuePair<string, V1NeonContainerRegistry.RegistrySpec>>();
+
+            var containerRegistry = new V1NeonContainerRegistry.RegistrySpec()
             {
-                Metadata = new V1ObjectMeta()
-                {
-                    Name = "test"
-                },
-                Spec = new V1NeonContainerRegistry.RegistrySpec()
-                {
-                    Username = "user",
-                    Password = "password",
-                    Location = "docker.io",
-                    SearchOrder = -1
-                }
+                Username    = "user",
+                Password    = "password",
+                Location    = "docker.io",
+                SearchOrder = -1
             };
 
-            fixture.Resources.Add(containerRegistry);
+            crioConfig.Spec.Registries.Add(new KeyValuePair<string, V1NeonContainerRegistry.RegistrySpec>(Guid.NewGuid().ToString(), containerRegistry));
 
             Mock.Arrange(() => Node.ExecuteCaptureAsync(
                 "/usr/bin/podman",
                 new object[]
                 {
                     "login",
-                    containerRegistry.Spec.Location,
-                    "--username", containerRegistry.Spec.Username,
-                    "--password", containerRegistry.Spec.Password
+                    containerRegistry.Location,
+                    "--username", containerRegistry.Username,
+                    "--password", containerRegistry.Password
                 },
                 null, null, null, null, null, null)).ReturnsAsync(new ExecuteResponse(0));
 
@@ -104,12 +104,21 @@ namespace TestNeonNodeAgent
             Mock.SetupStatic(typeof(Task), Behavior.CallOriginal, StaticConstructor.NonMocked);
             Mock.Arrange(() => Task.Delay(TimeSpan.FromSeconds(15))).Returns(Task.CompletedTask);
 
-            await controller.IdleAsync();
+            await controller.ReconcileAsync(crioConfig);
 
-            var result = File.ReadAllText(tempFile.Path);
-            var currentConfig = Toml.Parse(result);
+            var result = File.ReadAllText(tempFile.Path).Trim();
 
-            // todo(marcusbooyah): verify result
+            Assert.Equal(@"unqualified-search-registries = []
+
+[[registry]]
+prefix   = """"
+insecure = false
+blocked  = false
+location = ""docker.io""", 
+result, 
+ignoreLineEndingDifferences: true, 
+ignoreWhiteSpaceDifferences: true);
+
         }
     }
 }

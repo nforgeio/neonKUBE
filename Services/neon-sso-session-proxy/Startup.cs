@@ -34,6 +34,7 @@ using StackExchange.Redis;
 using Prometheus;
 
 using Yarp;
+using Yarp.ReverseProxy.Forwarder;
 
 namespace NeonSsoSessionProxy
 {
@@ -93,6 +94,7 @@ namespace NeonSsoSessionProxy
             services.AddHttpForwarder();
             services.AddHttpClient();
             services.AddSingleton(Service.DexClient);
+            services.AddSingleton<ForwarderRequestConfig>();
 
             // Http client for Yarp.
 

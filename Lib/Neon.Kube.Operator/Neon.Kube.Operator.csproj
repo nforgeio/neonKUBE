@@ -4,14 +4,14 @@
 		<TargetFramework>net7.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<Configurations>Debug;Release</Configurations>
-		<Version>0.8.9-alpha</Version>
+		<Version>0.9.2-alpha</Version>
 		<Description>Kubernetes Operator SDK.</Description>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
-		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Operator/README.md</PackageProjectUrl>
+		<PackageProjectUrl>https://docs.neonforge.com/docs/operator-sdk</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
 		<PackageIcon>nuget-icon.png</PackageIcon>
 		<RepositoryType>git</RepositoryType>
-		<PackageTags>kubernetes operator sdk neonkube</PackageTags>
+		<PackageTags>kubernetes operator sdk neonkube k8s</PackageTags>
 		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
 	</PropertyGroup>
 
@@ -28,8 +28,8 @@
         <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="7.0.5" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
         <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.24" />
-        <PackageReference Include="Neon.Common" Version="10000.1.3018-dev-master" />
-        <PackageReference Include="Neon.Service" Version="10000.1.3018-dev-master" />
+        <PackageReference Include="Neon.Common" Version="10000.1.3023-dev-master" />
+        <PackageReference Include="Neon.Service" Version="10000.1.3023-dev-master" />
         <PackageReference Include="NgrokSharp" Version="1.0.13" />
         <PackageReference Include="NJsonSchema" Version="10.8.0" />
         <PackageReference Include="NSwag.Generation" Version="13.18.2" />

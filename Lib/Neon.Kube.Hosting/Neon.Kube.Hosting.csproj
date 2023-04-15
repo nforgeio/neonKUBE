@@ -4,7 +4,7 @@
 		<TargetFramework>net7.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<RootNamespace>Neon.Kube.Hosting</RootNamespace>
-		<Version>0.8.9-alpha</Version>
+		<Version>0.9.2-alpha</Version>
 		<Description>INTERNAL USE ONLY: neonKUBE hosting manager common classes.</Description>
 		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
@@ -38,7 +38,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Neon.Common" Version="10000.1.3018-dev-master" />
+	  <PackageReference Include="Neon.Common" Version="10000.1.3023-dev-master" />
 	</ItemGroup>
 
 </Project>

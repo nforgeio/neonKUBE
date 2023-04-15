@@ -6,6 +6,7 @@ rules:
 - apiGroups:
   - neonkube.io
   resources:
+  - crioconfigurations
   - neonclusteroperators
   - neonnodetasks
   - neonnodetasks/status

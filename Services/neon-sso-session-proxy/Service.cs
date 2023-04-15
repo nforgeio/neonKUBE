@@ -33,9 +33,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Kube.PortForward;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Kube.Resources.Dex;
+using Neon.Net;
 using Neon.Service;
 using Neon.Tasks;
 
@@ -80,6 +82,21 @@ namespace NeonSsoSessionProxy
         public List<V1NeonSsoClient> Clients;
 
         /// <summary>
+        /// The port forward manager used for debugging in Visual Studio.
+        /// </summary>
+        public PortForwardManager PortForwardManager;
+
+        /// <summary>
+        /// The port used to communicate with Dex.
+        /// </summary>
+        public Uri DexUri { get; private set; }
+
+        /// <summary>
+        /// The port used to communicate with Dex.
+        /// </summary>
+        public int DexPort { get; private set; } = 5556;
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="name">The service name.</param>
@@ -116,6 +133,21 @@ namespace NeonSsoSessionProxy
                 var configFile = await k8s.CoreV1.ReadNamespacedConfigMapAsync("neon-sso-dex", KubeNamespace.NeonSystem);
 
                 Config = NeonHelper.YamlDeserializeViaJson<DexConfig>(configFile.Data["config.yaml"]);
+
+                PortForwardManager = new PortForwardManager(k8s, TelemetryHub.LoggerFactory);
+
+                var pod       = (await k8s.CoreV1.ListNamespacedPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=dex")).Items.First();
+                DexPort       = NetHelper.GetUnusedTcpPort(IPAddress.Loopback);
+                DexUri        = new Uri($"http://{IPAddress.Loopback}:{DexPort}");
+
+                PortForwardManager.StartPodPortForward(
+                    name: pod.Name(),
+                    @namespace: KubeNamespace.NeonSystem,
+                    localPort: DexPort,
+                    remotePort: 5556);
+
+                DexClient = new DexClient(DexUri, Logger);
+
             }
             else
             {
@@ -125,17 +157,9 @@ namespace NeonSsoSessionProxy
                 {
                     Config = NeonHelper.YamlDeserializeViaJson<DexConfig>(await reader.ReadToEndAsync());
                 }
-            }
 
-            // Dex config
-            if (NeonHelper.IsDevWorkstation)
-            {
-                DexClient = new DexClient(new Uri($"http://localhost:5556"), Logger);
-
-            }
-            else
-            {
-                DexClient = new DexClient(new Uri($"http://{KubeService.Dex}:5556"), Logger);
+                DexUri    = new Uri($"http://{KubeService.Dex}:{DexPort}");
+                DexClient = new DexClient(DexUri, Logger);
             }
 
             Clients = new List<V1NeonSsoClient>();

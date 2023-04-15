@@ -62,9 +62,9 @@ namespace TestNeonClusterOperator
 
             fixture.Resources.Add(ssoClient);
 
-            var callbackUrl = new V1NeonSsoCallbackUrl().Initialize();
+            var callbackUrl           = new V1NeonSsoCallbackUrl().Initialize();
             callbackUrl.Metadata.Name = "foo";
-            callbackUrl.Spec = new V1SsoCallbackUrlSpec()
+            callbackUrl.Spec          = new V1SsoCallbackUrlSpec()
             {
                 SsoClient = ssoClient.Name(),
                 Url       = "foo.bar/callback"
@@ -88,9 +88,9 @@ namespace TestNeonClusterOperator
             Assert.Contains("new.callback", ssoClient.Spec.RedirectUris);
             Assert.Single(ssoClient.Spec.RedirectUris);
 
-            ssoClient = new V1NeonSsoClient().Initialize();
+            ssoClient               = new V1NeonSsoClient().Initialize();
             ssoClient.Metadata.Name = "bar";
-            ssoClient.Spec = new V1SsoClientSpec()
+            ssoClient.Spec          = new V1SsoClientSpec()
             {
                 Id           = "bar",
                 Name         = "bar",

@@ -14,21 +14,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 using System;
-using System.Net.Http;
+using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Text.Json.Serialization;
 
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
-using k8s;
-using k8s.KubeConfigModels;
-using System.Text.Json.Serialization;
-using System.Diagnostics.Contracts;
+using Microsoft.Extensions.Options;
 
 namespace Neon.Kube.Xunit.Operator
 {
@@ -45,7 +43,10 @@ namespace Neon.Kube.Xunit.Operator
         {
             Covenant.Requires<ArgumentNullException>(services != null, nameof(services));
 
-            services.AddControllers()
+            services.AddControllers(options =>
+            {
+                options.InputFormatters.Insert(0, JPIF.GetJsonPatchInputFormatter());
+            })
                 .AddJsonOptions(
                     options => 
                     {
@@ -86,6 +87,32 @@ namespace Neon.Kube.Xunit.Operator
             app.UseRouting();
             app.UseEndpoints(endpoints => endpoints.MapControllers());
             app.Run(apiServer.UnhandledRequest);
+        }
+    }
+
+    /// <summary>
+    /// Used for getting <see cref="JsonPatchDocument"/> Formatter.
+    /// </summary>
+    public static class JPIF
+    {
+        /// <summary>
+        /// Gets a <see cref="JsonPatchDocument"/> formatter.
+        /// </summary>
+        /// <returns></returns>
+        public static NewtonsoftJsonPatchInputFormatter GetJsonPatchInputFormatter()
+        {
+            var builder = new ServiceCollection()
+            .AddLogging()
+            .AddMvc()
+            .AddNewtonsoftJson()
+            .Services.BuildServiceProvider();
+
+            return builder
+                .GetRequiredService<IOptions<MvcOptions>>()
+                .Value
+                .InputFormatters
+                .OfType<NewtonsoftJsonPatchInputFormatter>()
+                .First();
         }
     }
 }
