@@ -333,7 +333,7 @@ namespace Neon.Kube
         /// command line tool).  Rather than throw an exception, we're going
         /// to retry the operation a few times.
         /// </remarks>
-        internal static string ReadFileTextWithRetry(string path)
+        internal static string ParseTextFileWithRetry(string path)
         {
             var retry = new LinearRetryPolicy(typeof(IOException), maxAttempts: 10, retryInterval: TimeSpan.FromMilliseconds(200));
             var text  = string.Empty;
@@ -402,7 +402,7 @@ namespace Neon.Kube
 
                 try
                 {
-                    cachedClientConfig = NeonHelper.JsonDeserialize<KubeClientConfig>(ReadFileTextWithRetry(clientStatePath));
+                    cachedClientConfig = NeonHelper.JsonDeserialize<KubeClientConfig>(ParseTextFileWithRetry(clientStatePath));
 
                     ClientConfig.Validate();
                 }
@@ -1165,7 +1165,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the user's current <see cref="Config"/>.
+        /// Returns the user's current <see cref="KubeConfig"/>.
         /// </summary>
         public static KubeConfig Config
         {
@@ -1190,7 +1190,7 @@ namespace Neon.Kube
 
             cachedConfig = config;
 
-            WriteFileTextWithRetry(KubeConfigPath, NeonHelper.YamlSerialize(config));
+            config.Save();
         }
 
         /// <summary>
@@ -1252,8 +1252,8 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the <see cref="CurrentContext"/> for the connected cluster
-        /// or <c>null</c> when there is no current context.
+        /// Returns the current <see cref="KubeConfigContext"/> from the KubeContext or
+        /// <c>null</c> when no context is selected.
         /// </summary>
         public static KubeConfigContext CurrentContext
         {
@@ -1277,9 +1277,38 @@ namespace Neon.Kube
         public static KubeContextName CurrentContextName => CurrentContext == null ? null : KubeContextName.Parse(CurrentContext.Name);
 
         /// <summary>
-        /// Returns <c>true</c> if the current cluster is the neon-desktop built-in cluster.
+        /// Returns the current <see cref="KubeConfigCluster"/> specified by the <see cref="CurrentContext"/>
+        /// from the KubeContext or <c>null</c> when no context is selected or the named cluster does not exist.
         /// </summary>
-        public static bool IsBuiltinCluster => CurrentContext != null && CurrentContext.IsNeonKube && CurrentContext.Name == KubeConst.NeonDesktopContextName;
+        public static KubeConfigCluster CurrentCluster
+        {
+            get
+            {
+                if (cachedConfig == null || cachedConfig.CurrentContext == null)
+                {
+                    return null;
+                }
+
+                return cachedConfig.GetCluster(cachedConfig.CurrentContext);
+            }
+        }
+
+        /// <summary>
+        /// Returns the current <see cref="KubeConfigUser"/> specified by the <see cref="CurrentContext"/>
+        /// from the KubeContext or <c>null</c> when no context is selected or the named user does not exist.
+        /// </summary>
+        public static KubeConfigUser CurrentUser
+        {
+            get
+            {
+                if (cachedConfig == null || cachedConfig.CurrentContext == null)
+                {
+                    return null;
+                }
+
+                return cachedConfig.GetUser(cachedConfig.CurrentContext);
+            }
+        }
 
         /// <summary>
         /// Generates a self-signed certificate for arbitrary hostnames, possibly including 

@@ -88,7 +88,11 @@ namespace Neon.Kube
                 File.Delete(path);
             }
 
-            return new KubeSetupState() { path = path };
+            return new KubeSetupState() 
+            { 
+                path        = path,
+                ContextName = contextName
+            };
         }
 
         /// <summary>
@@ -306,6 +310,14 @@ namespace Neon.Kube
         [YamlMember(Alias = "neonCloudToken", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string NeonCloudToken { get; set; }
+
+        /// <summary>
+        /// Identifies the KubeConfig context that will be created locally for the cluster being setup.
+        /// </summary>
+        [JsonProperty(PropertyName = "ContextName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "contextName", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string ContextName { get; set; }
 
         /// <summary>
         /// The single sign-on (SSO) cluster username.

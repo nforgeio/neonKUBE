@@ -97,9 +97,9 @@ ARGUMENTS:
                     server = $"https://{server}";
                 }
 
-                var serverUri       = new Uri(server);
-                var clusterId       = serverUri.Host.Split('.').FirstOrDefault();
-                var ssoUri          = new Uri($"https://{ClusterHost.Sso}.{serverUri.Host}");
+                var serverUri = new Uri(server);
+                var clusterId = serverUri.Host.Split('.').FirstOrDefault();
+                var ssoUri    = new Uri($"https://{ClusterHost.Sso}.{serverUri.Host}");
 
                 var result = await KubeHelper.LoginOidcAsync(
                     authority: ssoUri.ToString(),
@@ -142,12 +142,14 @@ ARGUMENTS:
 
                 Console.WriteLine($"Login: {newContextName}...");
 
-                var configCluster     = config.Clusters.Where(cluster => cluster.Name == clusterInfo.Name).FirstOrDefault();
-                var clusterProperties = new KubeConfigClusterProperties()
-                {
-                    Server                = serverUri.ToString(),
-                    InsecureSkipTlsVerify = false
-                };
+                var configCluster = config.Clusters.Where(cluster => cluster.Name == clusterInfo.Name).FirstOrDefault();
+
+                var clusterProperties = 
+                    new KubeConfigClusterConfig()
+                    {
+                        Server                = serverUri.ToString(),
+                        InsecureSkipTlsVerify = false
+                    };
 
                 if (configCluster == null)
                 {
@@ -155,27 +157,23 @@ ARGUMENTS:
                         new KubeConfigCluster()
                         {
                             Name       = clusterInfo.Name,
-                            Properties = clusterProperties
+                            Config = clusterProperties
                         });
                 }
                 else
                 {
-                    configCluster.Properties = clusterProperties;
+                    configCluster.Config = clusterProperties;
                 }
 
                 var configUser   = config.Users.Where(user => user.Name == newContextName).FirstOrDefault();
-                var authProvider = new KubeConfigAuthProvider()
-                {
-                    Name       = "oidc",
-                    Properties = new KubeConfigAuthProviderProperties()
-                    {
-                        ClientId     = KubeConst.NeonSsoPublicClientId,
-                        IdpIssuerUrl = ssoUri.ToString(),
-                        RefreshToken = result.RefreshToken,
-                        IdToken      = result.IdentityToken
-                    }
-                };
-                var userProperties = new KubeConfigUserProperties()
+                var authProvider = new KubeConfigAuthProvider() { Name = "oidc" };
+
+                authProvider.Config["client-id"]      = KubeConst.NeonSsoPublicClientId;
+                authProvider.Config["idp-issuer-url"] = ssoUri.ToString();
+                authProvider.Config["refresh-token"]  = result.RefreshToken;
+                authProvider.Config["id-token"]       = result.IdentityToken;
+
+                var userConfig = new KubeConfigUserConfig()
                 {
                     Token        = result.AccessToken,
                     AuthProvider = authProvider
@@ -183,19 +181,21 @@ ARGUMENTS:
 
                 if (configUser == null)
                 {
-                    config.Users.Add(new KubeConfigUser()
-                    {
-                        Name       = newContextName,
-                        Properties = userProperties,
-                    });
+                    config.Users.Add(
+                        new KubeConfigUser()
+                        {
+                            Name   = newContextName,
+                            Config = userConfig,
+                        });
                 }
                 else
                 {
-                    configUser.Properties = userProperties;
+                    configUser.Config = userConfig;
                 }
 
-                var configContext     = config.Contexts.Where(context => context.Name == newContextName).FirstOrDefault();
-                var contextProperties = new KubeConfigContextProperties
+                var configContext = config.Contexts.Where(context => context.Name == newContextName).FirstOrDefault();
+
+                var contextProperties = new KubeConfigContextConfig
                 {
                     Cluster = clusterInfo.Name,
                     User    = newContextName
@@ -207,12 +207,12 @@ ARGUMENTS:
                         new KubeConfigContext()
                         {
                             Name       = newContextName,
-                            Properties = contextProperties
+                            Config = contextProperties
                         });
                 }
                 else
                 {
-                    configContext.Properties = contextProperties;
+                    configContext.Config = contextProperties;
                 }
 
                 config.CurrentContext = newContextName;

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeConfigContextProperties.cs
+// FILE:	    KubeConfigContextConfig.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -26,6 +26,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s.KubeConfigModels;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -40,12 +42,12 @@ namespace Neon.Kube.Config
     /// <summary>
     /// Describes a Kubernetes context properties.
     /// </summary>
-    public class KubeConfigContextProperties
+    public class KubeConfigContextConfig
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public KubeConfigContextProperties()
+        public KubeConfigContextConfig()
         {
         }
 
@@ -72,5 +74,16 @@ namespace Neon.Kube.Config
         [YamlMember(Alias = "user", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         [DefaultValue(null)]
         public string User { get; set; }
+
+        /// <summary>
+        /// Lists any custom extension properties.  Extensions are name/value pairs added
+        /// by vendors to hold arbitrary information.  Take care to choose property names
+        /// that are unlikely to conflict with properties created by other vendors by adding
+        /// a custom suffix like <b>my-property.neonkube.io</b>, where <b>my-property</b> 
+        /// identifies the property and <b>neonkibe.io</b> helps avoid conflicts.
+        /// </summary>
+        [JsonProperty(PropertyName = "extensions", Required = Required.Default)]
+        [YamlMember(Alias = "extensions", ApplyNamingConventions = false)]
+        public List<NamedExtension> Extensions { get; set; }
     }
 }

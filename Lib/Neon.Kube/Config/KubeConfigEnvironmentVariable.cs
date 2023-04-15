@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterDeploymentStatus.cs
+// FILE:	    KubeConfigEnvironmentVariable.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -16,32 +16,41 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
-using System.Runtime.Serialization;
+using System.Diagnostics.Contracts;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace Neon.Kube
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Serialization;
+
+using Neon.Common;
+using Neon.Cryptography;
+using Neon.Kube;
+
+namespace Neon.Kube.Config
 {
     /// <summary>
-    /// Enumerates the cluster deployment status.
+    /// Describes an environment variable.
     /// </summary>
-    public enum ClusterDeploymentStatus
+    public class KubeConfigEnvironmentVariable
     {
         /// <summary>
-        /// Indicates that the deployment status is unknown (the default value).
+        /// Specifies the variable name.
         /// </summary>
-        [EnumMember(Value = "unknown")]
-        Unknown = 0,
+        public string Name { get; set; }
 
         /// <summary>
-        /// Indicates that the cluster has been prepared.
+        /// Specifies the variable value.
         /// </summary>
-        [EnumMember(Value = "prepared")]
-        Prepared,
-
-        /// <summary>
-        /// Indicates that cluster setup succeeded and the cluster is ready.
-        /// </summary>
-        [EnumMember(Value = "ready")]
-        Ready
+        public string Value { get; set; }
     }
 }

@@ -230,11 +230,9 @@ namespace Neon.Kube.Proxy
                 nodeProxyCreator =
                     (name, address) =>
                     {
-                        var context = KubeHelper.CurrentContext;
-
-                        if (context != null && context.IsNeonKube)
+                        if (KubeHelper.CurrentCluster != null && KubeHelper.CurrentCluster.IsNeonDesktop)
                         {
-                            return new NodeSshProxy<NodeDefinition>(name, address, context.ClusterInfo.SshCredentials);
+                            return new NodeSshProxy<NodeDefinition>(name, address, KubeHelper.CurrentCluster.ClusterInfo.SshCredentials);
                         }
                         else
                         {
@@ -817,7 +815,7 @@ namespace Neon.Kube.Proxy
         {
             EnsureSetupMode();
 
-            throw new NotImplementedException("$todo(jefflill)");
+            SetupState?.Save();
         }
 
         //---------------------------------------------------------------------

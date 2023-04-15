@@ -70,11 +70,24 @@ USAGE:
         {
             HostingLoader.Initialize();
 
+            var config  = KubeHelper.Config;
             var current = KubeHelper.CurrentContext;
             var logins  = new List<string>();
 
             foreach (var context in KubeHelper.Config.Contexts
-                .Where(context => context.IsNeonKube)
+                .Where(context =>
+                {
+                    var cluster = config.GetCluster(current.Cluster);
+
+                    if (cluster == null)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        return cluster.IsNeonKube;
+                    }
+                })
                 .OrderBy(context => context.Name))
             {
                 logins.Add(context.Name);

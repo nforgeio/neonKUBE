@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeConfigUser.cs
+// FILE:	    KubeConfigAuthProvider.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -38,7 +38,7 @@ using Neon.Kube;
 namespace Neon.Kube.Config
 {
     /// <summary>
-    /// Describes a Kubernetes user configuration.
+    /// Describes a Kubernetes user authentication provider configuration.
     /// </summary>
     public class KubeConfigAuthProvider
     {
@@ -61,6 +61,6 @@ namespace Neon.Kube.Config
         /// </summary>
         [JsonProperty(PropertyName = "config", Required = Required.Always)]
         [YamlMember(Alias = "config", ApplyNamingConventions = false)]
-        public KubeConfigAuthProviderProperties Properties { get; set; }
+        public Dictionary<string, string> Config { get; set; } = new Dictionary<string, string>();
     }
 }

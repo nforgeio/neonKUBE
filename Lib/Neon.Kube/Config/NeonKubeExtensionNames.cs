@@ -46,6 +46,11 @@ namespace Neon.Kube.Config
         public const string ClusterInfo = $"cluster-info{Suffix}";
 
         /// <summary>
+        /// <see cref="ClusterDeploymentStatus"/>: Holds the provisioning state for neonKUBE clusters.s
+        /// </summary>
+        public const string DeploymentStatus = $"deployment-status{Suffix}";
+
+        /// <summary>
         /// Used by our xUnit <b>ClusterFixture</b> to persist the cluster definition so
         /// the fixture can determine when to provision a new cluster when the definition
         /// has changed.

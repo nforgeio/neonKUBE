@@ -103,7 +103,7 @@ OPTIONS:
 
             // Add/replace the cluster.
 
-            var existingCluster = KubeHelper.Config.GetCluster(newLogin.Context.Properties.Cluster);
+            var existingCluster = KubeHelper.Config.GetCluster(newLogin.Context.Config.Cluster);
 
             if (existingCluster != null)
             {
@@ -114,7 +114,7 @@ OPTIONS:
 
             // Add/replace the user.
 
-            var existingUser = KubeHelper.Config.GetUser(newLogin.Context.Properties.User);
+            var existingUser = KubeHelper.Config.GetUser(newLogin.Context.Config.User);
 
             if (existingUser != null)
             {

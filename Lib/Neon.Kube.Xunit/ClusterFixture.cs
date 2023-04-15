@@ -604,17 +604,18 @@ namespace Neon.Kube.Xunit
             // Determine whether a test cluster with the same name exists and if
             // its cluster definition matches the test cluster's definition.
             ;
-            var clusterExists = false;
-            var contextName   = KubeContextName.Parse($"root@{clusterDefinition.Name}");
-            var context       = KubeHelper.Config.GetContext(contextName);
+            var clusterExists     = false;
+            var configContextName = KubeContextName.Parse($"root@{clusterDefinition.Name}");
+            var configContext     = KubeHelper.Config.GetContext(configContextName);
+            var configCluster     = KubeHelper.Config.GetCluster(configContext.Cluster);
 
-            if (context != null)
+            if (configContext != null)
             {
-                var existingClusterDefinition = context.Extensions.Get<ClusterDefinition>(NeonKubeExtensionNames.TestClusterDefinition, null);
+                var existingClusterDefinition = configCluster.TestClusterDefinition;
 
                 if (existingClusterDefinition == null)
                 {
-                    throw new NeonKubeException($"Unit tests cannot be run on the [{contextName.Cluster}] cluster because it wasn't deployed by [{nameof(ClusterFixture)}].");
+                    throw new NeonKubeException($"Unit tests cannot be run on the [{configContextName.Cluster}] cluster because it wasn't deployed by [{nameof(ClusterFixture)}].");
                 }
 
                 clusterExists = ClusterDefinition.AreSimilar(clusterDefinition, existingClusterDefinition);
@@ -630,7 +631,7 @@ namespace Neon.Kube.Xunit
 
                 using (var cluster = new ClusterProxy(new HostingManagerFactory(), options.CloudMarketplace))
                 {
-                    KubeHelper.SetCurrentContext(contextName);
+                    KubeHelper.SetCurrentContext(configContextName);
 
                     var isLocked      = cluster.IsLockedAsync().ResultWithoutAggregate();
                     var clusterInfo   = cluster.GetClusterInfoAsync().ResultWithoutAggregate();

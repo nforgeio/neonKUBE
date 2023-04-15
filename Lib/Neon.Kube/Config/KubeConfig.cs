@@ -62,7 +62,7 @@ namespace Neon.Kube.Config
 
             if (File.Exists(configPath))
             {
-                var config = NeonHelper.YamlDeserialize<KubeConfig>(KubeHelper.ReadFileTextWithRetry(configPath));
+                var config = NeonHelper.YamlDeserialize<KubeConfig>(KubeHelper.ParseTextFileWithRetry(configPath));
 
                 config.Validate();
                 
@@ -201,7 +201,7 @@ namespace Neon.Kube.Config
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(rawName), nameof(rawName));
 
-            return Contexts.SingleOrDefault(context => context.Name == rawName && context.IsNeonKube);
+            return Contexts.SingleOrDefault(context => context.Name == rawName);
         }
 
         /// <summary>
@@ -215,7 +215,7 @@ namespace Neon.Kube.Config
 
             var rawName = name.ToString();
 
-            return Contexts.SingleOrDefault(context => context.Name == rawName && context.IsNeonKube);
+            return Contexts.SingleOrDefault(context => context.Name == rawName);
         }
 
         /// <summary>
@@ -275,7 +275,7 @@ namespace Neon.Kube.Config
         }
 
         /// <summary>
-        /// Validates the configuration and also prunes any non-neonKUBE contexts.
+        /// Validates the kubeconfig.
         /// </summary>
         /// <exception cref="NeonKubeException">Thrown when the current config is invalid.</exception>
         public void Validate()
@@ -283,58 +283,6 @@ namespace Neon.Kube.Config
             if (Kind != "Config")
             {
                 throw new NeonKubeException($"Invalid [{nameof(Kind)}={Kind}].");
-            }
-
-            // Ensure that the current context exists.
-
-            if (!string.IsNullOrEmpty(CurrentContext) && GetContext(CurrentContext) == null)
-            {
-                CurrentContext = null;
-            }
-
-            // Prune any non-neonKUBE or invalid contexts.
-
-            var prunedConfigs = new List<KubeConfigContext>();
-            var clusterRefs    = new HashSet<string>();
-
-            foreach (var context in Contexts)
-            {
-                if (!context.IsNeonKube)
-                {
-                    prunedConfigs.Add(context);
-                    continue;
-                }
-
-                if (!string.IsNullOrEmpty(context.Name) && GetCluster(context.Name) == null)
-                {
-                    prunedConfigs.Add(context);
-                    continue;
-                }
-
-                clusterRefs.Add(context.Name);
-            }
-
-            foreach (var context in prunedConfigs)
-            {
-                Contexts.Remove(context);
-            }
-
-            // Prune any non-neonKUBE clusters that are not referenced by a 
-            // neonKUBE context.
-
-            var prunedClusters = new List<KubeConfigCluster>();
-
-            foreach (var cluster in Clusters)
-            {
-                if (!clusterRefs.Contains(cluster.Name))
-                {
-                    prunedClusters.Add(cluster);
-                }
-            }
-
-            foreach (var cluster in prunedClusters)
-            {
-                Clusters.Remove(cluster);
             }
         }
 

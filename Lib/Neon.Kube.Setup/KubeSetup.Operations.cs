@@ -1278,32 +1278,39 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 cluster.SaveSetupState();
             }
 
-            // Update kubeconfig.
+            // Update kubeconfig by adding the new kubeconfig.
 
             var configText = cluster.SetupState.ControlNodeFiles["/etc/kubernetes/admin.conf"].Text;
             var port       = NetworkPorts.KubernetesApiServer;
 
             configText = configText.Replace("https://kubernetes-control-plane:6442", $"https://{cluster.SetupState.ClusterDomain}:{port}");
 
+            var newConfig  = NeonHelper.YamlDeserialize<KubeConfig>(configText);
+            var newUser    = newConfig.Users.Single();
+            var newCluster = newConfig.Clusters.Single();
+            var newContext = newConfig.Contexts.Single();
+
+            newContext.Name    = newUser.Name;
+            newContext.User    = newUser.Name;
+            newContext.Cluster = newCluster.Name;
+
             if (!File.Exists(kubeConfigPath))
             {
-                File.WriteAllText(kubeConfigPath, configText);
+                newConfig.CurrentContext = newContext.Name;
+
+                KubeHelper.SetConfig(newConfig);
             }
             else
             {
                 // The user already has an existing kubeconfig, so we need
                 // to merge in the new config.
 
-                var newConfig      = NeonHelper.YamlDeserialize<KubeConfig>(configText);
                 var existingConfig = KubeHelper.Config;
 
                 // Remove any existing user, context, and cluster with the same names.
                 // Note that we're assuming that there's only one of each in the config
                 // we downloaded from the cluster.
 
-                var newCluster      = newConfig.Clusters.Single();
-                var newContext      = newConfig.Contexts.Single();
-                var newUser         = newConfig.Users.Single();
                 var existingCluster = existingConfig.GetCluster(newCluster.Name);
                 var existingContext = existingConfig.GetContext(newContext.Name);
                 var existingUser    = existingConfig.GetUser(newUser.Name);
@@ -1332,13 +1339,15 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 KubeHelper.SetConfig(existingConfig);
             }
 
-            // Make sure that the config cached by [KubeHelper] is up to date.
+            // Make sure that the config cached by [KubeHelper] and [ClusterProxy] is up to date.
 
-            KubeHelper.LoadConfig();
+            var kubeConfig = KubeHelper.LoadConfig();
 
-            // Save the cluster node SSH certificate in the users [~/.ssh] folder.
+            cluster.KubeContext = kubeConfig.GetContext(cluster.SetupState.ContextName);
 
-            File.WriteAllText(Path.Combine(KubeHelper.UserSshFolder, KubeHelper.CurrentContextName.ToString()), cluster.SetupState.SshKey.PrivatePEM);
+            // Save the cluster node SSH certificate in the user's [~/.ssh] folder.
+
+            File.WriteAllText(Path.Combine(KubeHelper.UserSshFolder, cluster.SetupState.ContextName), cluster.SetupState.SshKey.PrivatePEM);
         }
 
         /// <summary>

@@ -217,7 +217,10 @@ OPTIONS:
                     KubeHelper.Config.Contexts.Remove(existingContext);
                 }
 
-                if (KubeHelper.CurrentContext != null && KubeHelper.CurrentContext.ClusterInfo != null && KubeHelper.CurrentContext.Name == context.Name)
+                if (KubeHelper.CurrentContext != null &&
+                    KubeHelper.CurrentCluster != null && 
+                    KubeHelper.CurrentCluster.ClusterInfo != null && 
+                    KubeHelper.CurrentContext.Name == context.Name)
                 {
                     KubeHelper.Config.CurrentContext = null;
                 }
