@@ -115,7 +115,7 @@ function Get-DotnetBaseImage
         [string]$globalJsonPath
     )
 
-	$command  = "neon-build dotnet-version"
+	$command  = "neon-build dotnet-version " + '"' + $globalJsonPath + '"'
 	$response = Invoke-CaptureStreams $command
 	$lines    = $response.stdout -split '\r?\n'
 	$runtime  = $lines[0].Trim()
