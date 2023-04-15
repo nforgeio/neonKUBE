@@ -169,7 +169,7 @@ ARGUMENTS:
                 var authProvider = new KubeConfigAuthProvider() { Name = "oidc" };
 
                 authProvider.Config["client-id"]      = KubeConst.NeonSsoPublicClientId;
-                authProvider.Config["idp-issuer-url"] = ssoUri.ToString().TrimEnd("/");
+                authProvider.Config["idp-issuer-url"] = ssoUri.ToString().TrimEnd('/');
                 authProvider.Config["refresh-token"]  = result.RefreshToken;
                 authProvider.Config["id-token"]       = result.IdentityToken;
 
