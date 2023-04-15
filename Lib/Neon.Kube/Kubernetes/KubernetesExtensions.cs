@@ -764,8 +764,9 @@ namespace Neon.Kube
                         return false;
                     }
                 },
-                timeout:      timeout,
-                pollInterval: pollInterval);
+                timeout:        timeout,
+                pollInterval:   pollInterval,
+                timeoutMessage: $"Timeout waiting for CRD: {typeof(TEntity).FullName}");
         }
 
         /// <summary>
