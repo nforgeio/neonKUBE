@@ -1,0 +1,23 @@
+<Project ToolsVersion="Current" >
+    <Target Name="PropsConfig">
+        <PropertyGroup>
+            <OperatorBasePath Condition="'$(OperatorBasePath)' == ''">$(MSBuildProjectDirectory)</OperatorBasePath>
+        </PropertyGroup>
+
+        <PropertyGroup>
+            <OperatorManifestPath Condition="'$(OperatorManifestPath)' == ''">$(OperatorBasePath)\Manifests</OperatorManifestPath>
+        </PropertyGroup>
+
+        <PropertyGroup>
+            <OperatorCrdPath Condition="'$(OperatorCrdPath)' == ''">$(OperatorManifestPath)\CRDs</OperatorCrdPath>
+        </PropertyGroup>
+
+        <PropertyGroup>
+            <OperatorRbacPath Condition="'$(OperatorRbacPath)' == ''">$(OperatorManifestPath)\RBAC</OperatorRbacPath>
+        </PropertyGroup>
+
+        <PropertyGroup>
+            <OperatorName Condition="'$(OperatorName)' == ''">$(PackageId)</OperatorName>
+        </PropertyGroup>
+    </Target>
+</Project>

@@ -86,24 +86,6 @@ namespace NeonClusterOperator
                             .StartCollecting();
                     };
 
-                if (!string.IsNullOrEmpty(args.FirstOrDefault()))
-                {
-                    await KubernetesOperatorHost
-                       .CreateDefaultBuilder(args)
-                       .ConfigureOperator(configure =>
-                       {
-                           configure.AssemblyScanningEnabled = true;
-                           configure.Name                    = Service.Name;
-                           configure.DeployedNamespace       = KubeNamespace.NeonSystem;
-                       })
-                       .ConfigureNeonKube()
-                       .AddSingleton<Service>(Service)
-                       .UseStartup<OperatorStartup>()
-                       .Build().RunAsync();
-
-                    Environment.Exit(0);
-                }
-
                 Environment.Exit(await Service.RunAsync());
             }
             catch (Exception e)

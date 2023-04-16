@@ -15,6 +15,14 @@
 		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	  <DebugType>full</DebugType>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	  <DebugType>full</DebugType>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
 		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
@@ -28,8 +36,8 @@
         <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="7.0.5" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
         <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.24" />
-        <PackageReference Include="Neon.Common" Version="10000.1.3027-dev-jeff" />
-        <PackageReference Include="Neon.Service" Version="10000.1.3027-dev-jeff" />
+        <PackageReference Include="Neon.Common" Version="10000.1.3029-dev-master" />
+        <PackageReference Include="Neon.Service" Version="10000.1.3029-dev-master" />
         <PackageReference Include="NgrokSharp" Version="1.0.13" />
         <PackageReference Include="NJsonSchema" Version="10.8.0" />
         <PackageReference Include="NSwag.Generation" Version="13.18.2" />

@@ -35,7 +35,6 @@ using Microsoft.Extensions.Logging;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube.Operator.Builder;
-using Neon.Kube.Operator.Commands.Generate;
 using Neon.Kube.Operator.Rbac;
 using Neon.Kube.Resources.CertManager;
 using Neon.Tasks;
@@ -127,36 +126,7 @@ namespace Neon.Kube.Operator
                 return;
             }
 
-            HostBuilder.ConfigureServices(services =>
-            {
-                services.AddSingleton<GenerateCommand>();
-                services.AddSingleton<GenerateCommandBase, GenerateRbacCommand>();
-            });
-
-            Host = HostBuilder.Build();
-
-            // Build the commands from what's registered in the DI container.
-
-            var rootCommand = new RootCommand();
-
-            foreach (Command command in Host.Services.GetServices<GenerateCommand>())
-            {
-                rootCommand.AddCommand(command);
-            }
-
-            var generateCommand = Host.Services.GetService<GenerateCommand>();
-
-            foreach (Command command in Host.Services.GetServices<GenerateCommandBase>())
-            {
-                generateCommand.AddCommand(command);
-            }
-
-            var commandLineBuilder = new CommandLineBuilder(rootCommand);
-            var parser             = commandLineBuilder.UseDefaults().Build();
-
-            // Invoke the command line parser which then invokes the respective command handlers.
-
-            parser.Invoke(args);
+            
         }
 
         /// <inheritdoc/>
@@ -193,36 +163,7 @@ namespace Neon.Kube.Operator
                 return;
             }
 
-            HostBuilder.ConfigureServices(services =>
-            {
-                services.AddSingleton<GenerateCommand>();
-                services.AddSingleton<GenerateCommandBase, GenerateRbacCommand>();
-            });
-
-            Host = HostBuilder.Build();
-
-            // Build the commands from what's registered in the DI container.
-
-            var rootCommand = new RootCommand();
-
-            foreach (Command command in Host.Services.GetServices<GenerateCommand>())
-            {
-                rootCommand.AddCommand(command);
-            }
-
-            var generateCommand = Host.Services.GetService<GenerateCommand>();
-
-            foreach (Command command in Host.Services.GetServices<GenerateCommandBase>())
-            {
-                generateCommand.AddCommand(command);
-            }
-
-            var commandLineBuilder = new CommandLineBuilder(rootCommand);
-            var parser             = commandLineBuilder.UseDefaults().Build();
-
-            // Invoke the command line parser which then invokes the respective command handlers.
-
-            await parser.InvokeAsync(args);
+            
 
             return;
         }

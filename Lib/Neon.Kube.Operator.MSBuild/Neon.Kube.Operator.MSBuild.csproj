@@ -1,0 +1,76 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+		<PropertyGroup>
+				<TargetFramework>net7.0</TargetFramework>
+				<OutputType>Library</OutputType>
+				<RootNamespace>Neon.Kube.Operator.MSBuild</RootNamespace>
+				<Version>0.9.2-alpha</Version>
+				<Description>Kubernetes Operator SDK MDBuild props.</Description>
+				<PackageLicenseFile>LICENSE</PackageLicenseFile>
+				<PackageIcon>nuget-icon.png</PackageIcon>
+				<PackageProjectUrl>https://docs.neonforge.com/docs/operator-sdk</PackageProjectUrl>
+				<RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
+				<RepositoryType>git</RepositoryType>
+				<PackageTags>kubernetes operator sdk neonkube k8s msbuild</PackageTags>
+				<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
+				<Configurations>Debug;Release</Configurations>
+				<DevelopmentDependency>true</DevelopmentDependency>
+				<NoWarn>$(NoWarn);CS2008;NU5100</NoWarn>
+		</PropertyGroup>
+
+		<ItemGroup>
+				<Folder Include="Properties\" />
+				<None Include="..\..\LICENSE">
+						<Pack>True</Pack>
+						<PackagePath></PackagePath>
+				</None>
+				<Content Include="..\nuget-icon.png">
+						<Pack>True</Pack>
+						<PackagePath></PackagePath>
+				</Content>
+
+				<Content Include="linux-x64\*" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+						<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+						<CopyToPublishDirectory>true</CopyToPublishDirectory>
+				</Content>
+
+				<Content Include="osx-x64\*" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+						<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+						<CopyToPublishDirectory>true</CopyToPublishDirectory>
+				</Content>
+
+				<Content Include="win-x64\*" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+						<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+						<CopyToPublishDirectory>true</CopyToPublishDirectory>
+				</Content>
+
+				<Content Include="Build\**">
+						<PackagePath>build/</PackagePath>
+				</Content>
+		</ItemGroup>
+
+		<ItemGroup>
+				<ProjectReference Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
+		</ItemGroup>
+		<ItemGroup>
+				<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+				<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+		</ItemGroup>
+		<!-- 
+	We're going to publish the [operator-cli] binaries for [linux-x64], [osx-x64],
+	and [win-x64] to the [operator-cli] folder of this project.
+	-->
+
+		<Target Name="ModelGen" BeforeTargets="BeforeBuild">
+
+				<Message Importance="high" Text="pubcore --no-cmd &quot;$(NK_ROOT)\Tools\operator-cli\operator-cli.csproj&quot; $(configuration) &quot;$(NK_ROOT)\Lib\Neon.Kube.Operator.MSBuild\linux-x64&quot; linux-x64" />
+				<Exec Command="pubcore --no-cmd &quot;$(NK_ROOT)\Tools\operator-cli\operator-cli.csproj&quot; $(configuration) &quot;$(NK_ROOT)\Lib\Neon.Kube.Operator.MSBuild\linux-x64&quot; linux-x64" />
+
+				<Message Importance="high" Text="pubcore --no-cmd &quot;$(NK_ROOT)\Tools\operator-cli\operator-cli.csproj&quot; $(configuration) &quot;$(NK_ROOT)\Lib\Neon.Kube.Operator.MSBuild\osx-x64&quot; osx-x64" />
+				<Exec Command="pubcore --no-cmd &quot;$(NK_ROOT)\Tools\operator-cli\operator-cli.csproj&quot; $(configuration) &quot;$(NK_ROOT)\Lib\Neon.Kube.Operator.MSBuild\osx-x64&quot; osx-x64" />
+
+				<Message Importance="high" Text="pubcore --no-cmd &quot;$(NK_ROOT)\Tools\operator-cli\operator-cli.csproj&quot; $(configuration) &quot;$(NK_ROOT)\Lib\Neon.Kube.Operator.MSBuild\win-x64&quot; win-x64" />
+				<Exec Command="pubcore --no-cmd &quot;$(NK_ROOT)\Tools\operator-cli\operator-cli.csproj&quot; $(configuration) &quot;$(NK_ROOT)\Lib\Neon.Kube.Operator.MSBuild\win-x64&quot; win-x64" />
+		</Target>
+
+</Project>

@@ -47,12 +47,28 @@ namespace Neon.Kube.Operator
         /// </summary>
         public OperatorSettings()
         {
+            if (string.IsNullOrEmpty(Name))
+            {
+                name = Assembly.GetEntryAssembly().GetName().Name;
+            }
         }
 
         /// <summary>
         /// The Operator name.  This defaults to a Kubernetes safe version of the entry assembly name.
         /// </summary>
-        public string Name { get; set; } = Regex.Replace(Assembly.GetEntryAssembly().GetName().Name, @"([a-z])([A-Z])", "$1-$2").ToLower();
+        public string Name
+        {
+            get
+            {
+                return name;
+            }
+            set
+            {
+                name = Regex.Replace(value, @"([a-z])([A-Z])", "$1-$2").ToLower();
+            }
+        }
+
+        private string name;
 
         /// <summary>
         /// Specifies the namespace to be watched or <c>null</c> for cluster scoped operators.

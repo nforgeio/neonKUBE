@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GenerateCommandBase.cs
+// FILE:	    GenerateCommand.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -18,16 +18,23 @@
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
+using System.CommandLine.NamingConventionBinder;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Neon.Kube.Operator.Commands.Generate
+namespace OperatorCli.Commands.Generate
 {
-    internal class GenerateCommandBase : CommandBase
+    internal class GenerateCommand : CommandBase
     {
-        protected GenerateCommandBase(string name, string description) : base(name, description)
+        public GenerateCommand() : base("generate", "Generate RBAC yaml for the operator.")
         {
+            Handler = CommandHandler.Create(() => HandleCommand());
+        }
+
+        private int HandleCommand()
+        {
+            return HandleCommand("Generating stuff");
         }
     }
 }

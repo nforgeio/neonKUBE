@@ -56,37 +56,18 @@ namespace NeonNodeAgent
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task Main(string[] args)
         {
-            Service = new Service(KubeService.NeonNodeAgent);
-
-            Service.MetricsOptions.Mode = MetricsMode.Scrape;
-            Service.MetricsOptions.GetCollector =
-                () =>
-                {
-                    return DotNetRuntimeStatsBuilder
-                        .Default()
-                        .StartCollecting();
-                };
-
             try
             {
-                if (!string.IsNullOrEmpty(args.FirstOrDefault()))
-                {
-                    await KubernetesOperatorHost
-                        .CreateDefaultBuilder(args)
-                        .ConfigureOperator(configure =>
-                        {
-                            configure.AssemblyScanningEnabled = true;
-                            configure.Name                    = Service.Name;
-                            configure.DeployedNamespace       = KubeNamespace.NeonSystem;
-                            configure.Port                    = 11006;
-                        })
-                       .ConfigureNeonKube()
-                       .AddSingleton(typeof(Service), Service)
-                       .UseStartup<OperatorStartup>()
-                       .Build().RunAsync();
+                Service = new Service(KubeService.NeonNodeAgent);
 
-                    Environment.Exit(0);
-                }
+                Service.MetricsOptions.Mode = MetricsMode.Scrape;
+                Service.MetricsOptions.GetCollector =
+                    () =>
+                    {
+                        return DotNetRuntimeStatsBuilder
+                            .Default()
+                            .StartCollecting();
+                    };
 
                 Environment.Exit(await Service.RunAsync());
             }
