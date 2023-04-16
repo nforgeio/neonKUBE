@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
@@ -31,7 +31,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Neon.Common" Version="10000.1.3029-dev-master" />
+	  <PackageReference Include="Neon.Common" Version="10000.1.3030-dev-master" />
 	</ItemGroup>
 
 	<ItemGroup>

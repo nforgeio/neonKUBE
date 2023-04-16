@@ -13,7 +13,7 @@
         <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
         <IsPackable>true</IsPackable>
         <PackageType>Template</PackageType>
-        <PackageId>Neon.Kube.Operator.MSBuild.Templates</PackageId>
+        <PackageId>Neon.Kube.Operator.Templates</PackageId>
         <IncludeContentInPack>true</IncludeContentInPack>
         <IncludeBuildOutput>false</IncludeBuildOutput>
         <ContentTargetFolders>content</ContentTargetFolders>

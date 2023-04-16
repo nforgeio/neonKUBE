@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-using Neon.Kube.Operator.MSBuild;
+using Neon.Kube.Operator;
 
 namespace OperatorTemplate
 {
