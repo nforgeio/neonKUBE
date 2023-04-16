@@ -300,7 +300,7 @@ OPTIONS:
 
                     if (check && !debug)
                     {
-                        var k8s = KubeHelper.GetKubernetesClient(kubeConfigPath: KubeHelper.KubeConfigPath);
+                        var k8s = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(KubeHelper.KubeConfigPath), new KubernetesRetryHandler());
 
                         if (!await ClusterChecker.CheckAsync(k8s))
                         {
