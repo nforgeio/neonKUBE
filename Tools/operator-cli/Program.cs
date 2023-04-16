@@ -29,9 +29,17 @@ using OperatorCli.Commands.Generate;
 
 namespace OperatorCli
 {
+    /// <summary>
+    /// Program entry
+    /// </summary>
     public static class Program
     {
 
+        /// <summary>
+        /// Main.
+        /// </summary>
+        /// <param name="args"></param>
+        /// <returns></returns>
         public static async Task Main(string[] args)
         {
             // Build the commands from what's registered in the DI container.
