@@ -170,6 +170,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Operator.Templates", "Lib\Neon.Kube.Operator.Templates\Neon.Kube.Operator.Templates.csproj", "{3671750E-E1FF-49EB-B352-9F20BC1C88D3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.neon-cluster-operator", "Test\Test.neon-cluster-operator\Test.neon-cluster-operator.csproj", "{7D43806E-A532-47C3-A0DB-9518A6E7035D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0DBDF691-C3AE-4545-97A5-F55746B377E1} = {0DBDF691-C3AE-4545-97A5-F55746B377E1}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.neon-node-agent", "Test\Test.neon-node-agent\Test.neon-node-agent.csproj", "{AD78F82C-B2F1-4116-B32A-C1682CF05999}"
 EndProject
