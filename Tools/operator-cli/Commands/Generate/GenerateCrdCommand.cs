@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GenerateCommand.cs
+// FILE:	    GenerateCrdsCommand.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -23,18 +23,27 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Neon.Kube.Operator.Commands.Generate
+using k8s;
+using Neon.Kube.Operator;
+using System.IO;
+
+namespace OperatorCli.Commands.Generate
 {
-    internal class GenerateCommand : CommandBase
+    internal class GenerateCrdsCommand : GenerateCommandBase
     {
-        public GenerateCommand() : base("generate", "Generate RBAC yaml for the operator.")
+        public GenerateCrdsCommand() : base("Crds", "Generate Crds yaml for the operator.")
         {
-            Handler = CommandHandler.Create(() => HandleCommand());
+            Handler = CommandHandler.Create<GenerateCrdsCommandArgs>(HandleCommand);
+
         }
 
-        private int HandleCommand()
+        private int HandleCommand(GenerateCrdsCommandArgs args)
         {
-            return HandleCommand("Generating stuff");
+            return HandleCommand("");
+        }
+
+        public class GenerateCrdsCommandArgs
+        {
         }
     }
 }

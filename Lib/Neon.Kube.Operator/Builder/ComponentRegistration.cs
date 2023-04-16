@@ -100,11 +100,31 @@ namespace Neon.Kube.Operator.Builder
         /// <summary>
         /// $todo(marcusbooyah): documentation
         /// </summary>
+        public void RegisterController(Type controllerType, Type entityType)
+        {
+            ControllerRegistrations.Add(new ControllerRegistration(controllerType, entityType));
+
+            return;
+        }
+
+        /// <summary>
+        /// $todo(marcusbooyah): documentation
+        /// </summary>
         /// <typeparam name="TEntity"></typeparam>
         public void RegisterEntity<TEntity>()
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
             EntityRegistrations.Add(new EntityRegistration(typeof(TEntity)));
+
+            return;
+        }
+
+        /// <summary>
+        /// $todo(marcusbooyah): documentation
+        /// </summary>
+        public void RegisterEntity(Type entityType)
+        {
+            EntityRegistrations.Add(new EntityRegistration(entityType));
 
             return;
         }
@@ -126,6 +146,16 @@ namespace Neon.Kube.Operator.Builder
         /// <summary>
         /// $todo(marcusbooyah): documentation
         /// </summary>
+        public void RegisterFinalizer(Type finalizerType, Type entityType)
+        {
+            FinalizerRegistrations.Add(new FinalizerRegistration(finalizerType, entityType));
+
+            return;
+        }
+
+        /// <summary>
+        /// $todo(marcusbooyah): documentation
+        /// </summary>
         /// <typeparam name="TMutator"></typeparam>
         /// <typeparam name="TEntity"></typeparam>
         public void RegisterMutatingWebhook<TMutator, TEntity>()
@@ -133,6 +163,16 @@ namespace Neon.Kube.Operator.Builder
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
             MutatingWebhookRegistrations.Add(new MutatingWebhookRegistration(typeof(TMutator), typeof(TEntity)));
+
+            return;
+        }
+
+        /// <summary>
+        /// $todo(marcusbooyah): documentation
+        /// </summary>
+        public void RegisterMutatingWebhook(Type webhookType, Type entityType)
+        {
+            MutatingWebhookRegistrations.Add(new MutatingWebhookRegistration(webhookType, entityType));
 
             return;
         }
@@ -151,6 +191,16 @@ namespace Neon.Kube.Operator.Builder
         /// <summary>
         /// $todo(marcusbooyah): documentation
         /// </summary>
+        public void RegisterResourceManager(Type resourceManagerType)
+        {
+            ResourceManagerRegistrations.Add(resourceManagerType);
+
+            return;
+        }
+
+        /// <summary>
+        /// $todo(marcusbooyah): documentation
+        /// </summary>
         /// <typeparam name="TMutator"></typeparam>
         /// <typeparam name="TEntity"></typeparam>
         public void RegisterValidatingWebhook<TMutator, TEntity>()
@@ -158,6 +208,16 @@ namespace Neon.Kube.Operator.Builder
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
             ValidatingWebhookRegistrations.Add(new ValidatingWebhookRegistration(typeof(TMutator), typeof(TEntity)));
+
+            return;
+        }
+
+        /// <summary>
+        /// $todo(marcusbooyah): documentation
+        /// </summary>
+        public void RegisterValidatingWebhook(Type webhookType, Type entityType)
+        {
+            ValidatingWebhookRegistrations.Add(new ValidatingWebhookRegistration(webhookType, entityType));
 
             return;
         }

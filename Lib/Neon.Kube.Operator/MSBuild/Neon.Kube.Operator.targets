@@ -1,0 +1,38 @@
+<Project ToolsVersion="Current" DefaultTargets="GenerateAfterBuild">
+    <Target Name="Config">
+
+        <PropertyGroup>
+            <!-- Paths to tools, tasks, and extensions are calculated relative to the StaticWebAssetsSdkDirectoryRoot. This can be modified to test a local build. -->
+            <StaticWebAssetsSdkDirectoryRoot Condition="'$(StaticWebAssetsSdkDirectoryRoot)'==''">$(MSBuildThisFileDirectory)</StaticWebAssetsSdkDirectoryRoot>
+            <StaticWebAssetsSdkBuildTasksDirectoryRoot Condition="'$(StaticWebAssetsSdkBuildTasksDirectoryRoot)'==''">$(StaticWebAssetsSdkDirectoryRoot)..\bin\Debug\</StaticWebAssetsSdkBuildTasksDirectoryRoot>
+            <_StaticWebAssetsSdkTasksTFM Condition=" '$(MSBuildRuntimeType)' == 'Core'">net7.0</_StaticWebAssetsSdkTasksTFM>
+            <_StaticWebAssetsSdkTasksTFM Condition=" '$(_StaticWebAssetsSdkTasksTFM)' == ''">net7.0</_StaticWebAssetsSdkTasksTFM>
+            <StaticWebAssetsSdkBuildTasksAssembly>$(StaticWebAssetsSdkBuildTasksDirectoryRoot)$(_StaticWebAssetsSdkTasksTFM)\Neon.Kube.Operator.Tasks.dll</StaticWebAssetsSdkBuildTasksAssembly>
+
+        </PropertyGroup>
+
+    </Target>
+    <UsingTask
+        TaskName="Neon.Kube.Operator.Tasks.GenerateRbac"
+        AssemblyFile="$(MSBuildProjectDirectory)\$(OutDir)Neon.Kube.Operator.dll" />
+
+    <Target Name="__GenerateRbac" AfterTargets="Config" >
+        <Message Text="Generating Rbac" Importance="high" />
+
+        <GenerateRbac
+            InputDll="$(MSBuildProjectDirectory)\$(RunCodeAnalysisInputs)"/>
+            <!--OperatorName="$(KubernetesOperatorName)"
+            OperatorNamespace="$(KubernetesOperatorNamepace)"
+            LeaderElectionEnabled="$(LeaderElectionEnabled)"
+            ManageCustomResourceDefinitions="$(ManageCustomResourceDefinitions)"
+            CertManagerEnabled="$(CertManagerEnabled)"
+            OperatorNamespace="$(KubernetesOperatorNamepace)"-->
+            
+    </Target>
+    <Target Name="GenerateAfterBuild" AfterTargets="Build" DependsOnTargets="Config">
+        <CallTarget  Targets="__GenerateRbac" />
+    </Target>
+    
+</Project>
+
+

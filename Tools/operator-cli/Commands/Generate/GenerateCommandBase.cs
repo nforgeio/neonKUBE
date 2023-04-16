@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AssemblyInfo.cs
+// FILE:	    GenerateCommandBase.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -17,10 +17,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using System.CommandLine;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-[assembly: InternalsVisibleTo("Test.Neon.Kube")]
-[assembly: InternalsVisibleTo("Test.Neon.Kube.Operator")]
-[assembly: InternalsVisibleTo("Neon.Kube.Xunit")]
-[assembly: InternalsVisibleTo("operator-cli")]
-
+namespace OperatorCli.Commands.Generate
+{
+    internal class GenerateCommandBase : CommandBase
+    {
+        protected GenerateCommandBase(string name, string description) : base(name, description)
+        {
+        }
+    }
+}
