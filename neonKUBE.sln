@@ -188,6 +188,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "operator-cli", "tools\operator-cli\operator-cli.csproj", "{0DBDF691-C3AE-4545-97A5-F55746B377E1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Operator.MSBuild", "Lib\Neon.Kube.Operator.MSBuild\Neon.Kube.Operator.MSBuild.csproj", "{86BB5184-5085-43A2-882E-7D73B6C1D378}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0DBDF691-C3AE-4545-97A5-F55746B377E1} = {0DBDF691-C3AE-4545-97A5-F55746B377E1}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
