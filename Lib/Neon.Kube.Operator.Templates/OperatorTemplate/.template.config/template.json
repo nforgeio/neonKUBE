@@ -4,7 +4,7 @@
   "classifications": [ "Kubernetes Operator" ],
   "name": "Kubernetes Operator",
   "description": "Kubernetes operator",
-  "identity": "Neon.Kube.Operator.Templates.Operator",
+  "identity": "Neon.Kube.Operator.Templates.Csharp",
   "groupIdentity": "Neon.Kube.Operator.Templates",
   "shortName": "k8s operator",
   "tags": {
