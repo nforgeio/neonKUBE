@@ -187,7 +187,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SSH", "SSH", "{9E427CA6-E96
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "operator-cli", "tools\operator-cli\operator-cli.csproj", "{0DBDF691-C3AE-4545-97A5-F55746B377E1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Kube.Operator.MSBuild", "Lib\Neon.Kube.Operator.MSBuild\Neon.Kube.Operator.MSBuild.csproj", "{86BB5184-5085-43A2-882E-7D73B6C1D378}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Operator.MSBuild", "Lib\Neon.Kube.Operator.MSBuild\Neon.Kube.Operator.MSBuild.csproj", "{86BB5184-5085-43A2-882E-7D73B6C1D378}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
