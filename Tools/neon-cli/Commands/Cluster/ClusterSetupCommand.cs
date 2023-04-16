@@ -190,7 +190,7 @@ OPTIONS:
 
             // Check for conflicting clusters and remove them when allowed by the user.
 
-            if (context != null && setupState != null && setupState.DeploymentStatus != ClusterDeploymentStatus.Ready)
+            if (context != null && setupState != null && setupState.DeploymentStatus == ClusterDeploymentStatus.Ready)
             {
                 if (commandLine.GetOption("--force") == null && !Program.PromptYesNo($"One or more clusters reference [context={context.Name}].  Do you wish to delete these?"))
                 {
