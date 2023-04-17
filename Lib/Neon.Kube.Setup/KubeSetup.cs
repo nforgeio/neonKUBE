@@ -360,13 +360,12 @@ namespace Neon.Kube.Setup
             controller.SetGlobalStepStatus($"Cluster {(preparing ? "prepare" : "setup")} failure: uploading redacted logs for analysis");
 
             var headendClient     = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
-            var clusterProxy      = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterDefinition = clusterProxy?.Definition;
+            var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterDefinition = cluster?.SetupState.ClusterDefinition;
 
             if (clusterDefinition != null)
             {
                 clusterDefinition = NeonHelper.JsonClone(clusterDefinition);
-                clusterDefinition.ClearSetupState();
                 clusterDefinition.Hosting?.ClearSecrets(clusterDefinition);
             }
 

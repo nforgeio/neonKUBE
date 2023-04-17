@@ -43,6 +43,7 @@ using Neon.Cryptography;
 using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Config;
 using Neon.Kube.Hosting;
 using Neon.Kube.Proxy;
 using Neon.Net;

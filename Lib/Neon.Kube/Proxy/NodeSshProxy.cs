@@ -33,6 +33,7 @@ using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.Config;
 using Neon.Kube.Hosting;
 using Neon.Kube.Setup;
 using Neon.Net;
@@ -291,7 +292,7 @@ namespace Neon.Kube.Proxy
         /// <exception cref="InvalidOperationException">Thrown when there is no associated cluster proxy.</exception>
         public string GetNtpSources()
         {
-            var clusterDefinition  = Cluster.Definition;
+            var clusterDefinition  = Cluster.SetupState.ClusterDefinition;
             var nodeDefinition     = NodeDefinition;
             var sortedControlNodes = clusterDefinition.SortedControlNodes.ToArray();
             var firstControlNode   = sortedControlNodes.First();

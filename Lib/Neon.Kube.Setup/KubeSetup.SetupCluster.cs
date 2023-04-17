@@ -41,6 +41,7 @@ using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Clients;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.Config;
 using Neon.Kube.Hosting;
 using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
@@ -87,34 +88,35 @@ namespace Neon.Kube.Setup
 
             var logFolder = KubeHelper.LogFolder;
 
-            // Ensure that the [prepare-ok] file in the log folder exists, indicating that
-            // the last prepare operation succeeded.
+            // Ensure that the cluster's setup state file exists and that it
+            // indicates that tyhe cluster was prepared.
 
-            var prepareOkPath = Path.Combine(logFolder, "prepare-ok");
+            var contextName    = KubeContextName.Parse($"root@{clusterDefinition.Name}");
+            var setupStatePath = KubeSetupState.GetPath((string)contextName);
+            var setupState     = (KubeSetupState)null;
 
-            if (!File.Exists(prepareOkPath))
+            if (!File.Exists(setupStatePath))
             {
-                throw new NeonKubeException($"Cannot locate the [{prepareOkPath}] file.  Cluster prepare must have failed.");
+                throw new NeonKubeException($"Cannot locate the [{setupStatePath}] file.  Cluster hasn't been prepared.");
             }
 
-            // Clear the log folder except for the [prepare-ok] file.
+            try
+            {
+                setupState = KubeSetupState.Load((string)contextName);
+            }
+            catch (Exception e)
+            {
+                throw new NeonKubeException($"[{setupStatePath}] file is invalid.", e);
+            }
+
+            // Clear the log folder.
 
             if (Directory.Exists(logFolder))
             {
-                foreach (var file in Directory.GetFiles(logFolder, "*", SearchOption.TopDirectoryOnly))
-                {
-                    if (Path.GetFileName(file) != "prepare-ok")
-                    {
-                        NeonHelper.DeleteFile(file);
-                    }
-                }
-            }
-            else
-            {
-                throw new DirectoryNotFoundException(logFolder);
+                NeonHelper.DeleteFolderContents(logFolder);
             }
 
-            // Reload the any KubeConfig file to ensure we're up-to-date.
+            // Reload the the KubeConfig file to ensure we're up-to-date.
 
             KubeHelper.LoadConfig();
 
@@ -130,24 +132,19 @@ namespace Neon.Kube.Setup
 
             // Initialize the cluster proxy.
 
-            var contextName = KubeContextName.Parse($"root@{clusterDefinition.Name}");
-            var kubeContext = new KubeConfigContext(contextName);
-
-            KubeHelper.InitContext(kubeContext);
-
-            ClusterProxy cluster = null;
+            var cluster = (ClusterProxy)null;
 
             cluster = new ClusterProxy(
-                hostingManagerFactory:  new HostingManagerFactory(() => HostingLoader.Initialize()),
-                cloudMarketplace:       cloudMarketplace,
-                operation:              ClusterProxy.Operation.Setup,
-                clusterDefinition:      clusterDefinition,
-                nodeProxyCreator:       (nodeName, nodeAddress) =>
+                hostingManagerFactory: new HostingManagerFactory(() => HostingLoader.Initialize()),
+                cloudMarketplace:      cloudMarketplace,
+                operation:             ClusterProxy.Operation.Setup,
+                setupState:            setupState,
+                nodeProxyCreator:      (nodeName, nodeAddress) =>
                 {
                     var logStream      = new FileStream(Path.Combine(logFolder, $"{nodeName}.log"), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
                     var logWriter      = new StreamWriter(logStream);
                     var context        = KubeHelper.CurrentContext;
-                    var sshCredentials = context.Extension.SshCredentials ?? SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
+                    var sshCredentials = setupState.SshCredentials ?? SshCredentials.FromUserPassword(KubeConst.SysAdminUser, KubeConst.SysAdminPassword);
 
                     return new NodeSshProxy<NodeDefinition>(nodeName, nodeAddress, sshCredentials, logWriter: logWriter);
                 });
@@ -157,30 +154,9 @@ namespace Neon.Kube.Setup
                 cluster.SecureRunOptions = RunOptions.None;
             }
 
-            // Load the cluster login information if it exists and when it indicates that
-            // setup is still pending, we'll use that information (especially the generated
-            // secure SSH password).
-            //
-            // Otherwise, we'll write (or overwrite) the context file with a fresh context.
-
-            var clusterLoginPath = KubeHelper.GetClusterLoginPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
-            var clusterLogin     = ClusterLogin.Load(clusterLoginPath);
-
-            if (clusterLogin == null || !clusterLogin.SetupDetails.SetupPending)
-            {
-                clusterLogin = new ClusterLogin(clusterLoginPath)
-                {
-                    ClusterDefinition = clusterDefinition,
-                    SshUsername       = KubeConst.SysAdminUser,
-                    SetupDetails      = new KubeSetupDetails() { SetupPending = true }
-                };
-
-                clusterLogin.Save();
-            }
-
             // Configure the setup controller.
 
-            var controller = new SetupController<NodeDefinition>($"Setup [{cluster.Definition.Name}] cluster", cluster.Nodes, KubeHelper.LogFolder, disableConsoleOutput: options.DisableConsoleOutput)
+            var controller = new SetupController<NodeDefinition>($"Setup [{cluster.SetupState.ClusterDefinition.Name}] cluster", cluster.Nodes, KubeHelper.LogFolder, disableConsoleOutput: options.DisableConsoleOutput)
             {
                 MaxParallel     = options.MaxParallel > 0 ? options.MaxParallel: cluster.HostingManager.MaxParallel,
                 LogBeginMarker  = "# CLUSTER-BEGIN-SETUP #########################################################",
@@ -200,7 +176,6 @@ namespace Neon.Kube.Setup
             controller.Add(KubeSetupProperty.DebugMode, options.DebugMode);
             controller.Add(KubeSetupProperty.MaintainerMode, !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NC_ROOT")));
             controller.Add(KubeSetupProperty.ClusterProxy, cluster);
-            controller.Add(KubeSetupProperty.ClusterLogin, clusterLogin);
             controller.Add(KubeSetupProperty.HostingManager, cluster.HostingManager);
             controller.Add(KubeSetupProperty.HostingEnvironment, cluster.HostingManager.HostingEnvironment);
             controller.Add(KubeSetupProperty.NeonCloudHeadendClient, HeadendClient.Create());
@@ -254,7 +229,7 @@ namespace Neon.Kube.Setup
 
             // Perform common configuration for the remaining nodes (if any).
 
-            if (cluster.Definition.Nodes.Count() > 1)
+            if (cluster.SetupState.ClusterDefinition.Nodes.Count() > 1)
             {
                 controller.AddNodeStep("setup other nodes",
                     (controller, node) =>
@@ -267,7 +242,7 @@ namespace Neon.Kube.Setup
 
             if (options.DebugMode)
             {
-                controller.AddNodeStep("load images", (controller, node) => node.NodeLoadImagesAsync(controller, downloadParallel: 5, loadParallel: 3));
+                controller.AddNodeStep("load container images", (controller, node) => node.NodeLoadImagesAsync(controller, downloadParallel: 5, loadParallel: 3));
             }
 
             controller.AddNodeStep("install helm",
@@ -307,9 +282,8 @@ namespace Neon.Kube.Setup
                 {
                     // Indicate that setup is complete.
 
-                    clusterLogin.ClusterDefinition.ClearSetupState();
-                    clusterLogin.SetupDetails.SetupPending = false;
-                    clusterLogin.Save();
+                    setupState.DeploymentStatus = ClusterDeploymentStatus.Ready;
+                    setupState.Save();
                 });
 
             //-----------------------------------------------------------------
@@ -318,7 +292,7 @@ namespace Neon.Kube.Setup
             controller.AddNodeStep("check control-plane nodes",
                 (controller, node) =>
                 {
-                    KubeDiagnostics.CheckControlNode(node, cluster.Definition);
+                    KubeDiagnostics.CheckControlNode(node, cluster.SetupState.ClusterDefinition);
                 },
                 (controller, node) => node.Metadata.IsControlPane);
 
@@ -327,7 +301,7 @@ namespace Neon.Kube.Setup
                 controller.AddNodeStep("check workers",
                     (controller, node) =>
                     {
-                        KubeDiagnostics.CheckWorker(node, cluster.Definition);
+                        KubeDiagnostics.CheckWorker(node, cluster.SetupState.ClusterDefinition);
                     },
                     (controller, node) => node.Metadata.IsWorker);
             }
@@ -359,11 +333,15 @@ namespace Neon.Kube.Setup
 
             controller.Finished += CaptureClusterState;
 
-            // Add another [Finished] event handler that uploads cluster deployment logs and
+            // Add a [Finished] event handler that uploads cluster deployment logs and
             // details to the headend for manalysis.  Note that we don't do this when telemetry
             // is disabled or when the cluster was deployed without redaction.
 
             controller.Finished += (s, a) => UploadDeploymentLogs((ISetupController)s, a);
+
+            // Add a [Finished] event handler that removes the cluster setup state.
+
+            controller.Finished += (a, s) => setupState.Delete();
 
             return controller;
         }
@@ -381,7 +359,7 @@ namespace Neon.Kube.Setup
 
             var controller                = (SetupController<NodeDefinition>)sender;
             var clusterProxy              = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var redactedClusterDefinition = clusterProxy.Definition.Redact();
+            var redactedClusterDefinition = clusterProxy.SetupState.ClusterDefinition.Redact();
             var logFolder                 = KubeHelper.LogFolder;
             var logDetailsFolder          = KubeHelper.LogDetailsFolder;
 

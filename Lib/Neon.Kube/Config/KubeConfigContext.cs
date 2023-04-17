@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeConfigUser.cs
+// FILE:	    KubeConfigContext.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -26,40 +26,70 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s.KubeConfigModels;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Kube;
 
-namespace Neon.Kube
+namespace Neon.Kube.Config
 {
     /// <summary>
-    /// Describes a Kubernetes user configuration.
+    /// Describes a Kubernetes cluster configuration.
     /// </summary>
-    public class KubeConfigAuthProvider
+    public class KubeConfigContext
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public KubeConfigAuthProvider()
+        public KubeConfigContext()
         {
+            this.Config = new KubeConfigContextConfig();
         }
 
         /// <summary>
-        /// The local nickname for the user.
+        /// Specifies the context name.
+        /// </summary>
+        /// <param name="clusterName">Specifies the cluster name.</param>
+        public KubeConfigContext(string clusterName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName), nameof(clusterName));
+
+            this.Name = clusterName;
+        }
+
+        /// <summary>
+        /// Specifies the context name.
         /// </summary>
         [JsonProperty(PropertyName = "name", Required = Required.Always)]
         [YamlMember(Alias = "name", ApplyNamingConventions = false)]
         public string Name { get; set; }
 
         /// <summary>
-        /// The user properties.
+        /// Specifies the linked cluster name.
         /// </summary>
-        [JsonProperty(PropertyName = "config", Required = Required.Always)]
-        [YamlMember(Alias = "config", ApplyNamingConventions = false)]
-        public KubeConfigAuthProviderProperties Properties { get; set; }
+        [JsonProperty(PropertyName = "cluster", Required = Required.Always)]
+        [YamlMember(Alias = "cluster", ApplyNamingConventions = false)]
+        public string Cluster { get; set; }
+
+        /// <summary>
+        /// Specifies the linked user name.
+        /// </summary>
+        [JsonProperty(PropertyName = "user", Required = Required.Always)]
+        [YamlMember(Alias = "user", ApplyNamingConventions = false)]
+        public string User { get; set; }
+
+        /// <summary>
+        /// The cluster properties.
+        /// </summary>
+        [JsonProperty(PropertyName = "context", Required = Required.Always)]
+        [YamlMember(Alias = "context", ApplyNamingConventions = false)]
+        public KubeConfigContextConfig Config { get; set; }
     }
 }

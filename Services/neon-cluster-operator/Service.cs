@@ -48,7 +48,6 @@ using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Clients;
 using Neon.Kube.Glauth;
-using Neon.Kube.Kube;
 using Neon.Kube.Operator;
 using Neon.Kube.Operator.ResourceManager;
 using Neon.Kube.Operator.Rbac;

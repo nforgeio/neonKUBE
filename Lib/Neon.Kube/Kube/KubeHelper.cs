@@ -42,6 +42,7 @@ using DiscUtils.Iso9660;
 using IdentityModel.OidcClient;
 
 using k8s;
+using k8s.KubeConfigModels;
 using k8s.Models;
 
 using Microsoft.Extensions.Logging;
@@ -54,10 +55,11 @@ using Neon.Cryptography;
 using Neon.Deployment;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.Kube;
 using Neon.Kube.BuildInfo;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.Config;
 using Neon.Kube.Glauth;
-using Neon.Kube.Kube;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Tasks;
@@ -71,15 +73,94 @@ namespace Neon.Kube
     /// </summary>
     public static class KubeHelper
     {
+        //---------------------------------------------------------------------
+        // Extension methods
+
+        /// <summary>
+        /// Sets the named extension value by adding it if it doesn't already exist or changing
+        /// the existing value.
+        /// </summary>
+        /// <typeparam name="T">Specifies the property value type.</typeparam>
+        /// <param name="extensions">Holds the extensions.</param>
+        /// <param name="name">Specifies the extension name.</param>
+        /// <param name="value">Specifies the value being set.</param>
+        public static void Set<T>(this List<NamedExtension> extensions, string name, T value)
+        {
+            Covenant.Requires<ArgumentNullException>(extensions != null, nameof(extensions));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            foreach (var item in extensions)
+            {
+                if (item.Name == name)
+                {
+                    item.Extension = value;
+                    return;
+                }
+            }
+
+            extensions.Add(new NamedExtension() { Name = name, Extension = value });
+        }
+
+        /// <summary>
+        /// Searches <paramref name="extensions"/> for an extension with the name passed and
+        /// returns its value when found, otherwise returns <paramref name="default"/>.
+        /// </summary>
+        /// <typeparam name="T">Specifies the property value type.</typeparam>
+        /// <param name="extensions">Holds the extensions.</param>
+        /// <param name="name">Specifies the extension name.</param>
+        /// <param name="default">The value to be returned when the extension doesn't exist.</param>
+        /// <returns>The extension value when found, otherwise <paramref name="default"/>.</returns>
+        /// <exception cref="InvalidCastException">Thrown when the extension value cannot be cast to <typeparamref name="T"/>.</exception>
+        public static T Get<T>(this List<NamedExtension> extensions, string name, T @default)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            if (extensions == null)
+            {
+                return @default;
+            }
+
+            foreach (var item in extensions)
+            {
+                if (item.Name == name)
+                {
+                    return (T)item.Extension;
+                }
+            }
+
+            return @default;
+        }
+
+        /// <summary>
+        /// Removes a named extension if present.
+        /// </summary>
+        /// <param name="extensions">Holds the extensions.</param>
+        /// <param name="name">Specifies the name of the extension being removed.</param>
+        public static void Remove(this List<NamedExtension> extensions, string name)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            for (int i = 0; i < extensions.Count; i++)
+            {
+                if (extensions[i].Name == name)
+                {
+                    extensions.RemoveAt(i);
+                    return;
+                }
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
         private static Guid                 clientId;
         private static KubeConfig           cachedConfig;
-        private static KubeConfigContext    cachedContext;
         private static string               cachedNeonKubeUserFolder;
         private static string               cachedRunFolder;
         private static string               cachedLogFolder;
         private static string               cachedLogDetailsFolder;
         private static string               cachedTempFolder;
-        private static string               cachedLoginsFolder;
+        private static string               cachedSetupFolder;
         private static string               cachedPasswordsFolder;
         private static string               cachedCacheFolder;
         private static string               cachedDesktopCommonFolder;
@@ -110,13 +191,12 @@ namespace Neon.Kube
         private static void ClearCachedItems()
         {
             cachedConfig                    = null;
-            cachedContext                   = null;
             cachedNeonKubeUserFolder        = null;
             cachedRunFolder                 = null;
             cachedLogFolder                 = null;
             cachedLogDetailsFolder          = null;
             cachedTempFolder                = null;
-            cachedLoginsFolder              = null;
+            cachedSetupFolder               = null;
             cachedPasswordsFolder           = null;
             cachedCacheFolder               = null;
             cachedDesktopCommonFolder       = null;
@@ -253,7 +333,7 @@ namespace Neon.Kube
         /// command line tool).  Rather than throw an exception, we're going
         /// to retry the operation a few times.
         /// </remarks>
-        internal static string ReadFileTextWithRetry(string path)
+        internal static string ParseTextFileWithRetry(string path)
         {
             var retry = new LinearRetryPolicy(typeof(IOException), maxAttempts: 10, retryInterval: TimeSpan.FromMilliseconds(200));
             var text  = string.Empty;
@@ -322,7 +402,7 @@ namespace Neon.Kube
 
                 try
                 {
-                    cachedClientConfig = NeonHelper.JsonDeserialize<KubeClientConfig>(ReadFileTextWithRetry(clientStatePath));
+                    cachedClientConfig = NeonHelper.JsonDeserialize<KubeClientConfig>(ParseTextFileWithRetry(clientStatePath));
 
                     ClientConfig.Validate();
                 }
@@ -631,33 +711,28 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path the folder containing cluster login files, creating the folder 
+        /// Returns the path the folder containing the temporary setup state files, creating the folder 
         /// if it doesn't already exist.
         /// </summary>
         /// <returns>The folder path.</returns>
         /// <remarks>
-        /// <para>
-        /// This folder will exist on developer/operator workstations that have used the <b>neon-cli</b>
-        /// to deploy and manage clusters.  Each known cluster will have a JSON file named
-        /// <b><i>NAME</i>.context.json</b> holding the serialized <see cref="ClusterLogin"/> 
-        /// information for the cluster, where <i>NAME</i> maps to a cluster configuration name
-        /// within the <c>kubeconfig</c> file.
-        /// </para>
+        /// This folder holds <see cref="KubeSetupState"/> for clusters in the process of being prepared and setup. 
+        /// Files will be  named like <b><i>CLUSTER-NAME</i>.json</b>
         /// </remarks>
-        public static string LoginsFolder
+        public static string SetupFolder
         {
             get
             {
-                if (cachedLoginsFolder != null)
+                if (cachedSetupFolder != null)
                 {
-                    return cachedLoginsFolder;
+                    return cachedSetupFolder;
                 }
 
-                var path = Path.Combine(NeonKubeUserFolder, "logins");
+                var path = Path.Combine(NeonKubeUserFolder, "setup");
 
                 Directory.CreateDirectory(path);
 
-                return cachedLoginsFolder = path;
+                return cachedSetupFolder = path;
             }
         }
 
@@ -960,49 +1035,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path to the cluster login file path for a specific context
-        /// by raw name.
-        /// </summary>
-        /// <param name="contextName">The kubecontext name.</param>
-        /// <returns>The file path.</returns>
-        public static string GetClusterLoginPath(KubeContextName contextName)
-        {
-            Covenant.Requires<ArgumentNullException>(contextName != null, nameof(contextName));
-
-            // Kubecontext names may include a forward slash to specify a Kubernetes
-            // namespace.  This won't work for a file name, so we're going to replace
-            // any of these with a "~".
-
-            var rawName = (string)contextName;
-
-            return Path.Combine(LoginsFolder, $"{rawName.Replace("/", "~")}.login.yaml");
-        }
-
-        /// <summary>
-        /// Returns the cluster login for the structured configuration name.
-        /// </summary>
-        /// <param name="name">The structured context name.</param>
-        /// <returns>The <see cref="ClusterLogin"/> or <c>null</c>.</returns>
-        public static ClusterLogin GetClusterLogin(KubeContextName name)
-        {
-            Covenant.Requires<ArgumentNullException>(name != null, nameof(name));
-
-            var path = GetClusterLoginPath(name);
-
-            if (!File.Exists(path))
-            {
-                return null;
-            }
-
-            var extension = NeonHelper.YamlDeserializeViaJson<ClusterLogin>(ReadFileTextWithRetry(path));
-
-            extension.SetPath(path);
-            extension.ClusterDefinition?.Validate();
-
-            return extension;
-        }
-
-        /// <summary>
         /// The name of the user's cluster virtual machine image cache folder.
         /// </summary>
         public const string VmImageFolderName = "images";
@@ -1133,7 +1165,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the user's current <see cref="Config"/>.
+        /// Returns the user's current <see cref="KubeConfig"/>.
         /// </summary>
         public static KubeConfig Config
         {
@@ -1158,18 +1190,7 @@ namespace Neon.Kube
 
             cachedConfig = config;
 
-            WriteFileTextWithRetry(KubeConfigPath, NeonHelper.YamlSerialize(config));
-        }
-
-        /// <summary>
-        /// This is used for special situations like setting up a cluster to
-        /// set an uninitialized Kubernetes config context as the current
-        /// <see cref="CurrentContext"/>.
-        /// </summary>
-        /// <param name="context">The context being set or <c>null</c> to reset.</param>
-        public static void InitContext(KubeConfigContext context = null)
-        {
-            cachedContext = context;
+            config.Save();
         }
 
         /// <summary>
@@ -1203,7 +1224,6 @@ namespace Neon.Kube
         {
             if (contextName == null)
             {
-                cachedContext         = null;
                 Config.CurrentContext = null;
             }
             else
@@ -1215,12 +1235,6 @@ namespace Neon.Kube
                     throw new ArgumentException($"Kubernetes [context={contextName}] does not exist.", nameof(contextName));
                 }
 
-                if (!contextName.IsNeonKube)
-                {
-                    throw new ArgumentException($"[{contextName}] is not a neonKUBE context.", nameof(contextName));
-                }
-
-                cachedContext         = newContext;
                 Config.CurrentContext = (string)contextName;
             }
 
@@ -1238,18 +1252,13 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the <see cref="CurrentContext"/> for the connected cluster
-        /// or <c>null</c> when there is no current context.
+        /// Returns the current <see cref="KubeConfigContext"/> from the KubeContext or
+        /// <c>null</c> when no context is selected.
         /// </summary>
         public static KubeConfigContext CurrentContext
         {
             get
             {
-                if (cachedContext != null)
-                {
-                    return cachedContext;
-                }
-
                 if (Config == null || string.IsNullOrEmpty(Config.CurrentContext))
                 {
                     return null;
@@ -1268,9 +1277,38 @@ namespace Neon.Kube
         public static KubeContextName CurrentContextName => CurrentContext == null ? null : KubeContextName.Parse(CurrentContext.Name);
 
         /// <summary>
-        /// Returns <c>true</c> if the current cluster is the neon-desktop built-in cluster.
+        /// Returns the current <see cref="KubeConfigCluster"/> specified by the <see cref="CurrentContext"/>
+        /// from the KubeContext or <c>null</c> when no context is selected or the named cluster does not exist.
         /// </summary>
-        public static bool IsBuiltinCluster => CurrentContext != null && CurrentContext.IsNeonKube && CurrentContext.Name == KubeConst.NeonDesktopContextName;
+        public static KubeConfigCluster CurrentCluster
+        {
+            get
+            {
+                if (cachedConfig == null || cachedConfig.CurrentContext == null)
+                {
+                    return null;
+                }
+
+                return cachedConfig.GetCluster(cachedConfig.CurrentContext);
+            }
+        }
+
+        /// <summary>
+        /// Returns the current <see cref="KubeConfigUser"/> specified by the <see cref="CurrentContext"/>
+        /// from the KubeContext or <c>null</c> when no context is selected or the named user does not exist.
+        /// </summary>
+        public static KubeConfigUser CurrentUser
+        {
+            get
+            {
+                if (cachedConfig == null || cachedConfig.CurrentContext == null)
+                {
+                    return null;
+                }
+
+                return cachedConfig.GetUser(cachedConfig.CurrentContext);
+            }
+        }
 
         /// <summary>
         /// Generates a self-signed certificate for arbitrary hostnames, possibly including 
@@ -3272,7 +3310,7 @@ TCPKeepAlive yes
         /// </summary>
         /// <param name="authority">Specifies the authority.</param>
         /// <param name="clientId">Specifies the client ID.</param>
-        /// <param name="scopes">Optionally specieis any scopes.</param>
+        /// <param name="scopes">Optionally specifies any scopes.</param>
         /// <returns>A <see cref="LoginResult"/>.</returns>
         public static async Task<LoginResult> LoginOidcAsync(
             string      authority,

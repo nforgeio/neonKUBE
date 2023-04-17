@@ -33,8 +33,9 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Kube;
 
-namespace Neon.Kube
+namespace Neon.Kube.Config
 {
     /// <summary>
     /// Holds all of the information required to import/export a cluster
@@ -69,7 +70,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "Extensions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "extensions", ApplyNamingConventions = false)]
-        public ClusterLogin Extensions { get; set; }
+        public KubeClusterInfo Extensions { get; set; }
 
         /// <summary>
         /// The Kubernetes user.

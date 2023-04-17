@@ -33,7 +33,7 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
-using Neon.Kube.Kube;
+using Neon.Kube;
 using Neon.Retry;
 using Neon.Tasks;
 
@@ -764,8 +764,9 @@ namespace Neon.Kube
                         return false;
                     }
                 },
-                timeout:      timeout,
-                pollInterval: pollInterval);
+                timeout:        timeout,
+                pollInterval:   pollInterval,
+                timeoutMessage: $"Timeout waiting for CRD: {typeof(TEntity).FullName}");
         }
 
         /// <summary>

@@ -30,6 +30,7 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.Kube;
+using Neon.Kube.Config;
 
 namespace NeonCli
 {
@@ -148,7 +149,7 @@ USER@CLUSTER[/NAMESPACE is not specified.
 
             if (KubeHelper.CurrentContextName != null)
             {
-                var sshKeyPath = Path.Combine(NeonHelper.UserHomeFolder, ".ssh", KubeHelper.CurrentContextName.ToString());
+                var sshKeyPath = Path.Combine(NeonHelper.UserHomeFolder, ".ssh", (string)KubeHelper.CurrentContextName);
 
                 NeonHelper.DeleteFile(sshKeyPath);
             }

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeConfigCluster.cs
+// FILE:	    KubeConfigEnvironmentVariable.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -34,33 +34,23 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Kube;
 
-namespace Neon.Kube
+namespace Neon.Kube.Config
 {
     /// <summary>
-    /// Describes a Kubernetes cluster configuration.
+    /// Describes an environment variable.
     /// </summary>
-    public class KubeConfigCluster
+    public class KubeConfigEnvironmentVariable
     {
         /// <summary>
-        /// Default constructor.
+        /// Specifies the variable name.
         /// </summary>
-        public KubeConfigCluster()
-        {
-        }
-
-        /// <summary>
-        /// The local nickname for the cluster.
-        /// </summary>
-        [JsonProperty(PropertyName = "name", Required = Required.Always)]
-        [YamlMember(Alias = "name", ApplyNamingConventions = false)]
         public string Name { get; set; }
 
         /// <summary>
-        /// The cluster properties.
+        /// Specifies the variable value.
         /// </summary>
-        [JsonProperty(PropertyName = "cluster", Required = Required.Always)]
-        [YamlMember(Alias = "cluster", ApplyNamingConventions = false)]
-        public KubeConfigClusterProperties Properties { get; set; }
+        public string Value { get; set; }
     }
 }

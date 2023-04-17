@@ -26,6 +26,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s.KubeConfigModels;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -33,20 +35,15 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Kube;
 
-namespace Neon.Kube
+namespace Neon.Kube.Config
 {
     /// <summary>
     /// Used to manage serialization of Kubernetes <b>kubeconfig</b> files. 
     /// These are used to manage cluster contexts on client machines:
     /// <a href="https://github.com/eBay/Kubernetes/blob/master/docs/user-guide/kubeconfig-file.md">more information</a>.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// neonKUBE client side tools like <b>neon-cli</b> and <b>neonDESKTOP</b> maintain 
-    /// cluster login information within 
-    /// </para>
-    /// </remarks>
     public class KubeConfig
     {
         //---------------------------------------------------------------------
@@ -55,7 +52,7 @@ namespace Neon.Kube
         private static object syncRoot = new object();
 
         /// <summary>
-        /// Reads and returns information loaded from the current <b>~/.kube/config</b> file.
+        /// Reads and returns information loaded from the user's <b>~/.kube/config</b> file.
         /// </summary>
         /// <returns>The parsed <see cref="KubeConfig"/> or an empty config if the file doesn't exist.</returns>
         /// <exception cref="NeonKubeException">Thrown when the current config is invalid.</exception>
@@ -65,25 +62,9 @@ namespace Neon.Kube
 
             if (File.Exists(configPath))
             {
-                var config = NeonHelper.YamlDeserialize<KubeConfig>(KubeHelper.ReadFileTextWithRetry(configPath));
+                var config = NeonHelper.YamlDeserialize<KubeConfig>(KubeHelper.ParseTextFileWithRetry(configPath));
 
                 config.Validate();
-
-                // Load any related neonKUBE cluster logins.
-
-                foreach (var context in config.Contexts)
-                {
-                    var extensionPath = Path.Combine(KubeHelper.LoginsFolder, $"{context.Name}.login.yaml");
-
-                    if (File.Exists(extensionPath))
-                    {
-                        context.Extension = NeonHelper.YamlDeserializeViaJson<ClusterLogin>(KubeHelper.ReadFileTextWithRetry(extensionPath));
-                    }
-                    else
-                    {
-                        context.Extension = new ClusterLogin();
-                    }
-                }
                 
                 return config;
             }
@@ -104,7 +85,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// The cluster API server protocol version (defaults to <b>v1</b>).
+        /// Specifies cluster API server protocol version (defaults to <b>v1</b>).
         /// </summary>
         [JsonProperty(PropertyName = "apiVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "apiVersion", ApplyNamingConventions = false)]
@@ -120,21 +101,21 @@ namespace Neon.Kube
         public string Kind { get; set; } = "Config";
 
         /// <summary>
-        /// The list of cluster configurations.
+        /// Lists cluster configurations.
         /// </summary>
         [JsonProperty(PropertyName = "clusters", Required = Required.Always)]
         [YamlMember(Alias = "clusters", ApplyNamingConventions = false)]
         public List<KubeConfigCluster> Clusters { get; set; } = new List<KubeConfigCluster>();
 
         /// <summary>
-        /// The list of config contexts.
+        /// Lists config contexts.
         /// </summary>
         [JsonProperty(PropertyName = "contexts", Required = Required.Always)]
         [YamlMember(Alias = "contexts", ApplyNamingConventions = false)]
         public List<KubeConfigContext> Contexts { get; set; } = new List<KubeConfigContext>();
 
         /// <summary>
-        /// The name of the current context or <c>null</c> when there is no current context.
+        /// Specifies the name of the current context or <c>null</c> when there is no current context.
         /// </summary>
         [JsonProperty(PropertyName = "current-context", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "current-context", ApplyNamingConventions = false)]
@@ -142,7 +123,7 @@ namespace Neon.Kube
         public string CurrentContext { get; set; }
 
         /// <summary>
-        /// The optional dictionary of preferences.
+        /// Optional dictionary of preferences.
         /// </summary>
         [JsonProperty(PropertyName = "preferences", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "preferences", ApplyNamingConventions = false)]
@@ -150,11 +131,22 @@ namespace Neon.Kube
         public Dictionary<string, string> Preferences { get; set; } = null;
 
         /// <summary>
-        /// The list of user configurations.
+        /// Lists the user configurations.
         /// </summary>
         [JsonProperty(PropertyName = "users", Required = Required.Always)]
         [YamlMember(Alias = "users", ApplyNamingConventions = false)]
         public List<KubeConfigUser> Users { get; set; } = new List<KubeConfigUser>();
+
+        /// <summary>
+        /// Lists any custom extension properties.  Extensions are name/value pairs added
+        /// by vendors to hold arbitrary information.  Take care to choose property names
+        /// that are unlikely to conflict with properties created by other vendors by adding
+        /// a custom suffix like <b>my-property.neonkube.io</b>, where <b>my-property</b> 
+        /// identifies the property and <b>neonkibe.io</b> helps avoid conflicts.
+        /// </summary>
+        [JsonProperty(PropertyName = "Extensions", Required = Required.Default)]
+        [YamlMember(Alias = "extensions", ApplyNamingConventions = false)]
+        public List<NamedExtension> Extensions { get; set; } = new List<NamedExtension>();
 
         /// <summary>
         /// Returns the current context or <c>null</c>.
@@ -177,7 +169,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the named neonKUBE related cluster.
+        /// Returns a Kubernetes context by name.
         /// </summary>
         /// <param name="name">The cluster name.</param>
         /// <returns>The <see cref="KubeConfigCluster"/> or <c>null</c>.</returns>
@@ -189,7 +181,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the named user.
+        /// Returns a Kubernetes user by name.
         /// </summary>
         /// <param name="name">The user name.</param>
         /// <returns>The <see cref="KubeConfigUser"/> or <c>null</c>.</returns>
@@ -201,7 +193,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the named neonKUBE related context (using a raw context name).
+        /// Returns a Kubernetes context using a raw context name.
         /// </summary>
         /// <param name="rawName">The raw context name.</param>
         /// <returns>The <see cref="KubeConfigContext"/> or <c>null</c>.</returns>
@@ -209,11 +201,11 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(rawName), nameof(rawName));
 
-            return Contexts.SingleOrDefault(context => context.Name == rawName && context.IsNeonKube);
+            return Contexts.SingleOrDefault(context => context.Name == rawName);
         }
 
         /// <summary>
-        /// Returns the named neonKUBE related context (using a structured context name).
+        /// Returns a Kubernetes context by name.
         /// </summary>
         /// <param name="name">The raw context name.</param>
         /// <returns>The <see cref="KubeConfigContext"/> or <c>null</c>.</returns>
@@ -223,87 +215,11 @@ namespace Neon.Kube
 
             var rawName = name.ToString();
 
-            return Contexts.SingleOrDefault(context => context.Name == rawName && context.IsNeonKube);
+            return Contexts.SingleOrDefault(context => context.Name == rawName);
         }
 
         /// <summary>
-        /// Adds or updates a kubecontext.
-        /// </summary>
-        /// <param name="context">The new context.</param>
-        /// <param name="cluster">The context cluster information.</param>
-        /// <param name="user">The context user information.</param>
-        /// <param name="noSave">Optionally prevent context save after the change.</param>
-        public void SetContext(KubeConfigContext context, KubeConfigCluster cluster, KubeConfigUser user, bool noSave = false)
-        {
-            Covenant.Requires<ArgumentNullException>(context != null, nameof(context));
-            Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
-            Covenant.Requires<ArgumentNullException>(user != null, nameof(user));
-            Covenant.Requires<ArgumentNullException>(context.Properties.Cluster == cluster.Name, nameof(context));
-            Covenant.Requires<ArgumentNullException>(context.Properties.User == user.Name, nameof(context));
-
-            var updated = false;
-
-            for (int i = 0; i < Contexts.Count; i++)
-            {
-                if (Contexts[i].Name == context.Name)
-                {
-                    Contexts[i] = context;
-                    updated     = true;
-                    break;
-                }
-            }
-
-            if (!updated)
-            {
-                Contexts.Add(context);
-            }
-
-            // We also need to add or update the referenced cluster and user properties.
-
-            updated = false;
-
-            for (int i = 0; i < Clusters.Count; i++)
-            {
-                if (Clusters[i].Name == context.Properties.Cluster)
-                {
-                    Clusters[i] = cluster;
-                    updated     = true;
-                    break;
-                }
-            }
-
-            if (!updated)
-            {
-                Clusters.Add(cluster);
-            }
-
-            updated = false;
-
-            for (int i = 0; i < Users.Count; i++)
-            {
-                if (Users[i].Name == context.Properties.User)
-                {
-                    Users[i] = user;
-                    updated  = true;
-                    break;
-                }
-            }
-
-            if (!updated)
-            {
-                Users.Add(user);
-            }
-
-            // Persist as required.
-
-            if (!noSave)
-            {
-                Save();
-            }
-        }
-
-        /// <summary>
-        /// Removes a neonKUBE related kubecontext if it exists.
+        /// Removes a Kubernetes context  by name, if it exists.
         /// </summary>
         /// <param name="name">The context name.</param>
         /// <param name="noSave">Optionally prevent context save after the change.</param>
@@ -313,16 +229,20 @@ namespace Neon.Kube
 
             if (context != null)
             {
-                RemoveContext(context);
+                RemoveContext(context, noSave: noSave);
             }
-            else
+
+            if (!noSave)
             {
-                NeonHelper.DeleteFile(KubeHelper.GetClusterLoginPath(name));
+                // Also the setup state file for this cluster if it exists.  This may be
+                // present if cluster prepare/setup was interrupted for the cluster.
+
+                KubeSetupState.Delete(name.ToString());
             }
         }
 
         /// <summary>
-        /// Removes a neonKUBE related kubecontext if it exists.
+        /// Removes a Kubernetes context, if it exists.
         /// </summary>
         /// <param name="context">The context to be removed.</param>
         /// <param name="noSave">Optionally prevent context save after the change.</param>
@@ -339,27 +259,6 @@ namespace Neon.Kube
                 }
             }
 
-            // Remove the referenced cluster and user if they're not
-            // referenced by another context (to prevent orphans).
-
-            for (int i = 0; i < Clusters.Count; i++)
-            {
-                if (Clusters[i].Name == context.Properties.Cluster)
-                {
-                    Clusters.RemoveAt(i);
-                    break;
-                }
-            }
-
-            for (int i = 0; i < Users.Count; i++)
-            {
-                if (Users[i].Name == context.Properties.User)
-                {
-                    Users.RemoveAt(i);
-                    break;
-                }
-            }
-
             // Clear the current context if the removed context was the current one.
 
             if (CurrentContext == context.Name)
@@ -372,24 +271,11 @@ namespace Neon.Kube
             if (!noSave)
             {
                 Save();
-
-                // We need to remove the extension file too (if one exists).
-
-                var extensionPath = Path.Combine(KubeHelper.LoginsFolder, $"{context.Name}.login.yaml");
-
-                try
-                {
-                    File.Delete(extensionPath);
-                }
-                catch (IOException)
-                {
-                    // Intentially ignoring this.
-                }
             }
         }
 
         /// <summary>
-        /// Validates the configuration and also prunes any non-neonKUBE contexts.
+        /// Validates the kubeconfig.
         /// </summary>
         /// <exception cref="NeonKubeException">Thrown when the current config is invalid.</exception>
         public void Validate()
@@ -397,58 +283,6 @@ namespace Neon.Kube
             if (Kind != "Config")
             {
                 throw new NeonKubeException($"Invalid [{nameof(Kind)}={Kind}].");
-            }
-
-            // Ensure that the current context exists.
-
-            if (!string.IsNullOrEmpty(CurrentContext) && GetContext(CurrentContext) == null)
-            {
-                CurrentContext = null;
-            }
-
-            // Prune any non-neonKUBE or invalid contexts.
-
-            var prunedConfigs = new List<KubeConfigContext>();
-            var clusterRefs    = new HashSet<string>();
-
-            foreach (var context in Contexts)
-            {
-                if (!context.IsNeonKube)
-                {
-                    prunedConfigs.Add(context);
-                    continue;
-                }
-
-                if (!string.IsNullOrEmpty(context.Properties.Cluster) && GetCluster(context.Properties.Cluster) == null)
-                {
-                    prunedConfigs.Add(context);
-                    continue;
-                }
-
-                clusterRefs.Add(context.Properties.Cluster);
-            }
-
-            foreach (var context in prunedConfigs)
-            {
-                Contexts.Remove(context);
-            }
-
-            // Prune any non-neonKUBE clusters that are not referenced by a 
-            // neonKUBE context.
-
-            var prunedClusters = new List<KubeConfigCluster>();
-
-            foreach (var cluster in Clusters)
-            {
-                if (!clusterRefs.Contains(cluster.Name))
-                {
-                    prunedClusters.Add(cluster);
-                }
-            }
-
-            foreach (var cluster in prunedClusters)
-            {
-                Clusters.Remove(cluster);
             }
         }
 
@@ -477,8 +311,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Persists the KubeContext along with any neonKUBE extension information to the
-        /// local user folder.
+        /// Persists the KubeConfig.
         /// </summary>
         public void Save()
         {
@@ -489,31 +322,6 @@ namespace Neon.Kube
                 var configPath = KubeHelper.KubeConfigPath;
 
                 File.WriteAllText(configPath, NeonHelper.YamlSerialize(this));
-
-                // Persist any cluster logins.
-
-                foreach (var context in Contexts.Where(context => context.Extension != null))
-                {
-                    var extensionPath = Path.Combine(KubeHelper.LoginsFolder, $"{context.Name}.login.yaml");
-
-                    File.WriteAllText(extensionPath, NeonHelper.YamlSerialize(context.Extension));
-                }
-
-                // Delete any existing cluster login files that don't have a corresponding
-                // context in the kubeconfig.
-
-                var fileExtension = ".login.yaml";
-
-                foreach (var extensionPath in Directory.GetFiles(KubeHelper.LoginsFolder, $"*{fileExtension}"))
-                {
-                    var fileName    = Path.GetFileName(extensionPath);
-                    var contextName = fileName.Substring(0, fileName.Length - fileExtension.Length);
-
-                    if (GetContext(contextName) == null)
-                    {
-                        File.Delete(extensionPath);
-                    }
-                }
             }
         }
     }

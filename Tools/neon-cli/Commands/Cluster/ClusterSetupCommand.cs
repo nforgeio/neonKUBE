@@ -44,6 +44,7 @@ using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.Config;
 using Neon.Kube.Setup;
 using Neon.Net;
 using Neon.Retry;
@@ -111,9 +112,6 @@ OPTIONS:
                           
 ";
 
-        private KubeConfigContext   kubeContext;
-        private ClusterLogin        clusterLogin;
-
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "setup" };
 
@@ -159,7 +157,8 @@ OPTIONS:
             NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfile());
 
             var contextName       = KubeContextName.Parse(commandLine.Arguments[0]);
-            var kubeCluster       = KubeHelper.Config.GetCluster(contextName.Cluster);
+            var context           = KubeHelper.Config.GetCluster(contextName.Cluster);
+            var setupState        = KubeSetupState.Load((string)contextName, nullIfMissing: true);
             var unredacted        = commandLine.HasOption("--unredacted");
             var debug             = commandLine.HasOption("--debug");
             var quiet             = commandLine.HasOption("--quiet");
@@ -181,17 +180,19 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            clusterLogin = KubeHelper.GetClusterLogin(contextName);
+            // Verify that it looks like the cluster has already been prepared.
 
-            if (clusterLogin == null)
+            if (setupState == null || setupState.DeploymentStatus != ClusterDeploymentStatus.Prepared)
             {
                 Console.Error.WriteLine($"*** ERROR: Be sure to prepare the cluster first via: neon cluster prepare...");
                 Program.Exit(1);
             }
 
-            if (kubeCluster != null && !clusterLogin.SetupDetails.SetupPending)
+            // Check for conflicting clusters and remove them when allowed by the user.
+
+            if (context != null && setupState != null && setupState.DeploymentStatus == ClusterDeploymentStatus.Ready)
             {
-                if (commandLine.GetOption("--force") == null && !Program.PromptYesNo($"One or more logins reference [{kubeCluster.Name}].  Do you wish to delete these?"))
+                if (commandLine.GetOption("--force") == null && !Program.PromptYesNo($"One or more clusters reference [context={context.Name}].  Do you wish to delete these?"))
                 {
                     Program.Exit(0);
                 }
@@ -199,24 +200,27 @@ OPTIONS:
                 // Remove the cluster from the kubeconfig and remove any 
                 // contexts that reference it.
 
-                KubeHelper.Config.Clusters.Remove(kubeCluster);
+                KubeHelper.Config.Clusters.Remove(context);
 
                 var delList = new List<KubeConfigContext>();
 
-                foreach (var context in KubeHelper.Config.Contexts)
+                foreach (var existingContext in KubeHelper.Config.Contexts)
                 {
-                    if (context.Properties.Cluster == kubeCluster.Name)
+                    if (existingContext.Name == existingContext.Name)
                     {
-                        delList.Add(context);
+                        delList.Add(existingContext);
                     }
                 }
 
-                foreach (var context in delList)
+                foreach (var existingContext in delList)
                 {
-                    KubeHelper.Config.Contexts.Remove(context);
+                    KubeHelper.Config.Contexts.Remove(existingContext);
                 }
 
-                if (KubeHelper.CurrentContext != null && KubeHelper.CurrentContext.Properties.Cluster == kubeCluster.Name)
+                if (KubeHelper.CurrentContext != null &&
+                    KubeHelper.CurrentCluster != null && 
+                    KubeHelper.CurrentCluster.ClusterInfo != null && 
+                    KubeHelper.CurrentContext.Name == context.Name)
                 {
                     KubeHelper.Config.CurrentContext = null;
                 }
@@ -224,13 +228,9 @@ OPTIONS:
                 KubeHelper.Config.Save();
             }
 
-            kubeContext = new KubeConfigContext(contextName);
-
-            KubeHelper.InitContext(kubeContext);
-
             // Create and run the cluster setup controller.
 
-            var clusterDefinition = clusterLogin.ClusterDefinition;
+            var clusterDefinition = setupState.ClusterDefinition;
 
             var setupOptions = new SetupClusterOptions()
             {
@@ -300,9 +300,9 @@ OPTIONS:
 
                     if (check && !debug)
                     {
-                        var k8s = KubeHelper.GetKubernetesClient(kubeConfigPath: KubeHelper.KubeConfigPath);
+                        var k8s = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(KubeHelper.KubeConfigPath), new KubernetesRetryHandler());
 
-                        if (!await ClusterChecker.CheckAsync(clusterLogin, k8s))
+                        if (!await ClusterChecker.CheckAsync(k8s))
                         {
                             Program.Exit(1);
                         }

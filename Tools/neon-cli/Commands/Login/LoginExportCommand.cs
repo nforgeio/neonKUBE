@@ -30,6 +30,7 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.Kube;
+using Neon.Kube.Config;
 
 namespace NeonCli
 {
@@ -111,8 +112,8 @@ REMARKS:
                 Program.Exit(1);
             }
 
-            var cluster = KubeHelper.Config.GetCluster(context.Properties.Cluster);
-            var user    = KubeHelper.Config.GetUser(context.Properties.User);
+            var cluster = KubeHelper.Config.GetCluster(context.Config.Cluster);
+            var user    = KubeHelper.Config.GetUser(context.Config.User);
 
             if (context == null)
             {
@@ -122,16 +123,15 @@ REMARKS:
 
             if (user == null)
             {
-                Console.Error.WriteLine($"*** ERROR: User [{context.Properties.User}] not found.");
+                Console.Error.WriteLine($"*** ERROR: User [{context.Config.User}] not found.");
                 Program.Exit(1);
             }
 
             var login = new ClusterLoginExport()
             {
-                Cluster    = cluster,
-                Context    = context,
-                Extensions = KubeHelper.GetClusterLogin(contextName),
-                User       = user
+                Cluster = cluster,
+                Context = context,
+                User    = user
             };
 
             var yaml = NeonHelper.YamlSerialize(login);

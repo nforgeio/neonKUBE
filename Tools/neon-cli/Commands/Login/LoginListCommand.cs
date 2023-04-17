@@ -30,6 +30,7 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.Kube;
+using Neon.Kube.Config;
 using Neon.Kube.Hosting;
 
 namespace NeonCli
@@ -40,34 +41,6 @@ namespace NeonCli
     [Command]
     public class LoginListCommand : CommandBase
     {
-        //---------------------------------------------------------------------
-        // Private types
-
-        private class LoginInfo
-        {
-            public LoginInfo(KubeConfigContext context)
-            {
-                this.Name = context.Name;
-
-                var sbInfo = new StringBuilder();
-
-                if (context.Extension != null &&
-                    context.Extension.SetupDetails != null && 
-                    context.Extension.SetupDetails.SetupPending)
-                {
-                    sbInfo.AppendWithSeparator("setup");
-                }
-
-                this.Info = sbInfo.ToString();
-            }
-
-            public string Name;
-            public string Info;
-        }
-
-        //---------------------------------------------------------------------
-        // Implementation
-        
         private const string usage = @"
 Lists the neonKUBE contexts available on the local computer.
 
@@ -97,14 +70,27 @@ USAGE:
         {
             HostingLoader.Initialize();
 
+            var config  = KubeHelper.Config;
             var current = KubeHelper.CurrentContext;
-            var logins  = new List<LoginInfo>();
+            var logins  = new List<string>();
 
             foreach (var context in KubeHelper.Config.Contexts
-                .Where(context => context.IsNeonKube)
+                .Where(context =>
+                {
+                    var cluster = config.GetCluster(current.Cluster);
+
+                    if (cluster == null)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        return cluster.IsNeonKube;
+                    }
+                })
                 .OrderBy(context => context.Name))
             {
-                logins.Add(new LoginInfo(context));
+                logins.Add(context.Name);
             }
 
             Console.WriteLine();
@@ -115,11 +101,11 @@ USAGE:
             }
             else
             {
-                var maxLoginNameWidth = logins.Max(login => login.Name.Length);
+                var maxLoginNameWidth = logins.Max(login => login.Length);
 
-                foreach (var login in logins.OrderBy(login => login.Name))
+                foreach (var login in logins.OrderBy(login => login))
                 {
-                    if (current != null && login.Name == current.Name)
+                    if (current != null && login == current.Name)
                     {
                         Console.Write(" --> ");
                     }
@@ -128,9 +114,7 @@ USAGE:
                         Console.Write("     ");
                     }
 
-                    var padding = new string(' ', maxLoginNameWidth - login.Name.Length);
-
-                    Console.WriteLine($"{login.Name}{padding}    {login.Info}");
+                    Console.WriteLine(login);
                 }
 
                 Console.WriteLine();

@@ -24,7 +24,9 @@ using System.Runtime.Serialization;
 using Newtonsoft.Json;
 
 using Neon.Common;
+using Neon.Kube;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.Proxy;
 
 namespace Neon.Kube
 {
@@ -41,44 +43,12 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Used to construct an instance, picking up common properties from a
-        /// cluster definition.
-        /// </summary>
-        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
-        public ClusterInfo(ClusterDefinition clusterDefinition)
-        {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
-            
-            ClusterId          = clusterDefinition.Id;
-            CreationTimestamp  = DateTime.UtcNow;
-            ClusterVersion     = clusterDefinition.ClusterVersion;
-            Name               = clusterDefinition.Name;
-            Description        = clusterDefinition.Description;
-            Environment        = clusterDefinition.Hosting.Environment;
-            Purpose            = clusterDefinition.Purpose;
-            Datacenter         = clusterDefinition.Datacenter;
-            IsDesktop          = clusterDefinition.IsDesktop;
-            Latitude           = clusterDefinition.Latitude;
-            Longitude          = clusterDefinition.Longitude;
-            Domain             = clusterDefinition.Domain;
-            PublicAddresses    = clusterDefinition.PublicAddresses;
-            FeatureOptions     = clusterDefinition.Features;
-        }
-
-        /// <summary>
         /// Globally unique cluster identifier.  This is set during cluster setup and is 
         /// used to distinguish between customer clusters.
         /// </summary>
         [JsonProperty(PropertyName = "ClusterId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string ClusterId { get; set; } = null;
-
-        /// <summary>
-        /// Identifies the client that deployed the cluster.
-        /// </summary>
-        [JsonProperty(PropertyName = "ClientId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public string ClientId { get; set; } = null;
 
         /// <summary>
         /// Identifies the organization that owns the cluster.

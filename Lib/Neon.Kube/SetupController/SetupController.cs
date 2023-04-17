@@ -445,7 +445,7 @@ namespace Neon.Kube.Setup
                         MaxDegreeOfParallelism = 20
                     };
 
-                    Parallel.ForEach(cluster.Definition.NodeDefinitions.Values, parallelOptions,
+                    Parallel.ForEach(cluster.SetupState.ClusterDefinition.NodeDefinitions.Values, parallelOptions,
                         node =>
                         {
                             using (var pinger = new Pinger())
@@ -1085,7 +1085,7 @@ namespace Neon.Kube.Setup
 
                 while (true)
                 {
-                    Covenant.Assert(ContainsKey(KubeSetupProperty.ClusterLogin), $"Setup controller is missing the required [{nameof(KubeSetupProperty.ClusterLogin)}] property.");
+                    Covenant.Assert(ContainsKey(KubeSetupProperty.ClusterProxy), $"Setup controller is missing the required [{nameof(KubeSetupProperty.ClusterProxy)}] property.");
 
                     var status  = new SetupClusterStatus(this);
                     var newJson = NeonHelper.JsonSerialize(status);

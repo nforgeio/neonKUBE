@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -36,7 +37,6 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.Net;
 using Neon.Time;
-using System.Data;
 
 namespace Neon.Kube.ClusterDef
 {
@@ -322,6 +322,16 @@ namespace Neon.Kube.ClusterDef
         public int NodeMtu { get; set; } = 0;
 
         /// <summary>
+        /// Optionally specifies the public IP addresses for the cluster.  This is useful
+        /// for documenting the public IP address for a router that directs traffic
+        /// into the cluster.
+        /// </summary>
+        [JsonProperty(PropertyName = "PublicAddresses", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "publicAddresses", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public List<string> PublicAddresses { get; set; } = null;
+
+        /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
@@ -547,6 +557,32 @@ namespace Neon.Kube.ClusterDef
             if (NodeMtu != 0 && (NodeMtu < 512 || NodeMtu > 9000))
             {
                 throw new ClusterDefinitionException($"[{networkOptionsPrefix}.{nameof(NodeMtu)}={NodeMtu}] is invalid.  Specify [0] or a value between [512-9000].");
+            }
+
+            // Validate/initialize the public addresses.
+
+            PublicAddresses ??= new List<string>();
+
+            PublicAddresses = PublicAddresses
+                .Where(address => !string.IsNullOrEmpty(address))
+                .ToList();
+
+            foreach (var address in PublicAddresses)
+            {
+                if (!IPAddress.TryParse(address, out var ip))
+                {
+                    throw new ClusterDefinitionException($"[{nameof(PublicAddresses)}={address}] is not a valid IPv4 address.");
+                }
+            }
+
+            if (PublicAddresses.Count == 0 && !KubeHelper.IsCloudEnvironment(clusterDefinition.Hosting.Environment))
+            {
+                // Default to the control-plane node addresses for non-cloud environments.
+
+                foreach (var node in clusterDefinition.SortedControlNodes)
+                {
+                    PublicAddresses.Add(node.Address);
+                }
             }
         }
 

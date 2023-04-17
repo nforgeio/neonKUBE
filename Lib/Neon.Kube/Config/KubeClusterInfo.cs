@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterLogin.cs
+// FILE:	    KubeClusterInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -34,61 +34,22 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Kube;
 using Neon.Kube.ClusterDef;
 using Neon.SSH;
 
-namespace Neon.Kube
+namespace Neon.Kube.Config
 {
     /// <summary>
-    /// Holds extended cluster information such as the cluster definition and
-    /// node SSH credentials.  These records are persisted as files to the 
-    /// <b>$HOME/.neonkube/logins</b> folder in YAML files named like
-    /// <b><i>USER</i>@<i>NAME</i>.login.yaml</b>.
+    /// Holds extended neonKUBE related cluster information.
     /// </summary>
-    public class ClusterLogin
+    public class KubeClusterInfo
     {
-        //---------------------------------------------------------------------
-        // Static members
-
-        /// <summary>
-        /// Reads a <see cref="ClusterLogin"/> from a file if it exists.
-        /// </summary>
-        /// <param name="path">Path the the cluster login file.</param>
-        /// <returns>The <see cref="ClusterLogin"/> if the file exists or <c>null</c>.</returns>
-        public static ClusterLogin Load(string path)
-        {
-            if (!File.Exists(path))
-            {
-                return null;
-            }
-
-            var clusterLogin = NeonHelper.YamlDeserializeViaJson<ClusterLogin>(File.ReadAllText(path), strict: true);
-
-            clusterLogin.path = path;
-
-            return clusterLogin;
-        }
-
-        //---------------------------------------------------------------------
-        // Instance members
-
-        private object      syncRoot = new object();
-        private string      path;
-
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ClusterLogin()
+        public KubeClusterInfo()
         {
-        }
-
-        /// <summary>
-        /// Parameterized constructor.
-        /// </summary>
-        /// <param name="path">Optionally specifies the path to the extension file.</param>
-        public ClusterLogin(string path)
-        {
-            this.path = path;
         }
 
         /// <summary>
@@ -101,32 +62,15 @@ namespace Neon.Kube
         public Guid ClusterId { get; set; } = Guid.NewGuid();
 
         /// <summary>
-        /// The cluster definition.
+        /// Set to the cluster domain.
         /// </summary>
-        [JsonProperty(PropertyName = "ClusterDefinition", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "clusterDefinition", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "ClusterDomain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "clusterDomain", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public ClusterDefinition ClusterDefinition { get; set; }
+        public string ClusterDomain { get; set; } = null;
 
         /// <summary>
-        /// Holds additional information required during setup as well as for
-        /// provisoning additional cluster nodes.
-        /// </summary>
-        [JsonProperty(PropertyName = "SetupDetails", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "setupDetails", ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public KubeSetupDetails SetupDetails { get; set; } = new KubeSetupDetails();
-
-        /// <summary>
-        /// The custom certificate generated for the Kubernetes dashboard PEM.
-        /// </summary>
-        [JsonProperty(PropertyName = "DashboardCertificate")]
-        [YamlMember(Alias = "dashboardCertificate", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string DashboardCertificate { get; set; }
-
-        /// <summary>
-        /// The root single sign-on (SSO) cluster username.
+        /// The single sign-on (SSO) cluster username.
         /// </summary>
         [JsonProperty(PropertyName = "SsoUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "ssoUsername", ApplyNamingConventions = false)]
@@ -134,7 +78,7 @@ namespace Neon.Kube
         public string SsoUsername { get; set; }
 
         /// <summary>
-        /// The root single sign-on (SSO) cluster password.
+        /// The single sign-on (SSO) cluster password.
         /// </summary>
         [JsonProperty(PropertyName = "SsoPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "ssoPassword", ApplyNamingConventions = false)]
@@ -158,8 +102,7 @@ namespace Neon.Kube
         public string SshPassword { get; set; }
 
         /// <summary>
-        /// Returns a <see cref="SshCredentials"/> instance suitable for connecting to
-        /// a cluster node.
+        /// Returns a <see cref="SshCredentials"/> instance suitable for connecting to a cluster node.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
@@ -198,45 +141,5 @@ namespace Neon.Kube
         [YamlMember(Alias = "clusterVersion", ApplyNamingConventions = false)]
         [DefaultValue(KubeVersions.NeonKube)]
         public string ClusterVersion { get; set; } = KubeVersions.NeonKube;
-
-        /// <summary>
-        /// Sets the file path where the extension will be persisted.
-        /// </summary>
-        /// <param name="path">The target path.</param>
-        internal void SetPath(string path)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
-
-            this.path = path;
-        }
-
-        /// <summary>
-        /// <para>
-        /// Persists the extension data.
-        /// </para>
-        /// <note>
-        /// A valid path must have been passed to the constructor for this to work.
-        /// </note>
-        /// </summary>
-        public void Save()
-        {
-            lock (syncRoot)
-            {
-                if (ClusterId == Guid.Empty)
-                {
-                    ClusterId = Guid.NewGuid();
-                }
-
-                File.WriteAllText(path, NeonHelper.YamlSerialize(this));
-            }
-        }
-
-        /// <summary>
-        /// Deletes the login.
-        /// </summary>
-        public void Delete()
-        {
-            NeonHelper.DeleteFile(path);
-        }
     }
 }

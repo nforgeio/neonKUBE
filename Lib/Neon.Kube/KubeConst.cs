@@ -451,5 +451,15 @@ namespace Neon.Kube
         /// Returns the cluster wide crio config name.
         /// </summary>
         public const string ClusterCrioConfigName = "cluster";
+
+        /// <summary>
+        /// Neon SSO client ID.
+        /// </summary>
+        public const string NeonSsoClientId = "neon-sso";
+
+        /// <summary>
+        /// Neon SSO Public client ID.
+        /// </summary>
+        public const string NeonSsoPublicClientId = "neon-sso-public";
     }
 }

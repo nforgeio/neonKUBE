@@ -131,23 +131,23 @@ namespace NeonDashboard
             })
             .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
             {
-                options.ClientId                      = ClusterConst.NeonSsoClientId;
-                options.ClientSecret                  = NeonDashboardService.SsoClientSecret;
-                options.Authority                     = $"https://{ClusterHost.Sso}.{NeonDashboardService.ClusterInfo.Domain}";
-                options.ResponseType                  = OpenIdConnectResponseType.Code;
-                options.SignInScheme                  = CookieAuthenticationDefaults.AuthenticationScheme;
-                options.SaveTokens                    = true;
-                options.RequireHttpsMetadata          = true;
-                options.RemoteAuthenticationTimeout   = TimeSpan.FromSeconds(120);
-                options.CallbackPath                  = "/oauth2/callback";
+                options.ClientId                    = KubeConst.NeonSsoClientId;
+                options.ClientSecret                = NeonDashboardService.SsoClientSecret;
+                options.Authority                   = $"https://{ClusterHost.Sso}.{NeonDashboardService.ClusterInfo.Domain}";
+                options.ResponseType                = OpenIdConnectResponseType.Code;
+                options.SignInScheme                = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.SaveTokens                  = true;
+                options.RequireHttpsMetadata        = true;
+                options.RemoteAuthenticationTimeout = TimeSpan.FromSeconds(120);
+                options.CallbackPath                = "/oauth2/callback";
                 options.Scope.Add("openid");
                 options.Scope.Add("profile");
                 options.Scope.Add("email");
                 options.Scope.Add("groups");
-                options.UsePkce                       = false;
-                options.DataProtectionProvider        = new CookieProtector(NeonDashboardService.AesCipher);
-                options.UseTokenLifetime              = false;
-                options.ProtocolValidator             = new OpenIdConnectProtocolValidator()
+                options.UsePkce                     = false;
+                options.DataProtectionProvider      = new CookieProtector(NeonDashboardService.AesCipher);
+                options.UseTokenLifetime            = false;
+                options.ProtocolValidator           = new OpenIdConnectProtocolValidator()
                 {
                     RequireNonce = false,
                     RequireState = false

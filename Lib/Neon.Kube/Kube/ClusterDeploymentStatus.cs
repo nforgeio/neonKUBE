@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterConst.cs
-// CONTRIBUTOR: Marcus Bowyer
+// FILE:	    ClusterDeploymentStatus.cs
+// CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,32 +16,32 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using k8s.Models;
+using System.ComponentModel;
+using System.Runtime.Serialization;
 
-using Neon.Collections;
-using Neon.Common;
-using Neon.Net;
-
-namespace Neon.Kube.Proxy
+namespace Neon.Kube
 {
     /// <summary>
-    /// Important cluster constants.
+    /// Enumerates the cluster deployment status.
     /// </summary>
-    public static class ClusterConst
+    public enum ClusterDeploymentStatus
     {
         /// <summary>
-        /// Neon SSO client ID.
+        /// Indicates that the deployment status is unknown (the default value).
         /// </summary>
-        public const string NeonSsoClientId = "neon-sso";
+        [EnumMember(Value = "unknown")]
+        Unknown = 0,
 
         /// <summary>
-        /// Neon SSO Public client ID.
+        /// Indicates that the cluster has been prepared.
         /// </summary>
-        public const string NeonSsoPublicClientId = "neon-sso-public";
+        [EnumMember(Value = "prepared")]
+        Prepared,
+
+        /// <summary>
+        /// Indicates that cluster setup succeeded and the cluster is ready.
+        /// </summary>
+        [EnumMember(Value = "ready")]
+        Ready
     }
 }

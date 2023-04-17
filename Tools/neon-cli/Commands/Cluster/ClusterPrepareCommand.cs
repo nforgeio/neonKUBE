@@ -248,7 +248,7 @@ OPTIONS:
             // Do a quick sanity check to ensure that the hosting environment has no conflicts
             // as well as enough resources (memory, disk,...) to actually host the cluster.
 
-            using (var cluster = new ClusterProxy(clusterDefinition, new HostingManagerFactory(), !useStaged))
+            using (var cluster = new ClusterProxy(new HostingManagerFactory(), !useStaged, setupState: new KubeSetupState() { ClusterDefinition = clusterDefinition }))
             {
                 var status = await cluster.GetResourceAvailabilityAsync();
 

@@ -29,11 +29,12 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
+using Neon.Kube;
 using Neon.Kube.Clients;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.Config;
 using Neon.Kube.Glauth;
 using Neon.Kube.Hosting;
-using Neon.Kube.Kube;
 using Neon.Kube.Operator;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Calico;
@@ -55,7 +56,6 @@ using k8s.Models;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Octokit;
 
 namespace Neon.Kube.Setup
 {
@@ -271,8 +271,8 @@ spec:
                                 patch.Metadata.Labels.Add("kubernetes.io/role", "worker");
                             }
 
-                            patch.Metadata.Labels.Add(NodeLabels.LabelDatacenter, cluster.Definition.Datacenter.ToLowerInvariant());
-                            patch.Metadata.Labels.Add(NodeLabels.LabelEnvironment, cluster.Definition.Purpose.ToString().ToLowerInvariant());
+                            patch.Metadata.Labels.Add(NodeLabels.LabelDatacenter, cluster.SetupState.ClusterDefinition.Datacenter.ToLowerInvariant());
+                            patch.Metadata.Labels.Add(NodeLabels.LabelEnvironment, cluster.SetupState.ClusterDefinition.Purpose.ToString().ToLowerInvariant());
 
                             foreach (var label in node.Metadata.Labels.All)
                             {
@@ -418,7 +418,7 @@ spec:
                     await InstallKubeDashboardAsync(controller, controlNode);
 
                     controller.ThrowIfCancelled();
-                    if (cluster.Definition.Features.NodeProblemDetector)
+                    if (cluster.SetupState.ClusterDefinition.Features.NodeProblemDetector)
                     {
                         await InstallNodeProblemDetectorAsync(controller, controlNode);
                     }
@@ -445,7 +445,7 @@ spec:
                     await InstallSsoAsync(controller, controlNode);
 
                     controller.ThrowIfCancelled();
-                    if (cluster.Definition.Features.Kiali)
+                    if (cluster.SetupState.ClusterDefinition.Features.Kiali)
                     {
                         await InstallKialiAsync(controller, controlNode);
                     }
@@ -485,7 +485,7 @@ spec:
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <returns>The YAML with the Kubernetes config used to initialize the cluster.</returns>
         public static string GenerateKubernetesClusterConfig(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -503,12 +503,12 @@ spec:
 
             sanNames["kubernetes-control-plane"] = null;
 
-            if (!string.IsNullOrEmpty(cluster.Definition.Domain))
+            if (!string.IsNullOrEmpty(cluster.SetupState.ClusterDomain))
             {
-                sanNames[cluster.Definition.Domain] = null;
+                sanNames[cluster.SetupState.ClusterDomain] = null;
             }
 
-            foreach (var address in cluster.Definition.PublicAddresses)
+            foreach (var address in cluster.SetupState.PublicAddresses)
             {
                 sanNames[address] = null;
             }
@@ -519,14 +519,24 @@ spec:
                 sanNames[node.Name]             = null;
             }
 
-            if (cluster.Definition.IsDesktop)
+            if (cluster.SetupState.ClusterDefinition.IsDesktop)
             {
-                sanNames[cluster.Definition.Name] = null;
+                sanNames[cluster.SetupState.ClusterDefinition.Name] = null;
             }
 
-            foreach (var name in sanNames.Keys)
+            for (int i = 0; i < sanNames.Count; i++)
             {
-                sbCertSANs.AppendLine($"  - \"{name}\"");
+                // Don't include line endings on the last entry line to
+                // make the generated file look a bit nicer.
+
+                if (i < sanNames.Count - 1)
+                {
+                    sbCertSANs.AppendLine($"  - \"{sanNames.Keys.ElementAt(i)}\"");
+                }
+                else
+                {
+                    sbCertSANs.Append($"  - \"{sanNames.Keys.ElementAt(i)}\"");
+                }
             }
 
             // Append the InitConfiguration
@@ -541,6 +551,7 @@ kind: InitConfiguration
 nodeRegistration:
   criSocket: unix://{KubeConst.CrioSocketPath}
   imagePullPolicy: IfNotPresent
+
 ---
 apiVersion: kubeadm.k8s.io/v1beta3
 kind: ClusterConfiguration
@@ -559,8 +570,8 @@ apiServer:
     service-account-issuer: https://kubernetes.default.svc
     service-account-key-file: /etc/kubernetes/pki/sa.key
     service-account-signing-key-file: /etc/kubernetes/pki/sa.key
-    oidc-issuer-url: https://{ClusterHost.Sso}.{cluster.Definition.Domain}
-    oidc-client-id: {ClusterConst.NeonSsoClientId}
+    oidc-issuer-url: https://{ClusterHost.Sso}.{cluster.SetupState.ClusterDomain}
+    oidc-client-id: {KubeConst.NeonSsoClientId}
     oidc-username-claim: email
     oidc-groups-claim: groups
     oidc-username-prefix: ""-""
@@ -570,8 +581,8 @@ apiServer:
 {sbCertSANs}
 controlPlaneEndpoint: ""{controlPlaneEndpoint}""
 networking:
-  podSubnet: ""{cluster.Definition.Network.PodSubnet}""
-  serviceSubnet: ""{cluster.Definition.Network.ServiceSubnet}""
+  podSubnet: ""{cluster.SetupState.ClusterDefinition.Network.PodSubnet}""
+  serviceSubnet: ""{cluster.SetupState.ClusterDefinition.Network.ServiceSubnet}""
 controllerManager:
   extraArgs:
     logging-format: json
@@ -592,34 +603,34 @@ nodeStatusReportFrequency: 4s
 volumePluginDir: /var/lib/kubelet/volume-plugins
 cgroupDriver: systemd
 runtimeRequestTimeout: 5m
+maxPods: {cluster.SetupState.ClusterDefinition.Kubernetes.MaxPodsPerNode}
+shutdownGracePeriod: {cluster.SetupState.ClusterDefinition.Kubernetes.ShutdownGracePeriodSeconds}s
+shutdownGracePeriodCriticalPods: {cluster.SetupState.ClusterDefinition.Kubernetes.ShutdownGracePeriodCriticalPodsSeconds}s
+rotateCertificates: true
 {kubeletFailSwapOnLine}
-maxPods: {cluster.Definition.Kubernetes.MaxPodsPerNode}
-shutdownGracePeriod: {cluster.Definition.Kubernetes.ShutdownGracePeriodSeconds}s
-shutdownGracePeriodCriticalPods: {cluster.Definition.Kubernetes.ShutdownGracePeriodCriticalPodsSeconds}s
+");
 
-rotateCertificates: true");
+            clusterConfig.AppendLine($"systemReserved:");
 
-            clusterConfig.AppendLine($@"
-systemReserved:");
-            foreach (var systemReservedkey in cluster.Definition.Kubernetes.SystemReserved.Keys)
+            foreach (var systemReservedkey in cluster.SetupState.ClusterDefinition.Kubernetes.SystemReserved.Keys)
             {
-                clusterConfig.AppendLine($@"
-  {systemReservedkey}: {cluster.Definition.Kubernetes.SystemReserved[systemReservedkey]}");
+                clusterConfig.AppendLine($"  {systemReservedkey}: {cluster.SetupState.ClusterDefinition.Kubernetes.SystemReserved[systemReservedkey]}");
             }
-                clusterConfig.AppendLine($@"
-kubeReserved:");
-            foreach (var kubeReservedKey in cluster.Definition.Kubernetes.KubeReserved.Keys)
+               
+            clusterConfig.AppendLine($"kubeReserved:");
+
+            foreach (var kubeReservedKey in cluster.SetupState.ClusterDefinition.Kubernetes.KubeReserved.Keys)
             {
-                clusterConfig.AppendLine($@"
-  {kubeReservedKey}: {cluster.Definition.Kubernetes.KubeReserved[kubeReservedKey]}");
+                clusterConfig.AppendLine($"  {kubeReservedKey}: {cluster.SetupState.ClusterDefinition.Kubernetes.KubeReserved[kubeReservedKey]}");
             }
-                clusterConfig.AppendLine($@"
-evictionHard:");
-            foreach (var evictionHardKey in cluster.Definition.Kubernetes.EvictionHard.Keys)
+
+            clusterConfig.AppendLine($"evictionHard:");
+
+            foreach (var evictionHardKey in cluster.SetupState.ClusterDefinition.Kubernetes.EvictionHard.Keys)
             {
-                clusterConfig.AppendLine($@"
-  {evictionHardKey}: {cluster.Definition.Kubernetes.EvictionHard[evictionHardKey]}");
+                clusterConfig.AppendLine($"  {evictionHardKey}: {cluster.SetupState.ClusterDefinition.Kubernetes.EvictionHard[evictionHardKey]}");
             }
+
             // Append the KubeProxyConfiguration
 
             var kubeProxyMode = "ipvs";
@@ -671,7 +682,6 @@ NeonKube™, Neon Desktop™, and NeonCli™ are trademarked by NEONFORGE LLC.
 
             var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
             var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterLogin       = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
 
             controller.ThrowIfCancelled();
             firstControlNode.InvokeIdempotent("setup/cluster-init",
@@ -740,7 +750,16 @@ if ! systemctl enable kubelet.service; then
     exit 1
 fi
 
-# The first call doesn't specify [--ignore-preflight-errors=all]
+################################
+# $debug(jefflill): DELETE THIS!
+if kubeadm init --config cluster.yaml --ignore-preflight-errors=all; then
+    exit 0
+else
+    exit 1
+fi
+################################
+
+]# The first call doesn't specify [--ignore-preflight-errors=all]
 
 if kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable; then
     exit 0
@@ -761,7 +780,13 @@ exit 1
 ";
                             controller.LogProgress(firstControlNode, verb: "initialize", message: "kubernetes");
 
-                            var response = firstControlNode.SudoCommand(CommandBundle.FromScript(kubeInitScript).AddFile("cluster.yaml", clusterConfig.ToString()));
+                            //###############################
+                            // $debug(jefflill): DELETE THIS!
+                            firstControlNode.UploadText("/tmp/cluster.yaml", NeonHelper.ToLinuxLineEndings(clusterConfig));
+                            firstControlNode.UploadText("/tmp/init.sh", "kubeadm init --config cluster.yaml --ignore-preflight-errors=all", permissions: "777");
+                            //###############################
+
+                            var response = firstControlNode.SudoCommand(CommandBundle.FromScript(kubeInitScript).AddFile("cluster.yaml", clusterConfig));
 
                             // Extract the cluster join command from the response.  We'll need this to join
                             // other nodes to the cluster.
@@ -790,14 +815,14 @@ exit 1
 
                             if (pEnd == -1)
                             {
-                                clusterLogin.SetupDetails.ClusterJoinCommand = Regex.Replace(output.Substring(pStart).Trim(), @"\t|\n|\r|\\", "");
+                                cluster.SetupState.ClusterJoinCommand = Regex.Replace(output.Substring(pStart).Trim(), @"\t|\n|\r|\\", "");
                             }
                             else
                             {
-                                clusterLogin.SetupDetails.ClusterJoinCommand = Regex.Replace(output.Substring(pStart, pEnd - pStart).Trim(), @"\t|\n|\r|\\", "");
+                                cluster.SetupState.ClusterJoinCommand = Regex.Replace(output.Substring(pStart, pEnd - pStart).Trim(), @"\t|\n|\r|\\", "");
                             }
 
-                            clusterLogin.Save();
+                            cluster.SaveSetupState();
 
                             controller.LogProgress(firstControlNode, verb: "created", message: "cluster");
                         });
@@ -818,8 +843,8 @@ exit 1
 
                             var adminConfig = firstControlNode.DownloadText("/etc/kubernetes/admin.conf");
 
-                            adminConfig = adminConfig.Replace($"kubernetes-admin@{cluster.Definition.Name}", $"root@{cluster.Definition.Name}");
-                            adminConfig = adminConfig.Replace("kubernetes-admin", $"root@{cluster.Definition.Name}");
+                            adminConfig = adminConfig.Replace($"kubernetes-admin@{cluster.SetupState.ClusterDefinition.Name}", $"root@{cluster.SetupState.ClusterDefinition.Name}");
+                            adminConfig = adminConfig.Replace("kubernetes-admin", $"root@{cluster.SetupState.ClusterDefinition.Name}");
 
                             firstControlNode.UploadText("/etc/kubernetes/admin.conf", adminConfig, permissions: "600", owner: "root:root");
                         });
@@ -828,19 +853,19 @@ exit 1
                     // control-plane nodes and may also be needed for other purposes (if we haven't already
                     // downloaded these).
 
-                    if (clusterLogin.SetupDetails.ControlNodeFiles != null)
+                    if (cluster.SetupState.ControlNodeFiles != null)
                     {
-                        clusterLogin.SetupDetails.ControlNodeFiles = new Dictionary<string, KubeFileDetails>();
+                        cluster.SetupState.ControlNodeFiles = new Dictionary<string, KubeFileDetails>();
                     }
 
-                    if (clusterLogin.SetupDetails.ControlNodeFiles.Count == 0)
+                    if (cluster.SetupState.ControlNodeFiles.Count == 0)
                     {
-                        clusterLogin.SetupDetails.ControlNodeFiles = firstControlNode.GetControlPlaneFiles();
+                        cluster.SetupState.ControlNodeFiles = firstControlNode.GetControlPlaneFiles();
                     }
 
                     // Persist the cluster join command and downloaded control-plane files.
 
-                    clusterLogin.Save();
+                    cluster.SaveSetupState();
 
                     //---------------------------------------------------------
                     // Join the remaining control-plane nodes to the cluster:
@@ -864,7 +889,7 @@ exit 1
 
                                     controller.LogProgress(controlNode, verb: "upload", message: "control-plane files");
 
-                                    foreach (var file in clusterLogin.SetupDetails.ControlNodeFiles)
+                                    foreach (var file in cluster.SetupState.ControlNodeFiles)
                                     {
                                         controlNode.UploadText(file.Key, file.Value.Text, permissions: file.Value.Permissions, owner: file.Value.Owner);
                                     }
@@ -897,7 +922,7 @@ exit 1
                                             {
                                                 controller.ThrowIfCancelled();
 
-                                                var response = controlNode.SudoCommand(clusterLogin.SetupDetails.ClusterJoinCommand + " --control-plane --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests", RunOptions.Defaults & ~RunOptions.FaultOnError);
+                                                var response = controlNode.SudoCommand(cluster.SetupState.ClusterJoinCommand + " --control-plane --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests", RunOptions.Defaults & ~RunOptions.FaultOnError);
 
                                                 if (response.Success)
                                                 {
@@ -998,7 +1023,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                         {
                                             controller.ThrowIfCancelled();
 
-                                            var response = worker.SudoCommand(clusterLogin.SetupDetails.ClusterJoinCommand + " --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests", RunOptions.Defaults & ~RunOptions.FaultOnError);
+                                            var response = worker.SudoCommand(cluster.SetupState.ClusterJoinCommand + " --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests", RunOptions.Defaults & ~RunOptions.FaultOnError);
 
                                             if (response.Success)
                                             {
@@ -1046,7 +1071,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             Covenant.Requires<ArgumentException>(controlNodes.Count() > 0, nameof(controlNodes));
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterDefinition = cluster.Definition;
+            var clusterDefinition = cluster.SetupState.ClusterDefinition;
 
             // We need to generate a "--feature-gates=..." command line option and add it to the end
             // of the command arguments in the API server static pod manifest at: 
@@ -1240,7 +1265,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var cluster          = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterLogin     = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
             var desktopReadyToGo = controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo);
             var kubeConfigPath   = KubeHelper.KubeConfigPath;
 
@@ -1250,36 +1274,43 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
             if (desktopReadyToGo)
             {
-                clusterLogin.SetupDetails.ControlNodeFiles = firstControlNode.GetControlPlaneFiles();
-                clusterLogin.Save();
+                cluster.SetupState.ControlNodeFiles = firstControlNode.GetControlPlaneFiles();
+                cluster.SaveSetupState();
             }
 
-            // Update kubeconfig.
+            // Update kubeconfig by adding the new kubeconfig.
 
-            var configText = clusterLogin.SetupDetails.ControlNodeFiles["/etc/kubernetes/admin.conf"].Text;
+            var configText = cluster.SetupState.ControlNodeFiles["/etc/kubernetes/admin.conf"].Text;
             var port       = NetworkPorts.KubernetesApiServer;
 
-            configText = configText.Replace("https://kubernetes-control-plane:6442", $"https://{cluster.Definition.Domain}:{port}");
+            configText = configText.Replace("https://kubernetes-control-plane:6442", $"https://{cluster.SetupState.ClusterDomain}:{port}");
+
+            var newConfig  = NeonHelper.YamlDeserialize<KubeConfig>(configText);
+            var newUser    = newConfig.Users.Single();
+            var newCluster = newConfig.Clusters.Single();
+            var newContext = newConfig.Contexts.Single();
+
+            newContext.Name    = newUser.Name;
+            newContext.User    = newUser.Name;
+            newContext.Cluster = newCluster.Name;
 
             if (!File.Exists(kubeConfigPath))
             {
-                File.WriteAllText(kubeConfigPath, configText);
+                newConfig.CurrentContext = newContext.Name;
+
+                KubeHelper.SetConfig(newConfig);
             }
             else
             {
                 // The user already has an existing kubeconfig, so we need
                 // to merge in the new config.
 
-                var newConfig      = NeonHelper.YamlDeserialize<KubeConfig>(configText);
                 var existingConfig = KubeHelper.Config;
 
                 // Remove any existing user, context, and cluster with the same names.
                 // Note that we're assuming that there's only one of each in the config
                 // we downloaded from the cluster.
 
-                var newCluster      = newConfig.Clusters.Single();
-                var newContext      = newConfig.Contexts.Single();
-                var newUser         = newConfig.Users.Single();
                 var existingCluster = existingConfig.GetCluster(newCluster.Name);
                 var existingContext = existingConfig.GetContext(newContext.Name);
                 var existingUser    = existingConfig.GetUser(newUser.Name);
@@ -1308,13 +1339,15 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 KubeHelper.SetConfig(existingConfig);
             }
 
-            // Make sure that the config cached by [KubeHelper] is up to date.
+            // Make sure that the config cached by [KubeHelper] and [ClusterProxy] is up to date.
 
-            KubeHelper.LoadConfig();
+            var kubeConfig = KubeHelper.LoadConfig();
 
-            // Save the cluster node SSH certificate in the users [~/.ssh] folder.
+            cluster.KubeContext = kubeConfig.GetContext(cluster.SetupState.ContextName);
 
-            File.WriteAllText(Path.Combine(KubeHelper.UserSshFolder, KubeHelper.CurrentContextName.ToString()), clusterLogin.SshKey.PrivatePEM);
+            // Save the cluster node SSH certificate in the user's [~/.ssh] folder.
+
+            File.WriteAllText(Path.Combine(KubeHelper.UserSshFolder, cluster.SetupState.ContextName), cluster.SetupState.SshKey.PrivatePEM);
         }
 
         /// <summary>
@@ -1406,7 +1439,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                 });
 
-            if (cluster.Definition.Hosting.Environment == HostingEnvironment.Azure)
+            if (cluster.SetupState.ClusterDefinition.Hosting.Environment == HostingEnvironment.Azure)
             {
                 // In Azure Calico needs to run in VXLAN mode.
 
@@ -1444,7 +1477,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         values.Add($"vEthMtu", hostingManager.NodeMtu);
                     }
 
-                    if (cluster.Definition.Hosting.Environment == HostingEnvironment.Azure)
+                    if (cluster.SetupState.ClusterDefinition.Hosting.Environment == HostingEnvironment.Azure)
                     {
                         values.Add($"ipipMode", "Never");
                         values.Add($"vxlanMode", "Always");
@@ -1690,7 +1723,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 {
                     controller.LogProgress(controlNode, verb: "configure", message: "control-plane taints");
 
-                    if (cluster.Definition.Kubernetes.AllowPodsOnControlPlane.GetValueOrDefault())
+                    if (cluster.SetupState.ClusterDefinition.Kubernetes.AllowPodsOnControlPlane.GetValueOrDefault())
                     {
                         var nodes = new V1NodeList();
 
@@ -1797,7 +1830,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterLogin  = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
             var k8s           = GetK8sClient(controller);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var ingressAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioIngressGateway);
@@ -1815,12 +1847,12 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     var values = new Dictionary<string, object>();
 
-                    values.Add("cluster.name", clusterLogin.ClusterDefinition.Name);
-                    values.Add("cluster.domain", clusterLogin.ClusterDefinition.Domain);
+                    values.Add("cluster.name", cluster.SetupState.ClusterDefinition.Name);
+                    values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
 
                     var i = 0;
 
-                    foreach (var rule in controlNode.Cluster.Definition.Network.IngressRules
+                    foreach (var rule in controlNode.Cluster.SetupState.ClusterDefinition.Network.IngressRules
                         .Where(rule => rule.TargetPort != 0))   // [TargetPort=0] indicates that traffic does not route through ingress gateway
                     {
                         values.Add($"nodePorts[{i}].name", $"{rule.Name}");
@@ -1846,7 +1878,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add($"resources.pilot.requests.cpu", $"{ToSiString(proxyAdvice.PodCpuRequest)}");
                     values.Add($"resources.pilot.requests.memory", $"{ToSiString(proxyAdvice.PodMemoryRequest)}");
 
-                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
                     
                     await controlNode.InstallHelmChartAsync(controller, "istio",
                         releaseName:  "neon-ingress",
@@ -2023,7 +2055,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     var cluster     = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
                     var k8s         = GetK8sClient(controller);
                     var values      = new Dictionary<string, object>();
-                    var acmeOptions = cluster.Definition.Network.AcmeOptions;
+                    var acmeOptions = cluster.SetupState.ClusterDefinition.Network.AcmeOptions;
                     var acmeAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonAcme);
 
                     var issuer = new ClusterIssuer()
@@ -2112,16 +2144,16 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     values.Add("image.registry", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
-                    values.Add("cluster.name", cluster.Definition.Name);
-                    values.Add("cluster.domain", cluster.Definition.Domain);
-                    values.Add("certficateDuration", cluster.Definition.Network.AcmeOptions.CertificateDuration);
-                    values.Add("certificateRenewBefore", cluster.Definition.Network.AcmeOptions.CertificateRenewBefore);
-                    values.Add("isNeonDesktop", cluster.Definition.IsDesktop);
+                    values.Add("cluster.name", cluster.SetupState.ClusterDefinition.Name);
+                    values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
+                    values.Add("certficateDuration", cluster.SetupState.ClusterDefinition.Network.AcmeOptions.CertificateDuration);
+                    values.Add("certificateRenewBefore", cluster.SetupState.ClusterDefinition.Network.AcmeOptions.CertificateRenewBefore);
+                    values.Add("isNeonDesktop", cluster.SetupState.ClusterDefinition.IsDesktop);
                     values.Add($"resources.requests.memory", ToSiString(acmeAdvice.PodMemoryRequest));
                     values.Add($"resources.limits.memory", ToSiString(acmeAdvice.PodMemoryLimit));
-                    values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 9 : 3);
-                    values.Add("dotnetGcServer", cluster.Definition.Nodes.Count() == 1 ? 0 : 1);
-                    values.Add("dotnetGcHighMemPercent", cluster.Definition.Nodes.Count() == 1 ? 15.ToString("x") : 50.ToString("x"));
+                    values.Add("dotnetGcConserveMemory", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 9 : 3);
+                    values.Add("dotnetGcServer", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 0 : 1);
+                    values.Add("dotnetGcHighMemPercent", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 15.ToString("x") : 50.ToString("x"));
 
                     int i = 0;
 
@@ -2140,7 +2172,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         values:       values);
                 });
 
-            if (cluster.Definition.IsDesktop)
+            if (cluster.SetupState.ClusterDefinition.IsDesktop)
             {
                 controller.ThrowIfCancelled();
                 await controlNode.InvokeIdempotentAsync("setup/cluster-certificates",
@@ -2258,7 +2290,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     virtualService.Spec = new V1VirtualServiceSpec()
                     {
                         Gateways = new List<string>() { $"{KubeNamespace.NeonIngress}/neoncluster-gateway" },
-                        Hosts    = new List<string>() { cluster.Definition.Domain },
+                        Hosts    = new List<string>() { cluster.SetupState.ClusterDomain },
                         Http     = new List<HTTPRoute>()
                         {
                             new HTTPRoute()
@@ -2329,7 +2361,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         },
                         StringData = new Dictionary<string, string>()
                         {
-                            { "token", cluster.Definition.NeonCloudToken }
+                            { "token", cluster.SetupState.NeonCloudToken }
                         }
                     };
 
@@ -2432,14 +2464,14 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     var values = new Dictionary<string, object>();
 
                     values.Add("replicas", serviceAdvice.ReplicaCount);
-                    values.Add("cluster.name", cluster.Definition.Name);
-                    values.Add("settings.clusterName", cluster.Definition.Name);
-                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("cluster.name", cluster.SetupState.ClusterDefinition.Name);
+                    values.Add("settings.clusterName", cluster.SetupState.ClusterDefinition.Name);
+                    values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
                     values.Add("neonkube.clusterDomain.kubernetesDashboard", ClusterHost.KubernetesDashboard);
                     values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
                     values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
-                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
 
                     await controlNode.InstallHelmChartAsync(controller, "kubernetes-dashboard",
                         releaseName:     "kubernetes-dashboard",
@@ -2558,12 +2590,12 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add("image.operator.repository", "kiali-kiali-operator");
                     values.Add("image.kiali.registry", KubeConst.LocalClusterRegistry);
                     values.Add("image.kiali.repository", "kiali-kiali");
-                    values.Add("cluster.name", cluster.Definition.Name);
-                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("cluster.name", cluster.SetupState.ClusterDefinition.Name);
+                    values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
                     values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
                     values.Add("neonkube.clusterDomain.kiali", ClusterHost.Kiali);
                     values.Add($"neonkube.clusterDomain.grafana", ClusterHost.Grafana);
-                    values.Add("grafanaPassword", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
+                    values.Add("grafanaPassword", NeonHelper.GetCryptoRandomPassword(cluster.SetupState.ClusterDefinition.Security.PasswordLength));
                     values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
@@ -2642,11 +2674,11 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
             var values = new Dictionary<string, object>();
 
-            values.Add("cluster.name", cluster.Definition.Name);
-            values.Add("cluster.domain", cluster.Definition.Domain);
+            values.Add("cluster.name", cluster.SetupState.ClusterDefinition.Name);
+            values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
             values.Add($"metrics.serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
             values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
-            values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+            values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/node-problem-detector",
@@ -2748,7 +2780,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             controller.LogProgress(controlNode, verb: "setup", message: "openebs-jiva");
 
                             var values       = new Dictionary<string, object>();
-                            var jivaReplicas = Math.Min(3, (cluster.Definition.Nodes.Where(node => node.Labels.OpenEbs).Count()));
+                            var jivaReplicas = Math.Min(3, (cluster.SetupState.ClusterDefinition.Nodes.Where(node => node.Labels.OpenEbs).Count()));
 
                             if (jivaReplicas < 1) 
                             {
@@ -2769,7 +2801,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     await WaitForOpenEbsReady(controller, controlNode);
 
-                    switch (cluster.Definition.Storage.OpenEbs.Engine)
+                    switch (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine)
                     {
                         case OpenEbsEngine.cStor:
 
@@ -2785,7 +2817,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         case OpenEbsEngine.Default:
                         case OpenEbsEngine.Mayastor:
 
-                            throw new NotImplementedException($"[{cluster.Definition.Storage.OpenEbs.Engine}]");
+                            throw new NotImplementedException($"[{cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine}]");
                     }
 
                     await controlNode.InvokeIdempotentAsync("setup/openebs-nfs",
@@ -2905,7 +2937,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     var blockDevices = await k8s.CustomObjects.ListNamespacedCustomObjectAsync<V1CStorBlockDevice>(KubeNamespace.NeonStorage);
 
-                    foreach (var node in cluster.Definition.Nodes.Where(n => n.OpenEbsStorage))
+                    foreach (var node in cluster.SetupState.ClusterDefinition.Nodes.Where(n => n.OpenEbsStorage))
                     {
                         var disk = cluster.HostingManager.GetDataDisk(cluster.Nodes.Where(n => n.Name == node.Name).FirstOrDefault());
 
@@ -2972,9 +3004,9 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
             var replicas = 3;
 
-            if (cluster.Definition.Nodes.Where(node => node.OpenEbsStorage).Count() < replicas)
+            if (cluster.SetupState.ClusterDefinition.Nodes.Where(node => node.OpenEbsStorage).Count() < replicas)
             {
-                replicas = cluster.Definition.Nodes.Where(node => node.OpenEbsStorage).Count();
+                replicas = cluster.SetupState.ClusterDefinition.Nodes.Where(node => node.OpenEbsStorage).Count();
             }
 
             controller.ThrowIfCancelled();
@@ -3085,9 +3117,9 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             await controlNode.InvokeIdempotentAsync($"setup/storage-class-jiva-{name}",
                 async () =>
                 {
-                    if (controlNode.Cluster.Definition.Nodes.Count() < replicaCount)
+                    if (controlNode.Cluster.SetupState.ClusterDefinition.Nodes.Count() < replicaCount)
                     {
-                        replicaCount = controlNode.Cluster.Definition.Nodes.Count();
+                        replicaCount = controlNode.Cluster.SetupState.ClusterDefinition.Nodes.Count();
                     }
 
                     var storageClass = new V1StorageClass()
@@ -3203,9 +3235,9 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync($"setup/storage-class-cstor-{name}",
                 async () =>
                 {
-                    if (controlNode.Cluster.Definition.Nodes.Where(node => node.OpenEbsStorage).Count() < replicaCount)
+                    if (controlNode.Cluster.SetupState.ClusterDefinition.Nodes.Where(node => node.OpenEbsStorage).Count() < replicaCount)
                     {
-                        replicaCount = controlNode.Cluster.Definition.Nodes.Where(node => node.OpenEbsStorage).Count();
+                        replicaCount = controlNode.Cluster.SetupState.ClusterDefinition.Nodes.Where(node => node.OpenEbsStorage).Count();
                     }
 
                     var storageClass = new V1StorageClass()
@@ -3264,7 +3296,7 @@ $@"- name: StorageType
 
             controller.ThrowIfCancelled();
 
-            switch (cluster.Definition.Storage.OpenEbs.Engine)
+            switch (cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine)
             {
                 case OpenEbsEngine.Default:
 
@@ -3288,7 +3320,7 @@ $@"- name: StorageType
                 case OpenEbsEngine.Mayastor:
                 default:
 
-                    throw new NotImplementedException($"Support for the [{cluster.Definition.Storage.OpenEbs.Engine}] OpenEBS storage engine is not implemented.");
+                    throw new NotImplementedException($"Support for the [{cluster.SetupState.ClusterDefinition.Storage.OpenEbs.Engine}] OpenEBS storage engine is not implemented.");
             };
         }
 
@@ -3320,11 +3352,11 @@ $@"- name: StorageType
                     var values = new Dictionary<string, object>();
                     var i      = 0;
 
-                    values.Add($"cluster.name", cluster.Definition.Name);
-                    values.Add($"cluster.domain", cluster.Definition.Domain);
-                    values.Add($"cluster.datacenter", cluster.Definition.Datacenter);
-                    values.Add($"cluster.version", cluster.Definition.ClusterVersion);
-                    values.Add($"cluster.hostingEnvironment", cluster.Definition.Hosting.Environment);
+                    values.Add($"cluster.name", cluster.SetupState.ClusterDefinition.Name);
+                    values.Add($"cluster.domain", cluster.SetupState.ClusterDomain);
+                    values.Add($"cluster.datacenter", cluster.SetupState.ClusterDefinition.Datacenter);
+                    values.Add($"cluster.version", cluster.SetupState.ClusterDefinition.ClusterVersion);
+                    values.Add($"cluster.hostingEnvironment", cluster.SetupState.ClusterDefinition.Hosting.Environment);
 
                     values.Add($"metrics.global.enabled", clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.global.scrapeInterval", clusterAdvice.MetricsInterval);
@@ -3336,8 +3368,8 @@ $@"- name: StorageType
                     values.Add($"metrics.kubelet.scrapeInterval", clusterAdvice.MetricsInterval);
                     values.Add($"metrics.cadvisor.enabled", clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.cadvisor.scrapeInterval", clusterAdvice.MetricsInterval);
-                    values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
-                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add($"tracing.enabled", cluster.SetupState.ClusterDefinition.Features.Tracing);
+                    values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
 
                     values.Add($"resources.agent.requests.memory", ToSiString(agentAdvice.PodMemoryRequest));
                     values.Add($"resources.agent.limits.memory", ToSiString(agentAdvice.PodMemoryLimit));
@@ -3452,7 +3484,7 @@ $@"- name: StorageType
                     values.Add($"replicas", serviceAdvice.ReplicaCount);
                     values.Add($"metrics.serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
-                    values.Add($"serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add($"serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
                     values.Add($"resources.requests.memory", ToSiString(serviceAdvice.PodMemoryRequest));
                     values.Add($"resources.limits.memory", ToSiString(serviceAdvice.PodMemoryLimit));
                     values.Add($"server.memory", Decimal.ToInt32(serviceAdvice.PodMemoryLimit.Value / 1200000));
@@ -3519,8 +3551,8 @@ $@"- name: StorageType
                     var storeGatewayAdvice  = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.MimirStoreGateway);
                     var values              = new Dictionary<string, object>();
 
-                    values.Add("cluster.name", cluster.Definition.Name);
-                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("cluster.name", cluster.SetupState.ClusterDefinition.Name);
+                    values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
 
                     values.Add($"alertmanager.replicas", alertmanagerAdvice.ReplicaCount);
                     values.Add($"alertmanager.resources.requests.memory", ToSiString(alertmanagerAdvice.PodMemoryRequest));
@@ -3569,12 +3601,12 @@ $@"- name: StorageType
 
                     values.Add($"serviceMonitor.enabled", mimirAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"serviceMonitor.interval", mimirAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
-                    values.Add($"serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
-                    values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
+                    values.Add($"serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
+                    values.Add($"tracing.enabled", cluster.SetupState.ClusterDefinition.Features.Tracing);
                     values.Add($"minio.enabled", true);
                     values.Add($"minio.bucket.mimirTsdb.quota", clusterAdvice.MetricsQuota);
 
-                    if (cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() == 1)
+                    if (cluster.SetupState.ClusterDefinition.Nodes.Where(node => node.Labels.MetricsInternal).Count() == 1)
                     {
                         values.Add($"blocksStorage.tsdb.block_ranges_period[0]", "1h0m0s");
                         values.Add($"blocksStorage.tsdb.retention_period", "2h0m0s");
@@ -3684,8 +3716,8 @@ $@"- name: StorageType
 
                     var values = new Dictionary<string, object>();
 
-                    values.Add("cluster.name", cluster.Definition.Name);
-                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("cluster.name", cluster.SetupState.ClusterDefinition.Name);
+                    values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
 
                     values.Add($"compactor.replicas", compactorAdvice.ReplicaCount);
                     values.Add($"compactor.resources.requests.memory", ToSiString(compactorAdvice.PodMemoryRequest));
@@ -3724,13 +3756,13 @@ $@"- name: StorageType
 
                     values.Add($"serviceMonitor.enabled", lokiAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"serviceMonitor.interval", lokiAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
-                    values.Add($"serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
-                    values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
+                    values.Add($"serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
+                    values.Add($"tracing.enabled", cluster.SetupState.ClusterDefinition.Features.Tracing);
 
                     values.Add($"minio.enabled", true);
                     values.Add($"minio.bucket.quota", clusterAdvice.LogsQuota);
 
-                    if (cluster.Definition.Nodes.Where(node => node.Labels.LogsInternal).Count() >= 3)
+                    if (cluster.SetupState.ClusterDefinition.Nodes.Where(node => node.Labels.LogsInternal).Count() >= 3)
                     {
                         values.Add($"config.replication_factor", 3);
                     }
@@ -3738,7 +3770,7 @@ $@"- name: StorageType
                     values.Add($"loki.schemaConfig.configs[0].object_store", "aws");
                     values.Add($"loki.storageConfig.boltdb_shipper.shared_store", "s3");
 
-                    if (cluster.Definition.IsDesktop || cluster.Definition.Nodes.Count() == 1)
+                    if (cluster.SetupState.ClusterDefinition.IsDesktop || cluster.SetupState.ClusterDefinition.Nodes.Count() == 1)
                     {
                         values.Add($"loki.storageConfig.boltdb_shipper.cache_ttl", "24h");
                         values.Add($"limits_config.retention_period", "24h");
@@ -3825,8 +3857,8 @@ $@"- name: StorageType
 
                     var values = new Dictionary<string, object>();
 
-                    values.Add("cluster.name", cluster.Definition.Name);
-                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("cluster.name", cluster.SetupState.ClusterDefinition.Name);
+                    values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
 
                     values.Add($"compactor.replicas", compactorAdvice.ReplicaCount);
                     values.Add($"compactor.resources.requests.memory", ToSiString(compactorAdvice.PodMemoryRequest));
@@ -3855,10 +3887,10 @@ $@"- name: StorageType
 
                     values.Add($"serviceMonitor.enabled", tempoAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"serviceMonitor.interval", tempoAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
-                    values.Add($"serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
-                    values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
+                    values.Add($"serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
+                    values.Add($"tracing.enabled", cluster.SetupState.ClusterDefinition.Features.Tracing);
 
-                    if (cluster.Definition.Nodes.Where(node => node.Labels.MetricsInternal).Count() > 1) {
+                    if (cluster.SetupState.ClusterDefinition.Nodes.Where(node => node.Labels.MetricsInternal).Count() > 1) {
                         values.Add($"storage.trace.backend", "s3");
                     }
 
@@ -3929,7 +3961,7 @@ $@"- name: StorageType
 
                     values.Add($"prometheus.monitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"prometheus.monitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
-                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
 
                     int i = 0;
                     foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetricsInternal, "true"))
@@ -3984,7 +4016,7 @@ $@"- name: StorageType
 
                     values.Add($"reloader.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add($"reloader.serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
 
                     await controlNode.InstallHelmChartAsync(controller, "reloader",
                         releaseName:  "reloader",
@@ -4028,17 +4060,17 @@ $@"- name: StorageType
 
                     var values = new Dictionary<string, object>();
 
-                    values.Add("cluster.name", cluster.Definition.Name);
-                    values.Add("cluster.domain", cluster.Definition.Domain);
-                    values.Add($"cluster.datacenter", cluster.Definition.Datacenter);
-                    values.Add($"cluster.version", cluster.Definition.ClusterVersion);
-                    values.Add($"cluster.hostingEnvironment", cluster.Definition.Hosting.Environment);
+                    values.Add("cluster.name", cluster.SetupState.ClusterDefinition.Name);
+                    values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
+                    values.Add($"cluster.datacenter", cluster.SetupState.ClusterDefinition.Datacenter);
+                    values.Add($"cluster.version", cluster.SetupState.ClusterDefinition.ClusterVersion);
+                    values.Add($"cluster.hostingEnvironment", cluster.SetupState.ClusterDefinition.Hosting.Environment);
                     values.Add("neonkube.clusterDomain.grafana", ClusterHost.Grafana);
                     values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
                     values.Add($"serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
-                    values.Add($"tracing.enabled", cluster.Definition.Features.Tracing);
-                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add($"tracing.enabled", cluster.SetupState.ClusterDefinition.Features.Tracing);
+                    values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
                     values.Add("replicas", serviceAdvice.ReplicaCount);
 
                     controller.ThrowIfCancelled();
@@ -4106,7 +4138,7 @@ $@"- name: StorageType
                     await k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonMonitor, "grafana-deployment", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken);
                 });
 
-            if (cluster.Definition.Features.Kiali)
+            if (cluster.SetupState.ClusterDefinition.Features.Kiali)
             {
                 controller.ThrowIfCancelled();
                 await controlNode.InvokeIdempotentAsync("setup/monitoring-grafana-kiali-user",
@@ -4230,8 +4262,8 @@ $@"- name: StorageType
 
                             var values = new Dictionary<string, object>();
 
-                            values.Add("cluster.name", cluster.Definition.Name);
-                            values.Add("cluster.domain", cluster.Definition.Domain);
+                            values.Add("cluster.name", cluster.SetupState.ClusterDefinition.Name);
+                            values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
                             values.Add("neonkube.clusterDomain.minio", ClusterHost.Minio);
                             values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
                             values.Add($"metrics.serviceMonitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
@@ -4240,10 +4272,10 @@ $@"- name: StorageType
                             values.Add("mcImage.registry", KubeConst.LocalClusterRegistry);
                             values.Add("helmKubectlJqImage.registry", KubeConst.LocalClusterRegistry);
                             values.Add($"tenants[0].pools[0].servers", serviceAdvice.ReplicaCount);
-                            values.Add($"tenants[0].pools[0].volumesPerServer", cluster.Definition.Storage.Minio.VolumesPerNode);
+                            values.Add($"tenants[0].pools[0].volumesPerServer", cluster.SetupState.ClusterDefinition.Storage.Minio.VolumesPerNode);
 
                             var volumesize = ByteUnits.Humanize(
-                                ByteUnits.Parse(cluster.Definition.Storage.Minio.VolumeSize),
+                                ByteUnits.Parse(cluster.SetupState.ClusterDefinition.Storage.Minio.VolumeSize),
                                 powerOfTwo:      true,
                                 spaceBeforeUnit: false,
                                 removeByteUnit:  true);
@@ -4262,17 +4294,17 @@ $@"- name: StorageType
                             values.Add($"operator.resources.limits.memory", ToSiString(operatorAdvice.PodMemoryLimit));
 
                             var accessKey = NeonHelper.GetCryptoRandomPassword(16);
-                            var secretKey = NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
+                            var secretKey = NeonHelper.GetCryptoRandomPassword(cluster.SetupState.ClusterDefinition.Security.PasswordLength);
 
                             values.Add($"tenants[0].secrets.accessKey", accessKey);
                             values.Add($"clients.aliases.minio.accessKey", accessKey);
                             values.Add($"tenants[0].secrets.secretKey", secretKey);
                             values.Add($"clients.aliases.minio.secretKey", secretKey);
 
-                            values.Add($"tenants[0].console.secrets.passphrase", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
-                            values.Add($"tenants[0].console.secrets.salt", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
+                            values.Add($"tenants[0].console.secrets.passphrase", NeonHelper.GetCryptoRandomPassword(cluster.SetupState.ClusterDefinition.Security.PasswordLength));
+                            values.Add($"tenants[0].console.secrets.salt", NeonHelper.GetCryptoRandomPassword(cluster.SetupState.ClusterDefinition.Security.PasswordLength));
                             values.Add($"tenants[0].console.secrets.accessKey", NeonHelper.GetCryptoRandomPassword(16));
-                            values.Add($"tenants[0].console.secrets.secretKey", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
+                            values.Add($"tenants[0].console.secrets.secretKey", NeonHelper.GetCryptoRandomPassword(cluster.SetupState.ClusterDefinition.Security.PasswordLength));
 
                             int i = 0;
 
@@ -4394,7 +4426,7 @@ $@"- name: StorageType
             tasks.Add(InstallLokiAsync(controller, controlNode));
             tasks.Add(InstallKubeStateMetricsAsync(controller, controlNode));
 
-            if (cluster.Definition.Features.Tracing)
+            if (cluster.SetupState.ClusterDefinition.Features.Tracing)
             {
                 tasks.Add(InstallTempoAsync(controller, controlNode));
             }
@@ -4438,7 +4470,7 @@ $@"- name: StorageType
                     values.Add($"haproxy.metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"exporter.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"exporter.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
-                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
 
                     if (serviceAdvice.ReplicaCount < 2)
                     {
@@ -4486,7 +4518,6 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterLogin  = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
             var k8s           = GetK8sClient(controller);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Harbor);
@@ -4563,7 +4594,7 @@ $@"- name: StorageType
 
                     if (!harborSecret.Data.ContainsKey("secret"))
                     {
-                        harborSecret.StringData["secret"] = NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
+                        harborSecret.StringData["secret"] = NeonHelper.GetCryptoRandomPassword(cluster.SetupState.ClusterDefinition.Security.PasswordLength);
 
                         await k8s.CoreV1.UpsertSecretAsync(harborSecret, KubeNamespace.NeonSystem);
                     }
@@ -4586,15 +4617,15 @@ $@"- name: StorageType
 
                     var values = new Dictionary<string, object>();
 
-                    values.Add("cluster.name", cluster.Definition.Name);
-                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("cluster.name", cluster.SetupState.ClusterDefinition.Name);
+                    values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
                     values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
-                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
 
-                    values.Add($"components.chartMuseum.enabled", cluster.Definition.Features.Harbor.ChartMuseum);
-                    values.Add($"components.notary.enabled", cluster.Definition.Features.Harbor.Notary);
-                    values.Add($"components.trivy.enabled", cluster.Definition.Features.Harbor.Trivy);
+                    values.Add($"components.chartMuseum.enabled", cluster.SetupState.ClusterDefinition.Features.Harbor.ChartMuseum);
+                    values.Add($"components.notary.enabled", cluster.SetupState.ClusterDefinition.Features.Harbor.Notary);
+                    values.Add($"components.trivy.enabled", cluster.SetupState.ClusterDefinition.Features.Harbor.Trivy);
                     
                     values.Add("neonkube.clusterDomain.harborNotary", ClusterHost.HarborNotary);
                     values.Add("neonkube.clusterDomain.harborRegistry", ClusterHost.HarborRegistry);
@@ -4602,7 +4633,7 @@ $@"- name: StorageType
                     values.Add($"storage.s3.accessKey", Encoding.UTF8.GetString(minioSecret.Data["accesskey"]));
                     values.Add($"storage.s3.secretKeyRef", "registry-minio");
 
-                    var baseDN = $@"dc={string.Join($@"\,dc=", cluster.Definition.Domain.Split('.'))}";
+                    var baseDN = $@"dc={string.Join($@"\,dc=", cluster.SetupState.ClusterDomain.Split('.'))}";
 
                     values.Add($"ldap.baseDN", baseDN);
                     values.Add($"ldap.secret", serviceUser.Password);
@@ -4643,7 +4674,7 @@ $@"- name: StorageType
 
                     var tasks = new List<Task>();
 
-                    if (cluster.Definition.Features.Harbor.ChartMuseum)
+                    if (cluster.SetupState.ClusterDefinition.Features.Harbor.ChartMuseum)
                     {
                         tasks.Add(k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-chartmuseum", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
                     }
@@ -4651,7 +4682,7 @@ $@"- name: StorageType
                     tasks.Add(k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-core", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
                     tasks.Add(k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-jobservice", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
 
-                    if (cluster.Definition.Features.Harbor.Notary)
+                    if (cluster.SetupState.ClusterDefinition.Features.Harbor.Notary)
                     {
                         tasks.Add(k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-notaryserver", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
                         tasks.Add(k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-notarysigner", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
@@ -4660,7 +4691,7 @@ $@"- name: StorageType
                     tasks.Add(k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-portal", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
                     tasks.Add(k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-registry", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
                     
-                    if (cluster.Definition.Features.Harbor.Trivy)
+                    if (cluster.SetupState.ClusterDefinition.Features.Harbor.Trivy)
                     {
                         tasks.Add(k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonSystem, "registry-harbor-harbor-trivy", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken));
                     }
@@ -4724,18 +4755,16 @@ $@"- name: StorageType
                     {
                         controller.LogProgress(controlNode, verb: "login", message: "workstation to Harbor");
 
-                        var login = KubeHelper.GetClusterLogin(KubeHelper.CurrentContextName);
-
-                        NeonHelper.ExecuteCapture(NeonHelper.DockerCli,
+                        NeonHelper.ExecuteCapture(NeonHelper.VerifiedDockerCli,
                             new object[]
                             {
                                 "login",
-                                $"{ClusterHost.HarborRegistry}.{login.ClusterDefinition.Domain}",
+                                $"{ClusterHost.HarborRegistry}.{cluster.SetupState.ClusterDomain}",
                                 "--username",
                                 "root",
                                 "--password-stdin"
                             },
-                            input: new StringReader(login.SsoPassword));
+                            input: new StringReader(cluster.SetupState.SsoPassword));
                     }
                 });
         }
@@ -4861,12 +4890,12 @@ $@"- name: StorageType
                     values.Add("image.registry", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
                     values.Add("image.pullPolicy", "IfNotPresent");
-                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
                     values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
                     values.Add("resources.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
-                    values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 9 : 3);
-                    values.Add("dotnetGcServer", cluster.Definition.Nodes.Count() == 1 ? 0 : 1);
-                    values.Add("dotnetGcHighMemPercent", cluster.Definition.Nodes.Count() == 1 ? 15.ToString("x") : 50.ToString("x"));
+                    values.Add("dotnetGcConserveMemory", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 9 : 3);
+                    values.Add("dotnetGcServer", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 0 : 1);
+                    values.Add("dotnetGcHighMemPercent", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 15.ToString("x") : 50.ToString("x"));
                     values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
@@ -4916,7 +4945,7 @@ $@"- name: StorageType
                                 ContainerImages = new V1NeonClusterOperator.UpdateSpec()
                                 {
                                     Enabled  = true,
-                                    Schedule = cluster.Definition.IsDesktop ? "0 * * ? * *" : "0 0 0 ? * *"
+                                    Schedule = cluster.SetupState.ClusterDefinition.IsDesktop ? "0 * * ? * *" : "0 0 0 ? * *"
                                 },
                                 ControlPlaneCertificates = new V1NeonClusterOperator.UpdateSpec()
                                 {
@@ -4942,7 +4971,7 @@ $@"- name: StorageType
                         }
                     };
 
-                    if (cluster.Definition.IsDesktop)
+                    if (cluster.SetupState.ClusterDefinition.IsDesktop)
                     {
                         nco.Spec.Updates.NeonDesktopCertificate = new V1NeonClusterOperator.UpdateSpec()
                         {
@@ -4982,51 +5011,54 @@ $@"- name: StorageType
                             controller,
                             controlNode,
                             name: "kubernetes",
-                            url: $"https://{ClusterHost.KubernetesDashboard}.{cluster.Definition.Domain}",
+                            url: $"https://{ClusterHost.KubernetesDashboard}.{cluster.SetupState.ClusterDomain}",
                             displayName: "Kubernetes",
                             enabled: true,
                             displayOrder: 1);
 
-                    if (cluster.Definition.Features.Grafana)
+                    if (cluster.SetupState.ClusterDefinition.Features.Grafana)
                     {
                         await CreateNeonDashboardAsync(
                             controller,
                             controlNode,
                             name:         "grafana",
-                            url:          $"https://{ClusterHost.Grafana}.{cluster.Definition.Domain}",
+                            url:          $"https://{ClusterHost.Grafana}.{cluster.SetupState.ClusterDomain}",
                             displayName:  "Grafana",
                             enabled:      true,
                             displayOrder: 10);
                     }
-                    if (cluster.Definition.Features.Minio)
+
+                    if (cluster.SetupState.ClusterDefinition.Features.Minio)
                     {
                         await CreateNeonDashboardAsync(
                             controller,
                             controlNode,
                             name:         "minio",
-                            url:          $"https://{ClusterHost.Minio}.{cluster.Definition.Domain}",
+                            url:          $"https://{ClusterHost.Minio}.{cluster.SetupState.ClusterDomain}",
                             displayName:  "Minio",
                             enabled:      true,
                             displayOrder: 10);
                     }
-                    if (cluster.Definition.Features.Harbor.Enabled)
+
+                    if (cluster.SetupState.ClusterDefinition.Features.Harbor.Enabled)
                     {
                         await CreateNeonDashboardAsync(
                             controller,
                             controlNode,
                             name:         "harbor",
-                            url:          $"https://{ClusterHost.HarborRegistry}.{cluster.Definition.Domain}",
+                            url:          $"https://{ClusterHost.HarborRegistry}.{cluster.SetupState.ClusterDomain}",
                             displayName:  "Harbor",
                             enabled:      true,
                             displayOrder: 10);
                     }
-                    if (cluster.Definition.Features.Kiali)
+                     
+                    if (cluster.SetupState.ClusterDefinition.Features.Kiali)
                     {
                         await CreateNeonDashboardAsync(
                             controller,
                             controlNode,
                             name:         "kiali",
-                            url:          $"https://{ClusterHost.Kiali}.{cluster.Definition.Domain}",
+                            url:          $"https://{ClusterHost.Kiali}.{cluster.SetupState.ClusterDomain}",
                             displayName:  "Kiali",
                             enabled:      true,
                             displayOrder: 10);
@@ -5043,20 +5075,20 @@ $@"- name: StorageType
 
                     values.Add("image.registry", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
-                    values.Add("cluster.name", cluster.Definition.Name);
-                    values.Add("cluster.domain", cluster.Definition.Domain);
-                    values.Add($"cluster.datacenter", cluster.Definition.Datacenter);
-                    values.Add($"cluster.version", cluster.Definition.ClusterVersion);
-                    values.Add($"cluster.hostingEnvironment", cluster.Definition.Hosting.Environment);
+                    values.Add("cluster.name", cluster.SetupState.ClusterDefinition.Name);
+                    values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
+                    values.Add($"cluster.datacenter", cluster.SetupState.ClusterDefinition.Datacenter);
+                    values.Add($"cluster.version", cluster.SetupState.ClusterDefinition.ClusterVersion);
+                    values.Add($"cluster.hostingEnvironment", cluster.SetupState.ClusterDefinition.Hosting.Environment);
                     values.Add($"neonkube.clusterDomain.neonDashboard", ClusterHost.NeonDashboard);
-                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
                     values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
                     values.Add("resources.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
-                    values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 9 : 3);
-                    values.Add("dotnetGcServer", cluster.Definition.Nodes.Count() == 1 ? 0 : 1);
-                    values.Add("dotnetGcHighMemPercent", cluster.Definition.Nodes.Count() == 1 ? 15.ToString("x") : 50.ToString("x"));
+                    values.Add("dotnetGcConserveMemory", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 9 : 3);
+                    values.Add("dotnetGcServer", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 0 : 1);
+                    values.Add("dotnetGcHighMemPercent", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 15.ToString("x") : 50.ToString("x"));
 
                     await controlNode.InstallHelmChartAsync(controller, "neon-node-agent",
                         releaseName:  "neon-node-agent",
@@ -5101,18 +5133,18 @@ $@"- name: StorageType
 
                     values.Add("image.registry", KubeConst.LocalClusterRegistry);
                     values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
-                    values.Add("cluster.name", cluster.Definition.Name);
-                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("cluster.name", cluster.SetupState.ClusterDefinition.Name);
+                    values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
                     values.Add("neonkube.clusterDomain.neonDashboard", ClusterHost.NeonDashboard);
                     values.Add("secrets.cipherKey", AesCipher.GenerateKey(256));
-                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
                     values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
                     values.Add("resources.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
-                    values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 9 : 3);
-                    values.Add("dotnetGcServer", cluster.Definition.Nodes.Count() == 1 ? 0 : 1);
-                    values.Add("dotnetGcHighMemPercent", cluster.Definition.Nodes.Count() == 1 ? 15.ToString("x") : 50.ToString("x"));
+                    values.Add("dotnetGcConserveMemory", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 9 : 3);
+                    values.Add("dotnetGcServer", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 0 : 1);
+                    values.Add("dotnetGcHighMemPercent", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 15.ToString("x") : 50.ToString("x"));
 
                     await controlNode.InstallHelmChartAsync(controller, "neon-dashboard",
                         releaseName:  "neon-dashboard",
@@ -5211,7 +5243,7 @@ $@"- name: StorageType
             values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
             values.Add($"metrics.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
-            if (cluster.Definition.IsDesktop)
+            if (cluster.SetupState.ClusterDefinition.IsDesktop)
             {
                 values.Add($"persistence.size", "1Gi");
             }
@@ -5242,7 +5274,7 @@ $@"- name: StorageType
                 async () =>
                 {
                     var username = KubeConst.NeonSystemDbAdminUser;
-                    var password = NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
+                    var password = NeonHelper.GetCryptoRandomPassword(cluster.SetupState.ClusterDefinition.Security.PasswordLength);
 
                     var secret = new V1Secret()
                     {
@@ -5270,7 +5302,7 @@ $@"- name: StorageType
                 async () =>
                 {
                     var username = KubeConst.NeonSystemDbServiceUser;
-                    var password = NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength);
+                    var password = NeonHelper.GetCryptoRandomPassword(cluster.SetupState.ClusterDefinition.Security.PasswordLength);
 
                     var secret = new V1Secret()
                     {
@@ -5297,7 +5329,7 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/system-db-volumes",
                 async () =>
                 {
-                    var nodes = cluster.Definition.SortedControlNodes.ToList();
+                    var nodes = cluster.SetupState.ClusterDefinition.SortedControlNodes.ToList();
 
                     if (nodes.Count > serviceAdvice.ReplicaCount.Value)
                     {
@@ -5316,9 +5348,9 @@ $@"- name: StorageType
                         {
                             Metadata = new V1ObjectMeta()
                             {
-                                Name = $"pgdata-neon-system-db-{i}",
+                                Name              = $"pgdata-neon-system-db-{i}",
                                 NamespaceProperty = KubeNamespace.NeonSystem,
-                                Annotations = new Dictionary<string, string>()
+                                Annotations       = new Dictionary<string, string>()
                                 {
                                     { "volume.kubernetes.io/selected-node", nodes[i].Name }
                                 },
@@ -5350,7 +5382,7 @@ $@"- name: StorageType
                     controller.LogProgress(controlNode, verb: "setup", message: "neon-system-db");
 
                     values.Add($"replicas", serviceAdvice.ReplicaCount);
-                    values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+                    values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
                     values.Add("healthCheck.image.tag", KubeVersions.NeonKubeContainerImageTag);
                     values.Add($"neonSystemDb.enableConnectionPooler", true);
 
@@ -5438,8 +5470,8 @@ $@"- name: StorageType
 
             var values = new Dictionary<string, object>();
 
-            values.Add("cluster.name", cluster.Definition.Name);
-            values.Add("cluster.domain", cluster.Definition.Domain);
+            values.Add("cluster.name", cluster.SetupState.ClusterDefinition.Name);
+            values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
             values.Add("neonkube.clusterDomain.grafana", ClusterHost.Grafana);
             values.Add("neonkube.clusterDomain.kiali", ClusterHost.Kiali);
             values.Add("neonkube.clusterDomain.minio", ClusterHost.Minio);
@@ -5447,19 +5479,19 @@ $@"- name: StorageType
             values.Add("neonkube.clusterDomain.neonDashboard", ClusterHost.NeonDashboard);
             values.Add("neonkube.clusterDomain.kubernetesDashboard", ClusterHost.KubernetesDashboard);
             values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
-            values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+            values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
 
-            values.Add("secrets.grafana", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
-            values.Add("secrets.harbor", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
-            values.Add("secrets.neonSso", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
-            values.Add("secrets.minio", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
+            values.Add("secrets.grafana", NeonHelper.GetCryptoRandomPassword(cluster.SetupState.ClusterDefinition.Security.PasswordLength));
+            values.Add("secrets.harbor", NeonHelper.GetCryptoRandomPassword(cluster.SetupState.ClusterDefinition.Security.PasswordLength));
+            values.Add("secrets.neonSso", NeonHelper.GetCryptoRandomPassword(cluster.SetupState.ClusterDefinition.Security.PasswordLength));
+            values.Add("secrets.minio", NeonHelper.GetCryptoRandomPassword(cluster.SetupState.ClusterDefinition.Security.PasswordLength));
             values.Add("secrets.ldap", serviceUser.Password);
 
-            values.Add("config.issuer", $"https://{ClusterHost.Sso}.{cluster.Definition.Domain}");
+            values.Add("config.issuer", $"https://{ClusterHost.Sso}.{cluster.SetupState.ClusterDomain}");
 
             // LDAP
 
-            var baseDN = $@"dc={string.Join($@"\,dc=", cluster.Definition.Domain.Split('.'))}";
+            var baseDN = $@"dc={string.Join($@"\,dc=", cluster.SetupState.ClusterDomain.Split('.'))}";
 
             values.Add("config.ldap.bindDN", $@"cn=serviceuser\,ou=admin\,{baseDN}");
             values.Add("config.ldap.userSearch.baseDN", $@"cn=users\,{baseDN}");
@@ -5499,11 +5531,11 @@ $@"- name: StorageType
                     controller.LogProgress(controlNode, verb: "wait for", message: "neon-sso-clients");
 
                     var publicClient           = new V1NeonSsoClient().Initialize();
-                    publicClient.Metadata.Name = ClusterConst.NeonSsoPublicClientId;
+                    publicClient.Metadata.Name = KubeConst.NeonSsoPublicClientId;
                     publicClient.Spec          = new V1SsoClientSpec()
                     {
-                        Id           = ClusterConst.NeonSsoPublicClientId,
-                        Name         = ClusterConst.NeonSsoPublicClientId,
+                        Id           = KubeConst.NeonSsoPublicClientId,
+                        Name         = KubeConst.NeonSsoPublicClientId,
                         Public       = true,
                         RedirectUris = new List<string>()
                     };
@@ -5598,17 +5630,17 @@ $@"- name: StorageType
 
             values.Add("image.registry", KubeConst.LocalClusterRegistry);
             values.Add("image.tag", KubeVersions.NeonKubeContainerImageTag);
-            values.Add("cluster.name", cluster.Definition.Name);
-            values.Add("cluster.domain", cluster.Definition.Domain);
+            values.Add("cluster.name", cluster.SetupState.ClusterDefinition.Name);
+            values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
             values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
             values.Add("secrets.cipherKey", AesCipher.GenerateKey(256));
             values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
-            values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+            values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
             values.Add("resources.requests.memory", $"{ToSiString(serviceAdvice.PodMemoryRequest)}");
             values.Add("resources.limits.memory", $"{ToSiString(serviceAdvice.PodMemoryLimit)}");
-            values.Add("dotnetGcConserveMemory", cluster.Definition.Nodes.Count() == 1 ? 9 : 3);
-            values.Add("dotnetGcServer", cluster.Definition.Nodes.Count() == 1 ? 0 : 1);
-            values.Add("dotnetGcHighMemPercent", cluster.Definition.Nodes.Count() == 1 ? 15.ToString("x") : 50.ToString("x"));
+            values.Add("dotnetGcConserveMemory", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 9 : 3);
+            values.Add("dotnetGcServer", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 0 : 1);
+            values.Add("dotnetGcHighMemPercent", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 15.ToString("x") : 50.ToString("x"));
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/neon-sso-session-proxy-install",
@@ -5643,7 +5675,6 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
             var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var clusterLogin  = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
             var k8s           = GetK8sClient(controller);
             var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.Glauth);
@@ -5651,16 +5682,16 @@ $@"- name: StorageType
             var dbSecret      = await k8s.CoreV1.ReadNamespacedSecretAsync(KubeConst.NeonSystemDbServiceSecret, KubeNamespace.NeonSystem);
             var dbPassword    = Encoding.UTF8.GetString(dbSecret.Data["password"]);
 
-            values.Add("cluster.name", cluster.Definition.Name);
-            values.Add("cluster.domain", cluster.Definition.Domain);
-            values.Add("serviceMesh.enabled", cluster.Definition.Features.ServiceMesh);
+            values.Add("cluster.name", cluster.SetupState.ClusterDefinition.Name);
+            values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
+            values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
 
-            values.Add("config.backend.baseDN", $"dc={string.Join($@"\,dc=", cluster.Definition.Domain.Split('.'))}");
+            values.Add("config.backend.baseDN", $"dc={string.Join($@"\,dc=", cluster.SetupState.ClusterDomain.Split('.'))}");
             values.Add("config.backend.database.user", KubeConst.NeonSystemDbServiceUser);
             values.Add("config.backend.database.password", dbPassword);
 
-            values.Add("users.root.password", clusterLogin.SsoPassword);
-            values.Add("users.serviceuser.password", NeonHelper.GetCryptoRandomPassword(cluster.Definition.Security.PasswordLength));
+            values.Add("users.root.password", cluster.SetupState.SsoPassword);
+            values.Add("users.serviceuser.password", NeonHelper.GetCryptoRandomPassword(cluster.SetupState.ClusterDefinition.Security.PasswordLength));
 
             if (serviceAdvice.PodMemoryRequest.HasValue && serviceAdvice.PodMemoryLimit.HasValue)
             {
@@ -5758,7 +5789,7 @@ $@"- name: StorageType
                         var userData     = NeonHelper.YamlDeserialize<GlauthUser>(Encoding.UTF8.GetString(users.Data[user]));
                         var name         = userData.Name;
                         var givenname    = userData.Name;
-                        var mail         = $"{userData.Name}@{cluster.Definition.Domain}";
+                        var mail         = $"{userData.Name}@{cluster.SetupState.ClusterDomain}";
                         var uidnumber    = userData.UidNumber;
                         var primarygroup = userData.PrimaryGroup;
                         var passsha256   = CryptoHelper.ComputeSHA256String(userData.Password);
@@ -5813,11 +5844,11 @@ $@"- name: StorageType
 
                     var values = new Dictionary<string, object>();
 
-                    values.Add("cluster.name", cluster.Definition.Name);
-                    values.Add("cluster.domain", cluster.Definition.Domain);
+                    values.Add("cluster.name", cluster.SetupState.ClusterDefinition.Name);
+                    values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
                     values.Add("config.cookieSecret", NeonHelper.ToBase64(NeonHelper.GetCryptoRandomPassword(24)));
                     values.Add("neonkube.clusterDomain.sso", ClusterHost.Sso);
-                    values.Add("client.id", ClusterConst.NeonSsoClientId);
+                    values.Add("client.id", KubeConst.NeonSsoClientId);
                     values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
 
@@ -5937,7 +5968,7 @@ $@"- name: StorageType
                     var clusterInfoMap = new TypedConfigMap<ClusterInfo>(
                         name:       KubeConfigMapName.ClusterInfo,
                         @namespace: KubeNamespace.NeonStatus,
-                        data:       new ClusterInfo(cluster.Definition));
+                        data:       cluster.CreateClusterInfo());
 
                     await k8s.CoreV1.CreateNamespacedTypedConfigMapAsync(clusterInfoMap);
                 });
@@ -5966,7 +5997,7 @@ $@"- name: StorageType
                         @namespace: KubeNamespace.NeonStatus,
                         data:       new ClusterLock()
                         {
-                            IsLocked = cluster.Definition.IsLocked,
+                            IsLocked = cluster.SetupState.ClusterDefinition.IsLocked,
                         });
 
                     await k8s.CoreV1.CreateNamespacedTypedConfigMapAsync(clusterLockMap);

@@ -719,7 +719,7 @@ systemctl daemon-reload
                 {
                     controller.LogProgress(this, verb: "configure", message: "ntp");
 
-                    var clusterDefinition = this.Cluster.Definition;
+                    var clusterDefinition = this.Cluster.SetupState.ClusterDefinition;
                     var nodeDefinition    = this.NodeDefinition;
 
                     var script =
@@ -999,7 +999,7 @@ service ntp restart
 
             controller.LogProgress(this, verb: "configure", message: "environment");
 
-            var clusterDefinition = Cluster.Definition;
+            var clusterDefinition = Cluster.SetupState.ClusterDefinition;
             var nodeDefinition    = NeonHelper.CastTo<NodeDefinition>(Metadata);
 
             // We're going to append the new variables to the existing Linux [/etc/environment] file.
@@ -1159,7 +1159,7 @@ ff02::2         ip6-allrouters
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var nodeDefinition    = NeonHelper.CastTo<NodeDefinition>(Metadata);
-            var clusterDefinition = Cluster.Definition;
+            var clusterDefinition = Cluster.SetupState.ClusterDefinition;
             var hostingManager    = controller.Get<IHostingManager>(KubeSetupProperty.HostingManager);
 
             InvokeIdempotent("setup/package-caching",
@@ -1280,7 +1280,7 @@ EOF
             Covenant.Requires<ArgumentNullException>(clusterManifest != null, nameof(clusterManifest));
 
             var nodeDefinition    = NeonHelper.CastTo<NodeDefinition>(Metadata);
-            var clusterDefinition = Cluster.Definition;
+            var clusterDefinition = Cluster.SetupState.ClusterDefinition;
             var hostingManager    = controller.Get<IHostingManager>(KubeSetupProperty.HostingManager);
 
             InvokeIdempotent("setup/node",

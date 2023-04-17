@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeConfigUser.cs
+// FILE:	    KubeConfigExecInteractiveMode.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -21,6 +21,7 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -29,37 +30,36 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Kube;
 
-namespace Neon.Kube
+namespace Neon.Kube.Config
 {
     /// <summary>
-    /// Describes a Kubernetes user configuration.
+    /// Describes an <see cref="KubeConfigAuthProvider"/>'s relationshit with standard input.
     /// </summary>
-    public class KubeConfigUser
+    public enum KubeConfigExecInteractiveMode
     {
         /// <summary>
-        /// Default constructor.
+        /// Indicates that the plugin will never use standard input.
         /// </summary>
-        public KubeConfigUser()
-        {
-        }
+        [EnumMember(Value = "Never")]
+        Never,
 
         /// <summary>
-        /// The local nickname for the user.
+        /// Indicates that the plugin will use standard input when available.
         /// </summary>
-        [JsonProperty(PropertyName = "name", Required = Required.Always)]
-        [YamlMember(Alias = "name", ApplyNamingConventions = false)]
-        public string Name { get; set; }
+        [EnumMember(Value = "IfAvailable")]
+        IfAvailable,
 
         /// <summary>
-        /// The user properties.
+        /// Indicates that the plugin will always use standard input.
         /// </summary>
-        [JsonProperty(PropertyName = "user", Required = Required.Always)]
-        [YamlMember(Alias = "user", ApplyNamingConventions = false)]
-        public KubeConfigUserProperties Properties { get; set; }
+        [EnumMember(Value = "Always")]
+        Always
     }
 }

@@ -28,6 +28,7 @@ using Neon.Common;
 using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.Config;
 using Neon.Kube.Hosting;
 using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
@@ -603,14 +604,21 @@ namespace Neon.Kube.Xunit
             // Determine whether a test cluster with the same name exists and if
             // its cluster definition matches the test cluster's definition.
             ;
-            var clusterExists      = false;
-            var clusterContextName = KubeContextName.Parse($"root@{clusterDefinition.Name}");
-            var clusterContext     = KubeHelper.Config.GetContext(clusterContextName);
-            var clusterLogin       = KubeHelper.GetClusterLogin(clusterContextName);
+            var clusterExists     = false;
+            var configContextName = KubeContextName.Parse($"root@{clusterDefinition.Name}");
+            var configContext     = KubeHelper.Config.GetContext(configContextName);
+            var configCluster     = KubeHelper.Config.GetCluster(configContext.Cluster);
 
-            if (clusterContext != null && clusterLogin != null && !clusterLogin.SetupDetails.SetupPending)
+            if (configContext != null)
             {
-                clusterExists = ClusterDefinition.AreSimilar(clusterDefinition, clusterLogin.ClusterDefinition);
+                var existingClusterDefinition = configCluster.TestClusterDefinition;
+
+                if (existingClusterDefinition == null)
+                {
+                    throw new NeonKubeException($"Unit tests cannot be run on the [{configContextName.Cluster}] cluster because it wasn't deployed by [{nameof(ClusterFixture)}].");
+                }
+
+                clusterExists = ClusterDefinition.AreSimilar(clusterDefinition, existingClusterDefinition);
             }
 
             if (clusterExists && !options.RemoveClusterOnStart)
@@ -621,9 +629,9 @@ namespace Neon.Kube.Xunit
                 // otherwise we'll remove the cluster as well as its context/login,
                 // and deploy a new cluster below.
 
-                using (var cluster = new ClusterProxy(clusterLogin.ClusterDefinition, new HostingManagerFactory(), options.CloudMarketplace))
+                using (var cluster = new ClusterProxy(new HostingManagerFactory(), options.CloudMarketplace))
                 {
-                    KubeHelper.SetCurrentContext(clusterContextName);
+                    KubeHelper.SetCurrentContext(configContextName);
 
                     var isLocked      = cluster.IsLockedAsync().ResultWithoutAggregate();
                     var clusterInfo   = cluster.GetClusterInfoAsync().ResultWithoutAggregate();
@@ -656,7 +664,7 @@ namespace Neon.Kube.Xunit
                 // deployed by another machine or fragments of a partially deployed cluster,
                 // so we need to do a preemptive cluster remove.
 
-                using (var cluster = new ClusterProxy(clusterDefinition, new HostingManagerFactory(), options.CloudMarketplace))
+                using (var cluster = new ClusterProxy(new HostingManagerFactory(), options.CloudMarketplace))
                 {
                     cluster.DeleteAsync(deleteOrphans: true).WaitWithoutAggregate();
                 }

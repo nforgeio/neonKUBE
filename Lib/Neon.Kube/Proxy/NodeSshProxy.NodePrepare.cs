@@ -36,6 +36,7 @@ using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.Config;
 using Neon.Kube.Hosting;
 using Neon.Kube.Setup;
 using Neon.Net;
@@ -105,7 +106,7 @@ namespace Neon.Kube.Proxy
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-            var clusterLogin = controller.Get<ClusterLogin>(KubeSetupProperty.ClusterLogin);
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
             // Write the SSHD subconfig file and configure the SSH certificate
             // credentials for [sysadmin] on the node.
@@ -150,7 +151,7 @@ chmod 600 $HOME/.ssh/authorized_keys
                     bundle = new CommandBundle("./addkeys.sh");
 
                     bundle.AddFile("addkeys.sh", addKeyScript, isExecutable: true);
-                    bundle.AddFile("ssh-key.ssh2", clusterLogin.SshKey.PublicPUB);
+                    bundle.AddFile("ssh-key.ssh2", cluster.SetupState.SshKey.PublicPUB);
 
                     // $note(jefflill):
                     //
@@ -188,7 +189,7 @@ systemctl restart sshd
             controller.LogProgress(this, verb: "verify", message: "ssh keys");
 
             Disconnect();
-            UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, clusterLogin.SshKey.PrivatePEM));
+            UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, cluster.SetupState.SshKey.PrivatePEM));
             WaitForBoot();
         }
 
@@ -288,7 +289,7 @@ systemctl restart rsyslog.service
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
             var hostingManager    = controller.Get<IHostingManager>(KubeSetupProperty.HostingManager);
-            var clusterDefinition = cluster.Definition;
+            var clusterDefinition = cluster.SetupState.ClusterDefinition;
 
             InvokeIdempotent("base/prepare-node",
                 () =>
@@ -1172,7 +1173,7 @@ rm  install-kustomize.sh
 
                     controller.LogProgress(this, verb: "load", message: "container images (debug mode)");
 
-                    var dockerPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), $@"DockerDesktop\version-bin\docker.exe");
+                    var dockerPath = NeonHelper.VerifiedDockerCli;
                     var images     = new List<NodeImageInfo>();
 
                     var setupImageFolders = Directory.EnumerateDirectories($"{Environment.GetEnvironmentVariable("NC_ROOT")}/Images/setup")
@@ -1246,7 +1247,7 @@ rm  install-kustomize.sh
             await SyncContext.Clear;
             await Task.Yield();
 
-            var dockerPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), $@"DockerDesktop\version-bin\docker.exe");
+            var dockerPath = NeonHelper.VerifiedDockerCli;
 
             await InvokeIdempotentAsync($"setup/debug-load-images-{image.Name}",
                 async () =>

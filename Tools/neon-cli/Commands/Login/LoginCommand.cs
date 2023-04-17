@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,13 +32,8 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.Kube;
+using Neon.Kube.Config;
 using Neon.Kube.Proxy;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Octokit;
-using System.Security.Cryptography.X509Certificates;
-using k8s.Models;
-using Neon.Kube.Kube;
-using Neon.Tasks;
 using Neon.Kube.Glauth;
 
 namespace NeonCli
@@ -94,36 +90,35 @@ ARGUMENTS:
 
             try
             {
-                var server    = commandLine.Arguments.First();
+                var server = commandLine.Arguments.First();
 
                 if (!server.StartsWith("https://"))
                 {
                     server = $"https://{server}";
                 }
 
-                var serverUri       = new Uri(server);
-                var clusterId       = serverUri.Host.Split('.').FirstOrDefault();
-                var ssoUri          = new Uri($"https://{ClusterHost.Sso}.{serverUri.Host}");
+                var serverUri = new Uri(server);
+                var clusterId = serverUri.Host.Split('.').FirstOrDefault();
+                var ssoUri    = new Uri($"https://{ClusterHost.Sso}.{serverUri.Host}");
 
                 var result = await KubeHelper.LoginOidcAsync(
                     authority: ssoUri.ToString(),
-                    clientId: ClusterConst.NeonSsoPublicClientId,
-                    scopes: new string[] { "openid", "email", "profile", "groups", "offline_access", "audience:server:client_id:neon-sso" });
+                    clientId:  KubeConst.NeonSsoPublicClientId,
+                    scopes:    new string[] { "openid", "email", "profile", "groups", "offline_access", "audience:server:client_id:neon-sso" });
                 
                 ClusterInfo clusterInfo;
                 GlauthUser  registryUser = null;
 
-                using var store = new X509Store(
-                            StoreName.CertificateAuthority,
-                            StoreLocation.CurrentUser);
+                using var store = new X509Store(StoreName.CertificateAuthority,StoreLocation.CurrentUser);
 
                 using (var k8s = new Kubernetes(new KubernetesClientConfiguration()
-                {
-                    AccessToken = result.AccessToken,
-                    SslCaCerts = store.Certificates,
-                    SkipTlsVerify = false,
-                    Host = serverUri.ToString(),
-                }, new KubernetesRetryHandler()))
+                    {
+                        AccessToken   = result.AccessToken,
+                        SslCaCerts    = store.Certificates,
+                        SkipTlsVerify = false,
+                        Host          = serverUri.ToString(),
+                    },
+                    new KubernetesRetryHandler()))
                 {
                     var configMap = await k8s.CoreV1.ReadNamespacedConfigMapAsync(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus);
 
@@ -135,70 +130,72 @@ ARGUMENTS:
                     }
                     catch
                     {
-                        // not allowed
+                        // We're going to ignore any errors here and drop through to
+                        // the code below to see if it can do something else.
                     }
                 }
 
-                var user     = result.User;
-                var userName = user.Identity.Name.Split("via").First().Trim();
-                var config   = KubeHelper.Config;
-
+                var user           = result.User;
+                var userName       = user.Identity.Name.Split("via").First().Trim();
+                var config         = KubeHelper.Config;
                 var newContextName = $"{userName}@{clusterInfo.Name}";
 
                 Console.WriteLine($"Login: {newContextName}...");
 
                 var configCluster = config.Clusters.Where(cluster => cluster.Name == clusterInfo.Name).FirstOrDefault();
-                var clusterProperties = new KubeConfigClusterProperties()
-                {
-                    Server                = serverUri.ToString(),
-                    InsecureSkipTlsVerify = false
-                };
+
+                var clusterProperties = 
+                    new KubeConfigClusterConfig()
+                    {
+                        Server                = serverUri.ToString(),
+                        InsecureSkipTlsVerify = false
+                    };
 
                 if (configCluster == null)
                 {
-                    config.Clusters.Add(new KubeConfigCluster()
-                    {
-                        Name       = clusterInfo.Name,
-                        Properties = clusterProperties
-                    });
+                    config.Clusters.Add(
+                        new KubeConfigCluster()
+                        {
+                            Name       = clusterInfo.Name,
+                            Config = clusterProperties
+                        });
                 }
                 else
                 {
-                    configCluster.Properties = clusterProperties;
+                    configCluster.Config = clusterProperties;
                 }
 
                 var configUser   = config.Users.Where(user => user.Name == newContextName).FirstOrDefault();
-                var authProvider = new KubeConfigAuthProvider()
+                var authProvider = new KubeConfigAuthProvider() { Name = "oidc" };
+
+                authProvider.Config["client-id"]      = KubeConst.NeonSsoPublicClientId;
+                authProvider.Config["idp-issuer-url"] = ssoUri.ToString().TrimEnd('/');
+                authProvider.Config["refresh-token"]  = result.RefreshToken;
+                authProvider.Config["id-token"]       = result.IdentityToken;
+
+                var userConfig = new KubeConfigUserConfig()
                 {
-                    Name       = "oidc",
-                    Properties = new KubeConfigAuthProviderProperties()
-                    {
-                        ClientId     = ClusterConst.NeonSsoPublicClientId,
-                        IdpIssuerUrl = ssoUri.ToString().TrimEnd('/'),
-                        RefreshToken = result.RefreshToken,
-                        IdToken      = result.IdentityToken
-                    }
-                };
-                var userProperties = new KubeConfigUserProperties()
-                {
+                    Token        = result.AccessToken,
                     AuthProvider = authProvider
                 };
 
                 if (configUser == null)
                 {
-                    config.Users.Add(new KubeConfigUser()
-                    {
-                        Name       = newContextName,
-                        Properties = userProperties,
-                    });
+                    config.Users.Add(
+                        new KubeConfigUser()
+                        {
+                            Name   = newContextName,
+                            Config = userConfig,
+                        });
                 }
                 else
                 {
-                    configUser.Properties = userProperties;
+                    configUser.Config = userConfig;
                 }
 
                 var configContext = config.Contexts.Where(context => context.Name == newContextName).FirstOrDefault();
-                var contextProperties = new KubeConfigContextProperties
+
+                var contextProperties = new KubeConfigContextConfig
                 {
                     Cluster = clusterInfo.Name,
                     User    = newContextName
@@ -206,15 +203,16 @@ ARGUMENTS:
 
                 if (configContext == null)
                 {
-                    config.Contexts.Add(new KubeConfigContext()
-                    {
-                        Name = newContextName,
-                        Properties = contextProperties
-                    });
+                    config.Contexts.Add(
+                        new KubeConfigContext()
+                        {
+                            Name       = newContextName,
+                            Config = contextProperties
+                        });
                 }
                 else
                 {
-                    configContext.Properties = contextProperties;
+                    configContext.Config = contextProperties;
                 }
 
                 config.CurrentContext = newContextName;
@@ -229,7 +227,7 @@ ARGUMENTS:
                         {
                             Console.WriteLine($"Login: Docker to Harbor...");
 
-                            NeonHelper.Execute(NeonHelper.DockerCli,
+                            NeonHelper.Execute(NeonHelper.VerifiedDockerCli,
                                 new object[]
                                 {
                                     "login",
@@ -243,8 +241,7 @@ ARGUMENTS:
                     }
                     catch (Exception e)
                     {
-                        Console.Error.WriteLine(e.Message);
-                        Console.Error.WriteLine($"*** error logging into cluster registry.");
+                        Console.Error.WriteLine($"*** ERROR: logging into cluster registry: {NeonHelper.ExceptionError(e)}");
                     }
                 }
             }
@@ -252,13 +249,12 @@ ARGUMENTS:
             {
                 KubeHelper.SetCurrentContext(orgContext?.Name);
 
-                Console.Error.WriteLine(e.Message);
-                Console.Error.WriteLine($"*** error logging into cluster.");
+                Console.Error.WriteLine($"*** ERROR: logging into cluster: {NeonHelper.ExceptionError(e)}");
                 Program.Exit(1);
             }
 
             Console.WriteLine();
-            Console.WriteLine($"Now logged into: {commandLine.Arguments.First()}");
+            Console.WriteLine($"Logged into: {commandLine.Arguments.First()}");
 
             await Task.CompletedTask;
         }

@@ -30,6 +30,7 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.Kube;
+using Neon.Kube.Config;
 
 namespace NeonCli
 {
@@ -86,12 +87,6 @@ OPTIONS:
             var newLogin        = NeonHelper.YamlDeserialize<ClusterLoginExport>(File.ReadAllText(commandLine.Arguments.First()));
             var existingContext = KubeHelper.Config.GetContext(newLogin.Context.Name);
 
-            // $todo(jefflill():
-            //
-            // This is a bit odd.  Why didn't we serialize this here originally?
-
-            newLogin.Context.Extension = newLogin.Extensions;
-
             // Add/replace the context.
 
             if (existingContext != null)
@@ -108,7 +103,7 @@ OPTIONS:
 
             // Add/replace the cluster.
 
-            var existingCluster = KubeHelper.Config.GetCluster(newLogin.Context.Properties.Cluster);
+            var existingCluster = KubeHelper.Config.GetCluster(newLogin.Context.Config.Cluster);
 
             if (existingCluster != null)
             {
@@ -119,7 +114,7 @@ OPTIONS:
 
             // Add/replace the user.
 
-            var existingUser = KubeHelper.Config.GetUser(newLogin.Context.Properties.User);
+            var existingUser = KubeHelper.Config.GetUser(newLogin.Context.Config.User);
 
             if (existingUser != null)
             {

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeConfigContextProperties.cs
+// FILE:	    KubeConfigUser.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -26,6 +26,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s.KubeConfigModels;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -33,43 +35,34 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Kube;
 
-namespace Neon.Kube
+namespace Neon.Kube.Config
 {
     /// <summary>
-    /// Describes a Kubernetes context properties.
+    /// Describes a Kubernetes user configuration.
     /// </summary>
-    public class KubeConfigContextProperties
+    public class KubeConfigUser
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public KubeConfigContextProperties()
+        public KubeConfigUser()
         {
         }
 
         /// <summary>
-        /// The optional cluster nickname.
+        /// The local nickname for the user.
         /// </summary>
-        [JsonProperty(PropertyName = "cluster", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "cluster", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
-        [DefaultValue(null)]
-        public string Cluster { get; set; }
+        [JsonProperty(PropertyName = "name", Required = Required.Always)]
+        [YamlMember(Alias = "name", ApplyNamingConventions = false)]
+        public string Name { get; set; }
 
         /// <summary>
-        /// The optional namespace.
+        /// The user properties.
         /// </summary>
-        [JsonProperty(PropertyName = "namespace", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "namespace", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
-        [DefaultValue(null)]
-        public string Namespace { get; set; }
-
-        /// <summary>
-        /// The optional user nickname.
-        /// </summary>
-        [JsonProperty(PropertyName = "user", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "user", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
-        [DefaultValue(null)]
-        public string User { get; set; }
+        [JsonProperty(PropertyName = "user", Required = Required.Always)]
+        [YamlMember(Alias = "user", ApplyNamingConventions = false)]
+        public KubeConfigUserConfig Config { get; set; }
     }
 }
