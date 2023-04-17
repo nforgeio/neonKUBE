@@ -21,8 +21,8 @@
         <PackageReference Include="LiquidTestReports.Markdown" Version="1.1.1-beta" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
         <PackageReference Include="Moq" Version="4.18.4" />
-        <PackageReference Include="Neon.Common" Version="10000.1.3030-dev-master" />
-        <PackageReference Include="Neon.Xunit" Version="10000.1.3030-dev-master" />
+        <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
+        <PackageReference Include="Neon.Xunit" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
         <PackageReference Include="xunit" Version="2.4.2" />
         <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -31,8 +31,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
-        <Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+        <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+        <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
     </ItemGroup>
 
     <ItemGroup>
@@ -48,6 +48,8 @@
         <ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube.Xunit\Neon.Kube.Xunit.csproj" />
         <ProjectReference Include="..\..\Services\neon-cluster-operator\neon-cluster-operator.csproj" />
+        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
+        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Xunit\Neon.Xunit.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
     </ItemGroup>
     
     <ItemGroup Condition="'$(JUSTMOCK_ENABLED)' != ''">

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
@@ -19,20 +19,22 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
-		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+		<Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+		<Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Grpc.Net.Client" Version="2.52.0" />
-		<PackageReference Include="Neon.Common" Version="10000.1.3030-dev-master" />
-		<PackageReference Include="Neon.HyperV" Version="10000.1.3030-dev-master" />
+		<PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
+		<PackageReference Include="Neon.HyperV" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
 		<PackageReference Include="protobuf-net.Grpc" Version="1.1.1" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
 		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
+      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
+      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.HyperV\Neon.HyperV.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
 	</ItemGroup>
 
 	<ItemGroup>

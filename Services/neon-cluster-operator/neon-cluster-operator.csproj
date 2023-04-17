@@ -13,8 +13,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
-        <Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+        <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+        <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
     </ItemGroup>
 
     <ItemGroup>
@@ -31,6 +31,8 @@
         </PackageReference>
         <PackageReference Include="JsonDiffPatch" Version="2.0.61" />
         <PackageReference Include="Minio" Version="4.0.7" />
+        <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
+        <PackageReference Include="Neon.Service" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
         <PackageReference Include="NSwag.MSBuild" Version="13.18.2">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -42,8 +44,6 @@
         <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="7.0.5" />
         <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
         <PackageReference Include="Quartz" Version="3.6.2" />
-        <PackageReference Include="Neon.Common" Version="10000.1.3030-dev-master" />
-        <PackageReference Include="Neon.Service" Version="10000.1.3030-dev-master" />
     </ItemGroup>
 
     <ItemGroup>
@@ -51,6 +51,8 @@
         <ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
+        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
+        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Service\Neon.Service.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
     </ItemGroup>
 
     <ItemGroup>

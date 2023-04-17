@@ -50,11 +50,11 @@
 		</ItemGroup>
 
 		<ItemGroup>
-				<ProjectReference Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
+				<ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
 		</ItemGroup>
 		<ItemGroup>
-				<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
-				<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+				<Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+				<Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
 		</ItemGroup>
 		<!-- 
 	We're going to publish the [operator-cli] binaries for [linux-x64], [osx-x64],

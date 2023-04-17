@@ -17,8 +17,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
-        <Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+        <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+        <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
     </ItemGroup>
 
     <ItemGroup>
@@ -29,8 +29,8 @@
     <ItemGroup>
         <PackageReference Include="KubernetesClient.Models" Version="10.1.19" />
         <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
-        <PackageReference Include="Neon.Common" Version="10000.1.3030-dev-master" />
-        <PackageReference Include="Neon.JsonConverters" Version="10000.1.3030-dev-master" />
+        <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
+        <PackageReference Include="Neon.JsonConverters" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="NJsonSchema" Version="10.8.0" />
         <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
@@ -42,6 +42,11 @@
         <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
         <PackageReference Include="System.Threading.Tasks.Parallel" Version="4.3.0" />
         <PackageReference Include="YamlDotNet" Version="13.0.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
+        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.JsonConverters\Neon.JsonConverters.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
     </ItemGroup>
 
 </Project>

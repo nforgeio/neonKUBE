@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
@@ -19,14 +19,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
-		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+		<Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+		<Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
         <PackageReference Include="FluentdForward.OpenTelemetry.Exporter.Logs" Version="0.2.0" />
-        <PackageReference Include="Neon.Common" Version="10000.1.3030-dev-master" />
-        <PackageReference Include="Neon.HyperV" Version="10000.1.3030-dev-master" />
+        <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
+        <PackageReference Include="Neon.HyperV" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
         <PackageReference Include="OpenTelemetry.Api" Version="1.4.0" />
         <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.4.0" />
         <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol.Logs" Version="1.4.0-rc.4" />
@@ -37,6 +37,8 @@
 		<ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
 		<ProjectReference Include="..\Neon.Kube.GrpcProto\Neon.Kube.GrpcProto.csproj" />
 		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
+      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
+      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.HyperV\Neon.HyperV.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
 	</ItemGroup>
 
 	<ItemGroup>

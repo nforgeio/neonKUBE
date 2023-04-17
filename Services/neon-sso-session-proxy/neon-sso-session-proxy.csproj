@@ -13,15 +13,15 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
-		<Compile Include="$(SolutionDir)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+		<Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+		<Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="7.0.5" />
-		<PackageReference Include="Neon.Common" Version="10000.1.3030-dev-master" />
-		<PackageReference Include="Neon.Service" Version="10000.1.3030-dev-master" />
-		<PackageReference Include="Neon.Web" Version="10000.1.3030-dev-master" />
+		<PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
+		<PackageReference Include="Neon.Service" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
+		<PackageReference Include="Neon.Web" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
 		<PackageReference Include="prometheus-net" Version="8.0.0" />
 		<PackageReference Include="prometheus-net.AspNetCore" Version="8.0.0" />
 		<PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
@@ -33,6 +33,9 @@
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
+      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
+      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Service\Neon.Service.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
+      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Web\Neon.Web.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
 	</ItemGroup>
 
 </Project>
