@@ -9,7 +9,7 @@
 				<Authors>NEONFORGE Team</Authors>
 				<Company>NEONFORGE LLC</Company>
 				<Copyright>Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.</Copyright>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageReadmeFile Condition="Exists('README.md')">README.md</PackageReadmeFile>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
 				<LangVersion>latest</LangVersion>
 				<Deterministic>true</Deterministic>
@@ -26,7 +26,6 @@
 				<!-- Debugging -->
 
 				<DebugType>embedded</DebugType>
-        <EmbedAllSources>true</EmbedAllSources>
         <DebugSymbols>true</DebugSymbols>
 				<PublishRepositoryUrl>true</PublishRepositoryUrl>
 				<EmbedUntrackedSources>true</EmbedUntrackedSources>
