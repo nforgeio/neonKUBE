@@ -325,6 +325,7 @@ data:
             enabled: true
           spanmetrics:
             metrics_instance: traces
+          prom_sd_operation_type: insert
           scrape_configs:
             - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
               job_name: kubernetes-pods
