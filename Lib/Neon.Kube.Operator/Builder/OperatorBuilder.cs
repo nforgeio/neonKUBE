@@ -167,9 +167,10 @@ namespace Neon.Kube.Operator.Builder
                             var options             = new ResourceManagerOptions();
                             var controllerAttribute = type.GetCustomAttribute<ControllerAttribute>();
 
-                            controllerArgs[0]       = this;
+                            controllerArgs[0] = this;
 
-                            if (controllerAttribute?.Ignore == true)
+                            if (controllerAttribute?.Ignore == true
+                                || type == typeof(ResourceControllerBase<>))
                             {
                                 break;
                             }

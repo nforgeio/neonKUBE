@@ -9,8 +9,8 @@
 				<Authors>NEONFORGE Team</Authors>
 				<Company>NEONFORGE LLC</Company>
 				<Copyright>Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.</Copyright>
-        <PackageReadmeFile Condition="Exists('README.md')">README.md</PackageReadmeFile>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+				<PackageReadmeFile Condition="Exists('README.md')">README.md</PackageReadmeFile>
+				<GenerateDocumentationFile>true</GenerateDocumentationFile>
 				<LangVersion>latest</LangVersion>
 				<Deterministic>true</Deterministic>
 				<DeterministicSourcePaths>false</DeterministicSourcePaths>
@@ -21,12 +21,12 @@
 				<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 				<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 				<NoWarn>1701;1702;NETSDK1138;CS8892;ASP0014;IDE0063;IDE0090;IDE0017;IDE0079;IDE0066</NoWarn>
-				<NeonSdkPackageVersion>10000.1.3030-dev-master</NeonSdkPackageVersion>
+				<NeonSdkPackageVersion>10000.1.3035-dev-master</NeonSdkPackageVersion>
 				
 				<!-- Debugging -->
 
-				<DebugType>embedded</DebugType>
-        <DebugSymbols>true</DebugSymbols>
+				<DebugType>full</DebugType>
+				<DebugSymbols>true</DebugSymbols>
 				<PublishRepositoryUrl>true</PublishRepositoryUrl>
 				<EmbedUntrackedSources>true</EmbedUntrackedSources>
 

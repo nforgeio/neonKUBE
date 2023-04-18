@@ -223,6 +223,8 @@ try
     {
         Invoke-CaptureStreams "docker system prune -af" -interleave | Out-Null
     }
+
+    "neon-build clean $nkRoot"
 }
 catch
 {
