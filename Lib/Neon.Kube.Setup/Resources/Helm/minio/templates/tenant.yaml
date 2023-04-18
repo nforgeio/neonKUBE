@@ -9,6 +9,8 @@ metadata:
   ## Optionally pass labels to be applied to the statefulset pods
   labels:
     app: minio
+  annotations:
+    sidecar.istio.io/inject: "false"
   {{ if .scheduler.name }}
   scheduler:
     name: {{ .scheduler.name }}
@@ -37,8 +39,6 @@ spec:
           resources:
             requests:
               storage: {{ .size }}
-      annotations:
-        sidecar.istio.io/inject: "false"
       {{- with .tolerations }}
       tolerations:
         {{ toYaml . | nindent 8 }}

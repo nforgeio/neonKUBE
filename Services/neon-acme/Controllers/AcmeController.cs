@@ -99,7 +99,7 @@ namespace NeonAcme.Controllers
             
             var args = new ArgDictionary()
             {
-                { "api-version", "0.2" },
+                { "api-version", "2023-04-06" },
             };
             
             var response = await headendClient.PostAsync<ChallengePayload>(uri: "acme/challenge", document: challenge, args: args);
