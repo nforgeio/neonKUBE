@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ComponentRegistration.cs
+// FILE:	    ComponentRegister.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -38,12 +38,12 @@ namespace Neon.Kube.Operator.Builder
     /// <summary>
     /// $todo(marcusbooyah): documentation
     /// </summary>
-    internal class ComponentRegistration
+    internal class ComponentRegister
     {
         /// <summary>
         /// $todo(marcusbooyah): documentation
         /// </summary>
-        public ComponentRegistration()
+        public ComponentRegister()
         {
             ControllerRegistrations        = new HashSet<ControllerRegistration>();
             EntityRegistrations            = new HashSet<EntityRegistration>();

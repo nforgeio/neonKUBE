@@ -2,8 +2,8 @@
     <Import Project="$(MSBuildThisFileDirectory)build.props"/>
 
     <Target Name="_GenerateRbac" DependsOnTargets="PropsConfig" >
-        <Message Text="Generating RBAC Manifest" Importance="high" />
-        
+        <Message Text="Generating RBAC Manifests" Importance="high" />
+
         <ItemGroup>
             <RbacArgs Include="generate"/>
             <RbacArgs Include="rbac"/>
@@ -16,13 +16,36 @@
 
         <Exec Command="&quot;$(TargetDir)$(NETCoreSdkRuntimeIdentifier)\operator-cli.exe&quot; @(RbacArgs,' ')"  />
     </Target>
-    
-    <Target 
-        Name="GenerateRbac" 
-        DependsOnTargets="PropsConfig" 
+
+    <Target Name="_GenerateCrds" DependsOnTargets="PropsConfig" >
+        <Message Text="Generating Custom Resource Definition Manifests" Importance="high" />
+
+        <ItemGroup>
+            <CrdArgs Include="generate"/>
+            <CrdArgs Include="crds"/>
+            <CrdArgs Include="--assembly-path=&quot;$(TargetPath)&quot;"/>
+            <CrdArgs Include="--output-path=&quot;$(OperatorCrdPath)&quot;"/>
+            <CrdArgs Include="--name=&quot;$(OperatorName)&quot;"/>
+            <CrdArgs Condition="'$(OperatorDeployedNamespace)' != ''" Include="--deployed-namespace=&quot;$(OperatorDeployedNamespace)&quot;"/>
+        </ItemGroup>
+
+        <Exec Command="&quot;$(TargetDir)$(NETCoreSdkRuntimeIdentifier)\operator-cli.exe&quot; @(CrdArgs,' ')"  />
+    </Target>
+
+    <Target
+        Name="GenerateRbac"
+        DependsOnTargets="PropsConfig"
         AfterTargets="PostBuildEvent"
         Condition="'$(OperatorDeployedNamespace)' != ''">
         <CallTarget  Targets="_GenerateRbac" />
+    </Target>
+
+    <Target
+        Name="GenerateCrds"
+        DependsOnTargets="PropsConfig"
+        AfterTargets="PostBuildEvent"
+        Condition="'$(OperatorDeployedNamespace)' != ''">
+        <CallTarget  Targets="_GenerateCrds" />
     </Target>
 
 </Project>

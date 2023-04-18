@@ -55,7 +55,7 @@ namespace Neon.Kube.Operator.Webhook.Ngrok
         private readonly ILogger                logger;
         private readonly IKubernetes            k8s;
         private readonly INgrokManager          ngrokManager;
-        private readonly ComponentRegistration  componentRegistration;
+        private readonly ComponentRegister  componentRegistration;
         private readonly IServiceProvider       serviceProvider;
         private readonly JsonClient             jsonClient;
         private string                          tunnelNname;
@@ -72,7 +72,7 @@ namespace Neon.Kube.Operator.Webhook.Ngrok
         /// <param name="ngrokAuthToken">Optionally spefifices the NGROK authentication token.</param>
         public NgrokWebhookTunnel(
             IKubernetes             k8s,
-            ComponentRegistration   componentRegistration,
+            ComponentRegister   componentRegistration,
             IServiceProvider        serviceProvider,
             string                  ngrokdirectory = null,
             string                  ngrokAuthToken = null)
@@ -164,7 +164,7 @@ namespace Neon.Kube.Operator.Webhook.Ngrok
                     // $todo(marcusbooyah): Does this catch make sense.  Why would ToString() fail here?
                 }
 
-                var componentRegistration = serviceProvider.GetRequiredService<ComponentRegistration>();
+                var componentRegistration = serviceProvider.GetRequiredService<ComponentRegister>();
 
                 foreach (var mutatingWebhookRegistration in this.componentRegistration.MutatingWebhookRegistrations)
                 {

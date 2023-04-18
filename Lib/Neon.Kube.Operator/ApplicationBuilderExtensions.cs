@@ -102,7 +102,7 @@ namespace Neon.Kube.Operator
                     }
                     catch { }
 
-                    var componentRegistrar = app.ApplicationServices.GetRequiredService<ComponentRegistration>();
+                    var componentRegistrar = app.ApplicationServices.GetRequiredService<ComponentRegister>();
 
                     foreach (var webhook in componentRegistrar.MutatingWebhookRegistrations)
                     {

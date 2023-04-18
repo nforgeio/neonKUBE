@@ -45,6 +45,8 @@ using Newtonsoft.Json.Serialization;
 using NJsonSchema;
 using NJsonSchema.Generation;
 using NJsonSchema.Generation.TypeMappers;
+using Neon.Kube.Operator.Util;
+using Neon.Kube.Operator.Attributes;
 
 namespace Neon.Kube.Operator.Entities
 {
@@ -54,7 +56,10 @@ namespace Neon.Kube.Operator.Entities
     public class CustomResourceGenerator
     {
         private readonly JsonSchemaGeneratorSettings jsonSchemaGeneratorSettings;
-        private readonly JsonSerializerSettings serializerSettings;
+        private readonly JsonSerializerSettings      serializerSettings;
+
+        private AssemblyScanner                      assemblyScanner;
+        private IEnumerable<string>                  kubernetesTypes;
 
         /// <summary>
         /// Constructor.
@@ -65,13 +70,13 @@ namespace Neon.Kube.Operator.Entities
         {
             serializerSettings = new JsonSerializerSettings
             {
-                Formatting            = Formatting.None,
-                DateFormatHandling    = DateFormatHandling.IsoDateFormat,
-                DateTimeZoneHandling  = DateTimeZoneHandling.Utc,
-                NullValueHandling     = NullValueHandling.Ignore,
+                Formatting = Formatting.None,
+                DateFormatHandling = DateFormatHandling.IsoDateFormat,
+                DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+                NullValueHandling = NullValueHandling.Ignore,
                 ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
-                ContractResolver      = new CamelCasePropertyNamesContractResolver(),
-                Converters            = new List<JsonConverter>
+                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                Converters = new List<JsonConverter>
                 {
                     new Iso8601TimeSpanConverter(),
                     new StringEnumConverter()
@@ -89,13 +94,16 @@ namespace Neon.Kube.Operator.Entities
 
             jsonSchemaGeneratorSettings = new JsonSchemaGeneratorSettings()
             {
-                SchemaType  = SchemaType.OpenApi3,
+                SchemaType = SchemaType.OpenApi3,
                 TypeMappers =
                 {
                     new ObjectTypeMapper(typeof(V1ObjectMeta), new JsonSchema { Type = JsonObjectType.Object}),
                 },
                 SerializerSettings = serializerSettings
             };
+
+            kubernetesTypes = Assembly.GetAssembly(typeof(V1Pod)).DefinedTypes.Where(t => t.GetCustomAttribute<KubernetesEntityAttribute>() != null).Select(t => t.GetKubernetesCrdName());
+
         }
 
         /// <summary>
@@ -105,18 +113,19 @@ namespace Neon.Kube.Operator.Entities
         /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
         /// <returns>The <see cref="V1CustomResourceDefinition"/>.</returns>
         public async Task<V1CustomResourceDefinition> GenerateCustomResourceDefinitionAsync(
-            Type                resourceType,
-            CancellationToken   cancellationToken = default)
+            Type resourceType,
+            CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(resourceType != null, nameof(resourceType));
 
-            var scope           = GetScope(resourceType) ?? EntityScope.Namespaced;
-            var entity          = resourceType.GetTypeInfo().GetCustomAttribute<KubernetesEntityAttribute>();
-            var schema          = GenerateJsonSchema(resourceType);
-            var pluralNameGroup = string.IsNullOrEmpty(entity.Group) ? entity.PluralName : $"{entity.PluralName}.{entity.Group}";
+            var scope            = GetScope(resourceType) ?? EntityScope.Namespaced;
+            var entity           = resourceType.GetTypeInfo().GetCustomAttribute<KubernetesEntityAttribute>();
+            var versionAttribute = resourceType.GetTypeInfo().GetCustomAttribute<EntityVersionAttribute>();
+            var schema           = GenerateJsonSchema(resourceType);
+            var pluralNameGroup  = string.IsNullOrEmpty(entity.Group) ? entity.PluralName : $"{entity.PluralName}.{entity.Group}";
 
-            var implementsStatus = resourceType.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IStatus<>));
+            var implementsStatus = resourceType.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IStatus<> ));
             var scaleAttribute   = resourceType.GetCustomAttribute<ScaleAttribute>();
 
             var crd = new V1CustomResourceDefinition(
@@ -131,13 +140,13 @@ namespace Neon.Kube.Operator.Entities
                 {
                     new V1CustomResourceDefinitionVersion(
                         name:          entity.ApiVersion,
-                        served:       true,
-                        storage:      true,
+                        served:       versionAttribute?.Served ?? true,
+                        storage:      versionAttribute?.Storage ?? true,
                         schema:       new V1CustomResourceValidation(schema),
                         subresources: new V1CustomResourceSubresources()
                         {
                             Status = implementsStatus ? new object() : null,
-                            Scale  = scaleAttribute != null 
+                            Scale  = scaleAttribute != null
                                 ? new V1CustomResourceSubresourceScale()
                                   {
                                       LabelSelectorPath  = scaleAttribute.LabelSelectorPath,
@@ -147,7 +156,7 @@ namespace Neon.Kube.Operator.Entities
                                 : null
                         },
                         additionalPrinterColumns: resourceType.GetCustomAttributes<AdditionalPrinterColumnsAttribute>()
-                            .Select(attr => (attr.ToV1CustomResourceColumnDefinition()))
+                            .Select(attr => attr.ToV1CustomResourceColumnDefinition())
                             .ToList()),
                 }));
 
@@ -161,6 +170,55 @@ namespace Neon.Kube.Operator.Entities
             }
 
             return crd;
+        }
+
+        /// <summary>
+        /// Returns custom resource definitions from an assembly.
+        /// </summary>
+        /// <param name="assemblyPath"></param>
+        /// <param name="operatorSettings"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public async Task<List<V1CustomResourceDefinition>> GetCustomResourcesFromAssemblyAsync(
+            string           assemblyPath,
+            OperatorSettings operatorSettings)
+        {
+            this.assemblyScanner ??= new AssemblyScanner();
+
+            assemblyScanner.Add(assemblyPath);
+            var customResourceDefinitions = new List<V1CustomResourceDefinition>();
+
+            foreach (var type in assemblyScanner.EntityTypes)
+            {
+                var crdName = type.GetKubernetesCrdName();
+
+                if (kubernetesTypes.Contains(crdName))
+                {
+                    continue;
+                }
+
+                var customResourceDefinition = await GenerateCustomResourceDefinitionAsync(type);
+                if (customResourceDefinitions.Any(crd => crd.Name() == customResourceDefinition.Name()))
+                {
+                    customResourceDefinitions
+                        .Where(crd => crd.Name() == customResourceDefinition.Name()
+                                        && !crd.Spec.Versions.Any(v => customResourceDefinition.Spec.Versions.Select(v => v.Name).Contains(v.Name)))
+                        .FirstOrDefault()?
+                        .Spec.Versions.Add(customResourceDefinition.Spec.Versions.FirstOrDefault());
+                }
+                else
+                {
+                    customResourceDefinitions.Add(customResourceDefinition);
+                }
+            }
+
+            var duplicateStoredVersions = customResourceDefinitions.Where(crd => crd.Spec.Versions.Where(v => v.Storage == true).Count() > 1);
+            if (duplicateStoredVersions.Any())
+            {
+                throw new Exception($"Only 1 stored version allowed. The following resources have multiple stored versions: [{string.Join(", ", duplicateStoredVersions.Select(crd => crd.Name()))}]");
+            }
+
+            return customResourceDefinitions;
         }
 
         /// <summary>
@@ -287,14 +345,14 @@ namespace Neon.Kube.Operator.Entities
                         try
                         {
                             var pValue = property.Value.GetValue<bool>();
-                            
+
                             if (!pValue)
                             {
                                 continue;
                             }
-                        } 
-                        catch 
-                        { 
+                        }
+                        catch
+                        {
                             // Ignoring
                         }
                     }
@@ -336,7 +394,7 @@ namespace Neon.Kube.Operator.Entities
             }
             else if (sourceToken is JsonArray sourceArray)
             {
-                return new JsonArray(sourceArray.Select(RewriteToken).ToArray<JsonNode>());
+                return new JsonArray(sourceArray.Select(RewriteToken).ToArray());
             }
             else
             {

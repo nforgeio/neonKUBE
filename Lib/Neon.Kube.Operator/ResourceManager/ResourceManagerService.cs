@@ -48,7 +48,7 @@ namespace Neon.Kube.Operator.ResourceManager
     internal class ResourceControllerManager : IHostedService
     {
         private readonly ILogger<ResourceControllerManager> logger;
-        private ComponentRegistration                       componentRegistration;
+        private ComponentRegister                       componentRegistration;
         private IServiceProvider                            serviceProvider;
         
         /// <summary>
@@ -57,7 +57,7 @@ namespace Neon.Kube.Operator.ResourceManager
         /// <param name="componentRegistration">Specifies the component registration.</param>
         /// <param name="serviceProvider">Specifies the depdency injection service provider.</param>
         public ResourceControllerManager(
-            ComponentRegistration   componentRegistration,
+            ComponentRegister   componentRegistration,
             IServiceProvider        serviceProvider)
         {
             Covenant.Requires<ArgumentNullException>(componentRegistration != null, nameof(componentRegistration));

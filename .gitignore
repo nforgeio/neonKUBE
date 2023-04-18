@@ -114,4 +114,4 @@ KubernetesWithRetry.cs
 /Lib/Neon.Kube.Operator.MSBuild/linux-x64
 /Lib/Neon.Kube.Operator.MSBuild/osx-x64
 /Lib/Neon.Kube.Operator.MSBuild/win-x64
-/Test/TestOperator/Manifests/RBAC
+/Test/TestOperator/Manifests

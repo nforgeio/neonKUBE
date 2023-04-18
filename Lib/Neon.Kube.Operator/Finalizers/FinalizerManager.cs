@@ -64,7 +64,7 @@ namespace Neon.Kube.Operator.Finalizer
         /// <param name="loggerFactory">Optionally specifies the logger factory.</param>
         public FinalizerManager(
             IKubernetes               k8s,
-            ComponentRegistration     componentRegistration,
+            ComponentRegister     componentRegistration,
             IFinalizerBuilder         finalizerInstanceBuilder,
             IServiceProvider          serviceProvider,
             OperatorSettings          operatorSettings = null,

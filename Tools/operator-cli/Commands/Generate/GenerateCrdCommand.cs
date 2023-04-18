@@ -26,24 +26,76 @@ using System.Threading.Tasks;
 using k8s;
 using Neon.Kube.Operator;
 using System.IO;
+using Neon.Kube.Operator.Entities;
+using k8s.Models;
 
 namespace OperatorCli.Commands.Generate
 {
     internal class GenerateCrdsCommand : GenerateCommandBase
     {
-        public GenerateCrdsCommand() : base("Crds", "Generate Crds yaml for the operator.")
+        public GenerateCrdsCommand() : base("crds", "Generate Crds yaml for the operator.")
         {
             Handler = CommandHandler.Create<GenerateCrdsCommandArgs>(HandleCommand);
 
+            this.AddOption(new Option<string>(new[] { "--assembly-path" })
+            {
+                Description = "The assembly path.",
+                IsRequired  = false,
+                Name        = "AssemblyPath"
+            });
+
+            this.AddOption(new Option<string>(new[] { "--output-path" })
+            {
+                Description = "The output path.",
+                IsRequired  = false,
+                Name        = "OutputPath"
+            });
+
+            this.AddOption(new Option<string>(new[] { "--deployed-namespace" })
+            {
+                Description = "The namespace that the operator is deployed.",
+                IsRequired  = false,
+                Name        = "DeployedNamespace"
+            });
+
+            this.AddOption(new Option<string>(new[] { "--name" })
+            {
+                Description = "The operator name.",
+                IsRequired  = false,
+                Name        = "Name"
+            });
         }
 
-        private int HandleCommand(GenerateCrdsCommandArgs args)
+        private async Task<int> HandleCommand(GenerateCrdsCommandArgs args)
         {
-            return HandleCommand("");
+            var assemblyPath = args.AssemblyPath.Trim('\'').Trim('"').Trim();
+            var outputPath   = args.OutputPath.Trim('\'').Trim('"').Trim();
+
+            Directory.CreateDirectory(outputPath);
+
+            var operatorSettings = new OperatorSettings()
+            {
+                DeployedNamespace       = args.DeployedNamespace,
+                Name                    = args.Name
+            };
+
+            var crdGenerator = new CustomResourceGenerator();
+            var crds         = await crdGenerator.GetCustomResourcesFromAssemblyAsync(assemblyPath, operatorSettings);
+
+            foreach (var crd in crds)
+            {
+                File.WriteAllText($"{outputPath}/crd-{crd.Name()}.yaml", KubernetesYaml.Serialize(crd));
+            }
+
+            return HandleCommand(KubernetesYaml.SerializeAll(crds));
         }
 
         public class GenerateCrdsCommandArgs
         {
+            public string AssemblyPath { get; set; }
+            public string OutputPath { get; set; }
+            public string DeployedNamespace { get; set; }
+            public string Name { get; set; }
         }
     }
 }

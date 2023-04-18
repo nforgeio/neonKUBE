@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    RbacGenerator.cs
+// FILE:	    CustomResourceAttribute.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -17,33 +17,28 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Neon.Kube.Resources;
 
-using Neon.Common;
-using Neon.Diagnostics;
-using Neon.Kube.Operator.Attributes;
-using Neon.Kube.Operator.Builder;
-using Neon.Tasks;
-
-using k8s;
 using k8s.Models;
+using k8s;
 
-using Prometheus;
-using System.Diagnostics.Contracts;
-
-namespace Neon.Kube.Operator.Generators
+namespace Neon.Kube.Resources.Attributes
 {
-    internal class RbacGenerator
+    /// <summary>
+    /// Used for versiond custom resources.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+    public class EntityVersionAttribute : Attribute
     {
-        public static async Task GenerateRbacAsync()
-        {
-            await SyncContext.Clear;
-        }
+        /// <summary>
+        /// Each version can be enabled/disabled by Served flag.
+        /// </summary>
+        public bool Served { get; set; } = true;
+
+        /// <summary>
+        /// One and only one version must be marked as the storage version.
+        /// </summary>
+        public bool Storage { get; set; } = false;
     }
 }

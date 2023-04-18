@@ -1,20 +1,20 @@
 ﻿using k8s;
 using k8s.Models;
-using Neon.Kube.Operator.Attributes;
+using Neon.Kube.Resources.Attributes;
 
 namespace TestOperator
 {
     /// <summary>
-    /// V1ExampleEntity
+    /// V2ExampleEntity
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
-    [EntityVersion(Served = true, Storage = false)]
-    public class V1ExampleEntity : IKubernetesObject<V1ObjectMeta>, ISpec<V1ExampleEntity.V1ExampleSpec>, IStatus<V1ExampleEntity.V1ExampleStatus>
+    [EntityVersion(Served = true, Storage = true)]
+    public class V2ExampleEntity : IKubernetesObject<V1ObjectMeta>, ISpec<V2ExampleEntity.V1ExampleSpec>, IStatus<V2ExampleEntity.V1ExampleStatus>
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeApiVersion = "v1alpha1";
+        public const string KubeApiVersion = "v2";
 
         /// <summary>
         /// The Kubernetes named schema this object is based on.
@@ -34,7 +34,7 @@ namespace TestOperator
         /// <summary>
         /// Constructor.
         /// </summary>
-        public V1ExampleEntity()
+        public V2ExampleEntity()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
             Kind = KubeKind;

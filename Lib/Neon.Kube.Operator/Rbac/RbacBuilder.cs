@@ -37,6 +37,7 @@ using Neon.Kube.Operator.Attributes;
 using Neon.Kube.Operator.Controller;
 using Neon.Kube.Operator.Finalizer;
 using Neon.Kube.Operator.Webhook;
+using Neon.Kube.Operator.Util;
 
 namespace Neon.Kube.Operator.Rbac
 {
@@ -47,7 +48,7 @@ namespace Neon.Kube.Operator.Rbac
     {
         private IServiceProvider        serviceProvider;
         private OperatorSettings        operatorSettings;
-        private ComponentRegistration   componentRegistration;
+        private ComponentRegister       componentRegister;
         private string                  @namespace;
         private List<Type>              assemblyTypes;
 
@@ -63,7 +64,7 @@ namespace Neon.Kube.Operator.Rbac
             this.serviceProvider        = serviceProvider;
             this.@namespace             = @namespace;
             this.operatorSettings       = serviceProvider.GetRequiredService<OperatorSettings>();
-            this.componentRegistration  = serviceProvider.GetRequiredService<ComponentRegistration>();
+            this.componentRegister      = serviceProvider.GetRequiredService<ComponentRegister>();
             this.ServiceAccounts        = new List<V1ServiceAccount>();
             this.ClusterRoles           = new List<V1ClusterRole>();
             this.ClusterRoleBindings    = new List<V1ClusterRoleBinding>();
@@ -77,115 +78,17 @@ namespace Neon.Kube.Operator.Rbac
 
             this.@namespace            = operatorSettings.DeployedNamespace;
             this.operatorSettings      = operatorSettings;
-            this.componentRegistration = new ComponentRegistration();
             this.ServiceAccounts       = new List<V1ServiceAccount>();
             this.ClusterRoles          = new List<V1ClusterRole>();
             this.ClusterRoleBindings   = new List<V1ClusterRoleBinding>();
             this.Roles                 = new List<V1Role>();
             this.RoleBindings          = new List<V1RoleBinding>();
 
-            var assembly = Assembly.LoadFrom(assemblyPath);
+            var assemblyScanner = new AssemblyScanner();
+            assemblyScanner.Add(assemblyPath);
 
-            try
-            {
-                assemblyTypes = assembly.GetTypes().Where(type => type != null).ToList();
-            }
-            catch (ReflectionTypeLoadException e) 
-            {
-                assemblyTypes = e.Types.Where(type => type != null).ToList();
-            }
-
-            var types = assemblyTypes
-                .Where(type => type.GetInterfaces().Count() > 0
-                        && type.GetInterfaces().Any(@interface => @interface.GetCustomAttributes<OperatorComponentAttribute>()
-                    .Any())).ToList();
-
-            foreach (var type in types)
-            {
-                switch (type.GetInterfaces()
-                    .Where(@interface => @interface.GetCustomAttributes<OperatorComponentAttribute>()
-                    .Any())
-                    .Select(@interface => @interface.GetCustomAttribute<OperatorComponentAttribute>())
-                    .FirstOrDefault().ComponentType)
-                {
-                    case OperatorComponentType.Controller:
-
-                        if (type.GetCustomAttribute<ControllerAttribute>()?.Ignore == true)
-                        {
-                            break;
-                        }
-                        
-                        var interfaces = type.GetInterfaces()
-                            .Where(@interface => @interface.IsConstructedGenericType && @interface.GetGenericTypeDefinition().IsEquivalentTo(typeof(IResourceController<>)))
-                            .Select(@interface => @interface.GenericTypeArguments[0]);
-
-                                    
-                        foreach (var @interface in interfaces)
-                        {
-                            componentRegistration.RegisterController(type, @interface);
-                        }
-
-                        break;
-
-                    case OperatorComponentType.Finalizer:
-
-                        if (type.GetCustomAttribute<FinalizerAttribute>()?.Ignore == true)
-                        {
-                            break;
-                        }
-
-                        var finalizerInterfaces = type.GetInterfaces()
-                            .Where(@interface => @interface.IsConstructedGenericType && @interface.GetGenericTypeDefinition().IsEquivalentTo(typeof(IResourceFinalizer<>)))
-                            .Select(@interface => @interface.GenericTypeArguments[0]);
-
-                        foreach (var @interface in finalizerInterfaces)
-                        {
-                            componentRegistration.RegisterFinalizer(type, @interface);
-                        }
-
-                        break;
-
-                    case OperatorComponentType.MutationWebhook:
-
-                        if (type.GetCustomAttribute<MutatingWebhookAttribute>()?.Ignore == true)
-                        {
-                            break;
-                        }
-
-                        var mutatingWebhookInterfaces = type.GetInterfaces()
-                            .Where(@interface => @interface.IsConstructedGenericType && @interface.GetGenericTypeDefinition().IsEquivalentTo(typeof(IMutatingWebhook<>)))
-                            .Select(@interface => @interface.GenericTypeArguments[0]);
-
-                        foreach (var @interface in mutatingWebhookInterfaces)
-                        {
-                            componentRegistration.RegisterMutatingWebhook(type, @interface);
-                        }
-
-                        operatorSettings.hasMutatingWebhooks = true;
-
-                        break;
-
-                    case OperatorComponentType.ValidationWebhook:
-
-                        if (type.GetCustomAttribute<ValidatingWebhookAttribute>()?.Ignore == true)
-                        {
-                            break;
-                        }
-
-                        var validatingWebhookInterfaces = type.GetInterfaces()
-                            .Where(@interface => @interface.IsConstructedGenericType && @interface.GetGenericTypeDefinition().IsEquivalentTo(typeof(IValidatingWebhook<>)))
-                            .Select(@interface => @interface.GenericTypeArguments[0]);
-
-                        foreach (var @interface in validatingWebhookInterfaces)
-                        {
-                            componentRegistration.RegisterValidatingWebhook(type, @interface);
-                        }
-
-                        operatorSettings.hasValidatingWebhooks = true;
-
-                        break;
-                }
-            }
+            this.componentRegister = assemblyScanner.ComponentRegister;
+            
         }
 
         /// <summary>
@@ -370,7 +273,7 @@ namespace Neon.Kube.Operator.Rbac
                             Verbs         = group.Verbs.ToStrings(),
                         }).ToList();
 
-            foreach (var registration in componentRegistration.ResourceManagerRegistrations)
+            foreach (var registration in componentRegister.ResourceManagerRegistrations)
             {
                 var resourceManager = (IResourceManager)serviceProvider.GetRequiredService(registration);
                 var options         = resourceManager.Options();

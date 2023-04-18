@@ -11,10 +11,10 @@ namespace TestOperator
     public class ExampleFinalizer : IResourceFinalizer<V1ExampleEntity>
     {
         private readonly IKubernetes k8s;
-        private readonly ILogger<ExampleController> logger;
+        private readonly ILogger<ExampleV1Controller> logger;
         public ExampleFinalizer(
             IKubernetes k8s,
-            ILogger<ExampleController> logger)
+            ILogger<ExampleV1Controller> logger)
         {
             this.k8s = k8s;
             this.logger = logger;

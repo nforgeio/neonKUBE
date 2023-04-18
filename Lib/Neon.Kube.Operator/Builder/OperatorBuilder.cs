@@ -49,8 +49,8 @@ using k8s.KubeConfigModels;
 
 using Prometheus;
 using Neon.Kube.Operator.EventQueue;
-using Neon.Kube.Operator.Entities;
 using System.Diagnostics.Contracts;
+using Neon.Kube.Operator.Entities;
 
 namespace Neon.Kube.Operator.Builder
 {
@@ -76,7 +76,7 @@ namespace Neon.Kube.Operator.Builder
         /// </summary>
         internal const string ReadinessHealthProbeTag = "readiness";
 
-        private ComponentRegistration   componentRegistration;
+        private ComponentRegister       componentRegister;
         private OperatorSettings        operatorSettings;
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace Neon.Kube.Operator.Builder
             Covenant.Requires<ArgumentNullException>(services != null, nameof(Service));
 
             Services              = services;
-            componentRegistration = new ComponentRegistration();
+            componentRegister = new ComponentRegister();
         }
 
         /// <summary>
@@ -125,7 +125,7 @@ namespace Neon.Kube.Operator.Builder
 
             Services.AddSingleton<OperatorSettings>(operatorSettings);
             Services.AddSingleton(operatorSettings.ResourceManagerOptions);
-            Services.AddSingleton(componentRegistration);
+            Services.AddSingleton(componentRegister);
             Services.AddSingleton(typeof(EventQueueMetrics<,>));
             Services.AddSingleton(typeof(ResourceCacheMetrics<>));
             Services.AddSingleton(typeof(ResourceManagerMetrics<,>));
@@ -291,7 +291,7 @@ namespace Neon.Kube.Operator.Builder
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
             Services.TryAddScoped<TImplementation>();
-            componentRegistration.RegisterFinalizer<TImplementation, TEntity>();
+            componentRegister.RegisterFinalizer<TImplementation, TEntity>();
 
             return this;
         }
@@ -302,7 +302,7 @@ namespace Neon.Kube.Operator.Builder
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
             Services.TryAddScoped<TImplementation>();
-            componentRegistration.RegisterMutatingWebhook<TImplementation, TEntity>();
+            componentRegister.RegisterMutatingWebhook<TImplementation, TEntity>();
 
             operatorSettings.hasMutatingWebhooks = true;
 
@@ -315,7 +315,7 @@ namespace Neon.Kube.Operator.Builder
             where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         {
             Services.TryAddScoped<TImplementation>();
-            componentRegistration.RegisterValidatingWebhook<TImplementation, TEntity>();
+            componentRegister.RegisterValidatingWebhook<TImplementation, TEntity>();
 
             operatorSettings.hasValidatingWebhooks = true;
 
@@ -343,9 +343,9 @@ namespace Neon.Kube.Operator.Builder
                     leaderElectionDisabled: leaderElectionDisabled);
             });
 
-            componentRegistration.RegisterResourceManager<ResourceManager<TEntity, TImplementation>>();
+            componentRegister.RegisterResourceManager<ResourceManager<TEntity, TImplementation>>();
             Services.TryAddScoped<TImplementation>();
-            componentRegistration.RegisterController<TImplementation, TEntity>();
+            componentRegister.RegisterController<TImplementation, TEntity>();
 
             if (!leaderElectionDisabled)
             {
@@ -376,7 +376,7 @@ namespace Neon.Kube.Operator.Builder
             Services.AddHostedService(
                 services => new NgrokWebhookTunnel(
                     services.GetRequiredService<IKubernetes>(),
-                    componentRegistration,
+                    componentRegister,
                     services,
                     ngrokDirectory,
                     ngrokAuthToken)

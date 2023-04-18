@@ -34,9 +34,9 @@ namespace Neon.Kube.Operator.Finalizer
 {
     internal class FinalizerBuilder : IFinalizerBuilder
     {
-        private readonly ComponentRegistration componentRegistration;
+        private readonly ComponentRegister componentRegistration;
 
-        public FinalizerBuilder(ComponentRegistration componentRegistration)
+        public FinalizerBuilder(ComponentRegister componentRegistration)
         {
             this.componentRegistration = componentRegistration;
         }

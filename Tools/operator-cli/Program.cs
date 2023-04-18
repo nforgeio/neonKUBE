@@ -54,6 +54,10 @@ namespace OperatorCli
 
             generateCommand.AddCommand(generateRbacCommand);
 
+            var generateCrdsCommand = new GenerateCrdsCommand();
+
+            generateCommand.AddCommand(generateCrdsCommand);
+
             var commandLineBuilder = new CommandLineBuilder(rootCommand);
             var parser             = commandLineBuilder.UseDefaults().Build();
 

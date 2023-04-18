@@ -20,26 +20,26 @@ namespace TestOperator
     /// <summary>
     /// Example controller
     /// </summary>
-    [RbacRule<V1ExampleEntity>(Verbs = RbacVerb.All)]
+    [RbacRule<V2ExampleEntity>(Verbs = RbacVerb.All)]
     [RbacRule<V1ExampleClusterEntity>(Verbs = RbacVerb.All)]
     [DependentResource<V1ExampleClusterEntity>]
-    public class ExampleController : IResourceController<V1ExampleEntity>
+    public class ExampleV2Controller : IResourceController<V2ExampleEntity>
     {
         private readonly IKubernetes k8s;
-        private readonly IFinalizerManager<V1ExampleEntity> finalizerManager;
-        private readonly ILogger<ExampleController> logger;
+        private readonly IFinalizerManager<V2ExampleEntity> finalizerManager;
+        private readonly ILogger<ExampleV2Controller> logger;
 
-        public ExampleController(
+        public ExampleV2Controller(
             IKubernetes k8s,
-            IFinalizerManager<V1ExampleEntity> finalizerManager,
-            ILogger<ExampleController> logger)
+            IFinalizerManager<V2ExampleEntity> finalizerManager,
+            ILogger<ExampleV2Controller> logger)
         {
             this.k8s = k8s;
             this.finalizerManager = finalizerManager;
             this.logger = logger;
         }
 
-        public async Task<ResourceControllerResult> ReconcileAsync(V1ExampleEntity resource)
+        public async Task<ResourceControllerResult> ReconcileAsync(V2ExampleEntity resource)
         {
             await SyncContext.Clear;
 
@@ -48,7 +48,7 @@ namespace TestOperator
             return ResourceControllerResult.Ok();
         }
 
-        public async Task DeletedAsync(V1ExampleEntity resource)
+        public async Task DeletedAsync(V2ExampleEntity resource)
         {
             logger.LogInformation($"DELETED: {resource.Name()}");
         }
