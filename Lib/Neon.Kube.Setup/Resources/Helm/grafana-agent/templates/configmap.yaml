@@ -332,6 +332,18 @@ data:
               kubernetes_sd_configs:
                 - role: pod
               relabel_configs:
+                - action: drop
+                  source_labels:
+                    - __meta_kubernetes_namespace
+                  regex: istio-init|istio-proxy|istio-validation
+                - action: drop
+                  source_labels:
+                    - __meta_kubernetes_pod_name
+                  regex: istio-init|istio-proxy|istio-validation
+                - action: drop
+                  source_labels:
+                    - __meta_kubernetes_pod_container_name
+                  regex: istio-init|istio-proxy|istio-validation
                 - action: replace
                   source_labels:
                     - __meta_kubernetes_namespace
