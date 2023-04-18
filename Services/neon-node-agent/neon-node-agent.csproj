@@ -23,9 +23,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
-		<PackageReference Include="Neon.Cryptography" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
-		<PackageReference Include="Neon.Service" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
+		<PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
+		<PackageReference Include="Neon.Cryptography" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
+		<PackageReference Include="Neon.Service" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
 		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="7.0.5" />
 		<PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
 		<PackageReference Include="Tomlyn" Version="0.15.0" />
@@ -36,9 +36,9 @@
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
-      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
-      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Cryptography\Neon.Cryptography.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
-      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Service\Neon.Service.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
+      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Cryptography\Neon.Cryptography.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Service\Neon.Service.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
 	</ItemGroup>
 
 	<ItemGroup>

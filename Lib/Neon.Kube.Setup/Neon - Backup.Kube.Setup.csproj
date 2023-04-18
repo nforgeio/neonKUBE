@@ -153,9 +153,9 @@
 		<ProjectReference Include="..\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
 		<ProjectReference Include="..\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
 		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
-      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
-      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Cryptography\Neon.Cryptography.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
-      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Postgres\Neon.Postgres.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'neonCloud'" />
+      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Cryptography\Neon.Cryptography.csproj" Condition="'$(SolutionName)' == 'neonCloud'" />
+      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Postgres\Neon.Postgres.csproj" Condition="'$(SolutionName)' == 'neonCloud'" />
 	</ItemGroup>
 
 	<ItemGroup>

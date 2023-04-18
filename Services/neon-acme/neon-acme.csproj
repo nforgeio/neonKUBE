@@ -17,8 +17,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Neon.Service" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
-		<PackageReference Include="Neon.Web" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
+		<PackageReference Include="Neon.Service" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
+		<PackageReference Include="Neon.Web" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
 		<PackageReference Include="prometheus-net" Version="8.0.0" />
 		<PackageReference Include="prometheus-net.AspNetCore" Version="8.0.0" />
 		<PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
@@ -28,8 +28,8 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
 	  <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
-      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Service\Neon.Service.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
-      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Web\Neon.Web.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
+      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Service\Neon.Service.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Web\Neon.Web.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
 	</ItemGroup>
 
 </Project>

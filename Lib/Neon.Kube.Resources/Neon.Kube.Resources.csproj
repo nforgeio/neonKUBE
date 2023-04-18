@@ -29,8 +29,8 @@
     <ItemGroup>
         <PackageReference Include="KubernetesClient.Models" Version="10.1.19" />
         <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
-        <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
-        <PackageReference Include="Neon.JsonConverters" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
+        <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
+        <PackageReference Include="Neon.JsonConverters" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="NJsonSchema" Version="10.8.0" />
         <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
@@ -45,8 +45,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.JsonConverters\Neon.JsonConverters.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
+        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.JsonConverters\Neon.JsonConverters.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
     </ItemGroup>
 
 </Project>

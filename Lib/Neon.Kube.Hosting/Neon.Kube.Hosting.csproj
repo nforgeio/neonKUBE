@@ -30,7 +30,7 @@
 		<ProjectReference Include="..\Neon.Kube.HyperV\Neon.Kube.HyperV.csproj" />
 		<ProjectReference Include="..\Neon.Kube.XenServer\Neon.Kube.XenServer.csproj" />
 		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
-      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
+      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -39,7 +39,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
+	  <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
 	</ItemGroup>
 
 </Project>

@@ -31,10 +31,10 @@
 	<ItemGroup>
 		<PackageReference Include="KubernetesClient" Version="10.1.19" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.5" />
-		<PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
-		<PackageReference Include="Neon.Deployment" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
-		<PackageReference Include="Neon.SSH" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
-		<PackageReference Include="Neon.Xunit" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'NeonCloud'" />
+		<PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
+		<PackageReference Include="Neon.Deployment" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
+		<PackageReference Include="Neon.SSH" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
+		<PackageReference Include="Neon.Xunit" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
 		<PackageReference Include="xunit.extensibility.core" Version="2.4.2" />
 		<PackageReference Include="xunit.extensibility.execution" Version="2.4.2" />
 		<PackageReference Include="YamlDotNet" Version="13.0.2" />
@@ -46,10 +46,10 @@
 		<ProjectReference Include="..\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
 		<ProjectReference Include="..\Neon.Kube.Setup\Neon.Kube.Setup.csproj" />
 		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
-      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
-      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Deployment\Neon.Deployment.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
-      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.SSH\Neon.SSH.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
-      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Xunit\Neon.Xunit.csproj" Condition="'$(SolutionName)' == 'NeonCloud'" />
+      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Deployment\Neon.Deployment.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.SSH\Neon.SSH.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Xunit\Neon.Xunit.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
 	</ItemGroup>
 
 </Project>
