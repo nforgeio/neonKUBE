@@ -5,9 +5,17 @@
 		<OutputType>Exe</OutputType>
 		<RootNamespace>OperatorCli</RootNamespace>
 		<AssemblyName>operator-cli</AssemblyName>
+		<PlatformTarget>AnyCPU</PlatformTarget>
 		<Configurations>Debug;Release</Configurations>
-		<IsPackable>false</IsPackable>
-		<Description>Manage neonKUBE clusters from the command line</Description>
+		<Description>Neon.Operator command line utilities</Description>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<PublishSingleFile>false</PublishSingleFile>
+		<SelfContained>true</SelfContained>
+		<PublishTrimmed>false</PublishTrimmed>
+		<TrimMode>partial</TrimMode>
+		<PublishReadyToRun>true</PublishReadyToRun>
 	</PropertyGroup>
 
 	<ItemGroup>
