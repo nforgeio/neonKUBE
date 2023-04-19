@@ -339,9 +339,17 @@ namespace Neon.Kube.Setup
 
             controller.Finished += (s, a) => UploadDeploymentLogs((ISetupController)s, a);
 
-            // Add a [Finished] event handler that removes the cluster setup state.
+            // Add a [Finished] event handler that removes the cluster setup state
+            // when cluster setup completed successfully.
 
-            controller.Finished += (a, s) => setupState.Delete();
+            controller.Finished +=
+                (a, s) =>
+                {
+                    if (setupState.DeploymentStatus == ClusterDeploymentStatus.Ready)
+                    {
+                        setupState.Delete();
+                    }
+                };
 
             return controller;
         }
