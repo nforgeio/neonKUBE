@@ -49,7 +49,7 @@ function Build
 
 	$tagOverride = $env:DEBUG_TAG
 
-	if (![string]::IsNullOrEmpty($tagOverride))
+	if (-not [string]::IsNullOrEmpty($tagOverride))
 	{
 		$tag    = $tagOverride
 		$latest = $false

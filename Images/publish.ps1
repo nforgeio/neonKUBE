@@ -24,14 +24,16 @@
 
 param 
 (
-    [switch]$all         = $false,      # Rebuild all images
-    [switch]$base        = $false,      # Rebuild base images
-    [switch]$test        = $false,      # Rebuild test related images
-    [switch]$other       = $false,      # Rebuild all other images (usually script based)
-    [switch]$services    = $false,      # Rebuild all cluster service images
-    [switch]$nopush      = $false,      # Don't push to the registry
-    [switch]$noprune     = $false,      # Don't prune the local Docker cache
-    [switch]$allVersions = $false       # Rebuild all image versions
+    [switch]$all             = $false, # Rebuild all images
+    [switch]$base            = $false, # Rebuild base images
+    [switch]$test            = $false, # Rebuild test related images
+    [switch]$other           = $false, # Rebuild all other images (usually script based)
+    [switch]$services        = $false, # Rebuild all cluster service images
+    [switch]$nopush          = $false, # Don't push to the registry
+    [switch]$noprune         = $false, # Don't prune the local Docker cache
+    [switch]$allVersions     = $false, # Rebuild all image versions
+    [switch]$nobuildsolution = $false  # Don't clean or build the solution
+
 )
 
 #----------------------------------------------------------
@@ -119,7 +121,7 @@ try
     # be available only for maintainers and are intialized by the neonCLOUD
     # [buildenv.cmd] script.
 
-    if (!(Test-Path env:NC_ROOT))
+    if (-not (Test-Path env:NC_ROOT))
     {
         "*** ERROR: This script is intended for use by maintainers only:"
         "           [NC_ROOT] environment variable is not defined."
@@ -144,51 +146,54 @@ try
     $nkSolution = "$nkRoot\neonKUBE.sln"
     $branch     = GitBranch $nkRoot
 
-    Write-Info ""
-    Write-Info "********************************************************************************"
-    Write-Info "***                           RESTORE PACKAGES                               ***"
-    Write-Info "********************************************************************************"
-    Write-Info ""
-
-    & dotnet restore "$nkSolution"
-
-    if (-not $?)
+    if (-not $nobuildsolution)
     {
-        throw "ERROR: RESTORE FAILED"
-    }
+        Write-Info ""
+        Write-Info "********************************************************************************"
+        Write-Info "***                           RESTORE PACKAGES                               ***"
+        Write-Info "********************************************************************************"
+        Write-Info ""
 
-    Write-Info ""
-    Write-Info "********************************************************************************"
-    Write-Info "***                            CLEAN SOLUTION                                ***"
-    Write-Info "********************************************************************************"
-    Write-Info ""
+        & dotnet restore "$nkSolution"
 
-    "neon-build clean $nkRoot"
-    & "$msbuild" "$nkSolution" $buildConfig -t:Clean -m -verbosity:quiet
+        if (-not $?)
+        {
+            throw "ERROR: RESTORE FAILED"
+        }
 
-    if (-not $?)
-    {
-        throw "ERROR: CLEAN FAILED"
-    }
+        Write-Info ""
+        Write-Info "********************************************************************************"
+        Write-Info "***                            CLEAN SOLUTION                                ***"
+        Write-Info "********************************************************************************"
+        Write-Info ""
 
-    Write-Info  ""
-    Write-Info  "*******************************************************************************"
-    Write-Info  "***                           BUILD SOLUTION                                ***"
-    Write-Info  "*******************************************************************************"
-    Write-Info  ""
+        "neon-build clean $nkRoot"
+        & "$msbuild" "$nkSolution" $buildConfig -t:Clean -m -verbosity:quiet
 
-    & "$msbuild" "$nkSolution" -p:Configuration=$config -m -verbosity:quiet
+        if (-not $?)
+        {
+            throw "ERROR: CLEAN FAILED"
+        }
 
-    if (-not $?)
-    {
-        throw "ERROR: BUILD FAILED"
+        Write-Info  ""
+        Write-Info  "*******************************************************************************"
+        Write-Info  "***                           BUILD SOLUTION                                ***"
+        Write-Info  "*******************************************************************************"
+        Write-Info  ""
+
+        & "$msbuild" "$nkSolution" -p:Configuration=$config -m -verbosity:quiet
+
+        if (-not $?)
+        {
+            throw "ERROR: BUILD FAILED"
+        }
     }
 
     # Purge any local Docker images as well as the image build cache.
     # This also purges all other Docker assets as a side effect.  We
     # need to do this to ensure to ensure a clean build.
 
-    if (!$noprune)
+    if (-not $noprune)
     {
         Invoke-CaptureStreams "docker system prune -af" -interleave | Out-Null
     }
@@ -219,7 +224,7 @@ try
     # state after building images.  This is especially important for
     # GitHub runners.
 
-    if (!$noprune)
+    if (-not $noprune)
     {
         Invoke-CaptureStreams "docker system prune -af" -interleave | Out-Null
     }
