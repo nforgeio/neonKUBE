@@ -22,7 +22,7 @@
 
 	<ItemGroup>
 		<Content Include="OperatorTemplate\**\*" Exclude="OperatorTemplate\**\bin\**;OperatorTemplate\**\obj\**" />
-		<Compile Remove="**\*" />
+		<Compile Remove="OperatorTemplate\**\*" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -35,8 +35,8 @@
 	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
-		<Exec Command="dotnet pack --no-build &quot;$(ProjectName).csproj&quot; -o $(OutDir)" />
-		<Exec Command="dotnet new install --force $(OutDir)$(ProjectName).$(PackageVersion).nupkg " />
+		<Exec Command="dotnet pack --no-build &quot;$(ProjectPath)&quot; -o &quot;$(OutDir)&quot;" />
+		<Exec Command="dotnet new install --force &quot;$(OutDir)$(ProjectName).$(PackageVersion).nupkg&quot;" />
 	</Target>
 
 </Project>

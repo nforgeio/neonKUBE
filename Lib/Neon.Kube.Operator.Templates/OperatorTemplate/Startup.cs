@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System;
+
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -6,11 +8,11 @@ using Neon.Kube.Operator;
 
 namespace OperatorTemplate
 {
-    public class OperatorStartup
+    public class Startup
     {
         public IConfiguration Configuration { get; }
 
-        public OperatorStartup(IConfiguration configuration)
+        public Startup(IConfiguration configuration)
         {
             this.Configuration = configuration;
         }

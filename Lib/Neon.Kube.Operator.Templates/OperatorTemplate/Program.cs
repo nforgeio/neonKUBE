@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+﻿using System;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
@@ -6,15 +6,17 @@ using Microsoft.Extensions.Logging;
 
 namespace OperatorTemplate
 {
+    /// <summary>
+    /// Hosts the operator entry point.
+    /// </summary>
     public static partial class Program
     {
         public static async Task Main(string[] args)
         {
-            var host = 
-                Host.CreateDefaultBuilder(args)
+            var host = Host.CreateDefaultBuilder(args)
                .ConfigureWebHostDefaults(webBuilder =>
                {
-                   webBuilder.UseStartup<OperatorStartup>();
+                   webBuilder.UseStartup<Startup>();
                });
 
             host.ConfigureLogging(
