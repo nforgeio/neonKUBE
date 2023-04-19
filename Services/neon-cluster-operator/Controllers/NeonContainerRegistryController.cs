@@ -40,6 +40,7 @@ using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Glauth;
 using Neon.Kube.Operator.Finalizer;
+using Neon.Kube.Operator.Attributes;
 using Neon.Kube.Operator.ResourceManager;
 using Neon.Kube.Operator.Controller;
 using Neon.Kube.Operator.Rbac;
@@ -73,6 +74,7 @@ namespace NeonClusterOperator
     [RbacRule<V1CrioConfiguration>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1NeonContainerRegistry>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1Secret>(Verbs = RbacVerb.Get, Scope = EntityScope.Namespaced, Namespace = KubeNamespace.NeonSystem, ResourceNames = "glauth-users")]
+    [Controller(MaxConcurrentReconciles = 1)]
     public class NeonContainerRegistryController : IResourceController<V1NeonContainerRegistry>
     {
         //---------------------------------------------------------------------
@@ -143,15 +145,15 @@ namespace NeonClusterOperator
                 V1CrioConfiguration crioConfig;
                 if (crioConfigList.Items.IsEmpty())
                 {
-                    crioConfig = new V1CrioConfiguration().Initialize();
-                    crioConfig.Metadata.Name = KubeConst.ClusterCrioConfigName;
-                    crioConfig.Spec = new V1CrioConfiguration.CrioConfigurationSpec();
+                    crioConfig                 = new V1CrioConfiguration().Initialize();
+                    crioConfig.Metadata.Name   = KubeConst.ClusterCrioConfigName;
+                    crioConfig.Spec            = new V1CrioConfiguration.CrioConfigurationSpec();
                     crioConfig.Spec.Registries = new List<KeyValuePair<string, V1NeonContainerRegistry.RegistrySpec>>();
                 }
                 else
                 {
-                    crioConfig = crioConfigList.Items.Where(cfg => cfg.Metadata.Name == KubeConst.ClusterCrioConfigName).Single();
-                    crioConfig.Spec ??= new V1CrioConfiguration.CrioConfigurationSpec();
+                    crioConfig                   = crioConfigList.Items.Where(cfg => cfg.Metadata.Name == KubeConst.ClusterCrioConfigName).Single();
+                    crioConfig.Spec            ??= new V1CrioConfiguration.CrioConfigurationSpec();
                     crioConfig.Spec.Registries ??= new List<KeyValuePair<string, V1NeonContainerRegistry.RegistrySpec>>();
                 }
 
