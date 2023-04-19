@@ -62,7 +62,7 @@ namespace Neon.Kube.Operator.Util
             k8sSerializerSettings = new JsonSerializerSettings()
             {
                 DateFormatString = "yyyy-MM-ddTHH:mm:ssZ",
-                Converters = new List<JsonConverter>() { new Newtonsoft.Json.Converters.StringEnumConverter() },
+                Converters       = new List<JsonConverter>() { new Newtonsoft.Json.Converters.StringEnumConverter() },
                 ContractResolver = new CamelCasePropertyNamesContractResolver()
 
             };
