@@ -31,8 +31,8 @@
 		<ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
 		<ProjectReference Include="..\Neon.Kube.GrpcProto\Neon.Kube.GrpcProto.csproj" />
 		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
-      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
-      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.HyperV\Neon.HyperV.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+		<ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+		<ProjectReference Include="$(NF_ROOT)\Lib\Neon.HyperV\Neon.HyperV.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
 	</ItemGroup>
 
 	<ItemGroup>

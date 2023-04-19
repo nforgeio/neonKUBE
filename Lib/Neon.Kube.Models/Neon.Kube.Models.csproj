@@ -31,12 +31,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
+		<PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
-      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+		<ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
+		<ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
 	</ItemGroup>
 
 </Project>

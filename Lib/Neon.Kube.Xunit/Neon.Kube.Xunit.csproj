@@ -23,10 +23,10 @@
 		<Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
 	</ItemGroup>
 
-    <ItemGroup>
-        <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
-        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
-    </ItemGroup>
+	<ItemGroup>
+		<None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="KubernetesClient" Version="10.1.19" />
@@ -46,10 +46,10 @@
 		<ProjectReference Include="..\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
 		<ProjectReference Include="..\Neon.Kube.Setup\Neon.Kube.Setup.csproj" />
 		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
-      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
-      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Deployment\Neon.Deployment.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
-      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.SSH\Neon.SSH.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
-      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Xunit\Neon.Xunit.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+		<ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+		<ProjectReference Include="$(NF_ROOT)\Lib\Neon.Deployment\Neon.Deployment.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+		<ProjectReference Include="$(NF_ROOT)\Lib\Neon.SSH\Neon.SSH.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+		<ProjectReference Include="$(NF_ROOT)\Lib\Neon.Xunit\Neon.Xunit.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
 	</ItemGroup>
 
 </Project>

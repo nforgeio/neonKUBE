@@ -2718,7 +2718,7 @@ namespace Neon.Kube.Hosting.Aws
                         {
                             new SubnetMapping() { SubnetId = publicSubnet.SubnetId, AllocationId = ingressAddress.AllocationId }
                         },
-                        IpAddressType  = IpAddressType.Ipv4,
+                        IpAddressType  = Amazon.ElasticLoadBalancingV2.IpAddressType.Ipv4,
                         Tags           = GetTags<ElbTag>("load-balancer"),
                     });
 

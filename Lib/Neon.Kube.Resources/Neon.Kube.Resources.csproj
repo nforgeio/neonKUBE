@@ -1,52 +1,52 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>netstandard2.1</TargetFramework>
-        <OutputType>Library</OutputType>
-        <RootNamespace>Neon.Kube.Resources</RootNamespace>
-        <Version>0.9.2-alpha</Version>
-        <Description>INTERNAL USE ONLY: neonKUBE Kubernetes CRDs and implementations.</Description>
-        <PackageLicenseFile>LICENSE</PackageLicenseFile>
-        <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
-        <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Resources/README.md</PackageProjectUrl>
-        <RepositoryType>git</RepositoryType>
-        <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
-        <Configurations>Debug;Release</Configurations>
-        <PackageIcon>nuget-icon.png</PackageIcon>
-        <PackageTags>kubernetes</PackageTags>
-    </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>netstandard2.1</TargetFramework>
+		<OutputType>Library</OutputType>
+		<RootNamespace>Neon.Kube.Resources</RootNamespace>
+		<Version>0.9.2-alpha</Version>
+		<Description>INTERNAL USE ONLY: neonKUBE Kubernetes CRDs and implementations.</Description>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
+		<PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Resources/README.md</PackageProjectUrl>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
+		<Configurations>Debug;Release</Configurations>
+		<PackageIcon>nuget-icon.png</PackageIcon>
+		<PackageTags>kubernetes</PackageTags>
+	</PropertyGroup>
 
-    <ItemGroup>
-        <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
-        <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
-    </ItemGroup>
+	<ItemGroup>
+		<Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+		<Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+	</ItemGroup>
 
-    <ItemGroup>
-        <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
-        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
-    </ItemGroup>
+	<ItemGroup>
+		<None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+	</ItemGroup>
 
-    <ItemGroup>
-        <PackageReference Include="KubernetesClient.Models" Version="10.1.19" />
-        <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
-        <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
-        <PackageReference Include="Neon.JsonConverters" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-        <PackageReference Include="NJsonSchema" Version="10.8.0" />
-        <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
-        <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
-        <PackageReference Include="System.IO.Compression" Version="4.3.0" />
-        <PackageReference Include="System.Net.Http" Version="4.3.4" />
-        <PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
-        <PackageReference Include="System.Net.Ping" Version="4.3.0" />
-        <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
-        <PackageReference Include="System.Threading.Tasks.Parallel" Version="4.3.0" />
-        <PackageReference Include="YamlDotNet" Version="13.0.2" />
-    </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="KubernetesClient.Models" Version="10.1.19" />
+		<PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
+		<PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
+		<PackageReference Include="Neon.JsonConverters" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="NJsonSchema" Version="10.8.0" />
+		<PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+		<PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
+		<PackageReference Include="System.IO.Compression" Version="4.3.0" />
+		<PackageReference Include="System.Net.Http" Version="4.3.4" />
+		<PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
+		<PackageReference Include="System.Net.Ping" Version="4.3.0" />
+		<PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
+		<PackageReference Include="System.Threading.Tasks.Parallel" Version="4.3.0" />
+		<PackageReference Include="YamlDotNet" Version="13.0.2" />
+	</ItemGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.JsonConverters\Neon.JsonConverters.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
-    </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+		<ProjectReference Include="$(NF_ROOT)\Lib\Neon.JsonConverters\Neon.JsonConverters.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+	</ItemGroup>
 
 </Project>

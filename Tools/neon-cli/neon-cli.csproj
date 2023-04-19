@@ -65,9 +65,9 @@
 		<ProjectReference Include="..\..\Lib\Neon.Kube.Setup\Neon.Kube.Setup.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube.XenServer\Neon.Kube.XenServer.csproj" />
 		<ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
-			<ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
-			<ProjectReference Include="$(NF_ROOT)\Lib\Neon.Deployment\Neon.Deployment.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
-			<ProjectReference Include="$(NF_ROOT)\Lib\Neon.WinTTY\Neon.WinTTY.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+		<ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+		<ProjectReference Include="$(NF_ROOT)\Lib\Neon.Deployment\Neon.Deployment.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+		<ProjectReference Include="$(NF_ROOT)\Lib\Neon.WinTTY\Neon.WinTTY.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -88,5 +88,5 @@
 			<LastGenOutput>Resources.Designer.cs</LastGenOutput>
 		</EmbeddedResource>
 	</ItemGroup>
-	
+
 </Project>
