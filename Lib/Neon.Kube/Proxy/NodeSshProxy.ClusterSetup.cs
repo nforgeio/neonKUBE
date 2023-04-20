@@ -1626,22 +1626,22 @@ done
                     try
                     {
                         await NeonHelper.WaitForAsync(
-                                async () =>
+                            async () =>
+                            {
+                                try
                                 {
-                                    try
-                                    {
-                                        SudoCommand(CommandBundle.FromScript(scriptString), RunOptions.FaultOnError).EnsureSuccess();
+                                    SudoCommand(CommandBundle.FromScript(scriptString), RunOptions.FaultOnError).EnsureSuccess();
 
-                                        return await Task.FromResult(true);
-                                    }
-                                    catch
-                                    {
-                                        return await Task.FromResult(false);
-                                    }
-                                },
-                                timeout: TimeSpan.FromSeconds(300),
-                                pollInterval: TimeSpan.FromSeconds(1),
-                                cancellationToken: controller.CancellationToken);
+                                    return await Task.FromResult(true);
+                                }
+                                catch
+                                {
+                                    return await Task.FromResult(false);
+                                }
+                            },
+                            timeout: TimeSpan.FromSeconds(300),
+                            pollInterval: TimeSpan.FromSeconds(1),
+                            cancellationToken: controller.CancellationToken);
                     }
                     catch (Exception e)
                     {
