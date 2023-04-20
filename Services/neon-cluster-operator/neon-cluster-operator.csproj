@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
         <TargetFramework>net7.0</TargetFramework>
@@ -51,8 +51,11 @@
         <ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Service\Neon.Service.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(SolutionName)' == 'neonCLOUD'" >
+        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
+        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Service\Neon.Service.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -76,7 +79,7 @@
         <Exec Command="$(NSwagExe) openapi2csclient /classname:HarborClient /namespace:NeonClusterOperator.Harbor /input:../../Lib/Neon.Kube/Harbor/swagger.json /output:HarborClient.mg.cs" />
     </Target>
 
-	<!--
+    <!--
 	$todo(jefflill): 02-25-2023
 	
 	I've refactored how cluster manifests are handled.  Before 02-25-2023, we included
@@ -96,9 +99,9 @@
 	This target is temporary and can be removed in a few months.
 	-->
 
-	<Target Name="DeleteClusterManifest" BeforeTargets="Build">
-		<Message Importance="high" Text="Delete: Resources/cluster-manifest.json" Condition="Exists('$(ProjectDir)Resources\cluster-manifest.json')" />
-		<Delete Files="$(ProjectDir)Resources\cluster-manifest.json" Condition="Exists('$(ProjectDir)Resources\cluster-manifest.json')" />
-	</Target>
+    <Target Name="DeleteClusterManifest" BeforeTargets="Build">
+        <Message Importance="high" Text="Delete: Resources/cluster-manifest.json" Condition="Exists('$(ProjectDir)Resources\cluster-manifest.json')" />
+        <Delete Files="$(ProjectDir)Resources\cluster-manifest.json" Condition="Exists('$(ProjectDir)Resources\cluster-manifest.json')" />
+    </Target>
 
 </Project>

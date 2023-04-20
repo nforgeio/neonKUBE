@@ -1,96 +1,72 @@
 # Remove the line below if you want to inherit .editorconfig settings from higher directories
 root = true
 
-# YAML files
-[*.{yml,yaml}]
-
-#### Core EditorConfig Options ####
-
-# Indentation and spacing
-indent_size = 2
-indent_style = space
-tab_width = 2
-
-# New line preferences
+#All Files
+[*]
+charset = utf-8
 end_of_line = lf
+indent_style = space
+indent_size = 4
+tab_width = 4
 insert_final_newline = false
+trim_trailing_whitespace = true
+
+# Visual Studio Files
+[*.{sln,csproj,vbproj,vcxproj.filters,proj,projitems,shproj}]
+end_of_line = crlf
+
+# XML Configuration Files
+[*.{xml,config,props,targets,nuspec,resx,ruleset,vsixmanifest,vsct}]
+end_of_line = crlf
+
+# JSON Files
+[*.{json,json5,webmanifest}]
+indent_size = 2
+
+# YAML Files
+[*.{yml,yaml}]
+indent_size = 2
+
+# Markdown Files
+[*.{md,mdx}]
+trim_trailing_whitespace = false
+
+# Web Files
+[*.{htm,html,js,jsm,ts,tsx,cjs,cts,ctsx,mjs,mts,mtsx,css,sass,scss,less,pcss,svg,vue}]
+indent_size = 2
+
+# Batch Files
+[*.{cmd,bat}]
+end_of_line = crlf
+
+# Bash Files
+[*.sh]
+end_of_line = lf
 
 # Dockerfiles
-[{Dockerfile}]
-
-#### Core EditorConfig Options ####
-
-# Indentation and spacing
+[Dockerfile]
 indent_size = 2
-indent_style = space
-tab_width = 2
 
-# New line preferences
-end_of_line = lf
-insert_final_newline = false
-
-# shell scripts
-[*.{sh}]
-
-#### Core EditorConfig Options ####
-
-# Indentation and spacing
-indent_size = 2
-indent_style = space
-tab_width = 2
-
-# New line preferences
-end_of_line = lf
-insert_final_newline = false
-
-# Blazor
 [*.{razor,cshtml}]
+charset = utf-8-bom
+end_of_line = crlf
+file_header_template = @*//-----------------------------------------------------------------------------\n// FILE:	    {fileName}\n// CONTRIBUTOR: NEONFORGE Developers\n// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.\n//\n// Licensed under the Apache License, Version 2.0 (the "License");\n// you may not use this file except in compliance with the License.\n// You may obtain a copy of the License at\n//\n//     http://www.apache.org/licenses/LICENSE-2.0\n//\n// Unless required by applicable law or agreed to in writing, software\n// distributed under the License is distributed on an "AS IS" BASIS,\n// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n// See the License for the specific language governing permissions and\n// limitations under the License.*@
 
-#### Core EditorConfig Options ####
+# .NET
+[*.{cs,csx,cake,vb,vbx}]
 
 # Indentation and spacing
-indent_size = 4
 indent_style = space
-tab_width = 4
 
 # New line preferences
 end_of_line = crlf
-insert_final_newline = false
-
-# shell scripts
-[*.{sh}]
-
-#### Core EditorConfig Options ####
-
-# Indentation and spacing
-indent_size = 2
-indent_style = space
-tab_width = 2
-
-# New line preferences
-end_of_line = lf
-insert_final_newline = false
-
-# C# files
-[*.cs]
-
-#### Core EditorConfig Options ####
-
-# Indentation and spacing
-indent_size = 4
-indent_style = space
-tab_width = 4
-
-# New line preferences
-end_of_line = crlf
-insert_final_newline = false
 
 #### .NET Coding Conventions ####
 
 # Organize usings
-dotnet_separate_import_directive_groups = false
-dotnet_sort_system_directives_first = false
-file_header_template = unset
+dotnet_separate_import_directive_groups = true
+dotnet_sort_system_directives_first = true
+file_header_template = //-----------------------------------------------------------------------------\n// FILE:	    {fileName}\n// CONTRIBUTOR: NEONFORGE Developers\n// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.\n//\n// Licensed under the Apache License, Version 2.0 (the "License");\n// you may not use this file except in compliance with the License.\n// You may obtain a copy of the License at\n//\n//     http://www.apache.org/licenses/LICENSE-2.0\n//\n// Unless required by applicable law or agreed to in writing, software\n// distributed under the License is distributed on an "AS IS" BASIS,\n// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n// See the License for the specific language governing permissions and\n// limitations under the License.
 
 # this. and Me. preferences
 dotnet_style_qualification_for_event = false
@@ -295,11 +271,7 @@ dotnet_naming_style.begins_with_i.word_separator =
 dotnet_naming_style.begins_with_i.capitalization = pascal_case
 csharp_style_prefer_readonly_struct = true:suggestion
 
-[*.{cs,vb}]
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
-tab_width = 4
-indent_size = 4
-end_of_line = crlf
 dotnet_style_coalesce_expression = true:suggestion
 dotnet_style_null_propagation = true:suggestion
 dotnet_style_prefer_is_null_check_over_reference_equality_method = true:suggestion
