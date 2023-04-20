@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 		<PropertyGroup>
 				<TargetFramework>net7.0</TargetFramework>
@@ -75,14 +75,13 @@
 				<PackageReference Include="YamlDotNet" Version="13.0.2" />
 		</ItemGroup>
 
-		<ItemGroup>
-				<ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
-				<ProjectReference Include="$(NF_ROOT)\Lib\Neon.Cryptography\Neon.Cryptography.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
-				<ProjectReference Include="$(NF_ROOT)\Lib\Neon.Deployment\Neon.Deployment.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
-				<ProjectReference Include="$(NF_ROOT)\Lib\Neon.JsonConverters\Neon.JsonConverters.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
-				<ProjectReference Include="$(NF_ROOT)\Lib\Neon.ModelGenerator\Neon.ModelGenerator.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
-				<ProjectReference Include="$(NF_ROOT)\Lib\Neon.Postgres\Neon.Postgres.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
-				<ProjectReference Include="$(NF_ROOT)\Lib\Neon.SSH\Neon.SSH.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+		<ItemGroup Condition="'$(SolutionName)' == 'neonCLOUD'" >
+				<ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
+				<ProjectReference Include="$(NF_ROOT)\Lib\Neon.Cryptography\Neon.Cryptography.csproj"/>
+				<ProjectReference Include="$(NF_ROOT)\Lib\Neon.Deployment\Neon.Deployment.csproj" />
+				<ProjectReference Include="$(NF_ROOT)\Lib\Neon.JsonConverters\Neon.JsonConverters.csproj" />
+				<ProjectReference Include="$(NF_ROOT)\Lib\Neon.Postgres\Neon.Postgres.csproj" />
+				<ProjectReference Include="$(NF_ROOT)\Lib\Neon.SSH\Neon.SSH.csproj" />
 		</ItemGroup>
 
 		<ItemGroup>
@@ -95,36 +94,25 @@
 				<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
 		</ItemGroup>
 
-		<!--
-	Generate the data models and service clients.
-	-->
-
 		<PropertyGroup Condition="'$(SolutionName)' != 'neonCLOUD'">
-				<ModelGeneratorPath>$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\win-x64\neon-modelgen</ModelGeneratorPath>
+				<ModelGeneratorPath>$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\$(RuntimePath)\neon-modelgen</ModelGeneratorPath>
 		</PropertyGroup>
 
 		<PropertyGroup Condition="'$(SolutionName)' == 'neonCLOUD'">
-				<ModelGeneratorPath>$(NF_ROOT)\Lib\Neon.ModelGenerator\win-x64\neon-modelgen</ModelGeneratorPath>
+				<ModelGeneratorPath >$(NF_ROOT)\Lib\Neon.ModelGenerator\$(RuntimePath)\neon-modelgen</ModelGeneratorPath>
 		</PropertyGroup>
-
-		<Target Name="ModelGen" BeforeTargets="CoreCompile" Condition="'$(SolutionName)' != 'neonCLOUD'">
+		
+		<Target Name="ModelGen" 
+				Inputs="$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\$(TargetFramework)\Neon.Kube.Models.dll"
+				Outputs="$(ProjectDir)Model\GeneratedEntities.mg.cs" 
+        BeforeTargets="CoreCompile"
+        DependsOnTargets="BeforeCompile">
 				<!--- Generate the model source files -->
-				<Message Importance="high" Text="&quot;$(ModelGeneratorPath)&quot; --targets=all --target-namespace=Neon.Kube.Clients &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\net7.0\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
-				<Exec Command="&quot;$(ModelGeneratorPath)&quot; --targets=all --target-namespace=Neon.Kube.Clients &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\net7.0\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
+				<Message Importance="high" Text="&quot;$(ModelGeneratorPath)&quot; --targets=all --target-namespace=Neon.Kube.Clients &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\$(TargetFramework)\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
+				<Exec Command="&quot;$(ModelGeneratorPath)&quot; --targets=all --target-namespace=Neon.Kube.Clients &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\$(TargetFramework)\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
 				<ItemGroup>
 						<!--- Ensure that the new files are included in the build -->
 						<Compile Include="**\*.cs" KeepDuplicates="false" />
 				</ItemGroup>
 		</Target>
-
-		<Target Name="ModelGen" BeforeTargets="CoreCompile" Condition="'$(SolutionName)' == 'neonCLOUD'">
-				<!--- Generate the model source files -->
-				<Message Importance="high" Text="&quot;$(ModelGeneratorPath)&quot; --targets=all --target-namespace=Neon.Kube.Clients &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\net7.0\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
-				<Exec Command="&quot;$(ModelGeneratorPath)&quot; --targets=all --target-namespace=Neon.Kube.Clients &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\net7.0\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
-				<ItemGroup>
-						<!--- Ensure that the new files are included in the build -->
-						<Compile Include="**\*.cs" KeepDuplicates="false" />
-				</ItemGroup>
-		</Target>
-
 </Project>

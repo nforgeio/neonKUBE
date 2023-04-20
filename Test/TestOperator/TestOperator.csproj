@@ -12,7 +12,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
-        <ProjectReference Include="..\..\Lib\Neon.Kube.Operator.MSBuild\Neon.Kube.Operator.MSBuild.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />

@@ -46,7 +46,10 @@
         <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube.Xunit\Neon.Kube.Xunit.csproj" />
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Xunit\Neon.Xunit.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(SolutionName)' == 'neonCLOUD'" >
+        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
+        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Xunit\Neon.Xunit.csproj" />
     </ItemGroup>
 </Project>

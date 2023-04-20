@@ -44,9 +44,9 @@
         <PackageReference Include="YamlDotNet" Version="13.0.2" />
     </ItemGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.JsonConverters\Neon.JsonConverters.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+    <ItemGroup Condition="'$(SolutionName)' == 'neonCLOUD'" >
+        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
+        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.JsonConverters\Neon.JsonConverters.csproj" />
     </ItemGroup>
 
 </Project>

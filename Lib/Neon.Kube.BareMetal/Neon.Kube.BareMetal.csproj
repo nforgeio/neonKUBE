@@ -25,7 +25,10 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
 		<ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
-      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" Condition="'$(SolutionName)' == 'neonCLOUD'" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(SolutionName)' == 'neonCLOUD'" >
+      <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

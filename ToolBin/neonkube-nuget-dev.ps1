@@ -81,11 +81,11 @@
 
 param 
 (
-    [switch]$local        = $false,     # publish to local file system
-    [switch]$localVersion = $false,     # use a local version counter (emergency only)
-    [switch]$dirty        = $false,     # use GitHub sources for SourceLink even if local repo is dirty
-    [switch]$release      = $false,     # RELEASE build instead of DEBUG (the default)
-    [switch]$restore      = $false      # Just restore the CSPROJ files after cancelling publish
+    [switch]$local          = $false, # publish to local file system
+    [switch]$localVersion   = $false, # use a local version counter (emergency only)
+    [switch]$dirty          = $false, # use GitHub sources for SourceLink even if local repo is dirty
+    [switch]$release        = $false, # RELEASE build instead of DEBUG (the default)
+    [string]$neonSdkVersion           # Just restore the CSPROJ files after cancelling publish
 )
 
 # Import the global solution include file.
@@ -127,54 +127,11 @@ else
     $config = "Debug"
 }
 
-#------------------------------------------------------------------------------
-# Sets the package version in the specified project file and makes a backup
-# of the original project file named [$project.bak].
+$neonSdkVersionParameter = ""
 
-function SetVersion
+if ($neonSdkVersion)
 {
-    [CmdletBinding()]
-    param (
-        [Parameter(Position=0, Mandatory=$true)]
-        [string]$project,
-        [Parameter(Position=1, Mandatory=$true)]
-        [string]$version
-    )
-
-    "* SetVersion: ${project}:${version}"
-
-    $projectPath    = [io.path]::combine($env:NK_ROOT, "Lib", "$project", "$project" + ".csproj")
-    $orgProjectFile = Get-Content "$projectPath" -Encoding utf8
-    $regex          = [regex]'<Version>(.*)</Version>'
-    $match          = $regex.Match($orgProjectFile)
-    $orgVersion     = $match.Groups[1].Value
-    $tmpProjectFile = $orgProjectFile.Replace("<Version>$orgVersion</Version>", "<Version>$version</Version>")
-
-    if (!(Test-Path "$projectPath.bak"))
-    {
-        Copy-Item "$projectPath" "$projectPath.bak"
-    }
-    
-    $tmpProjectFile | Out-File -FilePath "$projectPath" -Encoding utf8
-}
-
-#------------------------------------------------------------------------------
-# Restores the original project version for a project.
-
-function RestoreVersion
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Position=0, Mandatory=$true)]
-        [string]$project
-    )
-
-    "* Restore: ${project}"
-
-    $projectPath = [io.path]::combine($env:NK_ROOT, "Lib", "$project", "$project" + ".csproj")
-
-    Copy-Item "$projectPath.bak" "$projectPath"
-    Remove-Item "$projectPath.bak"
+    $neonSdkVersionParameter = "/p:NeonSdkPackageVersion=$neonSdkVersion"
 }
 
 #------------------------------------------------------------------------------
@@ -204,7 +161,8 @@ function Publish
 
     $projectPath = [io.path]::combine($env:NK_ROOT, "Lib", "$project", "$project" + ".csproj")
 
-    dotnet pack $projectPath -c $config -o "$env:NK_BUILD\nuget"
+    Write-Output dotnet pack $projectPath -c $config -o "$env:NK_BUILD\nuget" -p:PackageVersion=$version $neonSdkVersionParameter
+    dotnet pack $projectPath -c $config -o "$env:NK_BUILD\nuget" -p:PackageVersion=$version $neonSdkVersionParameter
     ThrowOnExitCode
 
     $nugetPath = "$env:NK_BUILD\nuget\$project.$version.nupkg"
@@ -326,117 +284,65 @@ try
     # We need to do a solution build to ensure that any tools or other dependencies 
     # are built before we build and publish the individual packages.
 
-    if (-not $restore)
+    Write-Info ""
+    Write-Info "********************************************************************************"
+    Write-Info "***                           RESTORE PACKAGES                               ***"
+    Write-Info "********************************************************************************"
+    Write-Info ""
+
+    & dotnet restore "$nkSolution" $neonSdkVersionParameter
+
+    if (-not $?)
     {
-        Write-Info ""
-        Write-Info "********************************************************************************"
-        Write-Info "***                           RESTORE PACKAGES                               ***"
-        Write-Info "********************************************************************************"
-        Write-Info ""
-
-        & dotnet restore "$nkSolution"
-
-        if (-not $?)
-        {
-            throw "ERROR: RESTORE FAILED"
-        }
-
-        Write-Info ""
-        Write-Info "********************************************************************************"
-        Write-Info "***                            CLEAN SOLUTION                                ***"
-        Write-Info "********************************************************************************"
-        Write-Info ""
-
-        & "$msbuild" "$nkSolution" -p:Configuration=$config -t:Clean -m -verbosity:quiet
-
-        if (-not $?)
-        {
-            throw "ERROR: CLEAN FAILED"
-        }
-
-        Write-Info  ""
-        Write-Info  "*******************************************************************************"
-        Write-Info  "***                           BUILD SOLUTION                                ***"
-        Write-Info  "*******************************************************************************"
-        Write-Info  ""
-
-        & "$msbuild" "$nkSolution" -p:Configuration=$config -restore -m -verbosity:quiet
-
-        if (-not $?)
-        {
-            throw "ERROR: BUILD FAILED"
-        }
+        throw "ERROR: RESTORE FAILED"
     }
 
-    #------------------------------------------------------------------------------
-    # We need to set the version in all of the project files so that implicit 
-    # package dependencies will work for external projects importing these 
-    # packages.
+    Write-Info ""
+    Write-Info "********************************************************************************"
+    Write-Info "***                            CLEAN SOLUTION                                ***"
+    Write-Info "********************************************************************************"
+    Write-Info ""
 
-    if (-not $restore)
+    & "$msbuild" "$nkSolution" -p:Configuration=$config -t:Clean -m -verbosity:quiet
+
+    if (-not $?)
     {
-        SetVersion Neon.Kube                        $neonkubeVersion
-        SetVersion Neon.Kube.Aws                    $neonkubeVersion
-        SetVersion Neon.Kube.Azure                  $neonkubeVersion
-        SetVersion Neon.Kube.BareMetal              $neonkubeVersion
-        SetVersion Neon.Kube.BuildInfo              $neonkubeVersion
-        SetVersion Neon.Kube.DesktopService         $neonkubeVersion
-        SetVersion Neon.Kube.Google                 $neonkubeVersion
-        SetVersion Neon.Kube.GrpcProto              $neonkubeVersion
-        SetVersion Neon.Kube.Hosting                $neonkubeVersion
-        SetVersion Neon.Kube.HyperV                 $neonkubeVersion
-        SetVersion Neon.Kube.Models                 $neonkubeVersion
-        SetVersion Neon.Kube.Operator               $neonkubeVersion
-        SetVersion Neon.Kube.Operator.MSBuild       $neonkubeVersion
-        SetVersion Neon.Kube.Operator.Templates     $neonkubeVersion
-        SetVersion Neon.Kube.Resources              $neonkubeVersion
-        SetVersion Neon.Kube.Setup                  $neonkubeVersion
-        SetVersion Neon.Kube.XenServer              $neonkubeVersion
-        SetVersion Neon.Kube.Xunit                  $neonkubeVersion
-
-        # Build and publish the projects.
-
-        Publish Neon.Kube                           $neonkubeVersion
-        Publish Neon.Kube.Aws                       $neonkubeVersion
-        Publish Neon.Kube.Azure                     $neonkubeVersion
-        Publish Neon.Kube.BareMetal                 $neonkubeVersion
-        Publish Neon.Kube.BuildInfo                 $neonkubeVersion
-        Publish Neon.Kube.DesktopService            $neonkubeVersion
-        Publish Neon.Kube.Google                    $neonkubeVersion
-        Publish Neon.Kube.GrpcProto                 $neonkubeVersion
-        Publish Neon.Kube.Hosting                   $neonkubeVersion
-        Publish Neon.Kube.HyperV                    $neonkubeVersion
-        Publish Neon.Kube.Models                    $neonkubeVersion
-        Publish Neon.Kube.Operator                  $neonkubeVersion
-        Publish Neon.Kube.Operator.MSBuild          $neonkubeVersion
-        Publish Neon.Kube.Operator.Templates        $neonkubeVersion
-        Publish Neon.Kube.Resources                 $neonkubeVersion
-        Publish Neon.Kube.Setup                     $neonkubeVersion
-        Publish Neon.Kube.XenServer                 $neonkubeVersion
-        Publish Neon.Kube.Xunit                     $neonkubeVersion
+        throw "ERROR: CLEAN FAILED"
     }
 
-    #--------------------------------------------------------------------------
-    # Restore the project versions
+    Write-Info  ""
+    Write-Info  "*******************************************************************************"
+    Write-Info  "***                           BUILD SOLUTION                                ***"
+    Write-Info  "*******************************************************************************"
+    Write-Info  ""
 
-    RestoreVersion Neon.Kube
-    RestoreVersion Neon.Kube.Aws
-    RestoreVersion Neon.Kube.Azure
-    RestoreVersion Neon.Kube.BareMetal
-    RestoreVersion Neon.Kube.BuildInfo
-    RestoreVersion Neon.Kube.DesktopService
-    RestoreVersion Neon.Kube.Google
-    RestoreVersion Neon.Kube.GrpcProto
-    RestoreVersion Neon.Kube.Hosting
-    RestoreVersion Neon.Kube.HyperV
-    RestoreVersion Neon.Kube.Models
-    RestoreVersion Neon.Kube.Operator
-    RestoreVersion Neon.Kube.Operator.MSBuild
-    RestoreVersion Neon.Kube.Operator.Templates
-    RestoreVersion Neon.Kube.Resources
-    RestoreVersion Neon.Kube.Setup
-    RestoreVersion Neon.Kube.XenServer
-    RestoreVersion Neon.Kube.Xunit
+    & "$msbuild" "$nkSolution" -p:Configuration=$config -restore -m -verbosity:quiet $neonSdkVersionParameter
+
+    if (-not $?)
+    {
+        throw "ERROR: BUILD FAILED"
+    }
+
+    # Build and publish the projects.
+
+    Publish Neon.Kube                           $neonkubeVersion
+    Publish Neon.Kube.Aws                       $neonkubeVersion
+    Publish Neon.Kube.Azure                     $neonkubeVersion
+    Publish Neon.Kube.BareMetal                 $neonkubeVersion
+    Publish Neon.Kube.BuildInfo                 $neonkubeVersion
+    Publish Neon.Kube.DesktopService            $neonkubeVersion
+    Publish Neon.Kube.Google                    $neonkubeVersion
+    Publish Neon.Kube.GrpcProto                 $neonkubeVersion
+    Publish Neon.Kube.Hosting                   $neonkubeVersion
+    Publish Neon.Kube.HyperV                    $neonkubeVersion
+    Publish Neon.Kube.Models                    $neonkubeVersion
+    Publish Neon.Kube.Operator                  $neonkubeVersion
+    Publish Neon.Kube.Operator.MSBuild          $neonkubeVersion
+    Publish Neon.Kube.Operator.Templates        $neonkubeVersion
+    Publish Neon.Kube.Resources                 $neonkubeVersion
+    Publish Neon.Kube.Setup                     $neonkubeVersion
+    Publish Neon.Kube.XenServer                 $neonkubeVersion
+    Publish Neon.Kube.Xunit                     $neonkubeVersion
 
     # Remove all of the generated nuget files so these don't accumulate.
 
