@@ -1587,7 +1587,23 @@ fi
 
                     helmChartScript.AppendLineLinux(
 $@"
-helm install {releaseName} --debug --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} ./{chartName}
+helmLogPath=/tmp/{chartName}.helm.log
+
+helm install {releaseName} --debug --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} ./{chartName} > $helmLogPath 2>&1
+exitcode=$?
+
+if [ ! $exitcode ] ; then
+
+    echo ===============================================================================
+    echo HELM INSTALL ERROR:
+    echo -------------------
+    cat $helmLogPath
+    echo ===============================================================================
+
+    exit $exitcode
+fi
+
+rm $helmLogPath
 
 START=`date +%s`
 DEPLOY_END=$((START+{timeoutSeconds}))
@@ -1609,7 +1625,6 @@ done
 
                     try
                     {
-
                         await NeonHelper.WaitForAsync(
                                 async () =>
                                 {
@@ -1628,9 +1643,9 @@ done
                                 pollInterval: TimeSpan.FromSeconds(1),
                                 cancellationToken: controller.CancellationToken);
                     }
-                    catch(Exception e)
+                    catch (Exception e)
                     {
-                        controller.LogProgressError($"Failed to install helm chart {@namespace}/{releaseName}.");
+                        controller.LogProgressError($"Failed to install helm chart: {@namespace}/{releaseName}");
                         controller.LogProgressError(e.Message);
 
                         var status = SudoCommand($"helm status {releaseName} --namespace {@namespace} --show-desc", RunOptions.FaultOnError).EnsureSuccess();
