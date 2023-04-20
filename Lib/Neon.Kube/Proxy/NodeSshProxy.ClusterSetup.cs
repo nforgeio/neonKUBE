@@ -1589,8 +1589,10 @@ fi
 $@"
 helmLogPath=/tmp/{chartName}.helm.log
 
+set +e
 helm install {releaseName} --debug --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} ./{chartName} > $helmLogPath 2>&1
 exitcode=$?
+set -e
 
 if [ ! $exitcode ] ; then
 
@@ -1602,7 +1604,6 @@ if [ ! $exitcode ] ; then
 
     exit $exitcode
 fi
-
 rm $helmLogPath
 
 START=`date +%s`
