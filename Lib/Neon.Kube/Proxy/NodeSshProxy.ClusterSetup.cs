@@ -1589,8 +1589,10 @@ fi
 $@"
 helmLogPath=/tmp/{chartName}.helm.log
 
+set +e
 helm install {releaseName} --debug --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} ./{chartName} > $helmLogPath 2>&1
 exitcode=$?
+set -e
 
 if [ ! $exitcode ] ; then
 
@@ -1602,7 +1604,6 @@ if [ ! $exitcode ] ; then
 
     exit $exitcode
 fi
-
 rm $helmLogPath
 
 START=`date +%s`
@@ -1626,22 +1627,22 @@ done
                     try
                     {
                         await NeonHelper.WaitForAsync(
-                                async () =>
+                            async () =>
+                            {
+                                try
                                 {
-                                    try
-                                    {
-                                        SudoCommand(CommandBundle.FromScript(scriptString), RunOptions.FaultOnError).EnsureSuccess();
+                                    SudoCommand(CommandBundle.FromScript(scriptString), RunOptions.FaultOnError).EnsureSuccess();
 
-                                        return await Task.FromResult(true);
-                                    }
-                                    catch
-                                    {
-                                        return await Task.FromResult(false);
-                                    }
-                                },
-                                timeout: TimeSpan.FromSeconds(300),
-                                pollInterval: TimeSpan.FromSeconds(1),
-                                cancellationToken: controller.CancellationToken);
+                                    return await Task.FromResult(true);
+                                }
+                                catch
+                                {
+                                    return await Task.FromResult(false);
+                                }
+                            },
+                            timeout: TimeSpan.FromSeconds(300),
+                            pollInterval: TimeSpan.FromSeconds(1),
+                            cancellationToken: controller.CancellationToken);
                     }
                     catch (Exception e)
                     {
