@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net7.0</TargetFramework>
@@ -8,10 +8,6 @@
         <Configurations>Debug;Release</Configurations>
         <GenerateDocumentationFile>false</GenerateDocumentationFile>
     </PropertyGroup>
-
-    <ItemGroup>
-        <None Remove="xunit.runner.json" />
-    </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="coverlet.collector" Version="3.2.0">
@@ -33,12 +29,6 @@
     <ItemGroup>
         <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
         <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Content Include="xunit.runner.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
     </ItemGroup>
 
     <ItemGroup>
