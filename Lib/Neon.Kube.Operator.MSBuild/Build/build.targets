@@ -14,7 +14,7 @@
             <RbacArgs Condition="'$(OperatorWatchNamespace)' != ''" Include="--watch-namespace=&quot;$(OperatorWatchNamespace)&quot;"/>
         </ItemGroup>
 
-        <Exec Command="&quot;$(TargetDir)$(NETCoreSdkRuntimeIdentifier)\operator-cli.exe&quot; @(RbacArgs,' ')"  />
+        <Exec Command="&quot;$(OperatorCliPath)&quot; @(RbacArgs,' ')"  />
     </Target>
 
     <Target Name="_GenerateCrds" DependsOnTargets="PropsConfig" >
@@ -29,7 +29,7 @@
             <CrdArgs Condition="'$(OperatorDeployedNamespace)' != ''" Include="--deployed-namespace=&quot;$(OperatorDeployedNamespace)&quot;"/>
         </ItemGroup>
 
-        <Exec Command="&quot;$(TargetDir)$(NETCoreSdkRuntimeIdentifier)\operator-cli.exe&quot; @(CrdArgs,' ')"  />
+        <Exec Command="&quot;$(OperatorCliPath)&quot; @(CrdArgs,' ')"  />
     </Target>
 
     <Target

@@ -20,4 +20,28 @@
             <OperatorName Condition="'$(OperatorName)' == ''">$(PackageId)</OperatorName>
         </PropertyGroup>
     </Target>
+
+    <PropertyGroup Condition="'$(SolutionName)' != 'neonCLOUD' And $([MSBuild]::IsOSPlatform('Linux'))">
+        <OperatorCliPath>$(PkgNeon_Kube_Operator_MSBuild)\contentFiles\any\netstandard2.0\linux-x64\operator-cli</OperatorCliPath>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(SolutionName)' != 'neonCLOUD' And $([MSBuild]::IsOSPlatform('OSX'))">
+        <OperatorCliPath>$(PkgNeon_Kube_Operator_MSBuild)\contentFiles\any\netstandard2.0\osx-x64\operator-cli</OperatorCliPath>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(SolutionName)' != 'neonCLOUD' And $([MSBuild]::IsOSPlatform('Windows'))">
+        <OperatorCliPath>$(PkgNeon_Kube_Operator_MSBuild)\contentFiles\any\netstandard2.0\win-x64\operator-cli</OperatorCliPath>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(SolutionName)' == 'neonCLOUD' And $([MSBuild]::IsOSPlatform('Linux'))">
+        <OperatorCliPath >$(NK_ROOT)\Lib\Neon.Kube.Operator.MSBuild\linux-x64\operator-cli</OperatorCliPath>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(SolutionName)' == 'neonCLOUD' And $([MSBuild]::IsOSPlatform('OSX'))">
+        <OperatorCliPath >$(NK_ROOT)\Lib\Neon.Kube.Operator.MSBuild\osx-x64\operator-cli</OperatorCliPath>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(SolutionName)' == 'neonCLOUD' And $([MSBuild]::IsOSPlatform('Windows'))">
+        <OperatorCliPath >$(NK_ROOT)\Lib\Neon.Kube.Operator.MSBuild\win-x64\operator-cli</OperatorCliPath>
+    </PropertyGroup>
 </Project>

@@ -1,53 +1,58 @@
 <Project>
 
-	<PropertyGroup>
-		<Product>neonKUBE</Product>
-		<Authors>NEONFORGE Team</Authors>
-		<Company>NEONFORGE LLC</Company>
-		<Copyright>Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.</Copyright>
-		<PackageReadmeFile Condition="Exists('README.md')">README.md</PackageReadmeFile>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<LangVersion>latest</LangVersion>
-		<Deterministic>true</Deterministic>
-		<DeterministicSourcePaths>false</DeterministicSourcePaths>
-		<Nullable>disable</Nullable>
-		<ImplicitUsings>disable</ImplicitUsings>
-		<EnableNETAnalyzers>true</EnableNETAnalyzers>
-		<TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
-		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-		<NoWarn>1701;1702;NETSDK1138;CS8892;ASP0014;IDE0063;IDE0090;IDE0017;IDE0079;IDE0066</NoWarn>
-		<NeonSdkPackageVersion>10000.1.3035-dev-master</NeonSdkPackageVersion>
+		<!--
+	Default properties:
+	-->
 
-		<!-- Debugging -->
+		<PropertyGroup>
+				<Product>neonKUBE</Product>
+				<Authors>NEONFORGE Team</Authors>
+				<Company>NEONFORGE LLC</Company>
+				<Copyright>Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.</Copyright>
+				<PackageReadmeFile Condition="Exists('README.md')">README.md</PackageReadmeFile>
+				<GenerateDocumentationFile>true</GenerateDocumentationFile>
+				<LangVersion>latest</LangVersion>
+				<Deterministic>true</Deterministic>
+				<DeterministicSourcePaths>false</DeterministicSourcePaths>
+				<Nullable>disable</Nullable>
+				<ImplicitUsings>disable</ImplicitUsings>
+				<EnableNETAnalyzers>true</EnableNETAnalyzers>
+				<TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
+				<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+				<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+				<NoWarn>1701;1702;NETSDK1138;CS8892;ASP0014;IDE0063;IDE0090;IDE0017;IDE0079;IDE0066</NoWarn>
 
 		<DebugSymbols>true</DebugSymbols>
 		<DebugType>embedded</DebugType>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 
-		<!-- 
+				<!-- 
 		Our nuget publication scripts will set the environment variable [NEON_PUBLIC_SOURCELINK=true]
 		when the source code has been or will be commited to GitHub with the expectation that we'll
 		enable sourcelink to reference source code from our GitHub repos.
 		-->
 
-		<ContinuousIntegrationBuild  Condition="'$(NEON_PUBLIC_SOURCELINK)' == 'true'">true</ContinuousIntegrationBuild>
+				<ContinuousIntegrationBuild  Condition="'$(NEON_PUBLIC_SOURCELINK)' == 'true'">true</ContinuousIntegrationBuild>
 
-		<!-- Publish defaults -->
+				<!-- Publish defaults -->
 
-		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+				<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 
-	</PropertyGroup>
+		</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>$(DefineConstants);TRACE;DEBUG</DefineConstants>
-		<Optimize>false</Optimize>
-	</PropertyGroup>
+		<PropertyGroup Condition="'$(NeonSdkPackageVersion)' == ''">
+				<NeonSdkPackageVersion>10000.1.3038-dev-master</NeonSdkPackageVersion>
+		</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<Optimize>true</Optimize>
-	</PropertyGroup>
+		<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+				<DefineConstants>$(DefineConstants);TRACE;DEBUG</DefineConstants>
+				<Optimize>false</Optimize>
+		</PropertyGroup>
+
+		<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+				<Optimize>true</Optimize>
+		</PropertyGroup>
 
 	<!-- 
 	We have a somewhat complex build environment.  The neonCLOUD repo is private and
@@ -89,11 +94,11 @@
 		<DefineConstants>$(DefineConstants);JUSTMOCK</DefineConstants>
 	</PropertyGroup>
 
-	<ItemGroup Condition="Exists('README.md')">
-		<None Include="README.md" Pack="true" PackagePath="" />
-	</ItemGroup>
+		<ItemGroup Condition="Exists('README.md')">
+				<None Include="README.md" Pack="true" PackagePath="" />
+		</ItemGroup>
 
-	<!-- 
+		<!-- 
 	$hack(jefflill):
 	
 	We've had a lot of trouble with auto generated source files generated for:
@@ -135,9 +140,21 @@
 			code for the the current target framework, etc.
 	-->
 
-	<PropertyGroup>
-		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
-	</PropertyGroup>
+		<PropertyGroup>
+				<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+				<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+		</PropertyGroup>
+
+		<PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+				<RuntimePath>win-x64</RuntimePath>
+		</PropertyGroup>
+
+		<PropertyGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+				<RuntimePath>osx-x64</RuntimePath>
+		</PropertyGroup>
+
+		<PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+				<RuntimePath>linux-x64</RuntimePath>
+		</PropertyGroup>
 
 </Project>
