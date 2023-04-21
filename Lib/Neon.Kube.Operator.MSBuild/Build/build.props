@@ -21,27 +21,60 @@
         </PropertyGroup>
     </Target>
 
-    <PropertyGroup Condition="'$(SolutionName)' != 'neonCLOUD' And $([MSBuild]::IsOSPlatform('Linux'))">
-        <OperatorCliPath>$(PkgNeon_Kube_Operator_MSBuild)\contentFiles\any\netstandard2.0\linux-x64\operator-cli</OperatorCliPath>
+    <!-- Determine the [operator-cli] path for the operating system hosting the build -->
+
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+
+        <!-- Use the [operator-cli] included in the referenced nuget package, if present -->
+        
+        <NugetOperatorCliPath Condition="'PkgNeon_Kube_Operator_MSBuild' != ''">$(PkgNeon_Kube_Operator_MSBuild)\contentFiles\any\netstandard2.0\linux-x64\operator-cli</NugetOperatorCliPath>
+        <OperatorCliPath Condition="'$(NugetOperatorCliPath)' != '' AND Exists('$(NugetOperatorCliPath)')">$(NugetOperatorCliPath)</OperatorCliPath>
+
+        <!--
+        If we didn't find the nuget [operator-cli] we're probably doing a multi-repo build,
+        so try to locate the program within the source repo.  This should never happen for
+        normal developers just using our Operator SDK for their own projects.
+        -->
+
+        <RepoOperatorCliPath>$(NK_ROOT)\Lib\Neon.Kube.Operator.MSBuild\linux-x64\operator-cli</RepoOperatorCliPath>
+        <OperatorCliPath Condition="Exists('$(RepoOperatorCliPath)')">$(RepoOperatorCliPath)</OperatorCliPath>
+    
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(SolutionName)' != 'neonCLOUD' And $([MSBuild]::IsOSPlatform('OSX'))">
-        <OperatorCliPath>$(PkgNeon_Kube_Operator_MSBuild)\contentFiles\any\netstandard2.0\osx-x64\operator-cli</OperatorCliPath>
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+
+        <!-- Use the [operator-cli] included in the referenced nuget package, if present -->
+        
+        <NugetOperatorCliPath Condition="'PkgNeon_Kube_Operator_MSBuild' != ''">$(PkgNeon_Kube_Operator_MSBuild)\contentFiles\any\netstandard2.0\osx-x64\operator-cli</NugetOperatorCliPath>
+        <OperatorCliPath Condition="'$(NugetOperatorCliPath)' != '' AND Exists('$(NugetOperatorCliPath)')">$(NugetOperatorCliPath)</OperatorCliPath>
+
+        <!--
+        If we didn't find the nuget [operator-cli] we're probably doing a multi-repo build,
+        so try to locate the program within the source repo.  This should never happen for
+        normal developers just using our Operator SDK for their own projects.
+        -->
+
+        <RepoOperatorCliPath>$(NK_ROOT)\Lib\Neon.Kube.Operator.MSBuild\osx-x64\operator-cli</RepoOperatorCliPath>
+        <OperatorCliPath Condition="Exists('$(RepoOperatorCliPath)')">$(RepoOperatorCliPath)</OperatorCliPath>
+    
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(SolutionName)' != 'neonCLOUD' And $([MSBuild]::IsOSPlatform('Windows'))">
-        <OperatorCliPath>$(PkgNeon_Kube_Operator_MSBuild)\contentFiles\any\netstandard2.0\win-x64\operator-cli</OperatorCliPath>
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+
+        <!-- Use the [operator-cli] included in the referenced nuget package, if present -->
+        
+        <NugetOperatorCliPath Condition="'PkgNeon_Kube_Operator_MSBuild' != ''">$(PkgNeon_Kube_Operator_MSBuild)\contentFiles\any\netstandard2.0\win-x64\operator-cli</NugetOperatorCliPath>
+        <OperatorCliPath Condition="'$(NugetOperatorCliPath)' != '' AND Exists('$(NugetOperatorCliPath).exe')">$(NugetOperatorCliPath)</OperatorCliPath>
+
+        <!--
+        If we didn't find the nuget [operator-cli] we're probably doing a multi-repo build,
+        so try to locate the program within the source repo.  This should never happen for
+        normal developers just using our Operator SDK for their own projects.
+        -->
+
+        <RepoOperatorCliPath>$(NK_ROOT)\Lib\Neon.Kube.Operator.MSBuild\win-x64\operator-cli.exe</RepoOperatorCliPath>
+        <OperatorCliPath Condition="Exists('$(RepoOperatorCliPath)')">$(RepoOperatorCliPath)</OperatorCliPath>
+    
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(SolutionName)' == 'neonCLOUD' And $([MSBuild]::IsOSPlatform('Linux'))">
-        <OperatorCliPath >$(NK_ROOT)\Lib\Neon.Kube.Operator.MSBuild\linux-x64\operator-cli</OperatorCliPath>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(SolutionName)' == 'neonCLOUD' And $([MSBuild]::IsOSPlatform('OSX'))">
-        <OperatorCliPath >$(NK_ROOT)\Lib\Neon.Kube.Operator.MSBuild\osx-x64\operator-cli</OperatorCliPath>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(SolutionName)' == 'neonCLOUD' And $([MSBuild]::IsOSPlatform('Windows'))">
-        <OperatorCliPath >$(NK_ROOT)\Lib\Neon.Kube.Operator.MSBuild\win-x64\operator-cli</OperatorCliPath>
-    </PropertyGroup>
 </Project>

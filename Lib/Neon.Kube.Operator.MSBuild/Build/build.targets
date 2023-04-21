@@ -4,6 +4,11 @@
     <Target Name="_GenerateRbac" DependsOnTargets="PropsConfig" >
         <Message Text="Generating RBAC Manifests" Importance="high" />
 
+        <!-- Fail if we still don't know the [operator-cli] location -->
+        <Error Condition="'$(OperatorCliPath)' == ''" Text="Cannot locate: operator-cli"/>
+
+        <Message Text="operator-cli path: $(OperatorCliPath)" Importance="high" />
+
         <ItemGroup>
             <RbacArgs Include="generate"/>
             <RbacArgs Include="rbac"/>
@@ -19,6 +24,11 @@
 
     <Target Name="_GenerateCrds" DependsOnTargets="PropsConfig" >
         <Message Text="Generating Custom Resource Definition Manifests" Importance="high" />
+
+        <!-- Fail if we still don't know the [operator-cli] location -->
+        <Error Condition="'$(OperatorCliPath)' == ''" Text="Cannot locate: operator-cli"/>
+
+        <Message Text="operator-cli path: $(OperatorCliPath)" Importance="high" />
 
         <ItemGroup>
             <CrdArgs Include="generate"/>
