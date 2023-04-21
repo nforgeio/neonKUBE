@@ -16,7 +16,7 @@
         <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
         <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
         <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-        <NoWarn>1701;1702;NETSDK1138;CS8892;ASP0014;IDE0063;IDE0090;IDE0017;IDE0079;IDE0066</NoWarn>
+        <NoWarn>1701;1702;NETSDK1138;CS8892;ASP0014;IDE0063;IDE0090;IDE0017;IDE0079;IDE0066;NU1605</NoWarn>
 
         <DebugSymbols>true</DebugSymbols>
         <DebugType>embedded</DebugType>
@@ -24,10 +24,10 @@
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
 
         <!-- 
-		Our nuget publication scripts will set the environment variable [NEON_PUBLIC_SOURCELINK=true]
-		when the source code has been or will be commited to GitHub with the expectation that we'll
-		enable sourcelink to reference source code from our GitHub repos.
-		-->
+        Our nuget publication scripts will set the environment variable [NEON_PUBLIC_SOURCELINK=true]
+        when the source code has been or will be commited to GitHub with the expectation that we'll
+        enable sourcelink to reference source code from our GitHub repos.
+        -->
 
         <ContinuousIntegrationBuild  Condition="'$(NEON_PUBLIC_SOURCELINK)' == 'true'">true</ContinuousIntegrationBuild>
 
@@ -51,36 +51,36 @@
     </PropertyGroup>
 
     <!-- 
-	We have a somewhat complex build environment.  The neonCLOUD repo is private and
-	our solution there actually includes references to all neonSDK and neonKUBE projects
-	so we can build everything at once in the neonCLOUD solution without having the mess
-	with publishing private nuget packages like we used to do (and really slowed down the
-	inner developer loop).
-	
-	This is nice for maintainers, but non-maintainers will also need to be able to 
-	build neonKUBE normally, where neonKUBE projects reference neonSDK nuget packages.
-	
-	We handle both the maintainer and non-maintainer scenarios by munging our neonCLOUD and
-	neonKUBE [.csproj] files so they can reference either nuget packages from other repos
-	or reference the projects in the other repos via relative project file path references.
-	
-	We're going to use the NEON_BUILD_USE_NUGETS variable to manage this.  This will be 
-	missing or blank when the builds should use nuget package references or "true" to use 
-	the relative project references.  The property group below configures this.
-	
-	We also need to handle another important scenario: the [neonkube-builder.ps1] and
-	[neoncloud-builder.ps1] scripts will need to be able to control whether we're 
-	using nuget references or not and eventually be able configure projects to reference
+    We have a somewhat complex build environment.  The neonCLOUD repo is private and
+    our solution there actually includes references to all neonSDK and neonKUBE projects
+    so we can build everything at once in the neonCLOUD solution without having the mess
+    with publishing private nuget packages like we used to do (and really slowed down the
+    inner developer loop).
+    
+    This is nice for maintainers, but non-maintainers will also need to be able to 
+    build neonKUBE normally, where neonKUBE projects reference neonSDK nuget packages.
+    
+    We handle both the maintainer and non-maintainer scenarios by munging our neonCLOUD and
+    neonKUBE [.csproj] files so they can reference either nuget packages from other repos
+    or reference the projects in the other repos via relative project file path references.
+    
+    We're going to use the NEON_BUILD_USE_NUGETS variable to manage this.  This will be 
+    missing or blank when the builds should use nuget package references or "true" to use 
+    the relative project references.  The property group below configures this.
+    
+    We also need to handle another important scenario: the [neonkube-builder.ps1] and
+    [neoncloud-builder.ps1] scripts will need to be able to control whether we're 
+    using nuget references or not and eventually be able configure projects to reference
     specific nuget versions for neonSDK and neonKUBE nugets.
-	
-	The build scripts will set NEON_BUILD_USE_NUGETS=true as an environment variable for
-	maintainers and not set this for non-maintainers.  This way maintainers running the
-	scripts will use the relative project references and non-maintainers will use nuget
-	package references.
-	
+    
+    The build scripts will set NEON_BUILD_USE_NUGETS=true as an environment variable for
+    maintainers and not set this for non-maintainers.  This way maintainers running the
+    scripts will use the relative project references and non-maintainers will use nuget
+    package references.
+    
     NOTE: This approach requires that the neonSDK, neonKUBE, and neonCLOUD repos are all
           located in the same parent folder so relative project references will work.
-	-->
+    -->
 
     <PropertyGroup Condition="'$(MSBuildSolutionName)' != 'neonCLOUD' or $(NEON_BUILD_USE_NUGETS) != ''">
         <NeonBuildUseNugets>true</NeonBuildUseNugets>
@@ -95,46 +95,46 @@
     </ItemGroup>
 
     <!-- 
-	$hack(jefflill):
-	
-	We've had a lot of trouble with auto generated source files generated for:
-	
-		* GitInfo
-		* AssemblyInfoAttribute
-		* TargetFrameworkAttribute
-		
-	The problem is that these are all generated in [obj/CONFIGURATION] or
-	[obj/CONFIGURATION/TARGETFRAMEWORK] but the build system compiles all
-	C# files it sees under the project directory, and it's very easy to 
-	end up with multiple source files defining the same classes.
-	
-	We tried precleaning these files early in the build, but that didn't 
-	work because we may end up building multiple build targets for the
-	same project in parallel and it also prevented us from publishing
-	nuget packages via scripts because we're typically running Visual
-	Studio in the DEBUG build configuration but publishing as RELEASE.
-	
-	We also tried messing with the source input globbing rules, but
-	that didn't work either.
-	
-	So here's what we're going to do:
-	
-		* Create a local [BuildInfo] library that has only one
-			build configuration and target framework.
-			
-		* Have [BuildInfo] reference the GitInfo nuget package
-			and then write a drop-in replacement for the [ThisAssembly]
-			class that returns the values from the local GitInfo generated
-			class.
-			
-		* Disable generation of the [AssemblyInfoAttribute] and 
-			[TargetFrameworkAttribute] classes for all projects.
-			
-		* Manually add [AssemblyInfo.cs] and [AssemblyAttributes.cs]
-			classes to [BuildInfo] and reference these from other projects as
-			shared links.  This code will include #IFDEFs to compile the correct
-			code for the the current target framework, etc.
-	-->
+    $hack(jefflill):
+    
+    We've had a lot of trouble with auto generated source files generated for:
+    
+        * GitInfo
+        * AssemblyInfoAttribute
+        * TargetFrameworkAttribute
+        
+    The problem is that these are all generated in [obj/CONFIGURATION] or
+    [obj/CONFIGURATION/TARGETFRAMEWORK] but the build system compiles all
+    C# files it sees under the project directory, and it's very easy to 
+    end up with multiple source files defining the same classes.
+    
+    We tried precleaning these files early in the build, but that didn't 
+    work because we may end up building multiple build targets for the
+    same project in parallel and it also prevented us from publishing
+    nuget packages via scripts because we're typically running Visual
+    Studio in the DEBUG build configuration but publishing as RELEASE.
+    
+    We also tried messing with the source input globbing rules, but
+    that didn't work either.
+    
+    So here's what we're going to do:
+    
+        * Create a local [BuildInfo] library that has only one
+            build configuration and target framework.
+            
+        * Have [BuildInfo] reference the GitInfo nuget package
+            and then write a drop-in replacement for the [ThisAssembly]
+            class that returns the values from the local GitInfo generated
+            class.
+            
+        * Disable generation of the [AssemblyInfoAttribute] and 
+            [TargetFrameworkAttribute] classes for all projects.
+            
+        * Manually add [AssemblyInfo.cs] and [AssemblyAttributes.cs]
+            classes to [BuildInfo] and reference these from other projects as
+            shared links.  This code will include #IFDEFs to compile the correct
+            code for the the current target framework, etc.
+    -->
 
     <PropertyGroup>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>

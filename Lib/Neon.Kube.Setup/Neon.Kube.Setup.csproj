@@ -181,24 +181,24 @@
     </ItemGroup>
 
     <!--
-	$todo(jefflill): 02-25-2023
-	
-	I've refactored how cluster manifests are handled.  Before 02-25-2023, we included
-	this manifest in the [Neon.Kube.Setup] and [neon-node-agent] projects as resources.
-	This resulted in a chicken-and-egg issue where rebuilding the manifest in neonCLOUD
-	would change the manifest, which was result in a change to [neon-cluster-operator]
-	which would cause the manifest to change when rebuilt, and so on...
-	
-	We're refactoring this by having our installers (built in neonCLOUD) include the
-	[cluster-manifest.json] file in the installed application folder so [neon-cli]
-	and [neon-desktop] can read the file from there or fallback to downloading it
-	from S3.
-	
-	The problem is that this file is git-ignored, so we need a way to remove it from
-	all checked out repos.  That's what this build target does.
-	
-	This target is temporary and can be removed in a few months.
-	-->
+    $todo(jefflill): 02-25-2023
+    
+    I've refactored how cluster manifests are handled.  Before 02-25-2023, we included
+    this manifest in the [Neon.Kube.Setup] and [neon-node-agent] projects as resources.
+    This resulted in a chicken-and-egg issue where rebuilding the manifest in neonCLOUD
+    would change the manifest, which was result in a change to [neon-cluster-operator]
+    which would cause the manifest to change when rebuilt, and so on...
+    
+    We're refactoring this by having our installers (built in neonCLOUD) include the
+    [cluster-manifest.json] file in the installed application folder so [neon-cli]
+    and [neon-desktop] can read the file from there or fallback to downloading it
+    from S3.
+    
+    The problem is that this file is git-ignored, so we need a way to remove it from
+    all checked out repos.  That's what this build target does.
+    
+    This target is temporary and can be removed in a few months.
+    -->
 
     <Target Name="DeleteClusterManifest" BeforeTargets="Build">
         <Message Importance="high" Text="Delete: Resources/cluster-manifest.json" Condition="Exists('$(ProjectDir)Resources\cluster-manifest.json')" />

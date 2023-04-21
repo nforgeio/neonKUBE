@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net7.0</TargetFramework>
@@ -103,8 +103,8 @@
     </PropertyGroup>
 
     <Target Name="ModelGen"
-				Inputs="$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\$(TargetFramework)\Neon.Kube.Models.dll"
-				Outputs="$(ProjectDir)Model\GeneratedEntities.mg.cs"
+                Inputs="$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\$(TargetFramework)\Neon.Kube.Models.dll"
+                Outputs="$(ProjectDir)Model\GeneratedEntities.mg.cs"
         BeforeTargets="CoreCompile"
         DependsOnTargets="BeforeCompile">
         <!--- Generate the model source files -->
