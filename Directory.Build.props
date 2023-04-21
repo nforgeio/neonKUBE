@@ -93,7 +93,7 @@
     package references.
     -->
 
-    <PropertyGroup Condition="'$(SolutionName)' != 'neonCLOUD' or $(NEON_BUILD_USE_NUGETS) != ''">
+    <PropertyGroup Condition="'$(SolutionName)' != 'neonCLOUD' OR $(NEON_BUILD_USE_NUGETS) != ''">
         <NeonBuildUseNugets>true</NeonBuildUseNugets>
     </PropertyGroup>
 
