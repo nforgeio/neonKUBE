@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // FILE:	    Test_ContainerRegistries.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright Â© 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,10 @@
 #if JUSTMOCK
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -35,9 +38,6 @@ using k8s.Models;
 using Telerik.JustMock;
 
 using Tomlyn;
-using System.Diagnostics;
-using System.Linq;
-using System.Collections.Generic;
 
 namespace TestNeonNodeAgent
 {
