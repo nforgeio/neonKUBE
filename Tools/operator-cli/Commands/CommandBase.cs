@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    CommandBase.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -46,7 +46,7 @@ namespace OperatorCli.Commands
         /// parameter?
         /// </summary>
         /// <param name="message"></param>
-        /// <returns></returns>
+        /// <returns>The command's exit code.</returns>
         protected int HandleCommand(string message)
         {
             Console.WriteLine(message);

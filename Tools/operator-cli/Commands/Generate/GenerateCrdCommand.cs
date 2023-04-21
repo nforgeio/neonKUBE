@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    GenerateCrdsCommand.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -75,8 +75,8 @@ namespace OperatorCli.Commands.Generate
 
             var operatorSettings = new OperatorSettings()
             {
-                DeployedNamespace       = args.DeployedNamespace,
-                Name                    = args.Name
+                DeployedNamespace = args.DeployedNamespace,
+                Name               = args.Name
             };
 
             var crdGenerator = new CustomResourceGenerator();
