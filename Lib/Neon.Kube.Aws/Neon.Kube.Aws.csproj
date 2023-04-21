@@ -23,20 +23,24 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
-        <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
         <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
         <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
     </ItemGroup>
+
+    <!-- Non-NEONFORGE package references -->
 
     <ItemGroup>
         <PackageReference Include="AWSSDK.Core" Version="3.7.106.21" />
         <PackageReference Include="AWSSDK.EC2" Version="3.7.130.9" />
         <PackageReference Include="AWSSDK.ElasticLoadBalancingV2" Version="3.7.3.63" />
         <PackageReference Include="AWSSDK.ResourceGroups" Version="3.7.0.144" />
+    </ItemGroup>
+
+    <!-- Local solution project references -->
+
+    <ItemGroup>
+        <ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
+        <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
     </ItemGroup>
 
 </Project>

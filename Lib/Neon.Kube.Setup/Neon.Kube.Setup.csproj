@@ -24,8 +24,17 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+    <ItemGroup>
         <EmbeddedResource Include="ClusterDefinitions\neon-desktop.hyperv.cluster.yaml" />
         <EmbeddedResource Include="Resources/**/*" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="Resources\Helm\crd-cluster\templates\" />
     </ItemGroup>
 
     <ItemGroup>
@@ -147,6 +156,17 @@
         <None Remove="Resources\Helm\tempo\templates\virtualservice.yaml" />
     </ItemGroup>
 
+    <!-- Non-NEONFORGE package references -->
+
+    <ItemGroup>
+        <PackageReference Include="Minio" Version="4.0.7" />
+        <PackageReference Include="Samboy063.Tomlet" Version="5.0.0" />
+        <PackageReference Include="Tomlyn" Version="0.15.0" />
+        <PackageReference Include="Npgsql" Version="7.0.2" />
+    </ItemGroup>
+
+    <!-- Local solution project references -->
+
     <ItemGroup>
         <ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
         <ProjectReference Include="..\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
@@ -155,54 +175,18 @@
         <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(SolutionName)' == 'neonCLOUD'" >
+    <!-- NEONFORGE package or project references -->
+
+    <ItemGroup Condition="'$(NeonBuildUseNugets)' == 'true'">
+        <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
+        <PackageReference Include="Neon.Cryptography" Version="$(NeonSdkPackageVersion)" />
+        <PackageReference Include="Neon.Postgres" Version="$(NeonSdkPackageVersion)" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(NeonBuildUseNugets)' != 'true'">
         <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
         <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Cryptography\Neon.Cryptography.csproj" />
         <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Postgres\Neon.Postgres.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Minio" Version="4.0.7" />
-        <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
-        <PackageReference Include="Neon.Cryptography" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
-        <PackageReference Include="Neon.Postgres" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
-        <PackageReference Include="Samboy063.Tomlet" Version="5.0.0" />
-        <PackageReference Include="Tomlyn" Version="0.15.0" />
-        <PackageReference Include="Npgsql" Version="7.0.2" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Folder Include="Resources\Helm\crd-cluster\templates\" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
-        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
-    </ItemGroup>
-
-    <!--
-    $todo(jefflill): 02-25-2023
-    
-    I've refactored how cluster manifests are handled.  Before 02-25-2023, we included
-    this manifest in the [Neon.Kube.Setup] and [neon-node-agent] projects as resources.
-    This resulted in a chicken-and-egg issue where rebuilding the manifest in neonCLOUD
-    would change the manifest, which was result in a change to [neon-cluster-operator]
-    which would cause the manifest to change when rebuilt, and so on...
-    
-    We're refactoring this by having our installers (built in neonCLOUD) include the
-    [cluster-manifest.json] file in the installed application folder so [neon-cli]
-    and [neon-desktop] can read the file from there or fallback to downloading it
-    from S3.
-    
-    The problem is that this file is git-ignored, so we need a way to remove it from
-    all checked out repos.  That's what this build target does.
-    
-    This target is temporary and can be removed in a few months.
-    -->
-
-    <Target Name="DeleteClusterManifest" BeforeTargets="Build">
-        <Message Importance="high" Text="Delete: Resources/cluster-manifest.json" Condition="Exists('$(ProjectDir)Resources\cluster-manifest.json')" />
-        <Delete Files="$(ProjectDir)Resources\cluster-manifest.json" Condition="Exists('$(ProjectDir)Resources\cluster-manifest.json')" />
-    </Target>
 
 </Project>

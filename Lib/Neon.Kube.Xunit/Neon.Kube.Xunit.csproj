@@ -28,17 +28,17 @@
         <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
     </ItemGroup>
 
+    <!-- Non-NEONFORGE package references -->
+
     <ItemGroup>
         <PackageReference Include="KubernetesClient" Version="10.1.19" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.5" />
-        <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
-        <PackageReference Include="Neon.Deployment" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
-        <PackageReference Include="Neon.SSH" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
-        <PackageReference Include="Neon.Xunit" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
         <PackageReference Include="xunit.extensibility.core" Version="2.4.2" />
         <PackageReference Include="xunit.extensibility.execution" Version="2.4.2" />
         <PackageReference Include="YamlDotNet" Version="13.0.2" />
     </ItemGroup>
+
+    <!-- Local solution project references -->
 
     <ItemGroup>
         <ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
@@ -48,11 +48,20 @@
         <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(SolutionName)' == 'neonCLOUD'" >
+    <!-- NEONFORGE package or project references -->
+
+    <ItemGroup Condition="'$(NeonBuildUseNugets)' == 'true'">
         <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
         <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Deployment\Neon.Deployment.csproj" />
         <ProjectReference Include="$(NF_ROOT)\Lib\Neon.SSH\Neon.SSH.csproj" />
         <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Xunit\Neon.Xunit.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(NeonBuildUseNugets)' != 'true'">
+        <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
+        <PackageReference Include="Neon.Deployment" Version="$(NeonSdkPackageVersion)" />
+        <PackageReference Include="Neon.SSH" Version="$(NeonSdkPackageVersion)" />
+        <PackageReference Include="Neon.Xunit" Version="$(NeonSdkPackageVersion)" />
     </ItemGroup>
 
 </Project>

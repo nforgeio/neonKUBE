@@ -22,6 +22,13 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+    <!-- Local solution project references -->
+
+    <ItemGroup>
         <ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
         <ProjectReference Include="..\Neon.Kube.Aws\Neon.Kube.Aws.csproj" />
         <ProjectReference Include="..\Neon.Kube.Azure\Neon.Kube.Azure.csproj" />
@@ -32,17 +39,14 @@
         <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(SolutionName)' == 'neonCLOUD'" >
+    <!-- NEONFORGE package or project references -->
+
+    <ItemGroup Condition="'$(NeonBuildUseNugets)' == 'true'">
+        <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(NeonBuildUseNugets)' != 'true'">
         <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
-        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
     </ItemGroup>
 
 </Project>

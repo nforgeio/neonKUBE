@@ -16,21 +16,34 @@
         <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
     </ItemGroup>
 
+    <!-- Non-NEONFORGE package references -->
+
     <ItemGroup>
-        <PackageReference Include="Neon.Service" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
-        <PackageReference Include="Neon.Web" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
         <PackageReference Include="prometheus-net" Version="8.0.0" />
         <PackageReference Include="prometheus-net.AspNetCore" Version="8.0.0" />
         <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     </ItemGroup>
 
+    <!-- Local solution project references -->
+
     <ItemGroup>
         <ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(SolutionName)' == 'neonCLOUD'" >
+    <!-- NEONFORGE package or project references -->
+
+    <ItemGroup Condition="'$(NeonBuildUseNugets)' == 'true'">
+        <PackageReference Include="Neon.Service" Version="$(NeonSdkPackageVersion)" />
+        <PackageReference Include="Neon.Web" Version="$(NeonSdkPackageVersion)" />
+        <PackageReference Include="prometheus-net" Version="8.0.0" />
+        <PackageReference Include="prometheus-net.AspNetCore" Version="8.0.0" />
+        <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(NeonBuildUseNugets)' != 'true'">
         <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Service\Neon.Service.csproj" />
         <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Web\Neon.Web.csproj" />
     </ItemGroup>

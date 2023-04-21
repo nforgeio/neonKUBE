@@ -24,14 +24,21 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+    <!-- Non-NEONFORGE package references -->
+
+    <ItemGroup>
         <PackageReference Include="FluentdForward.OpenTelemetry.Exporter.Logs" Version="0.2.0" />
-        <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
-        <PackageReference Include="Neon.HyperV" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
         <PackageReference Include="OpenTelemetry.Api" Version="1.4.0" />
         <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.4.0" />
         <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol.Logs" Version="1.4.0-rc.4" />
         <PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.1.1" />
     </ItemGroup>
+
+    <!-- Local solution project references -->
 
     <ItemGroup>
         <ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
@@ -39,14 +46,16 @@
         <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(SolutionName)' == 'neonCLOUD'" >
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.HyperV\Neon.HyperV.csproj" />
+    <!-- NEONFORGE package or project references -->
+
+    <ItemGroup Condition="'$(NeonBuildUseNugets)' == 'true'">
+        <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
+        <PackageReference Include="Neon.HyperV" Version="$(NeonSdkPackageVersion)" />
     </ItemGroup>
 
-    <ItemGroup>
-        <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
-        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+    <ItemGroup Condition="'$(NeonBuildUseNugets)' != 'true'">
+        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
+        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.HyperV\Neon.HyperV.csproj" />
     </ItemGroup>
 
 </Project>

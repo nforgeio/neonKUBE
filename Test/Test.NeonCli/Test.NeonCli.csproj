@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net7.0</TargetFramework>
@@ -7,6 +7,11 @@
         <GenerateDocumentationFile>false</GenerateDocumentationFile>
         <PlatformTarget>AnyCPU</PlatformTarget>
     </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+        <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+    </ItemGroup>
 
     <ItemGroup>
         <None Remove="xunit.runner.json" />
@@ -18,6 +23,8 @@
         </Content>
     </ItemGroup>
 
+    <!-- Non-NEONFORGE package references -->
+
     <ItemGroup>
         <PackageReference Include="coverlet.collector" Version="3.2.0">
             <PrivateAssets>all</PrivateAssets>
@@ -25,8 +32,6 @@
         </PackageReference>
         <PackageReference Include="LiquidTestReports.Markdown" Version="1.1.1-beta" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
-        <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
-        <PackageReference Include="Neon.Xunit" Version="$(NeonSdkPackageVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
         <PackageReference Include="xunit" Version="2.4.2" />
         <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
             <PrivateAssets>all</PrivateAssets>
@@ -34,10 +39,7 @@
         </PackageReference>
     </ItemGroup>
 
-    <ItemGroup>
-        <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
-        <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
-    </ItemGroup>
+    <!-- Local solution project references -->
 
     <ItemGroup>
         <ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
@@ -46,7 +48,14 @@
         <ProjectReference Include="..\..\Tools\neon-cli\neon-cli.csproj" />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(SolutionName)' == 'neonCLOUD'" >
+    <!-- NEONFORGE package or project references -->
+
+    <ItemGroup Condition="'$(NeonBuildUseNugets)' == 'true'">
+        <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
+        <PackageReference Include="Neon.Xunit" Version="$(NeonSdkPackageVersion)" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(NeonBuildUseNugets)' != 'true'">
         <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
         <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Xunit\Neon.Xunit.csproj" />
     </ItemGroup>

@@ -87,7 +87,8 @@
         Name="BuildOperatorCli"
         Inputs="@(OperatorCliFiles)"
         Outputs="@(OperatorCliFiles->'%(Filename).content')"
-        BeforeTargets="Build;BeforeCompile;CoreCompile" >
+        BeforeTargets="Build;BeforeCompile;CoreCompile">
+        
         <CallTarget Condition="$([MSBuild]::IsOSPlatform('Linux'))" Targets="_GenerateLinuxCli" />
         <CallTarget Condition="$([MSBuild]::IsOSPlatform('OSX'))" Targets="_GenerateOsxCli" />
         <CallTarget Condition="$([MSBuild]::IsOSPlatform('Windows'))" Targets="_GenerateWindowsCli" />

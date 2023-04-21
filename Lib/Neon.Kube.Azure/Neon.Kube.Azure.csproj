@@ -20,16 +20,13 @@
         <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
         <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
     </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
-        <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
-    </ItemGroup>
-
+    
     <ItemGroup>
         <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
         <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
     </ItemGroup>
+
+    <!-- Non-NEONFORGE package references -->
 
     <ItemGroup>
         <PackageReference Include="Azure.Identity" Version="1.6.0" />
@@ -37,6 +34,13 @@
         <PackageReference Include="Azure.ResourceManager.Compute" Version="1.0.0-beta.8" />
         <PackageReference Include="Azure.ResourceManager.Network" Version="1.0.0-beta.7" />
         <PackageReference Include="Azure.ResourceManager.Storage" Version="1.0.0-beta.9" />
+    </ItemGroup>
+
+    <!-- Local solution project references -->
+
+    <ItemGroup>
+        <ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
+        <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
     </ItemGroup>
 
 </Project>

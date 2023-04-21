@@ -19,15 +19,17 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+    <!-- Non-NEONFORGE package references -->
+
+    <ItemGroup>
         <PackageReference Include="GitInfo" Version="2.2.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-    </ItemGroup>
-
-    <ItemGroup>
-        <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
-        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
     </ItemGroup>
 
 </Project>
