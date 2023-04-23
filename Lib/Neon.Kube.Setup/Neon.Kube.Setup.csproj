@@ -154,6 +154,7 @@
         <None Remove="Resources\Helm\tempo\templates\buckets.yaml" />
         <None Remove="Resources\Helm\tempo\templates\service.yaml" />
         <None Remove="Resources\Helm\tempo\templates\virtualservice.yaml" />
+        <None Remove="Resources\Helm\test.txt" />
     </ItemGroup>
 
     <!-- Non-NEONFORGE package references -->
