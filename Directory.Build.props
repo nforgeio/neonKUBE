@@ -28,6 +28,7 @@
 
         <!-- Debugging -->
 
+        <DebugType>embedded</DebugType>
         <DebugSymbols>true</DebugSymbols>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -57,12 +58,10 @@
     <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
         <DefineConstants>$(DefineConstants);TRACE;DEBUG</DefineConstants>
         <Optimize>false</Optimize>
-        <DebugType>full</DebugType>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">
         <Optimize>true</Optimize>
-        <DebugType>embedded</DebugType>
     </PropertyGroup>
 
     <!-- 
