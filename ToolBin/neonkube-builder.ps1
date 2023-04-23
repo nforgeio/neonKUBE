@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         neonkube-builder.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright ï¿½ 2005-2023 by NEONFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -95,40 +95,11 @@ $neonSdkVersion = $(& "neon-build" read-version "$nkLib\Neon.Kube\KubeVersions.c
 ThrowOnExitCode
 
 #------------------------------------------------------------------------------
-# We have a somewhat complex build environment.  The neonCLOUD repo is private and
-# our solution there actually includes references to all neonSDK and neonKUBE projects
-# so we can build everything at once in the neonCLOUD solution without having the mess
-# with publishing private nuget packages like we used to do (and really slowed down the
-# inner developer loop).
-#
-# This is nice for maintainers, but non-maintainers will also need to be able to 
-# build neonKUBE normally, where neonKUBE projects reference neonSDK nuget packages.
-#
-# We handle both the maintainer and non-maintainer scenarios by munging our neonCLOUD and
-# neonKUBE [.csproj] files so they can reference either nuget packages from other repos
-# or reference the projects in the other repos via relative project file path references.
-#
-# We're going to use the NEON_BUILD_USE_NUGETS variable to manage this.  This will be 
-# missing or blank when the builds should use nuget package references or "true" to use 
-# the relative project references.  The property group below configures this.
-#
-# We also need to handle another important scenario: the [neonkube-builder.ps1] and
-# [neoncloud-builder.ps1] scripts will need to be able to control whether we're 
-# using nuget references or not and eventually be able configure projects to reference
-# specific nuget versions for neonSDK and neonKUBE nugets.
-#
-# The build scripts will set NEON_BUILD_USE_NUGETS=true as an environment variable for
-# maintainers and not set this for non-maintainers.  This way maintainers running the
-# scripts will use the relative project references and non-maintainers will use nuget
-# package references.
-#
-# NOTE: This approach requires that the neonSDK, neonKUBE, and neonCLOUD repos are all
-#       located in the same parent folder so relative project references will work.
+# Specify whether we're building with package or project references.
 
-if ($env:NF_MAINTAINER -eq '1')
-{
-    $env:NEON_BUILD_USE_NUGETS = 'true'
-}
+# $todo(jefflill): We're hardcoding project references for now.
+
+$env:NEON_BUILD_USE_NUGETS = 'false'
 
 #------------------------------------------------------------------------------
 # Perform the operation.
