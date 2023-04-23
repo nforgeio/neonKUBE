@@ -51,17 +51,17 @@
     <!-- NEONFORGE package or project references -->
 
     <ItemGroup Condition="'$(NeonBuildUseNugets)' == 'true'">
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Deployment\Neon.Deployment.csproj" />
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.SSH\Neon.SSH.csproj" />
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Xunit\Neon.Xunit.csproj" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(NeonBuildUseNugets)' != 'true'">
         <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
         <PackageReference Include="Neon.Deployment" Version="$(NeonSdkPackageVersion)" />
         <PackageReference Include="Neon.SSH" Version="$(NeonSdkPackageVersion)" />
         <PackageReference Include="Neon.Xunit" Version="$(NeonSdkPackageVersion)" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(NeonBuildUseNugets)' != 'true'">
+        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
+        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Deployment\Neon.Deployment.csproj" />
+        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.SSH\Neon.SSH.csproj" />
+        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Xunit\Neon.Xunit.csproj" />
     </ItemGroup>
 
 </Project>
