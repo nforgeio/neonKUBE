@@ -98,6 +98,15 @@
         <NeonBuildUseNugets>true</NeonBuildUseNugets>
     </PropertyGroup>
 
+    <!--
+    Set the nuget package version to non-existent versions to ensure that we're
+    not referencing nugets when we're not supposed to be building with nugets.
+    -->
+
+    <PropertyGroup Condition="'$(NeonBuildUseNugets)' != 'true'">
+        <NeonSdkPackageVersion>0</NeonSdkPackageVersion>
+    </PropertyGroup>
+
     <!-- Telerik JustMock settings -->
 
     <PropertyGroup Condition="'$(JUSTMOCK_ENABLED)' == 'true'">
