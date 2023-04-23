@@ -55,12 +55,12 @@
 
     <!-- Build configuration related settings -->
 
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
         <DefineConstants>$(DefineConstants);TRACE;DEBUG</DefineConstants>
         <Optimize>false</Optimize>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
         <Optimize>true</Optimize>
     </PropertyGroup>
 
