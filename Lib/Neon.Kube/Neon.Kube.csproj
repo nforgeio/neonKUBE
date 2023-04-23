@@ -115,8 +115,13 @@
 
     <!--- Generate the model source files -->
     
-    <Target Name="ModelGen" Inputs="$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\$(TargetFramework)\Neon.Kube.Models.dll" Outputs="$(ProjectDir)Model\GeneratedEntities.mg.cs" BeforeTargets="CoreCompile" DependsOnTargets="BeforeCompile">
-        
+    <Target Name="ModelGen"
+            Inputs="$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\$(TargetFramework)\Neon.Kube.Models.dll"
+            Outputs="$(ProjectDir)Model\GeneratedEntities.mg.cs"
+            BeforeTargets="CoreCompile"
+            DependsOnTargets="BeforeCompile">
+
+        <Message Importance="high" Text="neon-modelgen path: $(ModelGenToolPath)"/>
         <Message Importance="high" Text="&quot;$(ModelGeneratorPath)&quot; --targets=all --target-namespace=Neon.Kube.Clients &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\$(TargetFramework)\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
         <Exec Command="&quot;$(ModelGeneratorPath)&quot; --targets=all --target-namespace=Neon.Kube.Clients &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\$(TargetFramework)\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
         <ItemGroup>
