@@ -20,6 +20,19 @@
         <NoWarn>$(NoWarn);1591;CS2008</NoWarn>
     </PropertyGroup>
 
+    <!-- Template related settings: https://www.kenmuse.com/blog/custom-net-item-templates/ -->
+
+    <PropertyGroup>
+        <!-- Don't need any assemblies that would be built-->
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+
+        <!-- Needed to prevent NU5128 warning -->
+        <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+
+        <!-- Enable NuGet to handle files with names that start with "." -->
+        <NoDefaultExcludes>true</NoDefaultExcludes>
+    </PropertyGroup>
+
     <ItemGroup>
         <Content Include="OperatorTemplate\**\*" Exclude="OperatorTemplate\**\bin\**;OperatorTemplate\**\obj\**" />
         <Compile Remove="OperatorTemplate\**\*" />
