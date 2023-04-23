@@ -76,24 +76,19 @@
     
     We handle both the maintainer and non-maintainer scenarios by munging our neonCLOUD and
     neonKUBE [.csproj] files so they can reference either nuget packages from other repos
-    or reference the projects in the other repos via relative project file path references.
+    or reference projects from the other repos via relative project file path references.
     
-    We're going to use the NEON_BUILD_USE_NUGETS variable to manage this.  This will be 
-    missing or blank when the builds should use nuget package references or "true" to use 
-    the relative project references.  The property group below configures this.
+    We're going to use the NEON_BUILD_USE_NUGETS environment variable to manage this.  This
+    will be missing or blank when the builds should use nuget package references or "true" to
+    use the relative project references.  The property group below configures this.
     
     We also need to handle another important scenario: the [neonkube-builder.ps1] and
     [neoncloud-builder.ps1] scripts will need to be able to control whether we're 
     using nuget references or not and eventually be able configure projects to reference
     specific nuget versions for neonSDK and neonKUBE nugets.
-    
-    The build scripts will set NEON_BUILD_USE_NUGETS=true as an environment variable for
-    maintainers and not set this for non-maintainers.  This way maintainers running the
-    scripts will use the relative project references and non-maintainers will use nuget
-    package references.
     -->
 
-    <PropertyGroup Condition="'$(SolutionName)' != 'neonCLOUD' OR $(NEON_BUILD_USE_NUGETS) != ''">
+    <PropertyGroup Condition="'$(SolutionName)' != 'neonCLOUD' OR '$(NEON_BUILD_USE_NUGETS)' != ''">
         <NeonBuildUseNugets>true</NeonBuildUseNugets>
     </PropertyGroup>
 
