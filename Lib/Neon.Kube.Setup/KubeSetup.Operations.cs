@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubeSetup.Operations.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -750,15 +750,6 @@ if ! systemctl enable kubelet.service; then
     exit 1
 fi
 
-################################
-# $debug(jefflill): DELETE THIS!
-if kubeadm init --config cluster.yaml --ignore-preflight-errors=all; then
-    exit 0
-else
-    exit 1
-fi
-################################
-
 ]# The first call doesn't specify [--ignore-preflight-errors=all]
 
 if kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable; then
@@ -779,12 +770,6 @@ echo 'FAILED: kubeadm init...' >&2
 exit 1
 ";
                             controller.LogProgress(firstControlNode, verb: "initialize", message: "kubernetes");
-
-                            //###############################
-                            // $debug(jefflill): DELETE THIS!
-                            firstControlNode.UploadText("/tmp/cluster.yaml", NeonHelper.ToLinuxLineEndings(clusterConfig));
-                            firstControlNode.UploadText("/tmp/init.sh", "kubeadm init --config cluster.yaml --ignore-preflight-errors=all", permissions: "777");
-                            //###############################
 
                             var response = firstControlNode.SudoCommand(CommandBundle.FromScript(kubeInitScript).AddFile("cluster.yaml", clusterConfig));
 
