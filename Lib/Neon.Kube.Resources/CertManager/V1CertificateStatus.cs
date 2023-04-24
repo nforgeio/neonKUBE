@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    V1CertificateStatus.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -25,10 +25,10 @@ using System.Text;
 
 using k8s;
 using k8s.Models;
+
 using Neon.JsonConverters;
+
 using Newtonsoft.Json;
-using OpenTelemetry.Resources;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Neon.Kube.Resources.CertManager
 {
