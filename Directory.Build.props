@@ -88,7 +88,11 @@
     specific nuget versions for neonSDK and neonKUBE nugets.
     -->
 
-    <PropertyGroup Condition="'$(SolutionName)' != 'neonCLOUD' OR '$(NEON_BUILD_USE_NUGETS)' != ''">
+    <PropertyGroup>
+        <NeonBuildUseNugets>false</NeonBuildUseNugets>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(SolutionName)' != 'neonCLOUD' OR '$(NEON_BUILD_USE_NUGETS)' == 'true'">
         <NeonBuildUseNugets>true</NeonBuildUseNugets>
     </PropertyGroup>
 

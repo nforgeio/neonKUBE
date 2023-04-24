@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         neonkube-nuget-dev.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright Â© 2005-2023 by NEONFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -281,21 +281,7 @@ try
     $env:NEON_PUBLIC_SOURCELINK = "true"
 
     #------------------------------------------------------------------------------
-    # We need to do a solution build to ensure that any tools or other dependencies 
-    # are built before we build and publish the individual packages.
-
-    Write-Info ""
-    Write-Info "********************************************************************************"
-    Write-Info "***                           RESTORE PACKAGES                               ***"
-    Write-Info "********************************************************************************"
-    Write-Info ""
-
-    & dotnet restore "$nkSolution" $neonSdkVersionParameter
-
-    if (-not $?)
-    {
-        throw "ERROR: RESTORE FAILED"
-    }
+    # Clean and build the solution.
 
     Write-Info ""
     Write-Info "********************************************************************************"

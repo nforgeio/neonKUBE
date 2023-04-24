@@ -94,12 +94,12 @@ $env:PATH   += ";$nkBuild"
 $neonSdkVersion = $(& "neon-build" read-version "$nkLib\Neon.Kube\KubeVersions.cs" NeonKube)
 ThrowOnExitCode
 
-#------------------------------------------------------------------------------
-# Specify whether we're building with package or project references.
+    #------------------------------------------------------------------------------
+	# Specify whether we're building with package or project references.
 
-# $todo(jefflill): We're hardcoding project references for now.
+    # $todo(jefflill): We're hardcoding project references for now.
 
-$env:NEON_BUILD_USE_NUGETS = 'false'
+    $env:NEON_BUILD_USE_NUGETS = "false"
 
 #------------------------------------------------------------------------------
 # Perform the operation.
@@ -147,21 +147,6 @@ try
         ThrowOnExitCode
 
         # Clean and build the solution.
-
-        Write-Info ""
-        Write-Info "*******************************************************************************"
-        Write-Info "***                           RESTORE PACKAGES                              ***"
-        Write-Info "*******************************************************************************"
-        Write-Info ""
-
-        dotnet restore
-
-        & dotnet restore "$nkSolution"
-
-        if (-not $?)
-        {
-            throw "ERROR: RESTORE FAILED"
-        }
 
         Write-Info ""
         Write-Info "*******************************************************************************"
