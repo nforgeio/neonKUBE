@@ -52,16 +52,21 @@
 
     <!-- NEONFORGE package or project references -->
 
-    <ItemGroup Condition="'$(NeonBuildUseNugets)' == 'true'">
-        <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
-        <PackageReference Include="Neon.Cryptography" Version="$(NeonSdkPackageVersion)" />
-        <PackageReference Include="Neon.Service" Version="$(NeonSdkPackageVersion)" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(NeonBuildUseNugets)' != 'true'">
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Cryptography\Neon.Cryptography.csproj" />
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Service\Neon.Service.csproj" />
-    </ItemGroup>
+    <Choose>
+        <When Condition="'$(NeonBuildUseNugets)' == 'true'">
+            <ItemGroup>
+                <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.Cryptography" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.Service" Version="$(NeonSdkPackageVersion)" />
+            </ItemGroup>
+        </When>
+        <Otherwise>
+            <ItemGroup>
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Cryptography\Neon.Cryptography.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Service\Neon.Service.csproj" />
+            </ItemGroup>
+        </Otherwise>
+    </Choose>
 
 </Project>

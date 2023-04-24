@@ -81,27 +81,32 @@
 
     <!-- NEONFORGE package or project references -->
 
-    <ItemGroup Condition="'$(NeonBuildUseNugets)' == 'true'">
-        <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
-        <PackageReference Include="Neon.Cryptography" Version="$(NeonSdkPackageVersion)" />
-        <PackageReference Include="Neon.Deployment" Version="$(NeonSdkPackageVersion)" />
-        <PackageReference Include="Neon.JsonConverters" Version="$(NeonSdkPackageVersion)" />
-        <PackageReference Include="Neon.ModelGenerator" Version="$(NeonSdkPackageVersion)" GeneratePathProperty="true">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="Neon.Postgres" Version="$(NeonSdkPackageVersion)" />
-        <PackageReference Include="Neon.SSH" Version="$(NeonSdkPackageVersion)" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(NeonBuildUseNugets)' != 'true'">
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Cryptography\Neon.Cryptography.csproj" />
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Deployment\Neon.Deployment.csproj" />
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.JsonConverters\Neon.JsonConverters.csproj" />
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Postgres\Neon.Postgres.csproj" />
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.SSH\Neon.SSH.csproj" />
-    </ItemGroup>
+    <Choose>
+        <When Condition="'$(NeonBuildUseNugets)' == 'true'">
+            <ItemGroup>
+                <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.Cryptography" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.Deployment" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.JsonConverters" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.ModelGenerator" Version="$(NeonSdkPackageVersion)" GeneratePathProperty="true">
+                    <PrivateAssets>all</PrivateAssets>
+                    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+                </PackageReference>
+                <PackageReference Include="Neon.Postgres" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.SSH" Version="$(NeonSdkPackageVersion)" />
+            </ItemGroup>
+        </When>
+        <Otherwise>
+            <ItemGroup>
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Cryptography\Neon.Cryptography.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Deployment\Neon.Deployment.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.JsonConverters\Neon.JsonConverters.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Postgres\Neon.Postgres.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.SSH\Neon.SSH.csproj" />
+            </ItemGroup>
+        </Otherwise>
+    </Choose>
 
     <!-- Figure out where the [neon-modelgen] tool is located -->
 

@@ -73,17 +73,23 @@
 
     <!-- NEONFORGE package or project references -->
 
-    <ItemGroup Condition="'$(NeonBuildUseNugets)' == 'true'">
-        <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
-        <PackageReference Include="Neon.Service" Version="$(NeonSdkPackageVersion)" />
-        <PackageReference Include="Neon.Tailwind" Version="$(NeonSdkPackageVersion)" />
-        <PackageReference Include="Neon.Web" Version="$(NeonSdkPackageVersion)" />
-    </ItemGroup>
+    <Choose>
+        <When Condition="'$(NeonBuildUseNugets)' == 'true'">
+            <ItemGroup>
+                <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.Service" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.Tailwind" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.Web" Version="$(NeonSdkPackageVersion)" />
+            </ItemGroup>
+        </When>
+        <Otherwise>
+            <ItemGroup>
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Service\Neon.Service.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Tailwind\Neon.Tailwind.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Web\Neon.Web.csproj" />
+            </ItemGroup>
+        </Otherwise>
+    </Choose>
 
-    <ItemGroup Condition="'$(NeonBuildUseNugets)' != 'true'">
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Service\Neon.Service.csproj" />
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Tailwind\Neon.Tailwind.csproj" />
-        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Web\Neon.Web.csproj" />
-    </ItemGroup>
 </Project>
