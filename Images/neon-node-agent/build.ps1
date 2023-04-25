@@ -18,30 +18,29 @@ param
 $appname      = "neon-node-agent"
 $organization = SdkRegistryOrg
 
-# Build and publish the app to a local [bin] folder.
-
-DeleteFolder bin
-
-mkdir bin | Out-Null
-ThrowOnExitCode
-
-dotnet publish "$nkServices\$appname\$appname.csproj" -c $config -o "$pwd\bin" -p:SolutionName=$env:SolutionName
-ThrowOnExitCode
-
-# Split the build binaries into [__app] (application) and [__dep] dependency subfolders
-# so we can tune the image layers.
-
-core-layers $appname "$pwd\bin"
-ThrowOnExitCode
-
-# Build the image.
-
 try
 {
+    # Build and publish the app to a local [bin] folder.
+
+    DeleteFolder bin
+
+    mkdir bin | Out-Null
+    ThrowOnExitCode
+
+    dotnet publish "$nkServices\$appname\$appname.csproj" -c $config -o "$pwd\bin" -p:SolutionName=$env:SolutionName
+    ThrowOnExitCode
+
+    # Split the build binaries into [__app] (application) and [__dep] dependency subfolders
+    # so we can tune the image layers.
+
+    core-layers $appname "$pwd\bin"
+    ThrowOnExitCode
+
+    # Build the image.
+
     $baseImage = Get-DotnetBaseImage "$nkRoot\global.json"
 
     Invoke-CaptureStreams "docker build -t ${registry}:${tag} --build-arg `"APPNAME=$appname`" --build-arg `"ORGANIZATION=$organization`" --build-arg `"BASE_IMAGE=$baseImage`" ." -interleave | Out-Null
-    ThrowOnExitCode
 }
 finally
 {
