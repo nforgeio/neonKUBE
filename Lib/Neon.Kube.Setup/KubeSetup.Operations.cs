@@ -750,7 +750,7 @@ if ! systemctl enable kubelet.service; then
     exit 1
 fi
 
-]# The first call doesn't specify [--ignore-preflight-errors=all]
+# The first call doesn't specify [--ignore-preflight-errors=all]
 
 if kubeadm init --config cluster.yaml --ignore-preflight-errors=DirAvailable; then
     exit 0
