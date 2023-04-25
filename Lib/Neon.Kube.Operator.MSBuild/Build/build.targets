@@ -12,8 +12,8 @@
         <ItemGroup>
             <RbacArgs Include="generate"/>
             <RbacArgs Include="rbac"/>
-            <RbacArgs Include="--assembly-path=&quot;$(TargetPath)&quot;"/>
-            <RbacArgs Include="--output-path=&quot;$(OperatorRbacPath)&quot;"/>
+            <RbacArgs Include="--assembly=&quot;$(TargetPath)&quot;"/>
+            <RbacArgs Include="--output=&quot;$(OperatorRbacPath)&quot;"/>
             <RbacArgs Include="--name=&quot;$(OperatorName)&quot;"/>
             <RbacArgs Condition="'$(OperatorDeployedNamespace)' != ''" Include="--deployed-namespace=&quot;$(OperatorDeployedNamespace)&quot;"/>
             <RbacArgs Condition="'$(OperatorWatchNamespace)' != ''" Include="--watch-namespace=&quot;$(OperatorWatchNamespace)&quot;"/>
@@ -33,8 +33,8 @@
         <ItemGroup>
             <CrdArgs Include="generate"/>
             <CrdArgs Include="crds"/>
-            <CrdArgs Include="--assembly-path=&quot;$(TargetPath)&quot;"/>
-            <CrdArgs Include="--output-path=&quot;$(OperatorCrdPath)&quot;"/>
+            <CrdArgs Include="--assembly=&quot;$(TargetPath)&quot;"/>
+            <CrdArgs Include="--output=&quot;$(OperatorCrdPath)&quot;"/>
             <CrdArgs Include="--name=&quot;$(OperatorName)&quot;"/>
             <CrdArgs Condition="'$(OperatorDeployedNamespace)' != ''" Include="--deployed-namespace=&quot;$(OperatorDeployedNamespace)&quot;"/>
         </ItemGroup>
@@ -55,7 +55,7 @@
         DependsOnTargets="PropsConfig"
         AfterTargets="PostBuildEvent"
         Condition="'$(OperatorDeployedNamespace)' != ''">
-        <CallTarget  Targets="_GenerateCrds" />
+        <CallTarget Targets="_GenerateCrds" />
     </Target>
 
 </Project>

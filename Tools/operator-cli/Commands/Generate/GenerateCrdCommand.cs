@@ -33,43 +33,65 @@ namespace OperatorCli.Commands.Generate
 {
     internal class GenerateCrdsCommand : GenerateCommandBase
     {
+        //---------------------------------------------------------------------
+        // Private types
+
+        private class GenerateCrdsCommandArgs
+        {
+            public string   AssemblyPath { get; set; }
+            public string   OutputFolder { get; set; }
+            public string   DeployedNamespace { get; set; }
+            public string   Name { get; set; }
+            public bool     Debug { get; set; } = false;
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
         public GenerateCrdsCommand() : base("crds", "Generate Crds yaml for the operator.")
         {
             Handler = CommandHandler.Create<GenerateCrdsCommandArgs>(HandleCommand);
 
-            this.AddOption(new Option<string>(new[] { "--assembly-path" })
+            this.AddOption(new Option<string>(new[] { "--assembly" })
             {
-                Description = "The assembly path.",
-                IsRequired  = false,
+                Description = "Specifies the assembly path.",
+                IsRequired  = true,
                 Name        = "AssemblyPath"
             });
 
-            this.AddOption(new Option<string>(new[] { "--output-path" })
+            this.AddOption(new Option<string>(new[] { "--output" })
             {
-                Description = "The output path.",
-                IsRequired  = false,
-                Name        = "OutputPath"
+                Description = "Specifies folder where manifest files will be written.",
+                IsRequired  = true,
+                Name        = "OutputFolder"
             });
 
             this.AddOption(new Option<string>(new[] { "--deployed-namespace" })
             {
-                Description = "The namespace that the operator is deployed.",
+                Description = "Specifies the operator namespace.",
                 IsRequired  = false,
                 Name        = "DeployedNamespace"
             });
 
             this.AddOption(new Option<string>(new[] { "--name" })
             {
-                Description = "The operator name.",
+                Description = "Specifies the operator name.",
                 IsRequired  = false,
                 Name        = "Name"
+            });
+
+            this.AddOption(new Option<bool>(new[] { "--debug" })
+            {
+                Description = "Writes generated manifests to STDOUT in addition to the output folder.",
+                IsRequired  = false,
+                Name        = "Debug"
             });
         }
 
         private async Task<int> HandleCommand(GenerateCrdsCommandArgs args)
         {
             var assemblyPath = args.AssemblyPath.Trim('\'').Trim('"').Trim();
-            var outputPath   = args.OutputPath.Trim('\'').Trim('"').Trim();
+            var outputPath   = args.OutputFolder.Trim('\'').Trim('"').Trim();
 
             Directory.CreateDirectory(outputPath);
 
@@ -87,15 +109,7 @@ namespace OperatorCli.Commands.Generate
                 File.WriteAllText($"{outputPath}/crd-{crd.Name()}.yaml", KubernetesYaml.Serialize(crd));
             }
 
-            return HandleCommand(KubernetesYaml.SerializeAll(crds));
-        }
-
-        public class GenerateCrdsCommandArgs
-        {
-            public string AssemblyPath { get; set; }
-            public string OutputPath { get; set; }
-            public string DeployedNamespace { get; set; }
-            public string Name { get; set; }
+            return HandleCommand(args.Debug ? KubernetesYaml.SerializeAll(crds) : string.Empty);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    Program.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -71,7 +71,15 @@ namespace OperatorCli
 
             // Invoke the command line parser which then invokes the respective command handlers.
 
-            parser.Invoke(args);
+            try
+            {
+                parser.Invoke(args);
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine($"*** ERROR: {NeonHelper.ExceptionError(e)}");
+                Environment.Exit(1);
+            }
         }
     }
 }

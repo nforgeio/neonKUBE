@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    GenerateRbacCommand.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -34,71 +34,97 @@ namespace OperatorCli.Commands.Generate
 {
     internal class GenerateRbacCommand : GenerateCommandBase
     {
+        //---------------------------------------------------------------------
+        // Private types
+
+        private class GenerateRbacCommandArgs
+        {
+            public string   AssemblyPath { get; set; }
+            public string   OutputFolder { get; set; }
+            public string   Name { get; set; }
+            public string   WatchNamespace { get; set; }
+            public string   DeployedNamespace { get; set; }
+            public bool     CertManagerEnabled { get; set; } = true;
+            public bool     ManageCustomResourceDefinitions { get; set; } = true;
+            public bool     AssemblyScanningEnabled { get; set; } = true;
+            public bool     Debug { get; set; } = false;
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
         public GenerateRbacCommand() : base("rbac", "Generate RBAC yaml for the operator.")
         {
             Handler = CommandHandler.Create<GenerateRbacCommandArgs>(HandleCommand);
 
-            this.AddOption(new Option<string>(new[] { "--assembly-path" })
+            this.AddOption(new Option<string>(new[] { "--assembly" })
             {
-                Description = "The assembly path.",
-                IsRequired  = false,
+                Description = "Specifies the assembly path.",
+                IsRequired  = true,
                 Name        = "AssemblyPath"
             });
 
-            this.AddOption(new Option<string>(new[] { "--output-path" })
+            this.AddOption(new Option<string>(new[] { "--output" })
             {
-                Description = "The output path.",
-                IsRequired  = false,
-                Name        = "OutputPath"
+                Description = "Specifies folder where manifest files will be written.",
+                IsRequired  = true,
+                Name        = "OutputFolder"
             });
 
             this.AddOption(new Option<string>(new[] { "--deployed-namespace" })
             {
-                Description = "The namespace that the operator is deployed.",
+                Description = "Specifies the operator namespace.",
                 IsRequired  = false,
                 Name        = "DeployedNamespace"
             });
 
             this.AddOption(new Option<string>(new[] { "--watch-namespace" })
             {
-                Description = "The namespace that the operator should watch in csv format.",
+                Description = "Specifies the namespace that the operator should watch in CSV format.",
                 IsRequired  = false,
                 Name        = "WatchNamespace"
             });
 
             this.AddOption(new Option<string>(new[] { "--name" })
             {
-                Description = "The operator name.",
+                Description = "Specifies the operator name.",
                 IsRequired  = false,
                 Name        = "Name"
             });
 
-            this.AddOption(new Option<bool>(new[] { "--cert-manager-enabled" })
+            this.AddOption(new Option<bool>(new[] { "--cert-manager" })
             {
-                Description = "enable cert manager.",
+                Description = "Enable cert-manager.",
                 IsRequired  = false,
                 Name        = "CertManagerEnabled"
             });
 
-            this.AddOption(new Option<string>(new[] { "--manage-custom-resource-definitions" })
+            this.AddOption(new Option<string>(new[] { "--custom" })
             {
                 Description = "Manage custom resources.",
                 IsRequired  = false,
                 Name        = "ManageCustomResourceDefinitions"
             });
 
-            this.AddOption(new Option<bool>(new[] { "--assembly-scanning-enabled" })
+            this.AddOption(new Option<bool>(new[] { "--scan" })
             {
-                Description = "enable assembly scanning.",
+                Description = "Enable assembly scanning.",
                 IsRequired  = false,
                 Name        = "AssemblyScanningEnabled"
+            });
+
+            this.AddOption(new Option<bool>(new[] { "--debug" })
+            {
+                Description = "Writes generated manifests to STDOUT in addition to the output folder.",
+                IsRequired  = false,
+                Name        = "Debug"
             });
         }
 
         private int HandleCommand(GenerateRbacCommandArgs args)
         {
             var assemblyPath = args.AssemblyPath.Trim('\'').Trim('"').Trim();
-            var outputPath   = args.OutputPath.Trim('\'').Trim('"').Trim();
+            var outputPath   = args.OutputFolder.Trim('\'').Trim('"').Trim();
 
             Directory.CreateDirectory(outputPath);
 
@@ -120,7 +146,6 @@ namespace OperatorCli.Commands.Generate
             var consoleOutput = new StringBuilder();
             
             rbac.Build();
-
 
             foreach (var sa in rbac.ServiceAccounts)
             {
@@ -169,19 +194,7 @@ namespace OperatorCli.Commands.Generate
                 File.WriteAllText($"{outputPath}/rolebinding-{rb.Name()}-{rb.Namespace()}.yaml", rbString);
             }
 
-            return HandleCommand(consoleOutput.ToString());
-        }
-
-        public class GenerateRbacCommandArgs
-        {
-            public string AssemblyPath { get; set; }
-            public string OutputPath { get; set; }
-            public string Name { get; set; }
-            public string WatchNamespace { get; set; }
-            public string DeployedNamespace { get; set; }
-            public bool CertManagerEnabled { get; set; } = true;
-            public bool ManageCustomResourceDefinitions { get; set; } = true;
-            public bool AssemblyScanningEnabled { get; set; } = true;
+            return HandleCommand(args.Debug ? consoleOutput.ToString() : string.Empty);
         }
     }
 }
