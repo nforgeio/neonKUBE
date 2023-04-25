@@ -110,23 +110,28 @@
 
     <!-- Figure out where the [neon-modelgen] tool is located -->
 
-    <PropertyGroup Condition="'$(NeonBuildUseNugets)' == 'true'">
-        <ModelGeneratorPath>$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\$(RuntimePath)\neon-modelgen</ModelGeneratorPath>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(NeonBuildUseNugets)' != 'true'">
-        <ModelGeneratorPath>$(NF_ROOT)\Lib\Neon.ModelGenerator\$(RuntimePath)\neon-modelgen</ModelGeneratorPath>
-    </PropertyGroup>
+    <Choose>
+        <When Condition="'$(NeonBuildUseNugets)' == 'true'">
+            <PropertyGroup>
+                <ModelGeneratorPath>$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\$(RuntimePath)\neon-modelgen</ModelGeneratorPath>
+            </PropertyGroup>
+        </When>
+        <Otherwise>
+            <PropertyGroup>
+                <ModelGeneratorPath>$(NF_ROOT)\Lib\Neon.ModelGenerator\$(RuntimePath)\neon-modelgen</ModelGeneratorPath>
+            </PropertyGroup>
+        </Otherwise>
+    </Choose>
 
     <!--- Generate the model source files -->
-    
+
     <Target Name="ModelGen"
             Inputs="$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\$(TargetFramework)\Neon.Kube.Models.dll"
             Outputs="$(ProjectDir)Model\GeneratedEntities.mg.cs"
             BeforeTargets="CoreCompile"
             DependsOnTargets="BeforeCompile">
 
-        <Message Importance="high" Text="neon-modelgen path: $(ModelGenToolPath)"/>
+        <Message Importance="high" Text="neon-modelgen path: $(ModelGeneratorPath)"/>
         <Message Importance="high" Text="&quot;$(ModelGeneratorPath)&quot; --targets=all --target-namespace=Neon.Kube.Clients &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\$(TargetFramework)\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
         <Exec Command="&quot;$(ModelGeneratorPath)&quot; --targets=all --target-namespace=Neon.Kube.Clients &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\$(TargetFramework)\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
         <ItemGroup>
