@@ -134,6 +134,11 @@ try
     # We need to do a solution build to ensure that any tools or other dependencies 
     # are built before we build and publish the individual container images.
     
+    if ([System.String]::IsNullOrEmpty($env:SolutionName))
+    {
+        $env:solutionName = "neonKUBE"
+    }
+
     $config     = "Release"
     $msbuild    = $env:MSBUILDPATH
     $nkRoot     = "$env:NK_ROOT"

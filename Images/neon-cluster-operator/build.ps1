@@ -1,4 +1,4 @@
-﻿#Requires -Version 7.1.3 -RunAsAdministrator
+#Requires -Version 7.1.3 -RunAsAdministrator
 #------------------------------------------------------------------------------
 # FILE:         build.ps1
 # CONTRIBUTOR:  Marcus Bowyer
@@ -25,7 +25,7 @@ DeleteFolder bin
 mkdir bin | Out-Null
 ThrowOnExitCode
 
-dotnet publish "$nkServices\$appname\$appname.csproj" -c $config -o "$pwd\bin"
+dotnet publish "$nkServices\$appname\$appname.csproj" -c $config -o "$pwd\bin" -p:SolutionName=$env:solutionName
 ThrowOnExitCode
 
 # Split the build binaries into [__app] (application) and [__dep] dependency subfolders
@@ -36,11 +36,17 @@ ThrowOnExitCode
 
 # Build the image.
 
-$baseImage = Get-DotnetBaseImage "$nkRoot\global.json"
+try
+{
+    $baseImage = Get-DotnetBaseImage "$nkRoot\global.json"
 
-Invoke-CaptureStreams "docker build -t ${registry}:${tag} --build-arg `"APPNAME=$appname`" --build-arg `"ORGANIZATION=$organization`" --build-arg `"BASE_IMAGE=$baseImage`" ." -interleave | Out-Null
+    Invoke-CaptureStreams "docker build -t ${registry}:${tag} --build-arg `"APPNAME=$appname`" --build-arg `"ORGANIZATION=$organization`" --build-arg `"BASE_IMAGE=$baseImage`" ." -interleave | Out-Null
+    ThrowOnExitCode
+}
+finally
+{
+    # Clean up
 
-# Clean up
-
-DeleteFolder bin
+    DeleteFolder bin
+}
 
