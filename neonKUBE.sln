@@ -113,6 +113,7 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-cluster-operator", "Services\neon-cluster-operator\neon-cluster-operator.csproj", "{CF9B5668-C2A9-4855-AA5D-983249932883}"
 	ProjectSection(ProjectDependencies) = postProject
 		{75653A7E-60A7-4401-AED5-1AEAAD6475A5} = {75653A7E-60A7-4401-AED5-1AEAAD6475A5}
+		{987F4891-7FF0-49F7-A6B6-DCCB3F181A5D} = {987F4891-7FF0-49F7-A6B6-DCCB3F181A5D}
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-node-agent", "Services\neon-node-agent\neon-node-agent.csproj", "{75653A7E-60A7-4401-AED5-1AEAAD6475A5}"
