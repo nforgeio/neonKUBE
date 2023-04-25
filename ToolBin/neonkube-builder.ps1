@@ -126,6 +126,11 @@ try
     #--------------------------------------------------------------------------
     # Build the solution.
 
+    if ([System.String]::IsNullOrEmpty($env:SolutionName))
+    {
+        $env:SolutionName = "neonKUBE"
+    }
+
     if (-not $nobuild)
     {
         # We see somewhat random build problems when Visual Studio has the solution open,
@@ -154,7 +159,7 @@ try
         Write-Info "*******************************************************************************"
         Write-Info ""
 
-        & "$msbuild" "$nkSolution" $buildConfig -t:Clean -m -verbosity:$verbosity
+        & "$msbuild" "$nkSolution" $buildConfig -t:Clean -m -verbosity:$verbosity -p:SolutionName=$env:SolutionName
 
         if (-not $?)
         {
@@ -201,7 +206,7 @@ try
             throw "ERROR: Cannot remove: $nkBuild\codedoc"
         }
 
-        & "$msbuild" "$nkSolution" -p:Configuration=CodeDoc -restore -m -verbosity:$verbosity
+        & "$msbuild" "$nkSolution" -p:Configuration=CodeDoc -restore -m -verbosity:$verbosity -p:SolutionName=$env:SolutionName
 
         if (-not $?)
         {

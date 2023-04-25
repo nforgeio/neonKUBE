@@ -104,7 +104,7 @@ function Publish
     #
     # dotnet pack $projectPath -c Release -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -o "$env:NK_BUILD\nuget"
 
-    dotnet pack $projectPath -c Release -o "$env:NK_BUILD\nuget"
+    dotnet pack $projectPath -c Release -o "$env:NK_BUILD\nuget" -p:SolutionName=$env:SolutionName
     ThrowOnExitCode
 
     if (Test-Path "$env:NK_ROOT\Lib\$project\prerelease.txt")
@@ -128,14 +128,13 @@ function Publish
 
 try
 {
-	# We're going to build the RELEASE configuration.
-
-    $config = "Release"
-	
-    #------------------------------------------------------------------------------
-    # Load the library and neonKUBE versions.
+    if ([System.String]::IsNullOrEmpty($env:SolutionName))
+    {
+        $env:SolutionName = "neonKUBE"
+    }
 
     $msbuild         = $env:MSBUILDPATH
+    $config          = "Release"
     $nkRoot          = "$env:NK_ROOT"
     $nkSolution      = "$nkRoot\neonKUBE.sln"
     $nkBuild         = "$env:NK_BUILD"

@@ -116,17 +116,6 @@ if (!(Test-Path env:NC_ROOT))
     return 1
 }
 
-# We're going to build the DEBUG configuration by default for DEV packages so debugging will be easier.
-
-if ($release)
-{
-    $config = "Release"
-}
-else
-{
-    $config = "Debug"
-}
-
 $neonSdkVersionParameter = ""
 
 if ($neonSdkVersion)
@@ -161,8 +150,7 @@ function Publish
 
     $projectPath = [io.path]::combine($env:NK_ROOT, "Lib", "$project", "$project" + ".csproj")
 
-    Write-Output dotnet pack $projectPath -c $config -o "$env:NK_BUILD\nuget" -p:PackageVersion=$version $neonSdkVersionParameter
-    dotnet pack $projectPath -c $config -o "$env:NK_BUILD\nuget" -p:PackageVersion=$version $neonSdkVersionParameter
+    dotnet pack $projectPath -c $config -o "$env:NK_BUILD\nuget" -p:PackageVersion=$version $neonSdkVersionParameter -p:SolutionName=$env:SolutionName
     ThrowOnExitCode
 
     $nugetPath = "$env:NK_BUILD\nuget\$project.$version.nupkg"
@@ -181,7 +169,13 @@ function Publish
 
 try
 {
+    if ([System.String]::IsNullOrEmpty($env:SolutionName))
+    {
+        $env:SolutionName = "neonKUBE"
+    }
+
     $msbuild     = $env:MSBUILDPATH
+    $config      = "Release"
     $nkRoot      = "$env:NK_ROOT"
     $nkSolution  = "$nkRoot\neonKUBE.sln"
     $branch      = GitBranch $nkRoot

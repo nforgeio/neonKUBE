@@ -136,7 +136,7 @@ try
     
     if ([System.String]::IsNullOrEmpty($env:SolutionName))
     {
-        $env:solutionName = "neonKUBE"
+        $env:SolutionName = "neonKUBE"
     }
 
     $config     = "Release"

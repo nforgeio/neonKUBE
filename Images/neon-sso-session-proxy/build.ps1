@@ -25,7 +25,7 @@ DeleteFolder bin
 mkdir bin | Out-Null
 ThrowOnExitCode
 
-dotnet publish "$nkServices\$appname\$appname.csproj" -c $config -o "$pwd\bin" -p:SolutionName=$env:solutionName
+dotnet publish "$nkServices\$appname\$appname.csproj" -c $config -o "$pwd\bin" -p:SolutionName=$env:SolutionName
 ThrowOnExitCode
 
 # Split the build binaries into [__app] (application) and [__dep] dependency subfolders

@@ -47,10 +47,13 @@
 
     </PropertyGroup>
 
-    <!-- Set this to version of the neonSDK nuget packages to be referenced by solutuon projects -->
+    <!--
+    Set this to version of the neonSDK nuget packages to be referenced by solutuon projects,
+    or to 0 to disable NEONFORGE related package references.
+    -->
 
     <PropertyGroup Condition="'$(NeonSdkPackageVersion)' == ''">
-        <NeonSdkPackageVersion>10000.1.3038-dev-master</NeonSdkPackageVersion>
+        <NeonSdkPackageVersion>0</NeonSdkPackageVersion>
     </PropertyGroup>
 
     <!-- Build configuration related settings -->
@@ -79,20 +82,36 @@
     or reference projects from the other repos via relative project file path references.
     
     We're going to use the NEON_BUILD_USE_NUGETS environment variable to manage this.  This
-    will be missing or blank when the builds should use nuget package references or "true" to
-    use the relative project references.  The property group below configures this.
+    will be missing, blank, or "false" when the builds should use nuget package references
+    or "true" to use the relative project references.
     
     We also need to handle another important scenario: the [neonkube-builder.ps1] and
     [neoncloud-builder.ps1] scripts will need to be able to control whether we're 
     using nuget references or not and eventually be able configure projects to reference
     specific nuget versions for neonSDK and neonKUBE nugets.
+
+    This is tricky because MSBUILD doesn't initialize the $(SolutionName) variable.
+    We're going to handle this by having these scripts pass a custom $(NeonSolutionName)
+    property on the MSBUILD command line.  The property group below will 
+
+    IMPORTANT: You'll need to define the solution name property within any scripts
+               building the solution or a specific project, like:
+
+        dotnet build -p:SolutionName=SOLUTION-NAME ...
+        msbuild -p:SolutionName=SOLUTION-NAME ...
     -->
+
+    <!-- $debug(jefflill) : FIX THIS! -->
 
     <PropertyGroup>
         <NeonBuildUseNugets>false</NeonBuildUseNugets>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(SolutionName)' != 'neonCLOUD' OR '$(NEON_BUILD_USE_NUGETS)' == 'true'">
+    <!--<PropertyGroup Condition="'$(SolutionName)' != 'neonCLOUD' OR '$(NEON_BUILD_USE_NUGETS)' == 'true'">
+        <NeonBuildUseNugets>true</NeonBuildUseNugets>
+    </PropertyGroup>-->
+
+    <PropertyGroup Condition="'$(NEON_BUILD_USE_NUGETS)' == 'true'">
         <NeonBuildUseNugets>true</NeonBuildUseNugets>
     </PropertyGroup>
 
