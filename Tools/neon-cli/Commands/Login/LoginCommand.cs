@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    LoginCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -175,7 +175,6 @@ ARGUMENTS:
 
                 var userConfig = new KubeConfigUserConfig()
                 {
-                    Token        = result.AccessToken,
                     AuthProvider = authProvider
                 };
 
