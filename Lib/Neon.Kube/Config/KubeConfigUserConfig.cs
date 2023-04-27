@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubeConfigUserConfig.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -175,8 +175,8 @@ namespace Neon.Kube.Config
         /// a custom suffix like <b>my-property.neonkube.io</b>, where <b>my-property</b> 
         /// identifies the property and <b>neonkibe.io</b> helps avoid conflicts.
         /// </summary>
-        [JsonProperty(PropertyName = "extensions", Required = Required.Default)]
-        [YamlMember(Alias = "extensions", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "extensions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "extensions", ApplyNamingConventions = false, DefaultValuesHandling = DefaultValuesHandling.OmitNull | DefaultValuesHandling.OmitEmptyCollections)]
         public List<NamedExtension> Extensions { get; set; }
     }
 }

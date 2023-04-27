@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubeConfigCluster.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -149,6 +149,8 @@ namespace Neon.Kube.Config
         /// Optionally holds the cluster definition for testing clusters.  <b>ClusterFixture</b>
         /// uses this decide whether to deploy a new cluster when the definition has changed.
         /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
         public ClusterDefinition TestClusterDefinition
         {
             get => GetExtensionValue<ClusterDefinition>(NeonKubeExtensionNames.TestClusterDefinition, null);
