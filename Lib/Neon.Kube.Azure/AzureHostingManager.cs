@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    AzureHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -196,7 +196,7 @@ namespace Neon.Kube.Hosting.Azure
         // -------------------------
         // The Azure hosting manager is designed to be able to be interrupted and restarted
         // for cluster creation as well as management of the cluster afterwards.  This works
-        // by reading the current state of the cluster resources.
+        // by reading the current state of the cluster resources from Azure.
 
         //---------------------------------------------------------------------
         // Private types
@@ -1716,7 +1716,7 @@ namespace Neon.Kube.Hosting.Azure
         }
 
         /// <summary>
-        /// Locates the node virtual machine image to be used to provision the cluster.
+        /// Locates the virtual machine node image to be used to provision the cluster.
         /// The <see cref="nodeImageRef"/> and possibly <see cref="nodeImagePlan"/> members
         /// will be set to the correct image reference and plan.
         /// </summary>
@@ -1758,9 +1758,8 @@ namespace Neon.Kube.Hosting.Azure
                 const string galleryResourceGroupName = "neonkube-images";
                 const string galleryName              = "neonkube.images";
 
-                var nodeImageName        = neonKubeVersion.Prerelease == null ? $"neonkube-node-{cpuArchitecture}" : $"neonkube-node-{cpuArchitecture}-{neonKubeVersion.Prerelease}";
-                var nodeImageVersionName = $"{neonKubeVersion.Major}.{neonKubeVersion.Minor}.{neonKubeVersion.Patch}";
-
+                var nodeImageName           = neonKubeVersion.Prerelease == null ? $"neonkube-node-{cpuArchitecture}{KubeVersions.BranchPart}" : $"neonkube-node-{cpuArchitecture}-{neonKubeVersion.Prerelease}{KubeVersions.BranchPart}";
+                var nodeImageVersionName    = $"{neonKubeVersion.Major}.{neonKubeVersion.Minor}.{neonKubeVersion.Patch}";
                 var resourceGroupCollection = subscription.GetResourceGroups();
 
                 if (!await resourceGroupCollection.ExistsAsync(galleryResourceGroupName))
