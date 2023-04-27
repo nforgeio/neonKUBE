@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubeSetupProperty.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -131,14 +131,14 @@ namespace Neon.Kube
         public const string HarborCredentials = "harbor-credentials";
 
         /// <summary>
-        /// Property name for a <c>bool</c> value indicating that we're building a ready-to-go 
-        /// desktop image.
+        /// Property name for a <c>bool</c> value indicating that we're <b>building</b> a
+        /// ready-to-go desktop image.
         /// </summary>
         public const string BuildDesktopImage = "build-desktop-image";
 
         /// <summary>
-        /// Property name for a <c>bool</c> value indicating whether a cluster using a ready-to-go desktop
-        /// image is being deployed.
+        /// Property name for a <c>bool</c> value indicating whether we're <b>deploying</b>
+        /// a cluster using a ready-to-go desktop image.
         /// </summary>
         public const string DesktopReadyToGo = "desktop-readytogo";
 
