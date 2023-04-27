@@ -51,4 +51,13 @@
         </Otherwise>
     </Choose>
 
+    <Target Name="TouchFiles" AfterTargets="PostBuildEvent">
+        <Touch
+            Files=".buildComplete"
+            AlwaysCreate="true">
+            <Output
+                TaskParameter="TouchedFiles"
+                ItemName="FilesTouched"/>
+        </Touch>
+    </Target>
 </Project>

@@ -115,3 +115,4 @@ KubernetesWithRetry.cs
 /Lib/Neon.Kube.Operator.MSBuild/osx-x64
 /Lib/Neon.Kube.Operator.MSBuild/win-x64
 /Test/TestOperator/Manifests
+/Lib/Neon.Kube.Models/.buildComplete
