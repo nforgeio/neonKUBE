@@ -1235,9 +1235,9 @@ namespace Neon.Kube.Hosting.Azure
             controller.AddNodeStep("credentials",
                 (controller, node) =>
                 {
-                    // Update the node SSH proxies to use the secure SSH password.
+                    // Update the node SSH proxies to use the private SSH key.
 
-                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, cluster.SetupState.SshPassword));
+                    node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, cluster.SetupState.SshKey.PrivatePEM));
                 },
                 quiet: true);
             controller.AddNodeStep("virtual machines", CreateVmAsync);
@@ -2476,6 +2476,11 @@ chmod 600 /etc/neonkube/cloud-init/boot-script-path
 # Update the [sysadmin] user password:
 
 echo 'sysadmin:{cluster.SetupState.SshPassword}' | chpasswd
+
+#------------------------------------------------------------------------------
+# Enable the [sysadmin] SSH public key:
+
+echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_keys
 ";
             var encodedBootScript        = Convert.ToBase64String(Encoding.UTF8.GetBytes(NeonHelper.ToLinuxLineEndings(bootScript)));
             var virtualMachineCollection = resourceGroup.GetVirtualMachines();
