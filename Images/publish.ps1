@@ -141,6 +141,7 @@ try
 
     $config     = "Release"
     $msbuild    = $env:MSBUILDPATH
+    $neonBuild  = "$env:NF_ROOT\ToolBin\neon-build\neon-build.exe"
     $nkRoot     = "$env:NK_ROOT"
     $nkSolution = "$nkRoot\neonKUBE.sln"
     $branch     = GitBranch $nkRoot
@@ -153,13 +154,7 @@ try
         Write-Info "********************************************************************************"
         Write-Info ""
 
-        "neon-build clean $nkRoot"
-        & "$msbuild" "$nkSolution" $buildConfig -t:Clean -m -verbosity:quiet
-
-        if (-not $?)
-        {
-            throw "ERROR: CLEAN FAILED"
-        }
+        Invoke-Program "`"$neonBuild`" clean `"$nkRoot`""
 
         Write-Info  ""
         Write-Info  "*******************************************************************************"
@@ -167,7 +162,7 @@ try
         Write-Info  "*******************************************************************************"
         Write-Info  ""
 
-        & "$msbuild" "$nkSolution" -p:Configuration=$config -m -verbosity:quiet
+        & "$msbuild" "$nkSolution" -p:Configuration=$config -t:restore,build -p:RestorePackagesConfig=true -m -verbosity:quiet
 
         if (-not $?)
         {

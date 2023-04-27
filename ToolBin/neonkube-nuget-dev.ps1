@@ -175,6 +175,7 @@ try
     }
 
     $msbuild     = $env:MSBUILDPATH
+    $neonBuild   = "$env:NF_ROOT\ToolBin\neon-build\neon-build.exe"
     $config      = "Release"
     $nkRoot      = "$env:NK_ROOT"
     $nkSolution  = "$nkRoot\neonKUBE.sln"
@@ -283,12 +284,7 @@ try
     Write-Info "********************************************************************************"
     Write-Info ""
 
-    & "$msbuild" "$nkSolution" -p:Configuration=$config -t:Clean -m -verbosity:quiet
-
-    if (-not $?)
-    {
-        throw "ERROR: CLEAN FAILED"
-    }
+    Invoke-Program "`"$neonBuild`" clean `"$nkRoot`""
 
     Write-Info  ""
     Write-Info  "*******************************************************************************"
@@ -296,7 +292,7 @@ try
     Write-Info  "*******************************************************************************"
     Write-Info  ""
 
-    & "$msbuild" "$nkSolution" -p:Configuration=$config -restore -m -verbosity:quiet $neonSdkVersionParameter
+    & "$msbuild" "$nkSolution" -p:Configuration=$config -t:restore,build -p:RestorePackagesConfig=true -m -verbosity:quiet $neonSdkVersionParameter
 
     if (-not $?)
     {

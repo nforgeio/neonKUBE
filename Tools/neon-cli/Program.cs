@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    Program.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -173,7 +173,7 @@ namespace NeonCli
         /// <returns>The exit code.</returns>
         public static async Task<int> Main(string[] args)
         {
-            string usage = $@"
+            const string usage = $@"
 {Program.Name} [v{Program.Version}]
 {Build.Copyright}
 

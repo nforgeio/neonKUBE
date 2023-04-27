@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    AwsHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -243,7 +243,7 @@ namespace Neon.Kube.Hosting.Aws
         // -------------------------
         // The AWS hosting manager is designed to be able to be interrupted and restarted
         // for cluster creation as well as management of the cluster afterwards.  This works
-        // by reading the current state of the cluster resources.
+        // by reading the current state of the cluster resources from AWS.
 
         //---------------------------------------------------------------------
         // Local types
@@ -902,6 +902,7 @@ namespace Neon.Kube.Hosting.Aws
         public AwsHostingManager(ClusterProxy cluster, bool cloudMarketplace, string nodeImageUri = null, string nodeImagePath = null, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
+            Covenant.Requires<ArgumentException>(!cloudMarketplace || !string.IsNullOrEmpty(KubeVersions.BranchPart), nameof(cloudMarketplace), $"[{nameof(cloudMarketplace)}] cannot be TRUE when neonKUBE was built from a non-release branch.");
 
             cluster.HostingManager  = this;
 
@@ -2001,23 +2002,28 @@ namespace Neon.Kube.Hosting.Aws
 
             // Locate the node image AMI.
             // 
-            // ALPHA RELEASES
-            // --------------
-            // We'll use the local AMI from the current NEONFORGE AWS account, 
-            // matching the tags applied by the [neon-image] tool.
+            // STAGED RELEASES:
+            // ----------------
+            // We'll use the local AMI from the current NEONFORGE AWS account
+            // in our image build region, matching the tags applied by the
+            // [neon-image] tool.
             //
-            // PRODUCTION RELEASES
-            // -------------------
+            // PRODUCTION RELEASES:
+            // --------------------
             // We'll use the matching AMI from our AWS Marketplace offering.
 
             controller.SetGlobalStepStatus("locate: node image");
 
             var neonKubeVersion = SemanticVersion.Parse(KubeVersions.NeonKube);
-            var nodeImageName   = $"neonkube-{KubeVersions.NeonKube}";
+            var nodeImageName   = $"neonkube-{KubeVersions.NeonKube}{KubeVersions.BranchPart}";
             var operatingSystem = "ubuntu-22.04";
             var architecture    = "amd64";
 
-            if (neonKubeVersion.Prerelease != null && neonKubeVersion.Prerelease.StartsWith("alpha", StringComparison.InvariantCultureIgnoreCase))
+            if (cloudMarketplace)
+            {
+                throw new NotImplementedException("$todo(jefflill): Implement AWS Marketplace support.");
+            }
+            else
             {
                 var neonImageFilter = new List<Filter>()
                 {
@@ -2041,10 +2047,6 @@ namespace Neon.Kube.Hosting.Aws
                 {
                     throw new NeonKubeException($"Cannot locate the node image AMI for [{nodeImageName}: {operatingSystem}/{architecture}] in region: [{region}]");
                 }
-            }
-            else
-            {
-                throw new NotImplementedException("$todo(jefflill): Implement AWS Marketplace support.");
             }
         }
 
