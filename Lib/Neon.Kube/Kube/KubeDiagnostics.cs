@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubeDiagnostics.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -49,6 +49,7 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Proxy;
+using Neon.Kube.SSH;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;

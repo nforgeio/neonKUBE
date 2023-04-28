@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    NodeSshProxy.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -35,7 +35,9 @@ using Neon.IO;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Config;
 using Neon.Kube.Hosting;
+using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
+using Neon.Kube.SSH;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
@@ -48,7 +50,7 @@ using Newtonsoft.Json.Linq;
 using Renci.SshNet;
 using Renci.SshNet.Common;
 
-namespace Neon.Kube.Proxy
+namespace Neon.Kube.SSH
 {
     /// <summary>
     /// <para>
@@ -104,9 +106,9 @@ namespace Neon.Kube.Proxy
             /// <param name="owner">Optional file owner.</param>
             public RemoteFile(string path, string permissions = "600", string owner = "root:root")
             {
-                this.Path = path;
+                this.Path        = path;
                 this.Permissions = permissions;
-                this.Owner = owner;
+                this.Owner       = owner;
             }
 
             /// <summary>

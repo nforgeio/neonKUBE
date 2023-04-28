@@ -69,6 +69,7 @@ using Neon.Time;
 using PublicIPAddressSku     = Azure.ResourceManager.Network.Models.PublicIPAddressSku;
 using PublicIPAddressSkuName = Azure.ResourceManager.Network.Models.PublicIPAddressSkuName;
 using PublicIPAddressSkuTier = Azure.ResourceManager.Network.Models.PublicIPAddressSkuTier;
+using Neon.Kube.SSH;
 
 namespace Neon.Kube.Hosting.Azure
 {

@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    NodeSshProxy.ClusterSetup.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -50,7 +50,7 @@ using Newtonsoft.Json.Linq;
 using Renci.SshNet;
 using Renci.SshNet.Common;
 
-namespace Neon.Kube.Proxy
+namespace Neon.Kube.SSH
 {
     public partial class NodeSshProxy<TMetadata> : LinuxSshProxy<TMetadata>
         where TMetadata : class

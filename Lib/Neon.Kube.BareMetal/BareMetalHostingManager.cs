@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    BareMetalHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -45,6 +45,7 @@ using Neon.IO;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
+using Neon.Kube.SSH;
 using Neon.Net;
 using Neon.SSH;
 using Neon.Time;

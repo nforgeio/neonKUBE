@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubeSetup.PrepareCluster.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.Design;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -41,12 +42,12 @@ using Neon.Kube.Config;
 using Neon.Kube.Hosting;
 using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
+using Neon.Kube.SSH;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
 using Namotion.Reflection;
-using System.ComponentModel.Design;
 
 namespace Neon.Kube.Setup
 {

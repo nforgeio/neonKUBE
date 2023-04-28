@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    XenServerHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -39,6 +39,7 @@ using Neon.Kube.ClusterDef;
 using Neon.Kube.Config;
 using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
+using Neon.Kube.SSH;
 using Neon.Net;
 using Neon.XenServer;
 using Neon.IO;

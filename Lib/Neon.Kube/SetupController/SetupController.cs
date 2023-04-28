@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    SetupController.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -31,6 +31,7 @@ using Neon.Common;
 using Neon.Kube;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Proxy;
+using Neon.Kube.SSH;
 using Neon.Net;
 using Neon.SSH;
 using Neon.Tasks;
@@ -1221,7 +1222,7 @@ namespace Neon.Kube.Setup
         }
 
         /// <inheritdoc/>
-        public void LogProgress(SSH.ILinuxSshProxy node, string message)
+        public void LogProgress(Neon.SSH.ILinuxSshProxy node, string message)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));
@@ -1244,7 +1245,7 @@ namespace Neon.Kube.Setup
         }
 
         /// <inheritdoc/>
-        public void LogProgress(SSH.ILinuxSshProxy node, string verb, string message)
+        public void LogProgress(Neon.SSH.ILinuxSshProxy node, string verb, string message)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(verb), nameof(verb));
@@ -1295,7 +1296,7 @@ namespace Neon.Kube.Setup
         }
 
         /// <inheritdoc/>
-        public void LogProgressError(SSH.ILinuxSshProxy node, string message)
+        public void LogProgressError(Neon.SSH.ILinuxSshProxy node, string message)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(message), nameof(message));

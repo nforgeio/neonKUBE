@@ -64,6 +64,7 @@ using Ec2VolumeType  = Amazon.EC2.VolumeType;
 using ElbAction      = Amazon.ElasticLoadBalancingV2.Model.Action;
 using ElbTag         = Amazon.ElasticLoadBalancingV2.Model.Tag;
 using ElbTargetGroup = Amazon.ElasticLoadBalancingV2.Model.TargetGroup;
+using Neon.Kube.SSH;
 
 namespace Neon.Kube.Hosting.Aws
 {

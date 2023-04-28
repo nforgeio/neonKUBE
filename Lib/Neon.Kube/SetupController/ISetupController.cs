@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    ISetupController.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -27,7 +27,7 @@ using System.Threading.Tasks;
 
 using Neon.Collections;
 using Neon.Common;
-using Neon.Kube.Proxy;
+using Neon.Kube.SSH;
 using Neon.SSH;
 
 namespace Neon.Kube.Setup
@@ -204,7 +204,7 @@ namespace Neon.Kube.Setup
         /// <param name="node">Identifies the node</param>
         /// <param name="verb">The message verb.</param>
         /// <param name="message">The message.</param>
-        void LogProgress(SSH.ILinuxSshProxy node, string verb, string message);
+        void LogProgress(Neon.SSH.ILinuxSshProxy node, string verb, string message);
 
         /// <summary>
         /// <para>
@@ -217,7 +217,7 @@ namespace Neon.Kube.Setup
         /// </summary>
         /// <param name="node">Identifies the node</param>
         /// <param name="message">The message.</param>
-        void LogProgressError(SSH.ILinuxSshProxy node, string message);
+        void LogProgressError(Neon.SSH.ILinuxSshProxy node, string message);
 
         /// <summary>
         /// <para>

@@ -26,6 +26,9 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s;
+using k8s.Models;
+
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
@@ -33,6 +36,7 @@ using Neon.Kube;
 using Neon.Kube.Clients;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Config;
+using Neon.Kube.Deployment;
 using Neon.Kube.Glauth;
 using Neon.Kube.Hosting;
 using Neon.Kube.Operator;
@@ -46,17 +50,14 @@ using Neon.Kube.Resources.Minio;
 using Neon.Kube.Resources.OpenEBS;
 using Neon.Kube.Resources.Prometheus;
 using Neon.Kube.Proxy;
+using Neon.Kube.SSH;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
 
-using k8s;
-using k8s.Models;
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Neon.Kube.Deployment;
 
 namespace Neon.Kube.Setup
 {

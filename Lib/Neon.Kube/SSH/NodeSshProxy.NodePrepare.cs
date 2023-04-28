@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    NodeSshProxy.NodePrepare.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -38,6 +38,7 @@ using Neon.IO;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Config;
 using Neon.Kube.Hosting;
+using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
 using Neon.Net;
 using Neon.Retry;
@@ -51,7 +52,7 @@ using Newtonsoft.Json.Linq;
 using Renci.SshNet;
 using Renci.SshNet.Common;
 
-namespace Neon.Kube.Proxy
+namespace Neon.Kube.SSH
 {
     public partial class NodeSshProxy<TMetadata> : LinuxSshProxy<TMetadata>
         where TMetadata : class

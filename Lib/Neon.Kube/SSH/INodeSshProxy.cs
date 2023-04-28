@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    INodeSshProxy.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -45,12 +45,12 @@ using Newtonsoft.Json.Linq;
 using Renci.SshNet;
 using Renci.SshNet.Common;
 
-namespace Neon.Kube.Proxy
+namespace Neon.Kube.SSH
 {
     /// <summary>
     /// Used to reference node proxy common properties.
     /// </summary>
-    public interface INodeSshProxy : SSH.ILinuxSshProxy
+    public interface INodeSshProxy : Neon.SSH.ILinuxSshProxy
     {
         /// <summary>
         /// Returns the node role, one of the <see cref="NodeRole"/> identifying what the node does.
