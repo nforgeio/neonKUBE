@@ -177,7 +177,7 @@ cluster definition or by executing this command on your cluster:
                         // and remove those as will.
 
                         Console.WriteLine($"Removing: {cluster.Name}...");
-                        await cluster.DeleteAsync();
+                        await cluster.DeleteClusterAsync();
                         KubeHelper.Config.RemoveContext(context);
 
                         Console.WriteLine($"REMOVED:  {cluster.Name}");
