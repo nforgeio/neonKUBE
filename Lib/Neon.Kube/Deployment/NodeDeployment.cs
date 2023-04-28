@@ -44,12 +44,16 @@ namespace Neon.Kube.Deployment
         }
 
         /// <summary>
-        /// Constructs an instances from a cluster <see cref="NodeDefinition"/>.
+        /// Constructs an instances from a cluster definition <see cref="NodeDefinition"/>.
         /// </summary>
         /// <param name="nodeDefinition">Specifies the node definition.</param>
         public NodeDeployment(NodeDefinition nodeDefinition)
         {
             Covenant.Requires<ArgumentNullException>(nodeDefinition != null, nameof(nodeDefinition));
+
+            this.Name       = nodeDefinition.Name;
+            this.Address    = nodeDefinition.Address;
+            this.Hypervisor = nodeDefinition.Hypervisor;
         }
 
         /// <summary>
@@ -69,18 +73,11 @@ namespace Neon.Kube.Deployment
         public string Address { get; set; }
 
         /// <summary>
-        /// <para>
-        /// Identifies the hypervisor instance where this node.  This name must map to
-        /// the name of one of the <see cref="ClusterDeployment.Hosts"/> when set.
-        /// </para>
-        /// <note>
-        /// This property applies only for on-premise hypervisor hosting environments like
-        /// Hyper-V and XenServer and will be <c>null</c> for cloud hosts.
-        /// </note>
+        /// Hypervisor hosting related options for environments like Hyper-V and XenServer.
         /// </summary>
-        [JsonProperty(PropertyName = "Host", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "host", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Hypervisor", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "hypervisor", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string Host { get; set; } = null;
+        public HypervisorNodeOptions Hypervisor { get; set; } = null;
     }
 }

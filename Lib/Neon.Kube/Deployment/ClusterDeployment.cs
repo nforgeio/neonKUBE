@@ -46,7 +46,7 @@ namespace Neon.Kube.Deployment
         }
 
         /// <summary>
-        /// Constructs an instance from a <see cref="ClusterDefinition"/>.
+        /// Constructs an instance by extracting values from a <see cref="ClusterDefinition"/>.
         /// </summary>
         /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         public ClusterDeployment(ClusterDefinition clusterDefinition)

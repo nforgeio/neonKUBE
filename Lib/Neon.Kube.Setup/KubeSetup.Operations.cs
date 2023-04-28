@@ -56,6 +56,7 @@ using k8s.Models;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Neon.Kube.Deployment;
 
 namespace Neon.Kube.Setup
 {
@@ -417,9 +418,9 @@ spec:
                     controller.ThrowIfCancelled();
                     await InstallKubeDashboardAsync(controller, controlNode);
 
-                    controller.ThrowIfCancelled();
                     if (cluster.SetupState.ClusterDefinition.Features.NodeProblemDetector)
                     {
+                        controller.ThrowIfCancelled();
                         await InstallNodeProblemDetectorAsync(controller, controlNode);
                     }
 
@@ -444,9 +445,9 @@ spec:
                     controller.ThrowIfCancelled();
                     await InstallSsoAsync(controller, controlNode);
 
-                    controller.ThrowIfCancelled();
                     if (cluster.SetupState.ClusterDefinition.Features.Kiali)
                     {
+                        controller.ThrowIfCancelled();
                         await InstallKialiAsync(controller, controlNode);
                     }
 
@@ -4868,6 +4869,15 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/cluster-operator",
                 async () =>
                 {
+                    // Persist the cluster deployment information.
+
+                    var clusterDeployment          = new ClusterDeployment(cluster.SetupState.ClusterDefinition);
+                    var clusterDeploymentConfigMap = new TypedConfigMap<ClusterDeployment>(KubeConfigMapName.ClusterDeployment, KubeNamespace.NeonSystem, clusterDeployment);
+
+                    await k8s.CoreV1.ReplaceNamespacedTypedConfigMapAsync(clusterDeploymentConfigMap);
+
+                    // Deploy: neon-cluster-operator
+
                     controller.LogProgress(controlNode, verb: "setup", message: "neon-cluster-operator");
 
                     var values = new Dictionary<string, object>();
@@ -4886,9 +4896,9 @@ $@"- name: StorageType
 
                     await controlNode.InstallHelmChartAsync(controller, "neon-cluster-operator",
                         releaseName: "neon-cluster-operator",
-                        @namespace: KubeNamespace.NeonSystem,
+                        @namespace:   KubeNamespace.NeonSystem,
                         prioritySpec: PriorityClass.NeonOperator.Name,
-                        values: values);
+                        values:       values);
                 });
 
             controller.ThrowIfCancelled();
@@ -4995,10 +5005,10 @@ $@"- name: StorageType
                     await CreateNeonDashboardAsync(
                             controller,
                             controlNode,
-                            name: "kubernetes",
-                            url: $"https://{ClusterHost.KubernetesDashboard}.{cluster.SetupState.ClusterDomain}",
+                            name:         "kubernetes",
+                            url:          $"https://{ClusterHost.KubernetesDashboard}.{cluster.SetupState.ClusterDomain}",
                             displayName: "Kubernetes",
-                            enabled: true,
+                            enabled:      true,
                             displayOrder: 1);
 
                     if (cluster.SetupState.ClusterDefinition.Features.Grafana)
@@ -5186,7 +5196,6 @@ $@"- name: StorageType
         public static async Task<List<Task>> CreateNamespacesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             await SyncContext.Clear;
-
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
 
