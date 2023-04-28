@@ -24,16 +24,16 @@
 
 param 
 (
-    [switch]$all             = $false, # Rebuild all images
-    [switch]$base            = $false, # Rebuild base images
-    [switch]$test            = $false, # Rebuild test related images
-    [switch]$other           = $false, # Rebuild all other images (usually script based)
-    [switch]$services        = $false, # Rebuild all cluster service images
-    [switch]$nopush          = $false, # Don't push to the registry
-    [switch]$noprune         = $false, # Don't prune the local Docker cache
-    [switch]$allVersions     = $false, # Rebuild all image versions
-    [switch]$nobuildsolution = $false  # Don't clean or build the solution
-
+    [switch]$all             = $false,      # Rebuild all images
+    [switch]$base            = $false,      # Rebuild base images
+    [switch]$test            = $false,      # Rebuild test related images
+    [switch]$other           = $false,      # Rebuild all other images (usually script based)
+    [switch]$services        = $false,      # Rebuild all cluster service images
+    [switch]$nopush          = $false,      # Don't push to the registry
+    [switch]$noprune         = $false,      # Don't prune the local Docker cache
+    [switch]$noclean         = $false,      # Don't clean before building
+    [switch]$allVersions     = $false,      # Rebuild all image versions
+    [switch]$nobuildsolution = $false       # Don't clean or build the solution
 )
 
 #----------------------------------------------------------
@@ -88,17 +88,7 @@ function Publish
 
 try
 {
-    # Abort if Visual Studio is running because that can cause [pubcore] to
-    # fail due to locked files.
-
-    # $note(jefflill): 
-    #
-    # We don't currently need this check but I'm leaving it here commented
-    # out to make it easier to revive in the future, if necessary.
-
-    # Ensure-VisualStudioNotRunning
-
-    # Handle the command line arguments.
+    # Process the command line arguments.
 
     if ($all)
     {
@@ -148,13 +138,16 @@ try
 
     if (-not $nobuildsolution)
     {
-        Write-Info ""
-        Write-Info "********************************************************************************"
-        Write-Info "***                            CLEAN SOLUTION                                ***"
-        Write-Info "********************************************************************************"
-        Write-Info ""
+        if (-not $noclean)
+        {
+            Write-Info ""
+            Write-Info "********************************************************************************"
+            Write-Info "***                            CLEAN SOLUTION                                ***"
+            Write-Info "********************************************************************************"
+            Write-Info ""
 
-        Invoke-Program "`"$neonBuild`" clean `"$nkRoot`""
+            Invoke-Program "`"$neonBuild`" clean `"$nkRoot`""
+        }
 
         Write-Info  ""
         Write-Info  "*******************************************************************************"
