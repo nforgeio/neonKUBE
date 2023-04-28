@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    HyperVClusters.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -201,7 +201,7 @@ kubernetes:
   allowPodsOnControlPlane: true
 hosting:
   environment: hyperv
-  vm:
+  hypervisor:
     namePrefix: test-tiny
     cores: 4
     memory: 16 GiB
@@ -234,7 +234,7 @@ kubernetes:
   allowPodsOnControlPlane: false
 hosting:
   environment: hyperv
-  vm:
+  hypervisor:
     namePrefix: test-small
     cores: 4
     memory: 16 GiB
@@ -276,7 +276,7 @@ kubernetes:
   allowPodsOnControlPlane: false
 hosting:
   environment: hyperv
-  vm:
+  hypervisor:
     namePrefix: test-large
     cores: 4
     memory: 16 GiB

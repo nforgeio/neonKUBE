@@ -1,5 +1,5 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    VmHostingOptions.cs
+//-----------------------------------------------------------------------------
+// FILE:	    HypervisorHostingOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -40,7 +40,7 @@ namespace Neon.Kube.ClusterDef
     /// Specifies common options for on-premise hypervisor based hosting environments such as
     /// Hyper-V and XenServer.
     /// </summary>
-    public class VmHostingOptions
+    public class HypervisorHostingOptions
     {
         //---------------------------------------------------------------------
         // Static members
@@ -55,7 +55,7 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public VmHostingOptions()
+        public HypervisorHostingOptions()
         {
         }
 
@@ -257,7 +257,7 @@ namespace Neon.Kube.ClusterDef
             var hostNameSet    = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
             var hostAddressSet = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
-            foreach (var vmHost in clusterDefinition.Hosting.Vm.Hosts)
+            foreach (var vmHost in clusterDefinition.Hosting.Hypervisor.Hosts)
             {
                 if (hostNameSet.Contains(vmHost.Name))
                 {

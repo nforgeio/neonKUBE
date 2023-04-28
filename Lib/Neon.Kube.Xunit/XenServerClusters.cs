@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    XenServerClusters.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -210,7 +210,7 @@ kubernetes:
   allowPodsOnControlPlane: true
 hosting:
   environment: xenserver
-  vm:
+  hypervisor:
     hostUsername: $<secret:XENSERVER_LOGIN[username]>
     hostPassword: $<secret:XENSERVER_LOGIN[password]>
     namePrefix: test-tiny
@@ -233,7 +233,7 @@ nodes:
   control-0:
     role: control-plane
     address: $<profile:xenserver.tiny0.ip>
-    vm:
+    hypervisor:
       host: XEN-TEST
 ";
 
@@ -251,7 +251,7 @@ kubernetes:
   allowPodsOnControlPlane: false
 hosting:
   environment: xenserver
-  vm:
+  hypervisor:
     hostUsername: $<secret:XENSERVER_LOGIN[username]>
     hostPassword: $<secret:XENSERVER_LOGIN[password]>
     namePrefix: test-small
@@ -274,22 +274,22 @@ nodes:
   control-0:
     role: control-plane
     address: $<profile:xenserver.small0.ip>
-    vm:
+    hypervisor:
       host: XEN-TEST
   worker-0:
     role: worker
     address: $<profile:xenserver.small1.ip>
-    vm:
+    hypervisor:
       host: XEN-TEST
   worker-1:
     role: worker
     address: $<profile:xenserver.small2.ip>
-    vm:
+    hypervisor:
       host: XEN-TEST
   worker-2:
     role: worker
     address: $<profile:xenserver.small3.ip>
-    vm:
+    hypervisor:
       host: XEN-TEST
 ";
 
@@ -307,7 +307,7 @@ kubernetes:
   allowPodsOnControlPlane: false
 hosting:
   environment: xenserver
-  vm:
+  hypervisor:
     hostUsername: $<secret:XENSERVER_LOGIN[username]>
     hostPassword: $<secret:XENSERVER_LOGIN[password]>
     namePrefix: test-large
@@ -331,34 +331,34 @@ nodes:
     role: control-plane
     address: $<profile:xenserver.large0.ip>
     memory: 4 GiB
-    vm:
+    hypervisor:
       host: XEN-TEST
   control-1:
     role: control-plane
     address: $<profile:xenserver.large1.ip>
     memory: 4 GiB
-    vm:
+    hypervisor:
       host: XEN-TEST
   control-2:
     role: control-plane
     address: $<profile:xenserver.large2.ip>
     memory: 4 GiB
-    vm:
+    hypervisor:
       host: XEN-TEST
   worker-0:
     role: worker
     address: $<profile:xenserver.large3.ip>
-     vm:
+     hypervisor:
        host: XEN-TEST
   worker-1:
     role: worker
     address: $<profile:xenserver.large4.ip>
-    vm:
+    hypervisor:
       host: XEN-TEST
   worker-2:
     role: worker
     address: $<profile:xenserver.large5.ip>
-    vm:
+    hypervisor:
       host: XEN-TEST
 ";
     }

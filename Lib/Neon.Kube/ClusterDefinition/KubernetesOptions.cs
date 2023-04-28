@@ -272,7 +272,7 @@ namespace Neon.Kube.ClusterDef
                 AllowPodsOnControlPlane = clusterDefinition.Workers.Count() == 0;
             }
 
-            var controlPlaneMemory = (decimal)clusterDefinition.ControlNodes.First().Vm.GetMemory(clusterDefinition);
+            var controlPlaneMemory = (decimal)clusterDefinition.ControlNodes.First().Hypervisor.GetMemory(clusterDefinition);
 
             EvictionHard = EvictionHard ?? new Dictionary<string, string>();
 

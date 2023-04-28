@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    HostingOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -125,12 +125,12 @@ namespace Neon.Kube.ClusterDef
         public XenServerHostingOptions XenServer { get; set; } = null;
 
         /// <summary>
-        /// Specifies common hosting settings for hosted hypervisor environments such as Hyper-V and XenServer.
+        /// Specifies common hosting settings for on-premise hypervisor environments like Hyper-V and XenServer.
         /// </summary>
-        [JsonProperty(PropertyName = "VM", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "vm", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Hypervisor", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "hypervisor", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public VmHostingOptions Vm { get; set; } = null;
+        public HypervisorHostingOptions Hypervisor { get; set; } = null;
 
         /// <summary>
         /// Returns <c>true</c> if the cluster will be hosted by a cloud provider like AWS, Azure or Google.
@@ -255,8 +255,8 @@ namespace Neon.Kube.ClusterDef
                     HyperV = HyperV ?? new HyperVHostingOptions();
                     HyperV.Validate(clusterDefinition);
 
-                    Vm = Vm ?? new VmHostingOptions();
-                    Vm.Validate(clusterDefinition);
+                    Hypervisor = Hypervisor ?? new HypervisorHostingOptions();
+                    Hypervisor.Validate(clusterDefinition);
                     break;
 
                 case HostingEnvironment.XenServer:
@@ -267,8 +267,8 @@ namespace Neon.Kube.ClusterDef
                     Cloud = Cloud ?? new CloudOptions();
                     Cloud.Validate(clusterDefinition);
 
-                    Vm = Vm ?? new VmHostingOptions();
-                    Vm.Validate(clusterDefinition);
+                    Hypervisor = Hypervisor ?? new HypervisorHostingOptions();
+                    Hypervisor.Validate(clusterDefinition);
                     break;
 
                 default:
@@ -290,7 +290,7 @@ namespace Neon.Kube.ClusterDef
             clusterDefinition.Hosting.Google?.ClearSecrets();
             clusterDefinition.Hosting.HyperV?.ClearSecrets();
             clusterDefinition.Hosting.BareMetal?.ClearSecrets();
-            clusterDefinition.Hosting.Vm?.ClearSecrets();
+            clusterDefinition.Hosting.Hypervisor?.ClearSecrets();
             clusterDefinition.Hosting.XenServer?.ClearSecrets();
         }
     }

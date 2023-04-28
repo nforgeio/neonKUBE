@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    HypervisorHost.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -65,7 +65,7 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// The custom username to use when connecting to the hypervisor machine.  This
-        /// overrides <see cref="VmHostingOptions.HostUsername"/>.
+        /// overrides <see cref="HypervisorHostingOptions.HostUsername"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Username", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "username", ApplyNamingConventions = false)]
@@ -74,7 +74,7 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// The custom password to use when connecting to the hypervisor machine.  This
-        /// overrides <see cref="VmHostingOptions.HostPassword"/>.
+        /// overrides <see cref="HypervisorHostingOptions.HostPassword"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Password", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "password", ApplyNamingConventions = false)]
@@ -88,7 +88,7 @@ namespace Neon.Kube.ClusterDef
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         internal void Validate(ClusterDefinition clusterDefinition)
         {
-            var hypervisorHostPrefix = $"{nameof(ClusterDefinition.Hosting)}.{nameof(ClusterDefinition.Hosting.Vm)}";
+            var hypervisorHostPrefix = $"{nameof(ClusterDefinition.Hosting)}.{nameof(ClusterDefinition.Hosting.Hypervisor)}";
 
             if (string.IsNullOrEmpty(Name))
             {
@@ -105,14 +105,14 @@ namespace Neon.Kube.ClusterDef
                 throw new ClusterDefinitionException($"[{hypervisorHostPrefix}.{nameof(Address)}={Address}] is not a valid IP address or hostname.");
             }
 
-            if (string.IsNullOrEmpty(Username) && string.IsNullOrEmpty(clusterDefinition.Hosting.Vm.HostUsername))
+            if (string.IsNullOrEmpty(Username) && string.IsNullOrEmpty(clusterDefinition.Hosting.Hypervisor.HostUsername))
             {
-                throw new ClusterDefinitionException($"[{hypervisorHostPrefix}.{nameof(Username)}] is required when specifying a hypervisor host and no default username is specified by [{nameof(HostingOptions)}.{nameof(HostingOptions.Vm.HostUsername)}].");
+                throw new ClusterDefinitionException($"[{hypervisorHostPrefix}.{nameof(Username)}] is required when specifying a hypervisor host and no default username is specified by [{nameof(HostingOptions)}.{nameof(HostingOptions.Hypervisor.HostUsername)}].");
             }
 
-            if (string.IsNullOrEmpty(Password) && string.IsNullOrEmpty(clusterDefinition.Hosting.Vm.HostPassword))
+            if (string.IsNullOrEmpty(Password) && string.IsNullOrEmpty(clusterDefinition.Hosting.Hypervisor.HostPassword))
             {
-                throw new ClusterDefinitionException($"[{hypervisorHostPrefix}.{nameof(Password)}] is required when specifying a hypervisor host and no default password is specified by [{nameof(HostingOptions)}.{nameof(HostingOptions.Vm.HostPassword)}].");
+                throw new ClusterDefinitionException($"[{hypervisorHostPrefix}.{nameof(Password)}] is required when specifying a hypervisor host and no default password is specified by [{nameof(HostingOptions)}.{nameof(HostingOptions.Hypervisor.HostPassword)}].");
             }
         }
     }

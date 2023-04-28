@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    ClusterDefinition.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -888,18 +888,18 @@ namespace Neon.Kube.ClusterDef
 
             // Validate the properties.
 
-            FeatureGates = FeatureGates ?? new Dictionary<string, bool>();
-            Deployment   = Deployment ?? new DeploymentOptions();
-            Storage      = Storage ?? new StorageOptions();
-            Security     = Security ?? new SecurityOptions();
-            Kubernetes   = Kubernetes ?? new KubernetesOptions();
-            Monitor      = Monitor ?? new MonitorOptions();
-            Hosting      = Hosting ?? new HostingOptions();
-            Hosting.Vm   = Hosting.Vm ?? new VmHostingOptions();
-            NodeOptions  = NodeOptions ?? new NodeOptions();
-            Network      = Network ?? new NetworkOptions();
-            Container    = Container ?? new ContainerOptions();
-            Features     = Features ?? new FeatureOptions();
+            FeatureGates       = FeatureGates ?? new Dictionary<string, bool>();
+            Deployment         = Deployment ?? new DeploymentOptions();
+            Storage            = Storage ?? new StorageOptions();
+            Security           = Security ?? new SecurityOptions();
+            Kubernetes         = Kubernetes ?? new KubernetesOptions();
+            Monitor            = Monitor ?? new MonitorOptions();
+            Hosting            = Hosting ?? new HostingOptions();
+            Hosting.Hypervisor = Hosting.Hypervisor ?? new HypervisorHostingOptions();
+            NodeOptions        = NodeOptions ?? new NodeOptions();
+            Network            = Network ?? new NetworkOptions();
+            Container          = Container ?? new ContainerOptions();
+            Features           = Features ?? new FeatureOptions();
 
             if (IsDesktop && Nodes.Count() > 1)
             {

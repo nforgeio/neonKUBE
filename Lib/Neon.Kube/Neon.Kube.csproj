@@ -125,16 +125,12 @@
 
     <!--- Generate the model source files -->
 
-    <Target Name="ModelGen"
-            Inputs="$(NK_ROOT)\Lib\Neon.Kube.Models\.buildComplete"
-            Outputs="$(ProjectDir)Model\GeneratedEntities.mg.cs"
-            BeforeTargets="CoreCompile"
-            DependsOnTargets="BeforeCompile">
+    <Target Name="ModelGen" Inputs="$(NK_ROOT)\Lib\Neon.Kube.Models\.buildComplete" Outputs="$(ProjectDir)Model\GeneratedEntities.mg.cs" BeforeTargets="CoreCompile" DependsOnTargets="BeforeCompile">
 
         <!-- Fail if we still don't know the [neon-modelgen] location -->
-        <Error Condition="'$(ModelGeneratorPath)' == ''" Text="Cannot locate: neon-modelgen] location"/>
+        <Error Condition="'$(ModelGeneratorPath)' == ''" Text="Cannot locate: neon-modelgen] location" />
 
-        <Message Importance="high" Text="neon-modelgen path: $(ModelGeneratorPath)"/>
+        <Message Importance="high" Text="neon-modelgen path: $(ModelGeneratorPath)" />
         <Message Importance="high" Text="&quot;$(ModelGeneratorPath)&quot; --targets=all --target-namespace=Neon.Kube.Clients &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\$(TargetFramework)\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
         <Exec Command="&quot;$(ModelGeneratorPath)&quot; --targets=all --target-namespace=Neon.Kube.Clients &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\$(TargetFramework)\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
 

@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubeConfigMapName.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -75,5 +75,15 @@ namespace Neon.Kube
         /// </para>
         /// </summary>
         public const string ClusterManifest = "cluster-manifest";
+
+        /// <summary>
+        /// <para>
+        /// Identifies the configmap holding the <see cref="ClusterDeployment"/>.
+        /// </para>
+        /// <para>
+        /// This configmap is located in the <see cref="KubeNamespace.NeonSystem"/> namespace.
+        /// </para>
+        /// </summary>
+        public const string ClusterDeployment = "cluster-deployment";
     }
 }

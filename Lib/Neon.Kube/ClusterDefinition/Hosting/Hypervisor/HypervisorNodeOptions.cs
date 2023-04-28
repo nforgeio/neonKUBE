@@ -1,5 +1,5 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    VmNodeOptions.cs
+//-----------------------------------------------------------------------------
+// FILE:	    HypervisorNodeOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -42,18 +42,18 @@ namespace Neon.Kube.ClusterDef
     /// Specifies common node options for on-premise hypervisor based hosting environments such as
     /// Hyper-V and XenServer.
     /// </summary>
-    public class VmNodeOptions
+    public class HypervisorNodeOptions
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public VmNodeOptions()
+        public HypervisorNodeOptions()
         {
         }
 
         /// <summary>
         /// Identifies the hypervisor instance where this node is to be provisioned for Hyper-V
-        /// or XenServer based clusters.  This name must map to the name of one of the <see cref="VmHostingOptions.Hosts"/>
+        /// or XenServer based clusters.  This name must map to the name of one of the <see cref="HypervisorHostingOptions.Hosts"/>
         /// when set.
         /// </summary>
         [JsonProperty(PropertyName = "Host", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -64,7 +64,7 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// <para>
         /// Specifies the number of processors to assigned to this node when provisioned on a hypervisor.  This
-        /// defaults to the value specified by <see cref="VmHostingOptions.Cores"/>.
+        /// defaults to the value specified by <see cref="HypervisorHostingOptions.Cores"/>.
         /// </para>
         /// <note>
         /// neonKUBE requires that each control-plane and worker node have at least 4 CPUs.
@@ -80,7 +80,7 @@ namespace Neon.Kube.ClusterDef
         /// Specifies the amount of memory to allocate to this node when provisioned on a hypervisor.  
         /// This is specified as a string that can be a byte count or a number with units like <b>512MB</b>, 
         /// <b>0.5GB</b>, <b>2GB</b>, or <b>1TB</b>.  This defaults to the value specified by 
-        /// <see cref="VmHostingOptions.Memory"/>.
+        /// <see cref="HypervisorHostingOptions.Memory"/>.
         /// </para>
         /// <note>
         /// neonKUBE requires that each control-plane and worker node have at least 4GiB of RAM.
@@ -94,7 +94,7 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// The size of operating system disk for this node when when provisioned on a hypervisor.  This is specified 
         /// as a string that can be a byte count or a number with units like <b>512MB</b>, <b>0.5GB</b>, <b>2GB</b>, or <b>1TB</b>.  This 
-        /// defaults to the value specified by <see cref="VmHostingOptions.OsDisk"/>.
+        /// defaults to the value specified by <see cref="HypervisorHostingOptions.OsDisk"/>.
         /// </summary>
         [JsonProperty(PropertyName = "OsDisk", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "osDisk", ApplyNamingConventions = false)]
@@ -105,7 +105,7 @@ namespace Neon.Kube.ClusterDef
         /// Specifies the size of the second block device to be created for this node when it is
         /// enabled for OpenEBS.  This is specified as a string that can be a byte count or a number with 
         /// units like <b>512MiB</b>, <b>0.5GiB</b>, <b>2iGB</b>, or <b>1TiB</b>.  This defaults
-        /// to the value specified by <see cref="VmHostingOptions.OpenEbsDisk"/>.
+        /// to the value specified by <see cref="HypervisorHostingOptions.OpenEbsDisk"/>.
         /// </summary>
         [JsonProperty(PropertyName = "OpenEbsDisk", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "openEbsDisk", ApplyNamingConventions = false)]
@@ -126,7 +126,7 @@ namespace Neon.Kube.ClusterDef
             }
             else
             {
-                return clusterDefinition.Hosting.Vm.Cores;
+                return clusterDefinition.Hosting.Hypervisor.Cores;
             }
         }
 
@@ -144,7 +144,7 @@ namespace Neon.Kube.ClusterDef
             }
             else
             {
-                return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.Vm.Memory, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.Vm.Memory));
+                return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.Hypervisor.Memory, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.Hypervisor.Memory));
             }
         }
 
@@ -162,7 +162,7 @@ namespace Neon.Kube.ClusterDef
             }
             else
             {
-                return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.Vm.OsDisk, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.Vm.OsDisk));
+                return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.Hypervisor.OsDisk, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.Hypervisor.OsDisk));
             }
         }
 
@@ -187,7 +187,7 @@ namespace Neon.Kube.ClusterDef
                 }
                 else
                 {
-                    return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.Vm.OpenEbsDisk, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.Vm.OpenEbsDisk), minimum: minOpenEbsSize);
+                    return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.Hypervisor.OpenEbsDisk, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.Hypervisor.OpenEbsDisk), minimum: minOpenEbsSize);
                 }
 
                 default:
@@ -212,11 +212,11 @@ namespace Neon.Kube.ClusterDef
             {
                 if (string.IsNullOrEmpty(Host))
                 {
-                    throw new ClusterDefinitionException($"Node [{nodeName}] does not specify a hypervisor [{nodeDefinitionPrefix}.{nameof(NodeDefinition.Vm.Host)}].");
+                    throw new ClusterDefinitionException($"Node [{nodeName}] does not specify a hypervisor [{nodeDefinitionPrefix}.{nameof(NodeDefinition.Hypervisor.Host)}].");
                 }
-                else if (clusterDefinition.Hosting.Vm.Hosts.FirstOrDefault(h => h.Name.Equals(Host, StringComparison.InvariantCultureIgnoreCase)) == null)
+                else if (clusterDefinition.Hosting.Hypervisor.Hosts.FirstOrDefault(h => h.Name.Equals(Host, StringComparison.InvariantCultureIgnoreCase)) == null)
                 {
-                    throw new ClusterDefinitionException($"Node [{nodeName}] references hypervisor [{Host}] which is not defined in [{nameof(ClusterDefinition.Hosting)}.{nameof(ClusterDefinition.Hosting.Vm)}.{nameof(ClusterDefinition.Hosting.Vm.Hosts)}].");
+                    throw new ClusterDefinitionException($"Node [{nodeName}] references hypervisor [{Host}] which is not defined in [{nameof(ClusterDefinition.Hosting)}.{nameof(ClusterDefinition.Hosting.Hypervisor)}.{nameof(ClusterDefinition.Hosting.Hypervisor.Hosts)}].");
                 }
             }
 

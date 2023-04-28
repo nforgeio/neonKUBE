@@ -157,18 +157,18 @@ namespace Neon.Kube.Hosting.XenServer
             this.nodeImagePath          = nodeImagePath;
             this.cluster.HostingManager = this;
             this.logFolder              = logFolder;
-            this.maxVmNameWidth         = cluster.SetupState.ClusterDefinition.Nodes.Max(node => node.Name.Length) + cluster.SetupState.ClusterDefinition.Hosting.Vm.GetVmNamePrefix(cluster.SetupState.ClusterDefinition).Length;
+            this.maxVmNameWidth         = cluster.SetupState.ClusterDefinition.Nodes.Max(node => node.Name.Length) + cluster.SetupState.ClusterDefinition.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition).Length;
 
             // Create the [XenClient] instances that we'll use to manage the XenServer hosts.
 
             xenClients = new List<XenClient>();
 
-            foreach (var host in cluster.SetupState.ClusterDefinition.Hosting.Vm.Hosts)
+            foreach (var host in cluster.SetupState.ClusterDefinition.Hosting.Hypervisor.Hosts)
             {
                 var hostAddress  = GetHostIpAddress(host);
                 var hostname     = host.Name;
-                var hostUsername = host.Username ?? cluster.SetupState.ClusterDefinition.Hosting.Vm.HostUsername;
-                var hostPassword = host.Password ?? cluster.SetupState.ClusterDefinition.Hosting.Vm.HostPassword;
+                var hostUsername = host.Username ?? cluster.SetupState.ClusterDefinition.Hosting.Hypervisor.HostUsername;
+                var hostPassword = host.Password ?? cluster.SetupState.ClusterDefinition.Hosting.Hypervisor.HostPassword;
 
                 if (string.IsNullOrEmpty(hostname))
                 {
@@ -218,22 +218,22 @@ namespace Neon.Kube.Hosting.XenServer
                 throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Environment)}] must be set to [{HostingEnvironment.XenServer}].");
             }
 
-            if (clusterDefinition.Hosting == null || clusterDefinition.Hosting.Vm == null)
+            if (clusterDefinition.Hosting == null || clusterDefinition.Hosting.Hypervisor == null)
             {
-                throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Vm)}] property is required for XenServer clusters.");
+                throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Hypervisor)}] property is required for XenServer clusters.");
             }
 
-            var defaultHostUsername = clusterDefinition.Hosting.Vm.HostUsername;
-            var defaultHostPassword = clusterDefinition.Hosting.Vm.HostPassword;
+            var defaultHostUsername = clusterDefinition.Hosting.Hypervisor.HostUsername;
+            var defaultHostPassword = clusterDefinition.Hosting.Hypervisor.HostPassword;
 
-            if (clusterDefinition.Hosting.Vm.Hosts == null || clusterDefinition.Hosting.Vm.Hosts.Count == 0)
+            if (clusterDefinition.Hosting.Hypervisor.Hosts == null || clusterDefinition.Hosting.Hypervisor.Hosts.Count == 0)
             {
-                throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Vm)}.{nameof(VmHostingOptions.Hosts)}] must specify at least one XenServer host.");
+                throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Hypervisor)}.{nameof(HypervisorHostingOptions.Hosts)}] must specify at least one XenServer host.");
             }
 
             var hostSet = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
-            foreach (var host in clusterDefinition.Hosting.Vm.Hosts)
+            foreach (var host in clusterDefinition.Hosting.Hypervisor.Hosts)
             {
                 if (string.IsNullOrEmpty(host.Username) && string.IsNullOrEmpty(defaultHostUsername))
                 {
@@ -253,14 +253,14 @@ namespace Neon.Kube.Hosting.XenServer
 
             foreach (var node in clusterDefinition.Nodes)
             {
-                if (node.Vm == null || string.IsNullOrEmpty(node.Vm.Host))
+                if (node.Hypervisor == null || string.IsNullOrEmpty(node.Hypervisor.Host))
                 {
-                    throw new ClusterDefinitionException($"Cluster node [{node.Name}] does not specify a [{nameof(VmNodeOptions)}.{nameof(VmNodeOptions.Host)}]");
+                    throw new ClusterDefinitionException($"Cluster node [{node.Name}] does not specify a [{nameof(HypervisorNodeOptions)}.{nameof(HypervisorNodeOptions.Host)}]");
                 }
 
-                if (!hostSet.Contains(node.Vm.Host))
+                if (!hostSet.Contains(node.Hypervisor.Host))
                 {
-                    throw new ClusterDefinitionException($"Cluster node [{node.Name}] references [host={node.Vm.Host}] which is not defined.");
+                    throw new ClusterDefinitionException($"Cluster node [{node.Name}] references [host={node.Hypervisor.Host}] which is not defined.");
                 }
             }
         }
@@ -280,10 +280,10 @@ namespace Neon.Kube.Hosting.XenServer
 
             foreach (var node in cluster.SetupState.ClusterDefinition.Nodes)
             {
-                node.Labels.PhysicalMachine = node.Vm.Host;
-                node.Labels.ComputeCores    = node.Vm.GetCores(cluster.SetupState.ClusterDefinition);
-                node.Labels.ComputeRam      = (int)(node.Vm.GetMemory(cluster.SetupState.ClusterDefinition) / ByteUnits.MebiBytes);
-                node.Labels.StorageSize     = ByteUnits.ToGiB(node.Vm.GetOsDisk(cluster.SetupState.ClusterDefinition));
+                node.Labels.PhysicalMachine = node.Hypervisor.Host;
+                node.Labels.ComputeCores    = node.Hypervisor.GetCores(cluster.SetupState.ClusterDefinition);
+                node.Labels.ComputeRam      = (int)(node.Hypervisor.GetMemory(cluster.SetupState.ClusterDefinition) / ByteUnits.MebiBytes);
+                node.Labels.StorageSize     = ByteUnits.ToGiB(node.Hypervisor.GetOsDisk(cluster.SetupState.ClusterDefinition));
             }
 
             // Create [NodeSshProxy] instances that use the [XenClient] instances as proxy metadata.
@@ -299,12 +299,12 @@ namespace Neon.Kube.Hosting.XenServer
 
             var xenSshProxies = new List<NodeSshProxy<XenClient>>();
 
-            foreach (var host in cluster.SetupState.ClusterDefinition.Hosting.Vm.Hosts)
+            foreach (var host in cluster.SetupState.ClusterDefinition.Hosting.Hypervisor.Hosts)
             {
                 var hostAddress  = NetHelper.ParseIPv4Address(GetHostIpAddress(host));
                 var hostname     = host.Name;
-                var hostUsername = host.Username ?? cluster.SetupState.ClusterDefinition.Hosting.Vm.HostUsername;
-                var hostPassword = host.Password ?? cluster.SetupState.ClusterDefinition.Hosting.Vm.HostPassword;
+                var hostUsername = host.Username ?? cluster.SetupState.ClusterDefinition.Hosting.Hypervisor.HostUsername;
+                var hostPassword = host.Password ?? cluster.SetupState.ClusterDefinition.Hosting.Hypervisor.HostPassword;
 
                 if (string.IsNullOrEmpty(hostname))
                 {
@@ -401,7 +401,7 @@ namespace Neon.Kube.Hosting.XenServer
                 controller.AddNodeStep("openebs",
                     (controller, node) =>
                     {
-                        var xenClient = xenClients.Single(client => client.Name == node.Metadata.Vm.Host);
+                        var xenClient = xenClients.Single(client => client.Name == node.Metadata.Hypervisor.Host);
 
                         node.Status = "openebs: waiting for host...";
 
@@ -416,7 +416,7 @@ namespace Neon.Kube.Hosting.XenServer
                                 var disk = new XenVirtualDisk()
                                 {
                                     Name        = $"{GetVmName(node)}: openebs",
-                                    Size        = node.Metadata.Vm.GetOpenEbsDiskSizeBytes(cluster.SetupState.ClusterDefinition),
+                                    Size        = node.Metadata.Hypervisor.GetOpenEbsDiskSizeBytes(cluster.SetupState.ClusterDefinition),
                                     Description = "OpenEBS cStor"
                                 };
 
@@ -477,7 +477,7 @@ namespace Neon.Kube.Hosting.XenServer
         {
             var nodeDefinitions = cluster.SetupState.ClusterDefinition.NodeDefinitions.Values;
 
-            return cluster.Nodes.Where(node => node.Metadata.Vm.Host.Equals(xenClient.Name, StringComparison.InvariantCultureIgnoreCase))
+            return cluster.Nodes.Where(node => node.Metadata.Hypervisor.Host.Equals(xenClient.Name, StringComparison.InvariantCultureIgnoreCase))
                 .OrderBy(node => node.Name, StringComparer.CurrentCultureIgnoreCase)
                 .ToList();
         }
@@ -499,7 +499,7 @@ namespace Neon.Kube.Hosting.XenServer
         /// <returns>The virtual machine name.</returns>
         private string GetVmName(NodeSshProxy<NodeDefinition> node)
         {
-            return $"{cluster.SetupState.ClusterDefinition.Hosting.Vm.GetVmNamePrefix(cluster.SetupState.ClusterDefinition)}{node.Name}";
+            return $"{cluster.SetupState.ClusterDefinition.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition)}{node.Name}";
         }
 
         /// <summary>
@@ -511,7 +511,7 @@ namespace Neon.Kube.Hosting.XenServer
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
-            return $"{cluster.SetupState.ClusterDefinition.Hosting.Vm.GetVmNamePrefix(cluster.SetupState.ClusterDefinition)}{node.Name}";
+            return $"{cluster.SetupState.ClusterDefinition.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition)}{node.Name}";
         }
 
         /// <summary>
@@ -523,7 +523,7 @@ namespace Neon.Kube.Hosting.XenServer
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(vmName), nameof(vmName));
 
-            var prefix = cluster.SetupState.ClusterDefinition.Hosting.Vm.GetVmNamePrefix(cluster.SetupState.ClusterDefinition);
+            var prefix = cluster.SetupState.ClusterDefinition.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition);
 
             if (!vmName.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
             {
@@ -762,9 +762,9 @@ namespace Neon.Kube.Hosting.XenServer
             foreach (var node in GetHostedNodes(xenClient))
             {
                 var vmName      = GetVmName(node);
-                var cores       = node.Metadata.Vm.GetCores(cluster.SetupState.ClusterDefinition);
-                var memoryBytes = node.Metadata.Vm.GetMemory(cluster.SetupState.ClusterDefinition);
-                var osDiskBytes = node.Metadata.Vm.GetOsDisk(cluster.SetupState.ClusterDefinition);
+                var cores       = node.Metadata.Hypervisor.GetCores(cluster.SetupState.ClusterDefinition);
+                var memoryBytes = node.Metadata.Hypervisor.GetMemory(cluster.SetupState.ClusterDefinition);
+                var osDiskBytes = node.Metadata.Hypervisor.GetOsDisk(cluster.SetupState.ClusterDefinition);
 
                 xenSshProxy.Status = FormatVmStatus(vmName, "create: virtual machine");
 
@@ -952,7 +952,7 @@ namespace Neon.Kube.Hosting.XenServer
                             ResourceType = HostingConstrainedResourceType.VmHost,
                             Details      = "XenServer host is offline",
                             Nodes        = cluster.SetupState.ClusterDefinition.Nodes
-                                               .Where(node => node.Vm.Host.Equals(offlineHostname, StringComparison.InvariantCultureIgnoreCase))
+                                               .Where(node => node.Hypervisor.Host.Equals(offlineHostname, StringComparison.InvariantCultureIgnoreCase))
                                                .OrderBy(node => node.Name)
                                                .Select(node => node.Name)
                                                .ToList()
@@ -977,11 +977,11 @@ namespace Neon.Kube.Hosting.XenServer
 
             foreach (var node in cluster.SetupState.ClusterDefinition.Nodes)
             {
-                var hostname = node.Vm.Host;
+                var hostname = node.Hypervisor.Host;
 
-                hostnameToRequiredMemory[hostname] += node.Vm.GetMemory(cluster.SetupState.ClusterDefinition);
+                hostnameToRequiredMemory[hostname] += node.Hypervisor.GetMemory(cluster.SetupState.ClusterDefinition);
 
-                var requiredDiskForNode = node.Vm.GetOsDisk(cluster.SetupState.ClusterDefinition);
+                var requiredDiskForNode = node.Hypervisor.GetOsDisk(cluster.SetupState.ClusterDefinition);
 
                 if (node.OpenEbsStorage)
                 {
@@ -990,7 +990,7 @@ namespace Neon.Kube.Hosting.XenServer
                         case OpenEbsEngine.cStor:
                         case OpenEbsEngine.Mayastor:
 
-                            requiredDiskForNode += node.Vm.GetOpenEbsDiskSizeBytes(cluster.SetupState.ClusterDefinition);
+                            requiredDiskForNode += node.Hypervisor.GetOpenEbsDiskSizeBytes(cluster.SetupState.ClusterDefinition);
                             break;
 
                         default:
@@ -1005,7 +1005,7 @@ namespace Neon.Kube.Hosting.XenServer
             //-----------------------------------------------------------------
             // Construct and return the resource availability.
 
-            var hostNodes = cluster.SetupState.ClusterDefinition.Nodes.ToLookup(node => node.Vm.Host, node => node);
+            var hostNodes = cluster.SetupState.ClusterDefinition.Nodes.ToLookup(node => node.Hypervisor.Host, node => node);
 
             foreach (var hostNodeGroup in hostNodes)
             {
@@ -1355,7 +1355,7 @@ namespace Neon.Kube.Hosting.XenServer
                 node =>
                 {
                     var vmName    = GetVmName(node);
-                    var xenClient = xenClients.Single(xenClient => xenClient.Name.Equals(node.Vm.Host, StringComparison.InvariantCultureIgnoreCase));
+                    var xenClient = xenClients.Single(xenClient => xenClient.Name.Equals(node.Hypervisor.Host, StringComparison.InvariantCultureIgnoreCase));
                     var vm        = xenClient.Machine.Find(name: vmName);
 
                     if (vm == null)
@@ -1398,7 +1398,7 @@ namespace Neon.Kube.Hosting.XenServer
                 node =>
                 {
                     var vmName    = GetVmName(node);
-                    var xenClient = GetXenClient(node.Vm.Host);
+                    var xenClient = GetXenClient(node.Hypervisor.Host);
                     var vm        = xenClient.Machine.Find(vmName);
 
                     if (vm == null)
@@ -1460,7 +1460,7 @@ namespace Neon.Kube.Hosting.XenServer
             //
             // Otherwise, we'll do a normal remove.
 
-            var vmPrefix = cluster.SetupState.ClusterDefinition.Hosting.Vm.GetVmNamePrefix(cluster.SetupState.ClusterDefinition);
+            var vmPrefix = cluster.SetupState.ClusterDefinition.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition);
 
             if (removeOrphans && !string.IsNullOrEmpty(vmPrefix))
             {
@@ -1487,7 +1487,7 @@ namespace Neon.Kube.Hosting.XenServer
                 node =>
                 {
                     var vmName    = GetVmName(node);
-                    var xenClient = GetXenClient(node.Vm.Host);
+                    var xenClient = GetXenClient(node.Hypervisor.Host);
                     var vm        = xenClient.Machine.Find(vmName);
 
                     if (vm == null)

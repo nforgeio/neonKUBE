@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    NodeDefinition.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -27,15 +27,16 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
-using YamlDotNet.Serialization;
+using k8s.Models;
 
 using Neon.Common;
 using Neon.Net;
 
-using k8s.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
+
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube.ClusterDef
 {
@@ -211,10 +212,10 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// Hypervisor hosting related options for environments like Hyper-V and XenServer.
         /// </summary>
-        [JsonProperty(PropertyName = "Vm", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "vm", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Hypervisor", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "hypervisor", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public VmNodeOptions Vm { get; set; }
+        public HypervisorNodeOptions Hypervisor { get; set; }
 
         /// <summary>
         /// Azure provisioning options for this node, or <c>null</c> to use reasonable defaults.
@@ -263,7 +264,7 @@ namespace Neon.Kube.ClusterDef
                 case HostingEnvironment.HyperV:
                 case HostingEnvironment.XenServer:
 
-                    return Vm.GetOsDisk(clusterDefinition).ToString();
+                    return Hypervisor.GetOsDisk(clusterDefinition).ToString();
 
                 default:
 
@@ -301,7 +302,7 @@ namespace Neon.Kube.ClusterDef
                 case HostingEnvironment.HyperV:
                 case HostingEnvironment.XenServer:
 
-                    return Vm.GetOsDisk(clusterDefinition).ToString();
+                    return Hypervisor.GetOsDisk(clusterDefinition).ToString();
 
                 default:
 
@@ -318,7 +319,7 @@ namespace Neon.Kube.ClusterDef
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            Vm = Vm ?? new VmNodeOptions();
+            Hypervisor = Hypervisor ?? new HypervisorNodeOptions();
 
             var nodeDefinitionPrefix = $"{nameof(ClusterDefinition.NodeDefinitions)}";
 
@@ -418,8 +419,8 @@ namespace Neon.Kube.ClusterDef
                 case HostingEnvironment.HyperV:
                 case HostingEnvironment.XenServer:
 
-                    Vm = Vm ?? new VmNodeOptions();
-                    Vm.Validate(clusterDefinition, this.Name);
+                    Hypervisor = Hypervisor ?? new HypervisorNodeOptions();
+                    Hypervisor.Validate(clusterDefinition, this.Name);
                     break;
 
                 default:

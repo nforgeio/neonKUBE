@@ -191,7 +191,7 @@ namespace Neon.Kube.Setup
                     }
                     else if (processorCount == 4)
                     {
-                        clusterDefinition.Hosting.Vm.Cores = 3;
+                        clusterDefinition.Hosting.Hypervisor.Cores = 3;
                     }
 
                     clusterDefinition.RootPassword = KubeConst.RootDesktopPassword;
