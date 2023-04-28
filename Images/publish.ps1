@@ -33,6 +33,7 @@ param
     [switch]$noprune         = $false,      # Don't prune the local Docker cache
     [switch]$noclean         = $false,      # Don't clean before building
     [switch]$allVersions     = $false,      # Rebuild all image versions
+    [switch]$rethrow         = $false,      # Rethrow any exceptions (used when called by other scripts)
     [switch]$nobuildsolution = $false       # Don't clean or build the solution
 )
 
@@ -206,5 +207,11 @@ try
 catch
 {
     Write-Exception $_
+
+    if ($rethrow)
+    {
+        throw
+    }
+
     exit 1
 }
