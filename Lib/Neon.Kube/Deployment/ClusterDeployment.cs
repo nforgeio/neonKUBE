@@ -27,6 +27,8 @@ using Neon.Kube.ClusterDef;
 
 using Newtonsoft.Json;
 
+using Octokit;
+
 using YamlDotNet.Serialization;
 
 namespace Neon.Kube.Deployment
@@ -43,6 +45,8 @@ namespace Neon.Kube.Deployment
         /// </summary>
         public ClusterDeployment()
         {
+            Hosting = new HostingDeployment();
+            Nodes   = new List<NodeDeployment>();
         }
 
         /// <summary>
@@ -52,11 +56,24 @@ namespace Neon.Kube.Deployment
         public ClusterDeployment(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            Hosting = new HostingDeployment(clusterDefinition);
+            Nodes   = new List<NodeDeployment>();
+
+            foreach (var nodeDefinition in clusterDefinition.Nodes)
+            {
+                Nodes.Add(new NodeDeployment(nodeDefinition));
+            }
         }
 
         /// <summary>
-        /// Identifies the environment hosting the cluster.
+        /// Holds information about the environment hosting the cluster.
         /// </summary>
-        public HostingEnvironment HostingEnvironment { get; set; }
+        public HostingDeployment Hosting { get; set; }
+
+        /// <summary>
+        /// Holds information about the cluster nodes.
+        /// </summary>
+        public List<NodeDeployment> Nodes { get; set; }
     }
 }

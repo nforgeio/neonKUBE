@@ -440,7 +440,7 @@ namespace Neon.Kube.Xunit
             //      * That it's running
             //      * That it's not locked
 
-            Cluster = new ClusterProxy(KubeHelper.CurrentContext, new HostingManagerFactory(), options.CloudMarketplace);
+            Cluster = ClusterProxy.CreateAsync(KubeHelper.CurrentContext, new HostingManagerFactory(), options.CloudMarketplace).Result;
 
             try
             {
@@ -629,7 +629,7 @@ namespace Neon.Kube.Xunit
                 // otherwise we'll remove the cluster as well as its context/login,
                 // and deploy a new cluster below.
 
-                using (var cluster = new ClusterProxy(new HostingManagerFactory(), options.CloudMarketplace))
+                using (var cluster = ClusterProxy.CreateAsync(new HostingManagerFactory(), options.CloudMarketplace).Result)
                 {
                     KubeHelper.SetCurrentContext(configContextName);
 
@@ -650,7 +650,7 @@ namespace Neon.Kube.Xunit
 
                         started   = true;
                         IsRunning = true;
-                        Cluster   = new ClusterProxy(KubeHelper.CurrentContext, new HostingManagerFactory(), options.CloudMarketplace);
+                        Cluster   = ClusterProxy.CreateAsync(KubeHelper.CurrentContext, new HostingManagerFactory(), options.CloudMarketplace).Result;
 
                         return TestFixtureStatus.Started;
                     }
@@ -664,7 +664,7 @@ namespace Neon.Kube.Xunit
                 // deployed by another machine or fragments of a partially deployed cluster,
                 // so we need to do a preemptive cluster remove.
 
-                using (var cluster = new ClusterProxy(new HostingManagerFactory(), options.CloudMarketplace))
+                using (var cluster = ClusterProxy.CreateAsync(new HostingManagerFactory(), options.CloudMarketplace).Result)
                 {
                     cluster.DeleteClusterAsync(deleteOrphans: true).WaitWithoutAggregate();
                 }
@@ -692,10 +692,7 @@ namespace Neon.Kube.Xunit
                     Unredacted    = options.Unredacted
                 };
 
-                var controller = KubeSetup.CreateClusterPrepareController(
-                    clusterDefinition:   clusterDefinition,
-                    cloudMarketplace:    options.CloudMarketplace,
-                    options:             prepareOptions);
+                var controller = KubeSetup.CreateClusterPrepareControllerAsync(clusterDefinition: clusterDefinition, cloudMarketplace: options.CloudMarketplace, options: prepareOptions).Result;
 
                 switch (controller.RunAsync().ResultWithoutAggregate())
                 {
@@ -735,10 +732,7 @@ namespace Neon.Kube.Xunit
                     Unredacted  = options.Unredacted
                 };
 
-                var controller = KubeSetup.CreateClusterSetupController(
-                    clusterDefinition: clusterDefinition,
-                    cloudMarketplace:  options.CloudMarketplace,
-                    options:           setupOptions);
+                var controller = KubeSetup.CreateClusterSetupControllerAsync(clusterDefinition: clusterDefinition, cloudMarketplace: options.CloudMarketplace, options: setupOptions).Result;
 
                 switch (controller.RunAsync().ResultWithoutAggregate())
                 {
@@ -770,7 +764,7 @@ namespace Neon.Kube.Xunit
 
             started   = true;
             IsRunning = true;
-            Cluster   = new ClusterProxy(KubeHelper.CurrentContext, new HostingManagerFactory(), options.CloudMarketplace);
+            Cluster   = ClusterProxy.CreateAsync(KubeHelper.CurrentContext, new HostingManagerFactory(), options.CloudMarketplace).Result;
 
             return TestFixtureStatus.Started;
         }

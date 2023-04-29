@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    ClusterSetupCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -247,7 +247,7 @@ OPTIONS:
                 setupOptions.DesktopReadyToGo = true;
             }
 
-            var controller = KubeSetup.CreateClusterSetupController(
+            var controller = await KubeSetup.CreateClusterSetupControllerAsync(
                 clusterDefinition,
                 cloudMarketplace: !useStaged,
                 options:          setupOptions);

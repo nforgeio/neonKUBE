@@ -100,7 +100,137 @@ namespace Neon.Kube.Proxy
         }
 
         //---------------------------------------------------------------------
-        // Implementation
+        // Static members
+
+        /// <summary>
+        /// Creates a cluster proxy from a <see cref="KubeConfigContext"/> that will
+        /// typically be used to manage an already deployed cluster.
+        /// </summary>
+        /// <param name="context">The Kubernetes confug context.</param>
+        /// <param name="hostingManagerFactory">The hosting manager factory,</param>
+        /// <param name="cloudMarketplace">
+        /// <para>
+        /// For cloud environments, this specifies whether the cluster should be provisioned
+        /// using a VM image from the public cloud marketplace when <c>true</c> or from the
+        /// private NEONFORGE image gallery for testing when <c>false</c>.  This is ignored
+        /// for on-premise environments.
+        /// </para>
+        /// <note>
+        /// Only NEONFORGE maintainers will have permission to use the private image.
+        /// </note>
+        /// </param>
+        /// <param name="operation">Optionally identifies the operations that will be performed using the proxy.  This defaults to <see cref="Operation.LifeCycle"/>.</param>
+        /// <param name="setupState">Optionally specifies cluster setup state.</param>
+        /// <param name="nodeImageUri">Optionally passed as the URI to the (GZIP compressed) node image.</param>
+        /// <param name="nodeImagePath">Optionally passed as the local path to the (GZIP compressed) node image file.</param>
+        /// <param name="nodeProxyCreator">
+        /// The application supplied function that creates a management proxy
+        /// given the node name, public address or FQDN, private address, and
+        /// the node definition.
+        /// </param>
+        /// <param name="defaultRunOptions">
+        /// Optionally specifies the <see cref="RunOptions"/> to be assigned to the 
+        /// <see cref="LinuxSshProxy.DefaultRunOptions"/> property for the nodes managed
+        /// by the cluster proxy.  This defaults to <see cref="RunOptions.None"/>.
+        /// </param>
+        /// <returns>The <see cref="ClusterProxy"/>.</returns>
+        public static async Task<ClusterProxy> CreateAsync(
+            KubeConfigContext       context,
+            IHostingManagerFactory  hostingManagerFactory,
+            bool                    cloudMarketplace,
+            Operation               operation         = Operation.LifeCycle,
+            KubeSetupState          setupState        = null,
+            string                  nodeImageUri      = null,
+            string                  nodeImagePath     = null,
+            NodeProxyCreator        nodeProxyCreator  = null,
+            RunOptions              defaultRunOptions = RunOptions.None)
+        {
+            var cluster = new ClusterProxy(
+                context:               context,
+                hostingManagerFactory: hostingManagerFactory,
+                cloudMarketplace:      cloudMarketplace,
+                operation:             operation,
+                setupState:            setupState,
+                nodeImageUri:          nodeImageUri,
+                nodeImagePath:         nodeImagePath,
+                nodeProxyCreator:      nodeProxyCreator,
+                defaultRunOptions:     defaultRunOptions);
+
+            await cluster.InitializeAsync();
+
+            return cluster;
+        }
+
+        /// <summary>
+        /// Constructs a cluster proxy that will typically be used for deploying a new cluster.
+        /// </summary>
+        /// <param name="hostingManagerFactory">The hosting manager factory,</param>
+        /// <param name="cloudMarketplace">
+        /// <para>
+        /// For cloud environments, this specifies whether the cluster should be provisioned
+        /// using a VM image from the public cloud marketplace when <c>true</c> or from the
+        /// private NEONFORGE image gallery for testing when <c>false</c>.  This is ignored
+        /// for on-premise environments.
+        /// </para>
+        /// <note>
+        /// Only NEONFORGE maintainers will have permission to use the private image.
+        /// </note>
+        /// </param>
+        /// <param name="operation">Optionally identifies the operations that will be performed using the proxy.  This defaults to <see cref="Operation.LifeCycle"/>.</param>
+        /// <param name="setupState">Optionally specifies cluster setup state.</param>
+        /// <param name="nodeImageUri">Optionally passed as the URI to the (GZIP compressed) node image.</param>
+        /// <param name="nodeImagePath">Optionally passed as the local path to the (GZIP compressed) node image file.</param>
+        /// <param name="nodeProxyCreator">
+        /// The application supplied function that creates a management proxy
+        /// given the node name, public address or FQDN, private address, and
+        /// the node definition.
+        /// </param>
+        /// <param name="defaultRunOptions">
+        /// Optionally specifies the <see cref="RunOptions"/> to be assigned to the 
+        /// <see cref="LinuxSshProxy.DefaultRunOptions"/> property for the nodes managed
+        /// by the cluster proxy.  This defaults to <see cref="RunOptions.None"/>.
+        /// </param>
+        /// <returns>The <see cref="ClusterProxy"/>.</returns>
+        /// <remarks>
+        /// <para>
+        /// At least one of <paramref name="nodeImageUri"/> or <paramref name="nodeImagePath"/> must be passed
+        /// for <see cref="GetHostingManager(IHostingManagerFactory, bool, Operation, string)"/> to work.
+        /// </para>
+        /// <para>set
+        /// The <paramref name="nodeProxyCreator"/> function will be called for each node in
+        /// the cluster definition giving the application the chance to create the node
+        /// proxy using the node's SSH credentials and also to specify logging.  A default
+        /// creator that doesn't initialize SSH credentials and logging is used if <c>null</c>
+        /// is passed.
+        /// </para>
+        /// </remarks>
+        public static async Task<ClusterProxy> CreateAsync(
+            IHostingManagerFactory  hostingManagerFactory,
+            bool                    cloudMarketplace,
+            Operation               operation         = Operation.LifeCycle,
+            KubeSetupState          setupState        = null,
+            string                  nodeImageUri      = null,
+            string                  nodeImagePath     = null,
+            NodeProxyCreator        nodeProxyCreator  = null,
+            RunOptions              defaultRunOptions = RunOptions.None)
+        {
+            var cluster = new ClusterProxy(
+                hostingManagerFactory: hostingManagerFactory,
+                cloudMarketplace:      cloudMarketplace,
+                operation:             operation,
+                setupState:            setupState,
+                nodeImageUri:          nodeImageUri,
+                nodeImagePath:         nodeImagePath,
+                nodeProxyCreator:      nodeProxyCreator,
+                defaultRunOptions:     defaultRunOptions);
+
+            await cluster.InitializeAsync();
+
+            return cluster;
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
 
         private object                  syncLock = new object();
         private KubeConfigContext       context;
@@ -141,7 +271,7 @@ namespace Neon.Kube.Proxy
         /// <see cref="LinuxSshProxy.DefaultRunOptions"/> property for the nodes managed
         /// by the cluster proxy.  This defaults to <see cref="RunOptions.None"/>.
         /// </param>
-        public ClusterProxy(
+        private ClusterProxy(
             KubeConfigContext       context,
             IHostingManagerFactory  hostingManagerFactory,
             bool                    cloudMarketplace,
@@ -153,14 +283,14 @@ namespace Neon.Kube.Proxy
             RunOptions              defaultRunOptions = RunOptions.None)
             
             : this(
-                hostingManagerFactory:    hostingManagerFactory, 
-                cloudMarketplace:         cloudMarketplace,
-                operation:                operation,
-                setupState:               setupState,
-                nodeImageUri:             nodeImageUri, 
-                nodeImagePath:            nodeImagePath, 
-                nodeProxyCreator:         nodeProxyCreator, 
-                defaultRunOptions:        defaultRunOptions)
+                hostingManagerFactory: hostingManagerFactory, 
+                cloudMarketplace:      cloudMarketplace,
+                operation:             operation,
+                setupState:            setupState,
+                nodeImageUri:          nodeImageUri, 
+                nodeImagePath:         nodeImagePath, 
+                nodeProxyCreator:      nodeProxyCreator, 
+                defaultRunOptions:     defaultRunOptions)
         {
             this.context = context;
         }
@@ -207,7 +337,7 @@ namespace Neon.Kube.Proxy
         /// is passed.
         /// </para>
         /// </remarks>
-        public ClusterProxy(
+        private ClusterProxy(
             IHostingManagerFactory  hostingManagerFactory,
             bool                    cloudMarketplace,
             Operation               operation         = Operation.LifeCycle,
@@ -254,41 +384,6 @@ namespace Neon.Kube.Proxy
             this.defaultRunOptions = defaultRunOptions;
             this.nodeProxyCreator  = nodeProxyCreator;
 
-            // Initialize the cluster nodes.  There's two scenarios here:
-            //
-            //      * The [SetupState] property is set, indicating that the proxy is being
-            //        used to deploy a cluster, so we'll obtain the node information from
-            //        the cluster definition.
-            //
-            //      * The [SetupState] operator is NULL, indicating that the proxy references
-            //        an already deployed cluster.  In this case, we'll fetch the deployment
-            //        details from the cluster itself.
-
-            var nodes = new List<NodeSshProxy<NodeDefinition>>();
-
-            if (SetupState != null)
-            {
-                foreach (var nodeDefinition in SetupState.ClusterDefinition.SortedNodes)
-                {
-                    var node = nodeProxyCreator(nodeDefinition.Name, NetHelper.ParseIPv4Address(nodeDefinition.Address ?? "0.0.0.0"));
-
-                    node.Cluster = this;
-                    node.DefaultRunOptions = defaultRunOptions;
-                    node.Metadata = nodeDefinition;
-
-                    nodes.Add(node);
-                }
-            }
-            else
-            {
-                // $todo(jefflill): COMPLETE THIS!
-
-                // var configMap = await K8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterDeployment>(KubeConfigMapName.ClusterDeployment, KubeNamespace.NeonSystem);
-            }
-
-            this.Nodes            = nodes;
-            this.FirstControlNode = Nodes.Where(n => n.Metadata.IsControlPane).OrderBy(n => n.Name).First();
-
             // Create the hosting manager.
 
             this.HostingManager = GetHostingManager(hostingManagerFactory, cloudMarketplace, operation, KubeHelper.LogFolder);
@@ -323,6 +418,56 @@ namespace Neon.Kube.Proxy
             {
                 GC.SuppressFinalize(this);
             }
+        }
+
+        /// <summary>
+        /// Initializes the cluster proxy from setup state when available otherwise from the
+        /// cluster's deployment details..
+        /// </summary>
+        /// <returns></returns>
+        private async Task InitializeAsync()
+        {
+            // Initialize the cluster nodes.  There are two scenarios here:
+            //
+            //      * The [SetupState] property is set, indicating that the proxy is being
+            //        used to deploy a cluster, so we'll obtain deployment details from the
+            //        cluster definition.
+            //
+            //      * The [SetupState] operator is NULL, indicating that the proxy references
+            //        an already deployed cluster.  In this case, we'll fetch the deployment
+            //        details from the cluster itself.
+
+            var nodes = new List<NodeSshProxy<NodeDefinition>>();
+
+            void AddNode(NodeSshProxy<NodeDefinition> node, NodeDefinition metadata = null)
+            {
+                node.Cluster           = this;
+                node.DefaultRunOptions = defaultRunOptions;
+                node.Metadata          = metadata;
+
+                nodes.Add(node);
+            }
+
+            if (SetupState != null)
+            {
+                foreach (var nodeDefinition in SetupState.ClusterDefinition.SortedNodes)
+                {
+                    AddNode(nodeProxyCreator(nodeDefinition.Name, NetHelper.ParseIPv4Address(nodeDefinition.Address ?? "0.0.0.0")), nodeDefinition);
+                }
+            }
+            else
+            {
+                var configMap         = await K8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterDeployment>(KubeConfigMapName.ClusterDeployment, KubeNamespace.NeonSystem);
+                var clusterDeployment = configMap.Data;
+
+                foreach (var nodeDeployment in clusterDeployment.Nodes)
+                {
+                    AddNode(nodeProxyCreator(nodeDeployment.Name, NetHelper.ParseIPv4Address(nodeDeployment.Address ?? "0.0.0.0")));
+                }
+            }
+
+            this.Nodes            = nodes;
+            this.FirstControlNode = Nodes.Where(n => n.Metadata.IsControlPane).OrderBy(n => n.Name).First();
         }
 
         /// <summary>

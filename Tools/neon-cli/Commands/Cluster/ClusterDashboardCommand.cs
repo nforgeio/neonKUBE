@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    ClusterDashboardCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -78,7 +78,7 @@ USAGE:
 
             var dashboardName = commandLine.Arguments.ElementAtOrDefault(0);
 
-            using (var cluster = new ClusterProxy(currentContext, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
+            using (var cluster = await ClusterProxy.CreateAsync(currentContext, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
             {
                 var dashboards = await cluster.ListClusterDashboardsAsync();
 

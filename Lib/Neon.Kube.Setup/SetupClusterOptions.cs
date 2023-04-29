@@ -48,7 +48,7 @@ using Neon.Tasks;
 namespace Neon.Kube.Setup
 {
     /// <summary>
-    /// Optionally used to specify options for <see cref="KubeSetup.CreateClusterSetupController(ClusterDefinition, bool, SetupClusterOptions)"/>.
+    /// Optionally used to specify options for <see cref="KubeSetup.CreateClusterSetupControllerAsync(ClusterDefinition, bool, SetupClusterOptions)"/>.
     /// </summary>
     public class SetupClusterOptions
     {

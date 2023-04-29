@@ -36,7 +36,7 @@ using Neon.Kube.Hosting;
 namespace Neon.Kube.Setup
 {
     /// <summary>
-    /// Optionally used to specify options for <see cref="KubeSetup.CreateClusterPrepareController(ClusterDefinition, bool, PrepareClusterOptions)"/>.
+    /// Optionally used to specify options for <see cref="KubeSetup.CreateClusterPrepareControllerAsync(ClusterDefinition, bool, PrepareClusterOptions)"/>.
     /// </summary>
     public class PrepareClusterOptions
     {

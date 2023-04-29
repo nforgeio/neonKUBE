@@ -4875,7 +4875,7 @@ $@"- name: StorageType
                     var clusterDeployment          = new ClusterDeployment(cluster.SetupState.ClusterDefinition);
                     var clusterDeploymentConfigMap = new TypedConfigMap<ClusterDeployment>(KubeConfigMapName.ClusterDeployment, KubeNamespace.NeonSystem, clusterDeployment);
 
-                    await k8s.CoreV1.ReplaceNamespacedTypedConfigMapAsync(clusterDeploymentConfigMap);
+                    await k8s.CoreV1.CreateNamespacedTypedConfigMapAsync(clusterDeploymentConfigMap);
 
                     // Deploy: neon-cluster-operator
 

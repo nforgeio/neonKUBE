@@ -71,7 +71,7 @@ namespace Neon.Kube.Setup
         /// <param name="options">Specifies the cluster prepare options.</param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
         /// <exception cref="NeonKubeException">Thrown when there's a problem.</exception>
-        public static ISetupController CreateClusterPrepareController(
+        public static async Task<ISetupController> CreateClusterPrepareControllerAsync(
             ClusterDefinition           clusterDefinition,
             bool                        cloudMarketplace,
             PrepareClusterOptions       options)
@@ -114,7 +114,7 @@ namespace Neon.Kube.Setup
 
             // Initialize the cluster proxy.
 
-            var cluster = new ClusterProxy(
+            var cluster = await ClusterProxy.CreateAsync(
                 hostingManagerFactory: new HostingManagerFactory(() => HostingLoader.Initialize()),
                 cloudMarketplace:      cloudMarketplace,
                 operation:             ClusterProxy.Operation.Prepare,

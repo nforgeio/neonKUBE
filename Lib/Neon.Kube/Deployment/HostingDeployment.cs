@@ -32,7 +32,7 @@ using YamlDotNet.Serialization;
 namespace Neon.Kube.Deployment
 {
     /// <summary>
-    /// Holds information about the environment hosting the cluster deployment.
+    /// Holds information about the environment hosting the cluster.
     /// </summary>
     public class HostingDeployment
     {

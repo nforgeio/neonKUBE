@@ -72,7 +72,7 @@ namespace Neon.Kube.Setup
         /// <param name="options">Specifies the cluster setup options.</param>
         /// <returns>The <see cref="ISetupController"/>.</returns>
         /// <exception cref="NeonKubeException">Thrown when there's a problem.</exception>
-        public static ISetupController CreateClusterSetupController(
+        public static async Task<ISetupController> CreateClusterSetupControllerAsync(
             ClusterDefinition   clusterDefinition,
             bool                cloudMarketplace,
             SetupClusterOptions options)
@@ -133,9 +133,7 @@ namespace Neon.Kube.Setup
 
             // Initialize the cluster proxy.
 
-            var cluster = (ClusterProxy)null;
-
-            cluster = new ClusterProxy(
+            var cluster = await ClusterProxy.CreateAsync(
                 hostingManagerFactory: new HostingManagerFactory(() => HostingLoader.Initialize()),
                 cloudMarketplace:      cloudMarketplace,
                 operation:             ClusterProxy.Operation.Setup,

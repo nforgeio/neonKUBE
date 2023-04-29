@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    ClusterPrepareCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -248,7 +248,7 @@ OPTIONS:
             // Do a quick sanity check to ensure that the hosting environment has no conflicts
             // as well as enough resources (memory, disk,...) to actually host the cluster.
 
-            using (var cluster = new ClusterProxy(new HostingManagerFactory(), !useStaged, setupState: new KubeSetupState() { ClusterDefinition = clusterDefinition }))
+            using (var cluster = await ClusterProxy.CreateAsync(new HostingManagerFactory(), !useStaged, setupState: new KubeSetupState() { ClusterDefinition = clusterDefinition }))
             {
                 var status = await cluster.GetResourceAvailabilityAsync();
 
@@ -325,7 +325,7 @@ OPTIONS:
                 prepareOptions.DesktopReadyToGo = true;
             }
 
-            var controller = KubeSetup.CreateClusterPrepareController(
+            var controller = await KubeSetup.CreateClusterPrepareControllerAsync(
                 clusterDefinition, 
                 cloudMarketplace: !useStaged,
                 options:          prepareOptions);
