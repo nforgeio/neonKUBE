@@ -37,6 +37,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Config;
+using Neon.Kube.Deployment;
 using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
 using Neon.Kube.SSH;
@@ -500,19 +501,36 @@ namespace Neon.Kube.Hosting.XenServer
         /// <returns>The virtual machine name.</returns>
         private string GetVmName(NodeSshProxy<NodeDefinition> node)
         {
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+            cluster.EnsureSetupMode();
+
             return $"{cluster.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition)}{node.Name}";
         }
 
         /// <summary>
         /// Returns the name to use for the virtual machine that will host the node.
         /// </summary>
-        /// <param name="node">The target node.</param>
+        /// <param name="nodeDefinition">The target node definition.</param>
         /// <returns>The virtual machine name.</returns>
-        private string GetVmName(NodeDefinition node)
+        private string GetVmName(NodeDefinition nodeDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+            Covenant.Requires<ArgumentNullException>(nodeDefinition != null, nameof(nodeDefinition));
+            cluster.EnsureSetupMode();
 
-            return $"{cluster.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition)}{node.Name}";
+            return $"{cluster.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition)}{nodeDefinition.Name}";
+        }
+
+        /// <summary>
+        /// Returns the name to use for naming the virtual machine that will host the node.
+        /// </summary>
+        /// <param name="nodeDeployment">The target node deployment.</param>
+        /// <returns>The virtual machine name.</returns>
+        private string GetVmName(NodeDeployment nodeDeployment)
+        {
+            Covenant.Requires<ArgumentNullException>(nodeDeployment != null, nameof(nodeDeployment));
+            Covenant.Assert(cluster.KubeConfig?.Cluster != null, "Use this method only for already deployed clusters.");
+
+            return $"{cluster.KubeConfig.Cluster.HostingNamePrefix}{nodeDeployment.Name}";
         }
 
         /// <summary>
@@ -523,6 +541,7 @@ namespace Neon.Kube.Hosting.XenServer
         private NodeDefinition VmNameToNodeDefinition(string vmName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(vmName), nameof(vmName));
+            cluster.EnsureSetupMode();
 
             var prefix = cluster.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition);
 
@@ -539,6 +558,27 @@ namespace Neon.Kube.Hosting.XenServer
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Converts a virtual machine name into the corresponding cluster node name, as
+        /// defined in the cluster definition.
+        /// </summary>
+        /// <param name="vmName">The virtual machine name.</param>
+        /// <returns>The corresponding node name if found, or <c>null</c>.</returns>
+        private string VmNameToNodeName(string vmName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(vmName), nameof(vmName));
+            Covenant.Assert(cluster.KubeConfig?.Cluster != null, "The cluster must already be deployed.");
+
+            var prefix = cluster.KubeConfig.Cluster.HostingNamePrefix;
+
+            if (!vmName.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return null;
+            }
+
+            return vmName.Substring(prefix.Length);
         }
 
         /// <summary>
@@ -1143,7 +1183,7 @@ namespace Neon.Kube.Hosting.XenServer
             // cluster login and the state of the VMs deployed to the XenServer hosts.
 
             var contextName = $"root@{cluster.Name}";
-            var context     = KubeHelper.Config.GetContext(contextName);
+            var context     = KubeHelper.KubeConfig.GetContext(contextName);
 
             // Create a hashset holding the names of nodes that have existing virtual machines
             // and also construct a dictionary mapping the actual virtual machine names to
@@ -1163,11 +1203,11 @@ namespace Neon.Kube.Hosting.XenServer
 
                 foreach (var machine in nodeNameToVm.Values)
                 {
-                    var nodeDefinition = VmNameToNodeDefinition(machine.NameLabel);
+                    var nodeName = VmNameToNodeName(machine.NameLabel);
 
-                    if (nodeDefinition != null)
+                    if (nodeName != null)
                     {
-                        existingNodes.Add(nodeDefinition.Name);
+                        existingNodes.Add(nodeName);
                     }
 
                     existingMachines.Add(machine.NameLabel, machine);
@@ -1220,7 +1260,9 @@ namespace Neon.Kube.Hosting.XenServer
                 // (after stripping off any cluster prefix) belong to the cluster and will
                 // map the actual VM states to public node states.
 
-                foreach (var node in cluster.SetupState.ClusterDefinition.NodeDefinitions.Values)
+                var clusterDeployment = await cluster.GetDeploymentAsync();
+
+                foreach (var node in clusterDeployment.Nodes)
                 {
                     var nodeState = ClusterNodeState.NotProvisioned;
 

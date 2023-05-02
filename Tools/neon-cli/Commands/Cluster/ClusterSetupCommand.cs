@@ -157,7 +157,7 @@ OPTIONS:
             NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfile());
 
             var contextName       = KubeContextName.Parse(commandLine.Arguments[0]);
-            var context           = KubeHelper.Config.GetCluster(contextName.Cluster);
+            var context           = KubeHelper.KubeConfig.GetCluster(contextName.Cluster);
             var setupState        = KubeSetupState.Load((string)contextName, nullIfMissing: true);
             var unredacted        = commandLine.HasOption("--unredacted");
             var debug             = commandLine.HasOption("--debug");
@@ -200,11 +200,11 @@ OPTIONS:
                 // Remove the cluster from the kubeconfig and remove any 
                 // contexts that reference it.
 
-                KubeHelper.Config.Clusters.Remove(context);
+                KubeHelper.KubeConfig.Clusters.Remove(context);
 
                 var delList = new List<KubeConfigContext>();
 
-                foreach (var existingContext in KubeHelper.Config.Contexts)
+                foreach (var existingContext in KubeHelper.KubeConfig.Contexts)
                 {
                     if (existingContext.Name == existingContext.Name)
                     {
@@ -214,7 +214,7 @@ OPTIONS:
 
                 foreach (var existingContext in delList)
                 {
-                    KubeHelper.Config.Contexts.Remove(existingContext);
+                    KubeHelper.KubeConfig.Contexts.Remove(existingContext);
                 }
 
                 if (KubeHelper.CurrentContext != null &&
@@ -222,10 +222,10 @@ OPTIONS:
                     KubeHelper.CurrentCluster.ClusterInfo != null && 
                     KubeHelper.CurrentContext.Name == context.Name)
                 {
-                    KubeHelper.Config.CurrentContext = null;
+                    KubeHelper.KubeConfig.CurrentContext = null;
                 }
 
-                KubeHelper.Config.Save();
+                KubeHelper.KubeConfig.Save();
             }
 
             // Create and run the cluster setup controller.
@@ -282,13 +282,13 @@ OPTIONS:
 
                     if (pendingGroups.Count > 0)
                     {
-                        Console.WriteLine();
-                        Console.WriteLine($"*** ERROR: [{pendingGroups.Count}] pending task groups have not been awaited:");
-                        Console.WriteLine();
+                        Console.Error.WriteLine();
+                        Console.Error.WriteLine($"*** ERROR: [{pendingGroups.Count}] pending task groups have not been awaited:");
+                        Console.Error.WriteLine();
 
                         foreach (var groupName in pendingGroups)
                         {
-                            Console.WriteLine($"   {groupName}");
+                            Console.Error.WriteLine($"   {groupName}");
                         }
 
                         Program.Exit(1);
@@ -313,20 +313,20 @@ OPTIONS:
 
                 case SetupDisposition.Cancelled:
 
-                    Console.WriteLine();
-                    Console.WriteLine(" *** CANCELLED: Cluster setup was cancelled.");
-                    Console.WriteLine();
-                    Console.WriteLine();
+                    Console.Error.WriteLine();
+                    Console.Error.WriteLine(" *** CANCELLED: Cluster setup was cancelled.");
+                    Console.Error.WriteLine();
+                    Console.Error.WriteLine();
                     Program.Exit(1);
                     break;
 
                 case SetupDisposition.Failed:
 
-                    Console.WriteLine();
-                    Console.WriteLine(" *** ERROR: Cluster setup failed.  Examine the logs here:");
-                    Console.WriteLine();
-                    Console.WriteLine($" {KubeHelper.LogFolder}");
-                    Console.WriteLine();
+                    Console.Error.WriteLine();
+                    Console.Error.WriteLine(" *** ERROR: Cluster setup failed.  Examine the logs here:");
+                    Console.Error.WriteLine();
+                    Console.Error.WriteLine($" {KubeHelper.LogFolder}");
+                    Console.Error.WriteLine();
                     Program.Exit(1);
                     break;
 

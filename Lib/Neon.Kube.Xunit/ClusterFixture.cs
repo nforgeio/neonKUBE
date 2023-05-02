@@ -440,7 +440,7 @@ namespace Neon.Kube.Xunit
             //      * That it's running
             //      * That it's not locked
 
-            Cluster = ClusterProxy.CreateAsync(KubeHelper.Config, new HostingManagerFactory(), options.CloudMarketplace).Result;
+            Cluster = ClusterProxy.CreateAsync(KubeHelper.KubeConfig, new HostingManagerFactory(), options.CloudMarketplace).Result;
 
             try
             {
@@ -606,8 +606,8 @@ namespace Neon.Kube.Xunit
             ;
             var clusterExists     = false;
             var configContextName = KubeContextName.Parse($"root@{clusterDefinition.Name}");
-            var configContext     = KubeHelper.Config.GetContext(configContextName);
-            var configCluster     = KubeHelper.Config.GetCluster(configContext.Cluster);
+            var configContext     = KubeHelper.KubeConfig.GetContext(configContextName);
+            var configCluster     = KubeHelper.KubeConfig.GetCluster(configContext.Cluster);
 
             if (configContext != null)
             {
@@ -650,7 +650,7 @@ namespace Neon.Kube.Xunit
 
                         started   = true;
                         IsRunning = true;
-                        Cluster   = ClusterProxy.CreateAsync(KubeHelper.Config, new HostingManagerFactory(), options.CloudMarketplace).Result;
+                        Cluster   = ClusterProxy.CreateAsync(KubeHelper.KubeConfig, new HostingManagerFactory(), options.CloudMarketplace).Result;
 
                         return TestFixtureStatus.Started;
                     }
@@ -764,7 +764,7 @@ namespace Neon.Kube.Xunit
 
             started   = true;
             IsRunning = true;
-            Cluster   = ClusterProxy.CreateAsync(KubeHelper.Config, new HostingManagerFactory(), options.CloudMarketplace).Result;
+            Cluster   = ClusterProxy.CreateAsync(KubeHelper.KubeConfig, new HostingManagerFactory(), options.CloudMarketplace).Result;
 
             return TestFixtureStatus.Started;
         }

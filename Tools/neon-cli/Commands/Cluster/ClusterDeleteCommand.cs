@@ -137,7 +137,7 @@ cluster definition or by executing this command on your cluster:
 
             try
             {
-                using (var cluster = await ClusterProxy.CreateAsync(KubeHelper.Config, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
+                using (var cluster = await ClusterProxy.CreateAsync(KubeHelper.KubeConfig, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
                 {
                     var capabilities = cluster.Capabilities;
 
@@ -178,14 +178,14 @@ cluster definition or by executing this command on your cluster:
 
                         Console.WriteLine($"Removing: {cluster.Name}...");
                         await cluster.DeleteClusterAsync();
-                        KubeHelper.Config.RemoveContext(context);
+                        KubeHelper.KubeConfig.RemoveContext(context);
 
                         Console.WriteLine($"REMOVED:  {cluster.Name}");
                     }
                     catch (TimeoutException)
                     {
-                        Console.WriteLine();
-                        Console.WriteLine($"*** ERROR: Timeout waiting for cluster.");
+                        Console.Error.WriteLine();
+                        Console.Error.WriteLine($"*** ERROR: Timeout waiting for cluster.");
                     }
                 }
             }

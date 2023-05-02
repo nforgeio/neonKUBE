@@ -397,7 +397,7 @@ namespace Neon.Kube.Proxy
             }
 
             this.SetupState        = setupState;
-            this.KubeConfig        = KubeHelper.Config.Clone();
+            this.KubeConfig        = KubeHelper.KubeConfig.Clone();
             this.defaultRunOptions = defaultRunOptions;
             this.nodeProxyCreator  = nodeProxyCreator;
 
@@ -517,7 +517,7 @@ namespace Neon.Kube.Proxy
         public IHostingManager HostingManager { get; set; }
 
         /// <summary>
-        /// Returns the Kubernetes config with the current cluster.
+        /// Returns the Kubernetes config holding the current cluster.
         /// </summary>
         public KubeConfig KubeConfig { get; set; }
 
@@ -1539,13 +1539,13 @@ namespace Neon.Kube.Proxy
             Covenant.Assert(HostingManager != null);
 
             var contextName = KubeContextName.Parse($"{KubeConst.RootUser}@{Name}");
-            var context     = KubeHelper.Config.GetContext(contextName);
+            var context     = KubeHelper.KubeConfig.GetContext(contextName);
 
             await HostingManager.DeleteClusterAsync(deleteOrphans);
 
             if (context != null)
             {
-                KubeHelper.Config.RemoveContext(context);
+                KubeHelper.KubeConfig.RemoveContext(context);
             }
         }
     }

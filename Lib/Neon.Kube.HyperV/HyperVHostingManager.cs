@@ -52,6 +52,7 @@ using Neon.SSH;
 using Neon.Tasks;
 using Neon.Time;
 using Neon.Windows;
+using Neon.Kube.Deployment;
 
 namespace Neon.Kube.Hosting.HyperV
 {
@@ -590,20 +591,34 @@ namespace Neon.Kube.Hosting.HyperV
         /// <summary>
         /// Returns the name to use for naming the virtual machine that will host the node.
         /// </summary>
-        /// <param name="node">The target node.</param>
+        /// <param name="nodeDefinition">The target node definition.</param>
         /// <returns>The virtual machine name.</returns>
-        private string GetVmName(NodeDefinition node)
+        private string GetVmName(NodeDefinition nodeDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+            Covenant.Requires<ArgumentNullException>(nodeDefinition != null, nameof(nodeDefinition));
+            cluster.EnsureSetupMode();
 
-            return $"{cluster.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition)}{node.Name}";
+            return $"{cluster.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition)}{nodeDefinition.Name}";
+        }
+
+        /// <summary>
+        /// Returns the name to use for naming the virtual machine that will host the node.
+        /// </summary>
+        /// <param name="nodeDeployment">The target node deployment.</param>
+        /// <returns>The virtual machine name.</returns>
+        private string GetVmName(NodeDeployment nodeDeployment)
+        {
+            Covenant.Requires<ArgumentNullException>(nodeDeployment != null, nameof(nodeDeployment));
+            Covenant.Assert(cluster.KubeConfig?.Cluster != null, "Use this method only for already deployed clusters.");
+
+            return $"{cluster.KubeConfig.Cluster.HostingNamePrefix}{nodeDeployment.Name}";
         }
 
         /// <summary>
         /// Converts a virtual machine name to the matching node definition.
         /// </summary>
         /// <param name="vmName">The virtual machine name.</param>
-        /// <returns>The matching node definition or <c>null</c>.</returns>
+        /// <returns>The corresponding node definition if found or <c>null</c>.</returns>
         private NodeDefinition VmNameToNodeDefinition(string vmName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(vmName), nameof(vmName));
@@ -633,6 +648,36 @@ namespace Neon.Kube.Hosting.HyperV
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Converts a virtual machine name into the corresponding cluster node name, as
+        /// defined in the cluster definition.
+        /// </summary>
+        /// <param name="vmName">The virtual machine name.</param>
+        /// <returns>The corresponding node name if found, or <c>null</c>.</returns>
+        private string VmNameToNodeName(string vmName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(vmName), nameof(vmName));
+            Covenant.Assert(cluster.KubeConfig?.Cluster != null, "The cluster must already be deployed.");
+
+            // Special case the built-in neon-desktop cluster whose
+            // name is never prefixed.
+
+            if (cluster.KubeConfig.Cluster.IsNeonDesktop &&
+                vmName.Equals(KubeConst.NeonDesktopHyperVBuiltInVmName, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return vmName;
+            }
+
+            var prefix = cluster.KubeConfig.Cluster.HostingNamePrefix;
+
+            if (!vmName.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return null;
+            }
+
+            return vmName.Substring(prefix.Length);
         }
 
         /// <summary>
@@ -933,7 +978,7 @@ namespace Neon.Kube.Hosting.HyperV
                 // cluster login and the state of the VMs deployed in the local Hyper-V.
 
                 var contextName = $"root@{cluster.Name}";
-                var context     = KubeHelper.Config.GetContext(contextName);
+                var context     = KubeHelper.KubeConfig.GetContext(contextName);
 
                 // Create a hashset with the names of the nodes that map to deployed Hyper-V
                 // virtual machines.  We're also going to create a dictionary mapping the
@@ -944,11 +989,11 @@ namespace Neon.Kube.Hosting.HyperV
 
                 foreach (var machine in hyperV.ListVms())
                 {
-                    var nodeDefinition = VmNameToNodeDefinition(machine.Name);
+                    var nodeName = VmNameToNodeName(machine.Name);
 
-                    if (nodeDefinition != null)
+                    if (nodeName != null)
                     {
-                        existingNodes.Add(nodeDefinition.Name);
+                        existingNodes.Add(nodeName);
                     }
 
                     existingMachines.Add(machine.Name, machine);
@@ -981,15 +1026,16 @@ namespace Neon.Kube.Hosting.HyperV
                     // (after stripping off any cluster prefix) belong to the cluster and we'll map
                     // the actual VM states to public node states.
 
-                    var clusterHealth = new ClusterHealth();
+                    var clusterHealth     = new ClusterHealth();
+                    var clusterDeployment = await cluster.GetDeploymentAsync();
 
-                    foreach (var node in cluster.SetupState.ClusterDefinition.NodeDefinitions.Values)
+                    foreach (var node in clusterDeployment.Nodes)
                     {
                         var nodeState = ClusterNodeState.NotProvisioned;
 
                         if (existingNodes.Contains(node.Name))
                         {
-                            var vmName  = GetVmName(node);
+                            var vmName = GetVmName(node);
 
                             if (existingMachines.TryGetValue(vmName, out var machine))
                             {
@@ -1055,7 +1101,7 @@ namespace Neon.Kube.Hosting.HyperV
                         }
                     }
 
-                    if (cluster.SetupState.DeploymentStatus != ClusterDeploymentStatus.Ready)
+                    if (cluster.SetupState != null && cluster.SetupState.DeploymentStatus != ClusterDeploymentStatus.Ready)
                     {
                         clusterHealth.State   = ClusterState.Configuring;
                         clusterHealth.Summary = "Cluster is partially configured";

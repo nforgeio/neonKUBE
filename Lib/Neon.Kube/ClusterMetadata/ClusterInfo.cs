@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    ClusterInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -51,6 +51,13 @@ namespace Neon.Kube
         public string ClusterId { get; set; } = null;
 
         /// <summary>
+        /// The neonKUBE version of the cluster.  This is formatted as a <see cref="SemanticVersion"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "ClusterVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(KubeVersions.NeonKube)]
+        public string ClusterVersion { get; set; } = KubeVersions.NeonKube;
+
+        /// <summary>
         /// Identifies the organization that owns the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "OrganizationId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -63,13 +70,6 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "CreationTimestamp", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public DateTime? CreationTimestamp { get; set; }
-
-        /// <summary>
-        /// The neonKUBE version of the cluster.  This is formatted as a <see cref="SemanticVersion"/>.
-        /// </summary>
-        [JsonProperty(PropertyName = "ClusterVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(KubeVersions.NeonKube)]
-        public string ClusterVersion { get; set; } = KubeVersions.NeonKube;
 
         /// <summary>
         /// Identifies the cluster by name as specified by <see cref="ClusterDefinition.Name"/> in the cluster definition.

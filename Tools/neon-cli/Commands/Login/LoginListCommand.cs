@@ -68,11 +68,11 @@ USAGE:
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
-            var config  = KubeHelper.Config;
+            var config  = KubeHelper.KubeConfig;
             var current = KubeHelper.CurrentContext;
             var logins  = new List<string>();
 
-            foreach (var context in KubeHelper.Config.Contexts
+            foreach (var context in KubeHelper.KubeConfig.Contexts
                 .Where(context =>
                 {
                     var cluster = config.GetCluster(current.Cluster);

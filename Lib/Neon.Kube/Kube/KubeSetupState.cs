@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubeSetupState.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -400,6 +400,25 @@ namespace Neon.Kube
             {
                 File.Delete(path);
             }
+        }
+
+        /// <summary>
+        /// Returns a <see cref="KubeClusterInfo"/> instance initialized from this instance.
+        /// </summary>
+        /// <returns>The <see cref="KubeClusterInfo"/>.</returns>
+        public KubeClusterInfo ToKubeClusterInfo()
+        {
+            return new KubeClusterInfo()
+            {
+                ClusterId      = this.ClusterId,
+                ClusterDomain  = this.ClusterDomain,
+                ClusterVersion = this.ClusterVersion,
+                SshUsername    = this.SshUsername,
+                SshPassword    = this.SshPassword,
+                SshKey         = this.SshKey,
+                SsoUsername    = this.SsoUsername,
+                SsoPassword    = this.SsoPassword
+            };
         }
     }
 }

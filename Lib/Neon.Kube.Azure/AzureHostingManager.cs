@@ -3273,7 +3273,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
             // cluster login and the state of the VMs deployed to Azure.
 
             var contextName = $"root@{cluster.Name}";
-            var context     = KubeHelper.Config.GetContext(contextName);
+            var context     = KubeHelper.KubeConfig.GetContext(contextName);
 
             // Create a hashset with the names of the nodes that map to deployed Azure
             // virtual machines.

@@ -3986,7 +3986,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             // cluster login and the state of the VMs deployed to AWS.
 
             var contextName = $"root@{cluster.Name}";
-            var context     = KubeHelper.Config.GetContext(contextName);
+            var context     = KubeHelper.KubeConfig.GetContext(contextName);
 
             // Create a hashset with the names of the nodes that map to deployed AWS
             // machine instances.

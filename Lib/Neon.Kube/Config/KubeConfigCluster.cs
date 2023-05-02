@@ -128,41 +128,6 @@ namespace Neon.Kube.Config
         }
 
         /// <summary>
-        /// Indicates that this is a neonKUBE cluster.  This will allways be <c>false</c> for
-        /// non-neonKUBE clusters.
-        /// </summary>
-        [JsonIgnore]
-        [YamlIgnore]
-        public bool IsNeonKube
-        {
-            get => GetExtensionValue<bool>(NeonKubeExtensionNames.IsNeonKube, false);
-            set => SetExtensionValue<bool>(NeonKubeExtensionNames.IsNeonKube, value);
-        }
-
-        /// <summary>
-        /// Indicates that this is a neon-desktop cluster. This will always be <c>false</c> for
-        /// non-neonKUBE clusters.
-        /// </summary>
-        [JsonIgnore]
-        [YamlIgnore]
-        public bool IsNeonDesktop
-        {
-            get => GetExtensionValue<bool>(NeonKubeExtensionNames.IsNeonDesktop, false);
-            set => SetExtensionValue<bool>(NeonKubeExtensionNames.IsNeonDesktop, value);
-        }
-
-        /// <summary>
-        /// Identifies the <see cref="HostingEnvironment"/> for neonKUBE clusters.
-        /// </summary>
-        [JsonIgnore]
-        [YamlIgnore]
-        public HostingEnvironment HostingEnvironment
-        {
-            get => GetExtensionValue<HostingEnvironment>(NeonKubeExtensionNames.IsNeonKube, HostingEnvironment.Unknown);
-            set => SetExtensionValue<HostingEnvironment>(NeonKubeExtensionNames.IsNeonKube, value);
-        }
-
-        /// <summary>
         /// Holds additional information about neonKUBE clusters.  This will be
         /// <c>null</c> for non-neonKUBE clusters.
         /// </summary>
@@ -175,8 +140,57 @@ namespace Neon.Kube.Config
         }
 
         /// <summary>
-        /// Optionally holds the cluster definition for testing clusters.  <b>ClusterFixture</b>
+        /// Identifies the <see cref="Neon.Kube.ClusterDef.HostingEnvironment"/> for neonKUBE clusters.
+        /// This will be <see cref="HostingEnvironment.Unknown"/> for non-neonKUBE clusters.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public HostingEnvironment HostingEnvironment
+        {
+            get => GetExtensionValue<HostingEnvironment>(NeonKubeExtensionNames.HostingEnvironment, HostingEnvironment.Unknown);
+            set => SetExtensionValue<HostingEnvironment>(NeonKubeExtensionNames.HostingEnvironment, value);
+        }
+
+        /// <summary>
+        /// Identifies the <see cref="HostingEnvironment"/> for neonKUBE clusters.  This will be
+        /// <c>null</c> for non-neonKUBE clusters.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public string HostingNamePrefix
+        {
+            get => GetExtensionValue<string>(NeonKubeExtensionNames.HostingNamePrefix, null);
+            set => SetExtensionValue<string>(NeonKubeExtensionNames.HostingNamePrefix , value);
+        }
+
+        /// <summary>
+        /// Indicates that this is a neon-desktop cluster. This will be <c>false</c> for
+        /// non-neonKUBE clusters.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public bool IsNeonDesktop
+        {
+            get => GetExtensionValue<bool>(NeonKubeExtensionNames.IsNeonDesktop, false);
+            set => SetExtensionValue<bool>(NeonKubeExtensionNames.IsNeonDesktop, value);
+        }
+
+        /// <summary>
+        /// Indicates that this is a neonKUBE cluster.  This will be <c>false</c> for
+        /// non-neonKUBE clusters.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public bool IsNeonKube
+        {
+            get => GetExtensionValue<bool>(NeonKubeExtensionNames.IsNeonKube, false);
+            set => SetExtensionValue<bool>(NeonKubeExtensionNames.IsNeonKube, value);
+        }
+
+        /// <summary>
+        /// Holds the cluster definition for testing clusters.  <b>ClusterFixture</b>
         /// uses this decide whether to deploy a new cluster when the definition has changed.
+        /// This will be <c>null</c> for non-neonKUBE clusters.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]

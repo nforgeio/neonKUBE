@@ -137,7 +137,7 @@ ARGUMENTS:
 
                 var user           = result.User;
                 var userName       = user.Identity.Name.Split("via").First().Trim();
-                var config         = KubeHelper.Config;
+                var config         = KubeHelper.KubeConfig;
                 var newContextName = $"{userName}@{clusterInfo.Name}";
 
                 Console.WriteLine($"Login: {newContextName}...");

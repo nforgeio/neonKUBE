@@ -173,8 +173,8 @@ namespace Neon.Kube.ClusterDef
         /// <para>
         /// When this is <c>null</c> (the default), the cluster name followed by a dash will 
         /// prefix the provisioned virtual machine names.  When this is a non-empty string, the
-        /// value followed by a dash will be used.  If this is <c>null</c> or whitespace then the
-        /// machine names will not be prefixed.
+        /// value followed by a dash will be used.  If this is an empty string or whitespace then
+        /// the machine names will not be prefixed.
         /// </para>
         /// <note>
         /// Virtual machine name prefixes will always be converted to lowercase.

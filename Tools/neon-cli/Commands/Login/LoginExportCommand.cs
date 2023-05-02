@@ -104,7 +104,7 @@ REMARKS:
                 }
             }
 
-            var context = KubeHelper.Config.GetContext(contextName);
+            var context = KubeHelper.KubeConfig.GetContext(contextName);
 
             if (context == null)
             {
@@ -112,8 +112,8 @@ REMARKS:
                 Program.Exit(1);
             }
 
-            var cluster = KubeHelper.Config.GetCluster(context.Context.Cluster);
-            var user    = KubeHelper.Config.GetUser(context.Context.User);
+            var cluster = KubeHelper.KubeConfig.GetCluster(context.Context.Cluster);
+            var user    = KubeHelper.KubeConfig.GetUser(context.Context.User);
 
             if (context == null)
             {

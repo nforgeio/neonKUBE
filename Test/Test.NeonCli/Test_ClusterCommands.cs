@@ -36,6 +36,8 @@ using NeonCli;
 
 using Xunit;
 using System.Runtime.InteropServices;
+using Neon.Kube.Proxy;
+using Neon.Kube.Hosting;
 
 namespace Test.NeonCli
 {
@@ -173,21 +175,216 @@ nodes:
                             .EnsureSuccess();
                     }
 
+                    var configCluster = KubeHelper.KubeConfig.Cluster;
+
+                    Assert.NotNull(configCluster);
+
                     //-------------------------------------------------------------
-                    // Verify cluster lock related commands.
+                    // Create a cluster proxy for use in the tests below.
 
+                    using var clusterProxy = await ClusterProxy.CreateAsync(
+                        kubeConfig:            KubeHelper.KubeConfig,
+                        hostingManagerFactory: new HostingManagerFactory(),
+                        cloudMarketplace:      false,
+                        operation:             ClusterProxy.Operation.LifeCycle);
 
-                    response = (await NeonCliAsync("cluster", "islocked"))
+                    //-------------------------------------------------------------
+                    // Verify: cluster health
+
+                    response = (await NeonCliAsync("cluster", "health"))
                         .EnsureSuccess();
 
+                    var clusterHealth = NeonHelper.JsonDeserialize<ClusterHealth>(response.OutputText);
 
+                    Assert.Equal(ClusterState.Healthy, clusterHealth.State);
+                    Assert.Equal("Cluster is healthy", clusterHealth.Summary);
+                    Assert.Single(clusterHealth.Nodes);
+                    Assert.Equal("node", clusterHealth.Nodes.First().Key);
+                    Assert.Equal(ClusterNodeState.Running, clusterHealth.Nodes.First().Value);
+
+                    //-------------------------------------------------------------
+                    // Verify: cluster check
+
+                    response = (await NeonCliAsync("cluster", "check"))
+                        .EnsureSuccess();
+
+                    //-------------------------------------------------------------
+                    // Verify: cluster logout/login
+
+                    Assert.NotNull(KubeHelper.KubeConfig.CurrentContext);
+
+                    var contextName = KubeHelper.KubeConfig.CurrentContext;
+
+                    // Logout
+
+                    response = (await NeonCliAsync("cluster", "logout"))
+                        .EnsureSuccess();
+
+                    Assert.Null(KubeHelper.KubeConfig.CurrentContext);
+
+                    // Login
+
+                    response = (await NeonCliAsync("cluster", "login", contextName))
+                        .EnsureSuccess();
+
+                    Assert.NotNull(KubeHelper.KubeConfig.CurrentContext);
+                    Assert.Equal(contextName, KubeHelper.KubeConfig.CurrentContext);
+
+                    //-------------------------------------------------------------
+                    // Verify: cluster info
+
+                    response = (await NeonCliAsync("cluster", "info"))
+                        .EnsureSuccess();
+
+                    var clusterInfo = NeonHelper.JsonDeserialize<ClusterInfo>(response.OutputText);
+
+                    Assert.Equal(configCluster.ClusterInfo.ClusterId, clusterInfo.ClusterId);
+                    Assert.Equal(configCluster.ClusterInfo.ClusterVersion, clusterInfo.ClusterVersion);
+                    Assert.Equal(clusterName, clusterInfo.Name);
+
+                    //-------------------------------------------------------------
+                    // Verify: cluster purpose
+
+                    response = (await NeonCliAsync("cluster", "purpose"))
+                        .EnsureSuccess();
+
+                    Assert.Contains("test", response.OutputText);
+
+                    response = (await NeonCliAsync("cluster", "purpose", "production"))
+                        .EnsureSuccess();
+
+                    Assert.Contains("production", response.OutputText);
+
+                    //-------------------------------------------------------------
+                    // Verify: cluster dashboard
+
+                    // Verify the available dashboards.
+
+                    var dashboards = await clusterProxy.ListClusterDashboardsAsync();
+
+                    response = (await NeonCliAsync("cluster", "dashboard"))
+                        .EnsureSuccess();
+
+                    foreach (var dashboard in dashboards)
+                    {
+                        Assert.Contains(dashboard.Key, response.OutputText);
+                    }
+
+                    // Verify the dashboard URIs.
+
+                    foreach (var dashboard in dashboards)
+                    {
+                        response = (await NeonCliAsync("cluster", "--url", "dashboard", dashboard.Key))
+                            .EnsureSuccess();
+
+                        Assert.Contains(dashboard.Value.Spec.Url, response.OutputText);
+                    }
+
+                    //-------------------------------------------------------------
+                    // Verify: cluster lock/unlock/islocked commands.
+
+                    response = (await NeonCliAsync("cluster", "islocked"));
+
+                    Assert.Equal(0, response.ExitCode);     // exitcode=0: LOCKED
+
+                    response = (await NeonCliAsync("cluster", "unlock", "--force"))
+                        .EnsureSuccess();
+
+                    response = (await NeonCliAsync("cluster", "islocked"));
+
+                    Assert.Equal(2, response.ExitCode);     // exitcode=2: UNLOCKED
+
+                    response = (await NeonCliAsync("cluster", "lock"))
+                        .EnsureSuccess();
+
+                    response = (await NeonCliAsync("cluster", "islocked"));
+
+                    Assert.Equal(0, response.ExitCode);     // exitcode=0: LOCKED
+
+                    //-------------------------------------------------------------
+                    // Unlock the cluster so we can test dangerous commands.
+
+                    response = (await NeonCliAsync("cluster", "unlock", "--force"))
+                        .EnsureSuccess();
+
+                    response = (await NeonCliAsync("cluster", "islocked"));
+
+                    Assert.Equal(2, response.ExitCode);     // exitcode=2: UNLOCKED
+
+                    //-------------------------------------------------------------
+                    // Verify: cluster pause/resume
+
+                    if ((clusterProxy.Capabilities & HostingCapabilities.Pausable) != 0)
+                    {
+                        // Pause the cluster.
+
+                        response = (await NeonCliAsync("cluster", "pause", "--force"))
+                            .EnsureSuccess();
+
+                        response = (await NeonCliAsync("cluster", "health"))
+                            .EnsureSuccess();
+
+                        clusterHealth = NeonHelper.JsonDeserialize<ClusterHealth>(response.OutputText);
+
+                        Assert.Equal(ClusterState.Paused, clusterHealth.State);
+
+                        // Resume the cluster.
+
+                        response = (await NeonCliAsync("cluster", "resume"))
+                            .EnsureSuccess();
+
+                        response = (await NeonCliAsync("cluster", "health"))
+                            .EnsureSuccess();
+
+                        clusterHealth = NeonHelper.JsonDeserialize<ClusterHealth>(response.OutputText);
+
+                        Assert.Equal(ClusterState.Healthy, clusterHealth.State);
+                    }
+
+                    //-------------------------------------------------------------
+                    // Verify: cluster stop/start
+
+                    if ((clusterProxy.Capabilities & HostingCapabilities.Stoppable) != 0)
+                    {
+                        // Pause the cluster.
+
+                        response = (await NeonCliAsync("cluster", "stop", "--force"))
+                            .EnsureSuccess();
+
+                        response = (await NeonCliAsync("cluster", "health"))
+                            .EnsureSuccess();
+
+                        clusterHealth = NeonHelper.JsonDeserialize<ClusterHealth>(response.OutputText);
+
+                        Assert.Equal(ClusterState.Unhealthy, clusterHealth.State);
+
+                        // Resume the cluster.
+
+                        response = (await NeonCliAsync("cluster", "start"))
+                            .EnsureSuccess();
+
+                        response = (await NeonCliAsync("cluster", "health"))
+                            .EnsureSuccess();
+
+                        clusterHealth = NeonHelper.JsonDeserialize<ClusterHealth>(response.OutputText);
+
+                        Assert.Equal(ClusterState.Healthy, clusterHealth.State);
+                    }
+
+                    //-------------------------------------------------------------
+                    // Verify: cluster delete
+
+                    response = (await NeonCliAsync("cluster", "delete", "--force"))
+                        .EnsureSuccess();
+
+                    Assert.Empty(KubeHelper.KubeConfig.Clusters.Where(cluster => cluster.Name == clusterName));
                 }
                 finally
                 {
                     //-------------------------------------------------------------
-                    // Remove the test cluster.
+                    // Remove the test cluster in case it wasn't removed above
 
-                    if (!debugMode)
+                    if (!debugMode && KubeHelper.KubeConfig.Clusters.Any(cluster => cluster.Name == clusterName))
                     {
                         (await NeonCliAsync("cluster", "delete", "--force", clusterName)).EnsureSuccess();
                     }

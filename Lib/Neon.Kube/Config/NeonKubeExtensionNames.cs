@@ -28,38 +28,41 @@ namespace Neon.Kube.Config
         /// The prefix added to neonKUBE related KubeContext extension property names
         /// used to avoid conflicts with other vendor extensions.
         /// </summary>
-        private const string Prefix = "io.neonkube.";
-
-        /// <summary>
-        /// <c>bool</c>: Used to indicate that a cluster belongs to neonKUBE.
-        /// </summary>
-        public const string IsNeonKube = $"{Prefix}is-neonkube";
-
-        /// <summary>
-        /// <c>bool</c>: Used to indicate that a cluster belongs to neon-desktop.
-        /// </summary>
-        public const string IsNeonDesktop = $"{Prefix}is-neon-desktop";
-
-        /// <summary>
-        /// <see cref="HostingEnvironment"/>: Used to identify a cluster's host environment.
-        /// </summary>
-        public const string HostingEnvironment = $"{Prefix}hosting-environment";
+        private const string ExtensionPrefix = "io.neonkube.";
 
         /// <summary>
         /// <see cref="KubeClusterInfo"/>: Holds additional information for neonKUBE clusters.
         /// </summary>
-        public const string ClusterInfo = $"{Prefix}cluster-info";
+        public const string ClusterInfo = $"{ExtensionPrefix}cluster-info";
 
         /// <summary>
-        /// <see cref="ClusterDeploymentStatus"/>: Holds the provisioning state for neonKUBE clusters.
+        /// <see cref="HostingEnvironment"/>: Used to identify a cluster's host environment.
         /// </summary>
-        public const string DeploymentStatus = $"{Prefix}deployment-status";
+        public const string HostingEnvironment = $"{ExtensionPrefix}hosting-environment";
+
+        /// <summary>
+        /// Holds the prefix (if any) prepended by the hosting environment to node
+        /// names to identify the node within the hosting environment.  This is typically
+        /// set to the cluster name and is useful for avoiding node name conflicts when
+        /// hosting multiple clusters within the same environment.
+        /// </summary>
+        public const string HostingNamePrefix = $"{ExtensionPrefix}vm-name-prefix";
+
+        /// <summary>
+        /// <c>bool</c>: Used to indicate that a cluster belongs to neon-desktop.
+        /// </summary>
+        public const string IsNeonDesktop = $"{ExtensionPrefix}is-neon-desktop";
+
+        /// <summary>
+        /// <c>bool</c>: Used to indicate that a cluster belongs to neonKUBE.
+        /// </summary>
+        public const string IsNeonKube = $"{ExtensionPrefix}is-neonkube";
 
         /// <summary>
         /// Used by our xUnit <b>ClusterFixture</b> to persist the cluster definition so
         /// the fixture can determine when to provision a new cluster when the definition
         /// has changed.
         /// </summary>
-        public const string TestClusterDefinition = $"{Prefix}test-cluster-definition";
+        public const string TestClusterDefinition = $"{ExtensionPrefix}test-cluster-definition";
     }
 }

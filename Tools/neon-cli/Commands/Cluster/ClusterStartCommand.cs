@@ -97,7 +97,7 @@ USAGE:
                 Program.Exit(1);
             }
 
-            using (var cluster = await ClusterProxy.CreateAsync(KubeHelper.Config, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
+            using (var cluster = await ClusterProxy.CreateAsync(KubeHelper.KubeConfig, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
             {
                 var status       = await cluster.GetClusterHealthAsync();
                 var capabilities = cluster.Capabilities;
@@ -122,8 +122,8 @@ USAGE:
                         }
                         catch (TimeoutException)
                         {
-                            Console.WriteLine();
-                            Console.WriteLine($"*** ERROR: Timeout waiting for cluster.");
+                            Console.Error.WriteLine();
+                            Console.Error.WriteLine($"*** ERROR: Timeout waiting for cluster.");
                         }
                         break;
 

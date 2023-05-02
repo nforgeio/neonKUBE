@@ -47,12 +47,24 @@ dashboard in a browser window.
 
 USAGE:
 
-    neon cluster dashboard         - Lists available dashboard names
-    neon cluster dashboard NAME    - Displays the named dashboard
+    neon cluster dashboard              - Lists available dashboard names
+    neon cluster dashboard NAME [--url] - Launches a browser for the dashboard
+
+ARGUMENTS:
+
+    NAME        - identifies the desired dashboard
+
+OPTIONS:
+
+    --url       - Returns the dashboard URL in the output rather than
+                  lanching a browser
 ";
 
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "dashboard" };
+
+        /// <inheritdoc/>
+        public override string[] ExtendedOptions => new string[] { "--url" };
 
         /// <inheritdoc/>
         public override bool NeedsHostingManager => true;
@@ -66,8 +78,6 @@ USAGE:
         /// <inheritdoc/>
         public override async Task RunAsync(CommandLine commandLine)
         {
-            Console.WriteLine();
-
             var currentContext = KubeHelper.CurrentContext;
 
             if (currentContext == null)
@@ -77,13 +87,16 @@ USAGE:
             }
 
             var dashboardName = commandLine.Arguments.ElementAtOrDefault(0);
+            var url           = commandLine.HasOption("--url");
 
-            using (var cluster = await ClusterProxy.CreateAsync(KubeHelper.Config, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
+            using (var cluster = await ClusterProxy.CreateAsync(KubeHelper.KubeConfig, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
             {
                 var dashboards = await cluster.ListClusterDashboardsAsync();
 
                 if (string.IsNullOrEmpty(dashboardName))
                 {
+                    Console.WriteLine();
+
                     if (dashboards.Count > 0)
                     {
                         Console.WriteLine("Available Dashboards:");
@@ -108,11 +121,18 @@ USAGE:
                 {
                     if (dashboards.TryGetValue(dashboardName, out var dashboard))
                     {
-                        NeonHelper.OpenPlatformBrowser(dashboard.Spec.Url, newWindow: true);
+                        if (url)
+                        {
+                            Console.WriteLine(dashboard.Spec.Url);
+                        }
+                        else
+                        {
+                            NeonHelper.OpenPlatformBrowser(dashboard.Spec.Url, newWindow: true);
+                        }
                     }
                     else
                     {
-                        Console.WriteLine($"*** ERROR: Dashboard [{dashboardName}] does not exist.");
+                        Console.Error.WriteLine($"*** ERROR: Dashboard [{dashboardName}] does not exist.");
                         Program.Exit(1);
                     }
                 }

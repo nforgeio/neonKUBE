@@ -1078,16 +1078,16 @@ namespace Neon.Kube
         /// <summary>
         /// Loads or reloads the Kubernetes configuration.
         /// </summary>
-        /// <returns>The <see cref="Config"/>.</returns>
+        /// <returns>The <see cref="KubeConfig"/>.</returns>
         public static KubeConfig LoadConfig()
         {
             return cachedConfig = KubeConfig.Load();
         }
 
         /// <summary>
-        /// Returns the user's current <see cref="KubeConfig"/>.
+        /// Returns the user's current <see cref="Config.KubeConfig"/>.
         /// </summary>
-        public static KubeConfig Config
+        public static KubeConfig KubeConfig
         {
             get
             {
@@ -1144,21 +1144,21 @@ namespace Neon.Kube
         {
             if (contextName == null)
             {
-                Config.CurrentContext = null;
+                KubeConfig.CurrentContext = null;
             }
             else
             {
-                var newContext = Config.GetContext(contextName);
+                var newContext = KubeConfig.GetContext(contextName);
 
                 if (newContext == null)
                 {
                     throw new ArgumentException($"Kubernetes [context={contextName}] does not exist.", nameof(contextName));
                 }
 
-                Config.CurrentContext = (string)contextName;
+                KubeConfig.CurrentContext = (string)contextName;
             }
 
-            Config.Save();
+            KubeConfig.Save();
         }
 
         /// <summary>
@@ -1179,13 +1179,13 @@ namespace Neon.Kube
         {
             get
             {
-                if (Config == null || string.IsNullOrEmpty(Config.CurrentContext))
+                if (KubeConfig == null || string.IsNullOrEmpty(KubeConfig.CurrentContext))
                 {
                     return null;
                 }
                 else
                 {
-                    return Config.GetContext(Config.CurrentContext);
+                    return KubeConfig.GetContext(KubeConfig.CurrentContext);
                 }
             }
         }
@@ -3344,7 +3344,7 @@ TCPKeepAlive yes
 
         /// <summary>
         /// Creates a <see cref="IKubernetes"/> client for the current cluster specified
-        /// by a <see cref="KubeConfig"/>.
+        /// by a <see cref="Config.KubeConfig"/>.
         /// </summary>
         /// <param name="config">The source kubeconfig.</param>
         /// <returns>The <see cref="IKubernetes"/>.</returns>

@@ -360,13 +360,13 @@ OPTIONS:
 
                     if (pendingGroups.Count > 0)
                     {
-                        Console.WriteLine();
-                        Console.WriteLine($"*** ERROR: [{pendingGroups.Count}] pending task groups have not been awaited:");
-                        Console.WriteLine();
+                        Console.Error.WriteLine();
+                        Console.Error.WriteLine($"*** ERROR: [{pendingGroups.Count}] pending task groups have not been awaited:");
+                        Console.Error.WriteLine();
 
                         foreach (var groupName in pendingGroups)
                         {
-                            Console.WriteLine($"   {groupName}");
+                            Console.Error.WriteLine($"   {groupName}");
                         }
 
                         Program.Exit(1);
@@ -380,19 +380,19 @@ OPTIONS:
 
                 case SetupDisposition.Cancelled:
 
-                    Console.WriteLine();
-                    Console.WriteLine(" *** CANCELLED: Cluster prepare was cancelled.");
-                    Console.WriteLine();
+                    Console.Error.WriteLine();
+                    Console.Error.WriteLine(" *** CANCELLED: Cluster prepare was cancelled.");
+                    Console.Error.WriteLine();
                     Program.Exit(1);
                     break;
 
                 case SetupDisposition.Failed:
 
-                    Console.WriteLine();
-                    Console.WriteLine(" *** ERROR: Cluster prepare has failed.  Examine the logs here:");
-                    Console.WriteLine();
-                    Console.WriteLine($" {KubeHelper.LogFolder}");
-                    Console.WriteLine();
+                    Console.Error.WriteLine();
+                    Console.Error.WriteLine(" *** ERROR: Cluster prepare has failed.  Examine the logs here:");
+                    Console.Error.WriteLine();
+                    Console.Error.WriteLine($" {KubeHelper.LogFolder}");
+                    Console.Error.WriteLine();
                     Program.Exit(1);
                     break;
 

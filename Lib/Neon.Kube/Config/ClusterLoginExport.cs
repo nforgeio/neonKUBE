@@ -66,13 +66,6 @@ namespace Neon.Kube.Config
         public KubeConfigContext Context { get; set; }
 
         /// <summary>
-        /// The cluster login information.  This may be <c>null</c>.
-        /// </summary>
-        [JsonProperty(PropertyName = "extensions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "extensions", ApplyNamingConventions = false)]
-        public KubeClusterInfo Extensions { get; set; }
-
-        /// <summary>
         /// The Kubernetes user.
         /// </summary>
         [JsonProperty(PropertyName = "User", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

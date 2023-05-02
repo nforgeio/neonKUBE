@@ -99,7 +99,7 @@ USAGE: neon cluster ingo
                 Program.Exit(1);
             }
 
-            using (var cluster = await ClusterProxy.CreateAsync(KubeHelper.Config, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
+            using (var cluster = await ClusterProxy.CreateAsync(KubeHelper.KubeConfig, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
             {
                 var clusterInfo = await cluster.GetClusterInfoAsync();
 

@@ -99,7 +99,7 @@ USER@CLUSTER[/NAMESPACE is not specified.
 
             if (contextName != null)
             {
-                context = KubeHelper.Config.GetContext(contextName);
+                context = KubeHelper.KubeConfig.GetContext(contextName);
 
                 if (context == null)
                 {
@@ -110,7 +110,7 @@ USER@CLUSTER[/NAMESPACE is not specified.
                     }
                     else
                     {
-                        KubeHelper.Config.RemoveContext(contextName);
+                        KubeHelper.KubeConfig.RemoveContext(contextName);
                         Program.Exit(0);
                     }
                 }
@@ -156,7 +156,7 @@ USER@CLUSTER[/NAMESPACE is not specified.
 
             // Remove the login and kubecontext
 
-            KubeHelper.Config.RemoveContext(context);
+            KubeHelper.KubeConfig.RemoveContext(context);
             Console.WriteLine($"Removed: {contextName}");
             Console.WriteLine();
 

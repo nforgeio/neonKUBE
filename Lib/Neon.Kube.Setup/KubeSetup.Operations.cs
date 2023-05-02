@@ -1265,7 +1265,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 cluster.SaveSetupState();
             }
 
-            // Update kubeconfig by merging the new kubeconfig.
+            // Update kubeconfig by setting our custom extension properties and then merging the
+            // new kubeconfig into the global config.
 
             var configText = cluster.SetupState.ControlNodeFiles["/etc/kubernetes/admin.conf"].Text;
             var port       = NetworkPorts.KubernetesApiServer;
@@ -1277,9 +1278,15 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             var newCluster = newConfig.Clusters.Single();
             var newContext = newConfig.Contexts.Single();
 
-            newCluster.IsNeonKube         = true;
-            newCluster.IsNeonDesktop      = desktopReadyToGo;
             newCluster.HostingEnvironment = cluster.Hosting.Environment;
+            newCluster.IsNeonDesktop      = desktopReadyToGo;
+            newCluster.IsNeonKube         = true;
+            newCluster.ClusterInfo        = cluster.SetupState.ToKubeClusterInfo();
+
+            if (cluster.Hosting.Hypervisor != null)
+            {
+                newCluster.HostingNamePrefix = cluster.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition);
+            }
 
             newContext.Name    = newUser.Name;
             newContext.User    = newUser.Name;
@@ -1296,7 +1303,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 // The user already has an existing kubeconfig, so we need
                 // to merge in the new config.
 
-                var existingConfig = KubeHelper.Config;
+                var existingConfig = KubeHelper.KubeConfig;
 
                 // Remove any existing user, context, and cluster with the same names.
                 // Note that we're assuming that there's only one of each in the config

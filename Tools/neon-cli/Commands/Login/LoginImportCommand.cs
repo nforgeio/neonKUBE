@@ -85,7 +85,7 @@ OPTIONS:
             Console.WriteLine();
 
             var newLogin        = NeonHelper.YamlDeserialize<ClusterLoginExport>(File.ReadAllText(commandLine.Arguments.First()));
-            var existingContext = KubeHelper.Config.GetContext(newLogin.Context.Name);
+            var existingContext = KubeHelper.KubeConfig.GetContext(newLogin.Context.Name);
 
             // Add/replace the context.
 
@@ -96,41 +96,41 @@ OPTIONS:
                     return;
                 }
 
-                KubeHelper.Config.RemoveContext(existingContext);
+                KubeHelper.KubeConfig.RemoveContext(existingContext);
             }
 
-            KubeHelper.Config.Contexts.Add(newLogin.Context);
+            KubeHelper.KubeConfig.Contexts.Add(newLogin.Context);
 
             // Add/replace the cluster.
 
-            var existingCluster = KubeHelper.Config.GetCluster(newLogin.Context.Context.Cluster);
+            var existingCluster = KubeHelper.KubeConfig.GetCluster(newLogin.Context.Context.Cluster);
 
             if (existingCluster != null)
             {
-                KubeHelper.Config.Clusters.Remove(existingCluster);
+                KubeHelper.KubeConfig.Clusters.Remove(existingCluster);
             }
 
-            KubeHelper.Config.Clusters.Add(newLogin.Cluster);
+            KubeHelper.KubeConfig.Clusters.Add(newLogin.Cluster);
 
             // Add/replace the user.
 
-            var existingUser = KubeHelper.Config.GetUser(newLogin.Context.Context.User);
+            var existingUser = KubeHelper.KubeConfig.GetUser(newLogin.Context.Context.User);
 
             if (existingUser != null)
             {
-                KubeHelper.Config.Users.Remove(existingUser);
+                KubeHelper.KubeConfig.Users.Remove(existingUser);
             }
 
-            KubeHelper.Config.Users.Add(newLogin.User);
-            KubeHelper.Config.Save();
+            KubeHelper.KubeConfig.Users.Add(newLogin.User);
+            KubeHelper.KubeConfig.Save();
 
             Console.Error.WriteLine($"Imported: {newLogin.Context.Name}");
 
             if (commandLine.GetOption("--nologin") == null)
             {
                 Console.Error.WriteLine($"Logging into: {newLogin.Context.Name}");
-                KubeHelper.Config.CurrentContext = newLogin.Context.Name;
-                KubeHelper.Config.Save();
+                KubeHelper.KubeConfig.CurrentContext = newLogin.Context.Name;
+                KubeHelper.KubeConfig.Save();
             }
 
             await Task.CompletedTask;
