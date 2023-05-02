@@ -75,7 +75,7 @@ USAGE:
             foreach (var context in KubeHelper.KubeConfig.Contexts
                 .Where(context =>
                 {
-                    var cluster = config.GetCluster(current.Cluster);
+                    var cluster = config.GetCluster(context.Cluster);
 
                     if (cluster == null)
                     {
