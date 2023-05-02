@@ -38,6 +38,7 @@ using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
+using Neon.Kube.SSH;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
@@ -49,7 +50,7 @@ using Newtonsoft.Json.Linq;
 using Renci.SshNet;
 using Renci.SshNet.Common;
 
-namespace Neon.Kube
+namespace Neon.Kube.SSH
 {
     /// <summary>
     /// Extends the <see cref="NodeSshProxy{TMetadata}"/> class by adding cluster setup related methods.

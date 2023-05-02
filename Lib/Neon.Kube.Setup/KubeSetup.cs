@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubeSetup.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -296,14 +296,7 @@ namespace Neon.Kube.Setup
 
             Covenant.Assert(!string.IsNullOrEmpty(configPath) && File.Exists(configPath), $"Cannot locate Kubernetes config at [{configPath}].");
 
-            // We're using a generated wrapper class to handle transient retries rather than 
-            // modifying the built-in base retry policy.  We're really just trying to handle
-            // the transients that happen during setup when the API server is unavailable for
-            // some reaon (like it's being restarted).
-
-            var k8s = KubeHelper.GetKubernetesClient(kubeConfigPath: configPath, currentContext: cluster.KubeContext.Name);
-
-            controller.Add(KubeSetupProperty.K8sClient, k8s);
+            controller.Add(KubeSetupProperty.K8sClient, KubeHelper.GetKubernetesClient());
         }
 
         /// <summary>

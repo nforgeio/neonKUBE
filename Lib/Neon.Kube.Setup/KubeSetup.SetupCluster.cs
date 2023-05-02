@@ -155,7 +155,7 @@ namespace Neon.Kube.Setup
 
             // Configure the setup controller.
 
-            var controller = new SetupController<NodeDefinition>($"Setup [{cluster.SetupState.ClusterDefinition.Name}] cluster", cluster.Nodes, KubeHelper.LogFolder, disableConsoleOutput: options.DisableConsoleOutput)
+            var controller = new SetupController<NodeDefinition>($"Setup [{cluster.Name}] cluster", cluster.Nodes, KubeHelper.LogFolder, disableConsoleOutput: options.DisableConsoleOutput)
             {
                 MaxParallel     = options.MaxParallel > 0 ? options.MaxParallel: cluster.HostingManager.MaxParallel,
                 LogBeginMarker  = "# CLUSTER-BEGIN-SETUP #########################################################",
@@ -224,7 +224,7 @@ namespace Neon.Kube.Setup
                 {
                     node.SetupNode(controller, KubeSetup.ClusterManifest);
                 },
-                (controller, node) => node == cluster.FirstControlNode);
+                (controller, node) => node == cluster.DeploymentControlNode);
 
             // Perform common configuration for the remaining nodes (if any).
 
@@ -236,7 +236,7 @@ namespace Neon.Kube.Setup
                         node.SetupNode(controller, KubeSetup.ClusterManifest);
                         node.InvokeIdempotent("setup/setup-node-restart", () => node.Reboot(wait: true));
                     },
-                    (controller, node) => node != cluster.FirstControlNode);
+                    (controller, node) => node != cluster.DeploymentControlNode);
             }
 
             if (options.DebugMode)
@@ -261,15 +261,15 @@ namespace Neon.Kube.Setup
                 controller.AddNodeStep("upload helm charts",
                     (controller, node) =>
                     {
-                        cluster.FirstControlNode.SudoCommand($"rm -rf {KubeNodeFolder.Helm}/*");
-                        cluster.FirstControlNode.NodeInstallHelmArchive(controller);
+                        cluster.DeploymentControlNode.SudoCommand($"rm -rf {KubeNodeFolder.Helm}/*");
+                        cluster.DeploymentControlNode.NodeInstallHelmArchive(controller);
 
                         var zipPath = LinuxPath.Combine(KubeNodeFolder.Helm, "charts.zip");
 
-                        cluster.FirstControlNode.SudoCommand($"unzip {zipPath} -d {KubeNodeFolder.Helm}");
-                        cluster.FirstControlNode.SudoCommand($"rm -f {zipPath}");
+                        cluster.DeploymentControlNode.SudoCommand($"unzip {zipPath} -d {KubeNodeFolder.Helm}");
+                        cluster.DeploymentControlNode.SudoCommand($"rm -f {zipPath}");
                     },
-                    (controller, node) => node == cluster.FirstControlNode);
+                    (controller, node) => node == cluster.DeploymentControlNode);
             }
 
             //-----------------------------------------------------------------
@@ -375,7 +375,7 @@ namespace Neon.Kube.Setup
             //-----------------------------------------------------------------
             // FILE: pods.txt (output from: kubectl get pods -A
 
-            var result = clusterProxy.FirstControlNode.SudoCommand("kubectl", "get", "pods", "-A");
+            var result = clusterProxy.DeploymentControlNode.SudoCommand("kubectl", "get", "pods", "-A");
 
             using (var stream = File.Create(Path.Combine(logDetailsFolder, "all-pods.txt")))
             {

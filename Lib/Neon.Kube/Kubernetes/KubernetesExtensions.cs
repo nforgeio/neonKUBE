@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubernetesExtensions.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -42,6 +42,7 @@ using Newtonsoft.Json.Linq;
 
 using k8s;
 using k8s.Autorest;
+using k8s.KubeConfigModels;
 using k8s.Models;
 
 namespace Neon.Kube
@@ -67,6 +68,83 @@ namespace Neon.Kube
             };
 
             serializeOptions.Converters.Add(new JsonStringEnumMemberConverter());
+        }
+
+        //---------------------------------------------------------------------
+        // NamedExtension
+
+        /// <summary>
+        /// Sets the named extension value by adding it if it doesn't already exist or changing
+        /// the existing value.
+        /// </summary>
+        /// <typeparam name="T">Specifies the property value type.</typeparam>
+        /// <param name="extensions">Holds the extensions.</param>
+        /// <param name="name">Specifies the extension name.</param>
+        /// <param name="value">Specifies the value being set.</param>
+        public static void Set<T>(this List<NamedExtension> extensions, string name, T value)
+        {
+            Covenant.Requires<ArgumentNullException>(extensions != null, nameof(extensions));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            foreach (var item in extensions)
+            {
+                if (item.Name == name)
+                {
+                    item.Extension = value;
+                    return;
+                }
+            }
+
+            extensions.Add(new NamedExtension() { Name = name, Extension = value });
+        }
+
+        /// <summary>
+        /// Searches <paramref name="extensions"/> for an extension with the name passed and
+        /// returns its value when found, otherwise returns <paramref name="default"/>.
+        /// </summary>
+        /// <typeparam name="T">Specifies the property value type.</typeparam>
+        /// <param name="extensions">Holds the extensions.</param>
+        /// <param name="name">Specifies the extension name.</param>
+        /// <param name="default">The value to be returned when the extension doesn't exist.</param>
+        /// <returns>The extension value when found, otherwise <paramref name="default"/>.</returns>
+        /// <exception cref="InvalidCastException">Thrown when the extension value cannot be cast to <typeparamref name="T"/>.</exception>
+        public static T Get<T>(this List<NamedExtension> extensions, string name, T @default)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            if (extensions == null)
+            {
+                return @default;
+            }
+
+            foreach (var item in extensions)
+            {
+                if (item.Name == name)
+                {
+                    return NeonHelper.YamlDeserialize<T>(item.Extension);
+                }
+            }
+
+            return @default;
+        }
+
+        /// <summary>
+        /// Removes a named extension if present.
+        /// </summary>
+        /// <param name="extensions">Holds the extensions.</param>
+        /// <param name="name">Specifies the name of the extension being removed.</param>
+        public static void Remove(this List<NamedExtension> extensions, string name)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            for (int i = 0; i < extensions.Count; i++)
+            {
+                if (extensions[i].Name == name)
+                {
+                    extensions.RemoveAt(i);
+                    return;
+                }
+            }
         }
 
         //---------------------------------------------------------------------

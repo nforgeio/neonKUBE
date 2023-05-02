@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubeConfigContext.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -50,7 +50,7 @@ namespace Neon.Kube.Config
         /// </summary>
         public KubeConfigContext()
         {
-            this.Config = new KubeConfigContextConfig();
+            this.Context = new KubeConfigContextConfig();
         }
 
         /// <summary>
@@ -90,6 +90,48 @@ namespace Neon.Kube.Config
         /// </summary>
         [JsonProperty(PropertyName = "context", Required = Required.Always)]
         [YamlMember(Alias = "context", ApplyNamingConventions = false)]
-        public KubeConfigContextConfig Config { get; set; }
+        public KubeConfigContextConfig Context { get; set; }
+
+        /// <summary>
+        /// Returns an extension value.
+        /// </summary>
+        /// <typeparam name="T">Specifies the value type.</typeparam>
+        /// <param name="name">Specifies the extension name.</param>
+        /// <param name="default">Specifies the value to be returned when the extension is not found.</param>
+        /// <returns>The extension value.</returns>
+        public T GetExtensionValue<T>(string name, T @default)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            if (Context == null || Context.Extensions == null)
+            {
+                return @default;
+            }
+
+            return Context.Extensions.Get<T>(name, @default);
+        }
+
+        /// <summary>
+        /// Sets an extension value.
+        /// </summary>
+        /// <typeparam name="T">Specifies the value type.</typeparam>
+        /// <param name="name">Specifies the extension name.</param>
+        /// <param name="value">Specifies the value being set.</param>
+        public void SetExtensionValue<T>(string name, T value)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            if (Context == null)
+            {
+                Context = new KubeConfigContextConfig();
+            }
+
+            if (Context.Extensions == null)
+            {
+                Context.Extensions = new List<NamedExtension>();
+            }
+
+            Context.Extensions.Set<T>(name, value);
+        }
     }
 }

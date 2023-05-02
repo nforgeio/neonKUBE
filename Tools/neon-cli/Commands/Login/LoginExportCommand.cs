@@ -112,8 +112,8 @@ REMARKS:
                 Program.Exit(1);
             }
 
-            var cluster = KubeHelper.Config.GetCluster(context.Config.Cluster);
-            var user    = KubeHelper.Config.GetUser(context.Config.User);
+            var cluster = KubeHelper.Config.GetCluster(context.Context.Cluster);
+            var user    = KubeHelper.Config.GetUser(context.Context.User);
 
             if (context == null)
             {
@@ -123,7 +123,7 @@ REMARKS:
 
             if (user == null)
             {
-                Console.Error.WriteLine($"*** ERROR: User [{context.Config.User}] not found.");
+                Console.Error.WriteLine($"*** ERROR: User [{context.Context.User}] not found.");
                 Program.Exit(1);
             }
 

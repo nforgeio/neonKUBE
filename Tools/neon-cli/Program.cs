@@ -203,7 +203,7 @@ NEON CLUSTER LIFE-CYCLE COMMANDS:
     neon cluster start
     neon cluster stop       [OPTIONS]
     neon cluster unlock
-    neon cluster verify     [CLUSTER-DEF]
+    neon cluster validate   [CLUSTER-DEF]
 
     neon login              COMMAND
     neon logout

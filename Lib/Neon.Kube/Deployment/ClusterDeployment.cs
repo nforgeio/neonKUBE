@@ -53,12 +53,18 @@ namespace Neon.Kube.Deployment
         /// Constructs an instance by extracting values from a <see cref="ClusterDefinition"/>.
         /// </summary>
         /// <param name="clusterDefinition">Specifies the cluster definition.</param>
-        public ClusterDeployment(ClusterDefinition clusterDefinition)
+        /// <param name="clusterId">Specifies the cluster's unique ID.</param>
+        /// <param name="clusterDomain">Specifies the cluster's DNS domain.</param>
+        public ClusterDeployment(ClusterDefinition clusterDefinition, string clusterId, string clusterDomain)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterId), nameof(clusterId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterDomain), nameof(clusterDomain));
 
-            Hosting = new HostingDeployment(clusterDefinition);
-            Nodes   = new List<NodeDeployment>();
+            ClusterId     = clusterId;
+            ClusterDomain = clusterDomain;
+            Hosting       = new HostingDeployment(clusterDefinition);
+            Nodes         = new List<NodeDeployment>();
 
             foreach (var nodeDefinition in clusterDefinition.Nodes)
             {
@@ -67,13 +73,31 @@ namespace Neon.Kube.Deployment
         }
 
         /// <summary>
+        /// Specifies the cluster's unique ID.
+        /// </summary>
+        [JsonProperty(PropertyName = "ClusterId", Required = Required.Always)]
+        [YamlMember(Alias = "clusterId", ApplyNamingConventions = false)]
+        public string ClusterId { get; set; }
+
+        /// <summary>
+        /// Specifies thge cluster's DNS domain.
+        /// </summary>
+        [JsonProperty(PropertyName = "ClusterDomain", Required = Required.Always)]
+        [YamlMember(Alias = "clusterDomain", ApplyNamingConventions = false)]
+        public string ClusterDomain { get; set; }
+
+        /// <summary>
         /// Holds information about the environment hosting the cluster.
         /// </summary>
+        [JsonProperty(PropertyName = "Hosting", Required = Required.Always)]
+        [YamlMember(Alias = "hosting", ApplyNamingConventions = false)]
         public HostingDeployment Hosting { get; set; }
 
         /// <summary>
         /// Holds information about the cluster nodes.
         /// </summary>
+        [JsonProperty(PropertyName = "Nodes", Required = Required.Always)]
+        [YamlMember(Alias = "nodes", ApplyNamingConventions = false)]
         public List<NodeDeployment> Nodes { get; set; }
     }
 }

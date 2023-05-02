@@ -158,18 +158,18 @@ namespace Neon.Kube.Hosting.XenServer
             this.nodeImagePath          = nodeImagePath;
             this.cluster.HostingManager = this;
             this.logFolder              = logFolder;
-            this.maxVmNameWidth         = cluster.SetupState.ClusterDefinition.Nodes.Max(node => node.Name.Length) + cluster.SetupState.ClusterDefinition.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition).Length;
+            this.maxVmNameWidth         = cluster.SetupState.ClusterDefinition.Nodes.Max(node => node.Name.Length) + cluster.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition).Length;
 
             // Create the [XenClient] instances that we'll use to manage the XenServer hosts.
 
             xenClients = new List<XenClient>();
 
-            foreach (var host in cluster.SetupState.ClusterDefinition.Hosting.Hypervisor.Hosts)
+            foreach (var host in cluster.Hosting.Hypervisor.Hosts)
             {
                 var hostAddress  = GetHostIpAddress(host);
                 var hostname     = host.Name;
-                var hostUsername = host.Username ?? cluster.SetupState.ClusterDefinition.Hosting.Hypervisor.HostUsername;
-                var hostPassword = host.Password ?? cluster.SetupState.ClusterDefinition.Hosting.Hypervisor.HostPassword;
+                var hostUsername = host.Username ?? cluster.Hosting.Hypervisor.HostUsername;
+                var hostPassword = host.Password ?? cluster.Hosting.Hypervisor.HostPassword;
 
                 if (string.IsNullOrEmpty(hostname))
                 {
@@ -300,12 +300,12 @@ namespace Neon.Kube.Hosting.XenServer
 
             var xenSshProxies = new List<NodeSshProxy<XenClient>>();
 
-            foreach (var host in cluster.SetupState.ClusterDefinition.Hosting.Hypervisor.Hosts)
+            foreach (var host in cluster.Hosting.Hypervisor.Hosts)
             {
                 var hostAddress  = NetHelper.ParseIPv4Address(GetHostIpAddress(host));
                 var hostname     = host.Name;
-                var hostUsername = host.Username ?? cluster.SetupState.ClusterDefinition.Hosting.Hypervisor.HostUsername;
-                var hostPassword = host.Password ?? cluster.SetupState.ClusterDefinition.Hosting.Hypervisor.HostPassword;
+                var hostUsername = host.Username ?? cluster.Hosting.Hypervisor.HostUsername;
+                var hostPassword = host.Password ?? cluster.Hosting.Hypervisor.HostPassword;
 
                 if (string.IsNullOrEmpty(hostname))
                 {
@@ -343,7 +343,7 @@ namespace Neon.Kube.Hosting.XenServer
             // speed up cluster setup.  This works because each XenServer
             // host is essentially independent from the others.
 
-            xenController = new SetupController<XenClient>($"Provisioning [{cluster.SetupState.ClusterDefinition.Name}] cluster", xenSshProxies, KubeHelper.LogFolder)
+            xenController = new SetupController<XenClient>($"Provisioning [{cluster.Name}] cluster", xenSshProxies, KubeHelper.LogFolder)
             {
                 MaxParallel = this.MaxParallel
             };
@@ -500,7 +500,7 @@ namespace Neon.Kube.Hosting.XenServer
         /// <returns>The virtual machine name.</returns>
         private string GetVmName(NodeSshProxy<NodeDefinition> node)
         {
-            return $"{cluster.SetupState.ClusterDefinition.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition)}{node.Name}";
+            return $"{cluster.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition)}{node.Name}";
         }
 
         /// <summary>
@@ -512,7 +512,7 @@ namespace Neon.Kube.Hosting.XenServer
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
-            return $"{cluster.SetupState.ClusterDefinition.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition)}{node.Name}";
+            return $"{cluster.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition)}{node.Name}";
         }
 
         /// <summary>
@@ -524,7 +524,7 @@ namespace Neon.Kube.Hosting.XenServer
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(vmName), nameof(vmName));
 
-            var prefix = cluster.SetupState.ClusterDefinition.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition);
+            var prefix = cluster.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition);
 
             if (!vmName.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
             {
@@ -720,7 +720,7 @@ namespace Neon.Kube.Hosting.XenServer
             xenSshProxy.Status = $"install: node image {templateName} (slow)";
             xenController.SetGlobalStepStatus();
 
-            xenClient.Template.ImportVmTemplate(driveTemplatePath, templateName, cluster.SetupState.ClusterDefinition.Hosting.XenServer.StorageRepository, description: $"neonKUBE Node Image [MD5:{md5}]");
+            xenClient.Template.ImportVmTemplate(driveTemplatePath, templateName, cluster.Hosting.XenServer.StorageRepository, description: $"neonKUBE Node Image [MD5:{md5}]");
 
             xenSshProxy.Status = string.Empty;
             xenController.SetGlobalStepStatus();
@@ -773,8 +773,8 @@ namespace Neon.Kube.Hosting.XenServer
                     cores:                      cores,
                     memoryBytes:                memoryBytes,
                     diskBytes:                  osDiskBytes,
-                    snapshot:                   cluster.SetupState.ClusterDefinition.Hosting.XenServer.Snapshot,
-                    primaryStorageRepository:   cluster.SetupState.ClusterDefinition.Hosting.XenServer.StorageRepository);
+                    snapshot:                   cluster.Hosting.XenServer.Snapshot,
+                    primaryStorageRepository:   cluster.Hosting.XenServer.StorageRepository);
 
                 xenSshProxy.Status = string.Empty;
 
@@ -1142,7 +1142,7 @@ namespace Neon.Kube.Hosting.XenServer
             // We're going to infer the cluster provisiong status by examining the
             // cluster login and the state of the VMs deployed to the XenServer hosts.
 
-            var contextName = $"root@{cluster.SetupState.ClusterDefinition.Name}";
+            var contextName = $"root@{cluster.Name}";
             var context     = KubeHelper.Config.GetContext(contextName);
 
             // Create a hashset holding the names of nodes that have existing virtual machines
@@ -1461,7 +1461,7 @@ namespace Neon.Kube.Hosting.XenServer
             //
             // Otherwise, we'll do a normal remove.
 
-            var vmPrefix = cluster.SetupState.ClusterDefinition.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition);
+            var vmPrefix = cluster.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition);
 
             if (removeOrphans && !string.IsNullOrEmpty(vmPrefix))
             {

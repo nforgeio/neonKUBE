@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    NeonKubeExtensionNames.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -25,36 +25,41 @@ namespace Neon.Kube.Config
     public static class NeonKubeExtensionNames
     {
         /// <summary>
-        /// Suffix added to neonKUBE related KubeContext extension property names used
-        /// to avoid conflicts with other vendor extensions.
+        /// The prefix added to neonKUBE related KubeContext extension property names
+        /// used to avoid conflicts with other vendor extensions.
         /// </summary>
-        private const string Suffix = "-neonkube-io";
+        private const string Prefix = "io.neonkube.";
 
         /// <summary>
-        /// <c>bool</c>: Used to indicate that the parent object belongs to neonKUBE.
+        /// <c>bool</c>: Used to indicate that a cluster belongs to neonKUBE.
         /// </summary>
-        public const string IsNeonKube = $"is-neonkube{Suffix}";
+        public const string IsNeonKube = $"{Prefix}is-neonkube";
 
         /// <summary>
-        /// <c>bool</c>: Used to indicate that the parent object belongs to neon-desktop.
+        /// <c>bool</c>: Used to indicate that a cluster belongs to neon-desktop.
         /// </summary>
-        public const string IsNeonDesktop = $"is-neon-desktop{Suffix}";
+        public const string IsNeonDesktop = $"{Prefix}is-neon-desktop";
+
+        /// <summary>
+        /// <see cref="HostingEnvironment"/>: Used to identify a cluster's host environment.
+        /// </summary>
+        public const string HostingEnvironment = $"{Prefix}hosting-environment";
 
         /// <summary>
         /// <see cref="KubeClusterInfo"/>: Holds additional information for neonKUBE clusters.
         /// </summary>
-        public const string ClusterInfo = $"cluster-info{Suffix}";
+        public const string ClusterInfo = $"{Prefix}cluster-info";
 
         /// <summary>
-        /// <see cref="ClusterDeploymentStatus"/>: Holds the provisioning state for neonKUBE clusters.s
+        /// <see cref="ClusterDeploymentStatus"/>: Holds the provisioning state for neonKUBE clusters.
         /// </summary>
-        public const string DeploymentStatus = $"deployment-status{Suffix}";
+        public const string DeploymentStatus = $"{Prefix}deployment-status";
 
         /// <summary>
         /// Used by our xUnit <b>ClusterFixture</b> to persist the cluster definition so
         /// the fixture can determine when to provision a new cluster when the definition
         /// has changed.
         /// </summary>
-        public const string TestClusterDefinition = $"test-cluster-definition{Suffix}";
+        public const string TestClusterDefinition = $"{Prefix}test-cluster-definition";
     }
 }

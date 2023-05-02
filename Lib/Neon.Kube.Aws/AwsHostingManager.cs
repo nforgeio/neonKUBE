@@ -911,7 +911,7 @@ namespace Neon.Kube.Hosting.Aws
             this.cluster            = cluster;
             this.clusterName        = cluster.Name;
             this.clusterEnvironment = NeonHelper.EnumToString(cluster.SetupState.ClusterDefinition.Purpose);
-            this.hostingOptions     = cluster.SetupState.ClusterDefinition.Hosting;
+            this.hostingOptions     = cluster.Hosting;
             this.cloudOptions       = hostingOptions.Cloud;
             this.awsOptions         = hostingOptions.Aws;
             this.networkOptions     = cluster.SetupState.ClusterDefinition.Network;
@@ -1179,7 +1179,7 @@ namespace Neon.Kube.Hosting.Aws
 
             KubeHelper.EnsureIngressNodes(cluster.SetupState.ClusterDefinition);
 
-            var operation = $"Provisioning [{cluster.SetupState.ClusterDefinition.Name}] on AWS [{availabilityZone}/{resourceGroupName}]";
+            var operation = $"Provisioning [{cluster.Name}] on AWS [{availabilityZone}/{resourceGroupName}]";
 
             controller.AddGlobalStep("AWS connect", ConnectAwsAsync);
             controller.AddGlobalStep("region check", VerifyRegionAndInstanceTypesAsync);
@@ -2972,7 +2972,7 @@ namespace Neon.Kube.Hosting.Aws
 
                 var nodeMtu          = NodeMtu == 0 ? NetConst.DefaultMTU : NodeMtu;
                 var netInterfacePath = LinuxPath.Combine(KubeNodeFolder.Bin, "net-interface");
-                var privateSubnet    = NetworkCidr.Parse(cluster.SetupState.ClusterDefinition.Hosting.Aws.Network.NodeSubnet);
+                var privateSubnet    = NetworkCidr.Parse(cluster.Hosting.Aws.Network.NodeSubnet);
                 var bootScript       =
 $@"#cloud-boothook
 #!/bin/bash
@@ -3812,7 +3812,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
-            return $"{cluster.SetupState.ClusterDefinition.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition)}{node.Name}";
+            return $"{cluster.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition)}{node.Name}";
         }
 
         /// <summary>
@@ -3985,7 +3985,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             // We're going to infer the cluster provisiong status by examining the
             // cluster login and the state of the VMs deployed to AWS.
 
-            var contextName = $"root@{cluster.SetupState.ClusterDefinition.Name}";
+            var contextName = $"root@{cluster.Name}";
             var context     = KubeHelper.Config.GetContext(contextName);
 
             // Create a hashset with the names of the nodes that map to deployed AWS
@@ -4498,7 +4498,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             //-----------------------------------------------------------------
             // Step 8: Release Elastic IPs created for the cluster
 
-            if (!cluster.SetupState.ClusterDefinition.Hosting.Aws.Network.HasCustomElasticIPs)
+            if (!cluster.Hosting.Aws.Network.HasCustomElasticIPs)
             {
                 if (ingressAddress != null)
                 {

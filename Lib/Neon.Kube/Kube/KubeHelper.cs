@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubeHelper.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -73,86 +73,6 @@ namespace Neon.Kube
     /// </summary>
     public static class KubeHelper
     {
-        //---------------------------------------------------------------------
-        // Extension methods
-
-        /// <summary>
-        /// Sets the named extension value by adding it if it doesn't already exist or changing
-        /// the existing value.
-        /// </summary>
-        /// <typeparam name="T">Specifies the property value type.</typeparam>
-        /// <param name="extensions">Holds the extensions.</param>
-        /// <param name="name">Specifies the extension name.</param>
-        /// <param name="value">Specifies the value being set.</param>
-        public static void Set<T>(this List<NamedExtension> extensions, string name, T value)
-        {
-            Covenant.Requires<ArgumentNullException>(extensions != null, nameof(extensions));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
-
-            foreach (var item in extensions)
-            {
-                if (item.Name == name)
-                {
-                    item.Extension = value;
-                    return;
-                }
-            }
-
-            extensions.Add(new NamedExtension() { Name = name, Extension = value });
-        }
-
-        /// <summary>
-        /// Searches <paramref name="extensions"/> for an extension with the name passed and
-        /// returns its value when found, otherwise returns <paramref name="default"/>.
-        /// </summary>
-        /// <typeparam name="T">Specifies the property value type.</typeparam>
-        /// <param name="extensions">Holds the extensions.</param>
-        /// <param name="name">Specifies the extension name.</param>
-        /// <param name="default">The value to be returned when the extension doesn't exist.</param>
-        /// <returns>The extension value when found, otherwise <paramref name="default"/>.</returns>
-        /// <exception cref="InvalidCastException">Thrown when the extension value cannot be cast to <typeparamref name="T"/>.</exception>
-        public static T Get<T>(this List<NamedExtension> extensions, string name, T @default)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
-
-            if (extensions == null)
-            {
-                return @default;
-            }
-
-            foreach (var item in extensions)
-            {
-                if (item.Name == name)
-                {
-                    return (T)item.Extension;
-                }
-            }
-
-            return @default;
-        }
-
-        /// <summary>
-        /// Removes a named extension if present.
-        /// </summary>
-        /// <param name="extensions">Holds the extensions.</param>
-        /// <param name="name">Specifies the name of the extension being removed.</param>
-        public static void Remove(this List<NamedExtension> extensions, string name)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
-
-            for (int i = 0; i < extensions.Count; i++)
-            {
-                if (extensions[i].Name == name)
-                {
-                    extensions.RemoveAt(i);
-                    return;
-                }
-            }
-        }
-
-        //---------------------------------------------------------------------
-        // Implementation
-
         private static Guid                 clientId;
         private static KubeConfig           cachedConfig;
         private static string               cachedNeonKubeUserFolder;
@@ -3388,38 +3308,66 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Helper to get a Kubernetes client.
+        /// Creates a <see cref="IKubernetes"/> client from a kubeconfig file.
         /// </summary>
-        /// <param name="kubeConfigPath"></param>
-        /// <param name="currentContext"></param>
-        /// <returns></returns>
-        public static IKubernetes GetKubernetesClient(
-            string kubeConfigPath = null,
-            string currentContext = null)
+        /// <param name="kubeConfigPath">Optionally specifies the path to the kubecontext file.</param>
+        /// <param name="currentContext">Optionally specifies the name of the context to use.</param>
+        /// <returns>The <see cref="IKubernetes"/>.</returns>
+        /// <remarks>
+        /// This method just returns a client for the current context in the standard location when
+        /// <paramref name="kubeConfigPath"/> isn't passed, otherwise it will load the kubeconfig
+        /// from that path and return a client for the current context or the specific context identified
+        /// by <paramref name="currentContext"/>.
+        /// </remarks>
+        public static IKubernetes GetKubernetesClient(string kubeConfigPath = null, string currentContext = null)
         {
-            KubernetesClientConfiguration config = null;
+            KubernetesClientConfiguration   k8sConfig;
 
             if (kubeConfigPath != null)
             {
-                config = KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath: kubeConfigPath, currentContext: currentContext);
+                k8sConfig = KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath: kubeConfigPath, currentContext: currentContext);
             }
             else
             {
-                config = KubernetesClientConfiguration.BuildDefaultConfig();
+                k8sConfig = KubernetesClientConfiguration.BuildDefaultConfig();
             }
 
-            if (config.SslCaCerts == null)
+            if (k8sConfig.SslCaCerts == null)
             {
-                var store = new X509Store(
-                            StoreName.CertificateAuthority,
-                            StoreLocation.CurrentUser);
+                var store = new X509Store(StoreName.CertificateAuthority, StoreLocation.CurrentUser);
 
-                config.SslCaCerts = store.Certificates;
+                k8sConfig.SslCaCerts = store.Certificates;
             }
 
-            var k8s = new Kubernetes(config, new KubernetesRetryHandler());
+            return new Kubernetes(k8sConfig, new KubernetesRetryHandler());
+        }
 
-            return k8s;
+        /// <summary>
+        /// Creates a <see cref="IKubernetes"/> client for the current cluster specified
+        /// by a <see cref="KubeConfig"/>.
+        /// </summary>
+        /// <param name="config">The source kubeconfig.</param>
+        /// <returns>The <see cref="IKubernetes"/>.</returns>
+        public static IKubernetes GetKubernetesClient(KubeConfig config)
+        {
+            Covenant.Requires<ArgumentNullException>(config != null, nameof(config));
+            config.Validate(needsCurrentCluster: true);
+
+            using (var tempFile = new TempFile(suffix: ".yaml"))
+            {
+                File.WriteAllText(tempFile.Path, NeonHelper.YamlSerialize(config));
+
+                var k8sConfig = KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath: tempFile.Path);
+
+                if (k8sConfig.SslCaCerts == null)
+                {
+                    var store = new X509Store(StoreName.CertificateAuthority, StoreLocation.CurrentUser);
+
+                    k8sConfig.SslCaCerts = store.Certificates;
+                }
+
+                return new Kubernetes(k8sConfig, new KubernetesRetryHandler());
+            }
         }
     }
 }

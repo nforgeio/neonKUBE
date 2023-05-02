@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    ClusterLoginExport.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -54,21 +54,21 @@ namespace Neon.Kube.Config
         /// <summary>
         /// The Kubernetes cluster.
         /// </summary>
-        [JsonProperty(PropertyName = "Cluster", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "cluster", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "cluster", ApplyNamingConventions = false)]
         public KubeConfigCluster Cluster { get; set; }
 
         /// <summary>
         /// The Kubernetes context.
         /// </summary>
-        [JsonProperty(PropertyName = "Context", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "context", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "context", ApplyNamingConventions = false)]
         public KubeConfigContext Context { get; set; }
 
         /// <summary>
         /// The cluster login information.  This may be <c>null</c>.
         /// </summary>
-        [JsonProperty(PropertyName = "Extensions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "extensions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "extensions", ApplyNamingConventions = false)]
         public KubeClusterInfo Extensions { get; set; }
 

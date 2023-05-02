@@ -278,7 +278,7 @@ touch $NODE_ROOT{filePath}
             var metadata = nodeTask.Metadata;
             var spec     = nodeTask.Spec;
 
-            spec.Node             = fixture.Cluster.FirstControlNode.Name;
+            spec.Node             = fixture.Cluster.DeploymentControlNode.Name;
             spec.RetentionSeconds = 30;
             spec.BashScript       =
 @"
@@ -341,7 +341,7 @@ exit 123
             var metadata = nodeTask.Metadata;
             var spec     = nodeTask.Spec;
 
-            spec.Node             = fixture.Cluster.FirstControlNode.Name;
+            spec.Node             = fixture.Cluster.DeploymentControlNode.Name;
             spec.TimeoutSeconds   = 15;
             spec.RetentionSeconds = 30;
             spec.BashScript       =
@@ -402,7 +402,7 @@ sleep 30
             var metadata = nodeTask.Metadata;
             var spec     = nodeTask.Spec;
 
-            spec.Node                 = fixture.Cluster.FirstControlNode.Name;
+            spec.Node                 = fixture.Cluster.DeploymentControlNode.Name;
             spec.StartBeforeTimestamp = DateTime.UtcNow - TimeSpan.FromHours(1);
             spec.TimeoutSeconds       = 15;
             spec.RetentionSeconds     = 30;
@@ -443,7 +443,7 @@ sleep 5
             var spec         = nodeTask.Spec;
             var scheduledUtc = DateTime.UtcNow + TimeSpan.FromSeconds(90);
 
-            spec.Node                = fixture.Cluster.FirstControlNode.Name;
+            spec.Node                = fixture.Cluster.DeploymentControlNode.Name;
             spec.StartAfterTimestamp = scheduledUtc;
             spec.TimeoutSeconds      = 15;
             spec.RetentionSeconds    = 30;

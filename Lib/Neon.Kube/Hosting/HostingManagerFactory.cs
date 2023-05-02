@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    HostingManagerFactory.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -87,7 +87,7 @@ namespace Neon.Kube.Hosting
         public HostingManager GetManagerWithNodeImageUri(ClusterProxy cluster, bool cloudMarketplace, string nodeImageUri, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
-            Covenant.Requires<InvalidOperationException>(!IsCloudEnvironment(cluster.SetupState.ClusterDefinition.Hosting.Environment) || cloudMarketplace, $"[{nameof(cloudMarketplace)}=true] is not allowed for on-premise hosting environments.");
+            Covenant.Requires<InvalidOperationException>(!IsCloudEnvironment(cluster.Hosting.Environment) || cloudMarketplace, $"[{nameof(cloudMarketplace)}=true] is not allowed for on-premise hosting environments.");
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeImageUri), nameof(nodeImageUri));
 
             CheckInitialized();

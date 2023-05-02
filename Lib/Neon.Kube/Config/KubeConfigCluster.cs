@@ -65,48 +65,66 @@ namespace Neon.Kube.Config
         /// </summary>
         [JsonProperty(PropertyName = "cluster", Required = Required.Always)]
         [YamlMember(Alias = "cluster", ApplyNamingConventions = false)]
-        public KubeConfigClusterConfig Config { get; set; }
+        public KubeConfigClusterConfig Cluster { get; set; }
+
+        /// <summary>
+        /// Lists any custom extension properties.  Extensions are name/value pairs added
+        /// by vendors to hold arbitrary information.  Take care to choose property names
+        /// that are unlikely to conflict with properties created by other vendors by adding
+        /// a custom prefix like <b>io.neonkube.MY-PROPERTY</b>, where <b>MY-PROPERTY</b> 
+        /// identifies the property and <b>neonkibe.io</b> helps avoid conflicts.
+        /// </summary>
+        [JsonProperty(PropertyName = "extensions", Required = Required.Default)]
+        [YamlMember(Alias = "extensions", ApplyNamingConventions = false)]
+        public List<NamedExtension> Extensions { get; set; } = new List<NamedExtension>();
 
         /// <summary>
         /// Returns an extension value.
         /// </summary>
         /// <typeparam name="T">Specifies the value type.</typeparam>
-        /// <param name="propertyName">Specifies the property name.</param>
+        /// <param name="name">Specifies the extension name.</param>
         /// <param name="default">Specifies the value to be returned when the extension is not found.</param>
         /// <returns>The extension value.</returns>
-        private T GetExtensionValue<T>(string propertyName, T @default)
+        public T GetExtensionValue<T>(string name, T @default)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(propertyName), nameof(propertyName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
-            if (Config == null || Config.Extensions == null)
+            if (Cluster == null || Cluster.Extensions == null)
             {
                 return @default;
             }
 
-            return Config.Extensions.TryGetPropertyValue(propertyName, @default);
+            try
+            {
+                return Cluster.Extensions.Get<T>(name, @default);
+            }
+            catch
+            {
+                return @default;
+            }
         }
 
         /// <summary>
         /// Sets an extension value.
         /// </summary>
         /// <typeparam name="T">Specifies the value type.</typeparam>
-        /// <param name="propertyName">Specifies the property name.</param>
+        /// <param name="name">Specifies the extension name.</param>
         /// <param name="value">Specifies the value being set.</param>
-        private void SetExtensionValue<T>(string propertyName, T value)
+        public void SetExtensionValue<T>(string name, T value)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(propertyName), nameof(propertyName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
-            if (Config == null)
+            if (Cluster == null)
             {
-                Config = new KubeConfigClusterConfig();
+                Cluster = new KubeConfigClusterConfig();
             }
 
-            if (Config.Extensions == null)
+            if (Cluster.Extensions == null)
             {
-                Config.Extensions = new List<NamedExtension>();
+                Cluster.Extensions = new List<NamedExtension>();
             }
 
-            Config.Extensions.Set<T>(propertyName, value);
+            Cluster.Extensions.Set<T>(name, value);
         }
 
         /// <summary>
@@ -131,6 +149,17 @@ namespace Neon.Kube.Config
         {
             get => GetExtensionValue<bool>(NeonKubeExtensionNames.IsNeonDesktop, false);
             set => SetExtensionValue<bool>(NeonKubeExtensionNames.IsNeonDesktop, value);
+        }
+
+        /// <summary>
+        /// Identifies the <see cref="HostingEnvironment"/> for neonKUBE clusters.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public HostingEnvironment HostingEnvironment
+        {
+            get => GetExtensionValue<HostingEnvironment>(NeonKubeExtensionNames.IsNeonKube, HostingEnvironment.Unknown);
+            set => SetExtensionValue<HostingEnvironment>(NeonKubeExtensionNames.IsNeonKube, value);
         }
 
         /// <summary>

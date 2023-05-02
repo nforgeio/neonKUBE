@@ -64,9 +64,8 @@ namespace Neon.Kube.Deployment
         /// <summary>
         /// Identifies the cloud or other hosting platform.  This defaults to <see cref="HostingEnvironment.Unknown"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "Environment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Environment", Required = Required.Always)]
         [YamlMember(Alias = "environment", ApplyNamingConventions = false)]
-        [DefaultValue(HostingEnvironment.Unknown)]
         public HostingEnvironment Environment { get; set; } = HostingEnvironment.Unknown;
 
         /// <summary>
@@ -192,6 +191,27 @@ namespace Neon.Kube.Deployment
                         throw new NotImplementedException("Unexpected hosting environment.");
                 }
             }
+        }
+
+        /// <summary>
+        /// Converts the instance into a <see cref="HostingOptions"/>.
+        /// </summary>
+        /// <returns>The converted <see cref="HostingOptions"/>.</returns>
+        public HostingOptions ToOptions()
+        {
+            return new HostingOptions()
+            {
+                Environment  = Environment,
+
+                Aws        = Aws,
+                BareMetal  = BareMetal,
+                Azure      = Azure,
+                Cloud      = Cloud,
+                Google     = Google,
+                HyperV     = HyperV,
+                Hypervisor = Hypervisor,
+                XenServer  = XenServer
+            };
         }
     }
 }

@@ -157,12 +157,12 @@ ARGUMENTS:
                         new KubeConfigCluster()
                         {
                             Name       = clusterInfo.Name,
-                            Config = clusterProperties
+                            Cluster = clusterProperties
                         });
                 }
                 else
                 {
-                    configCluster.Config = clusterProperties;
+                    configCluster.Cluster = clusterProperties;
                 }
 
                 var configUser   = config.Users.Where(user => user.Name == newContextName).FirstOrDefault();
@@ -184,12 +184,12 @@ ARGUMENTS:
                         new KubeConfigUser()
                         {
                             Name   = newContextName,
-                            Config = userConfig,
+                            User = userConfig,
                         });
                 }
                 else
                 {
-                    configUser.Config = userConfig;
+                    configUser.User = userConfig;
                 }
 
                 var configContext = config.Contexts.Where(context => context.Name == newContextName).FirstOrDefault();
@@ -206,12 +206,12 @@ ARGUMENTS:
                         new KubeConfigContext()
                         {
                             Name       = newContextName,
-                            Config = contextProperties
+                            Context = contextProperties
                         });
                 }
                 else
                 {
-                    configContext.Config = contextProperties;
+                    configContext.Context = contextProperties;
                 }
 
                 config.CurrentContext = newContextName;

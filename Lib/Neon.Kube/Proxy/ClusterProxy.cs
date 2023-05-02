@@ -103,10 +103,10 @@ namespace Neon.Kube.Proxy
         // Static members
 
         /// <summary>
-        /// Creates a cluster proxy from a <see cref="KubeConfigContext"/> that will
+        /// Creates a cluster proxy from a <see cref="KubeConfig"/> that will
         /// typically be used to manage an already deployed cluster.
         /// </summary>
-        /// <param name="context">The Kubernetes confug context.</param>
+        /// <param name="kubeConfig">The Kubernetes config with the current context set to the target cluster.</param>
         /// <param name="hostingManagerFactory">The hosting manager factory,</param>
         /// <param name="cloudMarketplace">
         /// <para>
@@ -135,7 +135,7 @@ namespace Neon.Kube.Proxy
         /// </param>
         /// <returns>The <see cref="ClusterProxy"/>.</returns>
         public static async Task<ClusterProxy> CreateAsync(
-            KubeConfigContext       context,
+            KubeConfig              kubeConfig,
             IHostingManagerFactory  hostingManagerFactory,
             bool                    cloudMarketplace,
             Operation               operation         = Operation.LifeCycle,
@@ -145,8 +145,12 @@ namespace Neon.Kube.Proxy
             NodeProxyCreator        nodeProxyCreator  = null,
             RunOptions              defaultRunOptions = RunOptions.None)
         {
+            Covenant.Requires<ArgumentNullException>(kubeConfig != null, nameof(kubeConfig));
+            Covenant.Requires<ArgumentNullException>(hostingManagerFactory != null, nameof(hostingManagerFactory));
+            kubeConfig.Validate(needsCurrentCluster: true);
+
             var cluster = new ClusterProxy(
-                context:               context,
+                kubeConfig:            kubeConfig,
                 hostingManagerFactory: hostingManagerFactory,
                 cloudMarketplace:      cloudMarketplace,
                 operation:             operation,
@@ -156,7 +160,15 @@ namespace Neon.Kube.Proxy
                 nodeProxyCreator:      nodeProxyCreator,
                 defaultRunOptions:     defaultRunOptions);
 
+            cluster.KubeConfig = kubeConfig;
+            cluster.Hosting    = new HostingOptions()
+            {
+                Environment = kubeConfig.Cluster.HostingEnvironment
+            };
+
             await cluster.InitializeAsync();
+
+            cluster.HostingManager = cluster.GetHostingManager(hostingManagerFactory, cloudMarketplace, operation, KubeHelper.LogFolder);
 
             return cluster;
         }
@@ -214,6 +226,8 @@ namespace Neon.Kube.Proxy
             NodeProxyCreator        nodeProxyCreator  = null,
             RunOptions              defaultRunOptions = RunOptions.None)
         {
+            Covenant.Requires<ArgumentNullException>(hostingManagerFactory != null, nameof(hostingManagerFactory));
+
             var cluster = new ClusterProxy(
                 hostingManagerFactory: hostingManagerFactory,
                 cloudMarketplace:      cloudMarketplace,
@@ -226,25 +240,28 @@ namespace Neon.Kube.Proxy
 
             await cluster.InitializeAsync();
 
+            cluster.HostingManager = cluster.GetHostingManager(hostingManagerFactory, cloudMarketplace, operation, KubeHelper.LogFolder);
+
             return cluster;
         }
 
         //---------------------------------------------------------------------
         // Instance members
 
-        private object                  syncLock = new object();
-        private KubeConfigContext       context;
-        private RunOptions              defaultRunOptions;
-        private NodeProxyCreator        nodeProxyCreator;
-        private string                  nodeImageUri;
-        private string                  nodeImagePath;
-        private IKubernetes             cachedK8s;
+        private object                          syncLock = new object();
+        private RunOptions                      defaultRunOptions;
+        private NodeProxyCreator                nodeProxyCreator;
+        private string                          nodeImageUri;
+        private string                          nodeImagePath;
+        private ClusterDeployment               clusterDeployment;
+        private NodeSshProxy<NodeDefinition>    deploymentControlNode;
+        private IKubernetes                     cachedK8s;
 
         /// <summary>
         /// Constructs a cluster proxy from a <see cref="KubeConfigContext"/> that will
         /// typically be used to manage an already deployed cluster.
         /// </summary>
-        /// <param name="context">The Kubernetes confug context.</param>
+        /// <param name="kubeConfig">The Kubernetes config.</param>
         /// <param name="hostingManagerFactory">The hosting manager factory,</param>
         /// <param name="cloudMarketplace">
         /// <para>
@@ -272,7 +289,7 @@ namespace Neon.Kube.Proxy
         /// by the cluster proxy.  This defaults to <see cref="RunOptions.None"/>.
         /// </param>
         private ClusterProxy(
-            KubeConfigContext       context,
+            KubeConfig              kubeConfig,
             IHostingManagerFactory  hostingManagerFactory,
             bool                    cloudMarketplace,
             Operation               operation         = Operation.LifeCycle,
@@ -292,7 +309,7 @@ namespace Neon.Kube.Proxy
                 nodeProxyCreator:      nodeProxyCreator, 
                 defaultRunOptions:     defaultRunOptions)
         {
-            this.context = context;
+            KubeConfig = kubeConfig;
         }
 
         /// <summary>
@@ -380,13 +397,14 @@ namespace Neon.Kube.Proxy
             }
 
             this.SetupState        = setupState;
-            this.KubeContext       = KubeHelper.CurrentContext;
+            this.KubeConfig        = KubeHelper.Config.Clone();
             this.defaultRunOptions = defaultRunOptions;
             this.nodeProxyCreator  = nodeProxyCreator;
 
-            // Create the hosting manager.
-
-            this.HostingManager = GetHostingManager(hostingManagerFactory, cloudMarketplace, operation, KubeHelper.LogFolder);
+            if (setupState != null)
+            {
+                this.Hosting = setupState.ClusterDefinition.Hosting;
+            }
         }
 
         /// <summary>
@@ -448,42 +466,60 @@ namespace Neon.Kube.Proxy
                 nodes.Add(node);
             }
 
+            this.Nodes = nodes;
+
             if (SetupState != null)
             {
                 foreach (var nodeDefinition in SetupState.ClusterDefinition.SortedNodes)
                 {
                     AddNode(nodeProxyCreator(nodeDefinition.Name, NetHelper.ParseIPv4Address(nodeDefinition.Address ?? "0.0.0.0")), nodeDefinition);
                 }
+
+                this.DeploymentControlNode = Nodes.Where(n => n.Metadata.IsControlPane).OrderBy(n => n.Name).First();
             }
             else
             {
-                var configMap         = await K8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterDeployment>(KubeConfigMapName.ClusterDeployment, KubeNamespace.NeonSystem);
-                var clusterDeployment = configMap.Data;
+                var configMap = await K8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterDeployment>(KubeConfigMapName.ClusterDeployment, KubeNamespace.NeonStatus);
+
+                clusterDeployment = configMap.Data;
+                Hosting           = clusterDeployment.Hosting.ToOptions();
 
                 foreach (var nodeDeployment in clusterDeployment.Nodes)
                 {
                     AddNode(nodeProxyCreator(nodeDeployment.Name, NetHelper.ParseIPv4Address(nodeDeployment.Address ?? "0.0.0.0")));
                 }
             }
-
-            this.Nodes            = nodes;
-            this.FirstControlNode = Nodes.Where(n => n.Metadata.IsControlPane).OrderBy(n => n.Name).First();
         }
 
         /// <summary>
         /// Returns the cluster name.
         /// </summary>
-        public string Name => context != null ? context.Name : SetupState.ClusterDefinition.Name;
+        public string Name => KubeConfig?.Cluster != null ? KubeConfig.Cluster.Name : SetupState.ClusterDefinition.Name;
 
         /// <summary>
-        /// The associated <see cref="IHostingManager"/>.
+        /// Returns the cluster ID.
+        /// </summary>
+        public string Id => SetupState != null ? SetupState.ClusterId : clusterDeployment.ClusterId;
+
+        /// <summary>
+        /// Returns the cluster domain.
+        /// </summary>
+        public string Domain => SetupState != null ? SetupState.ClusterDomain : clusterDeployment.ClusterDomain;
+
+        /// <summary>
+        /// Returns the cluster hosting options.
+        /// </summary>
+        public HostingOptions Hosting { get; private set; }
+
+        /// <summary>
+        /// Returns associated <see cref="IHostingManager"/>.
         /// </summary>
         public IHostingManager HostingManager { get; set; }
 
         /// <summary>
-        /// Returns the cluster context.
+        /// Returns the Kubernetes config with the current cluster.
         /// </summary>
-        public KubeConfigContext KubeContext { get; set; }
+        public KubeConfig KubeConfig { get; set; }
 
         /// <summary>
         /// Returns a read-only list of cluster node proxies.
@@ -502,7 +538,7 @@ namespace Neon.Kube.Proxy
         /// </summary>
         /// <remarks>
         /// <para>
-        /// This is initialized by hosting manages such as XenServer and probably Hyper-V
+        /// This is initialized by hosting managers such as XenServer and probably Hyper-V
         /// in the future so that status changes for host machines will be included in 
         /// <see cref="SetupController{NodeMetadata}"/> UX status updates properly.
         /// </para>
@@ -514,9 +550,30 @@ namespace Neon.Kube.Proxy
         public List<LinuxSshProxy> Hosts { get; private set; } = new List<LinuxSshProxy>();
 
         /// <summary>
+        /// <para>
         /// Returns the first cluster control-plane node as sorted by name.
+        /// </para>
+        /// <note>
+        /// This property works only for cluster proxies constructed for cluster setup from a
+        /// <see cref="KubeSetupState"/>.  Use <see cref="GetReachableControlNode(ReachableHostMode)"/>
+        /// for other scenarios.
+        /// </note>
         /// </summary>
-        public NodeSshProxy<NodeDefinition> FirstControlNode { get; private set; }
+        /// <exception cref="InvalidOperationException">Thrown when the proxy was not created for deploying a cluster.</exception>
+        public NodeSshProxy<NodeDefinition> DeploymentControlNode
+        {
+            get
+            {
+                if (deploymentControlNode == null)
+                {
+                    throw new InvalidOperationException($"[{nameof(DeploymentControlNode)}] is available only for [{nameof(ClusterProxy)}] instances created for deploying a cluster.");
+                }
+
+                return deploymentControlNode;
+            }
+
+            private set => deploymentControlNode = value;
+        }
 
         /// <summary>
         /// Specifies the <see cref="RunOptions"/> to use when executing commands that 
@@ -543,10 +600,10 @@ namespace Neon.Kube.Proxy
         }
 
         /// <summary>
-        /// Ensures that the proxy is configured for provisioning cluster.
+        /// Ensures that the proxy is configured for provisioning the cluster.
         /// </summary>
         /// <exception cref="AssertException">Thrown when the proxy is not configured to provision the cluster.</exception>
-        private void EnsureSetupMode()
+        public void EnsureSetupMode()
         {
             Covenant.Assert(SetupState != null, $"[{nameof(ClusterProxy)}] is not configured for provisioning the cluster.");
         }
@@ -589,13 +646,13 @@ namespace Neon.Kube.Proxy
         /// </remarks>
         private IHostingManager GetHostingManager(IHostingManagerFactory hostingManagerFactory, bool cloudMarketplace, Operation operation = Operation.LifeCycle, string logFolder = null)
         {
-            EnsureSetupMode();
+            Covenant.Assert(Hosting.Environment != HostingEnvironment.Unknown);
 
             hostingManagerFactory ??= new HostingManagerFactory();
 
             HostingManager hostingManager;
 
-            if (KubeHelper.IsOnPremiseHypervisorEnvironment(SetupState.ClusterDefinition.Hosting.Environment))
+            if (KubeHelper.IsOnPremiseHypervisorEnvironment(Hosting.Environment))
             {
                 if (!string.IsNullOrEmpty(nodeImageUri))
                 {
@@ -632,7 +689,7 @@ namespace Neon.Kube.Proxy
 
             if (hostingManager == null)
             {
-                throw new NeonKubeException($"No hosting manager for the [{SetupState.ClusterDefinition.Hosting.Environment}] environment could be located.");
+                throw new NeonKubeException($"No hosting manager for the [{Hosting.Environment}] environment could be located.");
             }
 
             return hostingManager;
@@ -756,7 +813,7 @@ namespace Neon.Kube.Proxy
                 // $note(jefflill):
                 //
                 // The lock here may be a bit excessive, but there's a slight chance that
-                // multiple client could be created without it.  [ClusterProxy] isn't really
+                // multiple clients could be created without it.  [ClusterProxy] isn't really
                 // intended for super high transaction volumes and even for applications 
                 // doing that, they can mitigate this by save the client instance to a
                 // local variable (or something) and using that instead.
@@ -772,31 +829,7 @@ namespace Neon.Kube.Proxy
                         return cachedK8s;
                     }
 
-                    if (context == null)
-                    {
-                        context = KubeHelper.Config.Context;
-
-                        if (context == null)
-                        {
-                            throw new InvalidOperationException($"There is no current Kubernetes context.");
-                        }
-                    }
-
-                    var kubeConfigPath = KubeHelper.KubeConfigPath;
-
-                    if (kubeConfigPath == null)
-                    {
-                        throw new NeonKubeException("[KUBECONFIG] environment variable not found.");
-                    }
-
-                    if (kubeConfigPath.Contains(';'))
-                    {
-                        throw new NotSupportedException("[KUBECONFIG]: multiple config paths are not supported.");
-                    }
-
-                    kubeConfigPath = kubeConfigPath.Trim();
-
-                    cachedK8s = KubeHelper.GetKubernetesClient(kubeConfigPath: kubeConfigPath, currentContext: context.Name);
+                    cachedK8s = KubeHelper.GetKubernetesClient(KubeConfig);
 
                     return cachedK8s;
                 }
@@ -807,16 +840,15 @@ namespace Neon.Kube.Proxy
         /// Fetches the cluster deployment details for the proxied cluster.
         /// </summary>
         /// <returns>The <see cref="ClusterDeployment"/> details.</returns>
-        /// </exception>
         public async Task<ClusterDeployment> GetDeploymentAsync()
         {
             if (SetupState != null)
             {
-                return new ClusterDeployment(SetupState.ClusterDefinition);
+                return new ClusterDeployment(SetupState.ClusterDefinition, SetupState.ClusterId, SetupState.ClusterDomain);
             }
             else
             {
-                var configMap = await K8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterDeployment>(KubeConfigMapName.ClusterDeployment, KubeNamespace.NeonSystem);
+                var configMap = await K8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterDeployment>(KubeConfigMapName.ClusterDeployment, KubeNamespace.NeonStatus);
 
                 return configMap.Data;
             }
@@ -1199,35 +1231,32 @@ namespace Neon.Kube.Proxy
 
             var clusterHealth = await HostingManager.GetClusterHealthAsync(timeout);
 
-            if (context != null)
+            switch (clusterHealth.State)
             {
-                switch (clusterHealth.State)
-                {
-                    case ClusterState.Unknown:
+                case ClusterState.Unknown:
 
-                        clusterHealth.State   = ClusterState.Unhealthy;
-                        clusterHealth.Summary = clusterHealth.Summary;
-                        break;
+                    clusterHealth.State   = ClusterState.Unhealthy;
+                    clusterHealth.Summary = clusterHealth.Summary;
+                    break;
 
-                    case ClusterState.Unhealthy:
+                case ClusterState.Unhealthy:
 
-                        clusterHealth.State   = ClusterState.Unhealthy;
-                        clusterHealth.Summary = clusterHealth.Summary;
-                        break;
+                    clusterHealth.State   = ClusterState.Unhealthy;
+                    clusterHealth.Summary = clusterHealth.Summary;
+                    break;
 
-                    case ClusterState.Transitioning:
-                    case ClusterState.Healthy:
+                case ClusterState.Transitioning:
+                case ClusterState.Healthy:
 
-                        clusterHealth.State   = ClusterState.Healthy;
-                        clusterHealth.Summary = "Cluster is healthy";
-                        break;
+                    clusterHealth.State   = ClusterState.Healthy;
+                    clusterHealth.Summary = "Cluster is healthy";
+                    break;
 
-                    case ClusterState.Paused:
+                case ClusterState.Paused:
 
-                        clusterHealth.State   = ClusterState.Paused;
-                        clusterHealth.Summary = "Cluster is paused";
-                        break;
-                }
+                    clusterHealth.State   = ClusterState.Paused;
+                    clusterHealth.Summary = "Cluster is paused";
+                    break;
             }
 
             return clusterHealth;

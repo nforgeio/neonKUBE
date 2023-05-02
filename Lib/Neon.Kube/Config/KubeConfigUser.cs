@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubeConfigUser.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -63,6 +63,48 @@ namespace Neon.Kube.Config
         /// </summary>
         [JsonProperty(PropertyName = "user", Required = Required.Always)]
         [YamlMember(Alias = "user", ApplyNamingConventions = false)]
-        public KubeConfigUserConfig Config { get; set; }
+        public KubeConfigUserConfig User { get; set; }
+
+        /// <summary>
+        /// Returns an extension value.
+        /// </summary>
+        /// <typeparam name="T">Specifies the value type.</typeparam>
+        /// <param name="name">Specifies the extension name.</param>
+        /// <param name="default">Specifies the value to be returned when the extension is not found.</param>
+        /// <returns>The extension value.</returns>
+        public T GetExtensionValue<T>(string name, T @default)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            if (User == null || User.Extensions == null)
+            {
+                return @default;
+            }
+
+            return User.Extensions.Get<T>(name, @default);
+        }
+
+        /// <summary>
+        /// Sets an extension value.
+        /// </summary>
+        /// <typeparam name="T">Specifies the value type.</typeparam>
+        /// <param name="name">Specifies the extension name.</param>
+        /// <param name="value">Specifies the value being set.</param>
+        public void SetExtensionValue<T>(string name, T value)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            if (User == null)
+            {
+                User = new KubeConfigUserConfig();
+            }
+
+            if (User.Extensions == null)
+            {
+                User.Extensions = new List<NamedExtension>();
+            }
+
+            User.Extensions.Set<T>(name, value);
+        }
     }
 }

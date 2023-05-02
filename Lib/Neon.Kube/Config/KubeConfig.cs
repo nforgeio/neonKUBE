@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubeConfig.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -65,7 +65,7 @@ namespace Neon.Kube.Config
                 var config = NeonHelper.YamlDeserialize<KubeConfig>(KubeHelper.ParseTextFileWithRetry(configPath));
 
                 config.Validate();
-                
+
                 return config;
             }
             else
@@ -141,10 +141,10 @@ namespace Neon.Kube.Config
         /// Lists any custom extension properties.  Extensions are name/value pairs added
         /// by vendors to hold arbitrary information.  Take care to choose property names
         /// that are unlikely to conflict with properties created by other vendors by adding
-        /// a custom suffix like <b>my-property.neonkube.io</b>, where <b>my-property</b> 
+        /// a custom prefix like <b>io.neonkube.MY-PROPERTY</b>, where <b>MY-PROPERTY</b> 
         /// identifies the property and <b>neonkibe.io</b> helps avoid conflicts.
         /// </summary>
-        [JsonProperty(PropertyName = "Extensions", Required = Required.Default)]
+        [JsonProperty(PropertyName = "extensions", Required = Required.Default)]
         [YamlMember(Alias = "extensions", ApplyNamingConventions = false)]
         public List<NamedExtension> Extensions { get; set; } = new List<NamedExtension>();
 
@@ -165,6 +165,38 @@ namespace Neon.Kube.Config
                 {
                     return GetContext(CurrentContext);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Returns the current cluster or <c>null</c>.
+        /// </summary>
+        public KubeConfigCluster Cluster
+        {
+            get
+            {
+                if (Context == null)
+                {
+                    return null;
+                }
+
+                return GetCluster(Context.Cluster);
+            }
+        }
+
+        /// <summary>
+        /// Returns the current user or <c>null</c>.
+        /// </summary>
+        public KubeConfigUser User
+        {
+            get
+            {
+                if (Context == null)
+                {
+                    return null;
+                }
+
+                return GetUser(Context.User);
             }
         }
 
@@ -277,13 +309,72 @@ namespace Neon.Kube.Config
         /// <summary>
         /// Validates the kubeconfig.
         /// </summary>
+        /// <param name="needsCurrentCluster">
+        /// Optionally specifies that the config must have a current context identifying the
+        /// cluster and user.
+        /// </param>
         /// <exception cref="NeonKubeException">Thrown when the current config is invalid.</exception>
-        public void Validate()
+        public void Validate(bool needsCurrentCluster = false)
         {
             if (Kind != "Config")
             {
                 throw new NeonKubeException($"Invalid [{nameof(Kind)}={Kind}].");
             }
+
+            if (needsCurrentCluster)
+            {
+                if (Context == null)
+                {
+                    throw new NeonKubeException($"Kubeconfig does not specify a current context.");
+                }
+
+                if (Cluster == null)
+                {
+                    throw new NeonKubeException($"Kubeconfig context [{Context.Name}] references the [{Context.Cluster}] cluster which cannot be found.");
+                }
+
+                if (User == null)
+                {
+                    throw new NeonKubeException($"Kubeconfig context [{Context.Name}] references the [{Context.User}] user which cannot be found.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns an extension value.
+        /// </summary>
+        /// <typeparam name="T">Specifies the value type.</typeparam>
+        /// <param name="name">Specifies the extension name.</param>
+        /// <param name="default">Specifies the value to be returned when the extension is not found.</param>
+        /// <returns>The extension value.</returns>
+        public T GetExtensionValue<T>(string name, T @default)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            if (Extensions == null)
+            {
+                return @default;
+            }
+
+            return Extensions.Get<T>(name, @default);
+        }
+
+        /// <summary>
+        /// Sets an extension value.
+        /// </summary>
+        /// <typeparam name="T">Specifies the value type.</typeparam>
+        /// <param name="name">Specifies the extension name.</param>
+        /// <param name="value">Specifies the value being set.</param>
+        public void SetExtensionValue<T>(string name, T value)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            if (Extensions == null)
+            {
+                Extensions = new List<NamedExtension>();
+            }
+
+            Extensions.Set<T>(name, value);
         }
 
         /// <summary>
@@ -323,6 +414,15 @@ namespace Neon.Kube.Config
 
                 File.WriteAllText(configPath, NeonHelper.YamlSerialize(this));
             }
+        }
+
+        /// <summary>
+        /// Constructs a deep clone of the instance.
+        /// </summary>
+        /// <returns>The deep cloned <see cref="KubeConfig"/>.</returns>
+        public KubeConfig Clone()
+        {
+            return NeonHelper.JsonClone(this);
         }
     }
 }

@@ -65,11 +65,15 @@ namespace Neon.Kube.Deployment
         /// prefix added for the hosting environment.
         /// </note>
         /// </summary>
+        [JsonProperty(PropertyName = "Name", Required = Required.Always)]
+        [YamlMember(Alias = "name", ApplyNamingConventions = false)]
         public string Name { get; set; }
 
         /// <summary>
         /// Specifies the IP address for the node.
         /// </summary>
+        [JsonProperty(PropertyName = "Address", Required = Required.Always)]
+        [YamlMember(Alias = "address", ApplyNamingConventions = false)]
         public string Address { get; set; }
 
         /// <summary>

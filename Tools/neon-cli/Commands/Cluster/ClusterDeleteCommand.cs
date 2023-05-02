@@ -137,7 +137,7 @@ cluster definition or by executing this command on your cluster:
 
             try
             {
-                using (var cluster = await ClusterProxy.CreateAsync(context, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
+                using (var cluster = await ClusterProxy.CreateAsync(KubeHelper.Config, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
                 {
                     var capabilities = cluster.Capabilities;
 

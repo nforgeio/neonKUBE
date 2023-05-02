@@ -918,7 +918,7 @@ namespace Neon.Kube.Hosting.Azure
             this.cluster               = cluster;
             this.clusterName           = cluster.Name;
             this.clusterEnvironment    = NeonHelper.EnumToString(cluster.SetupState.ClusterDefinition.Purpose);
-            this.hostingOptions        = cluster.SetupState.ClusterDefinition.Hosting;
+            this.hostingOptions        = cluster.Hosting;
             this.cloudOptions          = hostingOptions.Cloud;
             this.azureOptions          = hostingOptions.Azure;
             this.cloudOptions          = hostingOptions.Cloud;
@@ -1173,7 +1173,7 @@ namespace Neon.Kube.Hosting.Azure
 
             // Initialize and run the [SetupController].
 
-            var operation = $"Provisioning [{cluster.SetupState.ClusterDefinition.Name}] on Azure [{region}/{resourceGroupName}]";
+            var operation = $"Provisioning [{cluster.Name}] on Azure [{region}/{resourceGroupName}]";
 
             controller.AddGlobalStep("AZURE connect", state => ConnectAzureAsync());
             controller.AddGlobalStep("locate node image", state => LocateNodeImageAsync());
@@ -1839,7 +1839,7 @@ namespace Neon.Kube.Hosting.Azure
 
             controller.SetGlobalStepStatus("verify: Azure region and VM size availability");
 
-            var regionName = cluster.SetupState.ClusterDefinition.Hosting.Azure.Region;
+            var regionName = cluster.Hosting.Azure.Region;
 
             await LoadVmSizeMetadataAsync();
 
@@ -3272,7 +3272,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
             // We're going to infer the cluster provisiong status by examining the
             // cluster login and the state of the VMs deployed to Azure.
 
-            var contextName = $"root@{cluster.SetupState.ClusterDefinition.Name}";
+            var contextName = $"root@{cluster.Name}";
             var context     = KubeHelper.Config.GetContext(contextName);
 
             // Create a hashset with the names of the nodes that map to deployed Azure

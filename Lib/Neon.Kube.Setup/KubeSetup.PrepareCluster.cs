@@ -520,7 +520,7 @@ namespace Neon.Kube.Setup
 
             if (options.DesktopReadyToGo)
             {
-                controller.AddNodeStep("configure: workstation", KubeSetup.ConfigureWorkstation, (controller, node) => node == cluster.FirstControlNode); ;
+                controller.AddNodeStep("configure: workstation", KubeSetup.ConfigureWorkstation, (controller, node) => node == cluster.DeploymentControlNode); ;
             }
 
             // Indicate that cluster prepare succeeded in the cluster setup state.  Cluster setup

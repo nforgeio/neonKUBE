@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    ClusterCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -59,7 +59,7 @@ USAGE:
     neon cluster start
     neon cluster stop       [OPTIONS]
     neon cluster unlock
-    neon cluster verify     [CLUSTER-DEF]
+    neon cluster validate   [CLUSTER-DEF]
 ";
 
         /// <inheritdoc/>
@@ -75,6 +75,7 @@ USAGE:
         public override async Task RunAsync(CommandLine commandLine)
         {
             Help();
+            Program.Exit(commandLine.Arguments.Length == 0 ? 0 : 1);
             await Task.CompletedTask;
         }
     }

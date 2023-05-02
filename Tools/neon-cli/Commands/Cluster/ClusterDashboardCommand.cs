@@ -78,7 +78,7 @@ USAGE:
 
             var dashboardName = commandLine.Arguments.ElementAtOrDefault(0);
 
-            using (var cluster = await ClusterProxy.CreateAsync(currentContext, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
+            using (var cluster = await ClusterProxy.CreateAsync(KubeHelper.Config, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
             {
                 var dashboards = await cluster.ListClusterDashboardsAsync();
 
