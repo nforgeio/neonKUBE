@@ -123,12 +123,12 @@ namespace Neon.Kube.Config
         public string CurrentContext { get; set; }
 
         /// <summary>
-        /// Optional dictionary of preferences.
+        /// Optional global kubeconfig preferences.
         /// </summary>
         [JsonProperty(PropertyName = "preferences", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "preferences", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public Dictionary<string, string> Preferences { get; set; } = null;
+        public KubeConfigPreferences Preferences { get; set; } = null;
 
         /// <summary>
         /// Lists the user configurations.
@@ -136,17 +136,6 @@ namespace Neon.Kube.Config
         [JsonProperty(PropertyName = "users", Required = Required.Always)]
         [YamlMember(Alias = "users", ApplyNamingConventions = false)]
         public List<KubeConfigUser> Users { get; set; } = new List<KubeConfigUser>();
-
-        /// <summary>
-        /// Lists any custom extension properties.  Extensions are name/value pairs added
-        /// by vendors to hold arbitrary information.  Take care to choose property names
-        /// that are unlikely to conflict with properties created by other vendors by adding
-        /// a custom prefix like <b>io.neonkube.MY-PROPERTY</b>, where <b>MY-PROPERTY</b> 
-        /// identifies the property and <b>neonkibe.io</b> helps avoid conflicts.
-        /// </summary>
-        [JsonProperty(PropertyName = "extensions", Required = Required.Default)]
-        [YamlMember(Alias = "extensions", ApplyNamingConventions = false)]
-        public List<NamedExtension> Extensions { get; set; } = new List<NamedExtension>();
 
         /// <summary>
         /// Returns the current context or <c>null</c>.
@@ -171,6 +160,8 @@ namespace Neon.Kube.Config
         /// <summary>
         /// Returns the current cluster or <c>null</c>.
         /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
         public KubeConfigCluster Cluster
         {
             get
@@ -187,6 +178,8 @@ namespace Neon.Kube.Config
         /// <summary>
         /// Returns the current user or <c>null</c>.
         /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
         public KubeConfigUser User
         {
             get
@@ -338,43 +331,6 @@ namespace Neon.Kube.Config
                     throw new NeonKubeException($"Kubeconfig context [{Context.Name}] references the [{Context.User}] user which cannot be found.");
                 }
             }
-        }
-
-        /// <summary>
-        /// Returns an extension value.
-        /// </summary>
-        /// <typeparam name="T">Specifies the value type.</typeparam>
-        /// <param name="name">Specifies the extension name.</param>
-        /// <param name="default">Specifies the value to be returned when the extension is not found.</param>
-        /// <returns>The extension value.</returns>
-        public T GetExtensionValue<T>(string name, T @default)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
-
-            if (Extensions == null)
-            {
-                return @default;
-            }
-
-            return Extensions.Get<T>(name, @default);
-        }
-
-        /// <summary>
-        /// Sets an extension value.
-        /// </summary>
-        /// <typeparam name="T">Specifies the value type.</typeparam>
-        /// <param name="name">Specifies the extension name.</param>
-        /// <param name="value">Specifies the value being set.</param>
-        public void SetExtensionValue<T>(string name, T value)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
-
-            if (Extensions == null)
-            {
-                Extensions = new List<NamedExtension>();
-            }
-
-            Extensions.Set<T>(name, value);
         }
 
         /// <summary>

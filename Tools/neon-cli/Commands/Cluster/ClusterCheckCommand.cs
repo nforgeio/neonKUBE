@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    ClusterCheckCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -49,6 +49,8 @@ using Neon.Retry;
 using Neon.SSH;
 using Neon.Time;
 
+// $todo(jefflill): We need to check for failed pods here too.
+
 namespace NeonCli
 {
     /// <summary>
@@ -92,6 +94,9 @@ This command returns a non-zero exit code when one or more checks fail.
 
         /// <inheritdoc/>
         public override string[] ExtendedOptions => new string[] { "--all", "--container-images", "--priority-class", "--resources", "--details" };
+
+        /// <inheritdoc/>
+        public override bool NeedsHostingManager => true;
 
         /// <inheritdoc/>
         public override void Help()

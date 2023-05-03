@@ -68,17 +68,6 @@ namespace Neon.Kube.Config
         public KubeConfigClusterConfig Cluster { get; set; }
 
         /// <summary>
-        /// Lists any custom extension properties.  Extensions are name/value pairs added
-        /// by vendors to hold arbitrary information.  Take care to choose property names
-        /// that are unlikely to conflict with properties created by other vendors by adding
-        /// a custom prefix like <b>io.neonkube.MY-PROPERTY</b>, where <b>MY-PROPERTY</b> 
-        /// identifies the property and <b>neonkibe.io</b> helps avoid conflicts.
-        /// </summary>
-        [JsonProperty(PropertyName = "extensions", Required = Required.Default)]
-        [YamlMember(Alias = "extensions", ApplyNamingConventions = false)]
-        public List<NamedExtension> Extensions { get; set; } = new List<NamedExtension>();
-
-        /// <summary>
         /// Returns an extension value.
         /// </summary>
         /// <typeparam name="T">Specifies the value type.</typeparam>
