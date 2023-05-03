@@ -1981,8 +1981,8 @@ exit 0
                     throw new NeonKubeException("Cannot generate SSH key:\r\n\r\n" + result.AllText);
                 }
 
-                var publicPUB      = File.ReadAllText(Path.Combine(tempFolder.Path, "key.pub"));
-                var privateOpenSSH = File.ReadAllText(Path.Combine(tempFolder.Path, "key"));
+                var publicPUB      = NeonHelper.ToLinuxLineEndings(File.ReadAllText(Path.Combine(tempFolder.Path, "key.pub")));
+                var privateOpenSSH = NeonHelper.ToLinuxLineEndings(File.ReadAllText(Path.Combine(tempFolder.Path, "key")));
 
                 //-------------------------------------------------------------
                 // We also need the public key in PEM format.
@@ -2000,7 +2000,7 @@ exit 0
                     throw new NeonKubeException("Cannot convert SSH public key to PEM:\r\n\r\n" + result.AllText);
                 }
 
-                var publicOpenSSH = result.OutputText;
+                var publicOpenSSH = NeonHelper.ToLinuxLineEndings(result.OutputText);
 
                 //-------------------------------------------------------------
                 // Also convert the public key to SSH2 (RFC 4716).
@@ -2017,7 +2017,7 @@ exit 0
                     throw new NeonKubeException("Cannot convert SSH public key to SSH2:\r\n\r\n" + result.AllText);
                 }
 
-                var publicSSH2 = result.OutputText;
+                var publicSSH2 = NeonHelper.ToLinuxLineEndings(result.OutputText);
 
                 // Strip out the comment header line if one was added during the conversion.
 
@@ -2034,7 +2034,7 @@ exit 0
                     }
                 }
 
-                publicSSH2 = sbPublicSSH2.ToString();
+                publicSSH2 = NeonHelper.ToLinuxLineEndings(sbPublicSSH2.ToString());
 
                 //-------------------------------------------------------------
                 // We need the private key as PEM
@@ -2056,7 +2056,7 @@ exit 0
                     throw new NeonKubeException("Cannot convert SSH private key to PEM:\r\n\r\n" + result.AllText);
                 }
 
-                var privatePEM = File.ReadAllText(Path.Combine(tempFolder.Path, "key.pem"));
+                var privatePEM = NeonHelper.ToLinuxLineEndings(File.ReadAllText(Path.Combine(tempFolder.Path, "key.pem")));
 
                 //-------------------------------------------------------------
                 // We need to obtain the MD5 fingerprint from the public key.
@@ -2074,7 +2074,7 @@ exit 0
                     throw new NeonKubeException("Cannot generate SSH public key MD5 fingerprint:\r\n\r\n" + result.AllText);
                 }
 
-                var fingerprintMd5 = result.OutputText.Trim();
+                var fingerprintMd5 = NeonHelper.ToLinuxLineEndings(result.OutputText.Trim());
 
                 //-------------------------------------------------------------
                 // We also need the SHA256 fingerprint.
@@ -2092,7 +2092,7 @@ exit 0
                     throw new NeonKubeException("Cannot generate SSH public key SHA256 fingerprint:\r\n\r\n" + result.AllText);
                 }
 
-                var fingerprintSha2565 = result.OutputText.Trim();
+                var fingerprintSha2565 = NeonHelper.ToLinuxLineEndings(result.OutputText.Trim());
 
                 //-------------------------------------------------------------
                 // Return the key information.
