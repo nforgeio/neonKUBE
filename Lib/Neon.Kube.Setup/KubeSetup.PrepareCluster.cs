@@ -414,13 +414,6 @@ namespace Neon.Kube.Setup
                     // Update node proxies with the generated SSH credentials.
 
                     node.UpdateCredentials(setupState.SshCredentials);
-
-                    // Remove the [sysadmin] user password; we support only SSH key authentication.
-
-                    if (!options.DesktopReadyToGo)
-                    {
-                        node.SudoCommand("passwd", "--delete", KubeConst.SysAdminUser).EnsureSuccess();
-                    }
                 });
 
             if (!options.DesktopReadyToGo)
