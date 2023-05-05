@@ -1394,7 +1394,9 @@ namespace Neon.Kube.Hosting.XenServer
 
             // We just need to start any cluster VMs that aren't already running.
 
-            Parallel.ForEach(cluster.SetupState.ClusterDefinition.Nodes, parallelOptions,
+            var deployment = await cluster.GetDeploymentAsync();
+
+            Parallel.ForEach(deployment.Nodes, parallelOptions,
                 node =>
                 {
                     var vmName    = GetVmName(node);
@@ -1437,7 +1439,9 @@ namespace Neon.Kube.Hosting.XenServer
 
             // We just need to stop any running cluster VMs.
 
-            Parallel.ForEach(cluster.SetupState.ClusterDefinition.Nodes,
+            var deployment = await cluster.GetDeploymentAsync();
+
+            Parallel.ForEach(deployment.Nodes,
                 node =>
                 {
                     var vmName    = GetVmName(node);

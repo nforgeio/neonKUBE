@@ -90,12 +90,12 @@ namespace Neon.Kube
             {
                 if (item.Name == name)
                 {
-                    item.Extension = value;
+                    item.Extension = NeonHelper.YamlSerialize(value);
                     return;
                 }
             }
 
-            extensions.Add(new NamedExtension() { Name = name, Extension = value });
+            extensions.Add(new NamedExtension() { Name = name, Extension = NeonHelper.YamlSerialize(value) });
         }
 
         /// <summary>
@@ -121,12 +121,12 @@ namespace Neon.Kube
             {
                 if (item.Name == name)
                 {
-                    if (item.Extension == null && typeof(T).IsClass)
+                    if (item.Extension == null)
                     {
                         return @default;
                     }
 
-                    return NeonHelper.YamlDeserialize<T>(item.Extension);
+                    return NeonHelper.YamlDeserialize<T>((string)item.Extension);
                 }
             }
 

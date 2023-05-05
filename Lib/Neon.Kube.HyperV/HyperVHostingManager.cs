@@ -977,7 +977,7 @@ namespace Neon.Kube.Hosting.HyperV
                 // We're going to infer the cluster provisiong status by examining the
                 // cluster login and the state of the VMs deployed in the local Hyper-V.
 
-                var contextName = $"root@{cluster.Name}";
+                var contextName = $"root@{cluster.Name}";   // $todo(jefflill): Hardcoding this will break SSO login (probably need to add context name to ClusterProxy.
                 var context     = KubeHelper.KubeConfig.GetContext(contextName);
 
                 // Create a hashset with the names of the nodes that map to deployed Hyper-V
@@ -1172,9 +1172,11 @@ namespace Neon.Kube.Hosting.HyperV
 
             // We just need to start any cluster VMs that aren't already running.
 
+            var deployment = await cluster.GetDeploymentAsync();
+
             using (var hyperv = new HyperVProxy())
             {
-                Parallel.ForEach(cluster.SetupState.ClusterDefinition.Nodes, parallelOptions,
+                Parallel.ForEach(deployment.Nodes, parallelOptions,
                     node =>
                     {
                         var vmName = GetVmName(node);
@@ -1219,9 +1221,11 @@ namespace Neon.Kube.Hosting.HyperV
 
             // We just need to stop any running cluster VMs.
 
+            var deployment = await cluster.GetDeploymentAsync();
+
             using (var hyperv = new HyperVProxy())
             {
-                Parallel.ForEach(cluster.SetupState.ClusterDefinition.Nodes, parallelOptions,
+                Parallel.ForEach(deployment.Nodes, parallelOptions,
                     node =>
                     {
                         var vmName = GetVmName(node);

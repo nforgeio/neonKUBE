@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    Test_ClusterCommands.cs
+// FILE:	    Test_ClusterAndLoginCommands.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -44,7 +44,7 @@ namespace Test.NeonCli
     [Trait(TestTrait.Category, TestArea.NeonCli)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
-    public class Test_ClusterCommands
+    public class Test_ClusterAndLoginCommands
     {
         /// <summary>
         /// This can be temporarily set to TRUE while debugging the tests.
@@ -89,7 +89,7 @@ nodes:
         /// <summary>
         /// Constructor,
         /// </summary>
-        public Test_ClusterCommands()
+        public Test_ClusterAndLoginCommands()
         {
             // Locate the neon-cli binary.
 
@@ -282,7 +282,15 @@ nodes:
                     response = (await NeonCliAsync("cluster", "purpose", "production"))
                         .EnsureSuccess();
 
+                    response = (await NeonCliAsync("cluster", "purpose"))
+                        .EnsureSuccess();
+
                     Assert.Contains("production", response.OutputText);
+
+                    // Revert back to "test" in case we need to re-run the test
+                    // on the same cluster.
+
+                    await NeonCliAsync("cluster", "purpose", "test");
 
                     //-------------------------------------------------------------
                     // Verify: cluster dashboard
@@ -310,13 +318,16 @@ nodes:
                     }
 
                     //-------------------------------------------------------------
-                    // Verify: cluster lock/unlock/islocked commands.
+                    // Verify: cluster lock, unlock, islocked commands.
+
+                    response = (await NeonCliAsync("cluster", "lock"))
+                        .EnsureSuccess();
 
                     response = (await NeonCliAsync("cluster", "islocked"));
 
                     Assert.Equal(0, response.ExitCode);     // exitcode=0: LOCKED
 
-                    response = (await NeonCliAsync("cluster", "unlock", "--force"))
+                    response = (await NeonCliAsync("cluster", "unlock"))
                         .EnsureSuccess();
 
                     response = (await NeonCliAsync("cluster", "islocked"));
@@ -333,7 +344,7 @@ nodes:
                     //-------------------------------------------------------------
                     // Unlock the cluster so we can test dangerous commands.
 
-                    response = (await NeonCliAsync("cluster", "unlock", "--force"))
+                    response = (await NeonCliAsync("cluster", "unlock"))
                         .EnsureSuccess();
 
                     response = (await NeonCliAsync("cluster", "islocked"));
