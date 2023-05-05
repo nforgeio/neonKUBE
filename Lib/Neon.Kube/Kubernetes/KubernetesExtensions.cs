@@ -121,6 +121,11 @@ namespace Neon.Kube
             {
                 if (item.Name == name)
                 {
+                    if (item.Extension == null && typeof(T).IsClass)
+                    {
+                        return @default;
+                    }
+
                     return NeonHelper.YamlDeserialize<T>(item.Extension);
                 }
             }

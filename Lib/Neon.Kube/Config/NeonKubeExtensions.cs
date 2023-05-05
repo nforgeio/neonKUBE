@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:	    NeonKubeExtensionNames.cs
+// FILE:	    NeonKubeExtensions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -22,7 +22,7 @@ namespace Neon.Kube.Config
     /// <summary>
     /// Defines our custom Kubernetes context extension names.
     /// </summary>
-    public static class NeonKubeExtensionNames
+    public static class NeonKubeExtensions
     {
         /// <summary>
         /// The prefix added to neonKUBE related KubeContext extension property names
@@ -57,6 +57,26 @@ namespace Neon.Kube.Config
         /// <c>bool</c>: Used to indicate that a cluster belongs to neonKUBE.
         /// </summary>
         public const string IsNeonKube = $"{ExtensionPrefix}is-neonkube";
+
+        /// <summary>
+        /// <c>string</c>: Specifies the cluster's SSO admin password.
+        /// </summary>
+        public const string SsoUsername = $"{ExtensionPrefix}sso-username";
+
+        /// <summary>
+        /// <c>string</c>: Specifies the cluster's SSO admin password.
+        /// </summary>
+        public const string SsoPassword = $"{ExtensionPrefix}sso-password";
+
+        /// <summary>
+        /// <c>string</c>: Specifies the cluster's SSH admin username.
+        /// </summary>
+        public const string SshUsername = $"{ExtensionPrefix}ssh-username";
+
+        /// <summary>
+        /// <c>string</c>: Specifies the cluster's SSH admin password.
+        /// </summary>
+        public const string SshPassword = $"{ExtensionPrefix}ssh-password";
 
         /// <summary>
         /// Used by our xUnit <b>ClusterFixture</b> to persist the cluster definition so

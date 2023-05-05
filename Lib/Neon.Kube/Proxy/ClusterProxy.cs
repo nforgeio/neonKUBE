@@ -1168,25 +1168,28 @@ namespace Neon.Kube.Proxy
         {
             EnsureSetupMode();
 
-            return new ClusterInfo()
+            var clusterInfo = new ClusterInfo()
             {
-                CreationTimestamp = DateTime.UtcNow,
+                CreationTimestamp  = DateTime.UtcNow,
 
-                ClusterVersion    = SetupState.ClusterDefinition.ClusterVersion,
-                Name              = SetupState.ClusterDefinition.Name,
-                Description       = SetupState.ClusterDefinition.Description,
-                Environment       = SetupState.ClusterDefinition.Hosting.Environment,
-                Purpose           = SetupState.ClusterDefinition.Purpose,
-                Datacenter        = SetupState.ClusterDefinition.Datacenter,
-                IsDesktop         = SetupState.ClusterDefinition.IsDesktop,
-                Latitude          = SetupState.ClusterDefinition.Latitude,
-                Longitude         = SetupState.ClusterDefinition.Longitude,
-                FeatureOptions    = SetupState.ClusterDefinition.Features,
+                ClusterVersion     = SetupState.ClusterDefinition.ClusterVersion,
+                Name               = SetupState.ClusterDefinition.Name,
+                Description        = SetupState.ClusterDefinition.Description,
+                HostingEnvironment = SetupState.ClusterDefinition.Hosting.Environment,
+                HostingNamePrefix  = SetupState.ClusterDefinition.Hosting.Hypervisor?.NamePrefix ?? string.Empty,
+                Purpose            = SetupState.ClusterDefinition.Purpose,
+                Datacenter         = SetupState.ClusterDefinition.Datacenter,
+                IsDesktop          = SetupState.ClusterDefinition.IsDesktop,
+                Latitude           = SetupState.ClusterDefinition.Latitude,
+                Longitude          = SetupState.ClusterDefinition.Longitude,
+                FeatureOptions     = SetupState.ClusterDefinition.Features,
 
-                ClusterId         = SetupState.ClusterId,
-                Domain            = SetupState.ClusterDomain,
-                PublicAddresses   = SetupState.PublicAddresses
+                ClusterId          = SetupState.ClusterId,
+                Domain             = SetupState.ClusterDomain,
+                PublicAddresses    = SetupState.PublicAddresses
             };
+
+            return clusterInfo;
         }
 
         /// <summary>

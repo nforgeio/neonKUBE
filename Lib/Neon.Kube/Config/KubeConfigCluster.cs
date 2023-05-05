@@ -124,8 +124,8 @@ namespace Neon.Kube.Config
         [YamlIgnore]
         public KubeClusterInfo ClusterInfo
         {
-            get => GetExtensionValue<KubeClusterInfo>(NeonKubeExtensionNames.ClusterInfo, null);
-            set => SetExtensionValue<KubeClusterInfo>(NeonKubeExtensionNames.ClusterInfo, value);
+            get => GetExtensionValue<KubeClusterInfo>(NeonKubeExtensions.ClusterInfo, null);
+            set => SetExtensionValue<KubeClusterInfo>(NeonKubeExtensions.ClusterInfo, value);
         }
 
         /// <summary>
@@ -136,20 +136,21 @@ namespace Neon.Kube.Config
         [YamlIgnore]
         public HostingEnvironment HostingEnvironment
         {
-            get => GetExtensionValue<HostingEnvironment>(NeonKubeExtensionNames.HostingEnvironment, HostingEnvironment.Unknown);
-            set => SetExtensionValue<HostingEnvironment>(NeonKubeExtensionNames.HostingEnvironment, value);
+            get => GetExtensionValue<HostingEnvironment>(NeonKubeExtensions.HostingEnvironment, HostingEnvironment.Unknown);
+            set => SetExtensionValue<HostingEnvironment>(NeonKubeExtensions.HostingEnvironment, value);
         }
 
         /// <summary>
-        /// Identifies the <see cref="HostingEnvironment"/> for neonKUBE clusters.  This will be
-        /// <c>null</c> for non-neonKUBE clusters.
+        /// Returns the prefix added by the hosting environments to virtual machine names.  This may
+        /// be the empty string form neonKUBE clusters and always will be <c>null</c> for non-neonKUBE
+        /// clusters.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
         public string HostingNamePrefix
         {
-            get => GetExtensionValue<string>(NeonKubeExtensionNames.HostingNamePrefix, null);
-            set => SetExtensionValue<string>(NeonKubeExtensionNames.HostingNamePrefix , value);
+            get => GetExtensionValue<string>(NeonKubeExtensions.HostingNamePrefix, null);
+            set => SetExtensionValue<string>(NeonKubeExtensions.HostingNamePrefix , value);
         }
 
         /// <summary>
@@ -160,8 +161,8 @@ namespace Neon.Kube.Config
         [YamlIgnore]
         public bool IsNeonDesktop
         {
-            get => GetExtensionValue<bool>(NeonKubeExtensionNames.IsNeonDesktop, false);
-            set => SetExtensionValue<bool>(NeonKubeExtensionNames.IsNeonDesktop, value);
+            get => GetExtensionValue<bool>(NeonKubeExtensions.IsNeonDesktop, false);
+            set => SetExtensionValue<bool>(NeonKubeExtensions.IsNeonDesktop, value);
         }
 
         /// <summary>
@@ -172,8 +173,50 @@ namespace Neon.Kube.Config
         [YamlIgnore]
         public bool IsNeonKube
         {
-            get => GetExtensionValue<bool>(NeonKubeExtensionNames.IsNeonKube, false);
-            set => SetExtensionValue<bool>(NeonKubeExtensionNames.IsNeonKube, value);
+            get => GetExtensionValue<bool>(NeonKubeExtensions.IsNeonKube, false);
+            set => SetExtensionValue<bool>(NeonKubeExtensions.IsNeonKube, value);
+        }
+
+        /// <summary>
+        /// Specifies the cluster's SSO admin password.
+        /// </summary>
+        public string SsoUsername
+        {
+            get => GetExtensionValue<string>(NeonKubeExtensions.SsoUsername, null);
+            set => SetExtensionValue<string>(NeonKubeExtensions.SsoUsername, value);
+        }
+
+        /// <summary>
+        /// Specifies the cluster's SSO admin password.
+        /// </summary>
+        public string SsoPassword
+        {
+            get => GetExtensionValue<string>(NeonKubeExtensions.SsoPassword, null);
+            set => SetExtensionValue<string>(NeonKubeExtensions.SsoPassword, value);
+        }
+
+        /// <summary>
+        /// Specifies the SSH admin username for cluster nodes.
+        /// </summary>
+        public string SshUsername
+        {
+            get => GetExtensionValue<string>(NeonKubeExtensions.SshUsername, null);
+            set => SetExtensionValue<string>(NeonKubeExtensions.SshUsername, value);
+        }
+
+        /// <summary>
+        /// <para>
+        /// Specifies the SSH padmin assword for cluster nodes.
+        /// </para>
+        /// <note>
+        /// Technically, this is actually the admin user account password on the cluster nodes,
+        /// not an SSH password because clusters disable SSH password authentication.
+        /// </note>
+        /// </summary>
+        public string SshPassword
+        {
+            get => GetExtensionValue<string>(NeonKubeExtensions.SshPassword, null);
+            set => SetExtensionValue<string>(NeonKubeExtensions.SshPassword, value);
         }
 
         /// <summary>
@@ -185,8 +228,8 @@ namespace Neon.Kube.Config
         [YamlIgnore]
         public ClusterDefinition TestClusterDefinition
         {
-            get => GetExtensionValue<ClusterDefinition>(NeonKubeExtensionNames.TestClusterDefinition, null);
-            set => SetExtensionValue<ClusterDefinition>(NeonKubeExtensionNames.TestClusterDefinition, value);
+            get => GetExtensionValue<ClusterDefinition>(NeonKubeExtensions.TestClusterDefinition, null);
+            set => SetExtensionValue<ClusterDefinition>(NeonKubeExtensions.TestClusterDefinition, value);
         }
     }
 }

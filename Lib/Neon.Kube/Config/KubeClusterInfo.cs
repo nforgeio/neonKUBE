@@ -78,7 +78,7 @@ namespace Neon.Kube.Config
         public string ClusterVersion { get; set; } = KubeVersions.NeonKube;
 
         /// <summary>
-        /// The single sign-on (SSO) cluster username.
+        /// The single sign-on (SSO) admin username.
         /// </summary>
         [JsonProperty(PropertyName = "SsoUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "ssoUsername", ApplyNamingConventions = false)]
@@ -86,7 +86,7 @@ namespace Neon.Kube.Config
         public string SsoUsername { get; set; }
 
         /// <summary>
-        /// The single sign-on (SSO) cluster password.
+        /// The single sign-on (SSO) admin password.
         /// </summary>
         [JsonProperty(PropertyName = "SsoPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "ssoPassword", ApplyNamingConventions = false)]
@@ -94,7 +94,7 @@ namespace Neon.Kube.Config
         public string SsoPassword { get; set; }
 
         /// <summary>
-        /// The SSH root username.
+        /// Specifies the SSH admin password for the cluster nodes.
         /// </summary>
         [JsonProperty(PropertyName = "SshUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "sshUsername", ApplyNamingConventions = false)]
@@ -102,7 +102,13 @@ namespace Neon.Kube.Config
         public string SshUsername { get; set; }
 
         /// <summary>
-        /// The SSH root password.
+        /// <para>
+        /// Specifies the SSH admin password for the cluster nodes.
+        /// </para>
+        /// <note>
+        /// Technically, this is actually the admin user account password on the cluster nodes,
+        /// not an SSH password because clusters disable SSH password authentication.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "SshPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "sshPassword", ApplyNamingConventions = false)]

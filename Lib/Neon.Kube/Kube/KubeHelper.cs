@@ -1110,7 +1110,7 @@ namespace Neon.Kube
 
             cachedConfig = config;
 
-            config.Save();
+            config.Save(KubeHelper.KubeConfigPath);
         }
 
         /// <summary>
@@ -3291,7 +3291,7 @@ TCPKeepAlive yes
 </script>
 </body>
 </html>";
-            var buffer         = Encoding.UTF8.GetBytes(responseString);
+            var buffer = Encoding.UTF8.GetBytes(responseString);
 
             context.Response.ContentLength64 = buffer.Length;
 

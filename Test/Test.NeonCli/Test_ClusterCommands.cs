@@ -147,7 +147,7 @@ nodes:
                             response = (await NeonCliAsync("login", "list"))
                                 .EnsureSuccess();
 
-                            if (response.OutputText.Contains($"root@{clusterName}"))
+                            if (response.OutputText.Contains(clusterLogin))
                             {
                                 Covenant.Assert(false, $"Cluster [{clusterName}] delete failed.");
                             }
@@ -175,11 +175,16 @@ nodes:
                             .EnsureSuccess();
                     }
 
-                    var configCluster = KubeHelper.KubeConfig.Cluster;
-                    var contextName   = KubeHelper.KubeConfig.CurrentContext;
+                    KubeHelper.KubeConfig.Reload();
 
-                    Assert.NotNull(configCluster);
-                    Assert.NotNull(KubeHelper.KubeConfig.CurrentContext);
+                    if (debugMode && !clusterExists)
+                    {
+                        Assert.NotNull(KubeHelper.KubeConfig.Cluster);
+                        Assert.NotNull(KubeHelper.KubeConfig.CurrentContext);
+                        Assert.NotNull(KubeHelper.KubeConfig.Context);
+                        Assert.NotNull(KubeHelper.KubeConfig.Cluster);
+                        Assert.NotNull(KubeHelper.KubeConfig.User);
+                    }
 
                     //-------------------------------------------------------------
                     // Verify: cluster logout/login
@@ -189,7 +194,11 @@ nodes:
                     response = (await NeonCliAsync("logout"))
                         .EnsureSuccess();
 
+                    KubeHelper.KubeConfig.Reload();
                     Assert.Null(KubeHelper.KubeConfig.CurrentContext);
+                    Assert.Null(KubeHelper.KubeConfig.Context);
+                    Assert.Null(KubeHelper.KubeConfig.Cluster);
+                    Assert.Null(KubeHelper.KubeConfig.User);
 
                     // Ensure that [login list] works when there's no current cluster context.
                     // We've seen a [NullReferenceException] in the past for this scenario.
@@ -197,13 +206,18 @@ nodes:
                     response = (await NeonCliAsync("login", "list"))
                         .EnsureSuccess();
 
+                    Assert.Contains(clusterLogin, response.OutputText);
+
                     // Login
 
-                    response = (await NeonCliAsync("login", contextName))
+                    KubeHelper.KubeConfig.Reload();
+
+                    response = (await NeonCliAsync("login", clusterLogin))
                         .EnsureSuccess();
 
+                    KubeHelper.KubeConfig.Reload();
                     Assert.NotNull(KubeHelper.KubeConfig.CurrentContext);
-                    Assert.Equal(contextName, KubeHelper.KubeConfig.CurrentContext);
+                    Assert.Equal(clusterLogin, KubeHelper.KubeConfig.CurrentContext);
 
                     //-------------------------------------------------------------
                     // Create a cluster proxy for use in the tests below.
@@ -253,8 +267,8 @@ nodes:
 
                     var clusterInfo = NeonHelper.JsonDeserialize<ClusterInfo>(response.OutputText);
 
-                    Assert.Equal(configCluster.ClusterInfo.ClusterId, clusterInfo.ClusterId);
-                    Assert.Equal(configCluster.ClusterInfo.ClusterVersion, clusterInfo.ClusterVersion);
+                    Assert.Equal(KubeHelper.KubeConfig.Cluster.ClusterInfo.ClusterId, clusterInfo.ClusterId);
+                    Assert.Equal(KubeHelper.KubeConfig.Cluster.ClusterInfo.ClusterVersion, clusterInfo.ClusterVersion);
                     Assert.Equal(clusterName, clusterInfo.Name);
 
                     //-------------------------------------------------------------

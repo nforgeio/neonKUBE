@@ -95,7 +95,7 @@ namespace NeonDashboard.Pages
             {
                 {"Version", clusterInfo.ClusterVersion },
                 {"Datacenter",  clusterInfo.Datacenter },
-                {"Enviroment", clusterInfo.Environment.ToString() },
+                {"Enviroment", clusterInfo.HostingEnvironment.ToString() },
                 {"Purpose", clusterInfo.Purpose.ToString() }
             };
 

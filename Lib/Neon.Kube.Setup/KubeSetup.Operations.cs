@@ -444,6 +444,9 @@ spec:
                     await InstallClusterOperatorAsync(controller, controlNode);
 
                     controller.ThrowIfCancelled();
+                    await InstallNodeAgentAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
                     await InstallSsoAsync(controller, controlNode);
 
                     if (cluster.SetupState.ClusterDefinition.Features.Kiali)
@@ -460,9 +463,6 @@ spec:
 
                     controller.ThrowIfCancelled();
                     await InstallMonitoringAsync(controller);
-
-                    controller.ThrowIfCancelled();
-                    await InstallNodeAgentAsync(controller, controlNode);
 
                     controller.ThrowIfCancelled();
                     await InstallContainerRegistryResourcesAsync(controller, controlNode);
@@ -1278,10 +1278,14 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             var newCluster = newConfig.Clusters.Single();
             var newContext = newConfig.Contexts.Single();
 
+            newCluster.ClusterInfo        = cluster.SetupState.ToKubeClusterInfo();
             newCluster.HostingEnvironment = cluster.Hosting.Environment;
             newCluster.IsNeonDesktop      = desktopReadyToGo;
             newCluster.IsNeonKube         = true;
-            newCluster.ClusterInfo        = cluster.SetupState.ToKubeClusterInfo();
+            newCluster.SsoUsername        = cluster.SetupState.SsoUsername;
+            newCluster.SsoPassword        = cluster.SetupState.SsoPassword;
+            newCluster.SshUsername        = cluster.SetupState.SshUsername;
+            newCluster.SshPassword        = cluster.SetupState.SshPassword;
 
             if (cluster.Hosting.Hypervisor != null)
             {

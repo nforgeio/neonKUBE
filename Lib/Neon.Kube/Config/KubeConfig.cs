@@ -52,17 +52,24 @@ namespace Neon.Kube.Config
         private static object syncRoot = new object();
 
         /// <summary>
-        /// Reads and returns information loaded from the user's <b>~/.kube/config</b> file.
+        /// Reads and returns information loaded from the user's <b>~/.kube/config</b> file
+        /// or the specified file.
         /// </summary>
+        /// <param name="configPath">
+        /// Optionally specifies the location of the kubeconfig file.  This defaults to the
+        /// user's <b>~/.kube/config</b> file.
+        /// </param>
         /// <returns>The parsed <see cref="KubeConfig"/> or an empty config if the file doesn't exist.</returns>
         /// <exception cref="NeonKubeException">Thrown when the current config is invalid.</exception>
-        public static KubeConfig Load()
+        public static KubeConfig Load(string configPath = null)
         {
-            var configPath = KubeHelper.KubeConfigPath;
+            configPath = configPath ?? KubeHelper.KubeConfigPath;
 
             if (File.Exists(configPath))
             {
                 var config = NeonHelper.YamlDeserialize<KubeConfig>(KubeHelper.ParseTextFileWithRetry(configPath));
+
+                config.path = configPath;
 
                 config.Validate();
 
@@ -70,12 +77,17 @@ namespace Neon.Kube.Config
             }
             else
             {
-                return new KubeConfig();
+                return new KubeConfig()
+                {
+                    path = configPath
+                };
             }
         }
 
         //---------------------------------------------------------------------
         // Instance members.
+
+        private string path;
 
         /// <summary>
         /// Default constructor.
@@ -358,17 +370,57 @@ namespace Neon.Kube.Config
         }
 
         /// <summary>
-        /// Persists the KubeConfig.
+        /// Reloads the kubeconfig from the global config file.
         /// </summary>
-        public void Save()
+        /// <exception cref="InvalidOperationException">Thrown when the config is not backed by a file.</exception>
+        public void Reload()
+        {
+            lock (syncRoot)
+            {
+                if (path == null)
+                {
+                    throw new InvalidOperationException($"Cannot reload [{nameof(KubeConfig)}] without a file path.");
+                }
+
+                // We're going to read into a temporary instance and then update
+                // this instance's properties from the loaded instance.
+
+                var config = Load(path);
+
+                this.Preferences    = config.Preferences;
+                this.CurrentContext = config.CurrentContext;
+                this.Users          = config.Users;
+                this.Contexts       = config.Contexts;
+                this.Clusters       = config.Clusters;
+            }
+        }
+
+        /// <summary>
+        /// Persists the KubeConfig to the user's <b>~/.kube/config</b> file
+        /// or the specified file. 
+        /// </summary>
+        /// <param name="configPath">
+        /// Optionally specifies the location of the kubeconfig file.  This defaults to the
+        /// path the config was loaded from.
+        /// </param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the config was not loaded from a file and <paramref name="configPath"/>
+        /// is not specified.
+        /// </exception>
+        public void Save(string configPath = null)
         {
             lock (syncRoot)
             {
                 // Persist the KubeConfig.
 
-                var configPath = KubeHelper.KubeConfigPath;
+                path = configPath ?? path;
 
-                File.WriteAllText(configPath, NeonHelper.YamlSerialize(this));
+                if (path == null)
+                {
+                    throw new InvalidOperationException($"Cannot save [{nameof(KubeConfig)}] without a file path.");
+                }
+
+                File.WriteAllText(path, NeonHelper.YamlSerialize(this));
             }
         }
 

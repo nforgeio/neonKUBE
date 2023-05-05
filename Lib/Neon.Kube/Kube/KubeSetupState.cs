@@ -320,7 +320,7 @@ namespace Neon.Kube
         public string ContextName { get; set; }
 
         /// <summary>
-        /// The single sign-on (SSO) cluster username.
+        /// The SSO admin username.
         /// </summary>
         [JsonProperty(PropertyName = "SsoUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "ssoUsername", ApplyNamingConventions = false)]
@@ -328,7 +328,7 @@ namespace Neon.Kube
         public string SsoUsername { get; set; }
 
         /// <summary>
-        /// The single sign-on (SSO) cluster password.
+        /// The SSO admin password.
         /// </summary>
         [JsonProperty(PropertyName = "SsoPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "ssoPassword", ApplyNamingConventions = false)]
@@ -336,7 +336,7 @@ namespace Neon.Kube
         public string SsoPassword { get; set; }
 
         /// <summary>
-        /// The SSH root username.
+        /// The SSH admin username.
         /// </summary>
         [JsonProperty(PropertyName = "SshUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "sshUsername", ApplyNamingConventions = false)]
@@ -344,7 +344,13 @@ namespace Neon.Kube
         public string SshUsername { get; set; }
 
         /// <summary>
-        /// The SSH root password.
+        /// <para>
+        /// Specifies the SSH admin password.
+        /// </para>
+        /// <note>
+        /// Technically, this is actually the admin user account password on the cluster nodes,
+        /// not an SSH password because clusters disable SSH password authentication.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "SshPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "sshPassword", ApplyNamingConventions = false)]

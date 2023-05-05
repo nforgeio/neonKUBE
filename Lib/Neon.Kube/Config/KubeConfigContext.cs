@@ -86,6 +86,15 @@ namespace Neon.Kube.Config
         public string User { get; set; }
 
         /// <summary>
+        /// Specifies the current Kubernetes target namespace.  <c>null</c> or
+        /// empty values will be treated as: <b>default</b>
+        /// </summary>
+        [JsonProperty(PropertyName = "namespace", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "namespace", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string Namespace { get; set; } = null;
+
+        /// <summary>
         /// The cluster properties.
         /// </summary>
         [JsonProperty(PropertyName = "context", Required = Required.Always)]

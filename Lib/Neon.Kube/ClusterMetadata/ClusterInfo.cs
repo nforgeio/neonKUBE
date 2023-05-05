@@ -89,9 +89,17 @@ namespace Neon.Kube
         /// Identifies the cloud or other hosting platform.
         /// definition. 
         /// </summary>
-        [JsonProperty(PropertyName = "Environment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "HostingEnvironment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(HostingEnvironment.Unknown)]
-        public HostingEnvironment Environment { get; set; } = HostingEnvironment.Unknown;
+        public HostingEnvironment HostingEnvironment { get; set; } = HostingEnvironment.Unknown;
+
+        /// <summary>
+        /// Specifies the prefix added by the hosting environments to virtual machine names.  This may
+        /// be empty.
+        /// </summary>
+        [JsonProperty(PropertyName = "HostingNamePrefix", Required = Required.AllowNull)]
+        [DefaultValue(null)]
+        public string HostingNamePrefix { get; set; }
 
         /// <summary>
         /// Indicates how the cluster is being used as specified by <see cref="ClusterDefinition.Purpose"/>.
