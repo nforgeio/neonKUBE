@@ -977,7 +977,7 @@ namespace Neon.Kube.Hosting.HyperV
                 // We're going to infer the cluster provisiong status by examining the
                 // cluster login and the state of the VMs deployed in the local Hyper-V.
 
-                var contextName = $"root@{cluster.Name}";   // $todo(jefflill): Hardcoding this will break SSO login (probably need to add context name to ClusterProxy.
+                var contextName = $"root@{cluster.Name}";   // $todo(jefflill): Hardcoding this will break SSO login (probably need to add context name to ClusterProxy).
                 var context     = KubeHelper.KubeConfig.GetContext(contextName);
 
                 // Create a hashset with the names of the nodes that map to deployed Hyper-V
@@ -1001,24 +1001,18 @@ namespace Neon.Kube.Hosting.HyperV
 
                 // Build the cluster status.
 
+
                 if (context == null)
                 {
                     // The Kubernetes context for this cluster doesn't exist, so we know that any
                     // virtual machines with names matching the virtual machines that would be
                     // provisioned for the cluster definition are conflicting.
 
-                    var clusterHealth = new ClusterHealth()
+                    return new ClusterHealth()
                     {
                         State   = ClusterState.NotFound,
-                        Summary = "Cluster does not exist"
+                        Summary = $"Cluster context [{contextName}] does not exist"
                     };
-
-                    foreach (var node in cluster.SetupState.ClusterDefinition.NodeDefinitions.Values)
-                    {
-                        clusterHealth.Nodes.Add(node.Name, existingNodes.Contains(node.Name) ? ClusterNodeState.Conflict : ClusterNodeState.NotProvisioned);
-                    }
-
-                    return clusterHealth;
                 }
                 else
                 {

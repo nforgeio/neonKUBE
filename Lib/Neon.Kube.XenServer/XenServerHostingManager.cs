@@ -1245,12 +1245,7 @@ namespace Neon.Kube.Hosting.XenServer
                 // provisioned for the cluster definition are conflicting.
 
                 clusterHealth.State   = ClusterState.NotFound;
-                clusterHealth.Summary = "Cluster does not exist";
-
-                foreach (var node in cluster.SetupState.ClusterDefinition.NodeDefinitions.Values)
-                {
-                    clusterHealth.Nodes.Add(node.Name, existingNodes.Contains(node.Name) ? ClusterNodeState.Conflict : ClusterNodeState.NotProvisioned);
-                }
+                clusterHealth.Summary = $"Cluster context [{contextName}] does not exist";
 
                 return clusterHealth;
             }

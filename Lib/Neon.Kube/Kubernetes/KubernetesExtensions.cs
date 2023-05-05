@@ -72,6 +72,13 @@ namespace Neon.Kube
 
         //---------------------------------------------------------------------
         // NamedExtension
+        //
+        // Note that we're persisting our extension values as YAML strings.  This works,
+        // but will be pretty slow since this requires the YAML to be serialized on every
+        // set and deserialized on every get.  This isn't called in inner loops right now
+        // so we're going with this for now.
+        //
+        // Setting assigning the value as a dynamic didn't work as I expected.
 
         /// <summary>
         /// Sets the named extension value by adding it if it doesn't already exist or changing
