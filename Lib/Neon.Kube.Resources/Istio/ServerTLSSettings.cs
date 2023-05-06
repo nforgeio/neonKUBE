@@ -61,7 +61,7 @@ namespace Neon.Kube.Resources.Istio
         /// The path to the file holding the server-side TLS certificate to use.
         /// </summary>
         /// <remarks>
-        /// REQUIRED if <see cref="Mode"/> is <see cref="TLSMode.Simple"/> or <see cref="TLSMode.Mutual"/>.
+        /// REQUIRED if <see cref="Mode"/> is <see cref="TLSMode.SIMPLE"/> or <see cref="TLSMode.MUTUAL"/>.
         /// </remarks>
         [JsonProperty(PropertyName = "serverCertificate", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
@@ -71,7 +71,7 @@ namespace Neon.Kube.Resources.Istio
         /// The path to the file holding the server’s private key.
         /// </summary>
         /// <remarks>
-        /// REQUIRED if <see cref="Mode"/> is <see cref="TLSMode.Simple"/> or <see cref="TLSMode.Mutual"/>.
+        /// REQUIRED if <see cref="Mode"/> is <see cref="TLSMode.SIMPLE"/> or <see cref="TLSMode.MUTUAL"/>.
         /// </remarks>
         [JsonProperty(PropertyName = "privateKey", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
@@ -81,7 +81,7 @@ namespace Neon.Kube.Resources.Istio
         /// The path to a file containing certificate authority certificates to use in verifying a presented client side certificate.
         /// </summary>
         /// <remarks>
-        /// REQUIRED if <see cref="Mode"/> is <see cref="TLSMode.Mutual"/>.
+        /// REQUIRED if <see cref="Mode"/> is <see cref="TLSMode.MUTUAL"/>.
         /// </remarks>
         [JsonProperty(PropertyName = "caCertificates", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
@@ -153,9 +153,9 @@ namespace Neon.Kube.Resources.Istio
         /// <exception cref="ValidationException">Thrown if validation fails.</exception>
         public virtual void Validate()
         {
-            Covenant.Requires<ArgumentNullException>(!((Mode == TLSMode.Simple || Mode == TLSMode.Mutual) && string.IsNullOrEmpty(ServerCertificate)), nameof(ServerCertificate));
-            Covenant.Requires<ArgumentNullException>(!((Mode == TLSMode.Simple || Mode == TLSMode.Mutual) && string.IsNullOrEmpty(PrivateKey)), nameof(PrivateKey));
-            Covenant.Requires<ArgumentNullException>(!((Mode == TLSMode.Mutual) && string.IsNullOrEmpty(CaCertificates)), nameof(CaCertificates));
+            Covenant.Requires<ArgumentNullException>(!((Mode == TLSMode.SIMPLE || Mode == TLSMode.MUTUAL) && string.IsNullOrEmpty(ServerCertificate)), nameof(ServerCertificate));
+            Covenant.Requires<ArgumentNullException>(!((Mode == TLSMode.SIMPLE || Mode == TLSMode.MUTUAL) && string.IsNullOrEmpty(PrivateKey)), nameof(PrivateKey));
+            Covenant.Requires<ArgumentNullException>(!((Mode == TLSMode.MUTUAL) && string.IsNullOrEmpty(CaCertificates)), nameof(CaCertificates));
         }
     }
 }

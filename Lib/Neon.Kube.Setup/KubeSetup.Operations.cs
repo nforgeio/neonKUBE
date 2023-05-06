@@ -2264,15 +2264,15 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         {
                             Tls = new ClientTLSSettings()
                             {
-                                Mode               = TLSMode.Simple,
+                                Mode               = TLSMode.SIMPLE,
                                 InsecureSkipVerify = false
                             }
                         }
                     };
 
                     await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync(
-                        body: destinationRule,
-                        name: destinationRule.Name(),
+                        body:               destinationRule,
+                        name:               destinationRule.Name(),
                         namespaceParameter: destinationRule.Namespace());
 
                 });
@@ -2324,8 +2324,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     };
 
                     await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync(
-                        body: virtualService,
-                        name: virtualService.Name(),
+                        body:               virtualService,
+                        name:               virtualService.Name(),
                         namespaceParameter: virtualService.Namespace());
                 });
         }

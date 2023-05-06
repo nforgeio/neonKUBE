@@ -40,6 +40,7 @@ using k8s.Models;
 
 using Xunit;
 using Xunit.Abstractions;
+using System.CodeDom;
 
 // $hack(jeff):
 //
@@ -562,7 +563,7 @@ namespace Neon.Kube.Xunit
 
             if (string.IsNullOrEmpty(imageUriOrPath))
             {
-                imageUriOrPath = KubeDownloads.GetNodeImageUriAsync(clusterDefinition.Hosting.Environment).Result;
+                imageUriOrPath = KubeDownloads.GetNodeImageUriAsync(clusterDefinition.Hosting.Environment, stageBranch: KubeVersions.BuildBranch).Result;
             }
 
             if (imageUriOrPath.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) || imageUriOrPath.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
@@ -607,15 +608,15 @@ namespace Neon.Kube.Xunit
             var clusterExists     = false;
             var configContextName = KubeContextName.Parse($"root@{clusterDefinition.Name}");
             var configContext     = KubeHelper.KubeConfig.GetContext(configContextName);
-            var configCluster     = KubeHelper.KubeConfig.GetCluster(configContext.Cluster);
 
             if (configContext != null)
             {
+                var configCluster             = KubeHelper.KubeConfig.GetCluster(configContext.Cluster);
                 var existingClusterDefinition = configCluster.TestClusterDefinition;
 
                 if (existingClusterDefinition == null)
                 {
-                    throw new NeonKubeException($"Unit tests cannot be run on the [{configContextName.Cluster}] cluster because it wasn't deployed by [{nameof(ClusterFixture)}].");
+                    throw new NeonKubeException($"Unit tests cannot be run on the [{configContextName.Cluster}] cluster because it can't determined that it was deployed by [{nameof(ClusterFixture)}].");
                 }
 
                 clusterExists = ClusterDefinition.AreSimilar(clusterDefinition, existingClusterDefinition);
@@ -626,8 +627,8 @@ namespace Neon.Kube.Xunit
                 // It looks like the test cluster may already exist.  We'll verify
                 // that it's running, healthy, unlocked and the cluster versions match.
                 // When all of these conditions are true, we'll use the existing cluster,
-                // otherwise we'll remove the cluster as well as its context/login,
-                // and deploy a new cluster below.
+                // otherwise we'll remove the cluster as well as its context, and deploy
+                // a new cluster below.
 
                 using (var cluster = ClusterProxy.CreateAsync(KubeHelper.KubeConfig, new HostingManagerFactory(), options.CloudMarketplace).Result)
                 {
@@ -664,7 +665,7 @@ namespace Neon.Kube.Xunit
                 // deployed by another machine or fragments of a partially deployed cluster,
                 // so we need to do a preemptive cluster remove.
 
-                using (var cluster = ClusterProxy.CreateAsync(KubeHelper.KubeConfig, new HostingManagerFactory(), options.CloudMarketplace).Result)
+                using (var cluster = ClusterProxy.CreateAsync(new KubeSetupState() { ClusterDefinition = clusterDefinition }, new HostingManagerFactory(), options.CloudMarketplace).Result)
                 {
                     cluster.DeleteClusterAsync().WaitWithoutAggregate();
                 }
@@ -751,6 +752,14 @@ namespace Neon.Kube.Xunit
 
                         throw new NotImplementedException();
                 }
+
+                // Add the cluster definition to the new cluster in the current kubeconfig.
+                // We use this to indicate that it's a test cluster and also to determine
+                // whether it needs to be redeployed.
+
+                KubeHelper.KubeConfig.Reload();
+                KubeHelper.KubeConfig.Cluster.TestClusterDefinition = clusterDefinition;
+                KubeHelper.KubeConfig.Save();
             }
             finally
             {
@@ -1010,7 +1019,9 @@ namespace Neon.Kube.Xunit
         /// </remarks>
         public ExecuteResponse NeonExecute(params string[] args)
         {
-            return NeonHelper.ExecuteCapture("neon", args);
+            throw new NotImplementedException("$todo(jefflill): We need a standard way to locate the [neon.exe] tool.");
+
+            // return NeonHelper.ExecuteCapture("neon", args);
         }
 
         /// <summary>
