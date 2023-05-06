@@ -248,14 +248,15 @@ namespace Neon.Kube.Proxy
         //---------------------------------------------------------------------
         // Instance members
 
-        private object                          syncLock = new object();
-        private RunOptions                      defaultRunOptions;
-        private NodeProxyCreator                nodeProxyCreator;
-        private string                          nodeImageUri;
-        private string                          nodeImagePath;
-        private ClusterDeployment               clusterDeployment;
-        private NodeSshProxy<NodeDefinition>    deploymentControlNode;
-        private IKubernetes                     cachedK8s;
+        private object                                      syncLock = new object();
+        private RunOptions                                  defaultRunOptions;
+        private NodeProxyCreator                            nodeProxyCreator;
+        private string                                      nodeImageUri;
+        private string                                      nodeImagePath;
+        private ClusterDeployment                           clusterDeployment;
+        private NodeSshProxy<NodeDefinition>                deploymentControlNode;
+        private IReadOnlyList<NodeSshProxy<NodeDefinition>> nodes;
+        private IKubernetes                                 cachedK8s;
 
         /// <summary>
         /// Constructs a cluster proxy from a <see cref="KubeConfigContext"/> that will
@@ -421,9 +422,12 @@ namespace Neon.Kube.Proxy
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         protected virtual void Dispose(bool disposing)
         {
-            foreach (var node in Nodes)
+            if (nodes != null)
             {
-                node.Dispose();
+                foreach (var node in Nodes)
+                {
+                    node.Dispose();
+                }
             }
 
             HostingManager?.Dispose();
@@ -445,31 +449,31 @@ namespace Neon.Kube.Proxy
         /// <returns></returns>
         private async Task InitializeAsync()
         {
-            // Initialize the cluster nodes.  There are two scenarios here:
-            //
-            //      * The [SetupState] property is set, indicating that the proxy is being
-            //        used to deploy a cluster, so we'll obtain deployment details from the
-            //        cluster definition.
-            //
-            //      * The [SetupState] operator is NULL, indicating that the proxy references
-            //        an already deployed cluster.  In this case, we'll fetch the deployment
-            //        details from the cluster itself.
-
-            var nodes = new List<NodeSshProxy<NodeDefinition>>();
-
-            void AddNode(NodeSshProxy<NodeDefinition> node, NodeDefinition metadata = null)
-            {
-                node.Cluster           = this;
-                node.DefaultRunOptions = defaultRunOptions;
-                node.Metadata          = metadata;
-
-                nodes.Add(node);
-            }
-
-            this.Nodes = nodes;
-
             if (SetupState != null)
             {
+                // Initialize the cluster nodes.  There are two scenarios here:
+                //
+                //      * The [SetupState] property is set, indicating that the proxy is being
+                //        used to deploy a cluster, so we'll obtain deployment details from the
+                //        cluster definition.
+                //
+                //      * The [SetupState] operator is NULL, indicating that the proxy references
+                //        an already deployed cluster.  In this case, we'll fetch the deployment
+                //        details from the cluster itself.
+
+                var nodes = new List<NodeSshProxy<NodeDefinition>>();
+
+                void AddNode(NodeSshProxy<NodeDefinition> node, NodeDefinition metadata = null)
+                {
+                    node.Cluster           = this;
+                    node.DefaultRunOptions = defaultRunOptions;
+                    node.Metadata          = metadata;
+
+                    nodes.Add(node);
+                }
+
+                this.Nodes = nodes;
+
                 foreach (var nodeDefinition in SetupState.ClusterDefinition.SortedNodes)
                 {
                     AddNode(nodeProxyCreator(nodeDefinition.Name, NetHelper.ParseIPv4Address(nodeDefinition.Address ?? "0.0.0.0")), nodeDefinition);
@@ -477,24 +481,14 @@ namespace Neon.Kube.Proxy
 
                 this.DeploymentControlNode = Nodes.Where(n => n.Metadata.IsControlPane).OrderBy(n => n.Name).First();
             }
-            else
-            {
-                var configMap = await K8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterDeployment>(KubeConfigMapName.ClusterDeployment, KubeNamespace.NeonStatus);
 
-                clusterDeployment = configMap.Data;
-                Hosting           = clusterDeployment.Hosting.ToOptions();
-
-                foreach (var nodeDeployment in clusterDeployment.Nodes)
-                {
-                    AddNode(nodeProxyCreator(nodeDeployment.Name, NetHelper.ParseIPv4Address(nodeDeployment.Address ?? "0.0.0.0")));
-                }
-            }
+            await Task.CompletedTask;
         }
 
         /// <summary>
         /// Returns the cluster name.
         /// </summary>
-        public string Name => KubeConfig?.Cluster != null ? KubeConfig.Cluster.Name : SetupState.ClusterDefinition.Name;
+        public string Name => SetupState != null ? SetupState.ClusterDefinition.Name : KubeConfig.Cluster.Name;
 
         /// <summary>
         /// Returns the cluster ID.
@@ -522,9 +516,51 @@ namespace Neon.Kube.Proxy
         public KubeConfig KubeConfig { get; set; }
 
         /// <summary>
-        /// Returns a read-only list of cluster node proxies.
+        /// Returns a read-only list of cluster node proxies.  This property is
+        /// available only when the <see cref="ClusterProxy"/> is being used to
+        /// deploy a cluster.
         /// </summary>
-        public IReadOnlyList<NodeSshProxy<NodeDefinition>> Nodes { get; private set; }
+        /// <exception cref="InvalidOperationException">Thrown when the cluster proxy is not configured to deplpy a cluster.</exception>
+        public IReadOnlyList<NodeSshProxy<NodeDefinition>> Nodes
+        {
+            get
+            {
+                if (nodes == null)
+                {
+                    throw new InvalidOperationException($"[{nameof(Nodes)}] is available only for [{nameof(ClusterProxy)}] instances created for deploying a cluster.");
+                }
+
+                return nodes;
+            }
+
+            private set => nodes = value;
+        }
+
+        /// <summary>
+        /// <para>
+        /// Returns the first cluster control-plane node as sorted by name.
+        /// </para>
+        /// <note>
+        /// This property works only for cluster proxies constructed for cluster setup from a
+        /// <see cref="KubeSetupState"/>.  Use <see cref="GetReachableControlNode(ReachableHostMode)"/>
+        /// for other scenarios.
+        /// </note>
+        /// </summary>
+        /// /// <exception cref="InvalidOperationException">Thrown when the cluster proxy is not configured to deplpy a cluster.</exception>
+        public NodeSshProxy<NodeDefinition> DeploymentControlNode
+        {
+            get
+            {
+                if (deploymentControlNode == null)
+                {
+                    throw new InvalidOperationException($"[{nameof(DeploymentControlNode)}] is available only for [{nameof(ClusterProxy)}] instances created for deploying a cluster.");
+                }
+
+                return deploymentControlNode;
+            }
+
+            private set => deploymentControlNode = value;
+        }
 
         /// <summary>
         /// Set to the setup state while the cluster is being provisioned,
@@ -548,32 +584,6 @@ namespace Neon.Kube.Proxy
         /// </para>
         /// </remarks>
         public List<LinuxSshProxy> Hosts { get; private set; } = new List<LinuxSshProxy>();
-
-        /// <summary>
-        /// <para>
-        /// Returns the first cluster control-plane node as sorted by name.
-        /// </para>
-        /// <note>
-        /// This property works only for cluster proxies constructed for cluster setup from a
-        /// <see cref="KubeSetupState"/>.  Use <see cref="GetReachableControlNode(ReachableHostMode)"/>
-        /// for other scenarios.
-        /// </note>
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown when the proxy was not created for deploying a cluster.</exception>
-        public NodeSshProxy<NodeDefinition> DeploymentControlNode
-        {
-            get
-            {
-                if (deploymentControlNode == null)
-                {
-                    throw new InvalidOperationException($"[{nameof(DeploymentControlNode)}] is available only for [{nameof(ClusterProxy)}] instances created for deploying a cluster.");
-                }
-
-                return deploymentControlNode;
-            }
-
-            private set => deploymentControlNode = value;
-        }
 
         /// <summary>
         /// Specifies the <see cref="RunOptions"/> to use when executing commands that 
@@ -1515,18 +1525,12 @@ namespace Neon.Kube.Proxy
         /// <para>
         /// Removes an existing cluster by terminating any nodes and then removing node VMs
         /// and any related resources as well as the related local cluster login by default.  
-        /// The cluster does not need to be running.  This method can optionally remove clusters
-        /// or VMs potentially orphaned by interrupted unit tests as identified by a resource 
-        /// group or VM name prefix.
+        /// The cluster does not need to be running.
         /// </para>
         /// <note>
         /// This operation may not be supported for all environments.
         /// </note>
         /// </summary>
-        /// <param name="deleteOrphans">
-        /// Optionally specifies that VMs or clusters with the same VM or resource group prefix
-        /// will be tewrminated and removed.  See the remarks for more information.
-        /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
         /// <remarks>
@@ -1536,7 +1540,7 @@ namespace Neon.Kube.Proxy
         /// test runs are removed in addition to removing the cluster specified by the cluster definition.
         /// </para>
         /// </remarks>
-        public async Task DeleteClusterAsync(bool deleteOrphans = false)
+        public async Task DeleteClusterAsync()
         {
             await SyncContext.Clear;
             Covenant.Assert(HostingManager != null);
@@ -1544,7 +1548,7 @@ namespace Neon.Kube.Proxy
             var contextName = KubeContextName.Parse($"{KubeConst.RootUser}@{Name}");
             var context     = KubeHelper.KubeConfig.GetContext(contextName);
 
-            await HostingManager.DeleteClusterAsync(deleteOrphans);
+            await HostingManager.DeleteClusterAsync();
 
             if (context != null)
             {

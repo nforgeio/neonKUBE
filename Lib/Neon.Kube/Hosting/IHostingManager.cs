@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    IHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -312,27 +312,14 @@ namespace Neon.Kube.Hosting
         /// <para>
         /// Deletes an existing cluster by terminating any nodes and then removing node VMs
         /// and any related resources as well as the related local cluster login by default.  
-        /// The cluster does not need to be running.  This method can optionally remove clusters
-        /// or VMs potentially orphaned by interrupted unit tests as identified by a resource 
-        /// group or VM name prefix.
+        /// The cluster does not need to be running.
         /// </para>
         /// <note>
         /// This operation may not be supported for all environments.
         /// </note>
         /// </summary>
-        /// <param name="removeOrphans">
-        /// Optionally specifies that VMs or clusters with the same resource group prefix or VM name
-        /// prefix will be removed as well.  See the remarks for more information.
-        /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        /// <remarks>
-        /// <para>
-        /// The <paramref name="removeOrphans"/> parameter is typically enabled when running unit tests
-        /// via the <b>ClusterFixture</b> to ensure that clusters and VMs orphaned by previous interrupted
-        /// test runs are removed in addition to removing the cluster specified by the cluster definition.
-        /// </para>
-        /// </remarks>
-        Task DeleteClusterAsync(bool removeOrphans = false);
+        Task DeleteClusterAsync();
     }
 }

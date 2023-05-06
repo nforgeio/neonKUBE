@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    HostingManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -271,9 +271,9 @@ namespace Neon.Kube.Hosting
             }
 
             var firstValidAddressUint = NetHelper.AddressToUint(nodeSubnet.FirstAddress) + KubeConst.CloudSubnetStartReservedIPs;
-            var firstValidAddress = NetHelper.UintToAddress(firstValidAddressUint);
-            var lastValidAddressUint = NetHelper.AddressToUint(nodeSubnet.LastAddress) - KubeConst.CloudSubnetEndReservedIPs;
-            var lastValidAddress = NetHelper.UintToAddress(lastValidAddressUint);
+            var firstValidAddress     = NetHelper.UintToAddress(firstValidAddressUint);
+            var lastValidAddressUint  = NetHelper.AddressToUint(nodeSubnet.LastAddress) - KubeConst.CloudSubnetEndReservedIPs;
+            var lastValidAddress      = NetHelper.UintToAddress(lastValidAddressUint);
 
             foreach (var node in clusterDefinition.SortedNodes.OrderBy(node => node.Name))
             {
@@ -392,7 +392,7 @@ namespace Neon.Kube.Hosting
         }
 
         /// <inheritdoc/>
-        public virtual async Task DeleteClusterAsync(bool removeOrphans = false)
+        public virtual async Task DeleteClusterAsync()
         {
             await SyncContext.Clear;
             throw new NotSupportedException();

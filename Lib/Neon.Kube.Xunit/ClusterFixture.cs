@@ -364,7 +364,7 @@ namespace Neon.Kube.Xunit
                 {
                     if (options.RemoveClusterOnDispose)
                     {
-                        Cluster.DeleteClusterAsync(deleteOrphans: true).WaitWithoutAggregate();
+                        Cluster.DeleteClusterAsync().WaitWithoutAggregate();
                     }
                     else
                     {
@@ -655,7 +655,7 @@ namespace Neon.Kube.Xunit
                         return TestFixtureStatus.Started;
                     }
 
-                    cluster.DeleteClusterAsync(deleteOrphans: true).WaitWithoutAggregate();
+                    cluster.DeleteClusterAsync().WaitWithoutAggregate();
                 }
             }
             else
@@ -666,7 +666,7 @@ namespace Neon.Kube.Xunit
 
                 using (var cluster = ClusterProxy.CreateAsync(new HostingManagerFactory(), options.CloudMarketplace).Result)
                 {
-                    cluster.DeleteClusterAsync(deleteOrphans: true).WaitWithoutAggregate();
+                    cluster.DeleteClusterAsync().WaitWithoutAggregate();
                 }
             }
 

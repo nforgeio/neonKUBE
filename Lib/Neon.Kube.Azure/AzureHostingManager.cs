@@ -3272,7 +3272,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
             // We're going to infer the cluster provisiong status by examining the
             // cluster login and the state of the VMs deployed to Azure.
 
-            var contextName = $"root@{cluster.Name}";   // $todo(jefflill): Hardcoding this will break SSO login (probably need to add context name to ClusterProxy).
+            var contextName = $"root@{cluster.Name}";   // $todo(jefflill): Hardcoding this breaks SSO login (probably need to add context name to ClusterProxy).
             var context     = KubeHelper.KubeConfig.GetContext(contextName);
 
             // Create a hashset with the names of the nodes that map to deployed Azure
@@ -3448,7 +3448,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
         }
 
         /// <inheritdoc/>
-        public override async Task DeleteClusterAsync(bool removeOrphans = false)
+        public override async Task DeleteClusterAsync()
         {
             await SyncContext.Clear;
 

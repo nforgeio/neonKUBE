@@ -370,7 +370,7 @@ nodes:
 
                         // Resume the cluster.
 
-                        response = (await NeonCliAsync("cluster", "resume"))
+                        response = (await NeonCliAsync("cluster", "start"))
                             .EnsureSuccess();
 
                         response = (await NeonCliAsync("cluster", "health"))
@@ -386,7 +386,7 @@ nodes:
 
                     if ((clusterProxy.Capabilities & HostingCapabilities.Stoppable) != 0)
                     {
-                        // Pause the cluster.
+                        // Stop the cluster.
 
                         response = (await NeonCliAsync("cluster", "stop", "--force"))
                             .EnsureSuccess();
@@ -396,9 +396,9 @@ nodes:
 
                         clusterHealth = NeonHelper.JsonDeserialize<ClusterHealth>(response.OutputText);
 
-                        Assert.Equal(ClusterState.Unhealthy, clusterHealth.State);
+                        Assert.Equal(ClusterState.Off, clusterHealth.State);
 
-                        // Resume the cluster.
+                        // Start the cluster.
 
                         response = (await NeonCliAsync("cluster", "start"))
                             .EnsureSuccess();

@@ -40,6 +40,7 @@ using YamlDotNet.Serialization;
 using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Kube.Deployment;
 using Neon.HyperV;
 using Neon.IO;
 using Neon.Kube.ClusterDef;
@@ -52,7 +53,6 @@ using Neon.SSH;
 using Neon.Tasks;
 using Neon.Time;
 using Neon.Windows;
-using Neon.Kube.Deployment;
 
 namespace Neon.Kube.Hosting.HyperV
 {
@@ -77,6 +77,39 @@ namespace Neon.Kube.Hosting.HyperV
     [HostingProvider(HostingEnvironment.HyperV)]
     public class HyperVHostingManager : HostingManager
     {
+        //---------------------------------------------------------------------
+        // Private types
+
+        /// <summary>
+        /// Maps a Hyper-V virtual machine to the corresponding cluster node name.
+        /// </summary>
+        private struct ClusterVm
+        {
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="machine">Specifies the virtual machine.</param>
+            /// <param name="nodeName">Specifies the associated cluster node name.</param>
+            public ClusterVm(VirtualMachine machine, string nodeName)
+            {
+                Covenant.Requires<ArgumentNullException>(machine != null, nameof(machine));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
+
+                this.Machine  = machine;
+                this.NodeName = nodeName;
+            }
+
+            /// <summary>
+            /// Returns the Hyper-V virtual machine.
+            /// </summary>
+            public VirtualMachine Machine { get; private set; }
+
+            /// <summary>
+            /// Returns the associated cluster node name.
+            /// </summary>
+            public string NodeName { get; private set; }
+        }
+
         //---------------------------------------------------------------------
         // Static members
 
@@ -148,7 +181,7 @@ namespace Neon.Kube.Hosting.HyperV
             // Determine where we're going to place the VM hard drive files and
             // ensure that the directory exists.
 
-            if (!string.IsNullOrEmpty(cluster.Hosting.Hypervisor.DiskLocation))
+            if (cluster.Hosting.Hypervisor != null && !string.IsNullOrEmpty(cluster.Hosting.Hypervisor.DiskLocation))
             {
                 vmDriveFolder = cluster.Hosting.Hypervisor.DiskLocation;
             }
@@ -961,201 +994,172 @@ namespace Neon.Kube.Hosting.HyperV
         /// <inheritdoc/>
         public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable | HostingCapabilities.Pausable | HostingCapabilities.Removable;
 
+        /// <summary>
+        /// Returns information about the cluster virtual machines and the related node names.
+        /// </summary>
+        /// <param name="hyperv">The Hyper-V proxy to use.</param>
+        /// <returns>The cluster virtual machine information.</returns>
+        private List<ClusterVm> GetClusterVms(HyperVProxy hyperv)
+        {
+            Covenant.Requires<ArgumentNullException>(hyperv != null, nameof(hyperv));
+
+            var clusterVms = new List<ClusterVm>();
+
+            foreach (var machine in hyperv.ListVms())
+            {
+                clusterVms.Add(new ClusterVm(machine, VmNameToNodeName(machine.Name)));
+            }
+
+            return clusterVms;
+        }
+
         /// <inheritdoc/>
         public override async Task<ClusterHealth> GetClusterHealthAsync(TimeSpan timeout = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
 
-            using (var hyperV = new HyperVProxy())
+            // $todo(jefflill):
+            //
+            // We're using cluster name prefixes to identify Hyper-V virtual machines that
+            // belong to the cluster.  This is a bit of a hack.
+            //
+            // We need to implement Hyper-V VM tagging in the future and then use a cluster
+            // ID tag for this instead.
+            //
+            //      https://github.com/nforgeio/neonSDK/issues/67
+
+            var clusterHealth = new ClusterHealth();
+
+            using (var hyperv = new HyperVProxy())
             {
                 if (timeout <= TimeSpan.Zero)
                 {
                     timeout = DefaultStatusTimeout;
                 }
 
-                // We're going to infer the cluster provisiong status by examining the
-                // cluster login and the state of the VMs deployed in the local Hyper-V.
+                // Create a list of the Hyper-V virtual machines that belong to the cluster.
 
-                var contextName = $"root@{cluster.Name}";   // $todo(jefflill): Hardcoding this will break SSO login (probably need to add context name to ClusterProxy).
-                var context     = KubeHelper.KubeConfig.GetContext(contextName);
+                var clusterVms = GetClusterVms(hyperv);
 
-                // Create a hashset with the names of the nodes that map to deployed Hyper-V
-                // virtual machines.  We're also going to create a dictionary mapping the
-                // existing virtual machine names to the machine information.
+                // Update the cluster health state for the nodes from the virtual machine states.
 
-                var existingNodes    = new HashSet<string>();
-                var existingMachines = new Dictionary<string, VirtualMachine>(StringComparer.InvariantCultureIgnoreCase);
-
-                foreach (var machine in hyperV.ListVms())
+                foreach (var clusterVm in clusterVms)
                 {
-                    var nodeName = VmNameToNodeName(machine.Name);
+                    var state = ClusterNodeState.NotProvisioned;
 
-                    if (nodeName != null)
+                    switch (clusterVm.Machine.State)
                     {
-                        existingNodes.Add(nodeName);
-                    }
+                        case VirtualMachineState.Unknown:
 
-                    existingMachines.Add(machine.Name, machine);
-                }
-
-                // Build the cluster status.
-
-
-                if (context == null)
-                {
-                    // The Kubernetes context for this cluster doesn't exist, so we know that any
-                    // virtual machines with names matching the virtual machines that would be
-                    // provisioned for the cluster definition are conflicting.
-
-                    return new ClusterHealth()
-                    {
-                        State   = ClusterState.NotFound,
-                        Summary = $"Cluster context [{contextName}] does not exist"
-                    };
-                }
-                else
-                {
-                    // We're going to assume that all virtual machines that match cluster node names
-                    // (after stripping off any cluster prefix) belong to the cluster and we'll map
-                    // the actual VM states to public node states.
-
-                    var clusterHealth     = new ClusterHealth();
-                    var clusterDeployment = await cluster.GetDeploymentAsync();
-
-                    foreach (var node in clusterDeployment.Nodes)
-                    {
-                        var nodeState = ClusterNodeState.NotProvisioned;
-
-                        if (existingNodes.Contains(node.Name))
-                        {
-                            var vmName = GetVmName(node);
-
-                            if (existingMachines.TryGetValue(vmName, out var machine))
-                            {
-                                switch (machine.State)
-                                {
-                                    case VirtualMachineState.Unknown:
-
-                                        nodeState = ClusterNodeState.Unknown;
-                                        break;
-
-                                    case VirtualMachineState.Off:
-
-                                        nodeState = ClusterNodeState.Off;
-                                        break;
-
-                                    case VirtualMachineState.Starting:
-
-                                        nodeState = ClusterNodeState.Starting;
-                                        break;
-
-                                    case VirtualMachineState.Running:
-
-                                        nodeState = ClusterNodeState.Running;
-                                        break;
-
-                                    case VirtualMachineState.Paused:
-
-                                        nodeState = ClusterNodeState.Unknown;
-                                        break;
-
-                                    case VirtualMachineState.Saved:
-
-                                        nodeState = ClusterNodeState.Paused;
-                                        break;
-
-                                    default:
-
-                                        throw new NotImplementedException();
-                                }
-                            }
-                        }
-
-                        clusterHealth.Nodes.Add(node.Name, nodeState);
-                    }
-
-                    // We're going to examine the node states from the Hyper-V perspective and
-                    // short-circuit the Kubernetes level cluster health check when the cluster
-                    // nodes are not provisioned, are paused or appear to be transitioning
-                    // between starting, stopping, waking, or paused states.
-
-                    var commonNodeState = clusterHealth.Nodes.Values.First();
-
-                    foreach (var nodeState in clusterHealth.Nodes.Values)
-                    {
-                        if (nodeState != commonNodeState)
-                        {
-                            // Nodes have differing states so we're going to consider the cluster
-                            // to be transitioning.
-
-                            clusterHealth.State   = ClusterState.Transitioning;
-                            clusterHealth.Summary = "Cluster is transitioning";
+                            state = ClusterNodeState.Unknown;
                             break;
-                        }
+
+                        case VirtualMachineState.Off:
+
+                            state = ClusterNodeState.Off;
+                            break;
+
+                        case VirtualMachineState.Starting:
+
+                            state = ClusterNodeState.Starting;
+                            break;
+
+                        case VirtualMachineState.Running:
+
+                            state = ClusterNodeState.Running;
+                            break;
+
+                        case VirtualMachineState.Paused:
+
+                            state = ClusterNodeState.Unknown;
+                            break;
+
+                        case VirtualMachineState.Saved:
+
+                            state = ClusterNodeState.Paused;
+                            break;
+
+                        default:
+
+                            throw new NotImplementedException();
                     }
 
-                    if (cluster.SetupState != null && cluster.SetupState.DeploymentStatus != ClusterDeploymentStatus.Ready)
+                    clusterHealth.Nodes.Add(clusterVm.NodeName, state);
+                }
+
+                // We're going to examine the node states from the Hyper-V perspective and
+                // short-circuit the Kubernetes level cluster health check when the cluster
+                // nodes are not provisioned, are paused or appear to be transitioning
+                // between starting, stopping, waking, or paused states.
+
+                var commonNodeState = clusterHealth.Nodes.Values.First();
+
+                foreach (var nodeState in clusterHealth.Nodes.Values)
+                {
+                    if (nodeState != commonNodeState)
                     {
-                        clusterHealth.State   = ClusterState.Configuring;
-                        clusterHealth.Summary = "Cluster is partially configured";
+                        // Nodes have differing states so we're going to consider the cluster
+                        // to be transitioning.
+
+                        clusterHealth.State   = ClusterState.Transitioning;
+                        clusterHealth.Summary = "Cluster is transitioning";
                     }
-                    else if (clusterHealth.State != ClusterState.Transitioning)
+                }
+
+                if (cluster.SetupState != null && cluster.SetupState.DeploymentStatus != ClusterDeploymentStatus.Ready)
+                {
+                    clusterHealth.State   = ClusterState.Configuring;
+                    clusterHealth.Summary = "Cluster is partially configured";
+                }
+                else if (clusterHealth.State != ClusterState.Transitioning)
+                {
+                    // If we get here then all of the nodes have the same state so
+                    // we'll use that common state to set the overall cluster state.
+
+                    switch (commonNodeState)
                     {
-                        // If we get here then all of the nodes have the same state so
-                        // we'll use that common state to set the overall cluster state.
+                        case ClusterNodeState.Paused:
 
-                        switch (commonNodeState)
-                        {
-                            case ClusterNodeState.Paused:
+                            clusterHealth.State    = ClusterState.Paused;
+                            clusterHealth.Summary = "Cluster is paused";
+                            break;
 
-                                clusterHealth.State    = ClusterState.Paused;
-                                clusterHealth.Summary = "Cluster is paused";
-                                break;
+                        case ClusterNodeState.Starting:
 
-                            case ClusterNodeState.Starting:
+                            clusterHealth.State   = ClusterState.Unhealthy;
+                            clusterHealth.Summary = "Cluster is starting";
+                            break;
 
-                                clusterHealth.State   = ClusterState.Unhealthy;
-                                clusterHealth.Summary = "Cluster is starting";
-                                break;
+                        case ClusterNodeState.Running:
 
-                            case ClusterNodeState.Running:
+                            clusterHealth.State   = ClusterState.Healthy;
+                            clusterHealth.Summary = "Cluster is configured";
+                            break;
 
-                                clusterHealth.State   = ClusterState.Healthy;
-                                clusterHealth.Summary = "Cluster is configured";
-                                break;
+                        case ClusterNodeState.Off:
 
-                            case ClusterNodeState.Off:
+                            clusterHealth.State   = ClusterState.Off;
+                            clusterHealth.Summary = "Cluster is turned off";
+                            break;
 
-                                clusterHealth.State   = ClusterState.Off;
-                                clusterHealth.Summary = "Cluster is turned off";
-                                break;
+                        case ClusterNodeState.NotProvisioned:
 
-                            case ClusterNodeState.NotProvisioned:
+                            clusterHealth.State   = ClusterState.NotFound;
+                            clusterHealth.Summary = "Cluster is not found.";
+                            break;
 
-                                clusterHealth.State   = ClusterState.NotFound;
-                                clusterHealth.Summary = "Cluster is not found.";
-                                break;
+                        case ClusterNodeState.Unknown:
+                        default:
 
-                            case ClusterNodeState.Unknown:
-                            default:
-
-                                clusterHealth.State   = ClusterState.Unknown;
-                                clusterHealth.Summary = "Cluster not found";
-                                break;
-                        }
+                            clusterHealth.State   = ClusterState.Unknown;
+                            clusterHealth.Summary = "Cluster not found";
+                            break;
                     }
-
-                    if (clusterHealth.State == ClusterState.Off)
-                    {
-                        clusterHealth.Summary = "Cluster is turned off";
-
-                        return clusterHealth;
-                    }
-
-                    return clusterHealth;
                 }
             }
+
+            return clusterHealth;
         }
 
         /// <inheritdoc/>
@@ -1166,30 +1170,21 @@ namespace Neon.Kube.Hosting.HyperV
 
             // We just need to start any cluster VMs that aren't already running.
 
-            var deployment = await cluster.GetDeploymentAsync();
-
             using (var hyperv = new HyperVProxy())
             {
-                Parallel.ForEach(deployment.Nodes, parallelOptions,
-                    node =>
+                var clusterVms = GetClusterVms(hyperv);
+
+                Parallel.ForEach(clusterVms, parallelOptions,
+                    clusterVm =>
                     {
-                        var vmName = GetVmName(node);
-                        var vm     = hyperv.FindVm(vmName);
-
-                        if (vm == null)
-                        {
-                            // We may see this when the cluster definition doesn't match the 
-                            // deployed cluster VMs.  We're just going to ignore this situation.
-
-                            return;
-                        }
+                        var vm = clusterVm.Machine;
 
                         switch (vm.State)
                         {
                             case VirtualMachineState.Off:
                             case VirtualMachineState.Saved:
 
-                                hyperv.StartVm(vmName);
+                                hyperv.StartVm(vm.Name);
                                 break;
 
                             case VirtualMachineState.Running:
@@ -1201,7 +1196,7 @@ namespace Neon.Kube.Hosting.HyperV
                             case VirtualMachineState.Paused:
                             case VirtualMachineState.Unknown:
 
-                                throw new NotImplementedException($"Unexpected VM state: {vmName}:{vm.State}");
+                                throw new NotImplementedException($"Unexpected VM state: {vm.Name}:{vm.State}");
                         }
                     });
             }
@@ -1215,23 +1210,14 @@ namespace Neon.Kube.Hosting.HyperV
 
             // We just need to stop any running cluster VMs.
 
-            var deployment = await cluster.GetDeploymentAsync();
-
             using (var hyperv = new HyperVProxy())
             {
-                Parallel.ForEach(deployment.Nodes, parallelOptions,
-                    node =>
+                var clusterVms = GetClusterVms(hyperv);
+
+                Parallel.ForEach(clusterVms, parallelOptions,
+                    clusterVm =>
                     {
-                        var vmName = GetVmName(node);
-                        var vm     = hyperv.FindVm(vmName);
-
-                        if (vm == null)
-                        {
-                            // We may see this when the cluster definition doesn't match the 
-                            // deployed cluster VMs.  We're just going to ignore this.
-
-                            return;
-                        }
+                        var vm = clusterVm.Machine;
 
                         switch (vm.State)
                         {
@@ -1248,17 +1234,17 @@ namespace Neon.Kube.Hosting.HyperV
                                 {
                                     case StopMode.Pause:
 
-                                        hyperv.SaveVm(vmName);
+                                        hyperv.SaveVm(vm.Name);
                                         break;
 
                                     case StopMode.Graceful:
 
-                                        hyperv.StopVm(vmName);
+                                        hyperv.StopVm(vm.Name);
                                         break;
 
                                     case StopMode.TurnOff:
 
-                                        hyperv.StopVm(vmName, turnOff: true);
+                                        hyperv.StopVm(vm.Name, turnOff: true);
                                         break;
                                 }
                                 break;
@@ -1266,91 +1252,30 @@ namespace Neon.Kube.Hosting.HyperV
                             default:
                             case VirtualMachineState.Unknown:
 
-                                throw new NotImplementedException($"Unexpected VM state: {vmName}:{vm.State}");
+                                throw new NotImplementedException($"Unexpected VM state: {vm.Name}:{vm.State}");
                         }
                     });
             }
         }
 
         /// <inheritdoc/>
-        public override async Task DeleteClusterAsync(bool removeOrphans = false)
+        public override async Task DeleteClusterAsync()
         {
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
 
             using (var hyperv = new HyperVProxy())
             {
-                // If [removeOrphans=true] and the cluster definition specifies a
-                // VM name prefix, then we'll simply remove all VMs with that prefix.
-                // Otherwise, we'll do a normal remove.
-
-                var vmPrefix = cluster.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition);
-
-                if (removeOrphans && !string.IsNullOrEmpty(vmPrefix))
-                {
-                    Parallel.ForEach(hyperv.ListVms().Where(vm => vm.Name.StartsWith(vmPrefix)), parallelOptions,
-                        vm =>
-                        {
-                            if (vm.State == VirtualMachineState.Running || vm.State == VirtualMachineState.Starting)
-                            {
-                                hyperv.StopVm(vm.Name, turnOff: true);
-                            }
-
-                            hyperv.RemoveVm(vm.Name);
-                        });
-
-                    return;
-                }
-
-                // All we need to do for Hyper-V clusters is turn off and remove the cluster VMs.
-                // Note that we're just turning nodes off to save time and because we're going
-                // to be deleting them all anyway.
-                //
-                // We're going to leave any virtual switches alone.
-
-                await StopClusterAsync(stopMode: StopMode.TurnOff);
-
-                // Remove all of the cluster VMs.
-
-                Parallel.ForEach(cluster.SetupState.ClusterDefinition.Nodes, parallelOptions,
-                    node =>
+                Parallel.ForEach(GetClusterVms(hyperv), parallelOptions,
+                    cluserVm =>
                     {
-                        var vmName = GetVmName(node);
-                        var vm     = hyperv.FindVm(vmName);
-
-                        if (vm == null)
+                        if (cluserVm.Machine.State == VirtualMachineState.Running || cluserVm.Machine.State == VirtualMachineState.Starting)
                         {
-                            // We may see this when the cluster definition doesn't match the 
-                            // deployed cluster VMs or when the cluster doesn't exist or when
-                            // the cluster deployment is in progress and this node VM hasn't.
-                            // been created yet.
-                            //
-                            // It's possible that the VHDX files could exist though, so we'll
-                            // go ahead and delete them, if present.
-
-                            NeonHelper.DeleteFile(Path.Combine(vmDriveFolder, $"{vmName}.vhdx"));
-                            NeonHelper.DeleteFile(Path.Combine(vmDriveFolder, $"{vmName}-openebs.vhdx"));
-                            return;
+                            hyperv.StopVm(cluserVm.Machine.Name, turnOff: true);
                         }
 
-                        hyperv.RemoveVm(vmName);
+                        hyperv.RemoveVm(cluserVm.Machine.Name);
                     });
-
-                // Remove any potentially orphaned VMs when enabled and a prefix is specified.
-
-                if (removeOrphans && !string.IsNullOrEmpty(cluster.SetupState.ClusterDefinition.Deployment.Prefix))
-                {
-                    var prefix = cluster.SetupState.ClusterDefinition.Deployment.Prefix + "-";
-
-                    Parallel.ForEach(hyperv.ListVms(), parallelOptions,
-                        vm =>
-                        {
-                            if (vm.Name.StartsWith(prefix))
-                            {
-                                hyperv.RemoveVm(vm.Name);
-                            }
-                        });
-                }
             }
         }
     }

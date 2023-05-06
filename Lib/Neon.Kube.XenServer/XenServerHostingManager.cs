@@ -1182,7 +1182,7 @@ namespace Neon.Kube.Hosting.XenServer
             // We're going to infer the cluster provisiong status by examining the
             // cluster login and the state of the VMs deployed to the XenServer hosts.
 
-            var contextName = $"root@{cluster.Name}";
+            var contextName = $"root@{cluster.Name}";   // $todo(jefflill): Hardcoding this breaks SSO login (probably need to add context name to ClusterProxy).
             var context     = KubeHelper.KubeConfig.GetContext(contextName);
 
             // Create a hashset holding the names of nodes that have existing virtual machines
@@ -1491,11 +1491,14 @@ namespace Neon.Kube.Hosting.XenServer
         }
 
         /// <inheritdoc/>
-        public override async Task DeleteClusterAsync(bool removeOrphans = false)
+        public override async Task DeleteClusterAsync()
         {
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(XenServerHostingManager)}] was created with the wrong constructor.");
 
+            throw new NotImplementedException("$todo(jefflill)");
+
+#if TODO
             // If [removeOrphans=true] and the cluster definition specifies a
             // VM name prefix, then we'll simply remove all VMs with that prefix
             // that exist on any of the target XenServer hosts.
@@ -1544,6 +1547,7 @@ namespace Neon.Kube.Hosting.XenServer
 
                     xenClient.Machine.Remove(vm, keepDrives: false);
                 });
+#endif
         }
     }
 }

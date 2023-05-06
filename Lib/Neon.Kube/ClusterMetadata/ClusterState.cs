@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    ClusterState.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -91,6 +91,12 @@ namespace Neon.Kube
         /// Cluster is configured but is paused.
         /// </summary>
         [EnumMember(Value = "paused")]
-        Paused
+        Paused,
+
+        /// <summary>
+        /// Cluster didn't respond to a health request.
+        /// </summary>
+        [EnumMember(Value = "no-response")]
+        NoResponse
     }
 }
