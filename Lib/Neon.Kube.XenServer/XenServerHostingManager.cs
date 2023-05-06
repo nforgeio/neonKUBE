@@ -630,7 +630,7 @@ namespace Neon.Kube.Hosting.XenServer
                 }
                 else
                 {
-                    Covenant.Assert(File.Exists(nodeImagePath), $"Missing file: {nodeImagePath}");
+                    Covenant.Assert(File.Exists(nodeImagePath), () => $"Missing file: {nodeImagePath}");
 
                     driveTemplateName = Path.GetFileName(nodeImagePath);
                     driveTemplatePath = nodeImagePath;

@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    NeonSsoCallbackUrlController.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -104,9 +104,9 @@ namespace NeonClusterOperator
             IFinalizerManager<V1NeonSsoCallbackUrl>     manager,
             ILogger<NeonSsoCallbackUrlController>       logger)
         {
-            Covenant.Requires(k8s != null, nameof(k8s));
-            Covenant.Requires(manager != null, nameof(manager));
-            Covenant.Requires(logger != null, nameof(logger));
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            Covenant.Requires<ArgumentNullException>(manager != null, nameof(manager));
+            Covenant.Requires<ArgumentNullException>(logger != null, nameof(logger));
 
             this.k8s              = k8s;
             this.finalizerManager = manager;

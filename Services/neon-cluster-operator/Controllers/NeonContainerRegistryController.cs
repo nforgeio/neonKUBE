@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    NeonContainerRegistryController.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -99,8 +99,8 @@ namespace NeonClusterOperator
             IKubernetes                                k8s,
             ILogger<NeonContainerRegistryController>   logger)
         {
-            Covenant.Requires(k8s != null, nameof(k8s));
-            Covenant.Requires(logger != null, nameof(logger));
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            Covenant.Requires<ArgumentNullException>(logger != null, nameof(logger));
 
             this.k8s    = k8s;
             this.logger = logger;

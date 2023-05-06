@@ -1385,12 +1385,12 @@ EOF
 
                                 default:
 
-                                    Covenant.Assert(false, $"Expecting partition size unit to be [G] or [T], not [{sizeUnit}].");
+                                    Covenant.Assert(false, () => $"Expecting partition size unit to be [G] or [T], not [{sizeUnit}].");
                                     break;
                             }
                         }
 
-                        Covenant.Assert(filesystemCount == 1, $"Expected exactly [1] Linux file system but are seeing [{filesystemCount}].");
+                        Covenant.Assert(filesystemCount == 1, () => $"Expected exactly [1] Linux file system but are seeing [{filesystemCount}].");
                     }
 
                     if (diskSize < 64 * ByteUnits.GibiBytes)

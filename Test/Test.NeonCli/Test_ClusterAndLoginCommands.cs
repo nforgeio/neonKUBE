@@ -97,7 +97,7 @@ nodes:
             var assemblyConfigAttribute = thisAssembly.GetCustomAttribute<AssemblyConfigurationAttribute>();
             var buildConfig             = assemblyConfigAttribute.Configuration;
 
-            Covenant.Assert(assemblyConfigAttribute != null, $"Test assembly [{thisAssembly.FullName}] does not include [{nameof(AssemblyConfigurationAttribute)}].");
+            Covenant.Assert(assemblyConfigAttribute != null, () => $"Test assembly [{thisAssembly.FullName}] does not include [{nameof(AssemblyConfigurationAttribute)}].");
 
             // $todo(jefflill):
             //
@@ -105,7 +105,7 @@ nodes:
 
             neonCliPath = Path.Combine(Environment.GetEnvironmentVariable("NK_ROOT"), "Tools", "neon-cli", "bin", buildConfig, "net7.0", "win10-x64", "neoncli.exe");
 
-            Covenant.Assert(File.Exists(neonCliPath), $"[neon-cli] executable does not exist at: {neonCliPath}");
+            Covenant.Assert(File.Exists(neonCliPath), () => $"[neon-cli] executable does not exist at: {neonCliPath}");
         }
 
         [Fact]

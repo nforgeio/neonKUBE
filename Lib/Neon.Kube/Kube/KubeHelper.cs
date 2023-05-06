@@ -1563,7 +1563,7 @@ namespace Neon.Kube
             Task.Run(
                 () =>
                 {
-                    NeonHelper.ExecuteAsync("kubectl",
+                    NeonHelper.Execute("kubectl",
                         args: new string[]
                         {
                             "--namespace", @namespace,

@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    MinioBucketController.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -104,9 +104,9 @@ namespace NeonClusterOperator
             ILogger<MinioBucketController> logger,
             Service                        service)
         {
-            Covenant.Requires(k8s != null, nameof(k8s));
-            Covenant.Requires(logger != null, nameof(logger));
-            Covenant.Requires(service != null, nameof(service));
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            Covenant.Requires<ArgumentNullException>(logger != null, nameof(logger));
+            Covenant.Requires<ArgumentNullException>(service != null, nameof(service));
 
             this.k8s     = k8s;
             this.logger  = logger;

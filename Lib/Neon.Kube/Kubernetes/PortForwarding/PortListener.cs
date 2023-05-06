@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    PortListener.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -49,7 +49,7 @@ namespace Neon.Kube.PortForward
             ILoggerFactory    loggerFactory     = null,
             CancellationToken cancellationToken = default)
         {
-            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort), nameof(localPort), $"Invalid TCP port: {localPort}");
+            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort), () => nameof(localPort), () => $"Invalid TCP port: {localPort}");
 
             this.localPort    = localPort;
             this.localAddress = localAddress ?? IPAddress.Loopback;

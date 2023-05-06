@@ -62,7 +62,7 @@ namespace Neon.Kube.Hosting
         /// </summary>
         private void CheckInitialized()
         {
-            Covenant.Assert(Loader != null, $"[{nameof(Loader)}] is not initialized.  You must call [HostingLoader.Initialize()] in the [Neon.Kube.Hosting] assembly first.");
+            Covenant.Assert(Loader != null, () => $"[{nameof(Loader)}] is not initialized.  You must call [HostingLoader.Initialize()] in the [Neon.Kube.Hosting] assembly first.");
         }
 
         /// <inheritdoc/>

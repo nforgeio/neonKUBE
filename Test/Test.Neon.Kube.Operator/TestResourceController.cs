@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // FILE:	    TestResourceController.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright Â© 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -61,7 +61,8 @@ namespace Test.Neon.Kube.Operator
         /// </summary>
         public TestResourceController(IKubernetes k8s)
         {
-            Covenant.Requires(k8s != null, nameof(k8s));
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+
             this.k8s = k8s;
         }
 

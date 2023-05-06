@@ -90,7 +90,7 @@ namespace Neon.Kube.Setup
             if (options.DesktopReadyToGo)
             {
                 Covenant.Assert(clusterDefinition.IsDesktop, $"Expected [{nameof(clusterDefinition.IsDesktop)}] to be TRUE.");
-                Covenant.Assert(clusterDefinition.Name == KubeConst.NeonDesktopClusterName, $"Expected cluster name [{KubeConst.NeonDesktopClusterName}] not [{clusterDefinition.Name}].");
+                Covenant.Assert(clusterDefinition.Name == KubeConst.NeonDesktopClusterName, () => $"Expected cluster name [{KubeConst.NeonDesktopClusterName}] not [{clusterDefinition.Name}].");
 
                 options.DebugMode = false;
             }

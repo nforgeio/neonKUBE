@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    CrioConfigController.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -366,7 +366,7 @@ rm $0
         public CrioConfigController(
             IKubernetes k8s)
         {
-            Covenant.Requires(k8s != null, nameof(k8s));
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
 
             this.k8s     = k8s;
         }

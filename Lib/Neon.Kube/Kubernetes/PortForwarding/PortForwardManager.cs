@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    PortForwardManager.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -78,8 +78,8 @@ namespace Neon.Kube.PortForward
             Dictionary<string, List<string>> customHeaders     = null,
             CancellationToken                cancellationToken = default)
         {
-            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort), nameof(localPort), $"Invalid TCP port: {localPort}");
-            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(remotePort), nameof(remotePort), $"Invalid TCP port: {remotePort}");
+            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort), () => nameof(localPort), () => $"Invalid TCP port: {localPort}");
+            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(remotePort), () => nameof(remotePort), () => $"Invalid TCP port: {remotePort}");
 
             var key = $"{@namespace}/{name}";
 

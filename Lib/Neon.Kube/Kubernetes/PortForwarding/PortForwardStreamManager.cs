@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    PortForwardStreamManager.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -58,7 +58,7 @@ namespace Neon.Kube.PortForward
         {
             Covenant.Requires<ArgumentNullException>(localConnection != null, nameof(localConnection));
             Covenant.Requires<ArgumentNullException>(remoteConnectionFactory != null, nameof(remoteConnectionFactory));
-            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(remotePort), nameof(remotePort), $"Invalid TCP port: {remotePort}");
+            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(remotePort), () => nameof(remotePort), () => $"Invalid TCP port: {remotePort}");
 
             var stream = new PortForwardStream(localConnection, remoteConnectionFactory, remotePort, loggerFactory);
 

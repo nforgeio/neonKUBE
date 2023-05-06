@@ -1436,7 +1436,7 @@ namespace Neon.Kube.Hosting.Aws
                 throw new NeonKubeException($"Node [{nodeName}] does not exist.");
             }
 
-            Covenant.Assert(awsInstance.ExternalSshPort != 0, $"Node [{nodeName}] does not have an external SSH port assignment.");
+            Covenant.Assert(awsInstance.ExternalSshPort != 0, () => $"Node [{nodeName}] does not have an external SSH port assignment.");
 
             return (Address: ingressAddress.PublicIp, Port: awsInstance.ExternalSshPort);
         }
@@ -1853,7 +1853,7 @@ namespace Neon.Kube.Hosting.Aws
                 }
             }
 
-            Covenant.Assert(false, $"Network ACL [id={networkAclId}] not found.");
+            Covenant.Assert(false, () => $"Network ACL [id={networkAclId}] not found.");
             return null;
         }
 
@@ -3607,7 +3607,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
             foreach (var awsInstance in SortedControlThenWorkerNodes)
             {
-                Covenant.Assert(awsInstance.ExternalSshPort != 0, $"Node [{awsInstance.Name}] does not have an external SSH port assignment.");
+                Covenant.Assert(awsInstance.ExternalSshPort != 0, () => $"Node [{awsInstance.Name}] does not have an external SSH port assignment.");
 
                 var targetGroupName = GetTargetGroupName(clusterName, IngressRuleTarget.Ssh, IngressProtocol.Tcp, awsInstance.ExternalSshPort);
 
@@ -4070,7 +4070,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
                                 default:
 
-                                    Covenant.Assert(false, $"Unexpected node instance status: [{stateCode}]");
+                                    Covenant.Assert(false, () => $"Unexpected node instance status: [{stateCode}]");
                                     break;
                             }
                         }

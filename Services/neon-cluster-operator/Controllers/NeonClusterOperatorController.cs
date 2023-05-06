@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    NeonClusterOperatorController.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -136,10 +136,10 @@ namespace NeonClusterOperator
             HeadendClient                            headendClient,
             HarborClient                             harborClient)
         {
-            Covenant.Requires(k8s != null, nameof(k8s));
-            Covenant.Requires(logger != null, nameof(logger));
-            Covenant.Requires(headendClient != null, nameof(headendClient));
-            Covenant.Requires(harborClient != null, nameof(harborClient));
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
+            Covenant.Requires<ArgumentNullException>(logger != null, nameof(logger));
+            Covenant.Requires<ArgumentNullException>(headendClient != null, nameof(headendClient));
+            Covenant.Requires<ArgumentNullException>(harborClient != null, nameof(harborClient));
 
             this.k8s           = k8s;
             this.logger        = logger;

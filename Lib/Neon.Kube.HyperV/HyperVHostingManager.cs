@@ -328,7 +328,7 @@ namespace Neon.Kube.Hosting.HyperV
             else
             {
                 Covenant.Assert(!string.IsNullOrEmpty(nodeImagePath), $"[{nameof(nodeImagePath)}] must be specified when node image download is disabled.");
-                Covenant.Assert(File.Exists(nodeImagePath), $"Missing file: {nodeImagePath}");
+                Covenant.Assert(File.Exists(nodeImagePath), () => $"Missing file: {nodeImagePath}");
 
                 driveTemplatePath = nodeImagePath;
             }
