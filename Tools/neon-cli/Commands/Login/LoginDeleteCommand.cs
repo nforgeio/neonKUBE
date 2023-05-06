@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    LoginDeleteCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -41,24 +41,25 @@ namespace NeonCli
     public class LoginDeleteCommand : CommandBase
     {
         private const string usage = @"
-Removes a Kubernetes context from the local computer.
+Removes a Kubernetes context from the local worstation.
 
 USAGE:
 
-    neon login delete   [--force] [ USER@CLUSTER[/NAMESPACE] ]
+    neon login delete [--force] [CONTEXT-NAME]
 
 ARGUMENTS:
 
-    USER@CLUSTER[/NAMESPACE]    - Kubernetes user, cluster and optional namespace
+    CONTEXT-NAME    - Optionally specifies the context to be removed.  The
+                      current context is removed by default.
 
 OPTIONS:
 
-    --force             - Don't prompt, just remove and ignore missing logins
+    --force             - Don't prompt, just remove andalso ignore missing logins
 
 REMARKS:
 
-By default, this comman will remove the current login when 
-USER@CLUSTER[/NAMESPACE is not specified.
+By default, this comman will remove the current login when
+CONTEXT-NAME is not specified.
 ";
 
         /// <inheritdoc/>

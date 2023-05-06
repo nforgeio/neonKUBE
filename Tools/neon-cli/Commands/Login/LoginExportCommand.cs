@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    LoginExportCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -41,23 +41,33 @@ namespace NeonCli
     public class LoginExportCommand : CommandBase
     {
         private const string usage = @"
-Exports an extended Kubernetes context to standard output.
+Exports a Kubernetes context to standard output or a file.
 
 USAGE:
 
-    neon login export --context=USER@CLUSTER[/NAMESPACE] ] [PATH]
+    neon login export [OPTIONS] [PATH]
 
 ARGUMENTS:
 
-    USER@CLUSTER[/NAMESPACE]    - Kubernetes user, cluster and optional namespace
-    PATH                        - Optional output file (defaults to STDOUT)
+    PATH                    - Optional output file (defaults to STDOUT)
+
+OPTIONS:
+
+    --context=CONTEXT-NAME  - Optionally identifies a specific context
+                              to be exported, rather than the current
+                              context
 
 REMARKS:
 
-    The output includes the Kubernetes context information along
-    with additional neonKUBE cluster login information.  This is 
-    intended to be used for distributing a login to other cluster 
-    login to their workstation.
+This command is used to obtain the Kubernetes context for a cluster so
+it can be saved and perhaps shared with other cluster users.  The current
+context (if there is one) is obtained by default, but you can use the
+[--context=CONTEXT-NAME] option to obtain a specific context.
+
+The context information is written to STDOUT by default.  Use the PATH
+argument to save this to a file instead.
+
+Use the [neon login import] command to import an exported context.
 ";
 
         /// <inheritdoc/>

@@ -38,6 +38,7 @@ using Xunit;
 using System.Runtime.InteropServices;
 using Neon.Kube.Proxy;
 using Neon.Kube.Hosting;
+using Neon.Kube.Config;
 
 namespace Test.NeonCli
 {
@@ -293,6 +294,82 @@ nodes:
                     await NeonCliAsync("cluster", "purpose", "test");
 
                     //-------------------------------------------------------------
+                    // Verify: login import/export/delete
+
+                    using (var exportFolder = new TempFolder())
+                    {
+                        // Verify export of the current context to STDOUT.
+
+                        response = (await NeonCliAsync("login", "export"))
+                            .EnsureSuccess();
+
+                        var export = NeonHelper.YamlDeserialize<ClusterLoginExport>(response.OutputText);
+
+                        Assert.Equal(KubeHelper.KubeConfig.CurrentContext, export.Context.Name);
+                        Assert.Equal(KubeHelper.KubeConfig.Cluster.Name, export.Context.Cluster);
+                        Assert.Equal(KubeHelper.KubeConfig.User.Name, export.Context.User);
+
+                        // Verify export of the current context by name to STDOUT.
+
+                        response = (await NeonCliAsync("login", "export", $"--context={KubeHelper.KubeConfig.CurrentContext}"))
+                            .EnsureSuccess();
+
+                        export = NeonHelper.YamlDeserialize<ClusterLoginExport>(response.OutputText);
+
+                        Assert.Equal(KubeHelper.KubeConfig.CurrentContext, export.Context.Name);
+                        Assert.Equal(KubeHelper.KubeConfig.Cluster.Name, export.Context.Cluster);
+                        Assert.Equal(KubeHelper.KubeConfig.User.Name, export.Context.User);
+
+                        // Verify export of the current context to a temporary file.
+
+                        var exportPath = Path.Combine(tempFolder.Path, "export.yaml");
+
+                        response = (await NeonCliAsync("login", "export", exportPath))
+                            .EnsureSuccess();
+
+                        export = NeonHelper.YamlDeserialize<ClusterLoginExport>(File.ReadAllText(exportPath));
+
+                        Assert.Equal(KubeHelper.KubeConfig.CurrentContext, export.Context.Name);
+                        Assert.Equal(KubeHelper.KubeConfig.Cluster.Name, export.Context.Cluster);
+                        Assert.Equal(KubeHelper.KubeConfig.User.Name, export.Context.User);
+
+                        // Delete the current context and verify.
+
+                        var testContextName = KubeHelper.KubeConfig.CurrentContext;
+                        var testClusterName = KubeHelper.KubeConfig.Context.Cluster;
+                        var testUserName    = KubeHelper.KubeConfig.Context.User;
+
+                        (await NeonCliAsync("login", "delete", "--force", KubeHelper.KubeConfig.CurrentContext))
+                            .EnsureSuccess();
+
+                        KubeHelper.KubeConfig.Reload();
+                        Assert.Null(KubeHelper.KubeConfig.CurrentContext);
+                        Assert.Null(KubeHelper.KubeConfig.GetContext(testContextName));
+                        Assert.Null(KubeHelper.KubeConfig.GetCluster(testClusterName));
+                        Assert.Null(KubeHelper.KubeConfig.GetUser(testUserName));
+
+                        // Verify import when the there are no conflicts with existing config items.
+
+                        (await NeonCliAsync("login", "import", exportPath))
+                            .EnsureSuccess();
+
+                        KubeHelper.KubeConfig.Reload();
+                        Assert.Equal(testContextName, KubeHelper.KubeConfig.CurrentContext);
+                        Assert.Equal(testClusterName, KubeHelper.KubeConfig.Cluster.Name);
+                        Assert.Equal(testUserName, KubeHelper.KubeConfig.User.Name);
+
+                        // Import again with [--force] to overwrite existing config items.
+
+                        (await NeonCliAsync("login", "import", "--force", exportPath))
+                            .EnsureSuccess();
+
+                        KubeHelper.KubeConfig.Reload();
+                        Assert.Equal(testContextName, KubeHelper.KubeConfig.CurrentContext);
+                        Assert.Equal(testClusterName, KubeHelper.KubeConfig.Cluster.Name);
+                        Assert.Equal(testUserName, KubeHelper.KubeConfig.User.Name);
+                    }
+
+                    //-------------------------------------------------------------
                     // Verify: cluster dashboard
 
                     // Verify the available dashboards.
@@ -417,6 +494,7 @@ nodes:
                     response = (await NeonCliAsync("cluster", "delete", "--force"))
                         .EnsureSuccess();
 
+                    KubeHelper.KubeConfig.Reload();
                     Assert.Empty(KubeHelper.KubeConfig.Clusters.Where(cluster => cluster.Name == clusterName));
                 }
                 finally
