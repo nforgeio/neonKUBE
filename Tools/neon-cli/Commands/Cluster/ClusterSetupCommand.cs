@@ -218,7 +218,6 @@ OPTIONS:
                 }
 
                 if (KubeHelper.CurrentContext != null &&
-                    KubeHelper.CurrentCluster != null && 
                     KubeHelper.CurrentCluster.ClusterInfo != null && 
                     KubeHelper.CurrentContext.Name == context.Name)
                 {

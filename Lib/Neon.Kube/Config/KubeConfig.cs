@@ -282,8 +282,12 @@ namespace Neon.Kube.Config
         /// Removes a Kubernetes context, if it exists.
         /// </summary>
         /// <param name="context">The context to be removed.</param>
+        /// <param name="removeClusterAndUser">
+        /// Optionally disable removal of the referenced cluster and user if
+        /// they're not referenced elsewhere (defaults to <c>true</c>).
+        /// </param>
         /// <param name="noSave">Optionally prevent context save after the change.</param>
-        public void RemoveContext(KubeConfigContext context, bool noSave = false)
+        public void RemoveContext(KubeConfigContext context, bool removeClusterAndUser = true, bool noSave = false)
         {
             Covenant.Requires<ArgumentNullException>(context != null, nameof(context));
 
@@ -301,6 +305,36 @@ namespace Neon.Kube.Config
             if (CurrentContext == context.Name)
             {
                 CurrentContext = null;
+            }
+
+            // Remove the referenced cluster and user if enabled and when they're
+            // not referenced by another context.
+
+            if (removeClusterAndUser)
+            {
+                if (!Contexts.Any(ctx => ctx.Cluster == context.Cluster))
+                {
+                    for (int i = 0; i < Clusters.Count; i++)
+                    {
+                        if (Clusters[i].Name == context.Cluster)
+                        {
+                            Clusters.RemoveAt(i);
+                            break;
+                        }
+                    }
+                }
+
+                if (!Contexts.Any(ctx => ctx.User == context.User))
+                {
+                    for (int i = 0; i < Users.Count; i++)
+                    {
+                        if (Users[i].Name == context.User)
+                        {
+                            Users.RemoveAt(i);
+                            break;
+                        }
+                    }
+                }
             }
 
             // Persist as required.

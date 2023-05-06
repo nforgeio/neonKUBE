@@ -120,7 +120,6 @@ namespace Neon.Kube.Proxy
         /// </note>
         /// </param>
         /// <param name="operation">Optionally identifies the operations that will be performed using the proxy.  This defaults to <see cref="Operation.LifeCycle"/>.</param>
-        /// <param name="setupState">Optionally specifies cluster setup state.</param>
         /// <param name="nodeImageUri">Optionally passed as the URI to the (GZIP compressed) node image.</param>
         /// <param name="nodeImagePath">Optionally passed as the local path to the (GZIP compressed) node image file.</param>
         /// <param name="nodeProxyCreator">
@@ -139,22 +138,19 @@ namespace Neon.Kube.Proxy
             IHostingManagerFactory  hostingManagerFactory,
             bool                    cloudMarketplace,
             Operation               operation         = Operation.LifeCycle,
-            KubeSetupState          setupState        = null,
             string                  nodeImageUri      = null,
             string                  nodeImagePath     = null,
             NodeProxyCreator        nodeProxyCreator  = null,
             RunOptions              defaultRunOptions = RunOptions.None)
         {
             Covenant.Requires<ArgumentNullException>(kubeConfig != null, nameof(kubeConfig));
+            Covenant.Requires<ArgumentNullException>(kubeConfig.Cluster != null, $"[{nameof(kubeConfig)}.{nameof(kubeConfig.Cluster)}] cannot be NULL.");
             Covenant.Requires<ArgumentNullException>(hostingManagerFactory != null, nameof(hostingManagerFactory));
             kubeConfig.Validate(needsCurrentCluster: true);
 
             var cluster = new ClusterProxy(
                 kubeConfig:            kubeConfig,
                 hostingManagerFactory: hostingManagerFactory,
-                cloudMarketplace:      cloudMarketplace,
-                operation:             operation,
-                setupState:            setupState,
                 nodeImageUri:          nodeImageUri,
                 nodeImagePath:         nodeImagePath,
                 nodeProxyCreator:      nodeProxyCreator,
@@ -168,6 +164,7 @@ namespace Neon.Kube.Proxy
 
             await cluster.InitializeAsync();
 
+            cluster.Name           = kubeConfig.Cluster.Name;
             cluster.HostingManager = cluster.GetHostingManager(hostingManagerFactory, cloudMarketplace, operation, KubeHelper.LogFolder);
 
             return cluster;
@@ -176,6 +173,7 @@ namespace Neon.Kube.Proxy
         /// <summary>
         /// Constructs a cluster proxy that will typically be used for deploying a new cluster.
         /// </summary>
+        /// <param name="setupState">Specifies cluster setup state.</param>
         /// <param name="hostingManagerFactory">The hosting manager factory,</param>
         /// <param name="cloudMarketplace">
         /// <para>
@@ -189,7 +187,6 @@ namespace Neon.Kube.Proxy
         /// </note>
         /// </param>
         /// <param name="operation">Optionally identifies the operations that will be performed using the proxy.  This defaults to <see cref="Operation.LifeCycle"/>.</param>
-        /// <param name="setupState">Optionally specifies cluster setup state.</param>
         /// <param name="nodeImageUri">Optionally passed as the URI to the (GZIP compressed) node image.</param>
         /// <param name="nodeImagePath">Optionally passed as the local path to the (GZIP compressed) node image file.</param>
         /// <param name="nodeProxyCreator">
@@ -217,21 +214,20 @@ namespace Neon.Kube.Proxy
         /// </para>
         /// </remarks>
         public static async Task<ClusterProxy> CreateAsync(
+            KubeSetupState          setupState,
             IHostingManagerFactory  hostingManagerFactory,
             bool                    cloudMarketplace,
             Operation               operation         = Operation.LifeCycle,
-            KubeSetupState          setupState        = null,
             string                  nodeImageUri      = null,
             string                  nodeImagePath     = null,
             NodeProxyCreator        nodeProxyCreator  = null,
             RunOptions              defaultRunOptions = RunOptions.None)
         {
+            Covenant.Requires<ArgumentNullException>(setupState != null, nameof(setupState));
             Covenant.Requires<ArgumentNullException>(hostingManagerFactory != null, nameof(hostingManagerFactory));
 
             var cluster = new ClusterProxy(
                 hostingManagerFactory: hostingManagerFactory,
-                cloudMarketplace:      cloudMarketplace,
-                operation:             operation,
                 setupState:            setupState,
                 nodeImageUri:          nodeImageUri,
                 nodeImagePath:         nodeImagePath,
@@ -240,6 +236,7 @@ namespace Neon.Kube.Proxy
 
             await cluster.InitializeAsync();
 
+            cluster.Name           = setupState.ClusterDefinition.Name;
             cluster.HostingManager = cluster.GetHostingManager(hostingManagerFactory, cloudMarketplace, operation, KubeHelper.LogFolder);
 
             return cluster;
@@ -264,18 +261,6 @@ namespace Neon.Kube.Proxy
         /// </summary>
         /// <param name="kubeConfig">The Kubernetes config.</param>
         /// <param name="hostingManagerFactory">The hosting manager factory,</param>
-        /// <param name="cloudMarketplace">
-        /// <para>
-        /// For cloud environments, this specifies whether the cluster should be provisioned
-        /// using a VM image from the public cloud marketplace when <c>true</c> or from the
-        /// private NEONFORGE image gallery for testing when <c>false</c>.  This is ignored
-        /// for on-premise environments.
-        /// </para>
-        /// <note>
-        /// Only NEONFORGE maintainers will have permission to use the private image.
-        /// </note>
-        /// </param>
-        /// <param name="operation">Optionally identifies the operations that will be performed using the proxy.  This defaults to <see cref="Operation.LifeCycle"/>.</param>
         /// <param name="setupState">Optionally specifies cluster setup state.</param>
         /// <param name="nodeImageUri">Optionally passed as the URI to the (GZIP compressed) node image.</param>
         /// <param name="nodeImagePath">Optionally passed as the local path to the (GZIP compressed) node image file.</param>
@@ -292,9 +277,6 @@ namespace Neon.Kube.Proxy
         private ClusterProxy(
             KubeConfig              kubeConfig,
             IHostingManagerFactory  hostingManagerFactory,
-            bool                    cloudMarketplace,
-            Operation               operation         = Operation.LifeCycle,
-            KubeSetupState          setupState        = null,
             string                  nodeImageUri      = null,
             string                  nodeImagePath     = null,
             NodeProxyCreator        nodeProxyCreator  = null,
@@ -302,14 +284,15 @@ namespace Neon.Kube.Proxy
             
             : this(
                 hostingManagerFactory: hostingManagerFactory, 
-                cloudMarketplace:      cloudMarketplace,
-                operation:             operation,
-                setupState:            setupState,
+                setupState:            null,
                 nodeImageUri:          nodeImageUri, 
                 nodeImagePath:         nodeImagePath, 
                 nodeProxyCreator:      nodeProxyCreator, 
                 defaultRunOptions:     defaultRunOptions)
         {
+            Covenant.Requires<ArgumentException>(kubeConfig.Cluster != null, nameof(kubeConfig), "KubeConfig has no current cluster.");
+
+            Name       = kubeConfig.Cluster.Name;
             KubeConfig = kubeConfig;
         }
 
@@ -317,19 +300,7 @@ namespace Neon.Kube.Proxy
         /// Constructs a cluster proxy that will typically be used for deploying a new cluster.
         /// </summary>
         /// <param name="hostingManagerFactory">The hosting manager factory,</param>
-        /// <param name="cloudMarketplace">
-        /// <para>
-        /// For cloud environments, this specifies whether the cluster should be provisioned
-        /// using a VM image from the public cloud marketplace when <c>true</c> or from the
-        /// private NEONFORGE image gallery for testing when <c>false</c>.  This is ignored
-        /// for on-premise environments.
-        /// </para>
-        /// <note>
-        /// Only NEONFORGE maintainers will have permission to use the private image.
-        /// </note>
-        /// </param>
-        /// <param name="operation">Optionally identifies the operations that will be performed using the proxy.  This defaults to <see cref="Operation.LifeCycle"/>.</param>
-        /// <param name="setupState">Optionally specifies cluster setup state.</param>
+        /// <param name="setupState">Specifies cluster setup state.</param>
         /// <param name="nodeImageUri">Optionally passed as the URI to the (GZIP compressed) node image.</param>
         /// <param name="nodeImagePath">Optionally passed as the local path to the (GZIP compressed) node image file.</param>
         /// <param name="nodeProxyCreator">
@@ -357,9 +328,7 @@ namespace Neon.Kube.Proxy
         /// </remarks>
         private ClusterProxy(
             IHostingManagerFactory  hostingManagerFactory,
-            bool                    cloudMarketplace,
-            Operation               operation         = Operation.LifeCycle,
-            KubeSetupState          setupState        = null,
+            KubeSetupState          setupState,
             string                  nodeImageUri      = null,
             string                  nodeImagePath     = null,
             NodeProxyCreator        nodeProxyCreator  = null,
@@ -488,7 +457,7 @@ namespace Neon.Kube.Proxy
         /// <summary>
         /// Returns the cluster name.
         /// </summary>
-        public string Name => SetupState != null ? SetupState.ClusterDefinition.Name : KubeConfig.Cluster.Name;
+        public string Name { get; private set; }
 
         /// <summary>
         /// Returns the cluster ID.
@@ -1533,13 +1502,6 @@ namespace Neon.Kube.Proxy
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        /// <remarks>
-        /// <para>
-        /// The <paramref name="deleteOrphans"/> parameter is typically enabled when running unit tests
-        /// via the <b>ClusterFixture</b> to ensure that clusters and VMs orphaned by previous interrupted
-        /// test runs are removed in addition to removing the cluster specified by the cluster definition.
-        /// </para>
-        /// </remarks>
         public async Task DeleteClusterAsync()
         {
             await SyncContext.Clear;
