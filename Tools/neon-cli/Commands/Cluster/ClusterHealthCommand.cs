@@ -89,12 +89,11 @@ USAGE: neon cluster health
                 Program.Exit(0);
             }
 
-            Console.WriteLine();
-
             var context = KubeHelper.CurrentContext;
 
             if (context == null)
             {
+                Console.WriteLine();
                 Console.Error.WriteLine($"*** ERROR: There is no current cluster.");
                 Program.Exit(1);
             }
@@ -103,9 +102,7 @@ USAGE: neon cluster health
             {
                 var clusterHealth = await cluster.GetClusterHealthAsync();
 
-                Console.WriteLine();
                 Console.WriteLine(NeonHelper.JsonSerialize(clusterHealth, Formatting.Indented));
-                Console.WriteLine();
             }
         }
     }

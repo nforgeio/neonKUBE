@@ -1089,9 +1089,8 @@ namespace Neon.Kube.Hosting.HyperV
                 }
 
                 // We're going to examine the node states from the Hyper-V perspective and
-                // short-circuit the Kubernetes level cluster health check when the cluster
-                // nodes are not provisioned, are paused or appear to be transitioning
-                // between starting, stopping, waking, or paused states.
+                // short-circuit the health check when the cluster nodes are not provisioned,
+                // are paused or appear to be transitioning between states.
 
                 var commonNodeState = clusterHealth.Nodes.Values.First();
 

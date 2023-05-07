@@ -1280,6 +1280,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
             newCluster.ClusterInfo        = cluster.SetupState.ToKubeClusterInfo();
             newCluster.HostingEnvironment = cluster.Hosting.Environment;
+            newCluster.Hosting            = cluster.Hosting;
             newCluster.IsNeonDesktop      = desktopReadyToGo;
             newCluster.IsNeonKube         = true;
             newCluster.SsoUsername        = cluster.SetupState.SsoUsername;
@@ -1341,7 +1342,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 KubeHelper.SetConfig(existingConfig);
             }
 
-            // Make sure that the config cached by [KubeHelper] and [ClusterProxy] is up to date.
+            // Make sure that the config cached by [KubeHelper] and [ClusterProxy] are up to date.
 
             cluster.KubeConfig = KubeHelper.LoadConfig().Clone();
 

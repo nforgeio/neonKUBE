@@ -45,7 +45,7 @@ namespace Neon.Kube.Deployment
         /// </summary>
         public ClusterDeployment()
         {
-            Hosting = new HostingDeployment();
+            Hosting = new HostingOptions();
             Nodes   = new List<NodeDeployment>();
         }
 
@@ -63,7 +63,7 @@ namespace Neon.Kube.Deployment
 
             ClusterId     = clusterId;
             ClusterDomain = clusterDomain;
-            Hosting       = new HostingDeployment(clusterDefinition);
+            Hosting       = clusterDefinition.Hosting;
             Nodes         = new List<NodeDeployment>();
 
             foreach (var nodeDefinition in clusterDefinition.Nodes)
@@ -91,7 +91,7 @@ namespace Neon.Kube.Deployment
         /// </summary>
         [JsonProperty(PropertyName = "Hosting", Required = Required.Always)]
         [YamlMember(Alias = "hosting", ApplyNamingConventions = false)]
-        public HostingDeployment Hosting { get; set; }
+        public HostingOptions Hosting { get; set; }
 
         /// <summary>
         /// Holds information about the cluster nodes.

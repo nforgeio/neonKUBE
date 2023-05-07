@@ -37,6 +37,7 @@ using Neon.Kube.Proxy;
 using Neon.Kube.Glauth;
 using System.Diagnostics.Contracts;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.Deployment;
 
 // $todo(jefflill): This implementation is incomplete.
 //
@@ -237,8 +238,9 @@ change the namespace for the current cluster when CONTEXT-NAME is not specified.
                 clientId:  KubeConst.NeonSsoPublicClientId,
                 scopes:    new string[] { "openid", "email", "profile", "groups", "offline_access", "audience:server:client_id:neon-sso" });
 
-            ClusterInfo clusterInfo;
-            GlauthUser  registryUser = null;
+            ClusterInfo         clusterInfo;
+            ClusterDeployment   clusterDeployment;
+            GlauthUser          registryUser = null;
 
             using var store = new X509Store(StoreName.CertificateAuthority,StoreLocation.CurrentUser);
 
@@ -251,9 +253,8 @@ change the namespace for the current cluster when CONTEXT-NAME is not specified.
             },
                 new KubernetesRetryHandler()))
             {
-                var clusterInfoConfigmap = await k8s.CoreV1.ReadNamespacedConfigMapAsync(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus);
-
-                clusterInfo = TypedConfigMap<ClusterInfo>.From(clusterInfoConfigmap).Data;
+                clusterInfo       = (await k8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterInfo>(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus)).Data;
+                clusterDeployment = (await k8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterDeployment>(KubeConfigMapName.ClusterDeployment, KubeNamespace.NeonStatus)).Data;
 
                 try
                 {
@@ -309,6 +310,7 @@ change the namespace for the current cluster when CONTEXT-NAME is not specified.
             configCluster.IsNeonDesktop      = clusterInfo.IsDesktop;
             configCluster.IsNeonKube         = true;
             configCluster.HostingEnvironment = clusterInfo.HostingEnvironment;
+            configCluster.Hosting            = clusterDeployment.Hosting;
             configCluster.HostingNamePrefix  = clusterInfo.HostingNamePrefix;
 
             // Add/update the config user.

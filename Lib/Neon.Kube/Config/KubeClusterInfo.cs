@@ -54,7 +54,7 @@ namespace Neon.Kube.Config
         }
 
         /// <summary>
-        /// Set to a globally unique ID to identify the cluster.
+        /// Specifies a UUID for the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "ClusterId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "clusterId", ApplyNamingConventions = false)]
@@ -62,7 +62,15 @@ namespace Neon.Kube.Config
         public string ClusterId { get; set; }
 
         /// <summary>
-        /// Set to the cluster domain.
+        /// Specifies the cluster name.
+        /// </summary>
+        [JsonProperty(PropertyName = "ClusterName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "clusterName", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string ClusterName { get; set; }
+
+        /// <summary>
+        /// Specifies the cluster domain.
         /// </summary>
         [JsonProperty(PropertyName = "ClusterDomain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "clusterDomain", ApplyNamingConventions = false)]
@@ -70,7 +78,7 @@ namespace Neon.Kube.Config
         public string ClusterDomain { get; set; } = null;
 
         /// <summary>
-        /// The neonKUBE version of the cluster.  This is formatted as a <see cref="SemanticVersion"/>.
+        /// Specifies the neonKUBE version of the cluster.  This is formatted as a <see cref="SemanticVersion"/>.
         /// </summary>
         [JsonProperty(PropertyName = "ClusterVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "clusterVersion", ApplyNamingConventions = false)]
@@ -78,7 +86,7 @@ namespace Neon.Kube.Config
         public string ClusterVersion { get; set; } = KubeVersions.NeonKube;
 
         /// <summary>
-        /// The single sign-on (SSO) admin username.
+        /// Specifies the SSO admin username.
         /// </summary>
         [JsonProperty(PropertyName = "SsoUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "ssoUsername", ApplyNamingConventions = false)]
@@ -86,7 +94,7 @@ namespace Neon.Kube.Config
         public string SsoUsername { get; set; }
 
         /// <summary>
-        /// The single sign-on (SSO) admin password.
+        /// Specifies the SSO admin password.
         /// </summary>
         [JsonProperty(PropertyName = "SsoPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "ssoPassword", ApplyNamingConventions = false)]

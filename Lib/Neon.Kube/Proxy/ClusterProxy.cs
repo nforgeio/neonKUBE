@@ -157,10 +157,7 @@ namespace Neon.Kube.Proxy
                 defaultRunOptions:     defaultRunOptions);
 
             cluster.KubeConfig = kubeConfig;
-            cluster.Hosting    = new HostingOptions()
-            {
-                Environment = kubeConfig.Cluster.HostingEnvironment
-            };
+            cluster.Hosting    = kubeConfig.Cluster.Hosting;
 
             await cluster.InitializeAsync();
 
@@ -237,6 +234,7 @@ namespace Neon.Kube.Proxy
             await cluster.InitializeAsync();
 
             cluster.Name           = setupState.ClusterDefinition.Name;
+            cluster.Hosting        = setupState.ClusterDefinition.Hosting;
             cluster.HostingManager = cluster.GetHostingManager(hostingManagerFactory, cloudMarketplace, operation, KubeHelper.LogFolder);
 
             return cluster;
@@ -261,7 +259,6 @@ namespace Neon.Kube.Proxy
         /// </summary>
         /// <param name="kubeConfig">The Kubernetes config.</param>
         /// <param name="hostingManagerFactory">The hosting manager factory,</param>
-        /// <param name="setupState">Optionally specifies cluster setup state.</param>
         /// <param name="nodeImageUri">Optionally passed as the URI to the (GZIP compressed) node image.</param>
         /// <param name="nodeImagePath">Optionally passed as the local path to the (GZIP compressed) node image file.</param>
         /// <param name="nodeProxyCreator">

@@ -41,12 +41,17 @@ namespace Neon.Kube.Config
         public const string HostingEnvironment = $"{ExtensionPrefix}hosting-environment";
 
         /// <summary>
+        /// <see cref="Hosting"/>: Details about the hosting environment including credentials.
+        /// </summary>
+        public const string Hosting = $"{ExtensionPrefix}hosting";
+
+        /// <summary>
         /// Holds the prefix (if any) prepended by the hosting environment to node
         /// names to identify the node within the hosting environment.  This is typically
         /// set to the cluster name and is useful for avoiding node name conflicts when
         /// hosting multiple clusters within the same environment.
         /// </summary>
-        public const string HostingNamePrefix = $"{ExtensionPrefix}vm-name-prefix";
+        public const string HostingNamePrefix = $"{ExtensionPrefix}hosting-name-prefix";
 
         /// <summary>
         /// <c>bool</c>: Used to indicate that a cluster belongs to neon-desktop.

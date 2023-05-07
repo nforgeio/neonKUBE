@@ -38,6 +38,7 @@ using Neon.Cryptography;
 using Neon.Kube;
 using Namotion.Reflection;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.Deployment;
 
 namespace Neon.Kube.Config
 {
@@ -141,7 +142,19 @@ namespace Neon.Kube.Config
         }
 
         /// <summary>
-        /// Returns the prefix added by the hosting environments to virtual machine names.  This may
+        /// Holds the <see cref="Neon.Kube.ClusterDef.HostingOptions"/> for neonKUBE clusters.
+        /// This will be <c>null</c> for non-neonKUBE clusters.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public HostingOptions Hosting
+        {
+            get => GetExtensionValue<HostingOptions>(NeonKubeExtensions.Hosting, null);
+            set => SetExtensionValue<HostingOptions>(NeonKubeExtensions.Hosting, value);
+        }
+
+        /// <summary>
+        /// Specifies the prefix added by the hosting environments to virtual machine names.  This may
         /// be the empty string form neonKUBE clusters and always will be <c>null</c> for non-neonKUBE
         /// clusters.
         /// </summary>
@@ -180,6 +193,8 @@ namespace Neon.Kube.Config
         /// <summary>
         /// Specifies the cluster's SSO admin password.
         /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
         public string SsoUsername
         {
             get => GetExtensionValue<string>(NeonKubeExtensions.SsoUsername, null);
@@ -189,6 +204,8 @@ namespace Neon.Kube.Config
         /// <summary>
         /// Specifies the cluster's SSO admin password.
         /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
         public string SsoPassword
         {
             get => GetExtensionValue<string>(NeonKubeExtensions.SsoPassword, null);
@@ -198,6 +215,8 @@ namespace Neon.Kube.Config
         /// <summary>
         /// Specifies the SSH admin username for cluster nodes.
         /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
         public string SshUsername
         {
             get => GetExtensionValue<string>(NeonKubeExtensions.SshUsername, null);
@@ -213,6 +232,8 @@ namespace Neon.Kube.Config
         /// not an SSH password because clusters disable SSH password authentication.
         /// </note>
         /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
         public string SshPassword
         {
             get => GetExtensionValue<string>(NeonKubeExtensions.SshPassword, null);

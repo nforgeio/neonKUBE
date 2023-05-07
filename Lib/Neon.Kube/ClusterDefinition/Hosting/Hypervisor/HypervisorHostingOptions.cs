@@ -33,6 +33,7 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Net;
+using Neon.Kube.Config;
 
 namespace Neon.Kube.ClusterDef
 {
@@ -186,7 +187,8 @@ namespace Neon.Kube.ClusterDef
         public string NamePrefix { get; set; }  = null;
 
         /// <summary>
-        /// Returns the prefix to be used when provisioning virtual machines in hypervisor environments.
+        /// Returns the prefix to be used when provisioning virtual machines in hypervisor environments
+        /// during cluster deployment.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The prefix.</returns>
@@ -204,6 +206,38 @@ namespace Neon.Kube.ClusterDef
             if (NamePrefix == null)
             {
                 prefix = $"{clusterDefinition.Name}-".ToLowerInvariant();
+            }
+            else if (string.IsNullOrWhiteSpace(NamePrefix))
+            {
+                prefix = string.Empty;
+            }
+            else
+            {
+                prefix = $"{NamePrefix}-".ToLowerInvariant();
+            }
+
+            return prefix;
+        }
+
+        /// <summary>
+        /// Returns the prefix to be used when provisioning virtual machines in hypervisor environments.
+        /// </summary>
+        /// <param name="configCluster">The cluster configuration (from kubeconfig).</param>
+        /// <returns>The prefix.</returns>
+        public string GetVmNamePrefix(KubeConfigCluster configCluster)
+        {
+            // We don't add a prefix for non-neonKUBE clusters or the special neon-desktop cluster.
+
+            if (!configCluster.IsNeonKube || configCluster.IsNeonDesktop)
+            {
+                return String.Empty;
+            }
+
+            var prefix = string.Empty;
+
+            if (NamePrefix == null)
+            {
+                prefix = $"{configCluster.ClusterInfo.ClusterName}-".ToLowerInvariant();
             }
             else if (string.IsNullOrWhiteSpace(NamePrefix))
             {

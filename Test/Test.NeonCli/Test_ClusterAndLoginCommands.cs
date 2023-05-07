@@ -51,6 +51,7 @@ namespace Test.NeonCli
         private bool debugMode = true;
 
         private const string clusterName  = "test-neoncli";
+        private const string namePrefix   = "test-neoncli";
         private const string clusterLogin = $"root@{clusterName}";
 
         private const string hypervClusterDefinition =
@@ -66,7 +67,7 @@ kubernetes:
 hosting:
   environment: hyperv
   hypervisor:
-    namePrefix: test-neoncli
+    namePrefix: {namePrefix}
     cores: 4
     memory: 16 GiB
     osDisk: 64 GiB
@@ -87,7 +88,7 @@ nodes:
 $@"
 name: {clusterName}
 datacenter: $<profile:datacenter>
-purpose: development
+purpose: test
 timeSources:
 - pool.ntp.org
 kubernetes:
@@ -97,7 +98,7 @@ hosting:
   hypervisor:
     hostUsername: $<secret:XENSERVER_LOGIN[username]>
     hostPassword: $<secret:XENSERVER_LOGIN[password]>
-    namePrefix: $<profile:owner>
+    namePrefix: {namePrefix}
     cores: 4
     memory: 18 GiB
     osDisk: 64 GiB
@@ -113,7 +114,7 @@ network:
   - $<profile:lan.dns0>
   - $<profile:lan.dns1>
 nodes:
-  control-0:
+  node:
     role: control-plane
     address: $<profile:xenserver.node0.ip>
     hypervisor:
