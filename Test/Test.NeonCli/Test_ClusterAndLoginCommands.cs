@@ -28,17 +28,15 @@ using Neon;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube;
+using Neon.Kube.ClusterDef;
+using Neon.Kube.Config;
+using Neon.Kube.Hosting;
+using Neon.Kube.Proxy;
 using Neon.Kube.Xunit;
 using Neon.IO;
 using Neon.Xunit;
 
-using NeonCli;
-
 using Xunit;
-using System.Runtime.InteropServices;
-using Neon.Kube.Proxy;
-using Neon.Kube.Hosting;
-using Neon.Kube.Config;
 
 namespace Test.NeonCli
 {
@@ -55,7 +53,7 @@ namespace Test.NeonCli
         private const string clusterName  = "test-neoncli";
         private const string clusterLogin = $"root@{clusterName}";
 
-        private const string clusterDefinition =
+        private const string hypervClusterDefinition =
 $@"
 name: {clusterName}
 datacenter: $<profile:datacenter>
@@ -85,7 +83,50 @@ nodes:
     address: $<profile:hyperv.tiny0.ip>
 ";
 
-        private readonly string neonCliPath;
+        private const string xenServerClusterDefinition =
+$@"
+name: {clusterName}
+datacenter: $<profile:datacenter>
+purpose: development
+timeSources:
+- pool.ntp.org
+kubernetes:
+  allowPodsOnControlPlane: true
+hosting:
+  environment: xenserver
+  hypervisor:
+    hostUsername: $<secret:XENSERVER_LOGIN[username]>
+    hostPassword: $<secret:XENSERVER_LOGIN[password]>
+    namePrefix: $<profile:owner>
+    cores: 4
+    memory: 18 GiB
+    osDisk: 64 GiB
+    hosts:
+    - name: XENHOST
+      address: $<profile:xen-test.host>
+  xenServer:
+     snapshot: true
+network:
+  premiseSubnet: $<profile:lan.subnet>
+  gateway: $<profile:lan.gateway>
+  nameservers:
+  - $<profile:lan.dns0>
+  - $<profile:lan.dns1>
+nodes:
+  control-0:
+    role: control-plane
+    address: $<profile:xenserver.node0.ip>
+    hypervisor:
+      host: XENHOST
+";
+
+        private readonly string                                 neonCliPath;
+        private readonly Dictionary<HostingEnvironment, string> envToDefinition =
+            new Dictionary<HostingEnvironment, string>()
+            {
+                { HostingEnvironment.HyperV, hypervClusterDefinition },
+                { HostingEnvironment.XenServer, xenServerClusterDefinition }
+            };
 
         /// <summary>
         /// Constructor,
@@ -102,16 +143,18 @@ nodes:
 
             // $todo(jefflill):
             //
-            // I'm hardcoding the .NET framework moniker and arcitecture parts of the subpath.
+            // I'm hardcoding the .NET framework moniker and architecture parts of the subpath.
 
             neonCliPath = Path.Combine(Environment.GetEnvironmentVariable("NK_ROOT"), "Tools", "neon-cli", "bin", buildConfig, "net7.0", "win10-x64", "neoncli.exe");
 
             Covenant.Assert(File.Exists(neonCliPath), () => $"[neon-cli] executable does not exist at: {neonCliPath}");
         }
 
-        [Fact]
+        [Theory]
+        [InlineData(HostingEnvironment.HyperV)]
+        [InlineData(HostingEnvironment.XenServer)]
         [Trait(TestTrait.Category, TestTrait.Slow)]
-        public async Task Verify()
+        public async Task Verify(HostingEnvironment environment)
         {
             // Use [neon-cli] to deploy a single-node Hyper-V test cluster and the verify that
             // common [neon-cli] cluster commands work as expected.  We're doing this all in a
@@ -120,6 +163,8 @@ nodes:
 
             bool            clusterExists = false;
             ExecuteResponse response;
+
+            var clusterDefinition = envToDefinition[environment];
 
             using (var tempFolder = new TempFolder())
             {
