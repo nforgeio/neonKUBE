@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubernetesRetryHandler.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -42,7 +42,7 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Static members
 
-        private static IRetryPolicy defaultRetryPolicy = new ExponentialRetryPolicy(
+        private static IRetryPolicy defaultRetryPolicy = new LinearRetryPolicy(
             transientDetector:
                 exception =>
                 {
@@ -85,10 +85,8 @@ namespace Neon.Kube
 
                     return false;
                 },
-                maxAttempts:          int.MaxValue,
-                initialRetryInterval: TimeSpan.FromSeconds(1),
-                maxRetryInterval:     TimeSpan.FromSeconds(5),
-                timeout:              TimeSpan.FromMinutes(5));
+                maxAttempts:   3,
+                retryInterval: TimeSpan.FromSeconds(1));
 
         //---------------------------------------------------------------------
         // Instance members
