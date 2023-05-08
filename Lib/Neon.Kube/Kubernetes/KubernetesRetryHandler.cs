@@ -86,7 +86,7 @@ namespace Neon.Kube
                     return false;
                 },
                 maxAttempts:   3,
-                retryInterval: TimeSpan.FromSeconds(1));
+                retryInterval: TimeSpan.FromSeconds(5));
 
         //---------------------------------------------------------------------
         // Instance members
