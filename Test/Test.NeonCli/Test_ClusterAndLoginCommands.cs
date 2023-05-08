@@ -54,6 +54,50 @@ namespace Test.NeonCli
         private const string namePrefix   = "test-neoncli";
         private const string clusterLogin = $"root@{clusterName}";
 
+        private const string awsClusterDefinition =
+$@"
+name: {clusterName}
+purpose: test
+timeSources:
+- pool.ntp.org
+kubernetes:
+  allowPodsOnControlPlane: true
+hosting:
+  environment: aws
+  aws:
+    accessKeyId: $<secret:AWS_NEONFORGE[ACCESS_KEY_ID]>
+    secretAccessKey: $<secret:AWS_NEONFORGE[SECRET_ACCESS_KEY]>
+    availabilityZone: us-west-2a
+    defaultEbsOptimized: true
+nodes:
+   node:
+     role: control-plane
+";
+
+        private const string azureClusterDefinition =
+$@"
+name: {clusterName}
+datacenter: westus2
+purpose: test
+timeSources:
+- pool.ntp.org
+kubernetes:
+  allowPodsOnControlPlane: true
+hosting:
+  environment: azure
+  azure:
+    subscriptionId: $<secret:AZURE_NEONFORGE[SUBSCRIPTION_ID]>
+    tenantId: $<secret:AZURE_NEONFORGE[TENANT_ID]>
+    clientId: $<secret:AZURE_NEONFORGE[CLIENT_ID]>
+    clientSecret: $<secret:AZURE_NEONFORGE[CLIENT_SECRET]>
+    region: westus2
+    disableProximityPlacement: false
+    defaultVmSize: Standard_D4d_v5
+nodes:
+   node:
+     role: control-plane
+";
+
         private const string hypervClusterDefinition =
 $@"
 name: {clusterName}
@@ -125,6 +169,8 @@ nodes:
         private readonly Dictionary<HostingEnvironment, string> envToDefinition =
             new Dictionary<HostingEnvironment, string>()
             {
+                { HostingEnvironment.Aws, awsClusterDefinition },
+                { HostingEnvironment.Azure, azureClusterDefinition },
                 { HostingEnvironment.HyperV, hypervClusterDefinition },
                 { HostingEnvironment.XenServer, xenServerClusterDefinition }
             };
@@ -152,6 +198,8 @@ nodes:
         }
 
         [Theory]
+        [InlineData(HostingEnvironment.Aws)]
+        [InlineData(HostingEnvironment.Azure)]
         [InlineData(HostingEnvironment.HyperV)]
         [InlineData(HostingEnvironment.XenServer)]
         [Trait(TestTrait.Category, TestTrait.Slow)]
