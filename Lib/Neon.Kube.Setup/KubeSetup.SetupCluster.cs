@@ -283,6 +283,10 @@ namespace Neon.Kube.Setup
 
                     setupState.DeploymentStatus = ClusterDeploymentStatus.Ready;
                     setupState.Save();
+
+                    // Persist additional cluster setup details to the log folder.
+
+                    CaptureClusterState(controller);
                 });
 
             //-----------------------------------------------------------------
@@ -306,12 +310,6 @@ namespace Neon.Kube.Setup
             controller.AddDisposable(cluster);
             controller.AddDisposable(desktopServiceProxy);
 
-            // Add a [Finished] event handler to the setup controller that captures additional
-            // information about the cluster including things like cluster pod status and logs
-            // from failed cluster pod containers.
-
-            controller.Finished += CaptureClusterState;
-
             // Add a [Finished] event handler that uploads cluster deployment logs and
             // details to the headend for manalysis.  Note that we don't do this when telemetry
             // is disabled or when the cluster was deployed without redaction.
@@ -334,17 +332,15 @@ namespace Neon.Kube.Setup
         }
 
         /// <summary>
-        /// Handles the <see cref="ISetupController.Finished"/> event from a cluster setup controller 
-        /// by capturing additional information about the cluster including things like cluster pod
-        /// status and logs from failed cluster pod containers and persisting that to the logs folder.
+        /// Captures additional information about the cluster including things like cluster pod status
+        /// and logs from failed cluster pod containers and persisting that to the logs folder.
         /// </summary>
-        /// <param name="sender">Passed as the sending <see cref="ISetupController"/>.</param>
-        /// <param name="e">Specifies an exception when setup failed or was cancelled, otherwise <c>null</c>.</param>
-        private static void CaptureClusterState(object sender, Exception e)
+        private static void CaptureClusterState(ISetupController controller)
         {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
             const string header = "===============================================================================";
 
-            var controller                = (SetupController<NodeDefinition>)sender;
             var clusterProxy              = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var redactedClusterDefinition = clusterProxy.SetupState.ClusterDefinition.Redact();
             var logFolder                 = KubeHelper.LogFolder;
