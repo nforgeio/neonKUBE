@@ -180,12 +180,20 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            // Verify that it looks like the cluster has already been prepared.
+            // Verify that it looks like the cluster has already been prepared or configured.
 
-            if (setupState == null || setupState.DeploymentStatus != ClusterDeploymentStatus.Prepared)
+            if (setupState == null)
             {
-                Console.Error.WriteLine($"*** ERROR: Be sure to prepare the cluster first via: neon cluster prepare...");
-                Program.Exit(1);
+                if (setupState.DeploymentStatus != ClusterDeploymentStatus.Ready)
+                {
+                    Console.Error.WriteLine($"*** WARNING: This cluster has already been deployed.");
+                    Program.Exit(0);
+                }
+                else if (setupState.DeploymentStatus != ClusterDeploymentStatus.Prepared)
+                {
+                    Console.Error.WriteLine($"*** ERROR: Be sure to prepare the cluster first via: neon cluster prepare...");
+                    Program.Exit(1);
+                }
             }
 
             // Check for conflicting clusters and remove them when allowed by the user.

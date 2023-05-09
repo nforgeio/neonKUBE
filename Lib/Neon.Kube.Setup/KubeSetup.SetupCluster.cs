@@ -286,26 +286,6 @@ namespace Neon.Kube.Setup
                 });
 
             //-----------------------------------------------------------------
-            // Check the cluster.
-
-            controller.AddNodeStep("check control-plane nodes",
-                (controller, node) =>
-                {
-                    KubeDiagnostics.CheckControlNode(node, cluster.SetupState.ClusterDefinition);
-                },
-                (controller, node) => node.Metadata.IsControlPane);
-
-            if (cluster.Workers.Count() > 0)
-            {
-                controller.AddNodeStep("check workers",
-                    (controller, node) =>
-                    {
-                        KubeDiagnostics.CheckWorker(node, cluster.SetupState.ClusterDefinition);
-                    },
-                    (controller, node) => node.Metadata.IsWorker);
-            }
-
-            //-----------------------------------------------------------------
             // Give the hosting manager a chance to perform and post setup steps.
 
             cluster.HostingManager.AddPostSetupSteps(controller);
