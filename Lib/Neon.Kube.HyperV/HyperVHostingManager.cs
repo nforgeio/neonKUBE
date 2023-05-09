@@ -1133,7 +1133,7 @@ namespace Neon.Kube.Hosting.HyperV
                         case ClusterNodeState.Running:
 
                             clusterHealth.State   = ClusterState.Healthy;
-                            clusterHealth.Summary = "Cluster is configured";
+                            clusterHealth.Summary = "Cluster is running";
                             break;
 
                         case ClusterNodeState.Off:

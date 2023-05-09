@@ -1381,13 +1381,13 @@ namespace Neon.Kube.Hosting.XenServer
                     case ClusterNodeState.Running:
 
                         clusterHealth.State   = ClusterState.Healthy;
-                        clusterHealth.Summary = "Cluster is configured";
+                        clusterHealth.Summary = "Cluster is running";
                         break;
 
                     case ClusterNodeState.Off:
 
                         clusterHealth.State   = ClusterState.Off;
-                        clusterHealth.Summary = "Cluster is turned off";
+                        clusterHealth.Summary = "Cluster is offline";
                         break;
 
                     case ClusterNodeState.NotProvisioned:
@@ -1406,7 +1406,7 @@ namespace Neon.Kube.Hosting.XenServer
 
                 if (clusterHealth.State == ClusterState.Off)
                 {
-                    clusterHealth.Summary = "Cluster is turned off";
+                    clusterHealth.Summary = "Cluster is offline";
 
                     return clusterHealth;
                 }

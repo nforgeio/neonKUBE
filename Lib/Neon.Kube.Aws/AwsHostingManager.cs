@@ -65,6 +65,7 @@ using ElbAction      = Amazon.ElasticLoadBalancingV2.Model.Action;
 using ElbTag         = Amazon.ElasticLoadBalancingV2.Model.Tag;
 using ElbTargetGroup = Amazon.ElasticLoadBalancingV2.Model.TargetGroup;
 using Neon.Kube.SSH;
+using Neon.Kube.Deployment;
 
 namespace Neon.Kube.Hosting.Aws
 {
@@ -258,32 +259,52 @@ namespace Neon.Kube.Hosting.Aws
             private string              instanceName;
 
             /// <summary>
-            /// Constructor.
+            /// Constructs an instance from a <see cref="NodeSshProxy{TMetadata}"/>.
             /// </summary>
-            /// <param name="node">The associated node proxy.</param>
+            /// <param name="nodeProxy">The associated node proxy.</param>
             /// <param name="hostingManager">The parent hosting manager.</param>
-            public AwsInstance(NodeSshProxy<NodeDefinition> node, AwsHostingManager hostingManager)
+            public AwsInstance(NodeSshProxy<NodeDefinition> nodeProxy, AwsHostingManager hostingManager)
             {
                 Covenant.Requires<ArgumentNullException>(hostingManager != null, nameof(hostingManager));
+                Covenant.Requires<ArgumentNullException>(nodeProxy != null, nameof(nodeProxy));
 
-                this.Node           = node;
+                this.NodeProxy      = nodeProxy;
                 this.hostingManager = hostingManager;
             }
 
             /// <summary>
-            /// Returns the associated node proxy.
+            /// Constructs an instance from a <see cref="NodeDeployment"/>.
             /// </summary>
-            public NodeSshProxy<NodeDefinition> Node { get; private set; }
+            /// <param name="nodeDeployment">The associated node deployment.</param>
+            /// <param name="hostingManager">The parent hosting manager.</param>
+            public AwsInstance(NodeDeployment nodeDeployment, AwsHostingManager hostingManager)
+            {
+                Covenant.Requires<ArgumentNullException>(hostingManager != null, nameof(hostingManager));
+                Covenant.Requires<ArgumentNullException>(nodeDeployment != null, nameof(nodeDeployment));
+
+                this.NodeDeployment = nodeDeployment;
+                this.hostingManager = hostingManager;
+            }
+
+            /// <summary>
+            /// Returns the associated node proxy or <c>null</c> when the cluster is already deployed.
+            /// </summary>
+            public NodeSshProxy<NodeDefinition> NodeProxy { get; private set; }
+
+            /// <summary>
+            /// Returns the associated node deployment or <c>null</c> when we're deploying the cluster.
+            /// </summary>
+            public NodeDeployment NodeDeployment { get; private set; }
 
             /// <summary>
             /// Returns the node metadata (AKA its definition).
             /// </summary>
-            public NodeDefinition Metadata => Node.Metadata;
+            public NodeDefinition Metadata => NodeProxy.Metadata;
 
             /// <summary>
             /// Returns the name of the node as defined in the cluster definition.
             /// </summary>
-            public string Name => Node.Metadata.Name;
+            public string Name => NodeProxy != null ? NodeProxy.Metadata.Name : NodeDeployment.Name;
 
             /// <summary>
             /// Returns the AWS instance ID.
@@ -309,24 +330,24 @@ namespace Neon.Kube.Hosting.Aws
                         return instanceName;
                     }
 
-                    return instanceName = hostingManager.GetResourceName($"{Node.Name}");
+                    return instanceName = hostingManager.GetResourceName(Name);
                 }
             }
 
             /// <summary>
             /// Returns the private IP address of the node.
             /// </summary>
-            public string Address => Node.Address.ToString();
+            public string Address => NodeProxy.Address.ToString();
 
             /// <summary>
             /// Returns <c>true</c> if the node is a control-plane.
             /// </summary>
-            public bool IsControlPlane => Node.Metadata.Role == NodeRole.ControlPlane;
+            public bool IsControlPlane => NodeProxy.Metadata.Role == NodeRole.ControlPlane;
 
             /// <summary>
             /// Returns <c>true</c> if the node is a worker.
             /// </summary>
-            public bool IsWorker => Node.Metadata.Role == NodeRole.Worker;
+            public bool IsWorker => NodeProxy.Metadata.Role == NodeRole.Worker;
 
             /// <summary>
             /// The external SSH port assigned to the instance.  This port is
@@ -582,11 +603,6 @@ namespace Neon.Kube.Hosting.Aws
         private const string neonClusterTagKey = neonTagKeyPrefix + "cluster";
 
         /// <summary>
-        /// Used to tag resources with the cluster environment.
-        /// </summary>
-        private const string neonEnvironmentTagKey = neonTagKeyPrefix + "environment";
-
-        /// <summary>
         /// Used to tag instances resources with the cluster node name.
         /// </summary>
         private const string neonNodeNameTagKey = neonTagKeyPrefix + "node.name";
@@ -799,7 +815,6 @@ namespace Neon.Kube.Hosting.Aws
         private ClusterProxy                        cluster;
         private string                              clusterName;
         private SetupController<NodeDefinition>     controller;
-        private string                              clusterEnvironment;
         private HostingOptions                      hostingOptions;
         private CloudOptions                        cloudOptions;
         private AwsHostingOptions                   awsOptions;
@@ -905,19 +920,18 @@ namespace Neon.Kube.Hosting.Aws
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
             Covenant.Requires<ArgumentException>(!cloudMarketplace || !string.IsNullOrEmpty(KubeVersions.BranchPart), nameof(cloudMarketplace), $"[{nameof(cloudMarketplace)}] cannot be TRUE when neonKUBE was built from a non-release branch.");
 
-            cluster.HostingManager  = this;
+            cluster.HostingManager = this;
 
-            this.cloudMarketplace   = cloudMarketplace;
-            this.cluster            = cluster;
-            this.clusterName        = cluster.Name;
-            this.clusterEnvironment = NeonHelper.EnumToString(cluster.SetupState.ClusterDefinition.Purpose);
-            this.hostingOptions     = cluster.Hosting;
-            this.cloudOptions       = hostingOptions.Cloud;
-            this.awsOptions         = hostingOptions.Aws;
-            this.networkOptions     = cluster.SetupState.ClusterDefinition.Network;
-            this.region             = awsOptions.Region;
-            this.availabilityZone   = awsOptions.AvailabilityZone;
-            this.clusterFilter      = new List<Filter>()
+            this.cloudMarketplace  = cloudMarketplace;
+            this.cluster           = cluster;
+            this.clusterName       = cluster.Name;
+            this.hostingOptions    = cluster.Hosting;
+            this.cloudOptions      = hostingOptions.Cloud;
+            this.awsOptions        = hostingOptions.Aws;
+            this.networkOptions    = cluster.SetupState?.ClusterDefinition.Network;
+            this.region            = awsOptions.Region;
+            this.availabilityZone  = awsOptions.AvailabilityZone;
+            this.clusterFilter     = new List<Filter>()
             {
                 new Filter()
                 {
@@ -926,12 +940,23 @@ namespace Neon.Kube.Hosting.Aws
                 }
             };
 
+            // Determine the resource group name for the cluster.
+
+            if (cluster.SetupState != null)
+            {
+                this.resourceGroupName = cluster.SetupState.ClusterDefinition.Deployment.GetPrefixedName(awsOptions.ResourceGroup);
+            }
+            else
+            {
+                Covenant.Assert(cluster.KubeConfig != null);
+
+                this.resourceGroupName = awsOptions.ResourceGroup.ToLowerInvariant();
+            }
+
             // Apparently, resource group names cannot start with "aws".  We'll workaround this
             // by adding an (ugly) dash prefix.
             //
             //      https://github.com/nforgeio/neonKUBE/issues/1627
-
-            this.resourceGroupName = cluster.SetupState.ClusterDefinition.Deployment.GetPrefixedName(awsOptions.ResourceGroup);
 
             if (this.resourceGroupName.StartsWith("aws", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -966,7 +991,7 @@ namespace Neon.Kube.Hosting.Aws
 
             cluster.HostingManager = this;
 
-            // Initialize the mappings between node and AWS instanc information.
+            // Initialize the mappings between node and AWS instance information.
 
             InitializeNodeDictionaries();
         }
@@ -1063,7 +1088,6 @@ namespace Neon.Kube.Hosting.Aws
 
             tagList.Add(new Tag<T>(nameTagKey, name).ToAws());
             tagList.Add(new Tag<T>(neonClusterTagKey, clusterName).ToAws());
-            tagList.Add(new Tag<T>(neonEnvironmentTagKey, clusterEnvironment).ToAws());
 
             if (cluster.SetupState.ClusterDefinition.ResourceTags != null)
             {
@@ -1140,30 +1164,35 @@ namespace Neon.Kube.Hosting.Aws
         }
 
         /// <summary>
-        /// Initializes the node mdictionaries: <see cref="nodeNameToAwsInstance"/> and <see cref="instanceNameToAwsInstance"/>.
+        /// Initializes the node dictionaries: <see cref="nodeNameToAwsInstance"/> and <see cref="instanceNameToAwsInstance"/>.
         /// </summary>
         private void InitializeNodeDictionaries()
         {
             // Initialize the instance/node mapping dictionaries and also ensure
             // that each node has reasonable AWS node options.
 
-            this.nodeNameToAwsInstance = new Dictionary<string, AwsInstance>(StringComparer.InvariantCultureIgnoreCase);
-
-            foreach (var node in cluster.Nodes)
+            if (cluster.SetupState != null)
             {
-                nodeNameToAwsInstance.Add(node.Name, new AwsInstance(node, this));
+                this.nodeNameToAwsInstance = new Dictionary<string, AwsInstance>(StringComparer.InvariantCultureIgnoreCase);
 
-                if (node.Metadata.Aws == null)
+                // Cluster deployment mode: initialize from the cluster definition.
+
+                foreach (var node in cluster.Nodes)
                 {
-                    node.Metadata.Aws = new AwsNodeOptions();
+                    nodeNameToAwsInstance.Add(node.Name, new AwsInstance(node, this));
+
+                    if (node.Metadata.Aws == null)
+                    {
+                        node.Metadata.Aws = new AwsNodeOptions();
+                    }
                 }
-            }
 
-            this.instanceNameToAwsInstance = new Dictionary<string, AwsInstance>();
+                this.instanceNameToAwsInstance = new Dictionary<string, AwsInstance>();
 
-            foreach (var instanceInfo in nodeNameToAwsInstance.Values)
-            {
-                instanceNameToAwsInstance.Add(instanceInfo.InstanceName, instanceInfo);
+                foreach (var instanceInfo in nodeNameToAwsInstance.Values)
+                {
+                    instanceNameToAwsInstance.Add(instanceInfo.InstanceName, instanceInfo);
+                }
             }
         }
 
@@ -1181,7 +1210,7 @@ namespace Neon.Kube.Hosting.Aws
 
             var operation = $"Provisioning [{cluster.Name}] on AWS [{availabilityZone}/{resourceGroupName}]";
 
-            controller.AddGlobalStep("AWS connect", ConnectAwsAsync);
+            controller.AddGlobalStep("AWS connect", controller => ConnectAwsAsync(controller));
             controller.AddGlobalStep("region check", VerifyRegionAndInstanceTypesAsync);
             controller.AddGlobalStep("locate node image", LocateNodeImageAsync);
             controller.AddGlobalStep("resource group", CreateResourceGroupAsync);
@@ -1525,6 +1554,7 @@ namespace Neon.Kube.Hosting.Aws
         {
             await SyncContext.Clear;
 
+            //-----------------------------------------------------------------
             // Resource group
 
             try
@@ -1555,6 +1585,7 @@ namespace Neon.Kube.Hosting.Aws
                 ValidateResourceGroupQuery(groupQueryResponse.GroupQuery);
             }
 
+            //-----------------------------------------------------------------
             // Elastic IPs
 
             if (awsOptions.Network.HasCustomElasticIPs)
@@ -1598,6 +1629,7 @@ namespace Neon.Kube.Hosting.Aws
                 egressAddress  = await GetElasticIpAsync(egressAddressName);
             }
 
+            //-----------------------------------------------------------------
             // VPC and it's default network ACL.
 
             var vpcPaginator = ec2Client.Paginators.DescribeVpcs(new DescribeVpcsRequest() { Filters = clusterFilter });
@@ -1612,6 +1644,7 @@ namespace Neon.Kube.Hosting.Aws
                 }
             }
 
+            //-----------------------------------------------------------------
             // Security Groups
 
             var securityGroupPagenator = ec2Client.Paginators.DescribeSecurityGroups(new DescribeSecurityGroupsRequest() { Filters = clusterFilter });
@@ -1626,6 +1659,7 @@ namespace Neon.Kube.Hosting.Aws
                 }
             }
 
+            //-----------------------------------------------------------------
             // Public and node subnets
 
             var subnetPaginator = ec2Client.Paginators.DescribeSubnets(new DescribeSubnetsRequest() { Filters = clusterFilter });
@@ -1649,6 +1683,7 @@ namespace Neon.Kube.Hosting.Aws
                 }
             }
 
+            //-----------------------------------------------------------------
             // Subnet route tables
 
             var routeTablePagenator = ec2Client.Paginators.DescribeRouteTables(new DescribeRouteTablesRequest() { Filters = clusterFilter });
@@ -1672,19 +1707,23 @@ namespace Neon.Kube.Hosting.Aws
                 }
             }
 
+            //-----------------------------------------------------------------
             // Internet and NAT Gateways
 
             internetGateway = await GetInternetGatewayAsync();
             natGateway      = await GetNatGatewayAsync();
 
+            //-----------------------------------------------------------------
             // Load Balancer
 
             loadBalancer = await GetLoadBalancerAsync();
 
+            //-----------------------------------------------------------------
             // Load balancer target groups.
 
             await LoadElbTargetGroupsAsync();
 
+            //-----------------------------------------------------------------
             // Placement groups
 
             var placementGroupPaginator = await ec2Client.DescribePlacementGroupsAsync(new DescribePlacementGroupsRequest() { Filters = clusterFilter });
@@ -1706,34 +1745,88 @@ namespace Neon.Kube.Hosting.Aws
                 }
             }
 
+            //-----------------------------------------------------------------
             // Instances
 
             var instancePaginator = ec2Client.Paginators.DescribeInstances(new DescribeInstancesRequest() { Filters = clusterFilter });
 
-            await foreach (var reservation in instancePaginator.Reservations)
+            if (cluster.SetupState == null)
             {
-                // Note that terminated instances will show up for a while, so we
-                // need to ignore them.
+                // [instanceNameToAwsInstance] and [nodeNameToAwsInstance] won't be initialized by
+                // default when we're not deploying a cluster.  We'll need to construct this using
+                // deployment information retrieved from AWS node tags.
 
-                foreach (var instance in reservation.Instances
-                    .Where(instance => instance.State.Name.Value != InstanceStateName.Terminated))
+                Covenant.Assert(cluster.SetupState == null);
+
+                nodeNameToAwsInstance     = new Dictionary<string, AwsInstance>();
+                instanceNameToAwsInstance = new Dictionary<string, AwsInstance>();
+
+                await foreach (var reservation in instancePaginator.Reservations)
                 {
-                    var name        = instance.Tags.SingleOrDefault(tag => tag.Key == nameTagKey)?.Value;
-                    var cluster     = instance.Tags.SingleOrDefault(tag => tag.Key == neonClusterTagKey)?.Value;
-                    var awsInstance = (AwsInstance)null;
+                    // Note that terminated instances hang around for a while, so we need to ignore them.
 
-                    if (name != null && cluster == clusterName && instanceNameToAwsInstance.TryGetValue(name, out awsInstance))
+                    foreach (var instance in reservation.Instances
+                        .Where(instance => instance.State.Name.Value != InstanceStateName.Terminated))
                     {
-                        awsInstance.Instance = instance;
+                        var name     = instance.Tags.SingleOrDefault(tag => tag.Key == nameTagKey)?.Value;
+                        var nodeName = instance.Tags.SingleOrDefault(tag => tag.Key == neonNodeNameTagKey)?.Value;
+                        var cluster  = instance.Tags.SingleOrDefault(tag => tag.Key == neonClusterTagKey)?.Value;
+
+                        if (name == null && nodeName == null && cluster != clusterName)
+                        {
+                            // Ignore instances that don't make sense to be safe.
+
+                            continue;
+                        }
+
+                        var awsInstance = new AwsInstance(new NodeDeployment() { Name = nodeName }, this)
+                        {
+                            Instance = instance
+                        };
+
+                        // Retrieve the external SSH port for the instance from the instance tag.
+
+                        var sshPortString = instance.Tags.SingleOrDefault(tag => tag.Key == neonNodeSshTagKey)?.Value;
+
+                        if (!string.IsNullOrEmpty(sshPortString) && int.TryParse(sshPortString, out var sshPort) && NetHelper.IsValidPort(sshPort))
+                        {
+                            awsInstance.ExternalSshPort = sshPort;
+                        }
+
+                        nodeNameToAwsInstance.Add(nodeName, awsInstance);
+                        instanceNameToAwsInstance.Add(awsInstance.InstanceName, awsInstance);
                     }
+                }
+            }
+            else
+            {
+                // [instanceNameToAwsInstance] and [nodeNameToAwsInstance] will be initialized when
+                // we're deploying a cluster.
 
-                    // Retrieve the external SSH port for the instance from the instance tag.
+                await foreach (var reservation in instancePaginator.Reservations)
+                {
+                    // Note that terminated instances  hang around for a while, so we need to ignore them.
 
-                    var sshPortString = instance.Tags.SingleOrDefault(tag => tag.Key == neonNodeSshTagKey)?.Value;
-
-                    if (!string.IsNullOrEmpty(sshPortString) && int.TryParse(sshPortString, out var sshPort) && NetHelper.IsValidPort(sshPort))
+                    foreach (var instance in reservation.Instances
+                        .Where(instance => instance.State.Name.Value != InstanceStateName.Terminated))
                     {
-                        awsInstance.ExternalSshPort = sshPort;
+                        var name        = instance.Tags.SingleOrDefault(tag => tag.Key == nameTagKey)?.Value;
+                        var cluster     = instance.Tags.SingleOrDefault(tag => tag.Key == neonClusterTagKey)?.Value;
+                        var awsInstance = (AwsInstance)null;
+
+                        if (name != null && cluster == clusterName && instanceNameToAwsInstance.TryGetValue(name, out awsInstance))
+                        {
+                            awsInstance.Instance = instance;
+                        }
+
+                        // Retrieve the external SSH port for the instance from the instance tag.
+
+                        var sshPortString = instance.Tags.SingleOrDefault(tag => tag.Key == neonNodeSshTagKey)?.Value;
+
+                        if (!string.IsNullOrEmpty(sshPortString) && int.TryParse(sshPortString, out var sshPort) && NetHelper.IsValidPort(sshPort))
+                        {
+                            awsInstance.ExternalSshPort = sshPort;
+                        }
                     }
                 }
             }
@@ -3524,7 +3617,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 .ToList();
 
             var targetIngressNodes = SortedControlThenWorkerNodes
-                .Where(awsInstance => awsInstance.Node.Metadata.Ingress)
+                .Where(awsInstance => awsInstance.NodeProxy.Metadata.Ingress)
                 .Select(awsInstance => new TargetDescription() { Id = awsInstance.InstanceId })
                 .ToList();
 
@@ -3985,6 +4078,16 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             // We're going to infer the cluster provisiong status by examining the
             // cluster login and the state of the VMs deployed to AWS.
 
+            if (instanceNameToAwsInstance.Count == 0)
+            {
+                // Looks like the cluster isn't running.
+
+                clusterHealth.State   = ClusterState.Off;
+                clusterHealth.Summary = "Cluster is offline.";
+
+                return clusterHealth;
+            }
+
             var contextName = $"root@{cluster.Name}";   // $todo(jefflill): Hardcoding this breaks SSO login (probably need to add context name to ClusterProxy).
             var context     = KubeHelper.KubeConfig.GetContext(contextName);
 
@@ -3995,89 +4098,72 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
             foreach (var item in instanceNameToAwsInstance)
             {
-                var nodeDefinition = VmNameToNodeDefinition(item.Key);
-
-                if (nodeDefinition != null)
-                {
-                    existingNodes.Add(nodeDefinition.Name);
-                }
+                existingNodes.Add(item.Value.Name);
             }
 
             // Build the cluster status.
 
-            if (context == null)
+            IEnumerable<string> nodeNames;
+
+            if (cluster.SetupState != null)
             {
-                // The Kubernetes context for this cluster doesn't exist, so we know that any
-                // virtual machines with names matching the virtual machines that would be
-                // provisioned for the cluster definition are conflicting.
-
-                clusterHealth.State   = ClusterState.NotFound;
-                clusterHealth.Summary = "Cluster does not exist";
-
-                foreach (var node in cluster.SetupState.ClusterDefinition.NodeDefinitions.Values)
-                {
-                    clusterHealth.Nodes.Add(node.Name, existingNodes.Contains(node.Name) ? ClusterNodeState.Conflict : ClusterNodeState.NotProvisioned);
-                }
-
-                return clusterHealth;
+                nodeNames = cluster.SetupState.ClusterDefinition.NodeDefinitions.Values.Select(nodeDefinition => nodeDefinition.Name);
             }
             else
             {
-                // We're going to assume that all virtual machines that match cluster node names
-                // (after stripping off any cluster prefix) belong to the cluster and we'll
-                // map the actual VM states to public node states.
+                nodeNames = nodeNameToAwsInstance.Keys;
+            }
 
-                foreach (var node in cluster.SetupState.ClusterDefinition.NodeDefinitions.Values)
+            foreach (var nodeName in nodeNames)
+            {
+                var nodeState = ClusterNodeState.NotProvisioned;
+
+                if (existingNodes.Contains(nodeName))
                 {
-                    var nodeState = ClusterNodeState.NotProvisioned;
-
-                    if (existingNodes.Contains(node.Name))
+                    if (nodeNameToAwsInstance.TryGetValue(nodeName, out var awsInstance))
                     {
-                        if (nodeNameToAwsInstance.TryGetValue(node.Name, out var awsInstance))
+                        var stateCode = InstanceStateCode.GetCode(awsInstance.Instance.State.Code);
+
+                        switch (stateCode)
                         {
-                            var stateCode = InstanceStateCode.GetCode(awsInstance.Instance.State.Code);
+                            case InstanceStateCode.Pending:
 
-                            switch (stateCode)
-                            {
-                                case InstanceStateCode.Pending:
-
-                                    nodeState = ClusterNodeState.Starting;
-                                    break;
+                                nodeState = ClusterNodeState.Starting;
+                                break;
                                     
-                                case InstanceStateCode.Running:
+                            case InstanceStateCode.Running:
 
-                                    nodeState = ClusterNodeState.Running;
-                                    break;
+                                nodeState = ClusterNodeState.Running;
+                                break;
 
-                                case InstanceStateCode.Stopping:
-                                case InstanceStateCode.ShuttingDown:
+                            case InstanceStateCode.Stopping:
+                            case InstanceStateCode.ShuttingDown:
 
-                                    // We don't currently have a status for stopping a node so we'll
-                                    // consider it to be running because technically, it still is.
+                                // We don't currently have a status for stopping a node so we'll
+                                // consider it to be running because technically, it still is.
 
-                                    nodeState = ClusterNodeState.Running;
-                                    break;
+                                nodeState = ClusterNodeState.Running;
+                                break;
 
-                                case InstanceStateCode.Stopped:
+                            case InstanceStateCode.Stopped:
 
-                                    nodeState = ClusterNodeState.Off;
-                                    break;
+                                nodeState = ClusterNodeState.Off;
+                                break;
 
-                                case InstanceStateCode.Terminated:
+                            case InstanceStateCode.Terminated:
 
-                                    nodeState = ClusterNodeState.NotProvisioned;
-                                    break;
+                                nodeState = ClusterNodeState.NotProvisioned;
+                                break;
 
-                                default:
+                            default:
 
-                                    Covenant.Assert(false, () => $"Unexpected node instance status: [{stateCode}]");
-                                    break;
-                            }
+                                Covenant.Assert(false, () => $"Unexpected node instance status: [{stateCode}]");
+                                break;
                         }
                     }
-
-                    clusterHealth.Nodes.Add(node.Name, nodeState);
                 }
+
+                clusterHealth.Nodes.Add(nodeName, nodeState);
 
                 // We're going to examine the node states from the AWS perspective and
                 // short-circuit the Kubernetes level cluster health check when the cluster
@@ -4086,9 +4172,9 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
                 var commonNodeState = clusterHealth.Nodes.Values.First();
 
-                foreach (var nodeState in clusterHealth.Nodes.Values)
+                foreach (var nodeState2 in clusterHealth.Nodes.Values)
                 {
-                    if (nodeState != commonNodeState)
+                    if (nodeState2 != commonNodeState)
                     {
                         // Nodes have differing states so we're going to consider the cluster
                         // to be transitioning.
@@ -4099,7 +4185,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                     }
                 }
 
-                if (cluster.SetupState.DeploymentStatus != ClusterDeploymentStatus.Ready)
+                if (cluster.SetupState != null && cluster.SetupState.DeploymentStatus != ClusterDeploymentStatus.Ready)
                 {
                     clusterHealth.State   = ClusterState.Configuring;
                     clusterHealth.Summary = "Cluster is partially configured";
@@ -4120,14 +4206,14 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                         case ClusterNodeState.Running:
 
                             clusterHealth.State   = ClusterState.Healthy;
-                            clusterHealth.Summary = "Cluster is configured";
+                            clusterHealth.Summary = "Cluster is running";
                             break;
 
                         case ClusterNodeState.Paused:
                         case ClusterNodeState.Off:
 
                             clusterHealth.State   = ClusterState.Off;
-                            clusterHealth.Summary = "Cluster is turned off";
+                            clusterHealth.Summary = "Cluster is offline";
                             break;
 
                         case ClusterNodeState.NotProvisioned:
@@ -4147,13 +4233,13 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
                 if (clusterHealth.State == ClusterState.Off)
                 {
-                    clusterHealth.Summary = "Cluster is turned off";
+                    clusterHealth.Summary = "Cluster is offline";
 
                     return clusterHealth;
                 }
-
-                return clusterHealth;
             }
+
+            return clusterHealth;
         }
 
         /// <inheritdoc/>
@@ -4161,8 +4247,6 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
         {
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");
-
-            // Connect to AWS and read any cluster resources.
 
             await ConnectAwsAsync();
 
@@ -4193,8 +4277,6 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");
 
-            // Connect to AWS and read any cluster resources.
-
             await ConnectAwsAsync();
 
             // We just need to stop all cluster instances.
@@ -4223,8 +4305,6 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
         {
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");
-
-            // Connect to AWS and read any cluster resources.
 
             await ConnectAwsAsync();
 

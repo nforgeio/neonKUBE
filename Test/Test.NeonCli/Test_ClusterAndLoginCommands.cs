@@ -596,6 +596,8 @@ nodes:
                     //-------------------------------------------------------------
                     // Remove the test cluster in case it wasn't removed above
 
+                    KubeHelper.KubeConfig.Reload();
+
                     if (!debugMode && KubeHelper.KubeConfig.Clusters.Any(cluster => cluster.Name == clusterName))
                     {
                         (await NeonCliAsync("cluster", "delete", "--force", clusterName)).EnsureSuccess();

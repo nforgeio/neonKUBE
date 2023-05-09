@@ -77,7 +77,7 @@ namespace Neon.Kube.Deployment
         public string Address { get; set; }
 
         /// <summary>
-        /// Hypervisor hosting related options for environments like Hyper-V and XenServer.
+        /// Optionally specifies hypervisor hosting related options for environments like Hyper-V and XenServer.
         /// </summary>
         [JsonProperty(PropertyName = "Hypervisor", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "hypervisor", ApplyNamingConventions = false)]

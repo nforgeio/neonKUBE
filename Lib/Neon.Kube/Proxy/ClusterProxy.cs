@@ -23,8 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.NetworkInformation;
-using System.Runtime.CompilerServices;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -80,7 +79,7 @@ namespace Neon.Kube.Proxy
             /// <summary>
             /// <para>
             /// Only cluster lifecycle operations like <see cref="StartAsync()"/>, <see cref="StopAsync(StopMode)"/>,
-            /// amd <see cref="DeleteClusterAsync(bool)"/> will be enabled.
+            /// and <see cref="DeleteClusterAsync()"/> will be enabled.
             /// </para>
             /// <note>
             /// These life cycle methods do not required a URI or file reference to a node image.
@@ -162,6 +161,8 @@ namespace Neon.Kube.Proxy
             await cluster.InitializeAsync();
 
             cluster.Name           = kubeConfig.Cluster.Name;
+            cluster.Id             = kubeConfig.Cluster.ClusterInfo.ClusterId;
+            cluster.Domain         = kubeConfig.Cluster.ClusterInfo.ClusterDomain;
             cluster.HostingManager = cluster.GetHostingManager(hostingManagerFactory, cloudMarketplace, operation, KubeHelper.LogFolder);
 
             return cluster;
@@ -234,6 +235,8 @@ namespace Neon.Kube.Proxy
             await cluster.InitializeAsync();
 
             cluster.Name           = setupState.ClusterDefinition.Name;
+            cluster.Id             = setupState.ClusterId;
+            cluster.Domain         = setupState.ClusterDomain;
             cluster.Hosting        = setupState.ClusterDefinition.Hosting;
             cluster.HostingManager = cluster.GetHostingManager(hostingManagerFactory, cloudMarketplace, operation, KubeHelper.LogFolder);
 
@@ -248,7 +251,6 @@ namespace Neon.Kube.Proxy
         private NodeProxyCreator                            nodeProxyCreator;
         private string                                      nodeImageUri;
         private string                                      nodeImagePath;
-        private ClusterDeployment                           clusterDeployment;
         private NodeSshProxy<NodeDefinition>                deploymentControlNode;
         private IReadOnlyList<NodeSshProxy<NodeDefinition>> nodes;
         private IKubernetes                                 cachedK8s;
@@ -459,12 +461,12 @@ namespace Neon.Kube.Proxy
         /// <summary>
         /// Returns the cluster ID.
         /// </summary>
-        public string Id => SetupState != null ? SetupState.ClusterId : clusterDeployment.ClusterId;
+        public string Id { get; private set; }
 
         /// <summary>
         /// Returns the cluster domain.
         /// </summary>
-        public string Domain => SetupState != null ? SetupState.ClusterDomain : clusterDeployment.ClusterDomain;
+        public string Domain { get; private set; }
 
         /// <summary>
         /// Returns the cluster hosting options.
@@ -809,6 +811,60 @@ namespace Neon.Kube.Proxy
 
                     return cachedK8s;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Queries the cluster to determine whether it's online.
+        /// </summary>
+        /// <returns><c>true</c> when the cluster reports that it's ready.</returns>
+        public async Task<bool> IsClusterReadyAsync()
+        {
+            // [HttpClient] takes around 20 seconds to realize that it can't establish a connection
+            // with a remote endpoint.  This, combined with the retry policy, means that it may take
+            // over a minute to detect that the cluster API is not available.
+            //
+            // We're going to try establishing a socket connection first to detect this quicker.
+
+            // $note(jefflill):
+            //
+            // Note that the ~20 second connection timeout appears to be coming at the socket
+            // level, so we can't reduce that without hacking up another thread (which I don't
+            // want to do.  At least this is better than waiting for a retry policy to barf.
+
+            var baseUri   = K8s.BaseUri;
+            var addresses = await Dns.GetHostAddressesAsync(baseUri.Host);
+
+            if (addresses.Length == 0)
+            {
+                // DNS lookup failed.
+
+                return false;
+            }
+
+            try
+            {
+                using (var socket = new Socket(SocketType.Stream, ProtocolType.Tcp))
+                {
+                    await socket.ConnectAsync(addresses.First(), baseUri.Port);
+                }
+            }
+            catch
+            {
+                return false;
+            }
+
+            // Query the cluster API server's ready endpoint.
+
+            try
+            {
+                var response = await ((Kubernetes)K8s).HttpClient.GetAsync($"{baseUri}readyz");
+
+                return response.StatusCode == HttpStatusCode.OK;
+            }
+            catch (HttpRequestException)
+            {
+                return false;
             }
         }
 

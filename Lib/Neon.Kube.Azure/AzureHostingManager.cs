@@ -824,7 +824,6 @@ namespace Neon.Kube.Hosting.Azure
         private ClusterProxy                                cluster;
         private string                                      clusterName;
         private SetupController<NodeDefinition>             controller;
-        private string                                      clusterEnvironment;
         private HostingOptions                              hostingOptions;
         private CloudOptions                                cloudOptions;
         private bool                                        prefixResourceNames;
@@ -917,7 +916,6 @@ namespace Neon.Kube.Hosting.Azure
             this.cloudMarketplace      = cloudMarketplace;
             this.cluster               = cluster;
             this.clusterName           = cluster.Name;
-            this.clusterEnvironment    = NeonHelper.EnumToString(cluster.SetupState.ClusterDefinition.Purpose);
             this.hostingOptions        = cluster.Hosting;
             this.cloudOptions          = hostingOptions.Cloud;
             this.azureOptions          = hostingOptions.Azure;
@@ -3371,14 +3369,14 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
                         case ClusterNodeState.Running:
 
                             clusterHealth.State   = ClusterState.Healthy;
-                            clusterHealth.Summary = "Cluster is configured";
+                            clusterHealth.Summary = "Cluster is running";
                             break;
 
                         case ClusterNodeState.Paused:
                         case ClusterNodeState.Off:
 
                             clusterHealth.State   = ClusterState.Off;
-                            clusterHealth.Summary = "Cluster is turned off";
+                            clusterHealth.Summary = "Cluster is offline";
                             break;
 
                         case ClusterNodeState.NotProvisioned:
@@ -3398,7 +3396,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
 
                 if (clusterHealth.State == ClusterState.Off)
                 {
-                    clusterHealth.Summary = "Cluster is turned off";
+                    clusterHealth.Summary = "Cluster is offline";
 
                     return clusterHealth;
                 }
