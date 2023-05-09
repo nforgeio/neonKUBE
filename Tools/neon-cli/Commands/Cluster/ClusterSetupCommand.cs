@@ -180,11 +180,16 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            // Verify that it looks like the cluster has already been prepared or configured.
+            // Verify that it looks like the cluster has already been prepared or deployed.
 
             if (setupState == null)
             {
-                if (setupState.DeploymentStatus != ClusterDeploymentStatus.Ready)
+                Console.Error.WriteLine($"*** ERROR: This cluster has not been prepared yet.");
+                Program.Exit(1);
+            }
+            else
+            {
+                if (setupState.DeploymentStatus == ClusterDeploymentStatus.Ready)
                 {
                     Console.Error.WriteLine($"*** WARNING: This cluster has already been deployed.");
                     Program.Exit(0);

@@ -70,6 +70,7 @@ using PublicIPAddressSku     = Azure.ResourceManager.Network.Models.PublicIPAddr
 using PublicIPAddressSkuName = Azure.ResourceManager.Network.Models.PublicIPAddressSkuName;
 using PublicIPAddressSkuTier = Azure.ResourceManager.Network.Models.PublicIPAddressSkuTier;
 using Neon.Kube.SSH;
+using Neon.Kube.Deployment;
 
 namespace Neon.Kube.Hosting.Azure
 {
@@ -218,47 +219,68 @@ namespace Neon.Kube.Hosting.Azure
             private AzureHostingManager hostingManager;
 
             /// <summary>
-            /// Constructor.
+            /// Constructs an instance from a <see cref="NodeSshProxy{TMetadata}"/> (used during cluster deployment).
             /// </summary>
-            /// <param name="node">The associated node proxy.</param>
+            /// <param name="nodeProxy">The associated node proxy.</param>
             /// <param name="hostingManager">The parent hosting manager.</param>
-            public AzureVm(NodeSshProxy<NodeDefinition> node, AzureHostingManager hostingManager)
+            public AzureVm(NodeSshProxy<NodeDefinition> nodeProxy, AzureHostingManager hostingManager)
             {
                 Covenant.Requires<ArgumentNullException>(hostingManager != null, nameof(hostingManager));
+                Covenant.Requires<ArgumentNullException>(nodeProxy != null, nameof(nodeProxy));
 
-                this.Node           = node;
+                this.NodeProxy      = nodeProxy;
                 this.hostingManager = hostingManager;
             }
 
             /// <summary>
-            /// Returns the associated node proxy.
+            /// Constructs an instance from a <see cref="NodeDeployment"/> (used after cluster deployment).
             /// </summary>
-            public NodeSshProxy<NodeDefinition> Node { get; private set; }
+            /// <param name="nodeDeployment">The associated node deployment.</param>
+            /// <param name="hostingManager">The parent hosting manager.</param>
+            public AzureVm(NodeDeployment nodeDeployment, AzureHostingManager hostingManager)
+            {
+                Covenant.Requires<ArgumentNullException>(hostingManager != null, nameof(hostingManager));
+                Covenant.Requires<ArgumentNullException>(nodeDeployment != null, nameof(nodeDeployment));
+
+                this.NodeDeployment = nodeDeployment;
+                this.hostingManager = hostingManager;
+            }
+
+            /// <summary>
+            /// Returns the associated node proxy when we're deploying the cluster,
+            /// <c>null</c> when the cluster has already been deployed.
+            /// </summary>
+            public NodeSshProxy<NodeDefinition> NodeProxy { get; private set; }
+
+            /// <summary>
+            /// Returns the associated node deployment or <c>null</c> when we're deploying the cluster.
+            /// </summary>
+            public NodeDeployment NodeDeployment { get; private set; }
 
             /// <summary>
             /// Returns the node metadata (AKA its definition).
             /// </summary>
-            public NodeDefinition Metadata => Node.Metadata;
+            public NodeDefinition Metadata => NodeProxy.Metadata;
 
             /// <summary>
             /// Returns the name of the node as defined in the cluster definition.
             /// </summary>
-            public string Name => Node.Metadata.Name;
+            public string Name => NodeProxy != null ? NodeProxy.Metadata.Name : NodeDeployment.Name;
 
             /// <summary>
             /// Returns the name of the Azure VM for this node.
             /// </summary>
-            public string VmName => hostingManager.GetResourceName("vm", Node.Name);
+            public string VmName => hostingManager.GetResourceName("vm", NodeProxy.Name);
 
             /// <summary>
             /// Returns the private IP address of the node.
             /// </summary>
-            public string Address => Node.Metadata.Address;
+            public string Address => NodeProxy.Metadata.Address;
 
             /// <summary>
             /// Returns the Azure VM size name (AKA SKU) for the node.
             /// </summary>
-            public string VmSize => Node.Metadata.Azure.VmSize;
+            public string VmSize => NodeProxy.Metadata.Azure.VmSize;
 
             /// <summary>
             /// The associated Azure VM.
@@ -273,12 +295,12 @@ namespace Neon.Kube.Hosting.Azure
             /// <summary>
             /// Returns <c>true</c> if the node is a control-plane.
             /// </summary>
-            public bool IsControlPlane => Node.Metadata.Role == NodeRole.ControlPlane;
+            public bool IsControlPlane => NodeProxy.Metadata.Role == NodeRole.ControlPlane;
 
             /// <summary>
             /// Returns <c>true</c> if the node is a worker.
             /// </summary>
-            public bool IsWorker => Node.Metadata.Role == NodeRole.Worker;
+            public bool IsWorker => NodeProxy.Metadata.Role == NodeRole.Worker;
 
             /// <summary>
             /// The Azure availability set hosting this node.
@@ -599,11 +621,6 @@ namespace Neon.Kube.Hosting.Azure
         private const string neonClusterTagKey = neonTagKeyPrefix + "cluster";
 
         /// <summary>
-        /// Used to tag resources with the cluster environment.
-        /// </summary>
-        private const string neonEnvironmentTagKey = neonTagKeyPrefix + "environment";
-
-        /// <summary>
         /// Used to tag VM resources with the cluster node name.
         /// </summary>
         private const string neonNodeNameTagKey = neonTagKeyPrefix + "node.name";
@@ -835,8 +852,8 @@ namespace Neon.Kube.Hosting.Azure
         private SubscriptionResource                        subscription;
         private ImageReference                              nodeImageRef;
         private ComputePlan                                 nodeImagePlan;
-        private readonly Dictionary<string, AzureVm>        nameToVm;
-        private Dictionary<string, VmSku>                   nameToVmSku;
+        private Dictionary<string, AzureVm>                 nodeNameToVm;
+        private Dictionary<string, VmSku>                   nodeNameToVmSku;
 
         // These names will be used to identify the cluster resources.
 
@@ -920,11 +937,36 @@ namespace Neon.Kube.Hosting.Azure
             this.cloudOptions          = hostingOptions.Cloud;
             this.azureOptions          = hostingOptions.Azure;
             this.cloudOptions          = hostingOptions.Cloud;
-            this.networkOptions        = cluster.SetupState.ClusterDefinition.Network;
+            this.networkOptions        = cluster.SetupState?.ClusterDefinition.Network;
             this.nameToAvailabilitySet = new Dictionary<string, AvailabilitySetResource>(StringComparer.InvariantCultureIgnoreCase);
             this.region                = azureOptions.Region;
             this.azureLocation         = new AzureLocation(azureOptions.Region);
-            this.resourceGroupName     = cluster.SetupState.ClusterDefinition.Deployment.GetPrefixedName(azureOptions.ResourceGroup ?? $"neon-{clusterName}");
+
+            // Determine the resource group name for the cluster and perform any other
+            // initialization based on whether the cluster is being deployed or not.
+
+            if (cluster.SetupState != null)
+            {
+                this.resourceGroupName = cluster.SetupState.ClusterDefinition.Deployment.GetPrefixedName(azureOptions.ResourceGroup);
+
+                nodeNameToVm = new Dictionary<string, AzureVm>(StringComparer.InvariantCultureIgnoreCase);
+
+                foreach (var nodeProxy in cluster.Nodes)
+                {
+                    nodeNameToVm.Add(nodeProxy.Name, new AzureVm(nodeProxy, this));
+                }
+            }
+            else
+            {
+                Covenant.Assert(cluster.KubeConfig != null);
+
+                this.resourceGroupName = azureOptions.ResourceGroup.ToLowerInvariant();
+            }
+
+            // Determine whether we're going to prefix the cluster resource names.
+            // We default to not doing this for Azure because all resources will
+            //already be scoped to the cluster resource group and having shorter
+            // names is nicer.
 
             switch (cloudOptions.PrefixResourceNames)
             {
@@ -968,20 +1010,6 @@ namespace Neon.Kube.Hosting.Azure
             this.loadbalancerIngressBackendName      = "ingress-nodes";
             this.loadbalancerControlPlaneBackendName = "control-plane";
 
-            // Initialize the vm/node mapping dictionary and also ensure
-            // that each node has reasonable Azure node options.
-
-            this.nameToVm = new Dictionary<string, AzureVm>(StringComparer.InvariantCultureIgnoreCase);
-
-            foreach (var node in cluster.Nodes)
-            {
-                nameToVm.Add(node.Name, new AzureVm(node, this));
-
-                if (node.Metadata.Azure == null)
-                {
-                    node.Metadata.Azure = new AzureNodeOptions();
-                }
-            }
 
             // This identifies the cluster manager instance with the cluster proxy
             // so that the proxy can have the hosting manager perform some operations
@@ -1008,7 +1036,7 @@ namespace Neon.Kube.Hosting.Azure
         /// <summary>
         /// Enumerates the cluster nodes in no particular order.
         /// </summary>
-        private IEnumerable<AzureVm> Nodes => nameToVm.Values;
+        private IEnumerable<AzureVm> Nodes => nodeNameToVm.Values;
 
         /// <summary>
         /// Enumerates the cluster nodes in ascending order by name.
@@ -1077,7 +1105,7 @@ namespace Neon.Kube.Hosting.Azure
         }
 
         /// <summary>
-        /// Adds standard tags to a resource's tag dictionary as well as any optional tages passed.
+        /// Adds standard tags to a resource's tag dictionary as well as any optional tags passed.
         /// </summary>
         /// <param name="resource">The resource data being tagged.</param>
         /// <param name="tags">Specifies any optional tags.</param>
@@ -1087,8 +1115,7 @@ namespace Neon.Kube.Hosting.Azure
         {
             Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
 
-            resource.Tags[neonClusterTagKey]     = clusterName;
-            resource.Tags[neonEnvironmentTagKey] = NeonHelper.EnumToString(cluster.SetupState.ClusterDefinition.Purpose);
+            resource.Tags[neonClusterTagKey] = clusterName;
 
             foreach (var tag in tags)
             {
@@ -1099,7 +1126,7 @@ namespace Neon.Kube.Hosting.Azure
         }
 
         /// <summary>
-        /// Adds standard tags to a network resource's tag dictionary as well as any optional tages passed.
+        /// Adds standard tags to a network resource's tag dictionary as well as any optional tags passed.
         /// </summary>
         /// <param name="resource">The resource data being tagged.</param>
         /// <param name="tags">Specifies any optional tags.</param>
@@ -1109,8 +1136,7 @@ namespace Neon.Kube.Hosting.Azure
         {
             Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
 
-            resource.Tags[neonClusterTagKey]     = clusterName;
-            resource.Tags[neonEnvironmentTagKey] = NeonHelper.EnumToString(cluster.SetupState.ClusterDefinition.Purpose);
+            resource.Tags[neonClusterTagKey] = clusterName;
 
             foreach (var tag in tags)
             {
@@ -1208,7 +1234,7 @@ namespace Neon.Kube.Hosting.Azure
                             break;  // Not a cluster VM
                         }
 
-                        if (!nameToVm.TryGetValue(nodeName, out var azureVm))
+                        if (!nodeNameToVm.TryGetValue(nodeName, out var azureVm))
                         {
                             // $todo(jefflill):
                             //
@@ -1261,7 +1287,7 @@ namespace Neon.Kube.Hosting.Azure
                 controller.AddNodeStep("openebs",
                     async (controller, node) =>
                     {
-                        var azureVm            = nameToVm[node.Name];
+                        var azureVm            = nodeNameToVm[node.Name];
                         var vm                 = azureVm.Vm;
                         var openEbsStorageType = ToAzureStorageType(azureVm.Metadata.Azure.OpenEbsStorageType);
 
@@ -1281,7 +1307,7 @@ namespace Neon.Kube.Hosting.Azure
                             vmPatch.StorageProfile.DataDisks.Add(
                                 new DataDisk(openEbsDiskLun, DiskCreateOptionTypes.Empty)
                                 {
-                                    DiskSizeGB   = (int)AzureHelper.GetDiskSizeGiB(azureVm.Node.Metadata.Azure.StorageType, openEbsDiskSize),
+                                    DiskSizeGB   = (int)AzureHelper.GetDiskSizeGiB(azureVm.NodeProxy.Metadata.Azure.StorageType, openEbsDiskSize),
                                     Caching      = CachingTypes.None,
                                     ManagedDisk  = new ManagedDiskParameters()
                                     {
@@ -1396,7 +1422,7 @@ namespace Neon.Kube.Hosting.Azure
             // Get the Azure VM so we can retrieve the assigned external SSH port for the
             // node via the external SSH port tag.
 
-            if (!nameToVm.TryGetValue(nodeName, out var azureVm))
+            if (!nodeNameToVm.TryGetValue(nodeName, out var azureVm))
             {
                 throw new NeonKubeException($"Cannot locate Azure VM for the [{nodeName}] node.");
             }
@@ -1514,6 +1540,11 @@ namespace Neon.Kube.Hosting.Azure
         {
             await SyncContext.Clear;
 
+            if (nodeNameToVm == null)
+            {
+                nodeNameToVm = new Dictionary<string, AzureVm>(StringComparer.InvariantCultureIgnoreCase);
+            }
+
             //-----------------------------------------------------------------
             // The resource group.
 
@@ -1530,7 +1561,7 @@ namespace Neon.Kube.Hosting.Azure
             resourceGroup = await resourceGroupCollection.GetAsync(resourceGroupName);
 
             //-----------------------------------------------------------------
-            // Network stuff.
+            // Network resources.
 
             var vnetCollection         = resourceGroup.GetVirtualNetworks();
             var nsgCollection          = resourceGroup.GetNetworkSecurityGroups();
@@ -1589,59 +1620,112 @@ namespace Neon.Kube.Hosting.Azure
             }
 
             //-----------------------------------------------------------------
-            // VM information
+            // Virtual machines
 
-            var vmCollection = resourceGroup.GetVirtualMachines();
+            nodeNameToVm.Clear();
 
-            await foreach (var vm in vmCollection.GetAllAsync())
+            var vmList = new List<VirtualMachineResource>();
+
+            await foreach (var vm in resourceGroup.GetVirtualMachines())
             {
-                if (!vm.Data.Tags.TryGetValue(neonNodeNameTagKey, out var nodeName))
+                vmList.Add(vm);
+            }
+
+            if (cluster.SetupState != null)
+            {
+                // Cluster deployment is in progress.
+                //
+                // We're going to initialize [nodeNameToVm] using node proxies.
+
+                foreach (var node in cluster.Nodes)
                 {
-                    throw new NeonKubeException($"Corrupted VM: [{vm.Data.Name}] is missing the [{neonNodeNameTagKey}] tag.");
+                    nodeNameToVm.Add(node.Name, new AzureVm(node, this));
+
+                    if (node.Metadata.Azure == null)
+                    {
+                        node.Metadata.Azure = new AzureNodeOptions();
+                    }
                 }
 
-                var node = cluster.FindNode(nodeName);
-
-                if (node == null)
+                foreach (var vm in vmList)
                 {
-                    throw new NeonKubeException($"Unexpected VM: [{vm.Data.Name}] does not correspond to a node in the cluster definition.");
-                }
+                    if (!vm.Data.Tags.TryGetValue(neonNodeNameTagKey, out var nodeName))
+                    {
+                        throw new NeonKubeException($"Corrupted VM: [{vm.Data.Name}] is missing the [{neonNodeNameTagKey}] tag.");
+                    }
 
-                if (!vm.Data.Tags.TryGetValue(neonNodeSshPortTagKey, out var sshPortString))
+                    var node = cluster.FindNode(nodeName);
+
+                    if (node == null)
+                    {
+                        throw new NeonKubeException($"Unexpected VM: [{vm.Data.Name}] does not correspond to a node in the cluster definition.");
+                    }
+
+                    if (!vm.Data.Tags.TryGetValue(neonNodeSshPortTagKey, out var sshPortString))
+                    {
+                        throw new NeonKubeException($"Corrupted VM: [{vm.Data.Name}] is missing the [{neonNodeSshPortTagKey}] tag.");
+                    }
+
+                    if (!int.TryParse(sshPortString, out var sshPort) || !NetHelper.IsValidPort(sshPort))
+                    {
+                        throw new NeonKubeException($"Corrupted VM: [{vm.Data.Name}] is has invalid [{neonNodeSshPortTagKey}={sshPortString}] tag.");
+                    }
+
+                    var azureVm = nodeNameToVm[nodeName];
+
+                    azureVm.Vm                  = vm;
+                    azureVm.AvailabilitySetName = (await azure.GetAvailabilitySetResource(vm.Data.AvailabilitySetId).GetAsync()).Value.Data.Name;
+
+                    var nicReference = vm.Data.NetworkProfile.NetworkInterfaces.First();
+                    var nicResource  = azure.GetNetworkInterfaceResource(new ResourceIdentifier(nicReference.Id));
+
+                    azureVm.Nic             = await nicResource.GetAsync();
+                    azureVm.ExternalSshPort = sshPort;
+
+
+                }
+            }
+            else
+            {
+                // Cluster is already deployed.
+                //
+                // We're going to initialize [nodeNameToVm] from Azure virtual machine information.
+
+                foreach (var vm in vmList)
                 {
-                    throw new NeonKubeException($"Corrupted VM: [{vm.Data.Name}] is missing the [{neonNodeSshPortTagKey}] tag.");
+                    if (!vm.Data.Tags.TryGetValue(neonNodeNameTagKey, out var nodeName))
+                    {
+                        throw new NeonKubeException($"Corrupted VM: [{vm.Data.Name}] is missing the [{neonNodeNameTagKey}] tag.");
+                    }
+
+                    var nodeDeployment = new NodeDeployment() { Name = nodeName };
+                    var azureVm        = new AzureVm(nodeDeployment, this);
+
+                    azureVm.Vm                  = vm;
+                    azureVm.AvailabilitySetName = (await azure.GetAvailabilitySetResource(vm.Data.AvailabilitySetId).GetAsync()).Value.Data.Name;
+
+                    var nicReference = vm.Data.NetworkProfile.NetworkInterfaces.First();
+                    var nicResource  = azure.GetNetworkInterfaceResource(new ResourceIdentifier(nicReference.Id));
+
+                    azureVm.Nic = await nicResource.GetAsync();
+
+                    nodeNameToVm.Add(nodeName, azureVm);
                 }
-
-                if (!int.TryParse(sshPortString, out var sshPort) || !NetHelper.IsValidPort(sshPort))
-                {
-                    throw new NeonKubeException($"Corrupted VM: [{vm.Data.Name}] is has invalid [{neonNodeSshPortTagKey}={sshPortString}] tag.");
-                }
-
-                var azureVm = nameToVm[nodeName];
-
-                azureVm.Vm                  = vm;
-                azureVm.AvailabilitySetName = (await azure.GetAvailabilitySetResource(vm.Data.AvailabilitySetId).GetAsync()).Value.Data.Name;
-
-                var nicReference = vm.Data.NetworkProfile.NetworkInterfaces.First();
-                var nicResource  = azure.GetNetworkInterfaceResource(new ResourceIdentifier(nicReference.Id));
-
-                azureVm.Nic                 = await nicResource.GetAsync();
-                azureVm.ExternalSshPort     = sshPort;
             }
         }
 
         /// <summary>
         /// Queries Azure for the provisoning/power status for all known cluster nodes.  This updates
-        /// the <see cref="nameToVm"/> dictionary values.
+        /// the <see cref="nodeNameToVm"/> dictionary values.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task GetAllClusterVmStatus()
         {
             await SyncContext.Clear;
             Covenant.Assert(azure != null);
-            Covenant.Assert(nameToVm != null);
+            Covenant.Assert(nodeNameToVm != null);
 
-            // Unfortunately, Azure doesn't retrieve VM powerstate when we list the VMs in [GetResourcesAsync()],
+            // Unfortunately, Azure doesn't retrieve VM powerstate when we list the VMs in [LoadResourcesAsync()],
             // so we need to query for each VM state individually.  We'll do this in parallel to speed things up.
             //
             // We'll be querying for each VM for its [InstanceView] and examine it's current status:
@@ -1650,7 +1734,7 @@ namespace Neon.Kube.Hosting.Azure
             //
             // and then convert that to our [ClusterNodeState].
 
-            await Parallel.ForEachAsync(nameToVm.Values, parallelOptions,
+            await Parallel.ForEachAsync(nodeNameToVm.Values, parallelOptions,
                 async (azureVm, cancellationToken) =>
                 {
                     if (azureVm.Vm == null)
@@ -1799,22 +1883,22 @@ namespace Neon.Kube.Hosting.Azure
 
         /// <summary>
         /// Loads virtual machine size related information for the current region into the
-        /// <see cref="nameToVmSku"/> field when not already initialized.
+        /// <see cref="nodeNameToVmSku"/> field when not already initialized.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task LoadVmSizeMetadataAsync()
         {
             await SyncContext.Clear;
 
-            if (nameToVmSku == null)
+            if (nodeNameToVmSku == null)
             {
-                nameToVmSku = new Dictionary<string, VmSku>(StringComparer.InvariantCultureIgnoreCase);
+                nodeNameToVmSku = new Dictionary<string, VmSku>(StringComparer.InvariantCultureIgnoreCase);
 
                 await foreach (var resourceSku in subscription.GetResourceSkusAsync(filter: $"location eq '{region.ToLowerInvariant()}'"))
                 {
                     if (resourceSku.ResourceType == "virtualMachines")
                     {
-                        nameToVmSku[resourceSku.Name] = new VmSku(resourceSku);
+                        nodeNameToVmSku[resourceSku.Name] = new VmSku(resourceSku);
                     }
                 }
             }
@@ -1845,7 +1929,7 @@ namespace Neon.Kube.Hosting.Azure
             {
                 var vmSkuName = node.Metadata.Azure.VmSize;
 
-                if (!nameToVmSku.TryGetValue(vmSkuName, out var vmSku))
+                if (!nodeNameToVmSku.TryGetValue(vmSkuName, out var vmSku))
                 {
                     throw new NeonKubeException($"Node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSkuName}].  This is not available in the [{regionName}] Azure region.");
                 }
@@ -1957,7 +2041,7 @@ namespace Neon.Kube.Hosting.Azure
         {
             await SyncContext.Clear;
 
-            foreach (var azureVm in nameToVm.Values)
+            foreach (var azureVm in nodeNameToVm.Values)
             {
                 azureVm.AvailabilitySetName = GetResourceName("avail", azureVm.Metadata.Labels.PhysicalAvailabilitySet);
 
@@ -2287,7 +2371,7 @@ namespace Neon.Kube.Hosting.Azure
 
             var allocatedPorts = new HashSet<int>();
 
-            foreach (var azureVm in nameToVm.Values.Where(azureVm => azureVm.ExternalSshPort != 0))
+            foreach (var azureVm in nodeNameToVm.Values.Where(azureVm => azureVm.ExternalSshPort != 0))
             {
                 allocatedPorts.Add(azureVm.ExternalSshPort);
             }
@@ -2330,7 +2414,7 @@ namespace Neon.Kube.Hosting.Azure
 
             foreach (var node in cluster.Nodes)
             {
-                var azureVm = nameToVm[node.Name];
+                var azureVm = nodeNameToVm[node.Name];
 
                 node.Address = IPAddress.Parse(publicIngressAddress.Data.IPAddress);
                 node.SshPort = azureVm.ExternalSshPort;
@@ -2392,7 +2476,7 @@ namespace Neon.Kube.Hosting.Azure
 
             await LoadVmSizeMetadataAsync();
 
-            var azureVm = nameToVm[node.Name];
+            var azureVm = nodeNameToVm[node.Name];
 
             if (azureVm.Vm != null)
             {
@@ -2401,7 +2485,7 @@ namespace Neon.Kube.Hosting.Azure
                 return;
             }
 
-            if (!nameToVmSku.TryGetValue(azureVm.VmSize, out var vmSku))
+            if (!nodeNameToVmSku.TryGetValue(azureVm.VmSize, out var vmSku))
             {
                 throw new NeonKubeException($"VM size [{azureVm.VmSize}] is not available at [{region}].");
             }
@@ -2427,11 +2511,11 @@ namespace Neon.Kube.Hosting.Azure
                     PrivateIPAllocationMethod = IPAllocationMethod.Static
                 });
 
-            azureVm.Nic = (await nicCollection.CreateOrUpdateAsync(WaitUntil.Completed, GetResourceName("nic", azureVm.Node.Name), WithNetworkTags(nicData))).Value;
+            azureVm.Nic = (await nicCollection.CreateOrUpdateAsync(WaitUntil.Completed, GetResourceName("nic", azureVm.NodeProxy.Name), WithNetworkTags(nicData))).Value;
 
             node.Status = "create: virtual machine";
 
-            var azureNodeOptions     = azureVm.Node.Metadata.Azure;
+            var azureNodeOptions     = azureVm.NodeProxy.Metadata.Azure;
             var azureOSStorageType   = ToAzureStorageType(azureNodeOptions.StorageType, osDisk: true);
             var azureDataStorageType = ToAzureStorageType(azureNodeOptions.StorageType);
             var diskSize             = ByteUnits.Parse(node.Metadata.Azure.DiskSize);
@@ -2608,7 +2692,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
             var controlBackendPoolData = loadBalancer.Data.BackendAddressPools.Single(pool => pool.Name.Equals(loadbalancerControlPlaneBackendName, StringComparison.InvariantCultureIgnoreCase));
             var ingressBackendPoolData = loadBalancer.Data.BackendAddressPools.Single(pool => pool.Name.Equals(loadbalancerIngressBackendName, StringComparison.InvariantCultureIgnoreCase));
 
-            await Parallel.ForEachAsync(nameToVm.Values, parallelOptions,
+            await Parallel.ForEachAsync(nodeNameToVm.Values, parallelOptions,
                 async (azureVm, cancellationToken) =>
                 {
                     var ipConfiguration        = azureVm.Nic.Data.IPConfigurations.First();
@@ -2864,7 +2948,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
 
             // STEP 1: Create the inbound NAT rules on the load balancer (if they don't already exist)
 
-            foreach (var azureVm in nameToVm.Values)
+            foreach (var azureVm in nodeNameToVm.Values)
             {
                 var ruleName = $"{publicSshRulePrefix}{azureVm.Name}";
 
@@ -2891,7 +2975,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
 
             // STEP 2: Add each inbound NAT rule to the associated VM NIC's IP configuration.
 
-            await Parallel.ForEachAsync(nameToVm.Values, parallelOptions,
+            await Parallel.ForEachAsync(nodeNameToVm.Values, parallelOptions,
                 async (azureVm, cancellationToken) =>
                 {
                     var vmIpConfiguration = azureVm.Nic.Data.IPConfigurations.First();
@@ -3205,7 +3289,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
 
             foreach (var vmSize in clusterVmSizes)
             {
-                if (!nameToVmSku.TryGetValue(vmSize, out var vmSku))
+                if (!nodeNameToVmSku.TryGetValue(vmSize, out var vmSku))
                 {
                     constraints.Add(
                         new HostingResourceConstraint()
@@ -3270,139 +3354,120 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
             // We're going to infer the cluster provisiong status by examining the
             // cluster login and the state of the VMs deployed to Azure.
 
-            var contextName = $"root@{cluster.Name}";   // $todo(jefflill): Hardcoding this breaks SSO login (probably need to add context name to ClusterProxy).
-            var context     = KubeHelper.KubeConfig.GetContext(contextName);
+            if (nodeNameToVm.Count == 0)
+            {
+                // There are no deployed VMs: looks like the cluster isn't running.
 
-            // Create a hashset with the names of the nodes that map to deployed Azure
-            // virtual machines.
+                clusterHealth.State   = ClusterState.NotFound;
+                clusterHealth.Summary = "Cluster is offline";
+
+                return clusterHealth;
+            }
+
+            // Create a hashset with the names of the nodes that map to deployed AWS
+            // machine instances.
 
             var existingNodes = new HashSet<string>();
 
-            foreach (var item in nameToVm)
+            foreach (var item in nodeNameToVm)
             {
-                var nodeDefinition = cluster.SetupState.ClusterDefinition.NodeDefinitions[item.Key];
-
-                if (nodeDefinition != null)
-                {
-                    existingNodes.Add(nodeDefinition.Name);
-                }
+                existingNodes.Add(item.Value.Name);
             }
 
-            // Build the cluster status.
+            // We're going to assume that all virtual machines in the cluster's resource group
+            // belong to the cluster and we'll map the actual VM states to tracked VM states.
 
-            if (context == null)
+            await GetAllClusterVmStatus();
+
+            foreach (var nodeName in nodeNameToVm.Keys)
             {
-                // The Kubernetes context for this cluster doesn't exist, so we know that any
-                // virtual machines with names matching the virtual machines that would be
-                // provisioned for the cluster definition are conflicting.
+                var nodePowerState = ClusterNodeState.NotProvisioned;
 
-                clusterHealth.State   = ClusterState.NotFound;
-                clusterHealth.Summary = "Cluster does not exist";
-
-                foreach (var node in cluster.SetupState.ClusterDefinition.NodeDefinitions.Values)
+                if (existingNodes.Contains(nodeName))
                 {
-                    clusterHealth.Nodes.Add(node.Name, existingNodes.Contains(node.Name) ? ClusterNodeState.Conflict : ClusterNodeState.NotProvisioned);
-                }
-
-                return clusterHealth;
-            }
-            else
-            {
-                // We're going to assume that all virtual machines in the cluster's resource group
-                // belong to the cluster and we'll map the actual VM states to public node states.
-
-                await GetAllClusterVmStatus();
-
-                foreach (var node in cluster.SetupState.ClusterDefinition.NodeDefinitions.Values)
-                {
-                    var nodePowerState = ClusterNodeState.NotProvisioned;
-
-                    if (existingNodes.Contains(node.Name))
+                    if (nodeNameToVm.TryGetValue(nodeName, out var azureVm))
                     {
-                        if (nameToVm.TryGetValue(node.Name, out var azureVm))
-                        {
-                            nodePowerState = azureVm.State;
-                        }
+                        nodePowerState = azureVm.State;
                     }
-
-                    clusterHealth.Nodes.Add(node.Name, nodePowerState);
                 }
 
-                // We're going to examine the node states from the Azure perspective and
-                // short-circuit the Kubernetes level cluster health check when the cluster
-                // nodes are not provisioned, are paused or appear to be transitioning
-                // between starting, stopping, or paused states.
+                clusterHealth.Nodes.Add(nodeName, nodePowerState);
+            }
 
-                var commonNodeState = clusterHealth.Nodes.Values.First();
+            // We're going to examine the node states from the Azure perspective and
+            // short-circuit the Kubernetes level cluster health check when the cluster
+            // nodes are not provisioned, are paused or appear to be transitioning
+            // between starting, stopping, or paused states.
 
-                foreach (var nodeState in clusterHealth.Nodes.Values)
+            var commonNodeState = clusterHealth.Nodes.Values.First();
+
+            foreach (var nodeState in clusterHealth.Nodes.Values)
+            {
+                if (nodeState != commonNodeState)
                 {
-                    if (nodeState != commonNodeState)
-                    {
-                        // Nodes have differing states so we're going to consider the cluster
-                        // to be transitioning.
+                    // Nodes have differing states so we're going to consider the cluster
+                    // to be transitioning.
 
-                        clusterHealth.State   = ClusterState.Transitioning;
-                        clusterHealth.Summary = "Cluster is transitioning";
+                    clusterHealth.State   = ClusterState.Transitioning;
+                    clusterHealth.Summary = "Cluster is transitioning";
+                    break;
+                }
+            }
+
+            if (cluster.SetupState != null && cluster.SetupState.DeploymentStatus != ClusterDeploymentStatus.Ready)
+            {
+                clusterHealth.State   = ClusterState.Configuring;
+                clusterHealth.Summary = "Cluster is partially configured";
+            }
+            else if (clusterHealth.State != ClusterState.Transitioning)
+            {
+                // If we get here then all of the nodes have the same state so
+                // we'll use that common state to set the overall cluster state.
+
+                switch (commonNodeState)
+                {
+                    case ClusterNodeState.Starting:
+
+                        clusterHealth.State   = ClusterState.Unhealthy;
+                        clusterHealth.Summary = "Cluster is starting";
                         break;
-                    }
+
+                    case ClusterNodeState.Running:
+
+                        clusterHealth.State   = ClusterState.Healthy;
+                        clusterHealth.Summary = "Cluster is running";
+                        break;
+
+                    case ClusterNodeState.Paused:
+                    case ClusterNodeState.Off:
+
+                        clusterHealth.State   = ClusterState.Off;
+                        clusterHealth.Summary = "Cluster is offline";
+                        break;
+
+                    case ClusterNodeState.NotProvisioned:
+
+                        clusterHealth.State   = ClusterState.NotFound;
+                        clusterHealth.Summary = "Cluster is not found.";
+                        break;
+
+                    case ClusterNodeState.Unknown:
+                    default:
+
+                        clusterHealth.State   = ClusterState.NotFound;
+                        clusterHealth.Summary = "Cluster not found";
+                        break;
                 }
+            }
 
-                if (cluster.SetupState.DeploymentStatus != ClusterDeploymentStatus.Ready)
-                {
-                    clusterHealth.State   = ClusterState.Configuring;
-                    clusterHealth.Summary = "Cluster is partially configured";
-                }
-                else if (clusterHealth.State != ClusterState.Transitioning)
-                {
-                    // If we get here then all of the nodes have the same state so
-                    // we'll use that common state to set the overall cluster state.
-
-                    switch (commonNodeState)
-                    {
-                        case ClusterNodeState.Starting:
-
-                            clusterHealth.State   = ClusterState.Unhealthy;
-                            clusterHealth.Summary = "Cluster is starting";
-                            break;
-
-                        case ClusterNodeState.Running:
-
-                            clusterHealth.State   = ClusterState.Healthy;
-                            clusterHealth.Summary = "Cluster is running";
-                            break;
-
-                        case ClusterNodeState.Paused:
-                        case ClusterNodeState.Off:
-
-                            clusterHealth.State   = ClusterState.Off;
-                            clusterHealth.Summary = "Cluster is offline";
-                            break;
-
-                        case ClusterNodeState.NotProvisioned:
-
-                            clusterHealth.State   = ClusterState.NotFound;
-                            clusterHealth.Summary = "Cluster is not found.";
-                            break;
-
-                        case ClusterNodeState.Unknown:
-                        default:
-
-                            clusterHealth.State   = ClusterState.NotFound;
-                            clusterHealth.Summary = "Cluster not found";
-                            break;
-                    }
-                }
-
-                if (clusterHealth.State == ClusterState.Off)
-                {
-                    clusterHealth.Summary = "Cluster is offline";
-
-                    return clusterHealth;
-                }
+            if (clusterHealth.State == ClusterState.Off)
+            {
+                clusterHealth.Summary = "Cluster is offline";
 
                 return clusterHealth;
             }
+
+            return clusterHealth;
         }
 
         /// <inheritdoc/>
@@ -3413,13 +3478,15 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
             // We're going to signal all cluster VMs to start.
 
             await ConnectAzureAsync();
+            await GetAllClusterVmStatus();
 
-            await Parallel.ForEachAsync(cluster.SetupState.ClusterDefinition.SortedControlThenWorkerNodes, parallelOptions,
-                async (node, cancellationToken) =>
+            await Parallel.ForEachAsync(nodeNameToVm.Values, parallelOptions,
+                async (azureVm, cancellationToken) =>
                 {
-                    var azureVm = nameToVm[node.Name];
-
-                    await azureVm.Vm.RestartAsync(WaitUntil.Completed);
+                    if (azureVm.State == ClusterNodeState.Off)
+                    {
+                        await azureVm.Vm.PowerOnAsync(WaitUntil.Started);
+                    }
                 });
         }
 
@@ -3436,11 +3503,9 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
 
             await ConnectAzureAsync();
 
-            await Parallel.ForEachAsync(cluster.SetupState.ClusterDefinition.SortedControlThenWorkerNodes, parallelOptions,
-                async (node, cancellationToken) =>
+            await Parallel.ForEachAsync(nodeNameToVm.Values, parallelOptions,
+                async (azureVm, cancellationToken) =>
                 {
-                    var azureVm = nameToVm[node.Name];
-
                     await azureVm.Vm.PowerOffAsync(WaitUntil.Completed, skipShutdown: stopMode != StopMode.Graceful);
                 });
         }

@@ -3779,7 +3779,11 @@ $@"- name: StorageType
                         values.Add($"table_manager.retention_period", "24h");
                     }
 
-                    var replayMemoryCeiling = ByteUnits.Humanize(ingesterAdvice.PodMemoryLimit.Value * 0.75m, false, true, false);
+                    var replayMemoryCeiling = ByteUnits.Humanize(
+                        size:            ingesterAdvice.PodMemoryLimit.Value * 0.75m,
+                        powerOfTwo:      false,
+                        spaceBeforeUnit: true,
+                        removeByteUnit:  false);
 
                     var byteUnitParts = replayMemoryCeiling.Split(' ');
                     var bytes = double.Parse(byteUnitParts.First());
@@ -4276,7 +4280,7 @@ $@"- name: StorageType
                             values.Add($"tenants[0].pools[0].volumesPerServer", cluster.SetupState.ClusterDefinition.Storage.Minio.VolumesPerNode);
 
                             var volumesize = ByteUnits.Humanize(
-                                ByteUnits.Parse(cluster.SetupState.ClusterDefinition.Storage.Minio.VolumeSize),
+                                size:            ByteUnits.Parse(cluster.SetupState.ClusterDefinition.Storage.Minio.VolumeSize),
                                 powerOfTwo:      true,
                                 spaceBeforeUnit: false,
                                 removeByteUnit:  true);
@@ -4713,33 +4717,28 @@ $@"- name: StorageType
                 {
                     var user     = await KubeHelper.GetClusterLdapUserAsync(k8s, "root");
                     var password = user.Password;
-                    var sbScript = new StringBuilder();
-                    var sbArgs   = new StringBuilder();
-
-                    sbScript.AppendLineLinux("#!/bin/bash");
-                    sbScript.AppendLineLinux($"echo '{password}' | podman login registry.neon.local --username {user.Name} --password-stdin");
+                    var command  = $"echo '{password}' | podman login registry.neon.local --username {user.Name} --password-stdin";
 
                     foreach (var node in cluster.Nodes)
                     {
                         controller.ThrowIfCancelled();
 
-                        await NeonHelper.WaitForAsync(
-                            async () =>
+                        NeonHelper.WaitFor(
+                            () =>
                             {
                                 try
                                 {
-                                    controlNode.SudoCommand(CommandBundle.FromScript(sbScript), RunOptions.None).EnsureSuccess();
+                                    controlNode.SudoCommand(CommandBundle.FromScript(command), RunOptions.None).EnsureSuccess();
 
-                                    return await Task.FromResult(true);
+                                    return true;
                                 }
                                 catch
                                 {
-                                    return await Task.FromResult(false);
+                                    return false;
                                 }
                             },
                             timeout:           TimeSpan.FromSeconds(600),
-                            pollInterval:      TimeSpan.FromSeconds(1),
-                            cancellationToken: controller.CancellationToken);
+                            pollInterval:      TimeSpan.FromSeconds(1));
                     }
                 });
 
@@ -4749,8 +4748,6 @@ $@"- name: StorageType
                 {
                     var user     = await KubeHelper.GetClusterLdapUserAsync(k8s, "root");
                     var password = user.Password;
-                    var sbScript = new StringBuilder();
-                    var sbArgs   = new StringBuilder();
 
                     if (!string.IsNullOrEmpty(NeonHelper.DockerCli))
                     {

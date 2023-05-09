@@ -513,7 +513,7 @@ nodes:
                     Assert.Equal(0, response.ExitCode);     // exitcode=0: LOCKED
 
                     //-------------------------------------------------------------
-                    // Unlock the cluster so we can test dangerous commands.
+                    // Unlock the cluster so we can test dangerous commands below.
 
                     response = (await NeonCliAsync("cluster", "unlock"))
                         .EnsureSuccess();

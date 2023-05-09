@@ -259,7 +259,7 @@ namespace Neon.Kube.Hosting.Aws
             private string              instanceName;
 
             /// <summary>
-            /// Constructs an instance from a <see cref="NodeSshProxy{TMetadata}"/>.
+            /// Constructs an instance from a <see cref="NodeSshProxy{TMetadata}"/> (used during cluster deployment).
             /// </summary>
             /// <param name="nodeProxy">The associated node proxy.</param>
             /// <param name="hostingManager">The parent hosting manager.</param>
@@ -273,7 +273,7 @@ namespace Neon.Kube.Hosting.Aws
             }
 
             /// <summary>
-            /// Constructs an instance from a <see cref="NodeDeployment"/>.
+            /// Constructs an instance from a <see cref="NodeDeployment"/> (used after cluster deployment).
             /// </summary>
             /// <param name="nodeDeployment">The associated node deployment.</param>
             /// <param name="hostingManager">The parent hosting manager.</param>
@@ -287,7 +287,8 @@ namespace Neon.Kube.Hosting.Aws
             }
 
             /// <summary>
-            /// Returns the associated node proxy or <c>null</c> when the cluster is already deployed.
+            /// Returns the associated node proxy when we're deploying the cluster,
+            /// <c>null</c> when the cluster has already been deployed.
             /// </summary>
             public NodeSshProxy<NodeDefinition> NodeProxy { get; private set; }
 
@@ -1750,15 +1751,51 @@ namespace Neon.Kube.Hosting.Aws
 
             var instancePaginator = ec2Client.Paginators.DescribeInstances(new DescribeInstancesRequest() { Filters = clusterFilter });
 
-            if (cluster.SetupState == null)
+            if (cluster.SetupState != null)
             {
+                // Cluster deployment is in progress.
+
+                // [instanceNameToAwsInstance] and [nodeNameToAwsInstance] will already be initialized when
+                // we're deploying a cluster.
+
+                await foreach (var reservation in instancePaginator.Reservations)
+                {
+                    // Note that terminated instances  hang around for a while, so we need to ignore them.
+
+                    foreach (var instance in reservation.Instances
+                        .Where(instance => instance.State.Name.Value != InstanceStateName.Terminated))
+                    {
+                        var name        = instance.Tags.SingleOrDefault(tag => tag.Key == nameTagKey)?.Value;
+                        var cluster     = instance.Tags.SingleOrDefault(tag => tag.Key == neonClusterTagKey)?.Value;
+                        var awsInstance = (AwsInstance)null;
+
+                        if (name != null && cluster == clusterName && instanceNameToAwsInstance.TryGetValue(name, out awsInstance))
+                        {
+                            awsInstance.Instance = instance;
+                        }
+
+                        // Retrieve the external SSH port for the instance from the instance tag.
+
+                        var sshPortString = instance.Tags.SingleOrDefault(tag => tag.Key == neonNodeSshTagKey)?.Value;
+
+                        if (!string.IsNullOrEmpty(sshPortString) && int.TryParse(sshPortString, out var sshPort) && NetHelper.IsValidPort(sshPort))
+                        {
+                            awsInstance.ExternalSshPort = sshPort;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Cluster is already deployed.
+                //
                 // [instanceNameToAwsInstance] and [nodeNameToAwsInstance] won't be initialized by
-                // default when we're not deploying a cluster.  We'll need to construct this using
+                // default when we're not deploying a cluster.  We'll need to construct them using
                 // deployment information retrieved from AWS node tags.
 
                 Covenant.Assert(cluster.SetupState == null);
 
-                nodeNameToAwsInstance     = new Dictionary<string, AwsInstance>();
+                nodeNameToAwsInstance = new Dictionary<string, AwsInstance>();
                 instanceNameToAwsInstance = new Dictionary<string, AwsInstance>();
 
                 await foreach (var reservation in instancePaginator.Reservations)
@@ -1795,38 +1832,6 @@ namespace Neon.Kube.Hosting.Aws
 
                         nodeNameToAwsInstance.Add(nodeName, awsInstance);
                         instanceNameToAwsInstance.Add(awsInstance.InstanceName, awsInstance);
-                    }
-                }
-            }
-            else
-            {
-                // [instanceNameToAwsInstance] and [nodeNameToAwsInstance] will be initialized when
-                // we're deploying a cluster.
-
-                await foreach (var reservation in instancePaginator.Reservations)
-                {
-                    // Note that terminated instances  hang around for a while, so we need to ignore them.
-
-                    foreach (var instance in reservation.Instances
-                        .Where(instance => instance.State.Name.Value != InstanceStateName.Terminated))
-                    {
-                        var name        = instance.Tags.SingleOrDefault(tag => tag.Key == nameTagKey)?.Value;
-                        var cluster     = instance.Tags.SingleOrDefault(tag => tag.Key == neonClusterTagKey)?.Value;
-                        var awsInstance = (AwsInstance)null;
-
-                        if (name != null && cluster == clusterName && instanceNameToAwsInstance.TryGetValue(name, out awsInstance))
-                        {
-                            awsInstance.Instance = instance;
-                        }
-
-                        // Retrieve the external SSH port for the instance from the instance tag.
-
-                        var sshPortString = instance.Tags.SingleOrDefault(tag => tag.Key == neonNodeSshTagKey)?.Value;
-
-                        if (!string.IsNullOrEmpty(sshPortString) && int.TryParse(sshPortString, out var sshPort) && NetHelper.IsValidPort(sshPort))
-                        {
-                            awsInstance.ExternalSshPort = sshPort;
-                        }
                     }
                 }
             }
@@ -4080,16 +4085,13 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
             if (instanceNameToAwsInstance.Count == 0)
             {
-                // Looks like the cluster isn't running.
+                // There are no deployed VMs: looks like the cluster isn't running.
 
                 clusterHealth.State   = ClusterState.Off;
                 clusterHealth.Summary = "Cluster is offline.";
 
                 return clusterHealth;
             }
-
-            var contextName = $"root@{cluster.Name}";   // $todo(jefflill): Hardcoding this breaks SSO login (probably need to add context name to ClusterProxy).
-            var context     = KubeHelper.KubeConfig.GetContext(contextName);
 
             // Create a hashset with the names of the nodes that map to deployed AWS
             // machine instances.
