@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 #------------------------------------------------------------------------------
 # FILE:         safe-apt-get
 # CONTRIBUTOR:  Jeff Lill
@@ -98,15 +98,19 @@ do
 
         TRANSIENT_ERROR=$false
 
-        if grep -q "^W: Failed to fetch" $STDALL_PATH ; then
+        if grep -q 'W: Failed to fetch" $STDALL_PATH' ; then
             $TRANSIENT_ERROR=$true
-        elif grep -q "^gpg: no valid OpenPGP data found" $STDALL_PATH ; then
+        elif grep -q 'gpg: no valid OpenPGP data found' $STDALL_PATH ; then
             $TRANSIENT_ERROR=$true
-        elif grep -q "^E: Could not get lock /var/lib/dpkg/lock-frontend." $STDALL_PATH ; then
+        elif grep -q 'E: Could not get lock' $STDALL_PATH ; then
+            $TRANSIENT_ERROR=$true
+        elif grep -q 'E: Unable to acquire the dpkg frontend lock' $STDALL_PATH ; then
             $TRANSIENT_ERROR=$true
         fi
 
-        if ! $TRANSIENT_ERROR ; then
+        if $TRANSIENT_ERROR ; then
+            echo 'Tansient
+        else
             # Looks like the operation failed due to a non-transient
             # problem so we'll break out of the retry loop and return
             # and error.
