@@ -626,6 +626,11 @@ namespace Neon.Kube.Hosting.Azure
         private const string neonNodeNameTagKey = neonTagKeyPrefix + "node.name";
 
         /// <summary>
+        /// Used to tag VM resources with the cluster node role.
+        /// </summary>
+        private const string neonNodeRoleTagKey = neonTagKeyPrefix + "node.role";
+
+        /// <summary>
         /// Used to tag virtual machines with the external SSH port to be used to 
         /// establish a SSH connection to the instance.
         /// </summary>
@@ -2610,6 +2615,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
             var nodeTags = new ResourceTag[]
             {
                 new ResourceTag(neonNodeNameTagKey, node.Name),
+                new ResourceTag(neonNodeRoleTagKey, node.Metadata.Role),
                 new ResourceTag(neonNodeSshPortTagKey, azureVm.ExternalSshPort.ToString()),
             };
 

@@ -609,6 +609,11 @@ namespace Neon.Kube.Hosting.Aws
         private const string neonNodeNameTagKey = neonTagKeyPrefix + "node.name";
 
         /// <summary>
+        /// Used to tag instances resources with the cluster node name.
+        /// </summary>
+        private const string neonNodeRoleTagKey = neonTagKeyPrefix + "node.role";
+
+        /// <summary>
         /// Used to tag VM instances resources with the external SSH port to be used to 
         /// establish a SSH connection to the instance.
         /// </summary>
@@ -3198,7 +3203,9 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                                 }
                             }
                         },
-                        TagSpecifications = GetTagSpecifications(awsInstanceName, ResourceType.Instance, new ResourceTag(neonNodeNameTagKey, node.Name))
+                        TagSpecifications = GetTagSpecifications(awsInstanceName, ResourceType.Instance,
+                                                new ResourceTag(neonNodeNameTagKey, node.Name),
+                                                new ResourceTag(neonNodeRoleTagKey, node.Metadata.Role))
                     });
 
                 awsInstance.Instance = runResponse.Reservation.Instances.Single();
