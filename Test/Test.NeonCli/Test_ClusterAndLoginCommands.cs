@@ -37,10 +37,13 @@ using Neon.IO;
 using Neon.Xunit;
 
 using Xunit;
+using System.Runtime.CompilerServices;
 
 namespace Test.NeonCli
 {
     [Trait(TestTrait.Category, TestArea.NeonCli)]
+    [Trait(TestTrait.Category, TestTrait.RequiresProfile)]
+    [Trait(TestTrait.Category, TestTrait.Slow)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ClusterAndLoginCommands
@@ -197,13 +200,33 @@ nodes:
             Covenant.Assert(File.Exists(neonCliPath), () => $"[neon-cli] executable does not exist at: {neonCliPath}");
         }
 
-        [Theory]
-        [InlineData(HostingEnvironment.Aws)]
-        [InlineData(HostingEnvironment.Azure)]
-        [InlineData(HostingEnvironment.HyperV)]
-        [InlineData(HostingEnvironment.XenServer)]
-        [Trait(TestTrait.Category, TestTrait.Slow)]
-        public async Task Verify(HostingEnvironment environment)
+        [MaintainerFact]
+        [Trait(TestTrait.Category, TestTrait.CloudExpense)]
+        public async Task Aws()
+        {
+            await Test(HostingEnvironment.Aws);
+        }
+
+        [MaintainerFact]
+        [Trait(TestTrait.Category, TestTrait.CloudExpense)]
+        public async Task Azure()
+        {
+            await Test(HostingEnvironment.Azure);
+        }
+
+        [MaintainerFact]
+        public async Task HyperV()
+        {
+            await Test(HostingEnvironment.HyperV);
+        }
+
+        [MaintainerFact]
+        public async Task XenServer()
+        {
+            await Test(HostingEnvironment.XenServer);
+        }
+
+        private async Task Test(HostingEnvironment environment)
         {
             // Use [neon-cli] to deploy a single-node Hyper-V test cluster and the verify that
             // common [neon-cli] cluster commands work as expected.  We're doing this all in a
