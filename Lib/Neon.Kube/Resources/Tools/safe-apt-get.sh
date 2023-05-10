@@ -81,7 +81,7 @@ do
     fi
 
     apt-get "$@" 1>$STDOUT_PATH 2>$STDERR_PATH
-    EXIT_CODE=$?''
+    EXIT_CODE=$?
 
     echo apt-get "$@"
     break
