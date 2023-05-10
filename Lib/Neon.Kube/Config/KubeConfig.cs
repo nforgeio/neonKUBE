@@ -461,10 +461,35 @@ namespace Neon.Kube.Config
         /// <summary>
         /// Constructs a deep clone of the instance.
         /// </summary>
+        /// <param name="currentOnly">Optionally strips out the non-current contexts, clusters, and users.</param>
         /// <returns>The deep cloned <see cref="KubeConfig"/>.</returns>
-        public KubeConfig Clone()
+        public KubeConfig Clone(bool currentOnly = false)
         {
-            return NeonHelper.JsonClone(this);
+            var clone = NeonHelper.JsonClone(this);
+
+            if (currentOnly && clone.CurrentContext != null)
+            {
+                var delContexts = clone.Contexts.Where(context => context.Name != clone.CurrentContext).ToArray();
+                var delClusters = clone.Clusters.Where(cluster => cluster.Name != clone.Context.Cluster).ToArray();
+                var delUsers    = clone.Users.Where(user => user.Name != clone.Context.User).ToArray();
+
+                foreach (var context in delContexts)
+                {
+                    clone.Contexts.Remove(context);
+                }
+
+                foreach (var cluster in delClusters)
+                {
+                    clone.Clusters.Remove(cluster);
+                }
+
+                foreach (var user in delUsers)
+                {
+                    clone.Users.Remove(user);
+                }
+            }
+
+            return clone;
         }
     }
 }

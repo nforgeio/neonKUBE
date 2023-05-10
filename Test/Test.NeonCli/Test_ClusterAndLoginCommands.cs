@@ -342,10 +342,9 @@ nodes:
 
                     HostingLoader.Initialize();
 
-                    using var clusterProxy = await ClusterProxy.CreateAsync(
+                    using var clusterProxy = ClusterProxy.Create(
                         kubeConfig:            KubeHelper.KubeConfig,
                         hostingManagerFactory: new HostingManagerFactory(),
-                        cloudMarketplace:      false,
                         operation:             ClusterProxy.Operation.LifeCycle);
 
                     //-------------------------------------------------------------

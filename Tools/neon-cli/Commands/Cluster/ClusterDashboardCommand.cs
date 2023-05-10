@@ -89,7 +89,7 @@ OPTIONS:
             var dashboardName = commandLine.Arguments.ElementAtOrDefault(0);
             var url           = commandLine.HasOption("--url");
 
-            using (var cluster = await ClusterProxy.CreateAsync(KubeHelper.KubeConfig, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
+            using (var cluster = ClusterProxy.Create(KubeHelper.KubeConfig, new HostingManagerFactory()))
             {
                 var dashboards = await cluster.ListClusterDashboardsAsync();
 

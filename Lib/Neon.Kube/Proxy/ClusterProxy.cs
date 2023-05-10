@@ -102,25 +102,11 @@ namespace Neon.Kube.Proxy
         // Static members
 
         /// <summary>
-        /// Creates a cluster proxy from a <see cref="KubeConfig"/> that will
-        /// typically be used to manage an already deployed cluster.
+        /// Creates a cluster proxy for the current context in a <see cref="KubeConfig"/>.
         /// </summary>
         /// <param name="kubeConfig">The Kubernetes config with the current context set to the target cluster.</param>
         /// <param name="hostingManagerFactory">The hosting manager factory,</param>
-        /// <param name="cloudMarketplace">
-        /// <para>
-        /// For cloud environments, this specifies whether the cluster should be provisioned
-        /// using a VM image from the public cloud marketplace when <c>true</c> or from the
-        /// private NEONFORGE image gallery for testing when <c>false</c>.  This is ignored
-        /// for on-premise environments.
-        /// </para>
-        /// <note>
-        /// Only NEONFORGE maintainers will have permission to use the private image.
-        /// </note>
-        /// </param>
         /// <param name="operation">Optionally identifies the operations that will be performed using the proxy.  This defaults to <see cref="Operation.LifeCycle"/>.</param>
-        /// <param name="nodeImageUri">Optionally passed as the URI to the (GZIP compressed) node image.</param>
-        /// <param name="nodeImagePath">Optionally passed as the local path to the (GZIP compressed) node image file.</param>
         /// <param name="nodeProxyCreator">
         /// The application supplied function that creates a management proxy
         /// given the node name, public address or FQDN, private address, and
@@ -132,13 +118,10 @@ namespace Neon.Kube.Proxy
         /// by the cluster proxy.  This defaults to <see cref="RunOptions.None"/>.
         /// </param>
         /// <returns>The <see cref="ClusterProxy"/>.</returns>
-        public static async Task<ClusterProxy> CreateAsync(
+        public static ClusterProxy Create(
             KubeConfig              kubeConfig,
             IHostingManagerFactory  hostingManagerFactory,
-            bool                    cloudMarketplace,
             Operation               operation         = Operation.LifeCycle,
-            string                  nodeImageUri      = null,
-            string                  nodeImagePath     = null,
             NodeProxyCreator        nodeProxyCreator  = null,
             RunOptions              defaultRunOptions = RunOptions.None)
         {
@@ -147,25 +130,67 @@ namespace Neon.Kube.Proxy
             Covenant.Requires<ArgumentNullException>(hostingManagerFactory != null, nameof(hostingManagerFactory));
             kubeConfig.Validate(needsCurrentCluster: true);
 
+            kubeConfig = kubeConfig.Clone(currentOnly: true);
+
             var cluster = new ClusterProxy(
                 kubeConfig:            kubeConfig,
                 hostingManagerFactory: hostingManagerFactory,
-                nodeImageUri:          nodeImageUri,
-                nodeImagePath:         nodeImagePath,
                 nodeProxyCreator:      nodeProxyCreator,
                 defaultRunOptions:     defaultRunOptions);
 
             cluster.KubeConfig = kubeConfig;
             cluster.Hosting    = kubeConfig.Cluster.Hosting;
 
-            await cluster.InitializeAsync();
+            cluster.Initialize();
 
             cluster.Name           = kubeConfig.Cluster.Name;
             cluster.Id             = kubeConfig.Cluster.ClusterInfo.ClusterId;
             cluster.Domain         = kubeConfig.Cluster.ClusterInfo.ClusterDomain;
-            cluster.HostingManager = cluster.GetHostingManager(hostingManagerFactory, cloudMarketplace, operation, KubeHelper.LogFolder);
+            cluster.HostingManager = cluster.GetHostingManager(hostingManagerFactory, cloudMarketplace: false, operation: operation, logFolder: KubeHelper.LogFolder);
 
             return cluster;
+        }
+
+        /// <summary>
+        /// Creates a cluster proxy for the the specified context in a <see cref="KubeConfig"/>. 
+        /// </summary>
+        /// <param name="kubeConfig">The Kubernetes config with the current context set to the target cluster.</param>
+        /// <param name="context">Specifies the context for the cluster.</param>
+        /// <param name="hostingManagerFactory">The hosting manager factory,</param>
+        /// <param name="operation">Optionally identifies the operations that will be performed using the proxy.  This defaults to <see cref="Operation.LifeCycle"/>.</param>
+        /// <param name="nodeProxyCreator">
+        /// The application supplied function that creates a management proxy
+        /// given the node name, public address or FQDN, private address, and
+        /// the node definition.
+        /// </param>
+        /// <param name="defaultRunOptions">
+        /// Optionally specifies the <see cref="RunOptions"/> to be assigned to the 
+        /// <see cref="LinuxSshProxy.DefaultRunOptions"/> property for the nodes managed
+        /// by the cluster proxy.  This defaults to <see cref="RunOptions.None"/>.
+        /// </param>
+        /// <returns>The <see cref="ClusterProxy"/>.</returns>
+        public static ClusterProxy Create(
+            KubeConfig              kubeConfig,
+            KubeConfigContext       context,
+            IHostingManagerFactory  hostingManagerFactory,
+            Operation               operation         = Operation.LifeCycle,
+            NodeProxyCreator        nodeProxyCreator  = null,
+            RunOptions              defaultRunOptions = RunOptions.None)
+        {
+            Covenant.Requires<ArgumentNullException>(kubeConfig != null, nameof(kubeConfig));
+            Covenant.Requires<ArgumentNullException>(kubeConfig.Cluster != null, $"[{nameof(kubeConfig)}.{nameof(kubeConfig.Cluster)}] cannot be NULL.");
+            Covenant.Requires<ArgumentNullException>(context != null, nameof(context));
+            Covenant.Requires<ArgumentException>(kubeConfig.Contexts.Contains(context), nameof(context));
+            Covenant.Requires<ArgumentNullException>(hostingManagerFactory != null, nameof(hostingManagerFactory));
+            kubeConfig.Validate(needsCurrentCluster: false);
+
+            var clonedConfig = kubeConfig.Clone();
+
+            clonedConfig.SetContext(context.Name);
+
+            clonedConfig = clonedConfig.Clone(currentOnly: true);
+
+            return Create(clonedConfig, hostingManagerFactory, operation, nodeProxyCreator, defaultRunOptions);
         }
 
         /// <summary>
@@ -211,7 +236,7 @@ namespace Neon.Kube.Proxy
         /// is passed.
         /// </para>
         /// </remarks>
-        public static async Task<ClusterProxy> CreateAsync(
+        public static ClusterProxy Create(
             KubeSetupState          setupState,
             IHostingManagerFactory  hostingManagerFactory,
             bool                    cloudMarketplace,
@@ -232,7 +257,7 @@ namespace Neon.Kube.Proxy
                 nodeProxyCreator:      nodeProxyCreator,
                 defaultRunOptions:     defaultRunOptions);
 
-            await cluster.InitializeAsync();
+            cluster.Initialize();
 
             cluster.Name           = setupState.ClusterDefinition.Name;
             cluster.Id             = setupState.ClusterId;
@@ -366,7 +391,7 @@ namespace Neon.Kube.Proxy
             }
 
             this.SetupState        = setupState;
-            this.KubeConfig        = KubeHelper.KubeConfig.Clone();
+            this.KubeConfig        = KubeHelper.KubeConfig.Clone(currentOnly: true);
             this.defaultRunOptions = defaultRunOptions;
             this.nodeProxyCreator  = nodeProxyCreator;
 
@@ -414,8 +439,7 @@ namespace Neon.Kube.Proxy
         /// Initializes the cluster proxy from setup state when available otherwise from the
         /// cluster's deployment details..
         /// </summary>
-        /// <returns></returns>
-        private async Task InitializeAsync()
+        private void Initialize()
         {
             if (SetupState != null)
             {
@@ -449,8 +473,6 @@ namespace Neon.Kube.Proxy
 
                 this.DeploymentControlNode = Nodes.Where(n => n.Metadata.IsControlPane).OrderBy(n => n.Name).First();
             }
-
-            await Task.CompletedTask;
         }
 
         /// <summary>

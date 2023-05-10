@@ -121,7 +121,7 @@ cluster definition or by executing this command on your cluster:
 
             var force = commandLine.HasOption("--force");
 
-            using (var cluster = await ClusterProxy.CreateAsync(KubeHelper.KubeConfig, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
+            using (var cluster = ClusterProxy.Create(KubeHelper.KubeConfig, new HostingManagerFactory()))
             {
                 var capabilities = cluster.Capabilities;
 
