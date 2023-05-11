@@ -384,7 +384,19 @@ spec:
                     await CreateNamespacesAsync(controller, controlNode);
 
                     controller.ThrowIfCancelled();
-                    await WriteClusterInfoAsync(controller, controlNode);
+                    await UploadClusterInfoAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await UploadClusterManifestAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await UploadClusterManifestAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await SetClusterLockAsync(controller, controlNode);
+
+                    controller.ThrowIfCancelled();
+                    await SetClusterHealthAsync(controller, controlNode, ready: false);
 
                     controller.ThrowIfCancelled();
                     await InstallCrdsAsync(controller, controlNode);
@@ -438,9 +450,6 @@ spec:
                     await InstallRedisAsync(controller, controlNode);
 
                     controller.ThrowIfCancelled();
-                    await UploadClusterManifestAsync(controller, controlNode);
-
-                    controller.ThrowIfCancelled();
                     await InstallClusterOperatorAsync(controller, controlNode);
 
                     controller.ThrowIfCancelled();
@@ -473,12 +482,13 @@ spec:
                         await WaitForHarborImagePushAsync(controller, controlNode);
                     }
 
-                    // IMPORTANT!
+                    // IMPORTANT:
                     //
-                    // This must be the last cluster setup step.
+                    // This must be the last step because it indicates that the cluster
+                    // has been successfully deployed.
 
                     controller.ThrowIfCancelled();
-                    await SaveClusterConfigMapsAsync(controller, controlNode);
+                    await SetClusterHealthAsync(controller, controlNode, ready: true);
                 });
         }
 
@@ -4728,7 +4738,8 @@ $@"- name: StorageType
                             {
                                 try
                                 {
-                                    controlNode.SudoCommand(CommandBundle.FromScript(command), RunOptions.None).EnsureSuccess();
+                                    controlNode.SudoCommand(CommandBundle.FromScript(command), RunOptions.None)
+                                        .EnsureSuccess();
 
                                     return true;
                                 }
@@ -4737,8 +4748,8 @@ $@"- name: StorageType
                                     return false;
                                 }
                             },
-                            timeout:           TimeSpan.FromSeconds(600),
-                            pollInterval:      TimeSpan.FromSeconds(1));
+                            timeout:      TimeSpan.FromSeconds(600),
+                            pollInterval: TimeSpan.FromSeconds(1));
                     }
                 });
 
@@ -4852,11 +4863,41 @@ $@"- name: StorageType
                 async () =>
                 {
                     var configmap = new TypedConfigMap<ClusterManifest>(
-                        name:       KubeConfigMapName.ClusterInfo, 
+                        name:       KubeConfigMapName.ClusterManifest, 
                         @namespace: KubeNamespace.NeonSystem, 
                         data:       KubeSetup.ClusterManifest);
 
                     await k8s.CoreV1.CreateNamespacedTypedConfigMapAsync(configmap);
+                });
+        }
+
+        /// <summary>
+        /// Sets the  <see cref="KubeConfigMapName.ClusterLock"/> config map in the <see cref="KubeNamespace.NeonStatus"/> namespace
+        /// using the lock setting from the cluster definition.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task SetClusterLockAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var k8s     = GetK8sClient(controller);
+
+            await controlNode.InvokeIdempotentAsync("setup/cluster-lock",
+                async () =>
+                {
+                    var clusterLockMap = new TypedConfigMap<ClusterLock>(
+                        name:       KubeConfigMapName.ClusterLock,
+                        @namespace: KubeNamespace.NeonStatus,
+                        data:       new ClusterLock()
+                        {
+                            IsLocked = cluster.SetupState.ClusterDefinition.IsLocked,
+                        });
+
+                    await k8s.CoreV1.CreateNamespacedTypedConfigMapAsync(clusterLockMap);
                 });
         }
 
@@ -5960,7 +6001,7 @@ $@"- name: StorageType
         /// <param name="controller">The setup controller.</param>
         /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task WriteClusterInfoAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        public static async Task UploadClusterInfoAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -5971,12 +6012,12 @@ $@"- name: StorageType
             await controlNode.InvokeIdempotentAsync("setup/cluster-info",
                 async () =>
                 {
-                    var clusterInfoMap = new TypedConfigMap<ClusterInfo>(
+                    var clusterManifestMap = new TypedConfigMap<ClusterInfo>(
                         name:       KubeConfigMapName.ClusterInfo,
                         @namespace: KubeNamespace.NeonStatus,
                         data:       cluster.CreateClusterInfo());
 
-                    await k8s.CoreV1.CreateNamespacedTypedConfigMapAsync(clusterInfoMap);
+                    await k8s.CoreV1.CreateNamespacedTypedConfigMapAsync(clusterManifestMap);
                 });
         }
 
@@ -5986,8 +6027,12 @@ $@"- name: StorageType
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <param name="ready">
+        /// Pass <c>false</c> early in the cluster setup process to indicate that the cluster isn't
+        /// ready yet and then <c>true</c> as the last setup step indicating that the cluster is ready.
+        /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task SaveClusterConfigMapsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        public static async Task SetClusterHealthAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode, bool ready)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -5995,21 +6040,7 @@ $@"- name: StorageType
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s     = GetK8sClient(controller);
 
-            await controlNode.InvokeIdempotentAsync("setup/cluster-lock",
-                async () =>
-                {
-                    var clusterLockMap = new TypedConfigMap<ClusterLock>(
-                        name:       KubeConfigMapName.ClusterLock,
-                        @namespace: KubeNamespace.NeonStatus,
-                        data:       new ClusterLock()
-                        {
-                            IsLocked = cluster.SetupState.ClusterDefinition.IsLocked,
-                        });
-
-                    await k8s.CoreV1.CreateNamespacedTypedConfigMapAsync(clusterLockMap);
-                });
-
-            await controlNode.InvokeIdempotentAsync("setup/cluster-health",
+            await controlNode.InvokeIdempotentAsync("setup/cluster-health" + (ready ? "-ready" : "-not-provisioning"),
                 async () =>
                 {
                     var clusterHealthMap = new TypedConfigMap<ClusterHealth>(
@@ -6017,8 +6048,8 @@ $@"- name: StorageType
                         @namespace: KubeNamespace.NeonStatus,
                         data:       new ClusterHealth()
                         {
-                            State   = ClusterState.Healthy,
-                            Summary = "Cluster is healthy"
+                            State   = ready ? ClusterState.Healthy : ClusterState.Provisoning,
+                            Summary = ready ? "Cluster is healthy" : "Cluster is healthy"
                         });
 
                     await k8s.CoreV1.CreateNamespacedTypedConfigMapAsync(clusterHealthMap);

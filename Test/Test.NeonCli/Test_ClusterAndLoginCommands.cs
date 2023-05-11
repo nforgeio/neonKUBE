@@ -214,8 +214,9 @@ nodes:
             await Test(HostingEnvironment.Azure);
         }
 
-        [MaintainerFact]
-        public async Task HyperV()
+        [MaintainerTheory]
+        [Repeat(10)]
+        public async Task HyperV(int runCount)
         {
             await Test(HostingEnvironment.HyperV);
         }
@@ -613,6 +614,12 @@ nodes:
 
                     KubeHelper.KubeConfig.Reload();
                     Assert.Empty(KubeHelper.KubeConfig.Clusters.Where(cluster => cluster.Name == clusterName));
+                }
+                catch (Exception e)
+                {
+                    // $debug(jefflill): DELETE THIS!
+
+                    var exceptionType = e.GetType().FullName;
                 }
                 finally
                 {
