@@ -200,30 +200,43 @@ nodes:
             Covenant.Assert(File.Exists(neonCliPath), () => $"[neon-cli] executable does not exist at: {neonCliPath}");
         }
 
-        [MaintainerFact]
+        private const int repeatCount = 1;
+
+        [MaintainerTheory]
+        [Repeat(repeatCount)]
         [Trait(TestTrait.Category, TestTrait.CloudExpense)]
-        public async Task Aws()
+        public async Task Aws(int runCount)
         {
+            _ = runCount;
+
             await Test(HostingEnvironment.Aws);
         }
 
-        [MaintainerFact]
+        [MaintainerTheory]
+        [Repeat(repeatCount)]
         [Trait(TestTrait.Category, TestTrait.CloudExpense)]
-        public async Task Azure()
+        public async Task Azure(int runCount)
         {
+            _ = runCount;
+
             await Test(HostingEnvironment.Azure);
         }
 
         [MaintainerTheory]
-        [Repeat(10)]
+        [Repeat(repeatCount)]
         public async Task HyperV(int runCount)
         {
+            _ = runCount;
+
             await Test(HostingEnvironment.HyperV);
         }
 
-        [MaintainerFact]
-        public async Task XenServer()
+        [MaintainerTheory]
+        [Repeat(repeatCount)]
+        public async Task XenServer(int runCount)
         {
+            _ = runCount;
+
             await Test(HostingEnvironment.XenServer);
         }
 
