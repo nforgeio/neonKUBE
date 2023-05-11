@@ -184,13 +184,7 @@ namespace Neon.Kube.Proxy
             Covenant.Requires<ArgumentNullException>(hostingManagerFactory != null, nameof(hostingManagerFactory));
             kubeConfig.Validate(needsCurrentCluster: false);
 
-            var clonedConfig = kubeConfig.Clone();
-
-            clonedConfig.SetContext(context.Name);
-
-            clonedConfig = clonedConfig.Clone(currentOnly: true);
-
-            return Create(clonedConfig, hostingManagerFactory, operation, nodeProxyCreator, defaultRunOptions);
+            return Create(kubeConfig.CloneAndSetContext(context.Name), hostingManagerFactory, operation, nodeProxyCreator, defaultRunOptions);
         }
 
         /// <summary>

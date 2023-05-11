@@ -279,6 +279,57 @@ namespace Neon.Kube.Config
         }
 
         /// <summary>
+        /// Obtains the current context, cluster, and user in one go.
+        /// </summary>
+        /// <param name="context">Returns as the current context or <c>null</c>.</param>
+        /// <param name="cluster">Returns as the current cluster or <c>null</c>.</param>
+        /// <param name="user">Returns as the current user or <c>null</c>.</param>
+        /// <exception cref="InvalidDataException">
+        /// Thrown when one or both of the referenced current context, cluster or
+        /// user doesn't exist.
+        /// </exception>
+        /// <remarks>
+        /// <note>
+        /// This method returns <c>null</c> for all values when there is no current context
+        /// and when there is a current context, it ensures that the referenced context, cluster
+        /// and user actually exists, throwing an <see cref="InvalidDataException"/> when any
+        /// are missing.
+        /// </note>
+        /// </remarks>
+        public void GetCurrent(out KubeConfigContext context, out KubeConfigCluster cluster, out KubeConfigUser user)
+        {
+            context = null;
+            cluster = null;
+            user    = null;
+
+            if (CurrentContext == null)
+            {
+                return;
+            }
+
+            context = GetContext(CurrentContext);
+
+            if (context == null)
+            {
+                throw new InvalidDataException($"KubeConfig [context={CurrentContext}] does not exist.");
+            }
+
+            cluster = GetCluster(context.Cluster);
+
+            if (cluster == null)
+            {
+                throw new InvalidDataException($"KubeConfig [cluster={context.Cluster}] does not exist.");
+            }
+
+            user = GetUser(context.User);
+
+            if (user == null)
+            {
+                throw new InvalidDataException($"KubeConfig [user={context.User}] does not exist.");
+            }
+        }
+
+        /// <summary>
         /// Removes a Kubernetes context, if it exists.
         /// </summary>
         /// <param name="context">The context to be removed.</param>
@@ -490,6 +541,37 @@ namespace Neon.Kube.Config
             }
 
             return clone;
+        }
+
+        /// <summary>
+        /// <para>
+        /// Searches the config for the named context.  If it's present, the method will clone
+        /// the config, make the named context as current and then remove all other contexts and
+        /// users.  <c>null</c> will be returned if the named context doesn't exist.
+        /// </para>
+        /// <para>
+        /// This is handy when you need to operate on a cluster that's not the current one.
+        /// </para>
+        /// </summary>
+        /// <param name="contextName"></param>
+        /// <returns>
+        /// The new <see cref="KubeConfig"/> with the specified context set or <c>null</c>
+        /// when the desired context does exist.
+        /// </returns>
+        public KubeConfig CloneAndSetContext(string contextName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(contextName), nameof(contextName));
+
+            if (GetContext(contextName) == null)
+            {
+                return null;
+            }
+
+            var clone = Clone();
+
+            clone.SetContext(contextName);
+
+            return clone.Clone(currentOnly: true);
         }
     }
 }
