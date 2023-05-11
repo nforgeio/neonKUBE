@@ -441,7 +441,7 @@ namespace Neon.Kube.Xunit
             //      * That it's running
             //      * That it's not locked
 
-            Cluster = ClusterProxy.CreateAsync(KubeHelper.KubeConfig, new HostingManagerFactory(), options.CloudMarketplace).Result;
+            Cluster = ClusterProxy.Create(KubeHelper.KubeConfig, new HostingManagerFactory());
 
             try
             {
@@ -630,7 +630,7 @@ namespace Neon.Kube.Xunit
                 // otherwise we'll remove the cluster as well as its context, and deploy
                 // a new cluster below.
 
-                using (var cluster = ClusterProxy.CreateAsync(KubeHelper.KubeConfig, new HostingManagerFactory(), options.CloudMarketplace).Result)
+                using (var cluster = ClusterProxy.Create(KubeHelper.KubeConfig, new HostingManagerFactory()))
                 {
                     KubeHelper.SetCurrentContext(configContextName);
 
@@ -651,7 +651,7 @@ namespace Neon.Kube.Xunit
 
                         started   = true;
                         IsRunning = true;
-                        Cluster   = ClusterProxy.CreateAsync(KubeHelper.KubeConfig, new HostingManagerFactory(), options.CloudMarketplace).Result;
+                        Cluster   = ClusterProxy.Create(KubeHelper.KubeConfig, new HostingManagerFactory());
 
                         return TestFixtureStatus.Started;
                     }
@@ -665,7 +665,7 @@ namespace Neon.Kube.Xunit
                 // deployed by another machine or fragments of a partially deployed cluster,
                 // so we need to do a preemptive cluster remove.
 
-                using (var cluster = ClusterProxy.CreateAsync(new KubeSetupState() { ClusterDefinition = clusterDefinition }, new HostingManagerFactory(), options.CloudMarketplace).Result)
+                using (var cluster = ClusterProxy.Create(new KubeSetupState() { ClusterDefinition = clusterDefinition }, new HostingManagerFactory(), cloudMarketplace: options.CloudMarketplace))
                 {
                     cluster.DeleteClusterAsync().WaitWithoutAggregate();
                 }
@@ -773,7 +773,7 @@ namespace Neon.Kube.Xunit
 
             started   = true;
             IsRunning = true;
-            Cluster   = ClusterProxy.CreateAsync(KubeHelper.KubeConfig, new HostingManagerFactory(), options.CloudMarketplace).Result;
+            Cluster   = ClusterProxy.Create(KubeHelper.KubeConfig, new HostingManagerFactory());
 
             return TestFixtureStatus.Started;
         }

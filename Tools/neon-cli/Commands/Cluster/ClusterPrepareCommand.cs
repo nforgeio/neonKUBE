@@ -250,7 +250,7 @@ OPTIONS:
 
             var setupState = new KubeSetupState() { ClusterDefinition = clusterDefinition };
 
-            using (var cluster = await ClusterProxy.CreateAsync(setupState, new HostingManagerFactory(), !useStaged))
+            using (var cluster = ClusterProxy.Create(setupState, new HostingManagerFactory(), !useStaged))
             {
                 var status = await cluster.GetResourceAvailabilityAsync();
 

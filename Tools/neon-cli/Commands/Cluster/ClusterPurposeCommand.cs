@@ -114,7 +114,7 @@ where PURPOSE can be passed as (case insensitive):
                 Program.Exit(1);
             }
 
-            using (var cluster = await ClusterProxy.CreateAsync(KubeHelper.KubeConfig, new HostingManagerFactory(), cloudMarketplace: false))   // [cloudMarketplace] arg doesn't matter here.
+            using (var cluster = ClusterProxy.Create(KubeHelper.KubeConfig, new HostingManagerFactory()))
             {
                 var purposeArg  = commandLine.Arguments.ElementAtOrDefault(0);
                 var clusterInfo = await cluster.GetClusterInfoAsync();
