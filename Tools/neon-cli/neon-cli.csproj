@@ -12,7 +12,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <PublishSingleFile>false</PublishSingleFile>
+        <PublishSingleFile>true</PublishSingleFile>
         <SelfContained>true</SelfContained>
         <PublishTrimmed>false</PublishTrimmed>
         <TrimMode>partial</TrimMode>
