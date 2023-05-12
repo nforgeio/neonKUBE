@@ -540,7 +540,7 @@ namespace Neon.Kube.Setup
             controller.AddDisposable(cluster);
             controller.AddDisposable(desktopServiceProxy);
 
-            return controller;
+            return await Task.FromResult(controller);
         }
     }
 }

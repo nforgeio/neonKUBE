@@ -329,7 +329,7 @@ namespace Neon.Kube.Setup
                     }
                 };
 
-            return controller;
+            return await Task.FromResult(controller);
         }
 
         /// <summary>
