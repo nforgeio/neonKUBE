@@ -275,7 +275,8 @@ namespace Neon.Kube.Setup
             //-----------------------------------------------------------------
             // Cluster setup.
 
-            controller.AddGlobalStep("setup cluster", controller => KubeSetup.SetupClusterAsync(controller));
+            controller.AddGlobalStep("setup cluster",  controller => KubeSetup.SetupClusterAsync(controller));
+            controller.AddNodeStep("lock sysadmin password", (controller, node) => node.SudoCommand($"passwd --lock {KubeConst.SysAdminUser}"));
             controller.AddGlobalStep("persist state",
                 controller =>
                 {
