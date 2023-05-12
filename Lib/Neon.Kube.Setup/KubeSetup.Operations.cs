@@ -39,7 +39,6 @@ using Neon.Kube.Config;
 using Neon.Kube.Deployment;
 using Neon.Kube.Glauth;
 using Neon.Kube.Hosting;
-using Neon.Kube.Operator;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Calico;
 using Neon.Kube.Resources.CertManager;
