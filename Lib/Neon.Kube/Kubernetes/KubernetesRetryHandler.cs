@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -72,7 +73,6 @@ namespace Neon.Kube
                             case (HttpStatusCode)429:   // Too many requests
 
                                 return true;
-
                         }
                     }
 
@@ -137,6 +137,7 @@ namespace Neon.Kube
                             {
                                 requestContent = await request.Content.ReadAsStringAsync();
                             }
+
                             throw new HttpOperationException()
                             {
                                 Body     = content,
@@ -152,8 +153,15 @@ namespace Neon.Kube
                 });
         }
 
+        /// <summary>
+        /// Creates a new exception with additional message details.
+        /// </summary>
+        /// <param name="e">The exception being augmented.</param>
+        /// <returns>The new augmented exception.</returns>
         private static HttpOperationException GetEnhancedHttpOperationException(HttpOperationException e)
         {
+            Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
+
             return new HttpOperationException($"{e.Message}\r\n\r\nRESPONSE.CONTENT:\r\n\r\n{e.Response.Content}", e.InnerException)
             {
                 Response = e.Response
