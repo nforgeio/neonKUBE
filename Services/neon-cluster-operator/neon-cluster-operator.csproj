@@ -53,6 +53,10 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="JsonDiffPatch" Version="2.0.61" />
+        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="Minio" Version="4.0.7" />
         <PackageReference Include="NSwag.MSBuild" Version="13.18.2">
             <PrivateAssets>all</PrivateAssets>
