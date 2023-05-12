@@ -6052,7 +6052,14 @@ $@"- name: StorageType
                             Summary = ready ? "Cluster is healthy" : "Cluster is healthy"
                         });
 
-                    await k8s.CoreV1.CreateNamespacedTypedConfigMapAsync(clusterHealthMap);
+                    if (!ready)
+                    {
+                        await k8s.CoreV1.CreateNamespacedTypedConfigMapAsync(clusterHealthMap);
+                    }
+                    else
+                    {
+                        await k8s.CoreV1.ReplaceNamespacedTypedConfigMapAsync(clusterHealthMap);
+                    }
                 });
         }
 
