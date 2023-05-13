@@ -50,7 +50,7 @@ using System.Diagnostics.Eventing.Reader;
 // is implied.  After talking to @marcusbooyah, I believe the conclusion
 // was that we're always going to be authenticating through the cluster
 // and the cluster will handle any indirection to upstream providers like
-// GitHub, neonCLOUD, etc.
+// GitHub, NEONCLOUD, etc.
 //
 // The command will need to disambiguate between context names or cluster
 // hostname/domains.  If the parameter includes the [https://] URI scheme,

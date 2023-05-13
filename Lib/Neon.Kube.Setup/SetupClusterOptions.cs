@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    SetupClusterOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -87,7 +87,7 @@ namespace Neon.Kube.Setup
         public bool UploadCharts { get; set; } = false;
 
         /// <summary>
-        /// Optionally overrides the neonCLOUD headend service URI.  This defaults to <see cref="KubeEnv.HeadendUri"/>.
+        /// Optionally overrides the NEONCLOUD headend service URI.  This defaults to <see cref="KubeEnv.HeadendUri"/>.
         /// </summary>
         public string NeonCloudHeadendUri { get; set; } = null;
 

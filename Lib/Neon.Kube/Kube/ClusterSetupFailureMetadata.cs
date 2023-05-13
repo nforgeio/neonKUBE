@@ -55,7 +55,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Set to the UUID for the user.  Note that this will be set to <see cref="Guid.Empty"/>
-        /// until we have the chance to implement neonCLOUD users.
+        /// until we have the chance to implement NEONCLOUD users.
         /// </summary>
         [JsonProperty(PropertyName = "UserId", Required = Required.Always)]
         [YamlMember(Alias = "userId", ApplyNamingConventions = false)]

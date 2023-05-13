@@ -99,7 +99,7 @@ namespace Neon.Kube
         public const string ClusterAdvice = "setup-advice";
 
         /// <summary>
-        /// Property name for accessing the neonCLOUD headend service client.
+        /// Property name for accessing the NEONCLOUD headend service client.
         /// </summary>
         public const string NeonCloudHeadendClient = "neoncloud-headend-client";
 

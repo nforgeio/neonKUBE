@@ -304,7 +304,7 @@ namespace Neon.Kube
         public Dictionary<string, KubeFileDetails> ControlNodeFiles { get; set; } = new Dictionary<string, KubeFileDetails>();
 
         /// <summary>
-        /// Holds the JWT used to authenticate with neonCLOUD headend services.
+        /// Holds the JWT used to authenticate with NEONCLOUD headend services.
         /// </summary>
         [JsonProperty(PropertyName = "NeonCloudToken", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "neonCloudToken", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]

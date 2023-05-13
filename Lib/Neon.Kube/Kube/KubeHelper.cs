@@ -2134,7 +2134,7 @@ exit 0
         {
             // $note(jefflill):
             //
-            // This key was generated using the neonCLOUD neon-image tool via:
+            // This key was generated using the NEONCLOUD neon-image tool via:
             //
             //      neon-image sshkey neon-desktop root
             //

@@ -46,4 +46,4 @@ Follow the steps below to configure a development or test workstation:
     * Click the **Install** link at the top of the solution explorer panel when there's a warning about a missing SDK.
     * Select **Build/Rebuild** Solution
 
-6: *Optional:* Maintainers authorized to perform releases will need to follow the README.md instructions in the neonCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
+6: *Optional:* Maintainers authorized to perform releases will need to follow the README.md instructions in the NEONCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.

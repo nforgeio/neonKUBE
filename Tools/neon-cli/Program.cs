@@ -82,7 +82,7 @@ namespace NeonCli
         /// </summary>
         /// <remarks>
         /// We use this to help with managing the source code duplicated for this in the
-        /// NEONKUBE and neonCLOUD (premium) GitHub repositories.
+        /// NEONKUBE and NEONCLOUD (premium) GitHub repositories.
         /// </remarks>
         public const bool IsPremium =
 #if PREMIUM

@@ -334,7 +334,7 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// Returns <c>true</c> for cluster definitions that describe a special NEONKUBE/CLOUD
-        /// cluster like the the neonCLOUD built-in cluster.  This is used to relax constraints
+        /// cluster like the the NEONCLOUD built-in cluster.  This is used to relax constraints
         /// on user cluster definitions like cluster node names not being able to use the "neon-"
         /// prefix.
         /// </summary>

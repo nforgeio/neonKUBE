@@ -45,7 +45,7 @@ namespace Neon.Kube
     /// <para>
     /// Holds information about a deployed cluster including things like the container images
     /// that need to be present in the local Harbor deployment.  This information is associated
-    /// with a specific version of NEONKUBE and is generated automatically during neonCLOUD
+    /// with a specific version of NEONKUBE and is generated automatically during NEONCLOUD
     /// node image builds and is uploaded to S3 as a JSON document.
     /// </para>
     /// <para>
