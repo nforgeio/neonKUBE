@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    VersionCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -40,11 +40,11 @@ namespace NeonCli
     public class VersionCommand : CommandBase
     {
         private const string usage = @"
-Prints the [neon-cli] version.
+Prints the [neon-cli] version or compares the version to an argument.
 
 USAGE:
 
-    neon tool version [OPTIONS]
+    neon neon-version [OPTIONS]
 
 OPTIONS:
 
@@ -57,7 +57,7 @@ OPTIONS:
                           if the tool is older than VERSION.
 ";
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "tool", "version" }; 
+        public override string[] Words => new string[] { "neon-version" }; 
 
         /// <inheritdoc/>
         public override string[] ExtendedOptions => new string[] { "-n", "--git", "--minimum" };
