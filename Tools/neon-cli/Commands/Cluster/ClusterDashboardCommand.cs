@@ -42,8 +42,8 @@ namespace NeonCli
     public class ClusterDashboardCommand : CommandBase
     {
         private const string usage = @"
-Lists the dashboards available for the current cluster or displays a named
-dashboard in a browser window.
+Lists the dashboards available for the current NEONKUBE cluster or displays
+a named dashboard in a browser window.
 
 USAGE:
 

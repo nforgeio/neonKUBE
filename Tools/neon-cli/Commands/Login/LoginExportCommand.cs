@@ -41,7 +41,7 @@ namespace NeonCli
     public class LoginExportCommand : CommandBase
     {
         private const string usage = @"
-Exports a Kubernetes context to standard output or a file.
+Exports a NEONKUBE context to standard output or a file.
 
 USAGE:
 
@@ -59,13 +59,17 @@ OPTIONS:
 
 REMARKS:
 
-This command is used to obtain the Kubernetes context for a cluster so
-it can be saved and perhaps shared with other cluster users.  The current
-context (if there is one) is obtained by default, but you can use the
-[--context=CONTEXT-NAME] option to obtain a specific context.
+IMPORTANT: Exported NEONKUBE contexts include cluster credentials and
+           should be protected.
+
+This command is used to obtain a NEONKUBE context for a cluster so
+it can be saved (perhaps in a password manager) and possibly shared with
+other cluster users.  The current context (if there is one) is obtained
+by default, but you can use the [--context=CONTEXT-NAME] option to obtain
+a specific context.
 
 The context information is written to STDOUT by default.  Use the PATH
-argument to save this to a file instead.
+argument to save to a file instead.
 
 Use the [neon login import] command to import an exported context.
 ";

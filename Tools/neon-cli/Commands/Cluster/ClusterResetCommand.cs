@@ -59,7 +59,7 @@ namespace NeonCli
     public class ClusterResetCommand : CommandBase
     {
         private const string usage = @"
-Resets the current cluster to its original condition.
+Resets the current NEONKUBE cluster to its original condition.
 
 USAGE:
 
@@ -123,8 +123,7 @@ Reset Minio and Harbor as well as removing all non-standard namespaces:
 
 NOTE:
 
-This command will not work on a locked clusters as a safety measure.  The idea
-it to add some friction to avoid impacting production clusters by accident.
+This command will not work on a locked clusters as a safety measure.
 
 All clusters besides neon-desktop built-in clusters are locked by default when
 they're deployed.  You can disable this by setting [IsLocked=false] in your

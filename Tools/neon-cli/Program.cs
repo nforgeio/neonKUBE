@@ -179,16 +179,6 @@ namespace NeonCli
 
 USAGE:
 
-    neon [OPTIONS] COMMAND [ARG...]
-
-NEON KUBECTL COMMANDS:
-
-    [neon-cli] supports all standard kubectl commands like (more help below):
-
-    neon apply -f my-manifest.yaml
-
-NEON CLUSTER LIFE-CYCLE COMMANDS:
-
     neon cluster check
     neon cluster dashboard
     neon cluster health
@@ -215,19 +205,10 @@ NEON HELM COMMANDS:
 
     neon helm install -f my-values.yaml my-redis ./redis
 
-NEON UTILITY COMMANDS:
-
-    neon tool generate iso  SOURCE-FOLDER ISO-PATH
-    neon tool password      COMMAND
-    neon tool vault         COMMAND
-    neon tool version       [-n] [--git] [--minimum=VERSION]
-
-CLUSTER MANAGEMENT ARGUMENTS:
+ARGUMENTS:
 
     CLUSTER-DEF         - Path to a cluster definition file.  This is
                           optional for some commands when logged in
-
-    COMMAND             - Subcommand and arguments
 
 NOTE: Command line arguments and options may include references to 
       profile values, secrets and environment variables, like:

@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    LogoutCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -40,7 +40,7 @@ namespace NeonCli
     public class LogoutCommand : CommandBase
     {
         private const string usage = @"
-Logs out of the current Kubernetes context.
+Logs out of the current NEONKUBE context by selecting no context.
 
 USAGE:
 

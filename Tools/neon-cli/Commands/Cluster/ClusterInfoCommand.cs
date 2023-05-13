@@ -61,7 +61,7 @@ namespace NeonCli
     public class ClusterInfoCommand : CommandBase
     {
         private const string usage = @"
-Prints the information the current cluster.
+Prints the information the current NEONKUBE cluster.
 
 USAGE: neon cluster ingo
 ";

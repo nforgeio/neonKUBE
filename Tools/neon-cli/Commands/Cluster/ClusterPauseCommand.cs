@@ -59,8 +59,8 @@ namespace NeonCli
     public class ClusterPauseCommand : CommandBase
     {
         private const string usage = @"
-Pauses the current cluster by putting its nodes to sleep.  This is not
-supported by all hosting environments.
+Pauses the current NEONKUBE cluster by putting its nodes to sleep.  This may
+not be supported by all hosting environments.
 
 USAGE:
 
@@ -75,8 +75,7 @@ REMARKS:
 
 Use the [neon cluster start] command to resume a paused cluster.
 
-This command will not work on a locked clusters as a safety measure.  The idea
-it to add some friction to avoid impacting production clusters by accident.
+This command will not work on a locked clusters as a safety measure.
 
 All clusters besides neon-desktop built-in clusters are locked by default when
 they're deployed.  You can disable this by setting [IsLocked=false] in your

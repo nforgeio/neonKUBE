@@ -41,7 +41,7 @@ namespace NeonCli
     public class ClusterValidateCommand : CommandBase
     {
         private const string usage = @"
-Verifies a cluster definition file.
+Validates a NEONKUBE cluster definition file.
 
 USAGE:
 

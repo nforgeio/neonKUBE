@@ -38,6 +38,7 @@ using Neon.Kube.Glauth;
 using System.Diagnostics.Contracts;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Deployment;
+using System.Diagnostics.Eventing.Reader;
 
 // $todo(jefflill): This implementation is incomplete.
 //
@@ -75,39 +76,72 @@ namespace NeonCli
     public class LoginCommand : CommandBase
     {
         private const string usage = @"
-Manages Kubernetes contexts for the user on the local workstation.
+Manages NEONKUBE contexts for the user on the local workstation.
 
 USAGE:
 
     neon login [OPTIONS] CONTEXT-NAME
+    neon login [OPTIONS] https://CLUSTER-DOMAIN
+    neon login [OPTIONS] --sso CLUSTER-DOMAIN
     neon login --namespace=NAMESPACE
     neon login -n=NAMESPACE
 
+    neon login delete [--force] CONTEXT-NAME
+    neon login export [--context=CONTEXT-NAME] [PATH]
+    neon login import [--no-login] [--force] PATH
+    neon login list
+    neon login ls
+
+    neon logout
+
 ARGUMENTS:
 
-    CONTEXT-NAME    - Specifies the name of an existing Kubernetes context
-                      on the workstation.  These are typically formatted like
+    CONTEXT-NAME    - Specifies the name of an existing NEONKUBE context on
+                      the workstation.  These are typically formatted like:
 
                           USER@CLUSTER-NAME
 
+    CLUSTER-DOMAIN  - Specifies the cluster domain for single-sign-on (SSO)
+                      authentication with the cluster
+
 OPTIONS:
 
+    --sso                   - Perform SSO authentication against the cluster
     --namespace=NAMESPACE   - Optionally specifies the Kubernetes namespace 
     -n=NAMESPACE              to be set for the new context
 
 REMARKS:
 
-This command is used to manage the current cluster which identifies the cluster
-where subsequent commands will take effect.  This command can also be used to
-change the namespace for the current cluster when CONTEXT-NAME is not specified.
+This command is used to switch between contexts on the local workstation.
+One cluster and subcommands are available for other operations.
 
+Scenarios:
+----------
+
+Select a NEONKUBE context on the workstation so that subsequent commands
+will operate on the related NEONKUBE cluster.
+
+    neon login [OPTIONS] CONTEXT-NAME
+
+Use single-sign-on (SSO) authentication to log into a new cluster for
+which you don't already have that cluster's context information.  This
+command displays a browser window from the target cluster that prompts
+for your cluster SSO credentials.  You'll need the cluster domain and
+can execute the command two ways:
+
+    neon login [OPTIONS] https://CLUSTERDOMAIN
+    neon login [OPTIONS] --sso CLUSTER-DOMAIN
+
+You may use the [--namespace=NAMESPACE] or [-n=NAMESPACE] options by
+themselves to switch the namespace for the current NEONKUBE cluster
+or when switching contexts to set the current namespace afterwards.
 ";
 
         /// <inheritdoc/>
         public override string[] Words => new string[] { "login" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--namespace", "-n" };
+        public override string[] ExtendedOptions => new string[] { "--namespace", "-n", "--sso" };
 
         /// <inheritdoc/>
         public override bool NeedsHostingManager => true;
@@ -134,6 +168,7 @@ change the namespace for the current cluster when CONTEXT-NAME is not specified.
             try
             {
                 var contextOrClusterDomain = commandLine.Arguments.FirstOrDefault();
+                var sso                    = commandLine.HasOption("--sso");
                 var contextName            = (string)null;
                 var clusterDomain          = (string)null;
                 var @namespace             = (string)null;
@@ -151,11 +186,16 @@ change the namespace for the current cluster when CONTEXT-NAME is not specified.
                     }
                 }
 
-                // Disambiguate between the context and cluster domain.
+                // Disambiguate between cluster context and cluster domain.
 
-                if (contextOrClusterDomain.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
+                if (sso || contextOrClusterDomain.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    clusterDomain = contextOrClusterDomain.Substring("https://".Length);
+                    clusterDomain = contextOrClusterDomain;
+
+                    if (clusterDomain.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        clusterDomain = clusterDomain.Substring("https://".Length);
+                    }
                 }
                 else
                 {

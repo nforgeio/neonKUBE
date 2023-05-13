@@ -60,17 +60,18 @@ namespace NeonCli
     public class ClusterDeleteCommand : CommandBase
     {
         private const string usage = @"
-Removes the current cluster or a named cluster.  This is not supported by all 
-hosting environments.
+Removes a NEONKUBE cluster.  This may not be supported by all hosting
+environments.
 
 USAGE:
 
-    neon cluster remove [CLUSTER-NAME] [--force]
+    neon cluster remove [CONTEXT-NAME] [--force]
 
 ARGUMENTS:
 
-    CLUSTER-NAME    - Optionally specifies the name of the cluster to be
-                      removed as opposed to the current cluster
+    CONTEXT-NAME    - Optionally identifies context identifying the cluster
+                      to be removed.  The current context's cluster will be
+                      removed when this isn't present
 
 OPTIONS:
 

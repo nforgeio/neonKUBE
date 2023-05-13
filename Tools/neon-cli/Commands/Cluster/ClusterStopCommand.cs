@@ -59,7 +59,8 @@ namespace NeonCli
     public class ClusterStopCommand : CommandBase
     {
         private const string usage = @"
-Starts a stopped or paused cluster.  This is not supported by all environments.
+Stops the current NEONKUBE cluster.  This may not be supported by
+all environments.
 
 USAGE:
 
@@ -75,8 +76,7 @@ OPTIONS:
 
 REMARKS:
 
-This command will not work on a locked clusters as a safety measure.  The idea
-it to add some friction to avoid impacting production clusters by accident.
+This command will not work on a locked clusters as a safety measure.
 
 All clusters besides neon-desktop built-in clusters are locked by default when
 they're deployed.  You can disable this by setting [IsLocked=false] in your

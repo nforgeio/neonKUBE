@@ -41,11 +41,11 @@ namespace NeonCli
     public class LoginImportCommand : CommandBase
     {
         private const string usage = @"
-Imports a cluster login from a file saved by a previous [neon login export] command.
+Imports a NEONKUBE context from a file saved by: neon login export
 
 USAGE:
 
-    neon login import [--nologin] [--force] PATH
+    neon login import [--no-login] [--force] PATH
 
 ARGUMENTS:
 
@@ -54,14 +54,19 @@ ARGUMENTS:
 OPTIONS:
 
     --force     - Don't prompt to replace an existing login.
-    --nologin   - Don't log into the imported cluster.
+    --no-login  - Don't log into the imported cluster.
+
+REMARKS:
+
+This command logs into the new context by default.  Use [--no-login]
+to disable this behavior and just import the context.
 ";
 
         /// <inheritdoc/>
         public override string[] Words => new string[] { "login", "import" }; 
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--nologin", "--force" };
+        public override string[] ExtendedOptions => new string[] { "--no-login", "--force" };
 
         /// <inheritdoc/>
         public override bool NeedsHostingManager => true;
@@ -125,7 +130,7 @@ OPTIONS:
 
             Console.Error.WriteLine($"Imported: {newLogin.Context.Name}");
 
-            if (commandLine.GetOption("--nologin") == null)
+            if (commandLine.GetOption("--no-login") == null)
             {
                 Console.Error.WriteLine($"Logging into: {newLogin.Context.Name}");
                 KubeHelper.KubeConfig.CurrentContext = newLogin.Context.Name;

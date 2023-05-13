@@ -60,11 +60,12 @@ namespace NeonCli
     public class ClusterPurposeCommand : CommandBase
     {
         private const string usage = @"
-Prints or sets the current cluster's purpose.
+Prints or sets the current NEONKUBE cluster purpose.  This is used to help
+cluster operators categorize at a high level how clusters are used.
 
 USAGE:
 
-    neon cluster purpose [unspecified | development | test | stage | production]
+    neon cluster purpose [development | production | stage | test | unspecified]
 
 REMARKS:
 
@@ -78,11 +79,11 @@ and this command to change the purpose to one of the possible values:
 
 where PURPOSE can be passed as (case insensitive):
 
-    unspecified
     development
-    test
-    stage
     production
+    stage
+    test
+    unspecified
 
 ";
         /// <inheritdoc/>

@@ -59,14 +59,24 @@ namespace NeonCli
     public class ClusterUnlockCommand : CommandBase
     {
         private const string usage = @"
-Unlocks the current cluster by allowing ClusterFixture to run unit tests
-as well as allowing potentially distructive commands like:
+Unlocks the current NEONKUBE cluster to allow potentially distructive
+commands like:
 
     remove, reset, pause and stop
 
-to execute without user confirmation.
+and also to enable [ClusterFixture] to run unit tests on the cluster.
 
 USAGE:
+
+    neon cluster unlock
+
+REMARKS:
+
+This command will not work on a locked clusters as a safety measure.
+
+All clusters besides neon-desktop built-in clusters are locked by default when
+they're deployed.  You can disable this by setting [IsLocked=false] in your
+cluster definition or by executing this command on your cluster:
 
     neon cluster unlock
 

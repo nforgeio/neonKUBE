@@ -41,7 +41,7 @@ namespace NeonCli
     public class LoginDeleteCommand : CommandBase
     {
         private const string usage = @"
-Removes a Kubernetes context from the local worstation.
+Removes a NEONKUBE context from the local worstation.
 
 USAGE:
 
@@ -54,12 +54,11 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --force             - Don't prompt, just remove andalso ignore missing logins
+    --force         - Don't prompt to confirm and also ignore missing logins
 
 REMARKS:
 
-By default, this comman will remove the current login when
-CONTEXT-NAME is not specified.
+This command removes the current login when CONTEXT-NAME is not specified.
 ";
 
         /// <inheritdoc/>
