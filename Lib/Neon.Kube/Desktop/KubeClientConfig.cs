@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubeClientConfig.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -40,7 +40,7 @@ using Neon.Net;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Used by the neonKUBE client desktop and command line tools to 
+    /// Used by the NEONKUBE client desktop and command line tools to 
     /// manage the client side configuration.
     /// </summary>
     public class KubeClientConfig

@@ -723,7 +723,7 @@ namespace Neon.Kube.Hosting.XenServer
             // compare the MD5 encoded in the remote template description against
             // the local template MD5.  The remote description should look like:
             //
-            //      neonKUBE Node Image [md5:ff97e7c555e32442ea8e8c7cb12d14df]
+            //      NEONKUBE Node Image [md5:ff97e7c555e32442ea8e8c7cb12d14df]
             //
             // We'll return immediately if the description MD5 matches otherwise
             // we'll remove the remote template and import a new one.
@@ -784,7 +784,7 @@ namespace Neon.Kube.Hosting.XenServer
             // Install the node template on the XenServer.  Note that we're going to
             // add a description formatted like:
             //
-            //      neonKUBE Node Image [MD5:ff97e7c555e32442ea8e8c7cb12d14df]
+            //      NEONKUBE Node Image [MD5:ff97e7c555e32442ea8e8c7cb12d14df]
             //
             // The MD5 is computed for the GZIP compressed node image as downloaded
             // from the source.  We're expecting a file at $"{driveTemplatePath}.gz" 
@@ -814,7 +814,7 @@ namespace Neon.Kube.Hosting.XenServer
             xenSshProxy.Status = $"install: node image {templateName} (slow)";
             xenController.SetGlobalStepStatus();
 
-            xenClient.Template.ImportVmTemplate(driveTemplatePath, templateName, cluster.Hosting.XenServer.StorageRepository, description: $"neonKUBE Node Image [MD5:{md5}]");
+            xenClient.Template.ImportVmTemplate(driveTemplatePath, templateName, cluster.Hosting.XenServer.StorageRepository, description: $"NEONKUBE Node Image [MD5:{md5}]");
 
             xenSshProxy.Status = string.Empty;
             xenController.SetGlobalStepStatus();
@@ -851,7 +851,7 @@ namespace Neon.Kube.Hosting.XenServer
 
             if (hostInfo.Version < KubeVersions.MinXenServerVersion)
             {
-                throw new NotSupportedException($"neonKUBE cannot provision a cluster on a XenServer/XCP-ng host older than [v{KubeVersions.MinXenServerVersion}].  [{hostInfo.Params["name-label"]}] is running version [{hostInfo.Version}]. ");
+                throw new NotSupportedException($"NEONKUBE cannot provision a cluster on a XenServer/XCP-ng host older than [v{KubeVersions.MinXenServerVersion}].  [{hostInfo.Params["name-label"]}] is running version [{hostInfo.Version}]. ");
             }
 
             foreach (var node in GetHostedNodes(xenClient))
@@ -924,7 +924,7 @@ namespace Neon.Kube.Hosting.XenServer
                     // Ignore errors reported when the partition is already at its
                     // maximum size and cannot be grown:
                     //
-                    //      https://github.com/nforgeio/neonKUBE/issues/1352
+                    //      https://github.com/nforgeio/TEMPKUBE/issues/1352
 
                     if (!response.Success && !response.AllText.Contains("NOCHANGE:"))
                     {
@@ -1176,7 +1176,7 @@ namespace Neon.Kube.Hosting.XenServer
         // XenServer is having trouble suspending VMs so I'm going to disable this
         // feature for the time being:
         //
-        //      https://github.com/nforgeio/neonKUBE/issues/1488
+        //      https://github.com/nforgeio/TEMPKUBE/issues/1488
 
         /// <inheritdoc/>
         public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable /* | HostingCapabilities.Pausable */ | HostingCapabilities.Removable;

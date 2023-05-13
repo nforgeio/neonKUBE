@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    NeonAnnotation.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -22,7 +22,7 @@ using Neon.Kube.ClusterDef;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Defines the non-node annotations used to tag objects by neonKUBE.
+    /// Defines the non-node annotations used to tag objects by NEONKUBE.
     /// </summary>
     public static class NeonAnnotation
     {

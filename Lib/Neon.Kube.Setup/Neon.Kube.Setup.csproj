@@ -5,11 +5,11 @@
         <OutputType>Library</OutputType>
         <RootNamespace>Neon.Kube.Setup</RootNamespace>
         <Version>0.9.2-alpha</Version>
-        <Description>INTERNAL USE ONLY: Core library used by neonKUBE related tooling.</Description>
+        <Description>INTERNAL USE ONLY: Core library used by NEONKUBE related tooling.</Description>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
-        <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
+        <PackageReleaseNotes>https://github.com/nforgeio/TEMPKUBE/releases</PackageReleaseNotes>
         <IsPackable>true</IsPackable>
-        <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Setup/README.md</PackageProjectUrl>
+        <PackageProjectUrl>https://github.com/nforgeio/TEMPKUBE/blob/master/Lib/Neon.Kube.Setup/README.md</PackageProjectUrl>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
         <Configurations>Debug;Release</Configurations>

@@ -1,6 +1,6 @@
-﻿# neonKUBE Developer Setup
+# NEONKUBE Developer Setup
 
-This page describes how to get started with neonKUBE development.
+This page describes how to get started with NEONKUBE development.
 
 ## Workstation Requirements
 
@@ -9,7 +9,7 @@ This page describes how to get started with neonKUBE development.
 * Visual Studio 2019 Edition (or better)
 * Visual Studio Code
 
-Note that the build environment currently assumes that only one Windows user will be acting as a developer on any given workstation.  Developers cannot share a machine and neonKUBE only builds on Windows at this time.
+Note that the build environment currently assumes that only one Windows user will be acting as a developer on any given workstation.  Developers cannot share a machine and NEONKUBE only builds on Windows at this time.
 
 ## Workstation Configuration
 

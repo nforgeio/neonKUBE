@@ -96,7 +96,7 @@ namespace Neon.Kube.ClusterDef
         /// The default number of virtual processors to assign to each cluster virtual machine.  
         /// </para>
         /// <note>
-        /// neonKUBE requires that each control-plane and worker node have at least 4 CPUs.
+        /// NEONKUBE requires that each control-plane and worker node have at least 4 CPUs.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Cores", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -111,7 +111,7 @@ namespace Neon.Kube.ClusterDef
         /// This defaults to <b>4GiB</b>.
         /// </para>
         /// <note>
-        /// neonKUBE requires that each control-plane and worker node have at least 4GiB of RAM.
+        /// NEONKUBE requires that each control-plane and worker node have at least 4GiB of RAM.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Memory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -151,7 +151,7 @@ namespace Neon.Kube.ClusterDef
         /// Eventually, you'll be able to specify a XenServer storage repository.
         /// </para>
         /// <para>
-        /// <a href="https://github.com/nforgeio/neonKUBE/issues/996">Issue #996</a>
+        /// <a href="https://github.com/nforgeio/TEMPKUBE/issues/996">Issue #996</a>
         /// </para>
         /// </note>
         /// </summary>
@@ -226,7 +226,7 @@ namespace Neon.Kube.ClusterDef
         /// <returns>The prefix.</returns>
         public string GetVmNamePrefix(KubeConfigCluster configCluster)
         {
-            // We don't add a prefix for non-neonKUBE clusters or the special neon-desktop cluster.
+            // We don't add a prefix for non-NEONKUBE clusters or the special neon-desktop cluster.
 
             if (!configCluster.IsNeonKube || configCluster.IsNeonDesktop)
             {

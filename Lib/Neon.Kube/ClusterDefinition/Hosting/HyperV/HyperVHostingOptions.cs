@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    LocalHyperVHostingOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -76,7 +76,7 @@ namespace Neon.Kube.ClusterDef
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Note that neonKUBE creates only a single internal Hyper-V switch for the <see cref="HostingEnvironment.HyperV"/>
+        /// Note that NEONKUBE creates only a single internal Hyper-V switch for the <see cref="HostingEnvironment.HyperV"/>
         /// hosting environment for the <see cref="NeonKubeInternalSubnet"/> (<b>100.64.0.0/24</b>).  The first and last two addresses 
         /// of the subnet are reserved:
         /// </para>

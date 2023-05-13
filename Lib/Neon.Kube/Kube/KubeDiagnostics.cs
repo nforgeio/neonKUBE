@@ -58,7 +58,7 @@ using Neon.Windows;
 namespace Neon.Kube
 {
     /// <summary>
-    /// neonKUBE cluster diagnostics.
+    /// NEONKUBE cluster diagnostics.
     /// </summary>
     public static class KubeDiagnostics
     {

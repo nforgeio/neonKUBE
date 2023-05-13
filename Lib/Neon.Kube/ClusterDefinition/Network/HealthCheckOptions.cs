@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    HealthCheckOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -51,7 +51,7 @@ namespace Neon.Kube.ClusterDef
     /// </summary>
     /// <remarks>
     /// <para>
-    /// neonKUBE clusters deployed to cloud hosting environments include a cloud provided
+    /// NEONKUBE clusters deployed to cloud hosting environments include a cloud provided
     /// load balancer that routes external network traffic to cluster nodes.  Currently,
     /// only TCP routing is supported.  HTTP and HTTPS traffic is routed as TCP because
     /// we don't want to add the complexity of managing TLS certificates at the load balancer

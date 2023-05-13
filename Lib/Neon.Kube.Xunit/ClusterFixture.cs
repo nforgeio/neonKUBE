@@ -56,7 +56,7 @@ namespace Neon.Kube.Xunit
 {
     /// <summary>
     /// <para>
-    /// Fixture for testing against neonKUBE clusters.  This can execute against an existing
+    /// Fixture for testing against NEONKUBE clusters.  This can execute against an existing
     /// cluster or it can manage the lifecycle of a new cluster during test runs.
     /// </para>
     /// <note>
@@ -152,7 +152,7 @@ namespace Neon.Kube.Xunit
     /// </code>
     /// </note>
     /// <para>
-    /// This fixture can be used to run tests against an existing neonKUBE cluster as well
+    /// This fixture can be used to run tests against an existing NEONKUBE cluster as well
     /// as a new clusters deployed by the fixture.  The idea here is that you'll have
     /// your unit test class inherit from <see cref="IClassFixture{TFixture}"/>, passing
     /// <see cref="ClusterFixture"/> as the type parameter and then implementing a test class
@@ -201,7 +201,7 @@ namespace Neon.Kube.Xunit
     /// </para>
     /// <para><b>CLUSTER TEST METHOD ATTRIBUTES</b></para>
     /// <para>
-    /// Tests that require a neonKUBE cluster will generally be quite slow and will require additional
+    /// Tests that require a NEONKUBE cluster will generally be quite slow and will require additional
     /// resources on the machine where the test is executing and potentially external resources including
     /// XenServer hosts, cloud accounts, specific network configuration, etc.  This means that cluster
     /// based unit tests can generally run only on specifically configured enviroments.
@@ -213,7 +213,7 @@ namespace Neon.Kube.Xunit
     /// variable <b>does not exist</b>.
     /// </para>
     /// <para>
-    /// Test methods that require neonKUBE clusters should be tagged with <see cref="ClusterFactAttribute"/> or
+    /// Test methods that require NEONKUBE clusters should be tagged with <see cref="ClusterFactAttribute"/> or
     /// <see cref="ClusterTheoryAttribute"/> instead of <see cref="FactAttribute"/> or <see cref="TheoryAttribute"/>.
     /// Then by default, these methods won't be executed unless the user has explicitly enabled this on the test
     /// machine by defining the <c>NEON_CLUSTER_TESTING</c> environment variable.
@@ -290,7 +290,7 @@ namespace Neon.Kube.Xunit
     /// username, like <b>runner0-</b> or <b>jeff-</b>, or <b>runner0-jeff-</b>...
     /// </para>
     /// <note>
-    /// neonKUBE maintainers can also use <see cref="IProfileClient"/> combined with the <b>neon-assistant</b>
+    /// NEONKUBE maintainers can also use <see cref="IProfileClient"/> combined with the <b>neon-assistant</b>
     /// tool to reference per-user and/or per-machine profile settings including things like cluster name prefixes, 
     /// reserved node IP addresses, etc.  These can be referenced by cluster definitions using special macros like
     /// <c>$&lt;$&lt;$&lt;NAME&gt;&gt;&gt;</c> as described here: <see cref="PreprocessReader"/>.
@@ -318,7 +318,7 @@ namespace Neon.Kube.Xunit
     /// mechanism isn't perfect at this time and sometimes clusters that should be redeployed won't be.
     /// </para>
     /// <para>
-    /// Specifically, node labels won't be considered when detecting changes: https://github.com/nforgeio/neonKUBE/issues/1505
+    /// Specifically, node labels won't be considered when detecting changes: https://github.com/nforgeio/TEMPKUBE/issues/1505
     /// </para>
     /// </remarks>
     public class ClusterFixture : TestFixture
@@ -518,7 +518,7 @@ namespace Neon.Kube.Xunit
         /// <para>
         /// <b>IMPORTANT:</b> Only one <see cref="ClusterFixture"/> can be run at a time on
         /// any one computer.  This is due to the fact that cluster state like the kubeconfig,
-        /// neonKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/$fixture/*</b>
+        /// NEONKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/$fixture/*</b>
         /// so multiple fixture instances will be confused when trying to manage these same files.
         /// </para>
         /// <para>
@@ -783,7 +783,7 @@ namespace Neon.Kube.Xunit
         /// Deploys a new cluster as specified by the cluster definition YAML definition.
         /// </para>
         /// <note>
-        /// This method removes any existing neonKUBE cluster before deploying a fresh one.
+        /// This method removes any existing NEONKUBE cluster before deploying a fresh one.
         /// </note>
         /// </summary>
         /// <param name="clusterDefinitionYaml">The cluster definition YAML.</param>
@@ -824,7 +824,7 @@ namespace Neon.Kube.Xunit
         /// <para>
         /// <b>IMPORTANT:</b> Only one <see cref="ClusterFixture"/> can be run at a time on
         /// any one computer.  This is due to the fact that cluster state like the kubeconfig,
-        /// neonKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/$fixture/*</b>
+        /// NEONKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/$fixture/*</b>
         /// so multiple fixture instances will be confused when trying to manage these same files.
         /// </para>
         /// <para>
@@ -845,7 +845,7 @@ namespace Neon.Kube.Xunit
         /// Deploys a new cluster as specified by a cluster definition YAML file.
         /// </para>
         /// <note>
-        /// This method removes any existing neonKUBE cluster before deploying a fresh one.
+        /// This method removes any existing NEONKUBE cluster before deploying a fresh one.
         /// </note>
         /// </summary>
         /// <param name="clusterDefinitionFile"><see cref="FileInfo"/> for the cluster definition YAML file.</param>
@@ -886,7 +886,7 @@ namespace Neon.Kube.Xunit
         /// <para>
         /// <b>IMPORTANT:</b> Only one <see cref="ClusterFixture"/> can be run at a time on
         /// any one computer.  This is due to the fact that cluster state like the kubeconfig,
-        /// neonKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/$fixture/*</b>
+        /// NEONKUBE logins, logs and other files will be written to <b>~/.neonkube/spaces/$fixture/*</b>
         /// so multiple fixture instances will be confused when trying to manage these same files.
         /// </para>
         /// <para>

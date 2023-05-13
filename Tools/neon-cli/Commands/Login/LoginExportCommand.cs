@@ -103,7 +103,7 @@ Use the [neon login import] command to import an exported context.
 
                 if (!contextName.IsNeonKube)
                 {
-                    Console.Error.WriteLine($"*** ERROR: [{contextName}] is not a neonKUBE context.");
+                    Console.Error.WriteLine($"*** ERROR: [{contextName}] is not a NEONKUBE context.");
                     Program.Exit(1);
                 }
             }
@@ -113,7 +113,7 @@ Use the [neon login import] command to import an exported context.
 
                 if (contextName == null)
                 {
-                    Console.Error.WriteLine($"*** ERROR: You are not logged into a neonKUBE cluster.");
+                    Console.Error.WriteLine($"*** ERROR: You are not logged into a NEONKUBE cluster.");
                     Program.Exit(1);
                 }
             }

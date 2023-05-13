@@ -1,0 +1,142 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <OutputType>Library</OutputType>
+        <RootNamespace>Neon.Kube</RootNamespace>
+        <Version>0.9.2-alpha</Version>
+        <Description>INTERNAL USE ONLY: Common library used by neonKUBE related projects.</Description>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageReleaseNotes>https://github.com/nforgeio/TEMPKUBE/releases</PackageReleaseNotes>
+        <IsPackable>true</IsPackable>
+        <PackageProjectUrl>https://github.com/nforgeio/TEMPKUBE/blob/master/Lib/Neon.Kube/README.md</PackageProjectUrl>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
+        <Configurations>Debug;Release</Configurations>
+        <PackageIcon>nuget-icon.png</PackageIcon>
+        <PackageTags>kubernetes</PackageTags>
+        <NoDefaultExcludes>true</NoDefaultExcludes>
+        <LangVersion>latest</LangVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+        <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Remove="Model\CRDs\Harbor\**" />
+        <Compile Remove="Properties\**" />
+        <EmbeddedResource Remove="Model\CRDs\Harbor\**" />
+        <EmbeddedResource Remove="Properties\**" />
+        <None Remove="Model\CRDs\Harbor\**" />
+        <None Remove="Properties\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="Resources/**/*" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Remove="Resources\Tools\net-interface.sh" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+    <!-- Non-NEONFORGE package references -->
+
+    <ItemGroup>
+        <PackageReference Include="DiscUtils.Iso9660" Version="0.16.13" />
+        <PackageReference Include="DNS" Version="7.0.0" />
+        <PackageReference Include="KubernetesClient" Version="10.1.19" />
+        <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
+        <PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />
+        <PackageReference Include="Microsoft.OpenApi" Version="1.6.3" />
+        <PackageReference Include="Microsoft.Windows.Compatibility" Version="7.0.1" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="prometheus-net" Version="8.0.0" />
+        <PackageReference Include="SharpCompress" Version="0.32.2" />
+        <PackageReference Include="SharpZipLib.NETStandard" Version="1.0.7" />
+        <PackageReference Include="SSH.NET" Version="2020.0.2" />
+        <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
+        <PackageReference Include="System.IO.Compression" Version="4.3.0" />
+        <PackageReference Include="System.Net.Http" Version="4.3.4" />
+        <PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
+        <PackageReference Include="System.Net.Ping" Version="4.3.0" />
+        <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
+        <PackageReference Include="System.Threading.Tasks.Parallel" Version="4.3.0" />
+        <PackageReference Include="YamlDotNet" Version="13.0.2" />
+    </ItemGroup>
+
+    <!-- Local solution project references -->
+
+    <ItemGroup>
+        <ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
+        <ProjectReference Include="..\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
+    </ItemGroup>
+
+    <!-- NEONFORGE package or project references -->
+
+    <Choose>
+        <When Condition="'$(NeonBuildUseNugets)' == 'true'">
+            <ItemGroup>
+                <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.Cryptography" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.Deployment" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.JsonConverters" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.ModelGenerator" Version="$(NeonSdkPackageVersion)" GeneratePathProperty="true">
+                    <PrivateAssets>all</PrivateAssets>
+                    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+                </PackageReference>
+                <PackageReference Include="Neon.Postgres" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.SSH" Version="$(NeonSdkPackageVersion)" />
+            </ItemGroup>
+        </When>
+        <Otherwise>
+            <ItemGroup>
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Cryptography\Neon.Cryptography.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Deployment\Neon.Deployment.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.JsonConverters\Neon.JsonConverters.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Postgres\Neon.Postgres.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.SSH\Neon.SSH.csproj" />
+            </ItemGroup>
+        </Otherwise>
+    </Choose>
+
+    <!-- Figure out where the [neon-modelgen] tool is located -->
+
+    <Choose>
+        <When Condition="'$(NeonBuildUseNugets)' == 'true'">
+            <PropertyGroup>
+                <ModelGeneratorPath>$(PkgNeon_ModelGenerator)\contentFiles\any\netstandard2.0\$(RuntimePath)\neon-modelgen</ModelGeneratorPath>
+            </PropertyGroup>
+        </When>
+        <Otherwise>
+            <PropertyGroup>
+                <ModelGeneratorPath>$(NF_ROOT)\Lib\Neon.ModelGenerator\$(RuntimePath)\neon-modelgen</ModelGeneratorPath>
+            </PropertyGroup>
+        </Otherwise>
+    </Choose>
+
+    <!--- Generate the model source files -->
+
+    <Target Name="ModelGen" Inputs="$(NK_ROOT)\Lib\Neon.Kube.Models\.buildComplete" Outputs="$(ProjectDir)Model\GeneratedEntities.mg.cs" BeforeTargets="CoreCompile" DependsOnTargets="BeforeCompile">
+
+        <!-- Fail if we still don't know the [neon-modelgen] location -->
+        <Error Condition="'$(ModelGeneratorPath)' == ''" Text="Cannot locate: neon-modelgen] location" />
+
+        <Message Importance="high" Text="neon-modelgen path: $(ModelGeneratorPath)" />
+        <Message Importance="high" Text="&quot;$(ModelGeneratorPath)&quot; --targets=all --target-namespace=Neon.Kube.Clients &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\$(TargetFramework)\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
+        <Exec Command="&quot;$(ModelGeneratorPath)&quot; --targets=all --target-namespace=Neon.Kube.Clients &quot;$(NK_ROOT)\Lib\Neon.Kube.Models\bin\$(Configuration)\$(TargetFramework)\Neon.Kube.Models.dll&quot; &quot;$(ProjectDir)Model\GeneratedEntities.mg.cs&quot;" />
+
+        <!--- Ensure that the new files are included in the build -->
+        <ItemGroup>
+            <Compile Include="**\*.cs" KeepDuplicates="false" />
+        </ItemGroup>
+    </Target>
+</Project>

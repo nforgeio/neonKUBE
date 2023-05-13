@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    Test_KubeFixtureHyperv.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -151,7 +151,7 @@ spec:
 @"
 apiVersion: v2
 name: neon-cluster-operator
-description: Manages neonKUBE clusters via multiple control loops
+description: Manages NEONKUBE clusters via multiple control loops
 type: application
 version: 0
 appVersion: 0

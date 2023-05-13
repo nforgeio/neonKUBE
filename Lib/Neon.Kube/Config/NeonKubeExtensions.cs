@@ -25,13 +25,13 @@ namespace Neon.Kube.Config
     public static class NeonKubeExtensions
     {
         /// <summary>
-        /// The prefix added to neonKUBE related KubeContext extension property names
+        /// The prefix added to NEONKUBE related KubeContext extension property names
         /// used to avoid conflicts with other vendor extensions.
         /// </summary>
         private const string ExtensionPrefix = "io.neonkube.";
 
         /// <summary>
-        /// <see cref="KubeClusterInfo"/>: Holds additional information for neonKUBE clusters.
+        /// <see cref="KubeClusterInfo"/>: Holds additional information for NEONKUBE clusters.
         /// </summary>
         public const string ClusterInfo = $"{ExtensionPrefix}cluster-info";
 
@@ -59,7 +59,7 @@ namespace Neon.Kube.Config
         public const string IsNeonDesktop = $"{ExtensionPrefix}is-neon-desktop";
 
         /// <summary>
-        /// <c>bool</c>: Used to indicate that a cluster belongs to neonKUBE.
+        /// <c>bool</c>: Used to indicate that a cluster belongs to NEONKUBE.
         /// </summary>
         public const string IsNeonKube = $"{ExtensionPrefix}is-neonkube";
 

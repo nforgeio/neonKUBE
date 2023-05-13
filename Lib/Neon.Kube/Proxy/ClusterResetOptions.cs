@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    ClusterResetOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -125,7 +125,7 @@ namespace Neon.Kube.Proxy
         /// <summary>
         /// <para>
         /// Specifies namespaces to be excluded from those being removed during the reset operation.
-        /// Normally, all namespaces beside the internal neonKUBE namespaces will be removed with
+        /// Normally, all namespaces beside the internal NEONKUBE namespaces will be removed with
         /// the <b>default</b> being recreated as empty thereafter.
         /// </para>
         /// <note>

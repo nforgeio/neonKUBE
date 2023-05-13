@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    CloudOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -73,7 +73,7 @@ namespace Neon.Kube.ClusterDef
         /// <item>
         ///     <term><b>Azure</b></term>
         ///     <description>
-        ///     Resource names are not prefixed by default.  neonKUBE clusters deployed to Azure
+        ///     Resource names are not prefixed by default.  NEONKUBE clusters deployed to Azure
         ///     are always created in a resource group and Azure scopes resource names to the group.
         ///     This means that the prefix really isn't necessary. 
         ///     </description>
@@ -87,7 +87,7 @@ namespace Neon.Kube.ClusterDef
         /// </list>
         /// <note>
         /// It is possible though to deploy a cluster into an existing resource group, along
-        /// with other already existing resources (perhaps another neonKUBE cluster).  You'll 
+        /// with other already existing resources (perhaps another NEONKUBE cluster).  You'll 
         /// need to take care in this situation to avoid resource name conflicts.  To handle this,
         /// set this property to <c>true</c> such that every cluster resource created will 
         /// include the cluster name in the resource name prefix.

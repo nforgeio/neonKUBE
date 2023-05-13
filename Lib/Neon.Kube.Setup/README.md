@@ -1,4 +1,4 @@
-﻿Neon.Kube.Setup
+Neon.Kube.Setup
 ===============
 
-**INTERNAL USE ONLY:** Core library used by neonKUBE related tooling.
+**INTERNAL USE ONLY:** Core library used by NEONKUBE related tooling.

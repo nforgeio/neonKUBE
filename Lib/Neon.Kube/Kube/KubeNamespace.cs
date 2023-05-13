@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubeNamespace.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -32,7 +32,7 @@ using Renci.SshNet;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Defines the built-in namespace names created for Kubernetes and neonKUBE.
+    /// Defines the built-in namespace names created for Kubernetes and NEONKUBE.
     /// </summary>
     public static class KubeNamespace
     {
@@ -77,7 +77,7 @@ namespace Neon.Kube
         public const string NeonStorage = "neon-storage";
 
         /// <summary>
-        /// Hosts neonKUBE infrastructure.
+        /// Hosts NEONKUBE infrastructure.
         /// </summary>
         public const string NeonSystem = "neon-system";
 
@@ -92,17 +92,17 @@ namespace Neon.Kube
         public static IReadOnlyList<string> KubernetesNamespaces { get; private set; }
 
         /// <summary>
-        /// Returns the set of built-in neonKUBE namespaces.
+        /// Returns the set of built-in NEONKUBE namespaces.
         /// </summary>
         public static IReadOnlyList<string> NeonNamespaces { get; private set; }
 
         /// <summary>
-        /// Returns the set of all Kubernetes and neonKUBE namespaces.
+        /// Returns the set of all Kubernetes and NEONKUBE namespaces.
         /// </summary>
         public static IReadOnlySet<string> InternalNamespaces { get; private set; }
 
         /// <summary>
-        /// Returns the set of all Kubernetes and neonKUBE namespaces but without the <b>default</b> namespace.
+        /// Returns the set of all Kubernetes and NEONKUBE namespaces but without the <b>default</b> namespace.
         /// </summary>
         public static IReadOnlySet<string> InternalNamespacesWithoutDefault { get; private set; }
 

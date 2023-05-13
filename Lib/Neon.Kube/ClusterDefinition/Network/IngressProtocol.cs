@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    IngressProtocol.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -42,7 +42,7 @@ namespace Neon.Kube.ClusterDef
 {
     /// <summary>
     /// <para>
-    /// Enumerates the network protocols supported by neonKUBE for ingress traffic.
+    /// Enumerates the network protocols supported by NEONKUBE for ingress traffic.
     /// </para>
     /// <note>
     /// Kubernetes/Istio does not currently support protocols like UCP or ICMP.

@@ -16,7 +16,7 @@
 // limitations under the License.
 
 // This file includes node configuration methods executed while setting
-// up a neonKUBE cluster.
+// up a NEONKUBE cluster.
 
 using System;
 using System.Collections.Generic;
@@ -59,7 +59,7 @@ namespace Neon.Kube.SSH
     {
         /// <summary>
         /// Installs the Helm charts as a single ZIP archive written to the 
-        /// neonKUBE node's Helm folder.
+        /// NEONKUBE node's Helm folder.
         /// </summary>
         /// <param name="node">The node instance.</param>
         /// <param name="controller">The setup controller.</param>
@@ -71,7 +71,7 @@ namespace Neon.Kube.SSH
             {
                 controller.LogProgress(node, verb: "setup", message: "helm charts (zip)");
 
-                var helmFolder = KubeSetup.Resources.GetDirectory("/Helm");    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
+                var helmFolder = KubeSetup.Resources.GetDirectory("/Helm");    // $hack(jefflill): https://github.com/nforgeio/TEMPKUBE/issues/1121
 
                 helmFolder.Zip(ms, searchOptions: SearchOption.AllDirectories, zipOptions: StaticZipOptions.LinuxLineEndings);
 

@@ -594,7 +594,7 @@ namespace Neon.Kube
 
             // $todo(jefflill): Investigate fixing race condition:
             // 
-            //      https://github.com/nforgeio/neonKUBE/issues/1578 
+            //      https://github.com/nforgeio/TEMPKUBE/issues/1578 
 
             // We're going to try fetching the resource first.  If it doesn't exist, we'll
             // create it otherwise we'll replace it.

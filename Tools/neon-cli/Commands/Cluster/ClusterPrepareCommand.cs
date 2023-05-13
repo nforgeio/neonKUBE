@@ -51,7 +51,7 @@ namespace NeonCli
     public class ClusterPrepareCommand : CommandBase
     {
         private const string usage = @"
-Provisions local and/or cloud infrastructure required to host a neonKUBE cluster.
+Provisions local and/or cloud infrastructure required to host a NEONKUBE cluster.
 This includes provisioning networks, load balancers, virtual machines, etc.  Once
 the infrastructure is ready, you'll use the [neon cluster setup ...] command to
 actually configure the cluster.
@@ -62,8 +62,7 @@ USAGE:
 
 ARGUMENTS:
 
-    CLUSTER-DEF     - Path to the cluster definition file or ""WSL2"" to deploy
-                      the standard neonKUBE WSL2 distribution.
+    CLUSTER-DEF     - Path to the cluster definition file.
 
 OPTIONS:
 
@@ -124,9 +123,9 @@ OPTIONS:
                                   should be used as opposed to the public release image.
 
                                   [--use-staged] by itself will prepare the cluster using
-                                  the staged neonKUBE node image whose version is a 
-                                  combination of the neonKUBE version along with the 
-                                  name of the neonKUBE branch when the libraries were
+                                  the staged NEONKUBE node image whose version is a 
+                                  combination of the NEONKUBE version along with the 
+                                  name of the NEONKUBE branch when the libraries were
                                   built.
 
                                   [--use-staged=branch] allows you to override the branch

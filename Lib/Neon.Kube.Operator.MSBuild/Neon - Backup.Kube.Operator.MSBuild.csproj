@@ -1,0 +1,97 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <OutputType>Library</OutputType>
+        <RootNamespace>Neon.Kube.Operator.MSBuild</RootNamespace>
+        <Version>0.9.2-alpha</Version>
+        <Description>Kubernetes Operator SDK MDBuild props.</Description>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageIcon>nuget-icon.png</PackageIcon>
+        <PackageProjectUrl>https://docs.neonforge.com/docs/operator-sdk</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>kubernetes operator sdk neonkube k8s msbuild</PackageTags>
+        <PackageReleaseNotes>https://github.com/nforgeio/TEMPKUBE/releases</PackageReleaseNotes>
+        <Configurations>Debug;Release</Configurations>
+        <NoWarn>$(NoWarn);CS2008;NU5100</NoWarn>
+        <RuntimeIdentifiers>win-x64;osx-x64;linux-x64</RuntimeIdentifiers>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyAttributes.cs" Link="Properties\AssemblyAttributes.cs" />
+        <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="Properties\" />
+        <None Include="..\..\LICENSE">
+            <Pack>True</Pack>
+            <PackagePath></PackagePath>
+        </None>
+        <Content Include="..\nuget-icon.png">
+            <Pack>True</Pack>
+            <PackagePath></PackagePath>
+        </Content>
+
+        <Content Include="Build\**">
+            <PackagePath>build/</PackagePath>
+        </Content>
+
+        <Content Include="linux-x64\*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>true</CopyToPublishDirectory>
+        </Content>
+
+        <Content Include="osx-x64\*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>true</CopyToPublishDirectory>
+        </Content>
+
+        <Content Include="win-x64\*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>true</CopyToPublishDirectory>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
+    </ItemGroup>
+
+    <Target Name="_GenerateLinuxCli">
+        <MSBuild Projects="$(NK_ROOT)\Tools\operator-cli\operator-cli.csproj" Targets="Publish;PublishItemsOutputGroup" Properties="Configuration=$(Configuration);RuntimeIdentifier=linux-x64;PublishSingleFile=true" RebaseOutputs="true">
+            <Output TaskParameter="TargetOutputs" ItemName="_ToolsProjectOutputs" />
+        </MSBuild>
+        <Copy SourceFiles="@(_ToolsProjectOutputs)" DestinationFolder="linux-x64" />
+    </Target>
+
+    <Target Name="_GenerateOsxCli">
+        <MSBuild Projects="$(NK_ROOT)\Tools\operator-cli\operator-cli.csproj" Targets="Publish;PublishItemsOutputGroup" Properties="Configuration=$(Configuration);RuntimeIdentifier=osx-x64;PublishSingleFile=true" RebaseOutputs="true">
+            <Output TaskParameter="TargetOutputs" ItemName="_ToolsProjectOutputs" />
+        </MSBuild>
+        <Copy SourceFiles="@(_ToolsProjectOutputs)" DestinationFolder="osx-x64" />
+    </Target>
+
+    <Target Name="_GenerateWindowsCli">
+        <MSBuild Projects="$(NK_ROOT)\Tools\operator-cli\operator-cli.csproj" Targets="Publish;PublishItemsOutputGroup" Properties="Configuration=$(Configuration);RuntimeIdentifier=win-x64;PublishSingleFile=true" RebaseOutputs="true">
+            <Output TaskParameter="TargetOutputs" ItemName="_ToolsProjectOutputs" />
+        </MSBuild>
+        <Copy SourceFiles="@(_ToolsProjectOutputs)" DestinationFolder="win-x64" />
+    </Target>
+
+    <ItemGroup>
+        <OperatorCliFiles Include="$(NK_ROOT)\Tools\operator-cli\*"/>
+    </ItemGroup>
+
+    <Target
+        Name="BuildOperatorCli"
+        Inputs="@(OperatorCliFiles)"
+        Outputs="@(OperatorCliFiles->'%(Filename).content')"
+        BeforeTargets="Build;BeforeCompile;CoreCompile">
+        
+        <CallTarget Condition="$([MSBuild]::IsOSPlatform('Linux'))" Targets="_GenerateLinuxCli" />
+        <CallTarget Condition="$([MSBuild]::IsOSPlatform('OSX'))" Targets="_GenerateOsxCli" />
+        <CallTarget Condition="$([MSBuild]::IsOSPlatform('Windows'))" Targets="_GenerateWindowsCli" />
+    </Target>
+
+</Project>

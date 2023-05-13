@@ -92,7 +92,7 @@ This command removes the current login when CONTEXT-NAME is not specified.
 
                 if (!contextName.IsNeonKube)
                 {
-                    Console.Error.WriteLine($"*** ERROR: [{contextName}] is not a neonKUBE context.");
+                    Console.Error.WriteLine($"*** ERROR: [{contextName}] is not a NEONKUBE context.");
                     Program.Exit(1);
                 }
             }
@@ -123,7 +123,7 @@ This command removes the current login when CONTEXT-NAME is not specified.
                 {
                     if (!force)
                     {
-                        Console.Error.WriteLine($"*** ERROR: You are not logged into a neonKUBE cluster.");
+                        Console.Error.WriteLine($"*** ERROR: You are not logged into a NEONKUBE cluster.");
                         Program.Exit(1);
                     }
                     else

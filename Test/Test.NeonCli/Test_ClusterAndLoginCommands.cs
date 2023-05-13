@@ -383,7 +383,7 @@ nodes:
                     // We're seeing some errors around priority classes which should be
                     // fixed:
                     //
-                    //      https://github.com/nforgeio/neonKUBE/issues/1775
+                    //      https://github.com/nforgeio/TEMPKUBE/issues/1775
                     //
                     // as well as some missing resource limits, which may end up being
                     // by design.  I'm going to disable the success check here for now.

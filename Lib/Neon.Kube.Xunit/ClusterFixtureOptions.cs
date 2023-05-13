@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    ClusterFixtureOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -68,7 +68,7 @@ namespace Neon.Kube.Xunit
         /// for on-premise environments.  This defaults to <c>true</c>.
         /// </para>
         /// <note>
-        /// You must be a neonKUBE maintainer to use private node images.
+        /// You must be a NEONKUBE maintainer to use private node images.
         /// </note>
         /// </summary>
         public bool CloudMarketplace { get; set; } = true;

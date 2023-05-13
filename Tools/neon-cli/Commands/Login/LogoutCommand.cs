@@ -68,7 +68,7 @@ USAGE:
 
             if (KubeHelper.CurrentContext == null)
             {
-                Console.WriteLine($"You are not logged into a neonKUBE cluster.");
+                Console.WriteLine($"You are not logged into a NEONKUBE cluster.");
                 return;
             }
 

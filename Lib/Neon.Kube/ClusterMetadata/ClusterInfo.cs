@@ -51,7 +51,7 @@ namespace Neon.Kube
         public string ClusterId { get; set; } = null;
 
         /// <summary>
-        /// The neonKUBE version of the cluster.  This is formatted as a <see cref="SemanticVersion"/>.
+        /// The NEONKUBE version of the cluster.  This is formatted as a <see cref="SemanticVersion"/>.
         /// </summary>
         [JsonProperty(PropertyName = "ClusterVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(KubeVersions.NeonKube)]

@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubeNodeFolder.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -115,7 +115,7 @@ namespace Neon.Kube
         public const string Tmpfs = "/dev/shm/neonkube";
 
         /// <summary>
-        /// Folder where neonKUBE related components will maintain runtime state.
+        /// Folder where NEONKUBE related components will maintain runtime state.
         /// </summary>
         public const string NeonRun = "/run/neonkube";
 

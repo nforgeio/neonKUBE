@@ -157,7 +157,7 @@ namespace Neon.Kube.SSH
         {
             this.Role = role;
 
-            // Append the neonKUBE cluster binary folder to the remote path.
+            // Append the NEONKUBE cluster binary folder to the remote path.
 
             RemotePath += $":{KubeNodeFolder.Bin}";
 
@@ -235,7 +235,7 @@ namespace Neon.Kube.SSH
 
         /// <summary>
         /// <para>
-        /// Indicates the neonKUBE node image version.  This is stored in the <b>/etc/neonkube/image-version</b> file.
+        /// Indicates the NEONKUBE node image version.  This is stored in the <b>/etc/neonkube/image-version</b> file.
         /// This can be used to ensure that the node image is compatible with the code configuring the cluster.
         /// </para>
         /// <node>
@@ -521,7 +521,7 @@ namespace Neon.Kube.SSH
         }
 
         /// <summary>
-        /// Ensures that the node operating system and version is supported for a neonKUBE
+        /// Ensures that the node operating system and version is supported for a NEONKUBE
         /// cluster.  This faults the node proxy on failure.
         /// </summary>
         /// <param name="controller">Optional setup controller.</param>

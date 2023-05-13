@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    ThisAssembly.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -28,7 +28,7 @@ using System.Reflection;
 //
 // See [Directory.Build.props] for more information.
 
-[assembly: AssemblyProduct("neonKUBE")]
+[assembly: AssemblyProduct("NEONKUBE")]
 [assembly: AssemblyCompany("NEONFORGE LLC")]
 [assembly: AssemblyCopyright("Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.")]
 

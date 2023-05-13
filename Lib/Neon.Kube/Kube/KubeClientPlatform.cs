@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubeClientPlatform.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -31,8 +31,8 @@ using Renci.SshNet;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Enumerates the operating systems supported by neonKUBE client applications
-    /// used on developer or operator workstations to manage remote neonKUBE clusters.  
+    /// Enumerates the operating systems supported by NEONKUBE client applications
+    /// used on developer or operator workstations to manage remote NEONKUBE clusters.  
     /// </summary>
     public enum KubeClientPlatform
     {

@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    V1NeonNodeTask.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -39,7 +39,7 @@ namespace Neon.Kube.Resources.Cluster
     /// </summary>
     /// <remarks>
     /// <para>
-    /// neonKUBE clusters deploy the <b>neon-node-agent</b> as a daemonset such that this is running on
+    /// NEONKUBE clusters deploy the <b>neon-node-agent</b> as a daemonset such that this is running on
     /// every node in the cluster.  This runs as a privileged pod and has full access to the host node's
     /// file system, network, and processes and is typically used for low-level node maintainance activities.
     /// </para>

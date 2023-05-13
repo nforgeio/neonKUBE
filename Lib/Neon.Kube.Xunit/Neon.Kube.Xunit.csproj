@@ -6,11 +6,11 @@
         <RootNamespace>Neon.Kube.Xunit</RootNamespace>
         <PackageId>Neon.Kube.Xunit</PackageId>
         <Version>0.9.2-alpha</Version>
-        <Description>INTERNAL USE ONLY: Xunit extensions for neonKUBE</Description>
+        <Description>INTERNAL USE ONLY: Xunit extensions for NEONKUBE</Description>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
-        <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
+        <PackageReleaseNotes>https://github.com/nforgeio/TEMPKUBE/releases</PackageReleaseNotes>
         <IsPackable>true</IsPackable>
-        <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Xunit/README.md</PackageProjectUrl>
+        <PackageProjectUrl>https://github.com/nforgeio/TEMPKUBE/blob/master/Lib/Neon.Kube.Xunit/README.md</PackageProjectUrl>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
         <Configurations>Debug;Release</Configurations>

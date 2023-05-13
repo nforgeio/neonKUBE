@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubePort.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -26,7 +26,7 @@ using Neon.Net;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Defines reserved neonKUBE ports.
+    /// Defines reserved NEONKUBE ports.
     /// </summary>
     public static class KubePort
     {

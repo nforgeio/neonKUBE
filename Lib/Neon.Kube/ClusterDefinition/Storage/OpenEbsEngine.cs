@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    OpenEbsEngine.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -21,7 +21,7 @@ using System.Runtime.Serialization;
 namespace Neon.Kube.ClusterDef
 {
     /// <summary>
-    /// Identifies the OpenEBS storage engines supported by neonKUBE clusters.
+    /// Identifies the OpenEBS storage engines supported by NEONKUBE clusters.
     /// </summary>
     public enum OpenEbsEngine
     {
@@ -66,7 +66,7 @@ namespace Neon.Kube.ClusterDef
         /// <a href="https://docs.openebs.io/v090/docs/next/jiva.html">Jiva Overview</a>
         /// </para>
         /// <note>
-        /// Jiva is not currently supported for neonKUBE clusters.
+        /// Jiva is not currently supported for NEONKUBE clusters.
         /// </note>
         /// </summary>
         [EnumMember(Value = "jiva")]
@@ -79,7 +79,7 @@ namespace Neon.Kube.ClusterDef
         /// than the old iSCSI protocol which is quite slow.  Mayastor is still in Beta.
         /// </para>
         /// <note>
-        /// Mayastor is not currently supported for neonKUBE clusters.
+        /// Mayastor is not currently supported for NEONKUBE clusters.
         /// </note>
         /// </summary>
         [EnumMember(Value = "mayastor")]

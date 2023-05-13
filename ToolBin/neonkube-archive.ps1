@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         neonkube-archive.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+# COPYRIGHT:    Copyright Â© 2005-2023 by NEONFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Creates a ZIP archive that includes all of the neonKUBE source files.
+# Creates a ZIP archive that includes all of the NEONKUBE source files.
 # This deletes all build binary files as well as all other files 
 # (e.g. Go vendor files) that are not part of the source tree before
 # generating the archive.
@@ -28,11 +28,11 @@
 #       -target PATH    - optionally specifies where the archive file
 #                         should be written.  This defaults to:
 #                       
-#                           C:\neonKUBE.zip
+#                           C:\NEONKUBE.zip
 
 param 
 (
-	$target = "C:\neonKUBE.zip"
+	$target = "C:\NEONKUBE.zip"
 )
 
 # Import the global solution include file.

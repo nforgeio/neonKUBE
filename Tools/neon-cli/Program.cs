@@ -63,7 +63,7 @@ using OpenTelemetry;
 namespace NeonCli
 {
     /// <summary>
-    /// This tool is used to configure and manage the nodes of a neonKUBE cluster.
+    /// This tool is used to configure and manage the nodes of a NEONKUBE cluster.
     /// </summary>
     public static class Program
     {
@@ -82,7 +82,7 @@ namespace NeonCli
         /// </summary>
         /// <remarks>
         /// We use this to help with managing the source code duplicated for this in the
-        /// neonKUBE and neonCLOUD (premium) GitHub repositories.
+        /// NEONKUBE and neonCLOUD (premium) GitHub repositories.
         /// </remarks>
         public const bool IsPremium =
 #if PREMIUM

@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubernetesOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -43,7 +43,7 @@ using YamlDotNet.Serialization;
 namespace Neon.Kube.ClusterDef
 {
     /// <summary>
-    /// Describes the Kubernetes options for a neonKUBE.
+    /// Describes the Kubernetes options for a NEONKUBE.
     /// </summary>
     public class KubernetesOptions
     {

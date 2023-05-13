@@ -1,4 +1,4 @@
-﻿#Requires -Version 7.1.3 -RunAsAdministrator
+#Requires -Version 7.1.3 -RunAsAdministrator
 #------------------------------------------------------------------------------
 # FILE:         includes.ps1
 # CONTRIBUTOR:  Jeff Lill
@@ -49,15 +49,15 @@ $ncTools    = "$ncRoot\Tools"
 #------------------------------------------------------------------------------
 # Global constants.
 
-# neonKUBE cluster release version.
+# NEONKUBE cluster release version.
 
 $neonKUBE_Version = $(& neon-build read-version "$nkRoot\Lib\Neon.Kube\KubeVersions.cs" NeonKube)
 ThrowOnExitCode
 
-# neonKUBE container image tag.
+# NEONKUBE container image tag.
 #
-# Note that we determine the currently checked-out Git branch for local neonKUBE 
-# repo.  If that's a release branch, then we'll just use the neonKUBE version,
+# Note that we determine the currently checked-out Git branch for local NEONKUBE 
+# repo.  If that's a release branch, then we'll just use the NEONKUBE version,
 # otherwise, we'll append the branch name with a leading period to the tag.
 #
 # This helps to isolate container images between different branches so developers 
@@ -168,11 +168,11 @@ function SdkRegistryOrg
 }
 
 #------------------------------------------------------------------------------
-# Prefixes the image name passed with the target neonKUBE SETUP GitHub container 
+# Prefixes the image name passed with the target NEONKUBE SETUP GitHub container 
 # registry for the current git branch by default such that when the current branch
 # name starts with "release-" the image will be pushed to "ghcr.io/neonrelease/"
 # otherwise it will be pushed to "ghcr.io/neonrelease-dev/".  The MAIN registry
-# holds the neonKUBE images tagged by cluster version.
+# holds the NEONKUBE images tagged by cluster version.
 
 function GetKubeStageRegistry($image)
 {
@@ -182,7 +182,7 @@ function GetKubeStageRegistry($image)
 }
 
 #------------------------------------------------------------------------------
-# Returns the neonKUBE staging container image registy.
+# Returns the NEONKUBE staging container image registy.
 
 function KubeStageRegistryOrg
 {
@@ -190,11 +190,11 @@ function KubeStageRegistryOrg
 }
 
 #------------------------------------------------------------------------------
-# Prefixes the image name passed with the target neonKUBE BASE GitHub container 
+# Prefixes the image name passed with the target NEONKUBE BASE GitHub container 
 # registry for the current git branch by default such that when the current branch
 # name starts with "release-" the image will be pushed to "ghcr.io/neonrelease/"
 # otherwise it will be pushed to "ghcr.io/neonrelease-dev/".  The BASE registry
-# holds the neonKUBE base images tagged with the component version.
+# holds the NEONKUBE base images tagged with the component version.
 
 function GetKubeBaseRegistry($image)
 {
@@ -204,7 +204,7 @@ function GetKubeBaseRegistry($image)
 }
 
 #------------------------------------------------------------------------------
-# Returns the neonKUBE staging base container image registry.
+# Returns the NEONKUBE staging base container image registry.
 
 function KubeBaseRegistryOrg
 {

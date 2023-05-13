@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
@@ -12,7 +12,7 @@
         <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>kubernetes operator sdk neonkube k8s msbuild</PackageTags>
-        <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
+        <PackageReleaseNotes>https://github.com/nforgeio/TEMPKUBE/releases</PackageReleaseNotes>
         <Configurations>Debug;Release</Configurations>
         <NoWarn>$(NoWarn);CS2008;NU5100</NoWarn>
         <RuntimeIdentifiers>win-x64;osx-x64;linux-x64</RuntimeIdentifiers>
@@ -80,14 +80,10 @@
     </Target>
 
     <ItemGroup>
-        <OperatorCliFiles Include="$(NK_ROOT)\Tools\operator-cli\*"/>
+        <OperatorCliFiles Include="$(NK_ROOT)\Tools\operator-cli\*" />
     </ItemGroup>
 
-    <Target
-        Name="BuildOperatorCli"
-        Inputs="@(OperatorCliFiles)"
-        Outputs="@(OperatorCliFiles->'%(Filename).content')"
-        BeforeTargets="Build;BeforeCompile;CoreCompile">
+    <Target Name="BuildOperatorCli" Inputs="@(OperatorCliFiles)" Outputs="@(OperatorCliFiles->'%(Filename).content')" BeforeTargets="Build;BeforeCompile;CoreCompile">
         
         <CallTarget Condition="$([MSBuild]::IsOSPlatform('Linux'))" Targets="_GenerateLinuxCli" />
         <CallTarget Condition="$([MSBuild]::IsOSPlatform('OSX'))" Targets="_GenerateOsxCli" />

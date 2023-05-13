@@ -1,4 +1,4 @@
-﻿Neon.Kube
+Neon.Kube
 =========
 
-**INTERNAL USE ONLY:** neonKUBE related data mmodels.
+**INTERNAL USE ONLY:** NEONKUBE related data models.

@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    NodeLabels.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -358,7 +358,7 @@ namespace Neon.Kube.ClusterDef
         /// These are used to group VMs together such that only one will be down
         /// for scheduled maintenance at any given moment and also that after a
         /// reboot, there will be a reasonable delay (like 30 minutes) to allow
-        /// the VMs to collectively recover before rebooting the next VM.  neonKUBE
+        /// the VMs to collectively recover before rebooting the next VM.  NEONKUBE
         /// will provision node VMs that have the same <see cref="PhysicalAvailabilitySet"/> 
         /// into the same cloud availability set (for clouds that support this).
         /// </para>
@@ -407,7 +407,7 @@ namespace Neon.Kube.ClusterDef
         // Define the neon-system related labels.
 
         /// <summary>
-        /// Reserved label name for core neonKUBE system components.
+        /// Reserved label name for core NEONKUBE system components.
         /// </summary>
         public const string LabelNeonSystem = ClusterDefinition.ReservedPrefix + "neon-system";
 
@@ -586,7 +586,7 @@ namespace Neon.Kube.ClusterDef
         // Implementation
 
         /// <summary>
-        /// Enumerates the standard neonKUBE node labels.
+        /// Enumerates the standard NEONKUBE node labels.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]

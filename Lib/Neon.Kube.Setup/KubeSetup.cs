@@ -88,7 +88,7 @@ namespace Neon.Kube.Setup
 
         /// <summary>
         /// <para>
-        /// Returns the <see cref="ClusterManifest"/> for the current neonKUBE build.  This is generated
+        /// Returns the <see cref="ClusterManifest"/> for the current NEONKUBE build.  This is generated
         /// by the internal <b>neon-image prepare node ...</b> tool command which prepares node images.
         /// This manifest describes the container images that will be provisioned into clusters.
         /// </para>
@@ -187,7 +187,7 @@ namespace Neon.Kube.Setup
 
                     if (processorCount < 4)
                     {
-                        throw new NotSupportedException($"neonKUBE built-in clusters require the host to have at least [4] processors.  Only [{processorCount}] processors are present.");
+                        throw new NotSupportedException($"NEONKUBE built-in clusters require the host to have at least [4] processors.  Only [{processorCount}] processors are present.");
                     }
                     else if (processorCount == 4)
                     {

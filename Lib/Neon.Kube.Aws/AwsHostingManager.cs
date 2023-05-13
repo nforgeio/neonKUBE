@@ -93,7 +93,7 @@ namespace Neon.Kube.Hosting.Aws
         //---------------------------------------------------------------------
         // IMPLENTATION NOTE:
         //
-        // A neonKUBE AWS cluster will require provisioning these things:
+        // A NEONKUBE AWS cluster will require provisioning these things:
         //
         //      * VPC (virtual private cloud, equivilent to an Azure VNET)
         //
@@ -120,7 +120,7 @@ namespace Neon.Kube.Hosting.Aws
         // inbound traffic across a backend target including the instances designated 
         // to accept ingress traffic into the cluster.  These nodes are identified 
         // by the presence of a [neonkube.io/node.ingress=true] label which can be
-        // set explicitly.  neonKUBE will default to reasonable ingress nodes when
+        // set explicitly.  NEONKUBE will default to reasonable ingress nodes when
         // necessary.  We'll be automatically managing the AWS target groups and
         // network ACLs to make this all work.
         //
@@ -211,7 +211,7 @@ namespace Neon.Kube.Hosting.Aws
         //
         // Regions, Availability Zones and Placement Groups
         // ------------------------------------------------
-        // neonKUBE clusters are currently deployed to a single AWS region and availability
+        // NEONKUBE clusters are currently deployed to a single AWS region and availability
         // zone within the region to ensure that internode communication will have low
         // latency.  Both of these are specified in the AWS cloud options.
         //
@@ -227,7 +227,7 @@ namespace Neon.Kube.Hosting.Aws
         //
         //      https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html
         //
-        // neonKUBE will be deployed using two partition placement groups, one for control-plane
+        // NEONKUBE will be deployed using two partition placement groups, one for control-plane
         // nodes and the other for workers.  The number of control-plane placement partitions is
         // controlled by [AwsHostingOptions.ControlPlanePlacementPartitions] which defaults to
         // the number of control-plane nodes in the cluster.  Doing this helps to avoid losing
@@ -568,7 +568,7 @@ namespace Neon.Kube.Hosting.Aws
         private const string nameTagKey = "Name";
 
         /// <summary>
-        /// The (namespace) prefix used for neonKUBE related AWS resource tags.
+        /// The (namespace) prefix used for NEONKUBE related AWS resource tags.
         /// </summary>
         private const string neonTagKeyPrefix = "neon:";
 
@@ -757,7 +757,7 @@ namespace Neon.Kube.Hosting.Aws
         /// dash characters are allowed and names may be up to 32 characters long.
         /// </para>
         /// <para>
-        /// The problem is that neonKUBE cluster names may also include periods and underscores.
+        /// The problem is that NEONKUBE cluster names may also include periods and underscores.
         /// This method converts any periods and underscores in the cluster name into dashes,
         /// appends the <paramref name="resourceName"/> with a leading dash and ensures that
         /// the combined name includes 32 characters or fewer.
@@ -924,7 +924,7 @@ namespace Neon.Kube.Hosting.Aws
         public AwsHostingManager(ClusterProxy cluster, bool cloudMarketplace, string nodeImageUri = null, string nodeImagePath = null, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
-            Covenant.Requires<ArgumentException>(!cloudMarketplace || !string.IsNullOrEmpty(KubeVersions.BranchPart), nameof(cloudMarketplace), $"[{nameof(cloudMarketplace)}] cannot be TRUE when neonKUBE was built from a non-release branch.");
+            Covenant.Requires<ArgumentException>(!cloudMarketplace || !string.IsNullOrEmpty(KubeVersions.BranchPart), nameof(cloudMarketplace), $"[{nameof(cloudMarketplace)}] cannot be TRUE when NEONKUBE was built from a non-release branch.");
 
             cluster.HostingManager = this;
 
@@ -962,7 +962,7 @@ namespace Neon.Kube.Hosting.Aws
             // Apparently, resource group names cannot start with "aws".  We'll workaround this
             // by adding an (ugly) dash prefix.
             //
-            //      https://github.com/nforgeio/neonKUBE/issues/1627
+            //      https://github.com/nforgeio/TEMPKUBE/issues/1627
 
             if (this.resourceGroupName.StartsWith("aws", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -2169,7 +2169,7 @@ namespace Neon.Kube.Hosting.Aws
             if (groupQuery.ResourceQuery.Type != QueryType.TAG_FILTERS_1_0 ||
                 groupQuery.ResourceQuery.Query != ResourceGroupQuery)
             {
-                throw new NeonKubeException($"Invalid resource group [{resourceGroupName}]: This resource group already exists for some other purpose or was edited after being created for a neonKUBE cluster.");
+                throw new NeonKubeException($"Invalid resource group [{resourceGroupName}]: This resource group already exists for some other purpose or was edited after being created for a NEONKUBE cluster.");
             }
         }
 
@@ -2220,7 +2220,7 @@ namespace Neon.Kube.Hosting.Aws
                     new CreateGroupRequest()
                     {
                         Name        = resourceGroupName,
-                        Description = $"Identifies the resources for the {clusterName} neonKUBE cluster",
+                        Description = $"Identifies the resources for the {clusterName} NEONKUBE cluster",
                         Tags        = new Dictionary<string, string>()
                         {
                             {  neonClusterTagKey, clusterName }
@@ -3383,7 +3383,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
         /// to the base cluster name passed.
         /// </summary>
         /// <param name="clusterName">The cluster name.</param>
-        /// <param name="ingressTarget">The neonKUBE target group type.</param>
+        /// <param name="ingressTarget">The NEONKUBE target group type.</param>
         /// <param name="protocol">The ingress protocol.</param>
         /// <param name="port">The ingress port.</param>
         /// <returns>The fully qualified target group name.</returns>
@@ -3965,7 +3965,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
             // NOTE: We're deferring checking quotas and current utilization for AWS at this time:
             //
-            //      https://github.com/nforgeio/neonKUBE/issues/1544
+            //      https://github.com/nforgeio/TEMPKUBE/issues/1544
 
             var regionName = awsOptions.Region;
             var zoneName   = awsOptions.AvailabilityZone;

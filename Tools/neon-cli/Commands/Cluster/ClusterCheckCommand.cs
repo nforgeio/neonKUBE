@@ -61,7 +61,7 @@ namespace NeonCli
     {
         private const string usage = @"
 Performs various checks on the current NEONKUBE cluster.  These checks are
-targeted at neonKUBE maintainers to verify that cluster setup worked correctly.
+targeted at NEONKUBE maintainers to verify that cluster setup worked correctly.
 This does the same thing as the [neon cluster setup --check] option.
 
 USAGE: 

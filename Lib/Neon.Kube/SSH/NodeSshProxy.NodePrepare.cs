@@ -16,7 +16,7 @@
 // limitations under the License.
 
 // This file includes node configuration methods executed while setting
-// up a neonKUBE cluster.
+// up a NEONKUBE cluster.
 
 using System;
 using System.Collections.Generic;
@@ -73,7 +73,7 @@ namespace Neon.Kube.SSH
         }
 
         /// <summary>
-        /// Installs the neonKUBE related tools to the <see cref="KubeNodeFolder.Bin"/> folder.
+        /// Installs the NEONKUBE related tools to the <see cref="KubeNodeFolder.Bin"/> folder.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         public void NodeInstallTools(ISetupController controller)
@@ -268,7 +268,7 @@ safe-apt-get install -y nfs-common
 
                     var filterScript =
 @"
-# neonKUBE: Filter [rsyslog.service] log events we don't care about.
+# NEONKUBE: Filter [rsyslog.service] log events we don't care about.
 
 cat <<EOF > /etc/rsyslog.d/60-filter.conf
 if $programname == ""systemd"" and ($msg startswith ""Created slice "" or $msg startswith ""Removed slice "") then stop
@@ -445,7 +445,7 @@ location = ""{KubeConst.LocalClusterRegistryHostName}""
             //
             // Version pinning doesn't seem to work:
             //
-            //      https://github.com/nforgeio/neonKUBE/issues/1563
+            //      https://github.com/nforgeio/TEMPKUBE/issues/1563
 
             var crioVersionFull    = Version.Parse(KubeVersions.Crio);
             var crioVersionNoPatch = new Version(crioVersionFull.Major, crioVersionFull.Minor);
@@ -471,7 +471,7 @@ if [ ""{install}"" = ""true"" ]; then
     #
     # In the meantime, we're going to disable the GPG check for this as described here:
     #
-    #       https://github.com/nforgeio/neonKUBE/issues/1723
+    #       https://github.com/nforgeio/TEMPKUBE/issues/1723
     #
     # I'm going to retain this code here in case we need it again in the future, but we
     # should come back and set [TRUST_HACK=false] after Red Hat fixes this.
@@ -1045,11 +1045,11 @@ $@"
 #
 # We're going to use an option to force the file overwrite and then ignore any
 # errors for now and hope for the best.  This isn't as bad as it sounds because 
-# for neonKUBE we're only calling this method while creating node images, so we'll
+# for NEONKUBE we're only calling this method while creating node images, so we'll
 # should be well aware of any problems while completing the node image configuration
 # and then deploying test clusters.
 #
-#       https://github.com/nforgeio/neonKUBE/issues/1571
+#       https://github.com/nforgeio/TEMPKUBE/issues/1571
 #       https://github.com/containers/podman/issues/14367
 #
 # I'm going to hack this for now by using this option:
@@ -1303,7 +1303,7 @@ rm  install-kustomize.sh
                     // We ran into a problem downloading the Google [apt-key.gpg] file which
                     // caused node image build failures:
                     //
-                    //      https://github.com/nforgeio/neonKUBE/issues/1754
+                    //      https://github.com/nforgeio/TEMPKUBE/issues/1754
                     //      https://github.com/kubernetes/kubernetes/issues/116068
                     //
                     // It looks like Kubernetes has an alternate URI for this key that hits
@@ -1328,11 +1328,11 @@ $@"
 #
 # We're going to use an option to force the file overwrite and then ignore any
 # errors for now and hope for the best.  This isn't as bad as it sounds because 
-# for neonKUBE we're only calling this method while creating node images, so we'll
+# for NEONKUBE we're only calling this method while creating node images, so we'll
 # should be well aware of any problems while completing the node image configuration
 # and then deploying test clusters.
 #
-#       https://github.com/nforgeio/neonKUBE/issues/1571
+#       https://github.com/nforgeio/TEMPKUBE/issues/1571
 #       https://github.com/containers/podman/issues/14367
 #
 # I'm going to hack this for now by using this option:

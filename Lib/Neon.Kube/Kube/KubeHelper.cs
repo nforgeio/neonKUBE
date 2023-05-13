@@ -581,7 +581,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path the user specific neonKUBE temporary folder, creating the folder if it doesn't already exist.
+        /// Returns the path the user specific NEONKUBE temporary folder, creating the folder if it doesn't already exist.
         /// </summary>
         /// <returns>The folder path.</returns>
         /// <remarks>
@@ -679,7 +679,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path the folder used by neonKUBE development tools, 
+        /// Returns the path the folder used by NEONKUBE development tools, 
         /// creating the folder if it doesn't already exist.
         /// </summary>
         /// <returns>The folder path.</returns>
@@ -702,8 +702,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Returns the path the folder used by neonKUBE development tools to
-        /// cache the packed container image files used to prepare neonKUBE node
+        /// Returns the path the folder used by NEONKUBE development tools to
+        /// cache the packed container image files used to prepare NEONKUBE node
         /// images, creating the folder if it doesn't already exist.
         /// </para>
         /// <note>
@@ -1326,7 +1326,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Ensures that <b>kubectl</b> tool whose version is at least as great as the Kubernetes
-        /// cluster version is installed to the <b>neonKUBE</b> programs folder by copying the
+        /// cluster version is installed to the <b>NEONKUBE</b> programs folder by copying the
         /// tool from the cache if necessary.
         /// </para>
         /// <note>
@@ -1467,7 +1467,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Ensures that <b>helm</b> client installed on the workstation version is at least as
-        /// great as the requested cluster version is installed to the <b>neonKUBE</b> programs 
+        /// great as the requested cluster version is installed to the <b>NEONKUBE</b> programs 
         /// folder by copying the tool from the cache if necessary.
         /// </para>
         /// <note>
@@ -1810,7 +1810,7 @@ mountFolder=${{1}}
 #------------------------------------------------------------------------------
 # Sleep for a bit in an attempt to ensure that the system is actually ready.
 #
-# https://github.com/nforgeio/neonKUBE/issues/980
+# https://github.com/nforgeio/TEMPKUBE/issues/980
 
 sleep 10
 {changePasswordScript}
@@ -1919,7 +1919,7 @@ exit 0
             //
             // We're going to use a version of this tool deployed with the Git tools for Windows.
             // This will be installed with neonDESKTOP and is also available as part of the
-            // neonKUBE Git repo as a fall back for Neon developers that haven't installed 
+            // NEONKUBE Git repo as a fall back for Neon developers that haven't installed 
             // the desktop yet.
 
             // Look for the installed version first.
@@ -1949,7 +1949,7 @@ exit 0
         }
 
         /// <summary>
-        /// Creates a SSH key for a neonKUBE cluster.
+        /// Creates a SSH key for a NEONKUBE cluster.
         /// </summary>
         /// <param name="clusterName">The cluster name.</param>
         /// <param name="userName">Optionally specifies the user name (defaults to <b>root</b>).</param>
@@ -2284,7 +2284,7 @@ passphrase:
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# This file is written to neonKUBE nodes during cluster preparation.  The
+# This file is written to NEONKUBE nodes during cluster preparation.  The
 # settings below were captured from the OpenSSH version installed with
 # Ubuntu-22.04:
 #
@@ -2428,7 +2428,7 @@ Subsystem sftp  /usr/lib/openssh/sftp-server
 # ForceCommand cvs server
 
 ###############################################################################
-# neonKUBE customization: relocated from the top of the original file         #
+# NEONKUBE customization: relocated from the top of the original file         #
 ###############################################################################
 
 Include /etc/ssh/sshd_config.d/*.conf
@@ -2461,7 +2461,7 @@ $@"# FILE:	       /etc/ssh/sshd_config.d/50-neonkube.conf
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# This file is written to neonKUBE nodes during cluster preparation
+# This file is written to NEONKUBE nodes during cluster preparation
 # to customize OpenSSH.
 #
 # See the sshd_config(5) manpage for details
@@ -3063,10 +3063,10 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Determines whether a custom resource definition is a neonKUBE custom resource.
+        /// Determines whether a custom resource definition is a NEONKUBE custom resource.
         /// </summary>
         /// <param name="crd">The custom resource definition.</param>
-        /// <returns><c>true</c> for neonKUBE resource definitions.</returns>
+        /// <returns><c>true</c> for NEONKUBE resource definitions.</returns>
         public static bool IsNeonKubeCustomResource(V1CustomResourceDefinition crd)
         {
             Covenant.Requires<ArgumentNullException>(crd != null, nameof(crd));
@@ -3131,7 +3131,7 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Returns the path to the <b>$/neonKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file.
+        /// Returns the path to the <b>$/TEMPKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file.
         /// </summary>
         /// <returns>The <b>KubeVersions.cd</b> path.</returns>
         /// <exception cref="InvalidOperationException">
@@ -3170,8 +3170,8 @@ TCPKeepAlive yes
 
         /// <summary>
         /// Returns the <see cref="KubeVersions.NeonKube"/> contant value extracted from the 
-        /// <b>$/neonKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file.  Note that the
-        /// <b>NK_ROOT</b> environment variable must reference the root of the <b>neonKUBE</b>
+        /// <b>$/TEMPKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file.  Note that the
+        /// <b>NK_ROOT</b> environment variable must reference the root of the <b>NEONKUBE</b>
         /// git repository.
         /// </summary>
         /// <returns>The <b>NeonKube</b> version.</returns>
@@ -3196,7 +3196,7 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Edits the <b>$/neonKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file by setting
+        /// Edits the <b>$/TEMPKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file by setting
         /// the <see cref="KubeVersions.NeonKube"/> constant to the version passed.
         /// </summary>
         /// <param name="version">The new version number.</param>

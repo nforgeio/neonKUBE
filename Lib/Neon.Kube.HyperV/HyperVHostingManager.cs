@@ -970,7 +970,7 @@ namespace Neon.Kube.Hosting.HyperV
                     // Ignore errors reported when the partition is already at its
                     // maximum size and cannot be grown:
                     //
-                    //      https://github.com/nforgeio/neonKUBE/issues/1352
+                    //      https://github.com/nforgeio/TEMPKUBE/issues/1352
 
                     if (!response.Success && !response.AllText.Contains("NOCHANGE:"))
                     {

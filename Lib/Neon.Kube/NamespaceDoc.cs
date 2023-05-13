@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    NamespaceDoc.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -26,7 +26,7 @@ using Neon.Common;
 namespace Neon.Kube
 {
     /// <summary>
-    /// This namespace includes neonKUBE Kubernetes distribution related types.
+    /// This namespace includes NEONKUBE Kubernetes distribution related types.
     /// </summary>
     [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc

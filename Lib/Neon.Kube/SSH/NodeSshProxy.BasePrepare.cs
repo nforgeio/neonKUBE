@@ -674,7 +674,7 @@ mkdir -p {KubeNodeFolder.Bin}
 cat <<EOF > /etc/systemd/system/neon-init.service
 
 [Unit]
-Description=neonKUBE one-time node preparation service 
+Description=NEONKUBE one-time node preparation service 
 After=systemd-networkd.service
 
 [Service]
@@ -709,10 +709,10 @@ cat <<EOF > {KubeNodeFolder.Bin}/neon-init
 # limitations under the License.
 #
 # This script is run early during node boot before the netork is configured
-# as a poor man's way for neonKUBE cluster setup to configure the network
+# as a poor man's way for NEONKUBE cluster setup to configure the network
 # without requiring DHCP.  Here's how this works:
 #
-#       1. neonKUBE cluster setup creates a node VM from a template.
+#       1. NEONKUBE cluster setup creates a node VM from a template.
 #
 #       2. Setup creates a temporary ISO (DVD) image with a script named 
 #          [neon-init.sh] on it and uploads this to the Hyper-V
@@ -883,11 +883,11 @@ chmod 740 {KubeNodeFolder.NeonRun}
                 {
                     controller.LogProgress(this, verb: "setup", message: "tools (base)");
 
-                    // Upload any tool scripts to the neonKUBE bin folder, stripping
+                    // Upload any tool scripts to the NEONKUBE bin folder, stripping
                     // the [*.sh] file type (if present) and then setting execute
                     // permissions.
 
-                    var scriptsFolder = KubeHelper.Resources.GetDirectory("/Tools");    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
+                    var scriptsFolder = KubeHelper.Resources.GetDirectory("/Tools");    // $hack(jefflill): https://github.com/nforgeio/TEMPKUBE/issues/1121
 
                     foreach (var file in scriptsFolder.GetFiles())
                     {

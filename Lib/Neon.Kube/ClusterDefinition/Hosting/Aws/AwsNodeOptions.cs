@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    AwsNodeOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -50,11 +50,11 @@ namespace Neon.Kube.ClusterDef
         /// This defaults to <see cref="AwsHostingOptions.DefaultInstanceType"/>.
         /// </para>
         /// <note>
-        /// neonKUBE clusters cannot be deployed to ARM-based AWS instance types.  You must
+        /// NEONKUBE clusters cannot be deployed to ARM-based AWS instance types.  You must
         /// specify an instance type using a Intel or AMD 64-bit processor.
         /// </note>
         /// <note>
-        /// neonKUBE requires control-plane and worker instances to have at least 4 CPUs and 8GiB RAM.  Choose
+        /// NEONKUBE requires control-plane and worker instances to have at least 4 CPUs and 8GiB RAM.  Choose
         /// an AWS instance type that satisfies these requirements.
         /// </note>
         /// </summary>
@@ -154,7 +154,7 @@ namespace Neon.Kube.ClusterDef
         /// </summary>
         /// <remarks>
         /// <note>
-        /// Node disks smaller than 64 GiB are not supported by neonKUBE.  We'll automatically
+        /// Node disks smaller than 64 GiB are not supported by NEONKUBE.  We'll automatically
         /// round up the disk size when necessary.
         /// </note>
         /// </remarks>
@@ -180,7 +180,7 @@ namespace Neon.Kube.ClusterDef
         /// </summary>
         /// <remarks>
         /// <note>
-        /// Node disks smaller than 64 GiB are not supported by neonKUBE.  We'll automatically
+        /// Node disks smaller than 64 GiB are not supported by NEONKUBE.  We'll automatically
         /// upgrade the disk size when necessary.
         /// </note>
         /// </remarks>

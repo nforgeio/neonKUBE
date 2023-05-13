@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    Test_KubeContextName.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -42,7 +42,7 @@ namespace TestKube
         [Fact]
         public void ParseNeonKube()
         {
-            // Verify that the neonKUBE components are parsed correctly.
+            // Verify that the NEONKUBE components are parsed correctly.
 
             var name = KubeContextName.Parse("user@cluster/namespace");
 

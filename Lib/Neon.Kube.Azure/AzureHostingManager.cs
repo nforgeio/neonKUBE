@@ -98,13 +98,13 @@ namespace Neon.Kube.Hosting.Azure
         // IMPLEMENTATION NOTE:
         // --------------------
         // Here's the original issue covering Azure provisioning and along with 
-        // some discussion about how neonKUBE thinks about cloud deployments:
+        // some discussion about how NEONKUBE thinks about cloud deployments:
         // 
-        //      https://github.com/nforgeio/neonKUBE/issues/908
+        //      https://github.com/nforgeio/TEMPKUBE/issues/908
         //
         // The remainder of this note will outline how Azure provisioning works.
         //
-        // A neonKUBE Azure cluster will require provisioning these things:
+        // A NEONKUBE Azure cluster will require provisioning these things:
         //
         //      * VNET
         //      * VMs & Disks
@@ -135,7 +135,7 @@ namespace Neon.Kube.Hosting.Azure
         // inbound traffic across a backend pool including the VMs designated to
         // accept ingress traffic into the cluster.  These nodes are identified 
         // by the presence of a [neonkube.io/node.ingress=true] label which can be
-        // set explicitly.  neonKUBE will default to reasonable ingress nodes when
+        // set explicitly.  NEONKUBE will default to reasonable ingress nodes when
         // necessary.
         //
         // External load balancer traffic can be enabled for specific ports via 
@@ -167,10 +167,10 @@ namespace Neon.Kube.Hosting.Azure
         // to provision the cluster.  Gen2 images work on most Azure VM sizes and offer
         // larger OS disks, improved performance, more memory and support for premium
         // and ultra storage.  There's a decent chance that Azure will deprecate Gen1
-        // VMs at some point, so neonKUBE is going to only support Gen2 images to
+        // VMs at some point, so NEONKUBE is going to only support Gen2 images to
         // simplify things.
         //
-        // This hosting manager will support creating VMs from neonKUBE node
+        // This hosting manager will support creating VMs from NEONKUBE node
         // images published to Azure .  No9de images are preprovisioned with all of
         // the software required, making cluster setup much faster and reliable.
         //
@@ -611,7 +611,7 @@ namespace Neon.Kube.Hosting.Azure
         private const string publicSshRulePrefix = "public-ssh-";
 
         /// <summary>
-        /// The (namespace) prefix used for neonKUBE related Azure resource tags.
+        /// The (namespace) prefix used for NEONKUBE related Azure resource tags.
         /// </summary>
         private const string neonTagKeyPrefix = "neon:";
 
@@ -2933,7 +2933,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
 
         /// <summary>
         /// Adds public SSH NAT and security rules for every node in the cluster.
-        /// These are used by neonKUBE tools for provisioning, setting up, and
+        /// These are used by NEONKUBE tools for provisioning, setting up, and
         /// managing cluster nodes.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -3084,7 +3084,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
 
         /// <summary>
         /// Removes public SSH NAT and security rules for every node in the cluster.
-        /// These are used by neonKUBE related tools for provisioning, setting up, and
+        /// These are used by NEONKUBE related tools for provisioning, setting up, and
         /// managing cluster nodes. 
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -3141,7 +3141,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
 
             // $todo(jefflill): We're deferring checking quotas and current utilization for Azure:
             //
-            //      https://github.com/nforgeio/neonKUBE/issues/1544
+            //      https://github.com/nforgeio/TEMPKUBE/issues/1544
 
             // Verify that the region exists and is available to the current subscription.
 
@@ -3151,7 +3151,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
             // be working; it always returns an empty list.  We'll temporarily work around this by
             // hardcoding known locations for the public cloud:
             //
-            //      https://github.com/nforgeio/neonKUBE/issues/1555
+            //      https://github.com/nforgeio/TEMPKUBE/issues/1555
 
             var locations = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
@@ -3276,7 +3276,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
             //      * Ensure that all VM sizes required by the cluster VM sizes are AMD64 compatible
             //      * VM is compatible with the storage tier specified for each node
             //
-            //      https://github.com/nforgeio/neonKUBE/issues/1545
+            //      https://github.com/nforgeio/TEMPKUBE/issues/1545
 
             await LoadVmSizeMetadataAsync();
 
@@ -3317,7 +3317,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
                         new HostingResourceConstraint()
                         {
                             ResourceType = HostingConstrainedResourceType.VmHost,
-                            Details      = $"VM Size [{vmSize}] [cpu-architecture={vmSku.CpuArchitecture}] is not currently supported by neonKUBE.",
+                            Details      = $"VM Size [{vmSize}] [cpu-architecture={vmSku.CpuArchitecture}] is not currently supported by NEONKUBE.",
                             Nodes        = cluster.Nodes
                                                .Where(node => node.Metadata.Azure.VmSize == vmSize)
                                                .Select(node => node.Name)
@@ -3505,7 +3505,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
 
             // $todo(jefflill): Note that the fluent SDK doesn't appear to support forced shutdown:
             //
-            //      https://github.com/nforgeio/neonKUBE/issues/1546
+            //      https://github.com/nforgeio/TEMPKUBE/issues/1546
 
             await ConnectAzureAsync();
 

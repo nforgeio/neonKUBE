@@ -39,7 +39,7 @@ namespace Neon.Kube.Config
 {
     /// <summary>
     /// Holds all of the information required to import/export a cluster
-    /// login.  This includes the Kubernetes cluster, login, and neonKUBE
+    /// login.  This includes the Kubernetes cluster, login, and NEONKUBE
     /// extensions.
     /// </summary>
     public class ClusterLoginExport

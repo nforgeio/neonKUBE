@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    NetworkCni.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -27,7 +27,7 @@ namespace Neon.Kube.ClusterDef
     {
         /// <summary>
         /// The <a href="https://projectcalico.org">Calico</a> network provider.  As of 01/2019, this is probably
-        /// the most popular network provider.  This is currently the default provider deployed for a neonKUBE
+        /// the most popular network provider.  This is currently the default provider deployed for a NEONKUBE
         /// but we expect to change this to the <see cref="Istio"/> integrated provider when that is ready.
         /// </summary>
         [EnumMember(Value = "calico")]

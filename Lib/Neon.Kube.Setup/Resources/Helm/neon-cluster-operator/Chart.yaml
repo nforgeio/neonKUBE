@@ -1,6 +1,6 @@
 apiVersion: v2
 name: neon-cluster-operator
-description: Manages neonKUBE clusters via multiple control loops
+description: Manages NEONKUBE clusters via multiple control loops
 
 # A chart can be either an 'application' or a 'library' chart.
 #

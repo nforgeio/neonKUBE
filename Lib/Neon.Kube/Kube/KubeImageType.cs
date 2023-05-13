@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubeImageType.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -21,7 +21,7 @@ using System.Runtime.Serialization;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Enumerates the neonKUBE image types.
+    /// Enumerates the NEONKUBE image types.
     /// </summary>
     public enum KubeImageType
     {

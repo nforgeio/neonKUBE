@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    ClusterHealth.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -60,7 +60,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// The neonKUBE version of the cluster or <b>"0"</b> when the version
+        /// The NEONKUBE version of the cluster or <b>"0"</b> when the version
         /// is not known.  This is formatted as a <see cref="SemanticVersion"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Version", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

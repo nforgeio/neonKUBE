@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    NetworkOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -238,7 +238,7 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// <para>
         /// Specifies the start of a range of ingress load balancer ports reserved by
-        /// neonKUBE.  These are reserved for temporarily exposing SSH from individual 
+        /// NEONKUBE.  These are reserved for temporarily exposing SSH from individual 
         /// cluster nodes to the Internet during cluster setup as well as afterwards so 
         /// that a cluster node can be accessed remotely by a cluster operator as well
         /// as for other purposes and for potential future features such as an integrated
@@ -262,7 +262,7 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// <para>
         /// Specifies the end of a range of ingress load balancer ports reserved by
-        /// neonKUBE.  These are reserved for temporarily exposing SSH from individual 
+        /// NEONKUBE.  These are reserved for temporarily exposing SSH from individual 
         /// cluster nodes to the Internet during cluster setup as well as afterwards so 
         /// that a cluster node can be accessed remotely by a cluster operator as well
         /// as for other purposes and for potential future features such as an integrated

@@ -8,7 +8,7 @@
         <AssemblyName>neoncli</AssemblyName>
         <PlatformTarget>AnyCPU</PlatformTarget>
         <Configurations>Debug;Release</Configurations>
-        <Description>Manage neonKUBE clusters from the command line</Description>
+        <Description>Manage NEONKUBE clusters from the command line</Description>
     </PropertyGroup>
 
     <PropertyGroup>

@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    IngressRuleTarget.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -31,7 +31,7 @@ namespace Neon.Kube.ClusterDef
         // dashes.
 
         /// <summary>
-        /// Provisioned for required neonKUBE cluster ingress ports, like the Kubernetes
+        /// Provisioned for required NEONKUBE cluster ingress ports, like the Kubernetes
         /// API port 6443.  This traffic will be routed to the control-plane nodes.
         /// </summary>
         [EnumMember(Value = "control-plane")]

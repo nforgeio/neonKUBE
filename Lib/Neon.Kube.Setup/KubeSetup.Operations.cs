@@ -1077,7 +1077,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             // and while we're at it, we need to modify the [--service-account-issuer] option to
             // pass the Kubernetes compliance tests.
             //
-            //      https://github.com/nforgeio/neonKUBE/issues/1385
+            //      https://github.com/nforgeio/TEMPKUBE/issues/1385
             //
             // Here's what the static pod manifest looks like:
             //
@@ -1361,7 +1361,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         }
 
         /// <summary>
-        /// Adds the neonKUBE standard priority classes to the cluster.
+        /// Adds the NEONKUBE standard priority classes to the cluster.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
@@ -5603,7 +5603,7 @@ $@"- name: StorageType
             //
             // I couldn't find that special connector anywhere.
             //
-            //      https://github.com/nforgeio/neonKUBE/issues/1731
+            //      https://github.com/nforgeio/TEMPKUBE/issues/1731
 #if TODO
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/dex-connectors",

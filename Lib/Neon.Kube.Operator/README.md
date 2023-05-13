@@ -1,4 +1,4 @@
-﻿Neon.Kube.Operator
+Neon.Kube.Operator
 ==================
 
-**INTERNAL USE ONLY:** Common code for neonKUBE operator implementations.
+**INTERNAL USE ONLY:** Common code for NEONKUBE operator implementations.

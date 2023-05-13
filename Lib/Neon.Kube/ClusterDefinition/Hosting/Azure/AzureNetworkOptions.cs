@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    AzureNetworkOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -77,7 +77,7 @@ namespace Neon.Kube.ClusterDef
     /// </para>
     /// <para>
     /// The way to mitigate this is to add additional public IP addresses to the NAT Gateway
-    /// because each address added can support about 64K connections.  neonKUBE clusters can
+    /// because each address added can support about 64K connections.  NEONKUBE clusters can
     /// do this by adding a <b>public IP prefix</b> to the NAT Gateway.  These represent
     /// between multiple IP addresses that are adjacent to each other in the address space.
     /// </para>

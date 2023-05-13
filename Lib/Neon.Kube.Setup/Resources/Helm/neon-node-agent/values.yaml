@@ -1,4 +1,4 @@
-# neonKUBE service [values.yaml] files are used for specifying parameters 
+# NEONKUBE service [values.yaml] files are used for specifying parameters 
 # based on cluster-advice recommendations (e.g. for single-node clusters vs. 
 # larger multi-node clusters).
 #

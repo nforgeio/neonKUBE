@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    NeonGrpcServices.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -36,7 +36,7 @@ using ProtoBuf.Grpc;
 namespace Neon.Kube.GrpcProto
 {
     /// <summary>
-    /// Creates clients for neonKUBE related gRPC services.
+    /// Creates clients for NEONKUBE related gRPC services.
     /// </summary>
     public static class NeonGrpcServices
     {

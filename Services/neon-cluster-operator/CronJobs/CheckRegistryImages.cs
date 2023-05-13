@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    CheckRegistryImages.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -51,7 +51,7 @@ using Metrics = Prometheus.Metrics;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// Handles loading of neonKUBE container images into Harbor by assigning node tasks to
+    /// Handles loading of NEONKUBE container images into Harbor by assigning node tasks to
     /// specific cluster nodes to upload missing images that are already cached locally by
     /// CRI-O or by fetching these from our public container registry and pushing them to
     /// Harbor.

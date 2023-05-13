@@ -79,7 +79,7 @@ namespace Neon.Kube.ClusterDef
         public static Regex NameRegex { get; private set; } = new Regex(@"^[a-z0-9\-_]+$", RegexOptions.IgnoreCase);
 
         /// <summary>
-        /// The prefix reserved for neonKUBE specific annotations and labels.
+        /// The prefix reserved for NEONKUBE specific annotations and labels.
         /// </summary>
         public const string ReservedPrefix = "neonkube.io/";
 
@@ -265,7 +265,7 @@ namespace Neon.Kube.ClusterDef
             // properties will not impact [ClusterFixture]'s decision about
             // redeploying the cluster or not.
             //
-            //      https://github.com/nforgeio/neonKUBE/issues/1505
+            //      https://github.com/nforgeio/TEMPKUBE/issues/1505
 
             foreach (var node in definition.Nodes)
             {
@@ -333,7 +333,7 @@ namespace Neon.Kube.ClusterDef
         }
 
         /// <summary>
-        /// Returns <c>true</c> for cluster definitions that describe a special neonKUBE/CLOUD
+        /// Returns <c>true</c> for cluster definitions that describe a special NEONKUBE/CLOUD
         /// cluster like the the neonCLOUD built-in cluster.  This is used to relax constraints
         /// on user cluster definitions like cluster node names not being able to use the "neon-"
         /// prefix.
@@ -399,7 +399,7 @@ namespace Neon.Kube.ClusterDef
         public string Description { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies the semantic version of the neonKUBE cluster being created.
+        /// Optionally specifies the semantic version of the NEONKUBE cluster being created.
         /// This defaults to <c>null</c> which indicates that the latest supported cluster
         /// version will be created.
         /// </summary>
@@ -435,11 +435,11 @@ namespace Neon.Kube.ClusterDef
         /// https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/#feature-gates
         /// </para>
         /// <note>
-        /// Your neonKUBE cluster may be somewhat older than the current Kubernetes version,
+        /// Your NEONKUBE cluster may be somewhat older than the current Kubernetes version,
         /// so some of the features listed may not apply to your cluster.
         /// </note>
         /// <para>
-        /// neonKUBE clusters enables specific features by default when you you haven't
+        /// NEONKUBE clusters enables specific features by default when you you haven't
         /// explicitly disabled them via this property.  Note that some features are 
         /// required and cannot be disabled.
         /// </para>
@@ -946,7 +946,7 @@ namespace Neon.Kube.ClusterDef
 
             new HostingManagerFactory().Validate(this);
 
-            // Add default neonKUBE feature gates when the user has not already configured them.
+            // Add default NEONKUBE feature gates when the user has not already configured them.
 
             if (!FeatureGates.ContainsKey("EphemeralContainers"))
             {

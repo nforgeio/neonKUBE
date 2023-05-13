@@ -118,8 +118,8 @@ namespace Neon.Kube.Config
         }
 
         /// <summary>
-        /// Holds additional information about neonKUBE clusters.  This will be
-        /// <c>null</c> for non-neonKUBE clusters.
+        /// Holds additional information about NEONKUBE clusters.  This will be
+        /// <c>null</c> for non-NEONKUBE clusters.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
@@ -130,8 +130,8 @@ namespace Neon.Kube.Config
         }
 
         /// <summary>
-        /// Identifies the <see cref="Neon.Kube.ClusterDef.HostingEnvironment"/> for neonKUBE clusters.
-        /// This will be <see cref="HostingEnvironment.Unknown"/> for non-neonKUBE clusters.
+        /// Identifies the <see cref="Neon.Kube.ClusterDef.HostingEnvironment"/> for NEONKUBE clusters.
+        /// This will be <see cref="HostingEnvironment.Unknown"/> for non-NEONKUBE clusters.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
@@ -142,8 +142,8 @@ namespace Neon.Kube.Config
         }
 
         /// <summary>
-        /// Holds the <see cref="Neon.Kube.ClusterDef.HostingOptions"/> for neonKUBE clusters.
-        /// This will be <c>null</c> for non-neonKUBE clusters.
+        /// Holds the <see cref="Neon.Kube.ClusterDef.HostingOptions"/> for NEONKUBE clusters.
+        /// This will be <c>null</c> for non-NEONKUBE clusters.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
@@ -155,7 +155,7 @@ namespace Neon.Kube.Config
 
         /// <summary>
         /// Specifies the prefix added by the hosting environments to virtual machine names.  This may
-        /// be the empty string form neonKUBE clusters and always will be <c>null</c> for non-neonKUBE
+        /// be the empty string form NEONKUBE clusters and always will be <c>null</c> for non-NEONKUBE
         /// clusters.
         /// </summary>
         [JsonIgnore]
@@ -168,7 +168,7 @@ namespace Neon.Kube.Config
 
         /// <summary>
         /// Indicates that this is a neon-desktop cluster. This will be <c>false</c> for
-        /// non-neonKUBE clusters.
+        /// non-NEONKUBE clusters.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
@@ -179,8 +179,8 @@ namespace Neon.Kube.Config
         }
 
         /// <summary>
-        /// Indicates that this is a neonKUBE cluster.  This will be <c>false</c> for
-        /// non-neonKUBE clusters.
+        /// Indicates that this is a NEONKUBE cluster.  This will be <c>false</c> for
+        /// non-NEONKUBE clusters.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
@@ -243,7 +243,7 @@ namespace Neon.Kube.Config
         /// <summary>
         /// Holds the cluster definition for testing clusters.  <b>ClusterFixture</b>
         /// uses this decide whether to deploy a new cluster when the definition has changed.
-        /// This will be <c>null</c> for non-neonKUBE clusters.
+        /// This will be <c>null</c> for non-NEONKUBE clusters.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]

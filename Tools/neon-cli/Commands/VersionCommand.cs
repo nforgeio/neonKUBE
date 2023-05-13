@@ -101,7 +101,7 @@ OPTIONS:
                     Console.Error.WriteLine();
                     Console.Error.WriteLine($"You can obtain the latest releases from here:");
                     Console.Error.WriteLine();
-                    Console.Error.WriteLine($"    https://github.com/nforgeio/neonKUBE/releases");
+                    Console.Error.WriteLine($"    https://github.com/nforgeio/TEMPKUBE/releases");
                     Console.Error.WriteLine();
                     Program.Exit(1);
                 }

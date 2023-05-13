@@ -60,7 +60,7 @@ namespace NeonCli
     public class ClusterSetupCommand : CommandBase
     {
         private const string usage = @"
-Configures a neonKUBE cluster as described in the cluster definition file.
+Configures a NEONKUBE cluster as described in the cluster definition file.
 
 USAGE: 
 

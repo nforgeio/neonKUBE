@@ -1,6 +1,6 @@
-﻿# Helm Charts Embedded Resources
+# Helm Charts Embedded Resources
 
-This folder holds the Helm Charts required to deploy neonKUBE clusters.  These files **must all** be configured to be **embedded resources**.  This is checked before the assembly is compiled.
+This folder holds the Helm Charts required to deploy NEONKUBE clusters.  These files **must all** be configured to be **embedded resources**.  This is checked before the assembly is compiled.
 
 ## Helm files without extensions
 
@@ -12,4 +12,4 @@ The `Assembly.GetResourceFileSystem()` extension method has some limitations:
 
 ## Node provisioning
 
-All of the Helm charts will be compiled into a ZIP archive and prepositioned on the neonKUBE node image at: `/lib/neonkube/helm/charts.zip`.
+All of the Helm charts will be compiled into a ZIP archive and prepositioned on the NEONKUBE node image at: `/lib/neonkube/helm/charts.zip`.

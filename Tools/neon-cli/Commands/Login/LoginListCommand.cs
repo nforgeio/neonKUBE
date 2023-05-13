@@ -95,7 +95,7 @@ USAGE:
 
             if (logins.Count == 0)
             {
-                Console.Error.WriteLine("*** No neonKUBE logins.");
+                Console.Error.WriteLine("*** No NEONKUBE logins.");
             }
             else
             {

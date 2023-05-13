@@ -260,7 +260,7 @@ namespace Neon.Kube.Hosting
             // Ensure that any explicit node IP address assignments are located
             // within the subnet where the nodes will be provisioned and do not 
             // conflict with any of the addresses reserved by the cloud provider
-            // or neonKUBE.
+            // or NEONKUBE.
 
             var nodeSubnetInfo = clusterDefinition.NodeSubnet;
             var nodeSubnet     = NetworkCidr.Parse(nodeSubnetInfo.Subnet);

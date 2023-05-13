@@ -373,7 +373,7 @@ namespace Neon.Kube.Setup
             controller.AddNodeStep("node check",
                 (controller, node) =>
                 {
-                    // Ensure that the node image type and version matches the current neonKUBE version.
+                    // Ensure that the node image type and version matches the current NEONKUBE version.
 
                     var imageType = node.ImageType;
 
@@ -401,7 +401,7 @@ namespace Neon.Kube.Setup
 
                     if (!imageVersion.ToString().StartsWith(KubeVersions.NeonKube))
                     {
-                        throw new Exception($"Node image version [{imageVersion}] does not match the neonKUBE version [{KubeVersions.NeonKube}] implemented by the current build.");
+                        throw new Exception($"Node image version [{imageVersion}] does not match the NEONKUBE version [{KubeVersions.NeonKube}] implemented by the current build.");
                     }
                 });
 

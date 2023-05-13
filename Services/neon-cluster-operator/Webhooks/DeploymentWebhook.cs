@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    DeploymentWebhook.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -41,7 +41,7 @@ using Octokit;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// Webhook to set istio injection on neonKUBE deployments.
+    /// Webhook to set istio injection on NEONKUBE deployments.
     /// </summary>
     [Webhook(
         name:                    "deployment-policy.neonkube.io",

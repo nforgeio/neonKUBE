@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    ClusterSetupFailureMetadata.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -40,7 +40,7 @@ namespace Neon.Kube
         public DateTime TimestampUtc { get; set; }
 
         /// <summary>
-        /// The current neonKUBE version.
+        /// The current NEONKUBE version.
         /// </summary>
         [JsonProperty(PropertyName = "NeonKubeVersion", Required = Required.Always)]
         [YamlMember(Alias = "neonKubeVersion", ApplyNamingConventions = false)]

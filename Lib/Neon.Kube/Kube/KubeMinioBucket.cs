@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubeMinioBuckets.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -32,7 +32,7 @@ using Renci.SshNet;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Defines the Minio bucket names used by neonKUBE applications.
+    /// Defines the Minio bucket names used by NEONKUBE applications.
     /// </summary>
     public static class KubeMinioBucket
     {
@@ -67,7 +67,7 @@ namespace Neon.Kube
         public const string Tempo = "tempo";
 
         /// <summary>
-        /// Returns the list of all internal neonKUBE Minio bucket names.
+        /// Returns the list of all internal NEONKUBE Minio bucket names.
         /// </summary>
         public static readonly IReadOnlyList<string> All =
             new List<string>()

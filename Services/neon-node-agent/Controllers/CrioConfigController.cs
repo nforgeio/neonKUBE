@@ -121,7 +121,7 @@ namespace NeonNodeAgent
         }
 
         /// <summary>
-        /// Represents a container registry login file as described here: https://github.com/nforgeio/neonKUBE/issues/1591
+        /// Represents a container registry login file as described here: https://github.com/nforgeio/TEMPKUBE/issues/1591
         /// </summary>
         internal class LoginFile
         {
@@ -479,7 +479,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
             // and periodically logging in with unchanged credentials to ensure that
             // we're actually logged in.  Here's how this works:
             //
-            //      https://github.com/nforgeio/neonKUBE/issues/1591
+            //      https://github.com/nforgeio/TEMPKUBE/issues/1591
 
             var retry = new LinearRetryPolicy(e => true, maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(5));
 
