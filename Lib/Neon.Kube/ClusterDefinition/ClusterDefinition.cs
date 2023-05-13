@@ -358,7 +358,7 @@ namespace Neon.Kube.ClusterDef
         }
 
         /// <summary>
-        /// Indicates whether the definition describes a neonDESKTOP built-in clusters.
+        /// Indicates whether the definition describes a NEONDESKTOP built-in clusters.
         /// </summary>
         [JsonProperty(PropertyName = "IsDesktop", Required = Required.Always)]
         [YamlMember(Alias = "isDesktop", ApplyNamingConventions = false)]

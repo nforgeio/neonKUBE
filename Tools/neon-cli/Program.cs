@@ -742,7 +742,7 @@ NOTE: Command line arguments and options may include references to
         /// be located in the <b>tools</b> subfolder where <b>neon-cli</b> itself is installed, like:
         /// </para>
         /// <code>
-        /// C:\Program Files\NEONFORGE\neonDESKTOP\
+        /// C:\Program Files\NEONFORGE\NEONDESKTOP\
         ///     neon-cli.exe
         ///     tools\
         ///         helm.exe
@@ -780,7 +780,7 @@ NOTE: Command line arguments and options may include references to
         /// be located in the <b>tools</b> subfolder where <b>neon-cli</b> itself is installed, like:
         /// </para>
         /// <code>
-        /// C:\Program Files\NEONFORGE\neonDESKTOP\
+        /// C:\Program Files\NEONFORGE\NEONDESKTOP\
         ///     neon-cli.exe
         ///     tools\
         ///         helm.exe

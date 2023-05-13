@@ -1145,7 +1145,7 @@ namespace Neon.Kube.Setup
         // This is part of the final setup refactor where all cluster prepare/setup 
         // related code is relocated to the [Neon.Kube] library so it can be referenced
         // by different kinds of applications.  This will include [neon-cli] as well
-        // as neonDESKTOP right now and perhaps Temporal based workflows in the future
+        // as NEONDESKTOP right now and perhaps Temporal based workflows in the future
         // as part of a NEONCLOUD offering.
         //
         // The LogProgress() methods update global or node-specific status.  For nodes,
@@ -1432,7 +1432,7 @@ namespace Neon.Kube.Setup
 
             // This method has been synchronous for a very long time (maybe 5 years).
             // We need to make this async now so that it will integrate well with
-            // the neonDESKTOP UX. 
+            // the NEONDESKTOP UX. 
             //
             // We're simply going to wrap the main setup loop onto a new thread and
             // have setup execute there.  We'll use a task completion source to signal

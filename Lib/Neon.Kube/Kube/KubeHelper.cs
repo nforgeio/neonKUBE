@@ -249,7 +249,7 @@ namespace Neon.Kube
         /// <returns>The file text.</returns>
         /// <remarks>
         /// It's possible for the configuration file to be temporarily opened
-        /// by another process (e.g. the neonDESKTOP application or a 
+        /// by another process (e.g. the NEONDESKTOP application or a 
         /// command line tool).  Rather than throw an exception, we're going
         /// to retry the operation a few times.
         /// </remarks>
@@ -274,7 +274,7 @@ namespace Neon.Kube
         /// <param name="text">The text to be written.</param>
         /// <remarks>
         /// It's possible for the configuration file to be temporarily opened
-        /// by another process (e.g. the neonDESKTOP application or a 
+        /// by another process (e.g. the NEONDESKTOP application or a 
         /// command line tool).  Rather than throw an exception, we're going
         /// to retry the operation a few times.
         /// </remarks>
@@ -307,7 +307,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Accesses the neonDESKTOP client configuration.
+        /// Accesses the NEONDESKTOP client configuration.
         /// </summary>
         public static KubeClientConfig ClientConfig
         {
@@ -774,7 +774,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns path to the neonDESKTOP log folder.
+        /// Returns path to the NEONDESKTOP log folder.
         /// </summary>
         public static string DesktopLogFolder
         {
@@ -794,7 +794,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns path to the neonDESKTOP Hyper-V state folder.
+        /// Returns path to the NEONDESKTOP Hyper-V state folder.
         /// </summary>
         public static string DesktopHypervFolder
         {
@@ -874,7 +874,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Returns the path to the global neonDESKTOP program data folder.  This is used for information
+        /// Returns the path to the global NEONDESKTOP program data folder.  This is used for information
         /// to be shared across all users as well as between the user programs and the Neon Desktop Service.
         /// </para>
         /// <note>
@@ -1918,7 +1918,7 @@ exit 0
             // a script or other process.
             //
             // We're going to use a version of this tool deployed with the Git tools for Windows.
-            // This will be installed with neonDESKTOP and is also available as part of the
+            // This will be installed with NEONDESKTOP and is also available as part of the
             // NEONKUBE Git repo as a fall back for Neon developers that haven't installed 
             // the desktop yet.
 

@@ -131,7 +131,7 @@ namespace Neon.Kube.Setup
         }
 
         /// <summary>
-        /// Returns the cluster definition required to prepare a neonDESKTOP built-in cluster for 
+        /// Returns the cluster definition required to prepare a NEONDESKTOP built-in cluster for 
         /// a specific hosting environment.
         /// </summary>
         /// <param name="hostEnvironment">Specifies the target environment.</param>
