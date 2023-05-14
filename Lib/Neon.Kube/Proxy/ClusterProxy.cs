@@ -1226,6 +1226,7 @@ namespace Neon.Kube.Proxy
                 HostingEnvironment = SetupState.ClusterDefinition.Hosting.Environment,
                 HostingNamePrefix  = SetupState.ClusterDefinition.Hosting.Hypervisor?.NamePrefix ?? string.Empty,
                 Purpose            = SetupState.ClusterDefinition.Purpose,
+                KubernetesVersion  = KubeVersions.Kubernetes,
                 Datacenter         = SetupState.ClusterDefinition.Datacenter,
                 IsDesktop          = SetupState.ClusterDefinition.IsDesktop,
                 Latitude           = SetupState.ClusterDefinition.Latitude,

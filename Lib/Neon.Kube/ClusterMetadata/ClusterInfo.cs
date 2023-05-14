@@ -119,6 +119,12 @@ namespace Neon.Kube
         public string Datacenter { get; set; } = string.Empty;
 
         /// <summary>
+        /// Identifies the version of Kubernetes installed on the cluster.
+        /// </summary>
+        [JsonProperty(PropertyName = "KubernetesVersion", Required = Required.Always)]
+        public string KubernetesVersion { get; set; }
+
+        /// <summary>
         /// Indicates whether the cluster is a neon-desktop cluster.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "IsDesktop", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

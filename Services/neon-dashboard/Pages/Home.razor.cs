@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    Home.razor.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -94,6 +94,7 @@ namespace NeonDashboard.Pages
             clusterMetaData = new Dictionary<string, string>()
             {
                 {"Version", clusterInfo.ClusterVersion },
+                {"KubernetesVersion", clusterInfo.KubernetesVersion },
                 {"Datacenter",  clusterInfo.Datacenter },
                 {"Enviroment", clusterInfo.HostingEnvironment.ToString() },
                 {"Purpose", clusterInfo.Purpose.ToString() }
