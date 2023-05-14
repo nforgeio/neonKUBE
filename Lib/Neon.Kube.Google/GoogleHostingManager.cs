@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    GoogleHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -77,8 +77,13 @@ namespace Neon.Kube.Hosting.Google
         /// </summary>
         public static void Load()
         {
-            // We don't have to do anything here because the assembly is loaded
-            // as a byproduct of calling this method.
+            // This method can't do nothing because the C# compiler may optimize calls
+            // out of trimmed executables and we need this type to be discoverable
+            // via reflection.
+            //
+            // This call does almost nothing to prevent C# optimization.
+
+            Load(() => new GoogleHostingManager());
         }
 
         //---------------------------------------------------------------------

@@ -89,6 +89,28 @@ namespace Neon.Kube.Hosting
             return !KubeHelper.IsCloudEnvironment(environment);
         }
 
+        /// <summary>
+        /// <b>HACK:</b> Used by derived <see cref="HostingManager"/> implementations to defeat
+        /// C# code optimization to prevent trimming.
+        /// </summary>
+        /// <param name="action">Specifies an action that ensures that trimming doesn't happen.</param>
+        protected static void Load(Action action)
+        {
+            Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
+
+            // $hack(jefflill):
+            //
+            // We fetch an environment variable what we don't expect to exist and create these
+            // instances.  The variable check will ensure that the C# compiler won't optimize
+            // these calls out but if on the off chance, the variable exists we'll invoke the
+            // action.
+
+            if (Environment.GetEnvironmentVariable("notfound-08749E0B-3EE0-48B6-93DF-245285147ED1") != null)
+            {
+                action.Invoke();
+            }
+        }
+
         //---------------------------------------------------------------------
         // Instance members
 

@@ -100,9 +100,9 @@ namespace Neon.Kube.Hosting
                 // reason.  It could be possible that we can't reference or load both sets
                 // of subassemblies at the same time.
                 //
-                // I'm going to defer this for now though.  I suspect that the ultimate
-                // solution will be to handle this as part of a greater extensibility
-                // strategy and this is unlikely to become a problem any time soon.
+                // I'm going to defer worrying about all of this for now though.  I suspect
+                // that the ultimate solution will be to handle this as part of a greater
+                // extensibility strategy and this is unlikely to become a problem any time soon.
 
                 AwsHostingManager.Load();
                 AzureHostingManager.Load();
@@ -113,7 +113,7 @@ namespace Neon.Kube.Hosting
 
                 // We're going to reflect all loaded assemblies for classes that implement
                 // [IHostingManager] and are decorated with an [HostingProviderAttribute],
-                // end then use the environment specified in the attributes to determine
+                // and then use the environment specified in the attributes to determine
                 // which hosting manager class to instantiate and return.
 
                 environmentToHostingManager = new Dictionary<HostingEnvironment, Type>();
@@ -163,11 +163,19 @@ namespace Neon.Kube.Hosting
         /// <inheritdoc/>
         public HostingManager GetManager(HostingEnvironment environment)
         {
+Console.Error.WriteLine($"HostingLoader: 0: count = {environmentToHostingManager.Count}");    // $debug(jefflill): DELETE THIS!
+foreach (var item in environmentToHostingManager)
+{
+    Console.Error.WriteLine($"HostingLoader: 0: {item.Key}: {item.Value.FullName}");
+}
+
             if (environmentToHostingManager.TryGetValue(environment, out var managerType))
             {
+Console.Error.WriteLine($"HostingLoader: 1");    // $debug(jefflill): DELETE THIS!
                 return (HostingManager)Activator.CreateInstance(managerType);
             }
 
+Console.Error.WriteLine($"HostingLoader: 2");    // $debug(jefflill): DELETE THIS!
             throw new NotImplementedException($"[{nameof(HostingEnvironment)}={environment}]");
         }
 

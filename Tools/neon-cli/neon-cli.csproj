@@ -17,6 +17,7 @@
         <PublishTrimmed>false</PublishTrimmed>
         <TrimMode>partial</TrimMode>
         <PublishReadyToRun>true</PublishReadyToRun>
+        <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
     </PropertyGroup>
 
     <ItemGroup>
