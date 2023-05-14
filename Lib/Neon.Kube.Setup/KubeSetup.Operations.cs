@@ -1264,9 +1264,9 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             var desktopReadyToGo = controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo);
             var kubeConfigPath   = KubeHelper.KubeConfigPath;
 
-            // For built-in desktop clusters, we need to obtain the control plane files from
-            // the node and add them to the cluster login because we didn't so a full cluster
-            // setup when this would normally happen.
+            // For NEONDESKTOP clusters, we need to obtain the control plane files from the node
+            // and add them to the cluster login because we didn't so a full cluster setup when
+            // this would normally happen.
 
             if (desktopReadyToGo)
             {
@@ -6063,7 +6063,7 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Waits for the a <b>neon-desktop</b> to stablize.
+        /// Waits for the a NEONDESKTOP cluster to stablize.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -6071,7 +6071,7 @@ $@"- name: StorageType
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-            Covenant.Assert(!controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo), $"[{nameof(StabilizeClusterAsync)}()] cannot be used for non neon-desktop clusters.");
+            Covenant.Assert(!controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo), $"[{nameof(StabilizeClusterAsync)}()] cannot be used for non NEONDESKTOP clusters.");
 
             var k8s = GetK8sClient(controller);
 

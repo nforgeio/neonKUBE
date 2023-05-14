@@ -754,7 +754,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path to the neon-desktop state folder.
+        /// Returns the path to the NEONDESKTOP state folder.
         /// </summary>
         public static string DesktopFolder
         {
@@ -2121,12 +2121,12 @@ exit 0
 
         /// <summary>
         /// <para>
-        /// Returns the fixed SSH key shared by all neon-desktop built-in clusters.
+        /// Returns the fixed SSH key shared by all NEONDESKTOP clusters.
         /// </para>
         /// <note>
-        /// This isn't really a security issue because built-in clusters are not
+        /// This isn't really a security issue because NEONDESKTOP clusters are not
         /// reachable from outside the machine they're deployed on and also because
-        /// the built-in desktop cluster is not intended to host production workloads.
+        /// the NEONDESKTOP cluster is not intended to host production workloads.
         /// </note>
         /// </summary>
         /// <returns>The <see cref="KubeSshKey"/>.</returns>
@@ -2136,7 +2136,7 @@ exit 0
             //
             // This key was generated using the NEONCLOUD neon-image tool via:
             //
-            //      neon-image sshkey neon-desktop root
+            //      neon-image sshkey NEONDESKTOP root
             //
             // SSH keys don't have an expiration so this key could potentionally work
             // forever, as long as the encryption algorithms are still supported.

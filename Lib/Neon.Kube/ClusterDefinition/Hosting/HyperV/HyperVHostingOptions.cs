@@ -47,7 +47,7 @@ namespace Neon.Kube.ClusterDef
         public readonly IPAddress NeonKubeInternalGateway;
 
         /// <summary>
-        /// <b>INTERNAL USE ONLY:</b> Returns the internal IP address reserved for the NEONDESKTOP built-in cluster.
+        /// <b>INTERNAL USE ONLY:</b> Returns the internal IP address reserved for the NEONDESKTOP cluster.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
@@ -102,7 +102,7 @@ namespace Neon.Kube.ClusterDef
         /// <item>
         ///     <term><b>100.64.0.254</b></term>
         ///     <description>
-        ///     Reserved for the NEONDESKTOP built-in single node cluster.
+        ///     Reserved for the NEONDESKTOP single node cluster.
         ///     </description>
         /// </item>
         /// <item>
@@ -148,14 +148,14 @@ namespace Neon.Kube.ClusterDef
 
             if (NeonDesktopBuiltIn)
             {
-                UseInternalSwitch = true;   // NEONDESKTOP built-in clusters always use the internal switch.
+                UseInternalSwitch = true;   // NEONDESKTOP clusters always use the internal switch.
 
                 // Ensure that cluster has only one control-plane node and set its
                 // address to the reserved IP.
 
                 if (clusterDefinition.NodeDefinitions.Count != 1 || !clusterDefinition.NodeDefinitions.Values.First().IsControlPane)
                 {
-                    throw new ClusterDefinitionException("The NEONDESKTOP built-in cluster must include only one node and that must be a [control-plane].");
+                    throw new ClusterDefinitionException("The NEONDESKTOP cluster must include only one node and that must be a [control-plane].");
                 }
 
                 clusterDefinition.NodeDefinitions.Values.First().Address = NeonDesktopNodeAddress.ToString();

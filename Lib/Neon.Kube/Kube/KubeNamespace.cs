@@ -32,7 +32,7 @@ using Renci.SshNet;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Defines the built-in namespace names created for Kubernetes and NEONKUBE.
+    /// Defines the namespace names created for NEONKUBE clusters.
     /// </summary>
     public static class KubeNamespace
     {
@@ -87,17 +87,17 @@ namespace Neon.Kube
         public const string NeonStatus = "neon-status";
 
         /// <summary>
-        /// Returns the set of built-in Kubernetes namespaces.
+        /// Returns the set of stock Kubernetes clusters namespaces.
         /// </summary>
         public static IReadOnlyList<string> KubernetesNamespaces { get; private set; }
 
         /// <summary>
-        /// Returns the set of built-in NEONKUBE namespaces.
+        /// Returns the set of stock NEONKUBE cluster namespaces.
         /// </summary>
         public static IReadOnlyList<string> NeonNamespaces { get; private set; }
 
         /// <summary>
-        /// Returns the set of all Kubernetes and NEONKUBE namespaces.
+        /// Returns the set of all stock Kubernetes and NEONKUBE cluster namespaces.
         /// </summary>
         public static IReadOnlySet<string> InternalNamespaces { get; private set; }
 

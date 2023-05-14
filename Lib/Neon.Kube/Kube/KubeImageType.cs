@@ -45,7 +45,7 @@ namespace Neon.Kube
         Node,
 
         /// <summary>
-        /// Identifies a prebuilt built-in neondesktop cluster image.
+        /// Identifies a prebuilt NEONDESKTOP cluster image.
         /// </summary>
         [EnumMember(Value = "desktop")]
         Desktop,

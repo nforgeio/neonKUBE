@@ -391,25 +391,25 @@ namespace Neon.Kube
 
         /// <summary>
         /// The name used by the <see cref="HostingEnvironment.HyperV"/> hosting manager
-        /// for creating the internal virtual switch where the NEONDESKTOP built-in cluster
+        /// for creating the internal virtual switch where the NEONDESKTOP cluster
         /// as well as user-defined internal clusters will be attached.
         /// </summary>
         public const string HyperVInternalSwitchName = "neon-internal";
 
         /// <summary>
-        /// The built-in neon-desktop cluster name.
+        /// The NEONDESKTOP cluster name.
         /// </summary>
         public const string NeonDesktopClusterName = "neon-desktop";
 
         /// <summary>
-        /// Identifies the Kubernetes context name for the neon-desktop built-in cluster.
+        /// Identifies the Kubernetes context name for the NEONDESKTOP cluster.
         /// </summary>
         public const string NeonDesktopContextName = $"{RootUser}@{NeonDesktopClusterName}";
 
         /// <summary>
-        /// Identifies the Hyper-V virtual machine used to host the NEONDESKTOP built-in cluster.
+        /// Identifies the Hyper-V virtual machine used to host the NEONDESKTOP cluster.
         /// </summary>
-        public const string NeonDesktopHyperVBuiltInVmName = "neon-desktop";
+        public const string NeonDesktopHyperVVmName = "neon-desktop";
 
         /// <summary>
         /// Specifies the file name to use for the global cluster (non-node) log file.

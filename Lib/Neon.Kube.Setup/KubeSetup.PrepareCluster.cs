@@ -285,7 +285,7 @@ namespace Neon.Kube.Setup
 
                     if (desktopReadyToGo)
                     {
-                        // We're going to configure a fixed password for built-in desktop clusters.
+                        // We're going to configure a fixed password for NEONDESKTOP clusters.
 
                         setupState.SshPassword = KubeConst.SysAdminPassword;
                     }
@@ -303,7 +303,7 @@ namespace Neon.Kube.Setup
                     // like AWS don't allow SSH password authentication by default, so we'll need the SSH key
                     // to initialize the nodes after they've been provisioned for those environments.
                     //
-                    // NOTE: All build-in neon-desktop clusters share the same SSH keys.  This isn't really
+                    // NOTE: All build-in NEONDESKTOP clusters share the same SSH keys.  This isn't really
                     //       a security issue because these clusters are not reachable from outside the host
                     //       machine and are also not intended for production workloads.
 
@@ -324,7 +324,7 @@ namespace Neon.Kube.Setup
                     }
 
                     // We also need to generate the cluster's root SSO password, unless this was specified
-                    // in the cluster definition (typically for built-in neon-desktop clusters).
+                    // in the cluster definition (typically for NEONDESKTOP clusters).
 
                     controller.SetGlobalStepStatus("generate: SSO password");
 
@@ -425,11 +425,11 @@ namespace Neon.Kube.Setup
                     });
             }
 
-            // Register the cluster domain with the headend, except for built-in desktop clusters.
+            // Register the cluster domain with the headend, except for NEONDESKTOP clusters.
             //
             // Note that we're also going to add this entry to the local [$/etc/hosts] file so clusters
             // will be recable from this machine even when not connected to the Internet.  We'll do
-            // this for built-in clusters as well.
+            // this for NEONDESKTOP clusters as well.
 
             controller.AddGlobalStep("neoncluster.io domain",
                 async controller =>
@@ -475,7 +475,7 @@ namespace Neon.Kube.Setup
                         hostAddress = IPAddress.Parse(cluster.HostingManager.GetClusterAddresses().First());
                     }
 
-                    // For the built-in desktop cluster, add these records to both the
+                    // For the NEONDESKTOP cluster, add these records to both the
                     // node's local [/etc/hosts] file.  Note that the node is named
                     // "neon-desktop".
                     //
@@ -509,7 +509,7 @@ namespace Neon.Kube.Setup
                 hostingManager.AddPostProvisioningSteps(controller);
             }
 
-            // Built-in neon-desktop clusters need to configure the workstation login, etc.
+            // NEONDESKTOP clusters need to configure the workstation login, etc.
 
             if (options.DesktopReadyToGo)
             {

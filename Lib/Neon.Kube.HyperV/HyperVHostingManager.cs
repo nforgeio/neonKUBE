@@ -657,10 +657,10 @@ namespace Neon.Kube.Hosting.HyperV
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(vmName), nameof(vmName));
             cluster.EnsureSetupMode();
 
-            // Special case the built-in neon-desktop cluster.
+            // Special case the NEONDESKTOP cluster.
 
             if (cluster.SetupState.ClusterDefinition.IsDesktop &&
-                vmName.Equals(KubeConst.NeonDesktopHyperVBuiltInVmName, StringComparison.InvariantCultureIgnoreCase) &&
+                vmName.Equals(KubeConst.NeonDesktopHyperVVmName, StringComparison.InvariantCultureIgnoreCase) &&
                 cluster.SetupState.ClusterDefinition.NodeDefinitions.TryGetValue(vmName, out var nodeDefinition))
             {
                 return nodeDefinition;
@@ -694,11 +694,11 @@ namespace Neon.Kube.Hosting.HyperV
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(vmName), nameof(vmName));
             Covenant.Assert(cluster.KubeConfig?.Cluster != null, "The cluster must already be deployed.");
 
-            // Special case the built-in neon-desktop cluster whose
+            // Special case the NEONDESKTOP cluster whose
             // name is never prefixed.
 
             if (cluster.KubeConfig.Cluster.IsNeonDesktop &&
-                vmName.Equals(KubeConst.NeonDesktopHyperVBuiltInVmName, StringComparison.InvariantCultureIgnoreCase))
+                vmName.Equals(KubeConst.NeonDesktopHyperVVmName, StringComparison.InvariantCultureIgnoreCase))
             {
                 return vmName;
             }
@@ -937,7 +937,7 @@ namespace Neon.Kube.Hosting.HyperV
                     hyperv.StartVm(vmName);
 
                     // Update the node credentials to use the secure password for normal clusters or the
-                    // hardcoded SSH key for ready-to-go neon-desktop clusters and then wait for the node
+                    // hardcoded SSH key for ready-to-go NEONDESKTOP clusters and then wait for the node
                     // to boot.
 
                     controller.ThrowIfCancelled();

@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    PrepareClusterOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -114,7 +114,7 @@ namespace Neon.Kube.Setup
         public bool BuildDesktopImage { get; set; } = false;
 
         /// <summary>
-        /// Optionally indicates that we're setting up a neon-desktop built-in cluster
+        /// Optionally indicates that we're setting up a NEONDESKTOP cluster
         /// from a completely prebuilt desktop image.  In this case, the controller
         /// returned will fully deploy the cluster (so no setup controller needs to
         /// be created and run afterwards).

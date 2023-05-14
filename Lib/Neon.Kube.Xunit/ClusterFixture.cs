@@ -272,7 +272,7 @@ namespace Neon.Kube.Xunit
     /// <para><b>CLUSTER CONFLICTS</b></para>
     /// <para>
     /// One thing you'll need to worry about is the possibility that a cluster created by one of the <b>Start()</b> 
-    /// methods may conflict with an existing production or NEONDESKTOP built-in cluster.  This fixture helps
+    /// methods may conflict with an existing production or NEONDESKTOP cluster.  This fixture helps
     /// somewhat by persisting cluster state such as kubconfigs, logins, logs, etc. for each deployed cluster
     /// within separate directories named like <b>~/.neonkube/spaces/$fixture</b>.
     /// This effectively isolates clusters deployed by the fixture from the user clusters.

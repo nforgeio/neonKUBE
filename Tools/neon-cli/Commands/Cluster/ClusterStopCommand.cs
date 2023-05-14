@@ -78,9 +78,9 @@ REMARKS:
 
 This command will not work on a locked clusters as a safety measure.
 
-All clusters besides neon-desktop built-in clusters are locked by default when
-they're deployed.  You can disable this by setting [IsLocked=false] in your
-cluster definition or by executing this command on your cluster:
+All clusters besides NEONDESKTOP clusters are locked by default when they're
+deployed.  You can disable this by setting [IsLocked=false] in your cluster
+definition or by executing this command on your cluster:
 
     neon cluster unlock
 
