@@ -1238,6 +1238,16 @@ namespace Neon.Kube.Proxy
                 PublicAddresses    = SetupState.PublicAddresses
             };
 
+            clusterInfo.Labels = new Dictionary<string, string>();
+
+            if (SetupState.ClusterDefinition.Labels != null)
+            {
+                foreach (var label in SetupState.ClusterDefinition.Labels)
+                {
+                    clusterInfo.Labels.Add(label.Key, label.Value);
+                }
+            }
+
             return clusterInfo;
         }
 

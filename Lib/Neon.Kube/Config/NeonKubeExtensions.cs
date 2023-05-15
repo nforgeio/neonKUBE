@@ -28,7 +28,7 @@ namespace Neon.Kube.Config
         /// The prefix added to NEONKUBE related KubeContext extension property names
         /// used to avoid conflicts with other vendor extensions.
         /// </summary>
-        private const string ExtensionPrefix = "io.neonkube.";
+        private const string ExtensionPrefix = "neonkube.io.";
 
         /// <summary>
         /// <see cref="KubeClusterInfo"/>: Holds additional information for NEONKUBE clusters.

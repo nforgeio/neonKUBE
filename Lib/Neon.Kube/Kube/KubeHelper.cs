@@ -3369,5 +3369,128 @@ TCPKeepAlive yes
                 return new Kubernetes(k8sConfig, new KubernetesRetryHandler());
             }
         }
+
+        /// <summary>
+        /// Verifies that the label name and valud conforms to the Kubernetes label constraints:
+        /// https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set
+        /// </summary>
+        /// <param name="labelType">
+        /// Identifies the type of label being checked.  Any exceptions thrown wil;
+        /// have their message text prefixed by this.
+        /// </param>
+        /// <param name="key">Specifies the label key.</param>
+        /// <param name="value">Specifies the label value.</param>
+        /// <exception cref="ClusterDefinitionException">Thrown when the label name or value invalid.</exception>
+        public static void ValidateKubernetesLabel(string labelType, string key, string value)
+        {
+            Covenant.Requires<ArgumentNullException>(labelType != null, nameof(labelType));
+            Covenant.Requires<ArgumentNullException>(key != null, nameof(key));
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
+
+            // Verify that custom node label name and value satisfies the following criteria:
+            // 
+            // NAMES:
+            //
+            //      1. Have an optional reverse domain prefix.
+            //      2. Be at least one character long.
+            //      3. Start and end with an alpha numeric character.
+            //      4. Include only alpha numeric characters, dashes,
+            //         underscores or dots.
+            //      5. Does not have consecutive dots or dashes.
+            //
+            // VALUES:
+            //
+            //      1. Must start or end with an alphnumeric character.
+            //      2. May include alphanumerics, dashes, underscores or dots
+            //         between the beginning and ending characters.
+            //      3. Values can be empty.
+            //      4. Maximum length is 63 characters.
+
+            if (key.Length == 0)
+            {
+                throw new ClusterDefinitionException($"{labelType}: Label key for value [{value}] is blank.");
+            }
+
+            var pSlash = key.IndexOf('/');
+            var domain = pSlash == -1 ? null : key.Substring(0, pSlash);
+            var name   = pSlash == -1 ? key : key.Substring(pSlash + 1);
+
+            // Validate the NAME:
+
+            if (domain != null)
+            {
+                if (!NetHelper.IsValidDnsHost(domain))
+                {
+                    throw new ClusterDefinitionException($"{labelType}: Label key [{key}] has an invalid reverse domain prefix.");
+                }
+
+                if (domain.Length > 253)
+                {
+                    throw new ClusterDefinitionException($"{labelType}: Label key [{key}] has a reverse domain prefix that's longer than 253 characters.");
+                }
+            }
+
+            if (name.Length == 0)
+            {
+                throw new ClusterDefinitionException($"{labelType}: Label key [{key}] is empty.");
+            }
+            else if (name.Contains(".."))
+            {
+                throw new ClusterDefinitionException($"{labelType}: Label key [{key}] has consecutive dots.");
+            }
+            else if (name.Contains("--"))
+            {
+                throw new ClusterDefinitionException($"{labelType}: Label key [{key}] has consecutive dashes.");
+            }
+            else if (name.Contains("__"))
+            {
+                throw new ClusterDefinitionException($"{labelType}: Label key [{key}] has consecutive underscores.");
+            }
+            else if (!char.IsLetterOrDigit(name.First()))
+            {
+                throw new ClusterDefinitionException($"{labelType}: Label key [{key}] does not begin with a letter or digit.");
+            }
+            else if (!char.IsLetterOrDigit(name.Last()))
+            {
+                throw new ClusterDefinitionException($"{labelType}: Label key [{key}] does not end with a letter or digit.");
+            }
+
+            foreach (var ch in name)
+            {
+                if (char.IsLetterOrDigit(ch) || ch == '.' || ch == '-' || ch == '_')
+                {
+                    continue;
+                }
+
+                throw new ClusterDefinitionException($"{labelType}: Label key [{key}] has an illegal character.  Only letters, digits, dashs, underscores and dots are allowed.");
+            }
+
+            // Validate the VALUE:
+
+            if (value == string.Empty)
+            {
+                return;
+            }
+
+            if (!char.IsLetterOrDigit(value.First()) || !char.IsLetterOrDigit(value.First()))
+            {
+                throw new ClusterDefinitionException($"{labelType}: Label [{key}={value}] value is invalid.  Values must start and end with a letter or digit.");
+            }
+
+            foreach (var ch in value)
+            {
+                if (char.IsLetterOrDigit(ch) || ch == '.' || ch == '-' || ch == '_')
+                {
+                    continue;
+                }
+
+                throw new ClusterDefinitionException($"{labelType}: Label value [{key}={value}] has an illegal character.  Only letters, digits, dashs, underscores and dots are allowed.");
+            }
+
+            if (value.Length > 63)
+            {
+                throw new ClusterDefinitionException($"{labelType}: Label value [{key}={value}] is too long.  Values can have a maximum of 63 characters.");
+            }
+        }
     }
 }

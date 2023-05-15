@@ -409,6 +409,16 @@ namespace Neon.Kube.ClusterDef
         public string ClusterVersion { get; set; } = null;
 
         /// <summary>
+        /// Optionally specifies cluster labels.  Label names and values must follow the
+        /// [Kubernetes conventions](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)
+        /// and the <b>neonkube.io/</b> prefix is reserved by NEONKUBE.
+        /// </summary>
+        [JsonProperty(PropertyName = "Labels", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "labels", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public Dictionary<string, string> Labels { get; set; } = null;
+
+        /// <summary>
         /// <para>
         /// Optionally specifies custom tags that will be attached to cluster resources in cloud
         /// hosting environments.  These tags are intended to help you manage your cloud resources
@@ -888,6 +898,7 @@ namespace Neon.Kube.ClusterDef
 
             // Validate the properties.
 
+            Labels             = Labels ?? new Dictionary<string, string>();
             FeatureGates       = FeatureGates ?? new Dictionary<string, bool>();
             Deployment         = Deployment ?? new DeploymentOptions();
             Storage            = Storage ?? new StorageOptions();
@@ -901,6 +912,8 @@ namespace Neon.Kube.ClusterDef
             Container          = Container ?? new ContainerOptions();
             Features           = Features ?? new FeatureOptions();
 
+            ClusterVersion = KubeVersions.NeonKube;
+
             if (IsDesktop && Nodes.Count() > 1)
             {
                 new ClusterDefinitionException($"[{nameof(IsDesktop)}=true] is allowed only for single node clusters.");
@@ -909,11 +922,6 @@ namespace Neon.Kube.ClusterDef
             if (IsDesktop && !IsSpecialNeonCluster)
             {
                 new ClusterDefinitionException($"[{nameof(IsDesktop)}=true] is allowed only when [{nameof(IsSpecialNeonCluster)}=true].");
-            }
-
-            foreach (var node in Nodes)
-            {
-                node.Validate(this);
             }
 
             Deployment.Validate(this);
@@ -972,7 +980,35 @@ namespace Neon.Kube.ClusterDef
                 node.Validate(this);
             }
 
-            ClusterVersion = KubeVersions.NeonKube;
+            var controlNodeCount = ControlNodes.Count();
+
+            if (controlNodeCount == 0)
+            {
+                throw new ClusterDefinitionException("Clusters must have at least one control-plane node.");
+            }
+            else if (controlNodeCount > KubeConst.MaxControlNodes)
+            {
+                throw new ClusterDefinitionException($"Clusters may not have more than [{KubeConst.MaxControlNodes}] control-plane nodes.");
+            }
+            else if (!NeonHelper.IsOdd(controlNodeCount))
+            {
+                throw new ClusterDefinitionException($"[{controlNodeCount}] control-plane nodes is not allowed.  Only an odd number of control-plane nodes is allowed: [1, 3, 5,...]");
+            }
+
+            // Ensure that every node is assigned to an availability set, assigning control-plane
+            // nodes to the [control-plane] set by default and worker nodes to the [worker] set.
+
+            foreach (var node in Nodes)
+            {
+                if (!string.IsNullOrEmpty(node.Labels.PhysicalAvailabilitySet))
+                {
+                    continue;
+                }
+
+                node.Labels.PhysicalAvailabilitySet = node.IsControlPane ? "control-plane" : "worker";
+            }
+
+            // Validate the cluster name.
 
             if (Name == null)
             {
@@ -989,15 +1025,28 @@ namespace Neon.Kube.ClusterDef
                 throw new ClusterDefinitionException($"The [{nameof(Name)}={Name}] property has more than [{MaxClusterNameLength}] characters.  Some hosting environments enforce name length limits so please trim your cluster name.");
             }
 
+            // Validate the cluster description.
+
             if (Description != null && Description.Length > 256)
             {
                 throw new ClusterDefinitionException($"The [{nameof(Description)}] property has more than 256 characters.");
             }
 
+            // Validate the cluster datacenter.
+
             if (!string.IsNullOrEmpty(Datacenter) && !IsValidName(Datacenter))
             {
                 throw new ClusterDefinitionException($"The [{nameof(Datacenter)}={Datacenter}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
+
+            // Validate the cluster labels.
+
+            foreach (var label in Labels)
+            {
+                KubeHelper.ValidateKubernetesLabel("cluster label", label.Key, label.Value);
+            }
+
+            // Validate the cluster location.
 
             if (Latitude.HasValue != Longitude.HasValue)
             {
@@ -1014,20 +1063,7 @@ namespace Neon.Kube.ClusterDef
                 throw new ClusterDefinitionException($"The [{nameof(Latitude)}={Latitude}] must be within: -180...+180");
             }
 
-            var controlNodeCount = ControlNodes.Count();
-
-            if (controlNodeCount == 0)
-            {
-                throw new ClusterDefinitionException("Clusters must have at least one control-plane node.");
-            }
-            else if (controlNodeCount > KubeConst.MaxControlNodes)
-            {
-                throw new ClusterDefinitionException($"Clusters may not have more than [{KubeConst.MaxControlNodes}] control-plane nodes.");
-            }
-            else if (!NeonHelper.IsOdd(controlNodeCount))
-            {
-                throw new ClusterDefinitionException($"[{controlNodeCount}] control-plane nodes is not allowed.  Only an odd number of control-plane nodes is allowed: [1, 3, 5,...]");
-            }
+            // Validate the Ubuntu apt package proxy settings.
 
             if (!string.IsNullOrEmpty(PackageProxy))
             {
@@ -1051,19 +1087,6 @@ namespace Neon.Kube.ClusterDef
                         throw new ClusterDefinitionException($"Invalid port [{fields[1]}] in [{nameof(PackageProxy)}={PackageProxy}].");
                     }
                 }
-            }
-
-            // Ensure that every node is assigned to an availability set, assigning control-plane
-            // nodes to the [control-plane] set by default and worker nodes to the [worker] set.
-
-            foreach (var node in Nodes)
-            {
-                if (!string.IsNullOrEmpty(node.Labels.PhysicalAvailabilitySet))
-                {
-                    continue;
-                }
-
-                node.Labels.PhysicalAvailabilitySet = node.IsControlPane ? "control-plane" : "worker";
             }
         }
     }

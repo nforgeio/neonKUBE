@@ -323,7 +323,8 @@ namespace Neon.Kube.ClusterDef
 
             var nodeDefinitionPrefix = $"{nameof(ClusterDefinition.NodeDefinitions)}";
 
-            // Ensure that the labels are wired up to the parent node.
+            // Ensure that the labels are wired up to the parent node and then
+            // validate the labels.
 
             if (Labels == null)
             {
@@ -333,6 +334,10 @@ namespace Neon.Kube.ClusterDef
             {
                 Labels.Node = this;
             }
+
+            Labels.Validate(clusterDefinition);
+
+            // Validate the node name.
 
             if (Name == null)
             {
@@ -367,6 +372,8 @@ namespace Neon.Kube.ClusterDef
                 throw new ClusterDefinitionException($"The [{nodeDefinitionPrefix}.{nameof(Name)}={Name}] property is not valid because the node name [cluster] is reserved.");
             }
 
+            // Validate the node role.
+
             if (string.IsNullOrEmpty(Role))
             {
                 Role = NodeRole.Worker;
@@ -377,7 +384,9 @@ namespace Neon.Kube.ClusterDef
                 throw new ClusterDefinitionException($"[{nodeDefinitionPrefix}.{nameof(Name)}={Name}] has invalid [{nameof(Role)}={Role}].  This must be [{NodeRole.ControlPlane}] or [{NodeRole.Worker}].");
             }
 
-            // We don't need to check the node address for cloud providers.
+            // Check the node addresses.
+            //
+            // NOTE: We don't need to check addresses for cloud providers.
 
             if (clusterDefinition.Hosting.IsOnPremiseProvider)
             {
@@ -391,6 +400,8 @@ namespace Neon.Kube.ClusterDef
                     throw new ClusterDefinitionException($"[{nodeDefinitionPrefix}.{nameof(Name)}={Name}] has invalid IP address [{Address}].");
                 }
             }
+
+            // Validate hosting environment options.
 
             switch (clusterDefinition.Hosting.Environment)
             {

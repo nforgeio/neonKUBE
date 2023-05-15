@@ -53,7 +53,7 @@ namespace Neon.Kube.ClusterDef
     /// <para>
     /// By convention, label names should use a reverse domain name prefix using a
     /// DNS domain you control.  For example, neonCLUSTER cluster related labels 
-    /// are prefixed with <b>"io.neonkube/..."</b>.  You should follow this convention 
+    /// are prefixed with <b>"neonkube.io/..."</b>.  You should follow this convention 
     /// for any custom labels you define.
     /// </para>
     /// <note>
@@ -189,7 +189,7 @@ namespace Neon.Kube.ClusterDef
         public const string LabelStorageEphemeral = ClusterDefinition.ReservedPrefix + "storage.ephemral";
 
         /// <summary>
-        /// <b>io.neonkube/storage.size</b> [<c>string</c>]: Specifies the node OS drive 
+        /// <b>neonkube.io/storage.size</b> [<c>string</c>]: Specifies the node OS drive 
         /// storage capacity in bytes.
         /// </summary>
         [JsonProperty(PropertyName = "StorageSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
@@ -198,7 +198,7 @@ namespace Neon.Kube.ClusterDef
         public string StorageSize { get; set; }
 
         /// <summary>
-        /// <b>io.neonkube/storage.local</b> [<c>bool</c>]: Specifies whether the node storage is hosted
+        /// <b>neonkube.io/storage.local</b> [<c>bool</c>]: Specifies whether the node storage is hosted
         /// on the node itself or is mounted as a remote file system or block device.  This defaults
         /// to <c>true</c> for on-premise clusters and is computed for cloud deployments.
         /// </summary>
@@ -208,7 +208,7 @@ namespace Neon.Kube.ClusterDef
         public bool StorageLocal { get; set; } = true;
 
         /// <summary>
-        /// <b>io.neonkube/storage.hdd</b> [<c>bool</c>]: Indicates that the storage is backed
+        /// <b>neonkube.io/storage.hdd</b> [<c>bool</c>]: Indicates that the storage is backed
         /// by a spinning drive as opposed to a SSD.  This defaults to <c>false</c> for 
         /// on-premise clusters and is computed for cloud deployments.
         /// </summary>
@@ -218,7 +218,7 @@ namespace Neon.Kube.ClusterDef
         public bool StorageHDD { get; set; } = false;
 
         /// <summary>
-        /// <b>io.neonkube/storage.redundant</b> [<c>bool</c>]: Indicates that the storage is redundant.  This
+        /// <b>neonkube.io/storage.redundant</b> [<c>bool</c>]: Indicates that the storage is redundant.  This
         /// may be implemented locally using RAID1+ or remotely using network or cloud-based file systems.
         /// This defaults to <c>false</c> for on-premise clusters and is computed for cloud deployments.
         /// </summary>
@@ -228,7 +228,7 @@ namespace Neon.Kube.ClusterDef
         public bool StorageRedundant { get; set; } = false;
 
         /// <summary>
-        /// <b>io.neonkube/storage.redundant</b> [<c>bool</c>]: Indicates that the storage is ephemeral.
+        /// <b>neonkube.io/storage.redundant</b> [<c>bool</c>]: Indicates that the storage is ephemeral.
         /// All data will be lost when the host is restarted.  This defaults to <c>false</c> for 
         /// on-premise clusters and is computed for cloud deployments.
         /// </summary>
@@ -251,7 +251,7 @@ namespace Neon.Kube.ClusterDef
         public const string LabelComputeRamMiB = ClusterDefinition.ReservedPrefix + "compute.ram-mib";
 
         /// <summary>
-        /// <b>io.neonkube/compute.cores</b> [<c>int</c>]: Specifies the number of CPU cores.
+        /// <b>neonkube.io/compute.cores</b> [<c>int</c>]: Specifies the number of CPU cores.
         /// This defaults to <b>0</b> for <see cref="HostingEnvironment.BareMetal"/>
         /// and is initialized for cloud and Hypervisor based hosting environments.
         /// </summary>
@@ -261,7 +261,7 @@ namespace Neon.Kube.ClusterDef
         public int ComputeCores { get; set; } = 0;
 
         /// <summary>
-        /// <b>io.neonkube/compute.ram_mb</b> [<c>int</c>]: Specifies the available RAM in
+        /// <b>neonkube.io/compute.ram_mb</b> [<c>int</c>]: Specifies the available RAM in
         /// megabytes.  This defaults to <b>0</b> for <see cref="HostingEnvironment.BareMetal"/>
         /// and is initialized for cloud and Hypervisor based hosting environments.
         /// </summary>
@@ -294,7 +294,7 @@ namespace Neon.Kube.ClusterDef
         public const string LabelPhysicalPower = ClusterDefinition.ReservedPrefix + "physical.power";
 
         /// <summary>
-        /// <b>io.neonkube/physical.location</b> [<c>string</c>]: A free format string describing the
+        /// <b>neonkube.io/physical.location</b> [<c>string</c>]: A free format string describing the
         /// physical location of the server.  This defaults to the 
         /// <b>empty string</b>.
         /// </summary>
@@ -317,7 +317,7 @@ namespace Neon.Kube.ClusterDef
         public string PhysicalLocation { get; set; } = string.Empty;
 
         /// <summary>
-        /// <b>io.neonkube/physical.model</b> [<c>string</c>]: A free format string describing the
+        /// <b>neonkube.io/physical.model</b> [<c>string</c>]: A free format string describing the
         /// physical server computer model (e.g. <b>Dell-PowerEdge-R220</b>).  This defaults to the <b>empty string</b>.
         /// </summary>
         [JsonProperty(PropertyName = "PhysicalMachine", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
@@ -327,7 +327,7 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// <para>
-        /// <b>io.neonkube/physical.availability-set</b> [<c>string</c>]: Indicates that 
+        /// <b>neonkube.io/physical.availability-set</b> [<c>string</c>]: Indicates that 
         /// the hosting environment will try to ensure that cluster VMs with the same
         /// availability set are deployed in a manner that reduces the possibility that
         /// more than one VM at a time will be taken offline for maintenance.
@@ -369,7 +369,7 @@ namespace Neon.Kube.ClusterDef
         public string PhysicalAvailabilitySet { get; set; } = null;
 
         /// <summary>
-        /// <b>io.neonkube/physical.power</b> [<c>string</c>]: Describes the physical power
+        /// <b>neonkube.io/physical.power</b> [<c>string</c>]: Describes the physical power
         /// to the server may be controlled.  This defaults to the <b>empty string</b>.
         /// </summary>
         /// <remarks>
@@ -575,7 +575,7 @@ namespace Neon.Kube.ClusterDef
         /// Use this property to define custom cluster node labels.
         /// </para>
         /// <note>
-        /// The <b>io.neonkube/</b> label prefix is reserved.
+        /// The <b>neonkube.io/</b> label prefix is reserved.
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "Custom")]
@@ -766,114 +766,9 @@ namespace Neon.Kube.ClusterDef
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            // Verify that custom node label names and values satisfy the 
-            // following criteria:
-            // 
-            // NAMES:
-            //
-            //      1. Have an optional reverse domain prefix.
-            //      2. Be at least one character long.
-            //      3. Start and end with an alpha numeric character.
-            //      4. Include only alpha numeric characters, dashes,
-            //         underscores or dots.
-            //      5. Does not have consecutive dots or dashes.
-            //
-            // VALUES:
-            //
-            //      1. Must start or end with an alphnumeric character.
-            //      2. May include alphanumerics, dashes, underscores or dots
-            //         between the beginning and ending characters.
-            //      3. Values can be empty.
-            //      4. Maximum length is 63 characters.
-
-            foreach (var item in Custom)
+            foreach (var label in Custom)
             {
-                if (item.Key.Length == 0)
-                {
-                    throw new ClusterDefinitionException($"Custom node label for value [{item.Value}] has no label name.");
-                }
-
-                var pSlash = item.Key.IndexOf('/');
-                var domain = pSlash == -1 ? null : item.Key.Substring(0, pSlash);
-                var name   = pSlash == -1 ? item.Key : item.Key.Substring(pSlash + 1);
-                var value  = item.Value;
-
-                // Validate the NAME:
-
-                if (domain != null)
-                {
-                    if (!NetHelper.IsValidDnsHost(domain))
-                    {
-                        throw new ClusterDefinitionException($"Custom node label [{item.Key}] has an invalid reverse domain prefix.");
-                    }
-
-                    if (domain.Length > 253)
-                    {
-                        throw new ClusterDefinitionException($"Custom node label [{item.Key}] has a reverse domain prefix that's longer than 253 characters.");
-                    }
-                }
-
-                if (name.Length == 0)
-                {
-                    throw new ClusterDefinitionException($"Custom node label name in [{item.Key}] is empty.");
-                }
-                else if (name.Contains(".."))
-                {
-                    throw new ClusterDefinitionException($"Custom node label name in [{item.Key}] has consecutive dots.");
-                }
-                else if (name.Contains("--"))
-                {
-                    throw new ClusterDefinitionException($"Custom node label name in [{item.Key}] has consecutive dashes.");
-                }
-                else if (name.Contains("__"))
-                {
-                    throw new ClusterDefinitionException($"Custom node label name in [{item.Key}] has consecutive underscores.");
-                }
-                else if (!char.IsLetterOrDigit(name.First()))
-                {
-                    throw new ClusterDefinitionException($"Custom node label name in [{item.Key}] does not begin with a letter or digit.");
-                }
-                else if (!char.IsLetterOrDigit(name.Last()))
-                {
-                    throw new ClusterDefinitionException($"Custom node label name in [{item.Key}] does not end with a letter or digit.");
-                }
-
-                foreach (var ch in name)
-                {
-                    if (char.IsLetterOrDigit(ch) || ch == '.' || ch == '-' || ch == '_')
-                    {
-                        continue;
-                    }
-
-                    throw new ClusterDefinitionException($"Custom node label name in [{item.Key}] has an illegal character.  Only letters, digits, dashs, underscores and dots are allowed.");
-                }
-
-                // Validate the VALUE:
-
-                if (value == string.Empty)
-                {
-                    continue;
-                }
-
-                if (!char.IsLetterOrDigit(value.First()) || !char.IsLetterOrDigit(value.First()))
-                {
-                    throw new ClusterDefinitionException($"Custom node label value in [{item.Key}={item.Value}] has an illegal value.  Values must start and end with a letter or digit.");
-                }
-
-                foreach (var ch in value)
-                {
-                    if (char.IsLetterOrDigit(ch) || ch == '.' || ch == '-' || ch == '_')
-                    {
-                        continue;
-                    }
-
-                    throw new ClusterDefinitionException($"Custom node label value in [{item.Key}={item.Value}] has an illegal character.  Only letters, digits, dashs, underscores and dots are allowed.");
-                }
-
-                if (value.Length > 63)
-                {
-                    throw new ClusterDefinitionException($"Custom node label value in [{item.Key}={item.Value}] is too long.  Values can have a maximum of 63 characters.");
-                }
+                KubeHelper.ValidateKubernetesLabel("node label", label.Key, label.Value);
             }
         }
     }
