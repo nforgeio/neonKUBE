@@ -212,13 +212,13 @@ OPTIONS:
             if (!int.TryParse(maxParallelOption, out var maxParallel) || maxParallel <= 0)
             {
                 Console.Error.WriteLine($"*** ERROR: [--max-parallel={maxParallelOption}] is not valid.");
-                Program.Exit(1);
+                Program.Exit(-1);
             }
 
             if (debug && string.IsNullOrEmpty(baseImageName))
             {
                 Console.Error.WriteLine($"*** ERROR: [--base-image-name] is required for [--debug] mode.");
-                Program.Exit(1);
+                Program.Exit(-1);
             }
 
             // Implement the command.
@@ -232,7 +232,7 @@ OPTIONS:
             if (commandLine.Arguments.Length == 0)
             {
                 Console.Error.WriteLine($"*** ERROR: CLUSTER-DEF expected.");
-                Program.Exit(1);
+                Program.Exit(-1);
             }
 
             // Load the cluster definition.
@@ -299,7 +299,7 @@ OPTIONS:
                     if (!NetHelper.TryParseIPv4Endpoint(item, out var endpoint))
                     {
                         Console.Error.WriteLine($"*** ERROR: [{item}] is not a valid package cache IPv4 endpoint.");
-                        Program.Exit(1);
+                        Program.Exit(-1);
                     }
 
                     packageCacheEndpoints.Add(endpoint);

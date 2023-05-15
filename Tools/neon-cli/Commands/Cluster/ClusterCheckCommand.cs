@@ -110,7 +110,7 @@ This command returns a non-zero exit code when one or more checks fail.
             if (commandLine.Arguments.Length > 0)
             {
                 Console.Error.WriteLine("*** ERROR: Unexpected argument.");
-                Program.Exit(1);
+                Program.Exit(-1);
             }
 
             Console.WriteLine();

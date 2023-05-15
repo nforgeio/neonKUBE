@@ -145,7 +145,7 @@ OPTIONS:
             if (commandLine.Arguments.Length < 1)
             {
                 Console.Error.WriteLine("*** ERROR: [root@CLUSTER-NAME] argument is required.");
-                Program.Exit(1);
+                Program.Exit(-1);
             }
 
             Console.WriteLine();
@@ -177,7 +177,7 @@ OPTIONS:
             if (!int.TryParse(maxParallelOption, out var maxParallel) || maxParallel <= 0)
             {
                 Console.Error.WriteLine($"*** ERROR: [--max-parallel={maxParallelOption}] is not valid.");
-                Program.Exit(1);
+                Program.Exit(-1);
             }
 
             // Verify that it looks like the cluster has already been prepared or deployed.

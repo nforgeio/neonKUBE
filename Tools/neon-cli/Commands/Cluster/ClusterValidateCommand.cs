@@ -72,7 +72,7 @@ ARGUMENTS:
             if (commandLine.Arguments.Length < 1)
             {
                 Console.Error.WriteLine("*** ERROR: CLUSTER-DEF is required.");
-                Program.Exit(1);
+                Program.Exit(-1);
             }
 
             // Parse and validate the cluster definition.

@@ -80,7 +80,7 @@ OPTIONS:
             if (commandLine.Arguments.Length > 0)
             {
                 Console.Error.WriteLine($"*** ERROR: Unexpected command line argument.");
-                Program.Exit(1);
+                Program.Exit(-1);
             }
 
             var minVersion = commandLine.GetOption("--minimum");
@@ -90,7 +90,7 @@ OPTIONS:
                 if (!SemanticVersion.TryParse(minVersion, out var minSemanticVersion))
                 {
                     Console.Error.WriteLine($"*** ERROR: [{minVersion}] is not a valid semantic version.");
-                    Program.Exit(1);
+                    Program.Exit(-1);
                 }
 
                 var toolSemanticVersion = SemanticVersion.Parse(Program.Version);

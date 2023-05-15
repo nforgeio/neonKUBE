@@ -182,7 +182,7 @@ or when switching contexts to set the current namespace afterwards.
                     if (!ClusterDefinition.DnsNameRegex.IsMatch(@namespace))
                     {
                         Console.Error.WriteLine($"Invalid namespace: {@namespace}");
-                        Program.Exit(1);
+                        Program.Exit(-1);
                     }
                 }
 
@@ -212,7 +212,7 @@ or when switching contexts to set the current namespace afterwards.
                 if (clusterDomain != null && !ClusterDefinition.DnsNameRegex.IsMatch(clusterDomain))
                 {
                     Console.Error.WriteLine($"Invalid cluster hostname: {clusterDomain}");
-                    Program.Exit(1);
+                    Program.Exit(-1);
                 }
 
                 if (clusterDomain != null)

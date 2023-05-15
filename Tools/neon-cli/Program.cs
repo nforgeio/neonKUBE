@@ -397,58 +397,20 @@ NOTE: Command line arguments and options may include references to
 
                 // Start a trace for the command.
 
-                traceActivity = ActivitySource?.CreateActivity("command", ActivityKind.Internal, parentId: null, 
-                    tags: new KeyValuePair<string, object>[] { new KeyValuePair<string, object>("cmd", CommandLine.ToString()) });
+                traceActivity = ActivitySource?.CreateActivity(
+                    "command",
+                    ActivityKind.Internal,
+                    parentId: null, 
+                    tags:     new KeyValuePair<string, object>[] { new KeyValuePair<string, object>("cmd", CommandLine.ToString()) });
 
                 // Lookup the command.
 
                 command = GetCommand(CommandLine, commands);
 
-                if (CommandLine.Arguments.ElementAtOrDefault(0) == "tool" && command == null)
-                {
-                    // Special case invalid command detection for [tool] commands.
-
-                    Console.WriteLine(usage);
-                    Program.Exit(1);
-                }
-
                 if (command == null)
                 {
-                    // This must be a [kubectl] command, so spawn [kubectl] to handle it.
-                    // Note that we'll create a TTY for commands with a [-t] or [--tty]
-                    // option so that editors and other interactive commands will work.
-
-                    // $todo(jefflill):
-                    //
-                    // I believe this treats this as if the user specified the [-i] or
-                    // [--stdin] option as well.  Most users probably specify [-it]
-                    // together, but we may need to revisit this at some point.
-
-                    var tty = CommandLine.HasOption("--tty");
-
-                    if (!tty)
-                    {
-                        // Look for a [-t] option.
-
-                        foreach (var item in CommandLine.Items.Where(item => item.StartsWith("-") && item.Length > 1 && item[1] != '-'))
-                        {
-                            if (item.Contains('t'))
-                            {
-                                tty = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (tty)
-                    {
-                        new ConsoleTTY().Run($"\"{KubectlPath}\" {CommandLine}");
-                        Program.Exit(0);
-                    }
-                    else
-                    {
-                        Program.Exit(NeonHelper.Execute(KubectlPath, CommandLine.Items));
-                    }
+                    Console.Error.WriteLine($"*** ERROR: Unexpected [{CommandLine.Arguments[0]}] command.");
+                    Program.Exit(-1);
                 }
 
                 // This is one of our commands, so ensure that there are no unexpected

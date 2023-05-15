@@ -83,7 +83,7 @@ to disable this behavior and just import the context.
             if (commandLine.Arguments.Length < 1)
             {
                 Console.Error.WriteLine("*** ERROR: PATH is required.");
-                Program.Exit(1);
+                Program.Exit(-1);
             }
 
             Console.WriteLine();

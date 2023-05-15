@@ -140,7 +140,7 @@ where PURPOSE can be passed as (case insensitive):
                             Console.Error.WriteLine($"    {NeonHelper.EnumToString(purpose)}");
                         }
 
-                        Program.Exit(1);
+                        Program.Exit(-1);
                     }
 
                     clusterInfo.Purpose = newPurpose;
