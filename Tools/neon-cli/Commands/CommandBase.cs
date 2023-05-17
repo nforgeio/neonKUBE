@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    CommandBase.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -57,12 +57,6 @@ namespace NeonCli
         public virtual bool CheckOptions
         {
             get { return true; }
-        }
-
-        /// <inheritdoc/>
-        public virtual bool NeedsSshCredentials(CommandLine commandLine)
-        {
-            return false;
         }
 
         /// <inheritdoc/>
