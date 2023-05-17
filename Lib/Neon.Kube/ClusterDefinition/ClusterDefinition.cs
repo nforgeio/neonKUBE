@@ -886,17 +886,17 @@ namespace Neon.Kube.ClusterDef
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         public void Validate()
         {
-            // Wire up the node label parents.
+            // Wire up the node definition label parents.
 
-            foreach (var node in NodeDefinitions.Values)
+            foreach (var nodeDefinition in NodeDefinitions.Values)
             {
-                if (node.Labels != null)
+                if (nodeDefinition.Labels != null)
                 {
-                    node.Labels.Node = node;
+                    nodeDefinition.Labels.Node = nodeDefinition;
                 }
             }
 
-            // Validate the properties.
+            // Allocate the cluster definition properties when necessary.
 
             Labels             = Labels ?? new Dictionary<string, string>();
             FeatureGates       = FeatureGates ?? new Dictionary<string, bool>();
@@ -924,13 +924,22 @@ namespace Neon.Kube.ClusterDef
                 new ClusterDefinitionException($"[{nameof(IsDesktop)}=true] is allowed only when [{nameof(IsSpecialNeonCluster)}=true].");
             }
 
+            // Validate the node definitions.
+
+            foreach (var nodeDefinition in NodeDefinitions.Values)
+            {
+                nodeDefinition.Validate(this);
+            }
+
+            // Validate the cluster definition properties.
+
             Deployment.Validate(this);
+            Hosting.Validate(this);
             Storage.Validate(this);
             Security.Validate(this);
             Kubernetes.Validate(this);
             Monitor.Validate(this);
             Network.Validate(this);
-            Hosting.Validate(this);
             NodeOptions.Validate(this);
             Network.Validate(this);
             Container.Validate(this);

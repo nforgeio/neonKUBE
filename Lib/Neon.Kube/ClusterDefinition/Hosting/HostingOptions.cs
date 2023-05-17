@@ -252,23 +252,23 @@ namespace Neon.Kube.ClusterDef
 
                 case HostingEnvironment.HyperV:
 
-                    HyperV = HyperV ?? new HyperVHostingOptions();
-                    HyperV.Validate(clusterDefinition);
-
                     Hypervisor = Hypervisor ?? new HypervisorHostingOptions();
                     Hypervisor.Validate(clusterDefinition);
+
+                    HyperV = HyperV ?? new HyperVHostingOptions();
+                    HyperV.Validate(clusterDefinition);
                     break;
 
                 case HostingEnvironment.XenServer:
+
+                    Hypervisor = Hypervisor ?? new HypervisorHostingOptions();
+                    Hypervisor.Validate(clusterDefinition);
 
                     XenServer = XenServer ?? new XenServerHostingOptions();
                     XenServer.Validate(clusterDefinition);
 
                     Cloud = Cloud ?? new CloudOptions();
                     Cloud.Validate(clusterDefinition);
-
-                    Hypervisor = Hypervisor ?? new HypervisorHostingOptions();
-                    Hypervisor.Validate(clusterDefinition);
                     break;
 
                 default:
