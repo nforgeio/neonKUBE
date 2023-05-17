@@ -47,6 +47,7 @@ USAGE:
     neon cluster check
     neon cluster dashboard
     neon cluster delete     [OPTIONS]
+    neon cluster deploy     [OPTION] CLUSTER-DEF
     neon cluster health
     neon cluster info
     neon cluster islocked
