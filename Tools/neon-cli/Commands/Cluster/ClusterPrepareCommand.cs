@@ -56,13 +56,20 @@ This includes provisioning networks, load balancers, virtual machines, etc.  Onc
 the infrastructure is ready, you'll use the [neon cluster setup ...] command to
 actually configure the cluster.
 
+This is the first part of deploying a cluster in two stages, where you first
+prepare the cluster to provision any virtual machines ane network infrastructure
+and then you setup NEONKUBE on that, like:
+
+    neon cluster prepare CLUSTER-DEF
+    neon cluster setup root@CLUSTER-NAME
+
 USAGE:
 
     neon cluster prepare [OPTIONS] CLUSTER-DEF
 
 ARGUMENTS:
 
-    CLUSTER-DEF     - Path to the cluster definition file.
+    CLUSTER-DEF                 - Path to the cluster definition file.
 
 OPTIONS:
 
@@ -75,7 +82,7 @@ OPTIONS:
                                   downloading the node image from GitHub Releases.  This
                                   is useful for debugging node image changes.
 
-    --package-caches=HOST:PORT  - Optionally specifies one or more APT Package cache
+    --package-cache=HOST:PORT   - Optionally specifies one or more APT Package cache
                                   servers by hostname and port for use by the new cluster. 
                                   Specify multiple servers by separating the endpoints 
                                   with spaces.
@@ -91,12 +98,6 @@ OPTIONS:
     --disable-pending           - Disable parallization of setup tasks across steps.
                                   This is generally intended for use while debugging
                                   cluster setup and may slow down setup substantially.
-
-    --remove-templates          - Removes any cached local virtual machine 
-                                  templates without actually setting up a 
-                                  cluster.  You can use this to ensure that 
-                                  cluster will be created from the most recent
-                                  template.
 
     --debug                     - Implements cluster setup from the base rather
                                   than the node image.  This mode is useful while
@@ -119,7 +120,7 @@ OPTIONS:
 
                                   NOTE: This is required for [--debug]
 
-    --use-staged[=branch]       - MAINTAINERS ONLY: Specifies that the staged image 
+    --use-staged[=branch]       - MAINTAINERS ONLY: Specifies that the staged node image 
                                   should be used as opposed to the public release image.
 
                                   [--use-staged] by itself will prepare the cluster using
@@ -132,6 +133,17 @@ OPTIONS:
                                   so you can base your cluster off of a specific image
                                   build.
 
+    --no-telemetry              - Disables whether telemetry for failed cluster deployment,
+                                  overriding the NEONKUBE_DISABLE_TELEMETRY environment
+                                  variable.
+
+REMARKS:
+
+Most users will use the deploy command that combines both commands.  The two
+stage process is typically used only by NEONKUBE maintainers.
+
+    neon cluster deploy CLUSTER-DEF
+
 ";
 
         /// <inheritdoc/>
@@ -142,19 +154,16 @@ OPTIONS:
         { 
             "--node-image-uri", 
             "--node-image-path",
-            "--package-caches",
+            "--package-cache",
             "--unredacted", 
             "--max-parallel", 
             "--disable-pending", 
-            "--remove-templates", 
             "--debug",
             "--quiet",
             "--base-image-name",
-            "--use-staged"
+            "--use-staged",
+            "--no-telemetry"
         };
-
-        /// <inheritdoc/>
-        public override bool NeedsSshCredentials(CommandLine commandLine) => !commandLine.HasOption("--remove-templates");
 
         /// <inheritdoc/>
         public override bool NeedsHostingManager => true;
@@ -181,18 +190,6 @@ OPTIONS:
             // perform the lookups.
 
             NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfile());
-
-            // Handle the [--remove-templates] option.
-
-            if (commandLine.HasOption("--remove-templates"))
-            {
-                Console.WriteLine("Removing cached virtual machine templates.");
-
-                foreach (var fileName in Directory.GetFiles(KubeHelper.VmImageFolder, "*.*", SearchOption.TopDirectoryOnly))
-                {
-                    File.Delete(fileName);
-                }
-            }
            
             var nodeImageUri      = commandLine.GetOption("--node-image-uri");
             var nodeImagePath     = commandLine.GetOption("--node-image-path");
@@ -203,6 +200,12 @@ OPTIONS:
             var disablePending    = commandLine.HasOption("--disable-pending");
             var useStaged         = commandLine.HasOption("--use-staged");
             var stageBranch       = commandLine.GetOption("--use-staged", KubeVersions.BuildBranch);
+            var noTelemetry       = commandLine.HasOption("--no-telemetry");
+
+            if (noTelemetry)
+            {
+                KubeEnv.IsTelemetryDisabled = true;
+            }
 
             if (useStaged && string.IsNullOrEmpty(stageBranch))
             {
@@ -289,7 +292,7 @@ OPTIONS:
 
             // Parse any specified package cache endpoints.
 
-            var packageCaches         = commandLine.GetOption("--package-caches", null);
+            var packageCaches         = commandLine.GetOption("--package-cache", null);
             var packageCacheEndpoints = new List<IPEndPoint>();
 
             if (!string.IsNullOrEmpty(packageCaches))
@@ -376,7 +379,6 @@ OPTIONS:
                     Console.WriteLine();
                     Console.WriteLine($" [{clusterDefinition.Name}] cluster is prepared.");
                     Console.WriteLine();
-                    Program.Exit(0);
                     break;
 
                 case SetupDisposition.Cancelled:

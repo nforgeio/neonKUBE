@@ -60,11 +60,22 @@ namespace NeonCli
     public class ClusterSetupCommand : CommandBase
     {
         private const string usage = @"
-Configures a NEONKUBE cluster as described in the cluster definition file.
+Sets up a NEONKUBE cluster as described in the cluster definition file.  This
+is the second part of deploying a cluster in two stages, where you first
+prepare the cluster to provision any virtual machines and network infrastructure
+and then you setup NEONKUBE on that, like:
+
+    neon cluster prepare CLUSTER-DEF
+    neon cluster setup root@CLUSTER-NAME
 
 USAGE: 
 
-    neon cluster setup [OPTIONS] root@CLUSTER-NAME  
+    neon cluster setup [OPTIONS] root@CLUSTER-NAME
+
+ARGUMENTS:
+
+    CONTEXT-NAME        - Specifies the context name for the cluster, typically
+                          root@CLUSTER-NAME for a newly prepared cluster.
 
 OPTIONS:
 
@@ -102,14 +113,21 @@ OPTIONS:
                           when [--debug] is specified.
 
                           NOTE: A non-zero exit code will be returned when this
-                                option is specified and one or more chechks fail.
+                                option is specified and one or more checks fail.
 
     --use-staged        - Specifies that the private node image should be deployed.
                           Only NEONFORGE maintainers should use this.
 
     --no-telemetry      - Disables whether telemetry for failed cluster deployment,
                           overriding the NEONKUBE_DISABLE_TELEMETRY environment variable.
-                          
+
+REMARKS:
+
+Most users will use the deploy command that combines both commands.  The two
+stage process is typically used only by NEONKUBE maintainers.
+
+    neon cluster deploy CLUSTER-DEF
+
 ";
 
         /// <inheritdoc/>
@@ -163,6 +181,7 @@ OPTIONS:
             var debug             = commandLine.HasOption("--debug");
             var quiet             = commandLine.HasOption("--quiet");
             var check             = commandLine.HasOption("--check");
+            var force             = commandLine.HasOption("--force");
             var uploadCharts      = commandLine.HasOption("--upload-charts") || debug;
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
             var disablePending    = commandLine.HasOption("--disable-pending");
@@ -205,7 +224,7 @@ OPTIONS:
 
             if (context != null && setupState != null && setupState.DeploymentStatus == ClusterDeploymentStatus.Ready)
             {
-                if (commandLine.GetOption("--force") == null && !Program.PromptYesNo($"One or more clusters reference [context={context.Name}].  Do you wish to delete these?"))
+                if (!force && !Program.PromptYesNo($"One or more clusters reference [context={context.Name}].  Do you wish to delete these?"))
                 {
                     Program.Exit(0);
                 }
@@ -320,7 +339,6 @@ OPTIONS:
                         }
                     }
 
-                    Program.Exit(0);
                     break;
 
                 case SetupDisposition.Cancelled:
