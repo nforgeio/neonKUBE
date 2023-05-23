@@ -18,7 +18,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -184,6 +186,11 @@ namespace Neon.Kube
         public const string Kubernetes = "1.24.0";
 
         /// <summary>
+        /// The version of Kubernetes to be installed, without the patch component.
+        /// </summary>
+        public const string KubernetesNoPatch = "1.24";
+
+        /// <summary>
         /// The version of the Kubernetes dashboard to be installed.
         /// </summary>
         public const string KubernetesDashboard = "2.5.1";
@@ -300,6 +307,19 @@ namespace Neon.Kube
         /// The minimum supported XenServer/XCP-ng hypervisor host version.
         /// </summary>
         public static readonly SemanticVersion MinXenServerVersion = SemanticVersion.Parse("8.2.0");
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static KubeVersions()
+        {
+            // Ensure that some of the constants are reasonable.
+
+            if (!Kubernetes.StartsWith(KubernetesNoPatch))
+            {
+                throw new InvalidDataException($"[KubernetesNoPatch={KubernetesNoPatch}] must be the same as [Kubernetes={Kubernetes}] without the patch component,");
+            }
+        }
 
         /// <summary>
         /// Ensures that the XenServer version passed is supported for building
