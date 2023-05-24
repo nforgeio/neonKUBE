@@ -315,9 +315,9 @@ namespace Neon.Kube
         {
             // Ensure that some of the constants are reasonable.
 
-            if (!Kubernetes.StartsWith(KubernetesNoPatch))
+            if (!Kubernetes.StartsWith(KubernetesNoPatch) || KubernetesNoPatch.Count(ch => ch == '.') > 1)
             {
-                throw new InvalidDataException($"[KubernetesNoPatch={KubernetesNoPatch}] must be the same as [Kubernetes={Kubernetes}] without the patch component,");
+                throw new InvalidDataException($"[KubernetesNoPatch={KubernetesNoPatch}] must be the same as [Kubernetes={Kubernetes}] without the patch part,");
             }
         }
 
