@@ -126,11 +126,6 @@ namespace NeonCli
         public static CommandLine CommandLine { get; private set; }
 
         /// <summary>
-        /// Returns the fully qualified path to the <b>kubectl</b> binary.
-        /// </summary>
-        public static string KubectlPath { get; private set; }
-
-        /// <summary>
         /// Returns the fully qualified path to the <b>helm</b> binary.
         /// </summary>
         public static string HelmPath { get; private set; }
@@ -198,17 +193,14 @@ USAGE:
     neon login              COMMAND
     neon logout
 
-NEON HELM COMMANDS:
-
-    The neon-cli supports all standard Helm commands by prefixing
-    them with [helm], like:
-
-    neon helm install -f my-values.yaml my-redis ./redis
+    neon toolpath           TOOLNAME
 
 ARGUMENTS:
 
     CLUSTER-DEF         - Path to a cluster definition file.  This is
                           optional for some commands when logged in
+
+    TOOLNAME            - Identifies a related tool, one of: helm
 
 NOTE: Command line arguments and options may include references to 
       profile values, secrets and environment variables, like:
@@ -312,11 +304,10 @@ NOTE: Command line arguments and options may include references to
 
             NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfile());
 
-            // Fetch the paths to the [kubectl] and [helm] binaries.  Note that these
-            // will download them when they're not already present.
+            // Fetch the paths to the [helm] binary.  Note that this
+            // will be downloaded them when it's not already present.
 
-            KubectlPath = GetKubectlPath();
-            HelmPath    = GetHelmPath();
+            HelmPath = GetHelmPath();
 
             // Process the command line.
 
@@ -347,7 +338,6 @@ NOTE: Command line arguments and options may include references to
                     // its help as well.
 
                     Console.WriteLine(usage);
-                    NeonHelper.Execute(KubectlPath, Array.Empty<object>());
                     Program.Exit(0);
                 }
 
@@ -389,7 +379,6 @@ NOTE: Command line arguments and options may include references to
                         // display its help as well.
 
                         Console.WriteLine(usage);
-                        NeonHelper.Execute(KubectlPath, Array.Empty<object>());
                     }
 
                     Program.Exit(0);
@@ -694,59 +683,21 @@ NOTE: Command line arguments and options may include references to
         }
 
         /// <summary>
-        /// Returns the path to the a tool binary to be used by <b>neon-cli</b>.
+        /// Returns the path to <b>helm</b> tool binary to be used by <b>neon-cli</b>.
         /// </summary>
         /// <returns>The fully qualified tool path.</returns>
         /// <exception cref="FileNotFoundException">Thrown when the tool cannot be located.</exception>
         /// <remarks>
         /// <para>
-        /// Installed versions of <b>neon-cli</b> expect the <b>kubectl</b> and <b>helm</b> tools to
-        /// be located in the <b>tools</b> subfolder where <b>neon-cli</b> itself is installed, like:
+        /// Installed versions of <b>neon-cli</b> expect the <b>helm</b> toolto be located
+        /// in the <b>tools</b> subfolder where <b>neon-cli</b> itself is installed, like:
         /// </para>
         /// <code>
         /// C:\Program Files\NEONFORGE\NEONDESKTOP\
-        ///     neon-cli.exe
+        ///     neon.exe
+        ///     neoncli.exe
         ///     tools\
         ///         helm.exe
-        ///         kubectl.exe
-        /// </code>
-        /// <para>
-        /// If this folder exists and the tool binary exists within that folder, then we'll simply
-        /// return the path to the binary.
-        /// </para>
-        /// <para>
-        /// If the tool folder or binary does not exist, then the user is probably a developer running
-        /// an uninstalled version of the tool, perhaps in the debugger.  In this case, we're going to
-        /// cache these binaries in the special tools folder: <see cref="KubeHelper.ToolsFolder"/>.
-        /// </para>
-        /// <para>
-        /// If the tool folder and/or the requested tool binary doesn't exist or the tool version doesn't
-        /// match what's specified in <see cref="KubeVersions"/>, then this method will attempt to download
-        /// the binary to <b>%TEMP%\neon-tool-cache</b>, indicating that this is happening on the
-        /// console.
-        /// </para>
-        /// </remarks>
-        public static string GetKubectlPath()
-        {
-            return KubeHelper.GetKubectlPath(InstalledToolFolder, userToolsFolder: true);
-        }
-
-        /// <summary>
-        /// Returns the path to the a tool binary to be used by <b>neon-cli</b>.
-        /// </summary>
-        /// <returns>The fully qualified tool path.</returns>
-        /// <exception cref="FileNotFoundException">Thrown when the tool cannot be located.</exception>
-        /// <remarks>
-        /// <para>
-        /// Installed versions of <b>neon-cli</b> expect the <b>kubectl</b> and <b>helm</b> tools to
-        /// be located in the <b>tools</b> subfolder where <b>neon-cli</b> itself is installed, like:
-        /// </para>
-        /// <code>
-        /// C:\Program Files\NEONFORGE\NEONDESKTOP\
-        ///     neon-cli.exe
-        ///     tools\
-        ///         helm.exe
-        ///         kubectl.exe
         /// </code>
         /// <para>
         /// If this folder exists and the tool binary exists within that folder, then we'll simply
@@ -760,7 +711,7 @@ NOTE: Command line arguments and options may include references to
         /// <para>
         /// If the tool folder and/or ther equested tool binary doesn't exist or the tool version doesn't
         /// match what's specified in <see cref="KubeVersions"/>, then this method will attempt to download
-        /// the binary to <b>%TEMP%\neon-tool-cache</b>, indicating that this is happening on the
+        /// the binary to <see cref="KubeHelper.ToolsFolder"/>, indicating that this is happening on the
         /// console.
         /// </para>
         /// </remarks>

@@ -1,5 +1,5 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    HelmCommand.cs
+//-----------------------------------------------------------------------------
+// FILE:	    ToolPathCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -34,38 +34,38 @@ using Neon.Kube;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>helm</b> command.
+    /// Implements the <b>toolpath</b> command.
     /// </summary>
     [Command]
-    public class HelmCommand : CommandBase
+    public class ToolPathCommand : CommandBase
     {
         private const string usage = @"
-Extended [neon-cli] related commands.
+Returns the path to a neon related tool binary, like: helm
 
 USAGE:
 
-    neon helm COMMAND [ARGS...]
+    neon toolpath TOOLNAME
+
+ARGUMENTS:
+
+    TOOLNAME    - specifies the desired tool, one of: helm
 
 REMARKS:
 
-    This command executes the standard [helm] utility, passing thru any
-    commands and arguments.
-
-HELM COMMANDS (note that you'll need to prefix these with ""neon""):
+This command returns the full qualified path to the tool binary.
+For normal users, this will be the path to the tool in the install
+folder.  For maintainers, this command will attempt to download
+and cache the tool and return its path from the cache folder.
 
 ";
 
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "helm" };
-
-        /// <inheritdoc/>
-        public override bool CheckOptions => false;
+        public override string[] Words => new string[] { "toolpath" };
 
         /// <inheritdoc/>
         public override void Help()
         {
             Console.WriteLine(usage);
-            NeonHelper.Execute(Program.HelmPath, Array.Empty<object>());
         }
 
         /// <inheritdoc/>
@@ -77,7 +77,28 @@ HELM COMMANDS (note that you'll need to prefix these with ""neon""):
                 return;
             }
 
-            Program.Exit(NeonHelper.Execute(Program.HelmPath, commandLine.Items));
+            var toolName = commandLine.Arguments.ElementAtOrDefault(0);
+
+            if (toolName == null)
+            {
+                Console.Error.WriteLine("TOOLNAME argument expected.");
+                Program.Exit(1);
+            }
+
+            switch (toolName)
+            {
+                case "helm":
+
+                    Console.WriteLine(Program.HelmPath);
+                    break;
+
+                default:
+
+                    Console.Error.WriteLine($"Unknown tool: {toolName}");
+                    Program.Exit(1);
+                    break;
+            }
+
             await Task.CompletedTask;
         }
     }
