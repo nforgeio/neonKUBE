@@ -657,8 +657,8 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path the folder containing Kubernetes related tools, creating the folder 
-        /// if it doesn't already exist.
+        /// Returns the path the folder used for holding Kubernetes related tools when running
+        /// <b>neon-cli</b> as a developer, creating the folder if it doesn't already exist.
         /// </summary>
         /// <returns>The folder path.</returns>
         public static string ToolsFolder
@@ -1009,19 +1009,18 @@ namespace Neon.Kube
         /// </para>
         /// <code>
         /// C:\Program Files\NEONFORGE\neon-cli\
-        ///     neon\               # neon-cli binaries
-        ///     powershell\         # Powershell 7.x
-        ///     ssh\                # SSH related tools
+        ///     .                       # neon-cli binaries
+        ///     neon-desktop-service    # neon-desktop-service binaries
+        ///     ssh\                    # SSH related tools
         /// </code>
         /// <para>
         /// and this for <b>neon-desktop</b> (which includes <b>neon-cli</b>):
         /// </para>
         /// <code>
         /// C:\Program Files\NEONFORGE\neon-desktop\
-        ///     desktop\            # neon-desktop binaries
-        ///     neon\               # neon-cli binaries
-        ///     powershell\         # Powershell 7.x
-        ///     ssh\                # SSH related tools
+        ///     .                       # neon-desktop and neon-cli binaries
+        ///     neon-desktop-service    # neon-desktop-service binaries
+        ///     ssh\                    # SSH related tools
         /// </code>
         /// </remarks>
         public static string InstallFolder
@@ -2571,7 +2570,7 @@ TCPKeepAlive yes
         /// Returns the path to the a tool binary to be used by <b>neon-cli</b>.
         /// </summary>
         /// <param name="installFolder">Path to the tool installation folder.</param>
-        /// <param name="toolName">The requested tool name, one of: <b>helm</b> or <b>kubectl</b>.</param>
+        /// <param name="toolName">The requested tool name, currently <b>helm</b> is supported.</param>
         /// <param name="toolChecker">Callback taking the the tool path as a parameter and returning <c>true</c> when the tool version matches what's required.</param>
         /// <param name="userToolsFolder">
         /// Optionally specifies that instead of downloading missing tool binaries to <paramref name="installFolder"/>,
@@ -2661,8 +2660,8 @@ TCPKeepAlive yes
                 }
             }
 
-            // We'll land here if there's no cached binary or if its version is not correct.  Any
-            // existing binary will be deleted and then we'll attempt to download a new copy.
+            // We'll land here when there's no cached binary or if its version is not correct.
+            // Any existing binary will be deleted and then we'll attempt to download a new copy.
             //
             // NOTE: We're going to require that the URI being downloaded is a TAR.GZ or a .ZIP file.
 
@@ -2673,7 +2672,6 @@ TCPKeepAlive yes
                             toolUri.AbsolutePath.EndsWith(".zip", StringComparison.InvariantCultureIgnoreCase), 
                             "Expecting a TAR.GZ or .ZIP file.");
 
-            Console.Error.WriteLine($"*** Download: {toolUri}");
             NeonHelper.DeleteFile(toolPath);
 
             using (var httpClient = new HttpClient())
@@ -2759,79 +2757,6 @@ TCPKeepAlive yes
             }
 
             return toolPath;
-        }
-
-        /// <summary>
-        /// Returns the path to the a tool binary to be used by <b>neon-cli</b>.
-        /// </summary>
-        /// <param name="installFolder">Path to the tool installation folder.</param>
-        /// <param name="userToolsFolder">
-        /// Optionally specifies that instead of downloading missing tool binaries to <paramref name="installFolder"/>,
-        /// the method will download the file to <see cref="ToolsFolder"/>.
-        /// </param>
-        /// <returns>The fully qualified tool path.</returns>
-        /// <exception cref="FileNotFoundException">Thrown when the tool cannot be located.</exception>
-        /// <remarks>
-        /// <para>
-        /// If the <paramref name="installFolder"/> folder and the binary exist then we'll simply
-        /// return the tool path when <paramref name="userToolsFolder"/><c>=true</c> and verify 
-        /// that tool version is correct when <paramref name="userToolsFolder"/><c>=false</c>.
-        /// </para>
-        /// <para>
-        /// If the <paramref name="installFolder"/> or binary does not exist, then the user is probably
-        /// a developer running an uninstalled version of the tool, perhaps in the debugger.  In this case, 
-        /// we're going to download the binaries to <paramref name="installFolder"/> by default or to 
-        /// <see cref="ToolsFolder"/> when <paramref name="userToolsFolder"/><c>=true</c>.
-        /// </para>
-        /// </remarks>
-        public static string GetKubectlPath(string installFolder, bool userToolsFolder = false)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(installFolder), nameof(installFolder));
-
-            Func<string, bool> toolChecker =
-                toolPath =>
-                {
-                    // [kubectl version --client] output will look like:
-                    //
-                    //      Client Version: version.Info{Major:"1", Minor:"21", GitVersion:"v1.21.5", GitCommit:"aea7bbadd2fc0cd689de94a54e5b7b758869d691", GitTreeState:"clean", BuildDate:"2021-09-15T21:10:45Z", GoVersion:"go1.16.8", Compiler:"gc", Platform:"windows/amd64"}
-
-                    var response      = NeonHelper.ExecuteCapture(toolPath, new object[] { "version", "--client" }).EnsureSuccess();
-                    var versionOutput = response.OutputText;
-                    var versionRegex  = new Regex(@"\sGitVersion:""v(?'version'[\d.]+)""", RegexOptions.None);
-                    var match         = versionRegex.Match(versionOutput);
-
-                    if (match.Success)
-                    {
-                        return match.Groups["version"].Value == KubeVersions.Kubectl;
-                    }
-                    else
-                    {
-                        throw new Exception($"Unable to extract [kubectl] version from: {versionOutput}");
-                    }
-                };
-
-            Func<string> toolUriRetriever =
-                () =>
-                {
-                    if (NeonHelper.IsWindows)
-                    {
-                        return $"https://dl.k8s.io/v{KubeVersions.Kubectl}/kubernetes-client-windows-amd64.tar.gz";
-                    }
-                    else if (NeonHelper.IsLinux)
-                    {
-                        return $"https://dl.k8s.io/v{KubeVersions.Kubectl}/kubernetes-client-linux-amd64.tar.gz";
-                    }
-                    else if (NeonHelper.IsOSX)
-                    {
-                        return $"https://dl.k8s.io/v{KubeVersions.Kubectl}/kubernetes-client-darwin-amd64.tar.gz";
-                    }
-                    else
-                    {
-                        throw new NotSupportedException(NeonHelper.OSDescription);
-                    }
-                };
-
-            return GetToolPath(installFolder, "kubectl", toolChecker, toolUriRetriever, userToolsFolder);
         }
 
         /// <summary>
