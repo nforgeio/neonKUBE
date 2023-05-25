@@ -695,7 +695,7 @@ NOTE: Command line arguments and options may include references to
         /// <code>
         /// C:\Program Files\NEONFORGE\NEONDESKTOP\
         ///     neon.exe
-        ///     neoncli.exe
+        ///     neon-cli.exe
         ///     tools\
         ///         helm.exe
         /// </code>
