@@ -47,3 +47,11 @@ Follow the steps below to configure a development or test workstation:
     * Select **Build/Rebuild** Solution
 
 6: *Optional:* Maintainers authorized to perform releases will need to follow the README.md instructions in the NEONCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
+
+7. Install Visual Studio Code and GO:
+
+   * Install **Visual Studio Code 64-bit** from [here](https://code.visualstudio.com/download)
+   * Create a desktop shortcut for Visual Studio Code and configure it to run as **administrator**.
+   * Install [Microsoft Remote Development Extension Pack](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.vscode-remote-extensionpack)
+   * Install GO *Windows.amd64) from: [here](https://go.dev/doc/install)
+     * ...and then set its shortcut to **Run as administrator**
