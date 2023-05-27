@@ -48,13 +48,13 @@ USAGE:
 
 OPTIONS:
 
-    -n                  - Don't write a newline after version.
-
     --git               - Include the Git branch/commit information.
 
     --minimum=VERSION   - Compares the version passed against the current
                           tool version and returns a non-zero exit code
                           if the tool is older than VERSION.
+    -n                  - Don't write a newline after version.
+
 ";
         /// <inheritdoc/>
         public override string[] Words => new string[] { "neon-version" }; 

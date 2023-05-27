@@ -59,8 +59,7 @@ namespace NeonCli
     public class ClusterStopCommand : CommandBase
     {
         private const string usage = @"
-Stops the current NEONKUBE cluster.  This may not be supported by
-all environments.
+Stops the current NEONKUBE cluster.
 
 USAGE:
 
@@ -68,19 +67,20 @@ USAGE:
 
 OPTIONS:
 
-    --turnoff   - Turns the nodes off immediately without allowing
-                  a graceful shutdown.  This may cause data loss.
+    --force     - Don't prompt for permission or require the the cluster
+                  be unlocked before stopping
 
-    --force     - forces cluster stop without user confirmation
-                  or verifying unlocked status
+    --turnoff   - Turns the nodes off immediately without waiting for
+                  a graceful shutdown.  This may cause data loss.
 
 REMARKS:
 
-This command will not work on a locked clusters as a safety measure.
+NOTE: This command requires that the cluster be unlocked by default as
+a safety measure.
 
-All clusters besides NEONDESKTOP clusters are locked by default when they're
-deployed.  You can disable this by setting [IsLocked=false] in your cluster
-definition or by executing this command on your cluster:
+All clusters besides NEONDESKTOP clusters are locked by default when
+they're deployed.  You can disable this by setting [IsLocked=false]
+in your cluster definition or by executing this command:
 
     neon cluster unlock
 

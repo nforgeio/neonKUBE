@@ -59,8 +59,7 @@ namespace NeonCli
     public class ClusterUnlockCommand : CommandBase
     {
         private const string usage = @"
-Unlocks the current NEONKUBE cluster to allow potentially distructive
-commands like:
+Unlocks the current NEONKUBE cluster, enabling dangerous operations like:
 
     remove, reset, pause and stop
 
@@ -72,13 +71,9 @@ USAGE:
 
 REMARKS:
 
-This command will not work on a locked clusters as a safety measure.
-
 All clusters besides NEONDESKTOP clusters are locked by default when they're
 deployed.  You can disable this by setting [IsLocked=false] in your cluster
-definition or by executing this command on your cluster:
-
-    neon cluster unlock
+definition.
 
 ";
         /// <inheritdoc/>

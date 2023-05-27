@@ -73,6 +73,9 @@ OPTIONS:
     --all               - Performs all checks.  This is implied when no other
                           options are present
 
+    --details           - Includes additional information for some of the 
+                          checks even when there are no errors
+
     --container-images  - Verifies that all container images running on the
                           cluster are included in the cluster manifest
 
@@ -81,9 +84,6 @@ OPTIONS:
 
     --resources         - Verifies that all pod containers specify resource
                           request and limits
-
-    --details           - Includes additional information for some of the 
-                          checks even when there are no errors
 
 REMARKS:
 

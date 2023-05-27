@@ -72,24 +72,28 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --max-parallel=#            - Specifies the maximum number of node related operations
-                                  to perform in parallel.  This defaults to [6].
-
-    --force                     - Don't prompt before removing existing contexts that
-                                  reference the target cluster.
-
-    --quiet                     - Only print the currently executing step rather than
-                                  displaying detailed setup status.
-
     --check                     - Performs development related checks against the cluster
                                   after it's been deployed.
 
                                   A non-zero exit code will be returned when this option
                                   is specified and one or more checks fail.
 
+    --force                     - Don't prompt before removing existing contexts that
+                                  reference the target cluster.
+
+    --max-parallel=#            - Specifies the maximum number of node related operations
+                                  to perform in parallel.  This defaults to [6].
+
+    --no-telemetry              - Disables telemetry uploads for failed cluster deployment,
+                                  overriding the NEONKUBE_DISABLE_TELEMETRY environment
+                                  variable.
+
     --package-cache=HOST:PORT   - Specifies one or more APT Package cache servers by hostname
                                   and port for use by the new cluster.  Specify multiple
-                                  servers by separating the endpoints with spaces.
+                                  servers by separating the endpoints with commas.
+
+    --quiet                     - Only print the currently executing step rather than
+                                  displaying detailed setup status.
 
     --use-staged[=branch]       - MAINTAINERS ONLY: Specifies that the staged node image 
                                   should be used as opposed to the public release image.
@@ -103,9 +107,6 @@ OPTIONS:
                                   [--use-staged=branch] allows you to override the branch
                                   so you can base your cluster off of a specific image
                                   build.
-
-    --no-telemetry              - Disables telemetry uploads for failed cluster deployment,
-                                  overriding the NEONKUBE_DISABLE_TELEMETRY environment variable.
 
 REMARKS:
 

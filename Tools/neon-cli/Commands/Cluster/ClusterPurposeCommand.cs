@@ -60,8 +60,8 @@ namespace NeonCli
     public class ClusterPurposeCommand : CommandBase
     {
         private const string usage = @"
-Prints or sets the current NEONKUBE cluster purpose.  This is used to help
-cluster operators categorize at a high level how clusters are used.
+Prints or sets the current NEONKUBE cluster purpose.  This is a high-level
+indication of how the cluster will be used.
 
 USAGE:
 

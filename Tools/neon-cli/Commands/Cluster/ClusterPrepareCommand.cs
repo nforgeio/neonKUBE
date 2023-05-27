@@ -51,10 +51,12 @@ namespace NeonCli
     public class ClusterPrepareCommand : CommandBase
     {
         private const string usage = @"
-Provisions local and/or cloud infrastructure required to host a NEONKUBE cluster.
-This includes provisioning networks, load balancers, virtual machines, etc.  Once
-the infrastructure is ready, you'll use the [neon cluster setup ...] command to
-actually configure the cluster.
+MAINTAINER ONLY: Provisions local and/or cloud infrastructure required to host a
+NEONKUBE cluster.  This includes provisioning networks, load balancers, virtual
+machines, etc.  Once the infrastructure is ready, you'll use the [neon cluster setup ...]
+command to actually setup the cluster.
+
+NOTE: This command is used by maintainers while debugging cluster setup. 
 
 This is the first part of deploying a cluster in two stages, where you first
 prepare the cluster to provision any virtual machines ane network infrastructure
@@ -73,43 +75,6 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --node-image-uri            - Overrides the default node image URI.
-
-                                  NOTE: This is ignored for [--debug] mode.
-                                  NOTE: This is ignored when [--node-image-path] is present.
-
-    --node-image-path=PATH      - Uses the node image at the PATH specified rather than
-                                  downloading the node image from GitHub Releases.  This
-                                  is useful for debugging node image changes.
-
-    --package-cache=HOST:PORT   - Optionally specifies one or more APT Package cache
-                                  servers by hostname and port for use by the new cluster. 
-                                  Specify multiple servers by separating the endpoints 
-                                  with spaces.
-
-    --unredacted                - Runs commands with potential secrets without 
-                                  redacting logs.  This is useful for debugging 
-                                  cluster setup issues.  Do not use for production
-                                  clusters.
-
-    --max-parallel=#            - Specifies the maximum number of node related operations
-                                  to perform in parallel.  This defaults to [6].
-
-    --disable-pending           - Disable parallization of setup tasks across steps.
-                                  This is generally intended for use while debugging
-                                  cluster setup and may slow down setup substantially.
-
-    --debug                     - Implements cluster setup from the base rather
-                                  than the node image.  This mode is useful while
-                                  developing and debugging cluster setup.  This
-                                  implies [--upload-charts].
-
-                                  NOTE: This mode is not supported for cloud and
-                                        bare-metal environments.
-
-    --quiet                     - Only print the currently executing step rather than
-                                  displaying detailed setup status.
-
     --base-image-name           - Specifies the base image name to use when operating
                                   in [--debug] mode.  This will be the name of the base
                                   image file as published to our public S3 bucket for
@@ -119,6 +84,46 @@ OPTIONS:
                                         XenServer: ubuntu-22.04.xenserver.xva
 
                                   NOTE: This is required for [--debug]
+
+    --debug                     - Implements cluster setup from the base rather
+                                  than the node image.  This mode is useful while
+                                  developing and debugging cluster setup..
+
+                                  NOTE: This mode is not supported for cloud and
+                                        bare-metal environments.
+
+    --disable-pending           - Disable parallization of setup tasks across steps.
+                                  This is generally intended for use while debugging
+                                  cluster setup and may slow down setup substantially.
+
+    --max-parallel=#            - Specifies the maximum number of node related operations
+                                  to perform in parallel.  This defaults to [6].
+
+    --node-image-path=PATH      - Uses the node image at the PATH specified rather than
+                                  downloading the node image.  This is useful for '
+                                  debugging node image changes locally.
+
+    --node-image-uri            - Overrides the default node image URI.
+
+                                  NOTE: This is ignored for [--debug] mode.
+                                  NOTE: This is ignored when [--node-image-path] is present.
+
+    --no-telemetry              - Disables whether telemetry for failed cluster deployment,
+                                  overriding the NEONKUBE_DISABLE_TELEMETRY environment
+                                  variable.
+
+    --package-cache=HOST:PORT   - Optionally specifies one or more APT Package cache
+                                  servers by hostname and port for use by the new cluster. 
+                                  Specify multiple servers by separating the endpoints 
+                                  with commas.
+
+    --quiet                     - Only print the currently executing step rather than
+                                  displaying detailed setup status.
+
+    --unredacted                - Runs commands with potential secrets without 
+                                  redacting logs.  This is useful for debugging 
+                                  cluster setup issues.  Do not use for production
+                                  clusters.
 
     --use-staged[=branch]       - MAINTAINERS ONLY: Specifies that the staged node image 
                                   should be used as opposed to the public release image.
@@ -132,10 +137,6 @@ OPTIONS:
                                   [--use-staged=branch] allows you to override the branch
                                   so you can base your cluster off of a specific image
                                   build.
-
-    --no-telemetry              - Disables whether telemetry for failed cluster deployment,
-                                  overriding the NEONKUBE_DISABLE_TELEMETRY environment
-                                  variable.
 
 REMARKS:
 
@@ -297,7 +298,7 @@ stage process is typically used only by NEONKUBE maintainers.
 
             if (!string.IsNullOrEmpty(packageCaches))
             {
-                foreach (var item in packageCaches.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                foreach (var item in packageCaches.Split(',', StringSplitOptions.RemoveEmptyEntries))
                 {
                     if (!NetHelper.TryParseIPv4Endpoint(item, out var endpoint))
                     {

@@ -54,7 +54,7 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --force         - Don't prompt to confirm and also ignore missing logins
+    --force         - Don't prompt for permission and also ignore missing contexts
 
 REMARKS:
 

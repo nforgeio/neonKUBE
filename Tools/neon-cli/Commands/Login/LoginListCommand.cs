@@ -47,14 +47,10 @@ Lists the NEONKUBE contexts available on the local computer.
 USAGE:
 
     neon login list
-    neon login ls
 ";
 
         /// <inheritdoc/>
         public override string[] Words => new string[] { "login", "list" }; 
-
-        /// <inheritdoc/>
-        public override string[] AltWords => new string[] { "login", "ls" };
 
         /// <inheritdoc/>
         public override bool NeedsHostingManager => true;

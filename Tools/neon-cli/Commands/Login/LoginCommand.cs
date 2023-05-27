@@ -106,9 +106,11 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --sso                   - Perform SSO authentication against the cluster
-    --namespace=NAMESPACE   - Optionally specifies the Kubernetes namespace 
     -n=NAMESPACE              to be set for the new context
+
+    --namespace=NAMESPACE   - Optionally specifies the Kubernetes namespace
+ 
+    --sso                   - Perform SSO authentication against the cluster
 
 REMARKS:
 

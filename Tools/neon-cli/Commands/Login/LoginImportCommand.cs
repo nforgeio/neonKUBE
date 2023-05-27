@@ -41,7 +41,7 @@ namespace NeonCli
     public class LoginImportCommand : CommandBase
     {
         private const string usage = @"
-Imports a NEONKUBE context from a file saved by: neon login export
+Imports an exported NEONKUBE context from a file.
 
 USAGE:
 
@@ -53,8 +53,9 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --force     - Don't prompt to replace an existing login.
-    --no-login  - Don't log into the imported cluster.
+    --force     - Don't prompt for permission to replace an existing context
+
+    --no-login  - Don't login to the new context
 
 REMARKS:
 

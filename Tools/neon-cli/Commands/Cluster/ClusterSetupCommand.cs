@@ -60,13 +60,15 @@ namespace NeonCli
     public class ClusterSetupCommand : CommandBase
     {
         private const string usage = @"
-Sets up a NEONKUBE cluster as described in the cluster definition file.  This
-is the second part of deploying a cluster in two stages, where you first
-prepare the cluster to provision any virtual machines and network infrastructure
-and then you setup NEONKUBE on that, like:
+MAINTAINERS ONLY: Sets up a NEONKUBE cluster as described in the cluster
+definition file.  This is the second part of deploying a cluster in two
+stages, where you first prepare the cluster to provision any virtual
+machines and network infrastructure and then you setup NEONKUBE, like:
 
     neon cluster prepare CLUSTER-DEF
     neon cluster setup root@CLUSTER-NAME
+
+NOTE: This is used by maintainers while debugging cluster setup.
 
 USAGE: 
 
@@ -79,23 +81,12 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --unredacted        - Runs Vault and other commands with potential
-                          secrets without redacting logs.  This is useful 
-                          for debugging cluster setup  issues.  Do not
-                          use for production clusters.
+    --check             - Performs development related checks against the cluster
+                          after it's been setup.  Note that checking is disabled
+                          when [--debug] is specified.
 
-    --max-parallel=#    - Specifies the maximum number of node related operations
-                          to perform in parallel.  This defaults to [6].
-
-    --disable-pending   - Disable parallization of setup tasks across steps.
-                          This is generally intended for use while debugging
-                          cluster setup and may slow down setup substantially.
-
-    --force             - Don't prompt before removing existing contexts
-                          that reference the target cluster.
-
-    --upload-charts     - Upload helm charts to node before setup. This
-                          is useful when debugging.
+                          NOTE: A non-zero exit code will be returned when this
+                                option is specified and one or more checks fail.
 
     --debug             - Implements cluster setup from the base rather
                           than the node image.  This mode is useful while
@@ -105,21 +96,31 @@ OPTIONS:
                           NOTE: This mode is not supported for cloud and
                                 bare-metal environments.
 
-    --quiet             - Only print the currently executing step rather than
-                          displaying detailed setup status.
+    --disable-pending   - Disable parallization of setup tasks across steps.
+                          This is generally intended for use while debugging
+                          cluster setup and may slow down setup substantially.
 
-    --check             - Performs development related checks against the cluster
-                          after it's been setup.  Note that checking is disabled
-                          when [--debug] is specified.
+    --force             - Don't prompt before removing existing contexts
+                          that reference the target cluster.
 
-                          NOTE: A non-zero exit code will be returned when this
-                                option is specified and one or more checks fail.
-
-    --use-staged        - Specifies that the private node image should be deployed.
-                          Only NEONFORGE maintainers should use this.
+    --max-parallel=#    - Specifies the maximum number of node related operations
+                          to perform in parallel.  This defaults to [6].
 
     --no-telemetry      - Disables whether telemetry for failed cluster deployment,
                           overriding the NEONKUBE_DISABLE_TELEMETRY environment variable.
+
+    --quiet             - Only print the currently executing step rather than
+                          displaying detailed setup status.
+
+    --unredacted        - Runs commands with potential secrets without redacting
+                          logs.  This is useful  for debugging cluster setup  issues.
+                          Do not use for production clusters.
+
+    --upload-charts     - Upload Helm charts from your workstation rather than using
+                          the charts baked into the node image.
+
+    --use-staged        - Specifies that the private node image should be deployed.
+                          Only NEONFORGE maintainers should use this.
 
 REMARKS:
 
