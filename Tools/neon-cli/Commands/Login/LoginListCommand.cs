@@ -42,7 +42,7 @@ namespace NeonCli
     public class LoginListCommand : CommandBase
     {
         private const string usage = @"
-Lists the NEONKUBE contexts available on the local computer.
+Lists the NEONKUBE contexts.
 
 USAGE:
 
