@@ -69,9 +69,6 @@ USAGE: neon cluster health
         public override string[] Words => new string[] { "cluster", "health" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--force" };
-
-        /// <inheritdoc/>
         public override bool NeedsHostingManager => true;
 
         /// <inheritdoc/>

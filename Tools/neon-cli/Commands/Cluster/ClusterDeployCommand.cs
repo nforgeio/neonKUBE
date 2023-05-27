@@ -68,16 +68,15 @@ USAGE:
 
 ARGUMENTS:
 
-    CLUSTER-DEF                 - Path to the cluster definition file.
+    CLUSTERDEF                  - Path to the cluster definition file.
 
 OPTIONS:
 
-    --max-parallel=#            - Specifies the maximum number of node related
-                                  operations to perform in parallel.  This
-                                  defaults to [6].
+    --max-parallel=#            - Specifies the maximum number of node related operations
+                                  to perform in parallel.  This defaults to [6].
 
-    --force                     - Don't prompt before removing existing contexts
-                                  that reference the target cluster.
+    --force                     - Don't prompt before removing existing contexts that
+                                  reference the target cluster.
 
     --quiet                     - Only print the currently executing step rather than
                                   displaying detailed setup status.
@@ -88,10 +87,9 @@ OPTIONS:
                                   A non-zero exit code will be returned when this option
                                   is specified and one or more checks fail.
 
-    --package-cache=HOST:PORT   - Optionally specifies one or more APT Package cache
-                                  servers by hostname and port for use by the new cluster. 
-                                  Specify multiple servers by separating the endpoints 
-                                  with spaces.
+    --package-cache=HOST:PORT   - Specifies one or more APT Package cache servers by hostname
+                                  and port for use by the new cluster.  Specify multiple
+                                  servers by separating the endpoints with spaces.
 
     --use-staged[=branch]       - MAINTAINERS ONLY: Specifies that the staged node image 
                                   should be used as opposed to the public release image.
@@ -106,7 +104,7 @@ OPTIONS:
                                   so you can base your cluster off of a specific image
                                   build.
 
-    --no-telemetry              - Disables whether telemetry for failed cluster deployment,
+    --no-telemetry              - Disables telemetry uploads for failed cluster deployment,
                                   overriding the NEONKUBE_DISABLE_TELEMETRY environment variable.
 
 REMARKS:
@@ -147,7 +145,7 @@ stage process is typically used only by NEONKUBE maintainers.
         {
             if (commandLine.Arguments.Length < 1)
             {
-                Console.Error.WriteLine("*** ERROR: CLUSTER-DEF argument is required.");
+                Console.Error.WriteLine("*** ERROR: CLUSTERDEF argument is required.");
                 Program.Exit(-1);
             }
 

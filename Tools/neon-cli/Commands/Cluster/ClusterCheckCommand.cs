@@ -70,15 +70,16 @@ USAGE:
 
 OPTIONS:
 
-    --all               - Implied when no other options are specified
+    --all               - Performs all checks.  This is implied when no other
+                          options are present
 
     --container-images  - Verifies that all container images running on the
                           cluster are included in the cluster manifest
 
-    --priority-class    - Verifies that all running pod templates specify a
-                          non-zero PriorityClass.
+    --priority-class    - Verifies that all running pods have a non-zero
+                          PriorityClass
 
-    --resources         - Verifies that all pod containers specifiy resource
+    --resources         - Verifies that all pod containers specify resource
                           request and limits
 
     --details           - Includes additional information for some of the 
@@ -119,7 +120,7 @@ This command returns a non-zero exit code when one or more checks fail.
 
             if (context == null)
             {
-                Console.Error.WriteLine($"*** ERROR: No Kubernetes context is currently selected.");
+                Console.Error.WriteLine($"*** ERROR: No NEONKUBE cluster is selected.");
                 Program.Exit(1);
             }
 

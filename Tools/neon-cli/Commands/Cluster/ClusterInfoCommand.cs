@@ -63,13 +63,10 @@ namespace NeonCli
         private const string usage = @"
 Prints the information the current NEONKUBE cluster.
 
-USAGE: neon cluster ingo
+USAGE: neon cluster info
 ";
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "info" };
-
-        /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--force" };
 
         /// <inheritdoc/>
         public override bool NeedsHostingManager => true;

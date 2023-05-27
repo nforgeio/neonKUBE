@@ -60,8 +60,7 @@ namespace NeonCli
     public class ClusterDeleteCommand : CommandBase
     {
         private const string usage = @"
-Removes a NEONKUBE cluster.  This may not be supported by all hosting
-environments.
+Permanently deletes a NEONKUBE cluster.
 
 USAGE:
 
@@ -75,7 +74,7 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --force         - forces cluster removal without user confirmation and
+    --force         - Forces cluster removal without user confirmation and
                       also without checking the cluster lock status
 
 REMARKS:
