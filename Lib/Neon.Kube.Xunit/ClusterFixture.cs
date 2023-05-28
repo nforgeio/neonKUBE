@@ -1019,9 +1019,7 @@ namespace Neon.Kube.Xunit
         /// </remarks>
         public ExecuteResponse NeonExecute(params string[] args)
         {
-            throw new NotImplementedException("$todo(jefflill): We need a standard way to locate the [neon.exe] tool.");
-
-            // return NeonHelper.ExecuteCapture("neon", args);
+            return NeonHelper.ExecuteCapture(KubeHelper.NeonExecutablePath, args);
         }
 
         /// <summary>

@@ -3417,5 +3417,67 @@ TCPKeepAlive yes
                 throw new ClusterDefinitionException($"{labelType}: Label value [{key}={value}] is too long.  Values can have a maximum of 63 characters.");
             }
         }
+
+        /// <summary>
+        /// Locates the most recent <b>neon</b> executable.
+        /// </summary>
+        /// <returns>The path to the executable.</returns>
+        /// <exception cref="FileNotFoundException">Thrown when no executable was found.</exception>
+        /// <remarks>
+        /// <para>
+        /// This method is intended to work well on normal user machines where the neonKUBE/neonCLOUD
+        /// sources and build environments are not configured as well as for maintainers that need to
+        /// execute most recent executable to test/debug recent changes.
+        /// </para>
+        /// <para>
+        /// If either of <b>neon-cli</b> or <b>neon-desktop</b> is installed on the workstation
+        /// (determined by the presence of the <b>NEON_INSTALL_FOLDER</b> environment variable),
+        /// we'll return the path to the executable from the installation folder.  When those are
+        /// not installed, we'll return <b>$(NC_ROOT)/Build/neon-cli/neon.exe</b>.
+        /// </para>
+        /// <para>
+        /// A <see cref="FileNotFoundException"/> will be thrown we couldn't locate the executable.
+        /// </para>
+        /// </remarks>
+        public static string NeonExecutablePath
+        {
+            get
+            {
+                var neonInstallFolder = Environment.GetEnvironmentVariable("NEON_INSTALL_FOLDER");
+                var ncRoot            = Environment.GetEnvironmentVariable("NC_ROOT");
+                var neonPath          = (string)null;
+
+                if (!string.IsNullOrEmpty(neonInstallFolder))
+                {
+                    neonPath = Path.Combine(neonInstallFolder, "neon.exe");
+                }
+                else if (!string.IsNullOrEmpty(ncRoot))
+                {
+                    neonPath = Path.Combine(ncRoot, "Build", "neon-cli", "neon.exe");
+                }
+
+                if (neonPath == null || !File.Exists(neonPath))
+                {
+                    string details;
+
+                    if (!string.IsNullOrEmpty(neonInstallFolder))
+                    {
+                        details = "The [neon.exe] program could not be located within the installation folder.\r\n\r\nYou may need to reinstall from here: https://github.com/nforgeio/neonKUBE/releases";
+                    }
+                    else if (!string.IsNullOrEmpty(ncRoot))
+                    {
+                        details = "MAINTAINERS: Rebuild the executable via:\r\n\r\nneoncloud-builder -dirty -noclean -nobuild -kubectlonly";
+                    }
+                    else
+                    {
+                        details = "You'll need to install one of [neon-cli] or [neon-desktop] from here:\r\n\r\nhttps://github.com/nforgeio/neonKUBE/releases";
+                    }
+
+                    throw new FileNotFoundException($"[{neonPath}] does not exist.\r\n\r\n{details}");
+                }
+
+                return neonPath;
+            }
+        }
     }
 }
