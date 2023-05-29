@@ -191,11 +191,7 @@ nodes:
 
             Covenant.Assert(assemblyConfigAttribute != null, () => $"Test assembly [{thisAssembly.FullName}] does not include [{nameof(AssemblyConfigurationAttribute)}].");
 
-            // $todo(jefflill):
-            //
-            // I'm hardcoding the .NET framework moniker and architecture parts of the subpath.
-
-            neonCliPath = Path.Combine(Environment.GetEnvironmentVariable("NK_ROOT"), "Tools", "neon-cli", "bin", buildConfig, "net7.0", "win10-x64", "neon-cli.exe");
+            neonCliPath = KubeHelper.NeonCliPath;
 
             Covenant.Assert(File.Exists(neonCliPath), () => $"[neon-cli] executable does not exist at: {neonCliPath}");
         }
@@ -340,6 +336,13 @@ nodes:
 
                     Assert.Contains(clusterLogin, response.OutputText);
 
+                    // Ensure that [login --show] indicates that we're not logged to a cluster.
+
+                    response = (await NeonCliAsync("login", "--show"))
+                        .EnsureSuccess();
+
+                    Assert.Contains("You are not logged into a cluster", response.OutputText);
+
                     // Login
 
                     KubeHelper.KubeConfig.Reload();
@@ -350,6 +353,27 @@ nodes:
                     KubeHelper.KubeConfig.Reload();
                     Assert.NotNull(KubeHelper.KubeConfig.CurrentContext);
                     Assert.Equal(clusterLogin, KubeHelper.KubeConfig.CurrentContext);
+                    Assert.Contains($"Logged into: {KubeHelper.KubeConfig.CurrentContext} namespace: default", response.OutputText);
+
+                    //-------------------------------------------------------------
+                    // Verify that we can change the default namespace with [--namespace] and [-n].
+                    // This also tests [--show].
+
+                    response = (await NeonCliAsync("login", $"--namespace=default", "--show"))
+                        .EnsureSuccess();
+
+                    KubeHelper.KubeConfig.Reload();
+                    Assert.NotNull(KubeHelper.KubeConfig.CurrentContext);
+                    Assert.Equal(clusterLogin, KubeHelper.KubeConfig.CurrentContext);
+                    Assert.Contains($"Logged into: {KubeHelper.KubeConfig.CurrentContext} namespace: {KubeNamespace.NeonSystem}", response.OutputText);
+
+                    response = (await NeonCliAsync("login", $"-n=default", "--show"))
+                        .EnsureSuccess();
+
+                    KubeHelper.KubeConfig.Reload();
+                    Assert.NotNull(KubeHelper.KubeConfig.CurrentContext);
+                    Assert.Equal(clusterLogin, KubeHelper.KubeConfig.CurrentContext);
+                    Assert.Contains($"Logged into: {KubeHelper.KubeConfig.CurrentContext} namespace: default", response.OutputText);
 
                     //-------------------------------------------------------------
                     // Create a cluster proxy for use in the tests below.
@@ -626,12 +650,6 @@ nodes:
 
                     KubeHelper.KubeConfig.Reload();
                     Assert.Empty(KubeHelper.KubeConfig.Clusters.Where(cluster => cluster.Name == clusterName));
-                }
-                catch (Exception e)
-                {
-                    // $debug(jefflill): DELETE THIS!
-
-                    var exceptionType = e.GetType().FullName;
                 }
                 finally
                 {

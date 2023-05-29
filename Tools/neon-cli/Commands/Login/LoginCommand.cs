@@ -106,11 +106,12 @@ ARGUMENTS:
 
 OPTIONS:
 
-    -n=NAMESPACE              to be set for the new context
+    --namespace|-n=NAMESPACE    - Optionally specifies the Kubernetes namespace
 
-    --namespace=NAMESPACE   - Optionally specifies the Kubernetes namespace
+    --show                      - Optionally prints the current context and
+                                  default namespace
  
-    --sso                   - Perform SSO authentication against the cluster
+    --sso                       - Perform SSO authentication against the cluster
 
 REMARKS:
 
@@ -143,7 +144,7 @@ or when switching contexts to set the current namespace afterwards.
         public override string[] Words => new string[] { "login" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--namespace", "-n", "--sso" };
+        public override string[] ExtendedOptions => new string[] { "--current", "-c", "--namespace", "-n", "--sso", "--show" };
 
         /// <inheritdoc/>
         public override bool NeedsHostingManager => true;
@@ -171,9 +172,35 @@ or when switching contexts to set the current namespace afterwards.
             {
                 var contextOrClusterDomain = commandLine.Arguments.FirstOrDefault();
                 var sso                    = commandLine.HasOption("--sso");
+                var show                   = commandLine.HasOption("--show");
                 var contextName            = (string)null;
                 var clusterDomain          = (string)null;
                 var @namespace             = (string)null;
+                var config                 = (KubeConfig)null;
+                var context                = (KubeConfigContext)null;
+
+                // Just print the current context name and default namespace when
+                // there are no arguments or options.
+
+                if (show && commandLine.Arguments.Length == 0 && commandLine.Options.Count == 1)
+                {
+                    config = KubeHelper.KubeConfig;
+
+                    config.Reload();
+
+                    context = config.Context;
+
+                    if (context == null)
+                    {
+                        Console.WriteLine($"*** You are not logged into a cluster");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Logged into: {context.Name} namespace: {@namespace}");
+                    }
+
+                    return;
+                }
 
                 @namespace = commandLine.GetOption("--namespace", null);
 
@@ -219,25 +246,30 @@ or when switching contexts to set the current namespace afterwards.
 
                 if (clusterDomain != null)
                 {
+                    show = true;
+
                     await SsoLoginAsync(clusterDomain);
                 }
                 else if (contextName != null)
                 {
+                    show = true;
+
                     await SetContextAsync(contextName);
                 }
 
                 // Update the current namespace as necessary and then report what we did.
 
-                var config = KubeHelper.KubeConfig;
+                config = KubeHelper.KubeConfig;
 
                 config.Reload();
 
-                var context = config.Context;
+                context = config.Context;
 
                 Covenant.Assert(context != null);
 
                 if (!string.IsNullOrEmpty(@namespace))
                 {
+                    show       = true;
                     context.Namespace = @namespace;
                     config.Save();
                 }
@@ -250,7 +282,11 @@ or when switching contexts to set the current namespace afterwards.
                 }
 
                 Console.WriteLine();
-                Console.WriteLine($"Logged into: {context.Name} namespace: {@namespace}");
+
+                if (show)
+                {
+                    Console.WriteLine($"Logged into: {context.Name} namespace: {@namespace}");
+                }
             }
             catch (Exception e)
             {

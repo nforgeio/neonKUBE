@@ -96,6 +96,7 @@ namespace Neon.Kube
         private static IStaticDirectory     cachedResources;
         private static string               cachedVmImageFolder;
         private static string               cachedUserSshFolder;
+        private static string               cachedNeonCliPath;
         private static object               jsonConverterLock = new object();
 
         private static List<KeyValuePair<string, object>> cachedTelemetryTags;
@@ -131,6 +132,7 @@ namespace Neon.Kube
             cachedResources                 = null;
             cachedVmImageFolder             = null;
             cachedUserSshFolder             = null;
+            cachedNeonCliPath               = null;
         }
 
         /// <summary>
@@ -3419,7 +3421,9 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Locates the most recent <b>neon</b> executable.
+        /// Locates the most recent <b>neon-cli</b> executable.  Note that this returns the path
+        /// to our version of <b>kubectl</b> rather than the <b>neon-cli</b> executable that implements
+        /// our customized subcommands.
         /// </summary>
         /// <returns>The path to the executable.</returns>
         /// <exception cref="FileNotFoundException">Thrown when no executable was found.</exception>
@@ -3439,10 +3443,15 @@ TCPKeepAlive yes
         /// A <see cref="FileNotFoundException"/> will be thrown we couldn't locate the executable.
         /// </para>
         /// </remarks>
-        public static string NeonExecutablePath
+        public static string NeonCliPath
         {
             get
             {
+                if (!string.IsNullOrEmpty(cachedNeonCliPath))
+                {
+                    return cachedNeonCliPath;
+                }
+
                 var neonInstallFolder = Environment.GetEnvironmentVariable("NEON_INSTALL_FOLDER");
                 var ncRoot            = Environment.GetEnvironmentVariable("NC_ROOT");
                 var neonPath          = (string)null;
@@ -3476,7 +3485,7 @@ TCPKeepAlive yes
                     throw new FileNotFoundException($"[{neonPath}] does not exist.\r\n\r\n{details}");
                 }
 
-                return neonPath;
+                return cachedNeonCliPath = neonPath;
             }
         }
     }

@@ -1019,7 +1019,7 @@ namespace Neon.Kube.Xunit
         /// </remarks>
         public ExecuteResponse NeonExecute(params string[] args)
         {
-            return NeonHelper.ExecuteCapture(KubeHelper.NeonExecutablePath, args);
+            return NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, args);
         }
 
         /// <summary>
