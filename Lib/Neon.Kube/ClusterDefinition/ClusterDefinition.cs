@@ -74,7 +74,7 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// Regex for verifying non-DNS like names that start and end with a letter or digit and
-        /// may also include dashes.
+        /// may also include dashes and underscores.
         /// </summary>
         public static Regex NameRegex { get; private set; } = new Regex(@"^[a-z0-9\-_]+$", RegexOptions.IgnoreCase);
 
@@ -409,14 +409,14 @@ namespace Neon.Kube.ClusterDef
         public string ClusterVersion { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies cluster labels.  Label names and values must follow the
-        /// [Kubernetes conventions](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)
+        /// Optionally specifies cluster annotations.  Label names and values must follow the
+        /// [Kubernetes conventions](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/)
         /// and the <b>neonkube.io/</b> prefix is reserved by NEONKUBE.
         /// </summary>
-        [JsonProperty(PropertyName = "Labels", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "labels", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Annotations", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "annotations", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public Dictionary<string, string> Labels { get; set; } = null;
+        public Dictionary<string, string> Annotations { get; set; } = null;
 
         /// <summary>
         /// <para>
@@ -898,7 +898,7 @@ namespace Neon.Kube.ClusterDef
 
             // Allocate the cluster definition properties when necessary.
 
-            Labels             = Labels ?? new Dictionary<string, string>();
+            Annotations        = Annotations ?? new Dictionary<string, string>();
             FeatureGates       = FeatureGates ?? new Dictionary<string, bool>();
             Deployment         = Deployment ?? new DeploymentOptions();
             Storage            = Storage ?? new StorageOptions();
@@ -922,6 +922,57 @@ namespace Neon.Kube.ClusterDef
             if (IsDesktop && !IsSpecialNeonCluster)
             {
                 new ClusterDefinitionException($"[{nameof(IsDesktop)}=true] is allowed only when [{nameof(IsSpecialNeonCluster)}=true].");
+            }
+
+            // Validate any cluster annotations.
+
+            foreach (var annotationKey in Annotations.Keys)
+            {
+                if (string.IsNullOrEmpty(annotationKey))
+                {
+                    throw new ClusterDefinitionException("Invalid cluster annotations.  At least one annotation key is NULL or blank.");
+                }
+
+                var slashPos = annotationKey.IndexOf('/');
+                var prefix   = slashPos == -1 ? null : annotationKey.Substring(0, slashPos);
+                var name     = slashPos == -1 ? annotationKey : annotationKey.Substring(slashPos + 1);
+
+                if (prefix != null && prefix.Length > 253)
+                {
+                    throw new ClusterDefinitionException($"Cluster annotation key [{annotationKey}] has a prefix that exceeds 253 characters.");
+                }
+
+                if (prefix != null && !DnsNameRegex.IsMatch(prefix))
+                {
+                    throw new ClusterDefinitionException($"Cluster annotation key [{annotationKey}] has an invalid prefix.");
+                }
+
+                if (name.Length > 63)
+                {
+                    throw new ClusterDefinitionException($"Cluster annotation key [{annotationKey}] has a name that exceeds 63 characters.");
+                }
+
+                if (!char.IsAsciiLetterOrDigit(name.First()))
+                {
+                    throw new ClusterDefinitionException($"Cluster annotation key [{annotationKey}] has a name that does not start with a letter or digit.");
+                }
+
+                if (!char.IsAsciiLetterOrDigit(name.Last()))
+                {
+                    throw new ClusterDefinitionException($"Cluster annotation key [{annotationKey}] has a name that does not end with a letter or digit.");
+                }
+
+                if (name.Any(ch => char.IsAsciiLetterOrDigit(ch) && ch != '.' && ch != '-' && ch != '_'))
+                {
+                    throw new ClusterDefinitionException($"Cluster annotation key [{annotationKey}] has a name with invalid characters.  Names may include letters, digits, dots, dashes, and underscores.");
+                }
+
+                // Normalize NULL values to the empty string.
+
+                if (Annotations[annotationKey] == null)
+                {
+                    Annotations[annotationKey] = string.Empty;
+                }
             }
 
             // Validate the node definitions.
@@ -1048,9 +1099,9 @@ namespace Neon.Kube.ClusterDef
                 throw new ClusterDefinitionException($"The [{nameof(Datacenter)}={Datacenter}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
 
-            // Validate the cluster labels.
+            // Validate the cluster annotations.
 
-            foreach (var label in Labels)
+            foreach (var label in Annotations)
             {
                 KubeHelper.ValidateKubernetesLabel("cluster label", label.Key, label.Value);
             }

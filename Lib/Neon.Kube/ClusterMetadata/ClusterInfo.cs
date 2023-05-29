@@ -86,12 +86,12 @@ namespace Neon.Kube
         public string Description { get; set; } = null;
 
         /// <summary>
-        /// Specifies the cluster labels.  Label names and values must follow the
+        /// Specifies the cluster annatations.  Label names and values must follow the
         /// [Kubernetes conventions](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)
         /// and the <b>neonkube.io/</b> prefix is reserved by NEONKUBE.
         /// </summary>
-        [JsonProperty(PropertyName = "Labels", Required = Required.Always)]
-        public Dictionary<string, string> Labels { get; set; } = null;
+        [JsonProperty(PropertyName = "Annotations", Required = Required.Always)]
+        public Dictionary<string, string> Annotations { get; set; } = null;
 
         /// <summary>
         /// Identifies the cloud or other hosting platform.
