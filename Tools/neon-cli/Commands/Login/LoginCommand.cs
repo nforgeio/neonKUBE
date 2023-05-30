@@ -108,6 +108,9 @@ OPTIONS:
 
     --namespace|-n=NAMESPACE    - Optionally specifies the Kubernetes namespace
 
+    --output=json|yaml          - Optionally specifies the format to print the
+    -o=json|yaml                  current context namespace.
+
     --show                      - Optionally prints the current context and
                                   default namespace
  
