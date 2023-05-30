@@ -112,7 +112,7 @@ OPTIONS:
     -o=json|yaml                  current context and namespace.
 
     --show                      - Optionally prints the current context and
-                                  default namespace
+                                  namespace
  
     --sso                       - Perform SSO authentication against the cluster
 
