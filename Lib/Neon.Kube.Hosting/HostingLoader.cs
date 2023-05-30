@@ -163,19 +163,11 @@ namespace Neon.Kube.Hosting
         /// <inheritdoc/>
         public HostingManager GetManager(HostingEnvironment environment)
         {
-Console.Error.WriteLine($"HostingLoader: 0: count = {environmentToHostingManager.Count}");    // $debug(jefflill): DELETE THIS!
-foreach (var item in environmentToHostingManager)
-{
-    Console.Error.WriteLine($"HostingLoader: 0: {item.Key}: {item.Value.FullName}");
-}
-
             if (environmentToHostingManager.TryGetValue(environment, out var managerType))
             {
-Console.Error.WriteLine($"HostingLoader: 1");    // $debug(jefflill): DELETE THIS!
                 return (HostingManager)Activator.CreateInstance(managerType);
             }
 
-Console.Error.WriteLine($"HostingLoader: 2");    // $debug(jefflill): DELETE THIS!
             throw new NotImplementedException($"[{nameof(HostingEnvironment)}={environment}]");
         }
 
