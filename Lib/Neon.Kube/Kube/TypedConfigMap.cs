@@ -44,7 +44,7 @@ namespace Neon.Kube
 {
     /// <summary>
     /// <para>
-    /// Wraps a Kubernetes <see cref="V1ConfigMap"/> to support strongly typed configurations.
+    /// Extends a Kubernetes <see cref="V1ConfigMap"/> to support strongly typed configurations.
     /// This is implemented by serializing the config data as JSON and adding that to the 
     /// low-level configmap under the <see cref="DataPropertyName"/> key.
     /// </para>
@@ -65,7 +65,7 @@ namespace Neon.Kube
     /// <para>
     /// To read an existing configmap, call <b>IKubernetes.CoreV1.ReadNamespacedTypedConfigMapAsync()</b> 
     /// to retrieve the Kubernetes configmap and then call the static <see cref="From"/> method to wrap
-    /// the result into a <see cref="TypedConfigMap{TConfig}"/> where your typesafe values can be accessed
+    /// the result into a <see cref="TypedConfigMap{TConfigMapData}"/> where your typesafe values can be accessed
     /// via the <see cref="Data"/> property.
     /// </para>
     /// <para>
@@ -81,7 +81,12 @@ namespace Neon.Kube
         // Static members
 
         /// <summary>
+        /// <para>
         /// Identifies the key used to store typed data within an untyped configmap.
+        /// </para>
+        /// <note>
+        /// <b>WARNING:</b> DO NOT MODIFY!  Any change will break existing clusters.
+        /// </note>
         /// </summary>
         public const string DataPropertyName = "typed-data";
 

@@ -4923,10 +4923,10 @@ $@"- name: StorageType
                 {
                     // Persist the cluster deployment information.
 
-                    var clusterDeployment          = new ClusterDeployment(cluster.SetupState.ClusterDefinition, cluster.SetupState.ClusterId, cluster.SetupState.ClusterDomain);
-                    var clusterDeploymentConfigMap = new TypedConfigMap<ClusterDeployment>(KubeConfigMapName.ClusterDeployment, KubeNamespace.NeonStatus, clusterDeployment);
+                    var clusterDeployment       = new ClusterDeployment(cluster.SetupState.ClusterDefinition, cluster.SetupState.ClusterId, cluster.SetupState.ClusterDomain);
+                    var clusterDeploymentSecret = new TypedSecret<ClusterDeployment>(KubeConfigMapName.ClusterDeployment, KubeNamespace.NeonStatus, clusterDeployment);
 
-                    await k8s.CoreV1.CreateNamespacedTypedConfigMapAsync(clusterDeploymentConfigMap);
+                    await k8s.CoreV1.CreateNamespacedTypedSecretAsync(clusterDeploymentSecret);
 
                     // Deploy: neon-cluster-operator
 

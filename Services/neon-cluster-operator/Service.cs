@@ -1,4 +1,4 @@
-﻿//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // FILE:        Service.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -339,16 +339,17 @@ namespace NeonClusterOperator
 
             // Start the watcher.
 
-            _ = K8s.WatchAsync<V1ConfigMap>(async (@event) =>
-            {
-                await SyncContext.Clear;
+            _ = K8s.WatchAsync<V1ConfigMap>(
+                async (@event) =>
+                {
+                    await SyncContext.Clear;
 
-                ClusterInfo = TypedConfigMap<ClusterInfo>.From(@event.Value).Data;
+                    ClusterInfo = TypedConfigMap<ClusterInfo>.From(@event.Value).Data;
 
-                Logger.LogInformationEx("Updated cluster info");
-            },
-            KubeNamespace.NeonStatus,
-            fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
+                    Logger.LogInformationEx("Updated cluster info");
+                },
+                KubeNamespace.NeonStatus,
+                fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}");
 
             // Wait for the watcher to see the [ClusterInfo].
 
