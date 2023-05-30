@@ -124,7 +124,7 @@ Scenarios:
 Select a NEONKUBE context on the workstation so that subsequent commands
 will operate on the related NEONKUBE cluster.
 
-    neon login [OPTIONS] CONTEXT-NAME
+    neon login [OPTIONS] CONFIGREF
 
 Use single-sign-on (SSO) authentication to log into a new cluster for
 which you don't already have that cluster's context information.  This
@@ -144,7 +144,16 @@ or when switching contexts to set the current namespace afterwards.
         public override string[] Words => new string[] { "login" };
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--current", "-c", "--namespace", "-n", "--sso", "--show" };
+        public override string[] ExtendedOptions => new string[]
+        {
+            "--current",
+            "-c",
+            "--namespace",
+            "-n",
+            "--sso",
+            "--show",
+            "--output",
+            "-o" };
 
         /// <inheritdoc/>
         public override bool NeedsHostingManager => true;
@@ -164,8 +173,6 @@ or when switching contexts to set the current namespace afterwards.
                 Program.Exit(0);
             }
 
-            Console.WriteLine();
-
             var orgContext = KubeHelper.CurrentContext;
 
             try
@@ -176,13 +183,15 @@ or when switching contexts to set the current namespace afterwards.
                 var contextName            = (string)null;
                 var clusterDomain          = (string)null;
                 var @namespace             = (string)null;
+                var outputFormat           = Program.GetOutputFormat(commandLine);
                 var config                 = (KubeConfig)null;
                 var context                = (KubeConfigContext)null;
 
-                // Just print the current context name and default namespace when
-                // there are no arguments or options.
+                //-------------------------------------------------------------
+                // Just print the current context name and namespace for [--show]
+                // when there are no arguments or other options.
 
-                if (show && commandLine.Arguments.Length == 0 && commandLine.Options.Count == 1)
+                if (show && contextOrClusterDomain == null && commandLine.Options.Count == 1)
                 {
                     config = KubeHelper.KubeConfig;
 
@@ -190,24 +199,22 @@ or when switching contexts to set the current namespace afterwards.
 
                     context = config.Context;
 
-                    if (context == null)
-                    {
-                        Console.WriteLine($"*** You are not logged into a cluster");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Logged into: {context.Name} namespace: {@namespace}");
-                    }
-
+                    PrintContext(context, outputFormat);
                     return;
                 }
 
+                //-------------------------------------------------------------
+                // Are we changing the namespace?
+
                 @namespace = commandLine.GetOption("--namespace", null);
+
+                if (@namespace == null)
+                {
+                    @namespace = commandLine.GetOption("-n", null);
+                }
 
                 if (!string.IsNullOrEmpty(@namespace))
                 {
-                    @namespace = commandLine.GetOption("-n", null);
-
                     if (!ClusterDefinition.DnsNameRegex.IsMatch(@namespace))
                     {
                         Console.Error.WriteLine($"Invalid namespace: {@namespace}");
@@ -215,46 +222,52 @@ or when switching contexts to set the current namespace afterwards.
                     }
                 }
 
-                // Disambiguate between cluster context and cluster domain.
+                //-------------------------------------------------------------
+                // Switch contexts if there's a CONTEXTREF argument.
 
-                if (sso || contextOrClusterDomain.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
+                if (contextOrClusterDomain != null)
                 {
-                    clusterDomain = contextOrClusterDomain;
+                    // Disambiguate between cluster context and cluster domain.
 
-                    if (clusterDomain.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        clusterDomain = clusterDomain.Substring("https://".Length);
-                    }
-                }
-                else
-                {
-                    if (KubeHelper.KubeConfig.GetContext(contextOrClusterDomain) == null)
+                    if (sso || contextOrClusterDomain.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
                     {
                         clusterDomain = contextOrClusterDomain;
+
+                        if (clusterDomain.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            clusterDomain = clusterDomain.Substring("https://".Length);
+                        }
                     }
                     else
                     {
-                        contextName = contextOrClusterDomain;
+                        if (KubeHelper.KubeConfig.GetContext(contextOrClusterDomain) == null)
+                        {
+                            clusterDomain = contextOrClusterDomain;
+                        }
+                        else
+                        {
+                            contextName = contextOrClusterDomain;
+                        }
                     }
-                }
 
-                if (clusterDomain != null && !ClusterDefinition.DnsNameRegex.IsMatch(clusterDomain))
-                {
-                    Console.Error.WriteLine($"Invalid cluster hostname: {clusterDomain}");
-                    Program.Exit(-1);
-                }
+                    if (clusterDomain != null && !ClusterDefinition.DnsNameRegex.IsMatch(clusterDomain))
+                    {
+                        Console.Error.WriteLine($"*** ERROR: Invalid cluster hostname: {clusterDomain}");
+                        Program.Exit(-1);
+                    }
 
-                if (clusterDomain != null)
-                {
-                    show = true;
+                    if (clusterDomain != null)
+                    {
+                        show = true;
 
-                    await SsoLoginAsync(clusterDomain);
-                }
-                else if (contextName != null)
-                {
-                    show = true;
+                        await SsoLoginAsync(clusterDomain);
+                    }
+                    else if (contextName != null)
+                    {
+                        show = true;
 
-                    await SetContextAsync(contextName);
+                        await SetContextAsync(contextName);
+                    }
                 }
 
                 // Update the current namespace as necessary and then report what we did.
@@ -269,23 +282,14 @@ or when switching contexts to set the current namespace afterwards.
 
                 if (!string.IsNullOrEmpty(@namespace))
                 {
-                    show       = true;
+                    show              = true;
                     context.Namespace = @namespace;
                     config.Save();
                 }
 
-                @namespace = context.Namespace;
-
-                if (string.IsNullOrEmpty(@namespace))
-                {
-                    @namespace = "default";
-                }
-
-                Console.WriteLine();
-
                 if (show)
                 {
-                    Console.WriteLine($"Logged into: {context.Name} namespace: {@namespace}");
+                    PrintContext(context, outputFormat);
                 }
             }
             catch (Exception e)
@@ -297,6 +301,47 @@ or when switching contexts to set the current namespace afterwards.
             }
 
             await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Prints a kubeconfig context to the output using the specified format.
+        /// </summary>
+        /// <param name="context">Specifies the context or <c>null</c> when there's no current context.</param>
+        /// <param name="outputFormat">Specifies the output format.</param>
+        private void PrintContext(KubeConfigContext context, OutputFormat? outputFormat)
+        {
+            if (!outputFormat.HasValue)
+            {
+                if (context == null)
+                {
+                    Console.WriteLine($"You are not logged into a cluster");
+                }
+                else
+                {
+                    Console.WriteLine($"Logged into: {context.Name} namespace: {context.Namespace}");
+                }
+
+                return;
+            }
+
+            var outputObject = new { context = context.Name, @namespace = context.Namespace };
+
+            switch (outputFormat.Value)
+            {
+                case OutputFormat.Json:
+
+                    Console.WriteLine(NeonHelper.JsonSerialize(outputObject, Formatting.Indented));
+                    break;
+
+                case OutputFormat.Yaml:
+
+                    Console.WriteLine(NeonHelper.YamlSerialize(outputObject));
+                    break;
+
+                default:
+
+                    throw new NotImplementedException();
+            }
         }
 
         /// <summary>

@@ -334,8 +334,7 @@ NOTE: Command line arguments and options may include references to
 
                 if (CommandLine.Items.Length == 0)
                 {
-                    // Output our standard usage help and then launch [kubectl] to display
-                    // its help as well.
+                    // Output our standard usage help.
 
                     Console.WriteLine(usage);
                     Program.Exit(0);
@@ -375,8 +374,7 @@ NOTE: Command line arguments and options may include references to
                     }
                     else
                     {
-                        // Output our standard usage help and then launch [kubectl] to
-                        // display its help as well.
+                        // Output our standard usage help.
 
                         Console.WriteLine(usage);
                     }
@@ -526,6 +524,50 @@ NOTE: Command line arguments and options may include references to
             }
 
             // No match.
+
+            return null;
+        }
+
+        /// <summary>
+        /// Looks for a <b>--output=FORMAT</b> or <b>-o=FORMAT</b> option on the command line
+        /// passed and returns the format or <n>null</n> when neither option is present.
+        /// </summary>
+        /// <param name="commandLine"></param>
+        /// <returns>The format specified or <c>null</c>.</returns>
+        public static OutputFormat? GetOutputFormat(CommandLine commandLine)
+        {
+            Covenant.Requires<ArgumentNullException>(commandLine != null, nameof(commandLine));
+
+            var formatString = commandLine.GetOption("--output");
+
+            if (formatString == null)
+            {
+                formatString = commandLine.GetOption("-o");
+            }
+
+            if (formatString == null)
+            {
+                return null;
+            }
+
+            switch (formatString.ToLowerInvariant())
+            {
+                case "json":
+
+                    return OutputFormat.Json;
+
+                case "yaml":
+
+                    return OutputFormat.Yaml;
+
+                default:
+
+                    Console.Error.WriteLine($"*** ERROR: [{formatString}] is not a supported output format.");
+                    Program.Exit(1);
+                    break;
+            }
+
+            // We should never reach this.
 
             return null;
         }
