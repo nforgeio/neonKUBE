@@ -1343,7 +1343,7 @@ $@"
 
 set -euo pipefail
 
-set +e                                                                                                                                              # <--- HACK: disable error checks
+set +e
 curl {KubeHelper.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 haveKey=$? 
 
@@ -1355,31 +1355,39 @@ if [ ! $haveKey ]; then
     set -euo pipefail
     curl {KubeHelper.CurlOptions} https://dl.k8s.io/apt/doc/apt-key.gpg | apt-key add -    
 fi
+set -e
 
-echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/sources.list.d/kubernetes.list
+# Configure the APT signing key and configure the Kubernetes APT repository.
+
+curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-archive-keyring.gpg
+echo ""deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main"" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+# Install: kubelet, kubeadm, and kubectl.
+
 {KubeNodeFolder.Bin}/safe-apt-get update
+{KubeNodeFolder.Bin}/safe-apt-get install -yq kubelet={KubeVersions.KubeAdminPackage} kubeadm={KubeVersions.KubeAdminPackage} kubectl={KubeVersions.KubeAdminPackage} -o Dpkg::Options::=""--force-overwrite""
 
-set +e                                                                                                                                              # <--- HACK: disable error checks
-{KubeNodeFolder.Bin}/safe-apt-get install -yq kubeadm={KubeVersions.KubeAdminPackage} -o Dpkg::Options::=""--force-overwrite""
-
-# Note that the [kubeadm] install also installs [kubelet] and [kubectl] but that the
-# versions installed may be more recent than the Kubernetes version.  We want our
-# clusters to use consistent versions of all tools so we're going to install these
-# two packages again with specific versions and allow them to be downgraded.
-
-{KubeNodeFolder.Bin}/safe-apt-get install -yq --allow-downgrades kubelet={KubeVersions.KubeletPackage} -o Dpkg::Options::=""--force-overwrite""     # <--- HACK: ignore overwrite errors
-{KubeNodeFolder.Bin}/safe-apt-get install -yq --allow-downgrades kubectl={KubeVersions.KubectlPackage} -o Dpkg::Options::=""--force-overwrite""     # <--- HACK: ignore overwrite errors
-
-# Prevent the package manager these components from starting automatically.
+# Prevent the package manager from upgrading these components.
 
 set +e      # Don't exit if the next command fails
 apt-mark hold kubeadm kubectl kubelet
 set -euo pipefail
 
 # Pull the core Kubernetes container images (kube-scheduler, kube-proxy,...) to ensure they'll 
-# be present on all node images.
+# be present on all node images.  Note that we needs to use a config file to ensure that container
+# images are pulled from [registry.k8s.io] rather than [k8s.gcr.io] which used to be the default
+# but was depreciated in 2022 and stopped receiving updates in 2023.
 
-kubeadm config images pull
+cat <<EOF > kubeadm.config.yaml
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: ClusterConfiguration
+imageRepository: registry.k8s.io
+dns:
+  imageRepository: registry.k8s.io/coredns
+EOF
+
+kubeadm config images pull --config=kubeadm.config.yaml 
+rm kubeadm.config.yaml
 
 # Configure kublet:
 
