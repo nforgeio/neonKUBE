@@ -5,7 +5,7 @@
 ---
 
 ### Documentation:
-- [Getting Started](https://docs.neonforge.com/docs/category/getting-started)
+- [Getting Started](https://docs.neonforge.com/docs/installation)
 - [How To Guides](https://docs.neonforge.com/docs/category/how-to-guides)
 - [Operator SDK](https://docs.neonforge.com/docs/operator-sdk)
 - [API Reference](https://api-docs.neonforge.com/neonkube/api/Neon.Kube.html)
