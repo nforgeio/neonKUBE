@@ -91,7 +91,7 @@ namespace Neon.Kube
         /// and the <b>neonkube.io/</b> prefix is reserved by NEONKUBE.
         /// </summary>
         [JsonProperty(PropertyName = "Annotations", Required = Required.Always)]
-        public Dictionary<string, string> Annotations { get; set; } = null;
+        public Dictionary<string, string> Annotations { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
         /// Identifies the cloud or other hosting platform.

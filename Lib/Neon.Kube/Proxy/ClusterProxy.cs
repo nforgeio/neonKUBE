@@ -1238,7 +1238,7 @@ namespace Neon.Kube.Proxy
                 PublicAddresses    = SetupState.PublicAddresses
             };
 
-            clusterInfo.Annotations = new Dictionary<string, string>();
+            Covenant.Assert(clusterInfo.Annotations != null);
 
             if (SetupState.ClusterDefinition.Annotations != null)
             {

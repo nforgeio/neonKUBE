@@ -322,7 +322,7 @@ namespace NeonClusterOperator
             //###########################################################################
             // $todo(jefflill): Remove this hack once we've figured out the watcher issue.
             //
-            // We need to ensure that wa have the initial cluster information before this
+            // We need to ensure that we have the initial cluster information before this
             // method returns.
             //
             // Marcus originally started the watcher and then used a [WaitFor()] call to
