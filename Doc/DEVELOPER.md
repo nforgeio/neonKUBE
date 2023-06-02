@@ -19,13 +19,16 @@ Follow the steps below to configure a development or test workstation:
 
 2. **Clone** the https://github.com/nforgeio/neonKUBE.git repository to your workstation:
 
-    * **IMPORTANT:** All NEONFORGE related repositories must be cloned within the same parent directory and their folder names must be the same as the repo names.
+    **IMPORTANT:** All NEONFORGE related repositories must be cloned within the same parent directory and their folder names must be the same as the repo names.
 
     ```
     cd "%NF_ROOT%\.."
     mkdir neonKUBE
     git clone https://github.com/nforgeio/neonKUBE.git
     ```
+
+    **RECOMMENDED:** **Exclude your source repos** from Windows **Virus Scanning**; that really slows down builds:
+    ([info](https://support.microsoft.com/en-us/windows/add-an-exclusion-to-windows-security-811816c0-4dfd-af4a-47e4-c301afe13b26)
 
 3. Configure the build **environment variables**:
 
@@ -34,9 +37,9 @@ Follow the steps below to configure a development or test workstation:
     * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
     * Press ENTER to close the CMD window when the script is finished
 
-4. Install Node.js from: [here](https://nodejs.org/dist/v16.17.0/node-v16.17.0-x64.msi)
+4. Install **Node.js** from: [here](https://nodejs.org/dist/v16.17.0/node-v16.17.0-x64.msi)
 
-   NOTE: Install with default options.
+   **NOTE:** Install with default options.
   
 5. Confirm that the solution builds:
 
@@ -47,11 +50,3 @@ Follow the steps below to configure a development or test workstation:
     * Select **Build/Rebuild** Solution
 
 6: *Optional:* Maintainers authorized to perform releases will need to follow the README.md instructions in the NEONCLOUD repo to configure credentials for the GitHub Releases and the Container Registry.
-
-7. Install Visual Studio Code and GO:
-
-   * Install **Visual Studio Code 64-bit** from [here](https://code.visualstudio.com/download)
-   * Create a desktop shortcut for Visual Studio Code and configure it to run as **administrator**.
-   * Install [Microsoft Remote Development Extension Pack](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.vscode-remote-extensionpack)
-   * Install GO *Windows.amd64) from: [here](https://go.dev/doc/install)
-     * ...and then set its shortcut to **Run as administrator**
