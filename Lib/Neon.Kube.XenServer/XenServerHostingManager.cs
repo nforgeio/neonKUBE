@@ -47,6 +47,7 @@ using Neon.IO;
 using Neon.SSH;
 using Neon.Tasks;
 using YamlDotNet.Serialization.ObjectGraphVisitors;
+using Neon.Retry;
 
 namespace Neon.Kube.Hosting.XenServer
 {
@@ -819,7 +820,12 @@ namespace Neon.Kube.Hosting.XenServer
             xenSshProxy.Status = $"install: node image {templateName} (slow)";
             xenController.SetGlobalStepStatus();
 
-            xenClient.Template.ImportVmTemplate(driveTemplatePath, templateName, cluster.Hosting.XenServer.StorageRepository, description: $"NEONKUBE Node Image [MD5:{md5}]");
+            // I've seen cases where template import fails due to a transient problem
+            // so we'll try this twice.
+
+            var retry = new LinearRetryPolicy(e => true, maxAttempts: 2, retryInterval: TimeSpan.FromSeconds(5));
+
+            retry.Invoke(() => xenClient.Template.ImportVmTemplate(driveTemplatePath, templateName, cluster.Hosting.XenServer.StorageRepository, description: $"NEONKUBE Node Image [MD5:{md5}]"));
 
             xenSshProxy.Status = string.Empty;
             xenController.SetGlobalStepStatus();
