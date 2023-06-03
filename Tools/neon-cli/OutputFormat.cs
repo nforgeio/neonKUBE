@@ -29,6 +29,11 @@ namespace NeonCli
     public enum OutputFormat
     {
         /// <summary>
+        /// No format is specified.
+        /// </summary>
+        Unspecified = 0,
+
+        /// <summary>
         /// Specifies the JSON format.
         /// </summary>
         Json,

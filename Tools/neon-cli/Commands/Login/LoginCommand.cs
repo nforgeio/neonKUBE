@@ -39,6 +39,8 @@ using System.Diagnostics.Contracts;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Deployment;
 using System.Diagnostics.Eventing.Reader;
+using Windows.AI.MachineLearning;
+using System.Configuration;
 
 // $todo(jefflill): This implementation is incomplete.
 //
@@ -86,11 +88,10 @@ USAGE:
     neon login --namespace=NAMESPACE
     neon login -n=NAMESPACE
 
-    neon login delete [--force] CONTEXT-NAME
+    neon login delete|rm [--force] CONTEXT-NAME
     neon login export [--context=CONTEXT-NAME] [PATH]
     neon login import [--no-login] [--force] PATH
-    neon login list
-    neon login ls
+    neon login list|ls
 
     neon logout
 
@@ -154,9 +155,9 @@ or when switching contexts to set the current namespace afterwards.
             "--namespace",
             "-n",
             "--sso",
-            "--show",
             "--output",
-            "-o" };
+            "-o"
+        };
 
         /// <inheritdoc/>
         public override bool NeedsHostingManager => true;
@@ -180,49 +181,32 @@ or when switching contexts to set the current namespace afterwards.
 
             try
             {
+                commandLine.DefineOption("--namespace", "-n");
+
                 var contextOrClusterDomain = commandLine.Arguments.FirstOrDefault();
                 var sso                    = commandLine.HasOption("--sso");
-                var show                   = commandLine.HasOption("--show");
                 var contextName            = (string)null;
                 var clusterDomain          = (string)null;
-                var @namespace             = (string)null;
+                var @namespace             = commandLine.GetOption("--namespace");
                 var outputFormat           = Program.GetOutputFormat(commandLine);
-                var config                 = (KubeConfig)null;
-                var context                = (KubeConfigContext)null;
 
                 //-------------------------------------------------------------
-                // Just print the current context name and namespace for [--show]
-                // when there are no arguments or other options.
+                // Just print the current context info when we're not changing
+                // the namespace.
 
-                if (show && contextOrClusterDomain == null && commandLine.Options.Count == 1)
+                if (contextOrClusterDomain == null && string.IsNullOrEmpty(@namespace))
                 {
-                    config = KubeHelper.KubeConfig;
-
-                    config.Reload();
-
-                    context = config.Context;
-
-                    PrintContext(context, outputFormat);
+                    PrintContext(outputFormat);
                     return;
                 }
 
                 //-------------------------------------------------------------
-                // Are we changing the namespace?
+                // Check the namespace if specified.
 
-                @namespace = commandLine.GetOption("--namespace", null);
-
-                if (@namespace == null)
+                if (!string.IsNullOrEmpty(@namespace) && !ClusterDefinition.DnsNameRegex.IsMatch(@namespace))
                 {
-                    @namespace = commandLine.GetOption("-n", null);
-                }
-
-                if (!string.IsNullOrEmpty(@namespace))
-                {
-                    if (!ClusterDefinition.DnsNameRegex.IsMatch(@namespace))
-                    {
-                        Console.Error.WriteLine($"Invalid namespace: {@namespace}");
-                        Program.Exit(-1);
-                    }
+                    Console.Error.WriteLine($"Invalid namespace: {@namespace}");
+                    Program.Exit(-1);
                 }
 
                 //-------------------------------------------------------------
@@ -261,90 +245,33 @@ or when switching contexts to set the current namespace afterwards.
 
                     if (clusterDomain != null)
                     {
-                        show = true;
-
                         await SsoLoginAsync(clusterDomain);
                     }
                     else if (contextName != null)
                     {
-                        show = true;
-
-                        await SetContextAsync(contextName);
+                        await SetContextAsync(contextName, @namespace);
                     }
                 }
-
-                // Update the current namespace as necessary and then report what we did.
-
-                config = KubeHelper.KubeConfig;
-
-                config.Reload();
-
-                context = config.Context;
-
-                Covenant.Assert(context != null);
-
-                if (!string.IsNullOrEmpty(@namespace))
+                else
                 {
-                    show              = true;
-                    context.Namespace = @namespace;
-                    config.Save();
+                    await SetContextAsync(contextName, @namespace);
                 }
 
-                if (show)
-                {
-                    PrintContext(context, outputFormat);
-                }
+                PrintContext(outputFormat);
+            }
+            catch (ProgramExitException)
+            {
+                throw;
             }
             catch (Exception e)
             {
                 KubeHelper.SetCurrentContext(orgContext?.Name);
 
-                Console.Error.WriteLine($"*** ERROR: logging into cluster: {NeonHelper.ExceptionError(e)}");
+                Console.Error.WriteLine($"*** ERROR: Logging into cluster: {NeonHelper.ExceptionError(e)}");
                 Program.Exit(1);
             }
 
             await Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Prints a kubeconfig context to the output using the specified format.
-        /// </summary>
-        /// <param name="context">Specifies the context or <c>null</c> when there's no current context.</param>
-        /// <param name="outputFormat">Specifies the output format.</param>
-        private void PrintContext(KubeConfigContext context, OutputFormat? outputFormat)
-        {
-            if (!outputFormat.HasValue)
-            {
-                if (context == null)
-                {
-                    Console.WriteLine($"You are not logged into a cluster");
-                }
-                else
-                {
-                    Console.WriteLine($"Logged into: {context.Name} namespace: {context.Namespace}");
-                }
-
-                return;
-            }
-
-            var outputObject = new { context = context.Name, @namespace = context.Namespace };
-
-            switch (outputFormat.Value)
-            {
-                case OutputFormat.Json:
-
-                    Console.WriteLine(NeonHelper.JsonSerialize(outputObject, Formatting.Indented));
-                    break;
-
-                case OutputFormat.Yaml:
-
-                    Console.WriteLine(NeonHelper.YamlSerialize(outputObject));
-                    break;
-
-                default:
-
-                    throw new NotImplementedException();
-            }
         }
 
         /// <summary>
@@ -496,7 +423,7 @@ or when switching contexts to set the current namespace afterwards.
             config.CurrentContext = newContextName;
             config.Save();
 
-            // Log Doxker into the cluster's Harbor.
+            // Log Docker into the cluster's Harbor service.
 
             if (registryUser != null)
             {
@@ -529,30 +456,104 @@ or when switching contexts to set the current namespace afterwards.
         /// <summary>
         /// Changes the current Kubernetes context.
         /// </summary>
-        /// <param name="contextName">Specifies the target context name.</param>
+        /// <param name="contextName">
+        /// Specifies the target context name.  This may be <c>null</c> when
+        /// <paramref name="namespace"/> is passed.
+        /// </param>
+        /// <param name="namespace">Optionally specifies the new namespace.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task SetContextAsync(string contextName)
+        private async Task SetContextAsync(string contextName, string @namespace = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(contextName), nameof(contextName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(contextName) || !string.IsNullOrEmpty(@namespace), nameof(contextName));
 
-            var config  = KubeHelper.KubeConfig;
-            var context = config.GetContext(contextName);
+            var config = KubeHelper.KubeConfig;
 
-            if (context == null)
+            config.Reload();
+
+            if (!string.IsNullOrEmpty(contextName))
             {
-                Console.Error.WriteLine($"*** ERROR: Cannot find Kubernetes context: {contextName}");
+                config.CurrentContext = contextName;
+            }
+
+            if (string.IsNullOrEmpty(config.CurrentContext) && string.IsNullOrEmpty(contextName))
+            {
+                Console.Error.WriteLine("*** ERROR: Cannot switch namespace because is no current NEONKUBE cluster.");
                 Program.Exit(1);
             }
 
-            config.CurrentContext = contextName;
+            var context = config.GetContext(!string.IsNullOrEmpty(contextName) ? contextName : config.CurrentContext);
+
+            if (context == null)
+            {
+                Console.Error.WriteLine($"*** ERROR: Cannot find NEONKUBE cluster: {contextName}");
+                Program.Exit(1);
+            }
+
+            if (!string.IsNullOrEmpty(@namespace))
+            {
+                context.Context.Namespace = @namespace;
+            }
+
             config.Save();
 
-            // $todo(jefflill):
-            //
-            // We should probably log the user into Harbor here.  We'll need to
-            // obtain the registry user credentials from somewhere.
-
             await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Prints a kubeconfig context to the output using the specified format.
+        /// </summary>
+        /// <param name="outputFormat">Specifies the output format.</param>
+        private void PrintContext(OutputFormat? outputFormat)
+        {
+            var config = KubeHelper.KubeConfig;
+
+            config.Reload();
+
+            var context = config.Context;
+
+            if (!outputFormat.HasValue)
+            {
+                if (context == null)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine($"You are not logged into a NEONKUBE cluster");
+                }
+                else
+                {
+                    Console.WriteLine();
+                    Console.WriteLine($"Logged into: {context.Name} ({context.Context.Namespace ?? "default"})");
+                }
+
+                return;
+            }
+
+            object outputObject;
+
+            if (context != null)
+            {
+                outputObject = new { context = context.Name, @namespace = context.Context.Namespace ?? "default" };
+            }
+            else
+            {
+                outputObject = null;
+            }
+
+            switch (outputFormat.Value)
+            {
+                case OutputFormat.Json:
+
+                    Console.WriteLine(NeonHelper.JsonSerialize(outputObject, Formatting.Indented));
+                    break;
+
+                case OutputFormat.Yaml:
+
+                    Console.WriteLine(NeonHelper.YamlSerialize(outputObject));
+                    break;
+
+                default:
+
+                    throw new NotImplementedException();
+            }
         }
     }
 }

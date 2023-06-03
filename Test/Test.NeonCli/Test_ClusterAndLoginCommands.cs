@@ -460,8 +460,8 @@ nodes:
                         var export = NeonHelper.YamlDeserialize<ClusterLoginExport>(response.OutputText);
 
                         Assert.Equal(KubeHelper.KubeConfig.CurrentContext, export.Context.Name);
-                        Assert.Equal(KubeHelper.KubeConfig.Cluster.Name, export.Context.Cluster);
-                        Assert.Equal(KubeHelper.KubeConfig.User.Name, export.Context.User);
+                        Assert.Equal(KubeHelper.KubeConfig.Cluster.Name, export.Context.Context.Cluster);
+                        Assert.Equal(KubeHelper.KubeConfig.User.Name, export.Context.Context.User);
 
                         // Verify export of the current context by name to STDOUT.
 
@@ -471,8 +471,8 @@ nodes:
                         export = NeonHelper.YamlDeserialize<ClusterLoginExport>(response.OutputText);
 
                         Assert.Equal(KubeHelper.KubeConfig.CurrentContext, export.Context.Name);
-                        Assert.Equal(KubeHelper.KubeConfig.Cluster.Name, export.Context.Cluster);
-                        Assert.Equal(KubeHelper.KubeConfig.User.Name, export.Context.User);
+                        Assert.Equal(KubeHelper.KubeConfig.Cluster.Name, export.Context.Context.Cluster);
+                        Assert.Equal(KubeHelper.KubeConfig.User.Name, export.Context.Context.User);
 
                         // Verify export of the current context to a temporary file.
 
@@ -484,14 +484,14 @@ nodes:
                         export = NeonHelper.YamlDeserialize<ClusterLoginExport>(File.ReadAllText(exportPath));
 
                         Assert.Equal(KubeHelper.KubeConfig.CurrentContext, export.Context.Name);
-                        Assert.Equal(KubeHelper.KubeConfig.Cluster.Name, export.Context.Cluster);
-                        Assert.Equal(KubeHelper.KubeConfig.User.Name, export.Context.User);
+                        Assert.Equal(KubeHelper.KubeConfig.Cluster.Name, export.Context.Context.Cluster);
+                        Assert.Equal(KubeHelper.KubeConfig.User.Name, export.Context.Context.User);
 
                         // Delete the current context and verify.
 
                         var testContextName = KubeHelper.KubeConfig.CurrentContext;
-                        var testClusterName = KubeHelper.KubeConfig.Context.Cluster;
-                        var testUserName    = KubeHelper.KubeConfig.Context.User;
+                        var testClusterName = KubeHelper.KubeConfig.Context.Context.Cluster;
+                        var testUserName    = KubeHelper.KubeConfig.Context.Context.User;
 
                         (await NeonCliAsync("login", "delete", "--force", KubeHelper.KubeConfig.CurrentContext))
                             .EnsureSuccess();

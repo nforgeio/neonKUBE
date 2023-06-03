@@ -611,12 +611,12 @@ namespace Neon.Kube.Xunit
 
             if (configContext != null)
             {
-                var configCluster             = KubeHelper.KubeConfig.GetCluster(configContext.Cluster);
+                var configCluster             = KubeHelper.KubeConfig.GetCluster(configContext.Context.Cluster);
                 var existingClusterDefinition = configCluster.TestClusterDefinition;
 
                 if (existingClusterDefinition == null)
                 {
-                    throw new NeonKubeException($"Unit tests cannot be run on the [{configContextName.Cluster}] cluster because it can't determined that it was deployed by [{nameof(ClusterFixture)}].");
+                    throw new NeonKubeException($"Unit tests cannot be run on the [{configContextName.Cluster}] cluster because it can't determine that it was deployed by [{nameof(ClusterFixture)}].");
                 }
 
                 clusterExists = ClusterDefinition.AreSimilar(clusterDefinition, existingClusterDefinition);

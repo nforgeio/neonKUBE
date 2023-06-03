@@ -72,29 +72,6 @@ namespace Neon.Kube.Config
         public string Name { get; set; }
 
         /// <summary>
-        /// Specifies the linked cluster name.
-        /// </summary>
-        [JsonProperty(PropertyName = "cluster", Required = Required.Always)]
-        [YamlMember(Alias = "cluster", ApplyNamingConventions = false)]
-        public string Cluster { get; set; }
-
-        /// <summary>
-        /// Specifies the linked user name.
-        /// </summary>
-        [JsonProperty(PropertyName = "user", Required = Required.Always)]
-        [YamlMember(Alias = "user", ApplyNamingConventions = false)]
-        public string User { get; set; }
-
-        /// <summary>
-        /// Specifies the current Kubernetes target namespace.  <c>null</c> or
-        /// empty values will be treated as: <b>default</b>
-        /// </summary>
-        [JsonProperty(PropertyName = "namespace", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "namespace", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string Namespace { get; set; } = null;
-
-        /// <summary>
         /// The cluster properties.
         /// </summary>
         [JsonProperty(PropertyName = "context", Required = Required.Always)]

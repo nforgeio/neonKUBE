@@ -45,7 +45,7 @@ Removes a NEONKUBE context from the local worstation.
 
 USAGE:
 
-    neon login delete [--force] [CONTEXT-NAME]
+    neon login delete|rm [--force] [CONTEXT-NAME]
 
 ARGUMENTS:
 
@@ -62,7 +62,10 @@ This command removes the current login when CONTEXT-NAME is not specified.
 ";
 
         /// <inheritdoc/>
-        public override string[] Words => new string[] { "login", "delete" }; 
+        public override string[] Words => new string[] { "login", "delete" };
+
+        /// <inheritdoc/>
+        public override string[] AltWords => new string[] { "login", "rm" };
 
         /// <inheritdoc/>
         public override string[] ExtendedOptions => new string[] { "--force" };

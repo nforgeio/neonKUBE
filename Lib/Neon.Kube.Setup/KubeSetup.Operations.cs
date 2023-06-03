@@ -1302,9 +1302,9 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 newCluster.HostingNamePrefix = cluster.Hosting.Hypervisor.GetVmNamePrefix(cluster.SetupState.ClusterDefinition);
             }
 
-            newContext.Name    = newUser.Name;
-            newContext.User    = newUser.Name;
-            newContext.Cluster = newCluster.Name;
+            newContext.Name            = newUser.Name;
+            newContext.Context.User    = newUser.Name;
+            newContext.Context.Cluster = newCluster.Name;
 
             if (!File.Exists(kubeConfigPath))
             {

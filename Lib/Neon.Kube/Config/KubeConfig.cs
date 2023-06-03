@@ -183,7 +183,7 @@ namespace Neon.Kube.Config
                     return null;
                 }
 
-                return GetCluster(Context.Cluster);
+                return GetCluster(Context.Context.Cluster);
             }
         }
 
@@ -201,7 +201,7 @@ namespace Neon.Kube.Config
                     return null;
                 }
 
-                return GetUser(Context.User);
+                return GetUser(Context.Context.User);
             }
         }
 
@@ -314,18 +314,18 @@ namespace Neon.Kube.Config
                 throw new InvalidDataException($"KubeConfig [context={CurrentContext}] does not exist.");
             }
 
-            cluster = GetCluster(context.Cluster);
+            cluster = GetCluster(context.Context.Cluster);
 
             if (cluster == null)
             {
-                throw new InvalidDataException($"KubeConfig [cluster={context.Cluster}] does not exist.");
+                throw new InvalidDataException($"KubeConfig [cluster={context.Context.Cluster}] does not exist.");
             }
 
-            user = GetUser(context.User);
+            user = GetUser(context.Context.User);
 
             if (user == null)
             {
-                throw new InvalidDataException($"KubeConfig [user={context.User}] does not exist.");
+                throw new InvalidDataException($"KubeConfig [user={context.Context.User}] does not exist.");
             }
         }
 
@@ -363,11 +363,11 @@ namespace Neon.Kube.Config
 
             if (removeClusterAndUser)
             {
-                if (!Contexts.Any(ctx => ctx.Cluster == context.Cluster))
+                if (!Contexts.Any(ctx => ctx.Context.Cluster == context.Context.Cluster))
                 {
                     for (int i = 0; i < Clusters.Count; i++)
                     {
-                        if (Clusters[i].Name == context.Cluster)
+                        if (Clusters[i].Name == context.Context.Cluster)
                         {
                             Clusters.RemoveAt(i);
                             break;
@@ -375,11 +375,11 @@ namespace Neon.Kube.Config
                     }
                 }
 
-                if (!Contexts.Any(ctx => ctx.User == context.User))
+                if (!Contexts.Any(ctx => ctx.Context.User == context.Context.User))
                 {
                     for (int i = 0; i < Users.Count; i++)
                     {
-                        if (Users[i].Name == context.User)
+                        if (Users[i].Name == context.Context.User)
                         {
                             Users.RemoveAt(i);
                             break;
@@ -420,12 +420,12 @@ namespace Neon.Kube.Config
 
                 if (Cluster == null)
                 {
-                    throw new NeonKubeException($"Kubeconfig context [{Context.Name}] references the [{Context.Cluster}] cluster which cannot be found.");
+                    throw new NeonKubeException($"Kubeconfig context [{Context.Name}] references the [{Context.Context.Cluster}] cluster which cannot be found.");
                 }
 
                 if (User == null)
                 {
-                    throw new NeonKubeException($"Kubeconfig context [{Context.Name}] references the [{Context.User}] user which cannot be found.");
+                    throw new NeonKubeException($"Kubeconfig context [{Context.Name}] references the [{Context.Context.User}] user which cannot be found.");
                 }
             }
         }
@@ -521,8 +521,8 @@ namespace Neon.Kube.Config
             if (currentOnly && clone.CurrentContext != null)
             {
                 var delContexts = clone.Contexts.Where(context => context.Name != clone.CurrentContext).ToArray();
-                var delClusters = clone.Clusters.Where(cluster => cluster.Name != clone.Context.Cluster).ToArray();
-                var delUsers    = clone.Users.Where(user => user.Name != clone.Context.User).ToArray();
+                var delClusters = clone.Clusters.Where(cluster => cluster.Name != clone.Context.Context.Cluster).ToArray();
+                var delUsers    = clone.Users.Where(user => user.Name != clone.Context.Context.User).ToArray();
 
                 foreach (var context in delContexts)
                 {

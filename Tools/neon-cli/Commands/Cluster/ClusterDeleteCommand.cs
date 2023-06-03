@@ -93,6 +93,9 @@ definition or by executing this command on your cluster:
         public override string[] Words => new string[] { "cluster", "delete" };
 
         /// <inheritdoc/>
+        public override string[] AltWords => new string[] { "cluster", "rm" };
+
+        /// <inheritdoc/>
         public override string[] ExtendedOptions => new string[] { "--force" };
 
         /// <inheritdoc/>
