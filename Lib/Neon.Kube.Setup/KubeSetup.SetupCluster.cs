@@ -276,7 +276,7 @@ namespace Neon.Kube.Setup
             // Cluster setup.
 
             controller.AddGlobalStep("setup cluster",  controller => KubeSetup.SetupClusterAsync(controller));
-            controller.AddNodeStep("lock sysadmin password", (controller, node) => node.SudoCommand($"passwd --lock {KubeConst.SysAdminUser}"));
+            controller.AddNodeStep("secure ssh", (controller, node) => node.AllowSshPasswordLogin(false));
             controller.AddGlobalStep("persist state",
                 controller =>
                 {

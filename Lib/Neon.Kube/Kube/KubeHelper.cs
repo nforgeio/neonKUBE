@@ -1791,6 +1791,11 @@ $@"
 # password.
 
 echo 'sysadmin:{newPassword}' | chpasswd
+
+# Restart [sshd] and wait a bit to ensure that its picked up the change.
+
+systemctl restart ssh
+sleep 5
 ";
             if (String.IsNullOrWhiteSpace(newPassword))
             {
@@ -1813,7 +1818,7 @@ mountFolder=${{1}}
 #
 # https://github.com/nforgeio/TEMPKUBE/issues/980
 
-sleep 10
+sleep 5
 {changePasswordScript}
 #------------------------------------------------------------------------------
 # Configure the network.
