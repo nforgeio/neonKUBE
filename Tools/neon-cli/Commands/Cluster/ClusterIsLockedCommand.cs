@@ -43,6 +43,7 @@ using Neon.Cryptography;
 using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.ClusterMetadata;
 using Neon.Kube.Hosting;
 using Neon.Kube.Proxy;
 using Neon.Net;
@@ -60,25 +61,6 @@ namespace NeonCli
     [Command]
     public class ClusterIsLockedCommand : CommandBase
     {
-        //---------------------------------------------------------------------
-        // Private types
-
-        private enum LockStatus
-        {
-            unknown = 0,
-            unlocked,
-            locked
-        }
-
-        private class ClusterLockStatus
-        {
-            public string cluster { get; set; }
-            public LockStatus status { get; set; }
-        }
-
-        //---------------------------------------------------------------------
-        // Implementation
-
         private const string usage = @"
 Determines whether the current NEONKUBE cluster is locked.
 
@@ -138,9 +120,9 @@ EXITCODE:
 
             using (var cluster = ClusterProxy.Create(KubeHelper.KubeConfig, new HostingManagerFactory()))
             {
-                var status     = await cluster.GetClusterHealthAsync();
-                var isLocked   = (bool?)null;
-                var lockStatus = LockStatus.unknown;
+                var status    = await cluster.GetClusterHealthAsync();
+                var isLocked  = (bool?)null;
+                var lockState = ClusterLockState.Unknown;
 
                 switch (status.State)
                 {
@@ -159,17 +141,17 @@ EXITCODE:
 
                 if (!isLocked.HasValue)
                 {
-                    lockStatus = LockStatus.unknown;
+                    lockState = ClusterLockState.Unknown;
                 }
                 else
                 {
-                    lockStatus = isLocked.Value ? LockStatus.locked : LockStatus.unlocked;
+                    lockState = isLocked.Value ? ClusterLockState.Locked : ClusterLockState.Unlocked;
                 }
 
                 var clusterLockStatus = new ClusterLockStatus()
                 {
-                    cluster = cluster.Name,
-                    status  = lockStatus
+                    Cluster = cluster.Name,
+                    State   = lockState
                 };
 
                 if (!outputFormat.HasValue)
@@ -213,19 +195,19 @@ EXITCODE:
                             throw new NotImplementedException();
                     }
 
-                    switch (lockStatus)
+                    switch (lockState)
                     {
-                        case LockStatus.locked:
+                        case ClusterLockState.Locked:
 
                             Program.Exit(0);
                             break;
 
-                        case LockStatus.unlocked:
+                        case ClusterLockState.Unlocked:
 
                             Program.Exit(2);
                             break;
 
-                        case LockStatus.unknown:
+                        case ClusterLockState.Unknown:
 
                             Program.Exit(1);
                             break;
