@@ -63,10 +63,23 @@ namespace NeonCli
         private const string usage = @"
 Prints the information the current NEONKUBE cluster.
 
-USAGE: neon cluster info
+USAGE: neon cluster info [OPTIONS]
+
+OPTIONS:
+
+    --output=json|yaml          - Optionally specifies the format to print the
+    -o=json|yaml                  cluster info
+
 ";
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "info" };
+
+        /// <inheritdoc/>
+        public override string[] ExtendedOptions => new string[]
+        {
+            "--output",
+            "-o"
+        };
 
         /// <inheritdoc/>
         public override bool NeedsHostingManager => true;
@@ -86,12 +99,14 @@ USAGE: neon cluster info
                 Program.Exit(0);
             }
 
-            Console.WriteLine();
+            commandLine.DefineOption("--output", "-o");
 
-            var context = KubeHelper.CurrentContext;
+            var outputFormat = Program.GetOutputFormat(commandLine);
+            var context      = KubeHelper.CurrentContext;
 
             if (context == null)
             {
+                Console.Error.WriteLine();
                 Console.Error.WriteLine($"*** ERROR: There is no current cluster.");
                 Program.Exit(1);
             }
@@ -100,9 +115,27 @@ USAGE: neon cluster info
             {
                 var clusterInfo = await cluster.GetClusterInfoAsync();
 
-                Console.WriteLine();
-                Console.WriteLine(NeonHelper.JsonSerialize(clusterInfo, Formatting.Indented));
-                Console.WriteLine();
+                if (!outputFormat.HasValue)
+                {
+                    outputFormat = OutputFormat.Yaml;
+                }
+
+                switch (outputFormat.Value)
+                {
+                    case OutputFormat.Json:
+
+                        Console.WriteLine(NeonHelper.JsonSerialize(clusterInfo, Formatting.Indented));
+                        break;
+
+                    case OutputFormat.Yaml:
+
+                        Console.WriteLine(NeonHelper.YamlSerialize(clusterInfo));
+                        break;
+
+                    default:
+
+                        throw new NotImplementedException();
+                }
             }
         }
     }

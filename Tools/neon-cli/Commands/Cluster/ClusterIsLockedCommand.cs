@@ -50,6 +50,8 @@ using Neon.Retry;
 using Neon.SSH;
 using Neon.Time;
 
+using Newtonsoft.Json;
+
 namespace NeonCli
 {
     /// <summary>
@@ -58,12 +60,36 @@ namespace NeonCli
     [Command]
     public class ClusterIsLockedCommand : CommandBase
     {
+        //---------------------------------------------------------------------
+        // Private types
+
+        private enum LockStatus
+        {
+            unknown = 0,
+            unlocked,
+            locked
+        }
+
+        private class ClusterLockStatus
+        {
+            public string cluster { get; set; }
+            public LockStatus status { get; set; }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
         private const string usage = @"
 Determines whether the current NEONKUBE cluster is locked.
 
 USAGE:
 
     neon cluster islocked
+
+OPTIONS:
+
+    --output=json|yaml          - Optionally specifies the format to print the
+    -o=json|yaml                  cluster info
 
 EXITCODE:
 
@@ -73,6 +99,13 @@ EXITCODE:
 ";
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "islocked" };
+
+        /// <inheritdoc/>
+        public override string[] ExtendedOptions => new string[]
+        {
+            "--output",
+            "-o"
+        };
 
         /// <inheritdoc/>
         public override bool NeedsHostingManager => true;
@@ -92,9 +125,10 @@ EXITCODE:
                 Program.Exit(0);
             }
 
-            Console.WriteLine();
+            commandLine.DefineOption("--output", "-o").Default = null;
 
-            var context = KubeHelper.CurrentContext;
+            var outputFormat = Program.GetOutputFormat(commandLine);
+            var context      = KubeHelper.CurrentContext;
 
             if (context == null)
             {
@@ -104,31 +138,16 @@ EXITCODE:
 
             using (var cluster = ClusterProxy.Create(KubeHelper.KubeConfig, new HostingManagerFactory()))
             {
-                var status = await cluster.GetClusterHealthAsync();
+                var status     = await cluster.GetClusterHealthAsync();
+                var isLocked   = (bool?)null;
+                var lockStatus = LockStatus.unknown;
 
                 switch (status.State)
                 {
                     case ClusterState.Healthy:
                     case ClusterState.Unhealthy:
 
-                        var isLocked = await cluster.IsLockedAsync();
-
-                        if (!isLocked.HasValue)
-                        {
-                            Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] lock status is unknown.");
-                            Program.Exit(1);
-                        }
-
-                        if (isLocked.Value)
-                        {
-                            Console.WriteLine($"[{cluster.Name}]: LOCKED");
-                            Program.Exit(0);
-                        }
-                        else
-                        {
-                            Console.WriteLine($"[{cluster.Name}]: UNLOCKED");
-                            Program.Exit(2);
-                        }
+                        isLocked = await cluster.IsLockedAsync();
                         break;
 
                     default:
@@ -136,6 +155,85 @@ EXITCODE:
                         Console.Error.WriteLine($"*** ERROR: Cluster is not running.");
                         Program.Exit(1);
                         break;
+                }
+
+                if (!isLocked.HasValue)
+                {
+                    lockStatus = LockStatus.unknown;
+                }
+                else
+                {
+                    lockStatus = isLocked.Value ? LockStatus.locked : LockStatus.unlocked;
+                }
+
+                var clusterLockStatus = new ClusterLockStatus()
+                {
+                    cluster = cluster.Name,
+                    status  = lockStatus
+                };
+
+                if (!outputFormat.HasValue)
+                {
+                    if (!isLocked.HasValue)
+                    {
+                        Console.Error.WriteLine();
+                        Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] lock status is unknown.");
+                        Program.Exit(1);
+                    }
+
+                    if (isLocked.Value)
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine($"[{cluster.Name}]: LOCKED");
+                        Program.Exit(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine($"[{cluster.Name}]: UNLOCKED");
+                        Program.Exit(2);
+                    }
+                }
+                else
+                {
+                    switch (outputFormat.Value)
+                    {
+                        case OutputFormat.Json:
+
+                            Console.WriteLine(NeonHelper.JsonSerialize(clusterLockStatus, Formatting.Indented));
+                            break;
+
+                        case OutputFormat.Yaml:
+
+                            Console.WriteLine(NeonHelper.YamlSerialize(clusterLockStatus));
+                            break;
+
+                        default:
+
+                            throw new NotImplementedException();
+                    }
+
+                    switch (lockStatus)
+                    {
+                        case LockStatus.locked:
+
+                            Program.Exit(0);
+                            break;
+
+                        case LockStatus.unlocked:
+
+                            Program.Exit(2);
+                            break;
+
+                        case LockStatus.unknown:
+
+                            Program.Exit(1);
+                            break;
+
+                        default:
+
+                            throw new NotImplementedException();
+                    }
                 }
             }
         }

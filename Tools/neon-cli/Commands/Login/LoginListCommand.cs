@@ -89,6 +89,7 @@ USAGE:
         public override async Task RunAsync(CommandLine commandLine)
         {
             commandLine.DefineOption("--namespace", "-n");
+            commandLine.DefineOption("--output", "-o");
 
             var outputFormat = Program.GetOutputFormat(commandLine);
 

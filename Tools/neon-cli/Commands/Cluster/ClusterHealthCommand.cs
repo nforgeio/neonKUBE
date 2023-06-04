@@ -63,10 +63,23 @@ namespace NeonCli
         private const string usage = @"
 Prints the status of the current NEONKUBE cluster.
 
-USAGE: neon cluster health
+USAGE: neon cluster health [OPTIONS]
+
+OPTIONS:
+
+    --output=json|yaml          - Optionally specifies the format to print the
+    -o=json|yaml                  cluster health
+
 ";
         /// <inheritdoc/>
         public override string[] Words => new string[] { "cluster", "health" };
+
+        /// <inheritdoc/>
+        public override string[] ExtendedOptions => new string[]
+        {
+            "--output",
+            "-o"
+        };
 
         /// <inheritdoc/>
         public override bool NeedsHostingManager => true;
@@ -86,7 +99,10 @@ USAGE: neon cluster health
                 Program.Exit(0);
             }
 
-            var context = KubeHelper.CurrentContext;
+            commandLine.DefineOption("--output", "-o");
+
+            var outputFormat = Program.GetOutputFormat(commandLine);
+            var context      = KubeHelper.CurrentContext;
 
             if (context == null)
             {
@@ -99,7 +115,27 @@ USAGE: neon cluster health
             {
                 var clusterHealth = await cluster.GetClusterHealthAsync();
 
-                Console.WriteLine(NeonHelper.JsonSerialize(clusterHealth, Formatting.Indented));
+                if (!outputFormat.HasValue)
+                {
+                    outputFormat = OutputFormat.Yaml;
+                }
+
+                switch (outputFormat.Value)
+                {
+                    case OutputFormat.Json:
+
+                        Console.WriteLine(NeonHelper.JsonSerialize(clusterHealth, Formatting.Indented));
+                        break;
+
+                    case OutputFormat.Yaml:
+
+                        Console.WriteLine(NeonHelper.YamlSerialize(clusterHealth));
+                        break;
+
+                    default:
+
+                        throw new NotImplementedException();
+                }
             }
         }
     }

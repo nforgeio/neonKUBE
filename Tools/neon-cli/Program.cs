@@ -545,7 +545,7 @@ NOTE: Command line arguments and options may include references to
                 formatString = commandLine.GetOption("-o");
             }
 
-            if (formatString == null)
+            if (string.IsNullOrEmpty(formatString))
             {
                 return null;
             }

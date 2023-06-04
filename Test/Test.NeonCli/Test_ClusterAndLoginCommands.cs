@@ -24,12 +24,15 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using Neon;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Config;
+using Neon.Deployment;
 using Neon.Kube.Hosting;
 using Neon.Kube.Proxy;
 using Neon.Kube.Xunit;
@@ -268,7 +271,13 @@ nodes:
             bool            clusterExists = false;
             ExecuteResponse response;
 
-            var clusterDefinition = envToDefinition[environment];
+            // We need to inject an implementation for [PreprocessReader] so we'll
+            // be able to resolve profile references within the cluster definition.
+
+            NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfile());
+
+            var clusterDefinitionYaml = envToDefinition[environment];
+            var clusterDefinition     = ClusterDefinition.FromYaml(clusterDefinitionYaml);
 
             using (var tempFolder = new TempFolder())
             {
@@ -276,7 +285,7 @@ nodes:
                 {
                     var clusterDefinitionPath = Path.Combine(tempFolder.Path, "cluster-definition.yaml");
 
-                    File.WriteAllText(clusterDefinitionPath, clusterDefinition);
+                    File.WriteAllText(clusterDefinitionPath, clusterDefinitionYaml);
 
                     //-------------------------------------------------------------
                     // Remove the test cluster and login if they already exist
@@ -656,10 +665,32 @@ nodes:
                     //-------------------------------------------------------------
                     // Verify: cluster health
 
-                    response = (await NeonCliAsync("cluster", "health"))
+                    response = (await NeonCliAsync("cluster", "health")) // Output format defaults to YAML
                         .EnsureSuccess();
 
-                    var clusterHealth = NeonHelper.JsonDeserialize<ClusterHealth>(response.OutputText);
+                    var clusterHealth = NeonHelper.YamlDeserialize<ClusterHealth>(response.OutputText);
+
+                    Assert.Equal(ClusterState.Healthy, clusterHealth.State);
+                    Assert.Equal("Cluster is healthy", clusterHealth.Summary);
+                    Assert.Single(clusterHealth.Nodes);
+                    Assert.Equal("node", clusterHealth.Nodes.First().Key);
+                    Assert.Equal(ClusterNodeState.Running, clusterHealth.Nodes.First().Value);
+
+                    response = (await NeonCliAsync("cluster", "health", "-o=yaml"))
+                        .EnsureSuccess();
+
+                    clusterHealth = NeonHelper.YamlDeserialize<ClusterHealth>(response.OutputText);
+
+                    Assert.Equal(ClusterState.Healthy, clusterHealth.State);
+                    Assert.Equal("Cluster is healthy", clusterHealth.Summary);
+                    Assert.Single(clusterHealth.Nodes);
+                    Assert.Equal("node", clusterHealth.Nodes.First().Key);
+                    Assert.Equal(ClusterNodeState.Running, clusterHealth.Nodes.First().Value);
+
+                    response = (await NeonCliAsync("cluster", "health", "-o=json"))
+                        .EnsureSuccess();
+
+                    clusterHealth = NeonHelper.JsonDeserialize<ClusterHealth>(response.OutputText);
 
                     Assert.Equal(ClusterState.Healthy, clusterHealth.State);
                     Assert.Equal("Cluster is healthy", clusterHealth.Summary);
@@ -685,10 +716,28 @@ nodes:
                     //-------------------------------------------------------------
                     // Verify: cluster info
 
-                    response = (await NeonCliAsync("cluster", "info"))
+                    response = (await NeonCliAsync("cluster", "info")) // Output format defaults to YAML
                         .EnsureSuccess();
 
-                    var clusterInfo = NeonHelper.JsonDeserialize<ClusterInfo>(response.OutputText);
+                    var clusterInfo = NeonHelper.YamlDeserialize<ClusterInfo>(response.OutputText);
+
+                    Assert.Equal(KubeHelper.KubeConfig.Cluster.ClusterInfo.ClusterId, clusterInfo.ClusterId);
+                    Assert.Equal(KubeHelper.KubeConfig.Cluster.ClusterInfo.ClusterVersion, clusterInfo.ClusterVersion);
+                    Assert.Equal(clusterName, clusterInfo.Name);
+
+                    response = (await NeonCliAsync("cluster", "info", "-o=yaml"))
+                        .EnsureSuccess();
+
+                    clusterInfo = NeonHelper.YamlDeserialize<ClusterInfo>(response.OutputText);
+
+                    Assert.Equal(KubeHelper.KubeConfig.Cluster.ClusterInfo.ClusterId, clusterInfo.ClusterId);
+                    Assert.Equal(KubeHelper.KubeConfig.Cluster.ClusterInfo.ClusterVersion, clusterInfo.ClusterVersion);
+                    Assert.Equal(clusterName, clusterInfo.Name);
+
+                    response = (await NeonCliAsync("cluster", "info", "-o=json"))
+                        .EnsureSuccess();
+
+                    clusterInfo = NeonHelper.JsonDeserialize<ClusterInfo>(response.OutputText);
 
                     Assert.Equal(KubeHelper.KubeConfig.Cluster.ClusterInfo.ClusterId, clusterInfo.ClusterId);
                     Assert.Equal(KubeHelper.KubeConfig.Cluster.ClusterInfo.ClusterVersion, clusterInfo.ClusterVersion);
@@ -826,6 +875,17 @@ nodes:
 
                     Assert.Equal(0, response.ExitCode);     // exitcode=0: LOCKED
 
+                    response = (await NeonCliAsync("cluster", "islocked", "-o=json"));
+
+                    Assert.Equal(0, response.ExitCode);     // exitcode=0: LOCKED
+                    Assert.True(CheckJson<dynamic>(response.OutputText,
+                        item =>
+                        {
+                            return item != null &&
+                                   item.cluster == clusterDefinition.Name &&
+                                   item.status == "locked";
+                        }));
+
                     response = (await NeonCliAsync("cluster", "unlock"))
                         .EnsureSuccess();
 
@@ -833,12 +893,30 @@ nodes:
 
                     Assert.Equal(2, response.ExitCode);     // exitcode=2: UNLOCKED
 
+                    response = (await NeonCliAsync("cluster", "islocked", "-o=json"));
+                    Assert.True(CheckJson<dynamic>(response.OutputText,
+                        item =>
+                        {
+                            return item != null &&
+                                   item.cluster == clusterDefinition.Name &&
+                                   item.status == "unlocked";
+                        }));
+
                     response = (await NeonCliAsync("cluster", "lock"))
                         .EnsureSuccess();
 
                     response = (await NeonCliAsync("cluster", "islocked"));
 
                     Assert.Equal(0, response.ExitCode);     // exitcode=0: LOCKED
+
+                    response = (await NeonCliAsync("cluster", "islocked", "-o=json"));
+                    Assert.True(CheckJson<dynamic>(response.OutputText,
+                        item =>
+                        {
+                            return item != null &&
+                                   item.cluster == clusterDefinition.Name &&
+                                   item.status == "locked";
+                        }));
 
                     //-------------------------------------------------------------
                     // Unlock the cluster so we can test dangerous commands below.
@@ -863,7 +941,7 @@ nodes:
                         response = (await NeonCliAsync("cluster", "health"))
                             .EnsureSuccess();
 
-                        clusterHealth = NeonHelper.JsonDeserialize<ClusterHealth>(response.OutputText);
+                        clusterHealth = NeonHelper.YamlDeserialize<ClusterHealth>(response.OutputText);
 
                         Assert.Equal(ClusterState.Paused, clusterHealth.State);
 
@@ -875,7 +953,7 @@ nodes:
                         response = (await NeonCliAsync("cluster", "health"))
                             .EnsureSuccess();
 
-                        clusterHealth = NeonHelper.JsonDeserialize<ClusterHealth>(response.OutputText);
+                        clusterHealth = NeonHelper.YamlDeserialize<ClusterHealth>(response.OutputText);
 
                         Assert.Equal(ClusterState.Healthy, clusterHealth.State);
                     }
@@ -893,7 +971,7 @@ nodes:
                         response = (await NeonCliAsync("cluster", "health"))
                             .EnsureSuccess();
 
-                        clusterHealth = NeonHelper.JsonDeserialize<ClusterHealth>(response.OutputText);
+                        clusterHealth = NeonHelper.YamlDeserialize<ClusterHealth>(response.OutputText);
 
                         Assert.Equal(ClusterState.Off, clusterHealth.State);
 
@@ -905,7 +983,7 @@ nodes:
                         response = (await NeonCliAsync("cluster", "health"))
                             .EnsureSuccess();
 
-                        clusterHealth = NeonHelper.JsonDeserialize<ClusterHealth>(response.OutputText);
+                        clusterHealth = NeonHelper.YamlDeserialize<ClusterHealth>(response.OutputText);
 
                         Assert.Equal(ClusterState.Healthy, clusterHealth.State);
                     }
@@ -918,6 +996,10 @@ nodes:
 
                     KubeHelper.KubeConfig.Reload();
                     Assert.Empty(KubeHelper.KubeConfig.Clusters.Where(cluster => cluster.Name == clusterName));
+                }
+                catch (Exception e)
+                {
+                    throw;
                 }
                 finally
                 {
