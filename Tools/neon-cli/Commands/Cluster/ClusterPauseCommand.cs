@@ -68,7 +68,7 @@ USAGE:
 
 OPTIONS:
 
-    --force     - forces cluster stop without user confirmation
+    --force     - forces cluster pause without user confirmation
                   or verifying unlocked status
 
 REMARKS:
