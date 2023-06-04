@@ -318,7 +318,7 @@ namespace Neon.Kube.Xunit
     /// mechanism isn't perfect at this time and sometimes clusters that should be redeployed won't be.
     /// </para>
     /// <para>
-    /// Specifically, node labels won't be considered when detecting changes: https://github.com/nforgeio/TEMPKUBE/issues/1505
+    /// Specifically, node labels won't be considered when detecting changes: https://github.com/nforgeio/neonKUBE/issues/1505
     /// </para>
     /// </remarks>
     public class ClusterFixture : TestFixture

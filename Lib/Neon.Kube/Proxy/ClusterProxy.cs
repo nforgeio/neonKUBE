@@ -1557,17 +1557,17 @@ namespace Neon.Kube.Proxy
             //-----------------------------------------------------------------
             // Reset Auth (Dex/Glauth)
 
-            // $todo(marcusbooyah): https://github.com/nforgeio/TEMPKUBE/issues/1480
+            // $todo(marcusbooyah): https://github.com/nforgeio/neonKUBE/issues/1480
 
             //-----------------------------------------------------------------
             // Reset Harbor
 
-            // $todo(marcusbooyah): https://github.com/nforgeio/TEMPKUBE/issues/1480
+            // $todo(marcusbooyah): https://github.com/nforgeio/neonKUBE/issues/1480
 
             //-----------------------------------------------------------------
             // Reset Monitoring
 
-            // $todo(marcusbooyah): https://github.com/nforgeio/TEMPKUBE/issues/1480
+            // $todo(marcusbooyah): https://github.com/nforgeio/neonKUBE/issues/1480
         }
 
         /// <summary>

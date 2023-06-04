@@ -265,7 +265,7 @@ namespace Neon.Kube
         /// User name used to log CRI-O on the cluster nodes into the local
         /// Harbor registry via <b>podman</b>.
         /// </summary>
-        public const string HarborCrioUser = "root";    // $todo(jefflill): change this to "neon-harbor-crio" (https://github.com/nforgeio/TEMPKUBE/issues/1404)
+        public const string HarborCrioUser = "root";    // $todo(jefflill): change this to "neon-harbor-crio" (https://github.com/nforgeio/neonKUBE/issues/1404)
 
         /// <summary>
         /// Returns the Harbor Project name.

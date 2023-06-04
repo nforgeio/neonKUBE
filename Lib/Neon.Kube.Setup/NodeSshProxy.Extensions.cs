@@ -71,7 +71,7 @@ namespace Neon.Kube.SSH
             {
                 controller.LogProgress(node, verb: "setup", message: "helm charts (zip)");
 
-                var helmFolder = KubeSetup.Resources.GetDirectory("/Helm");    // $hack(jefflill): https://github.com/nforgeio/TEMPKUBE/issues/1121
+                var helmFolder = KubeSetup.Resources.GetDirectory("/Helm");    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
 
                 helmFolder.Zip(ms, searchOptions: SearchOption.AllDirectories, zipOptions: StaticZipOptions.LinuxLineEndings);
 

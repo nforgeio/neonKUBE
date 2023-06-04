@@ -175,7 +175,7 @@ namespace Neon.Kube.ClusterDef
                         //
                         // We'll revisit this when we implement remote Hyper-C support:
                         //
-                        //      https://github.com/nforgeio/TEMPKUBE/issues/1447
+                        //      https://github.com/nforgeio/neonKUBE/issues/1447
 
                         return false;
 

@@ -967,7 +967,7 @@ namespace Neon.Kube.Hosting.Aws
             // Apparently, resource group names cannot start with "aws".  We'll workaround this
             // by adding an (ugly) dash prefix.
             //
-            //      https://github.com/nforgeio/TEMPKUBE/issues/1627
+            //      https://github.com/nforgeio/neonKUBE/issues/1627
 
             if (this.resourceGroupName.StartsWith("aws", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -3970,7 +3970,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
 
             // NOTE: We're deferring checking quotas and current utilization for AWS at this time:
             //
-            //      https://github.com/nforgeio/TEMPKUBE/issues/1544
+            //      https://github.com/nforgeio/neonKUBE/issues/1544
 
             var regionName = awsOptions.Region;
             var zoneName   = awsOptions.AvailabilityZone;

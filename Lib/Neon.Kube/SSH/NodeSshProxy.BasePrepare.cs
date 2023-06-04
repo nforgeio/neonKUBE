@@ -887,7 +887,7 @@ chmod 740 {KubeNodeFolder.NeonRun}
                     // the [*.sh] file type (if present) and then setting execute
                     // permissions.
 
-                    var scriptsFolder = KubeHelper.Resources.GetDirectory("/Tools");    // $hack(jefflill): https://github.com/nforgeio/TEMPKUBE/issues/1121
+                    var scriptsFolder = KubeHelper.Resources.GetDirectory("/Tools");    // $hack(jefflill): https://github.com/nforgeio/neonKUBE/issues/1121
 
                     foreach (var file in scriptsFolder.GetFiles())
                     {

@@ -1815,7 +1815,7 @@ mountFolder=${{1}}
 #------------------------------------------------------------------------------
 # Sleep for a bit in an attempt to ensure that the system is actually ready.
 #
-# https://github.com/nforgeio/TEMPKUBE/issues/980
+# https://github.com/nforgeio/neonKUBE/issues/980
 
 sleep 5
 {changePasswordScript}

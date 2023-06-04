@@ -267,7 +267,7 @@ namespace Neon.Kube.ClusterDef
             // properties will not impact [ClusterFixture]'s decision about
             // redeploying the cluster or not.
             //
-            //      https://github.com/nforgeio/TEMPKUBE/issues/1505
+            //      https://github.com/nforgeio/neonKUBE/issues/1505
 
             foreach (var node in definition.Nodes)
             {

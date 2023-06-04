@@ -151,7 +151,7 @@ namespace Neon.Kube.ClusterDef
         /// Eventually, you'll be able to specify a XenServer storage repository.
         /// </para>
         /// <para>
-        /// <a href="https://github.com/nforgeio/TEMPKUBE/issues/996">Issue #996</a>
+        /// <a href="https://github.com/nforgeio/neonKUBE/issues/996">Issue #996</a>
         /// </para>
         /// </note>
         /// </summary>

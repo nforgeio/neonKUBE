@@ -100,7 +100,7 @@ namespace Neon.Kube.Hosting.Azure
         // Here's the original issue covering Azure provisioning and along with 
         // some discussion about how NEONKUBE thinks about cloud deployments:
         // 
-        //      https://github.com/nforgeio/TEMPKUBE/issues/908
+        //      https://github.com/nforgeio/neonKUBE/issues/908
         //
         // The remainder of this note will outline how Azure provisioning works.
         //
@@ -3146,7 +3146,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
 
             // $todo(jefflill): We're deferring checking quotas and current utilization for Azure:
             //
-            //      https://github.com/nforgeio/TEMPKUBE/issues/1544
+            //      https://github.com/nforgeio/neonKUBE/issues/1544
 
             // Verify that the region exists and is available to the current subscription.
 
@@ -3156,7 +3156,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
             // be working; it always returns an empty list.  We'll temporarily work around this by
             // hardcoding known locations for the public cloud:
             //
-            //      https://github.com/nforgeio/TEMPKUBE/issues/1555
+            //      https://github.com/nforgeio/neonKUBE/issues/1555
 
             var locations = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
@@ -3281,7 +3281,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
             //      * Ensure that all VM sizes required by the cluster VM sizes are AMD64 compatible
             //      * VM is compatible with the storage tier specified for each node
             //
-            //      https://github.com/nforgeio/TEMPKUBE/issues/1545
+            //      https://github.com/nforgeio/neonKUBE/issues/1545
 
             await LoadVmSizeMetadataAsync();
 
@@ -3510,7 +3510,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
 
             // $todo(jefflill): Note that the fluent SDK doesn't appear to support forced shutdown:
             //
-            //      https://github.com/nforgeio/TEMPKUBE/issues/1546
+            //      https://github.com/nforgeio/neonKUBE/issues/1546
 
             await ConnectAzureAsync();
 

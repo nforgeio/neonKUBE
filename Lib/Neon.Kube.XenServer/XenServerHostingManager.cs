@@ -935,7 +935,7 @@ namespace Neon.Kube.Hosting.XenServer
                     // Ignore errors reported when the partition is already at its
                     // maximum size and cannot be grown:
                     //
-                    //      https://github.com/nforgeio/TEMPKUBE/issues/1352
+                    //      https://github.com/nforgeio/neonKUBE/issues/1352
 
                     if (!response.Success && !response.AllText.Contains("NOCHANGE:"))
                     {
@@ -1187,7 +1187,7 @@ namespace Neon.Kube.Hosting.XenServer
         // XenServer is having trouble suspending VMs so I'm going to disable this
         // feature for the time being:
         //
-        //      https://github.com/nforgeio/TEMPKUBE/issues/1488
+        //      https://github.com/nforgeio/neonKUBE/issues/1488
 
         /// <inheritdoc/>
         public override HostingCapabilities Capabilities => HostingCapabilities.Stoppable /* | HostingCapabilities.Pausable */ | HostingCapabilities.Removable;
