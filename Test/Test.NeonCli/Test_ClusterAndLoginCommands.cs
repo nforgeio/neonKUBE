@@ -79,7 +79,7 @@ namespace Test.NeonCli
         /// <summary>
         /// This can be temporarily set to TRUE while debugging the tests.
         /// </summary>
-        private bool debugMode = true;
+        private bool debugMode = false;
 
         private const string clusterName  = "test-neoncli";
         private const string namePrefix   = "test-neoncli";
