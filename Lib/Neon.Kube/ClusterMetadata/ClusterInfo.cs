@@ -43,6 +43,14 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Specifies the cluster annatations.  Label names and values must follow the
+        /// [Kubernetes conventions](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)
+        /// and the <b>neonkube.io/</b> prefix is reserved by NEONKUBE.
+        /// </summary>
+        [JsonProperty(PropertyName = "Annotations", Required = Required.Always)]
+        public Dictionary<string, string> Annotations { get; set; } = new Dictionary<string, string>();
+
+        /// <summary>
         /// Globally unique cluster identifier.  This is set during cluster setup and is 
         /// used to distinguish between customer clusters.
         /// </summary>
@@ -58,13 +66,6 @@ namespace Neon.Kube
         public string ClusterVersion { get; set; } = KubeVersions.NeonKube;
 
         /// <summary>
-        /// Identifies the organization that owns the cluster.
-        /// </summary>
-        [JsonProperty(PropertyName = "OrganizationId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public string OrganizationId { get; set; } = null;
-
-        /// <summary>
         /// Timestamp representing the date that the cluster was created.
         /// </summary>
         [JsonProperty(PropertyName = "CreationTimestamp", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -72,12 +73,15 @@ namespace Neon.Kube
         public DateTime? CreationTimestamp { get; set; }
 
         /// <summary>
-        /// Identifies the cluster by name as specified by <see cref="ClusterDefinition.Name"/> in the cluster definition.
+        /// Identifies where the cluster is hosted as specified by <see cref="ClusterDefinition.Datacenter"/> in the cluster
+        /// definition.  That property defaults to the empty string for on-premise clusters and the the region for cloud
+        /// based clusters.
         /// </summary>
-        [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Datacenter", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue("")]
-        public string Name { get; set; } = string.Empty;
+        public string Datacenter { get; set; } = string.Empty;
 
+        /// <summary>
         /// <summary>
         /// Optionally describes the cluster for humans.
         /// </summary>
@@ -86,12 +90,18 @@ namespace Neon.Kube
         public string Description { get; set; } = null;
 
         /// <summary>
-        /// Specifies the cluster annatations.  Label names and values must follow the
-        /// [Kubernetes conventions](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)
-        /// and the <b>neonkube.io/</b> prefix is reserved by NEONKUBE.
+        /// Identifies the DNS domain assigned to the cluster when it was provisioned.
         /// </summary>
-        [JsonProperty(PropertyName = "Annotations", Required = Required.Always)]
-        public Dictionary<string, string> Annotations { get; set; } = new Dictionary<string, string>();
+        [JsonProperty(PropertyName = "Domain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue("")]
+        public string Domain { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Describes which optional components have been deployed to the cluster.
+        /// </summary>
+        [JsonProperty(PropertyName = "FeatureOptions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public FeatureOptions FeatureOptions { get; set; } = new FeatureOptions();
 
         /// <summary>
         /// Identifies the cloud or other hosting platform.
@@ -110,34 +120,17 @@ namespace Neon.Kube
         public string HostingNamePrefix { get; set; }
 
         /// <summary>
-        /// Indicates how the cluster is being used as specified by <see cref="ClusterDefinition.Purpose"/>.
-        /// definition. 
+        /// Indicates whether the cluster is a neon-desktop cluster.  This defaults to <c>false</c>.
         /// </summary>
-        [JsonProperty(PropertyName = "Purpose", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(ClusterPurpose.Unspecified)]
-        public ClusterPurpose Purpose { get; set; } = ClusterPurpose.Unspecified;
-
-        /// <summary>
-        /// Identifies where the cluster is hosted as specified by <see cref="ClusterDefinition.Datacenter"/> in the cluster
-        /// definition.  That property defaults to the empty string for on-premise clusters and the the region for cloud
-        /// based clusters.
-        /// </summary>
-        [JsonProperty(PropertyName = "Datacenter", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue("")]
-        public string Datacenter { get; set; } = string.Empty;
+        [JsonProperty(PropertyName = "IsDesktop", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(false)]
+        public bool IsDesktop { get; set; } = false;
 
         /// <summary>
         /// Identifies the version of Kubernetes installed on the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "KubernetesVersion", Required = Required.Always)]
         public string KubernetesVersion { get; set; }
-
-        /// <summary>
-        /// Indicates whether the cluster is a neon-desktop cluster.  This defaults to <c>false</c>.
-        /// </summary>
-        [JsonProperty(PropertyName = "IsDesktop", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(false)]
-        public bool IsDesktop { get; set; } = false;
 
         /// <summary>
         /// <para>
@@ -167,12 +160,18 @@ namespace Neon.Kube
         [DefaultValue(null)]
         public double? Longitude { get; set; } = null;
 
-        /// <summary>
-        /// Identifies the DNS domain assigned to the cluster when it was provisioned.
+        /// Identifies the cluster by name as specified by <see cref="ClusterDefinition.Name"/> in the cluster definition.
         /// </summary>
-        [JsonProperty(PropertyName = "Domain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue("")]
-        public string Domain { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Identifies the organization that owns the cluster.
+        /// </summary>
+        [JsonProperty(PropertyName = "OrganizationId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string OrganizationId { get; set; } = null;
 
         /// <summary>
         /// <para>
@@ -194,17 +193,18 @@ namespace Neon.Kube
         public List<string> PublicAddresses { get; set; } = null;
 
         /// <summary>
+        /// Indicates how the cluster is being used as specified by <see cref="ClusterDefinition.Purpose"/>.
+        /// definition. 
+        /// </summary>
+        [JsonProperty(PropertyName = "Purpose", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(ClusterPurpose.Unspecified)]
+        public ClusterPurpose Purpose { get; set; } = ClusterPurpose.Unspecified;
+
+        /// <summary>
         /// Human readable string that summarizes the cluster state.
         /// </summary>
         [JsonProperty(PropertyName = "Summary", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string Summary { get; set; } = null;
-
-        /// <summary>
-        /// Describes which optional components have been deployed to the cluster.
-        /// </summary>
-        [JsonProperty(PropertyName = "FeatureOptions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public FeatureOptions FeatureOptions { get; set; } = new FeatureOptions();
     }
 }
