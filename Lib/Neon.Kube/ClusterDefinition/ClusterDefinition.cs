@@ -59,7 +59,7 @@ namespace Neon.Kube.ClusterDef
         // [DnsNameRegex] and [NameRegex] need to be more restrictive than they are now by
         // ensuring that all segments start and end with letters/digits, and that dots/dash
         // rules are also applied.  We could also check for maximum lengths if we really
-        // wanted to get fancy.
+        // wanted to be fancy.
 
         /// <summary>
         /// Maximum number of characters allowed in a cluster name.
@@ -126,6 +126,8 @@ namespace Neon.Kube.ClusterDef
                 using (var preprocessReader = new PreprocessReader(stringReader))
                 {
                     preprocessReader.SetYamlMode();
+
+                    preprocessReader.ProcessStatements = true;
 
                     var clusterDefinition = NeonHelper.YamlDeserialize<ClusterDefinition>(preprocessReader.ReadToEnd(), strict: strict);
 
