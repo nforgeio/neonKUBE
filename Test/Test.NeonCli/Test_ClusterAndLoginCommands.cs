@@ -37,7 +37,6 @@ using Neon.IO;
 using Neon.Xunit;
 
 using Xunit;
-using System.Runtime.CompilerServices;
 
 namespace Test.NeonCli
 {
@@ -48,10 +47,33 @@ namespace Test.NeonCli
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ClusterAndLoginCommands
     {
+        //---------------------------------------------------------------------
+        // Private types
+
+        private class Context
+        {
+            public string context { get; set; }
+            public string @namespace { get; set; }
+        }
+
+        private class ListedContext
+        {
+            public string context { get; set; }
+            public string @namespace { get; set; }
+            public bool current { get; set; }
+        }
+
+        private class ContextList : List<ListedContext>
+        {
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
         /// <summary>
         /// This can be temporarily set to TRUE while debugging the tests.
         /// </summary>
-        private bool debugMode = false;
+        private bool debugMode = true;
 
         private const string clusterName  = "test-neoncli";
         private const string namePrefix   = "test-neoncli";
@@ -257,18 +279,21 @@ nodes:
                     File.WriteAllText(clusterDefinitionPath, clusterDefinition);
 
                     //-------------------------------------------------------------
-                    // Remove the test cluster and login if they already exist.
+                    // Remove the test cluster and login if they already exist
+                    // (and we're not in debug mode).
 
-                    response = (await NeonCliAsync("login", "list"))
+                    response = (await NeonCliAsync("login", "list", "-o=json"))
                         .EnsureSuccess();
 
-                    if (response.OutputText.Contains(clusterLogin))
-                    {
-                        if (debugMode)
+                    clusterExists = CheckJson<ContextList>(response.OutputText,
+                        items =>
                         {
-                            clusterExists = true;
-                        }
-                        else
+                            return items.Any(item => item.context == clusterLogin);
+                        });
+
+                    if (clusterExists)
+                    {
+                        if (!debugMode)
                         {
                             (await NeonCliAsync("cluster", "delete", "--force", clusterName)).EnsureSuccess();
 
@@ -279,6 +304,8 @@ nodes:
                             {
                                 Covenant.Assert(false, $"Cluster [{clusterName}] delete failed.");
                             }
+
+                            clusterExists = false;
                         }
                     }
 
@@ -289,18 +316,37 @@ nodes:
                         .EnsureSuccess();
 
                     //-------------------------------------------------------------
-                    // Deploy the test cluster.
+                    // Deploy the test cluster.  We're going to exercise the two step
+                    // cluster prepare/setup command for some clusters and the single
+                    // step deploy command for others.
 
                     if (!clusterExists)
                     {
                         (await NeonCliAsync("logout"))
                             .EnsureSuccess();
 
-                        (await NeonCliAsync("cluster", "prepare", clusterDefinitionPath, "--use-staged"))
-                            .EnsureSuccess();
+                        switch (environment)
+                        {
+                            case HostingEnvironment.HyperV:
+                            case HostingEnvironment.Aws:
 
-                        (await NeonCliAsync("cluster", "setup", clusterLogin, "--use-staged"))
-                            .EnsureSuccess();
+                                (await NeonCliAsync("cluster", "prepare", clusterDefinitionPath, "--use-staged"))
+                                    .EnsureSuccess();
+
+                                (await NeonCliAsync("cluster", "setup", clusterLogin, "--use-staged"))
+                                    .EnsureSuccess();
+
+                                break;
+
+                            default:
+                            case HostingEnvironment.XenServer:
+                            case HostingEnvironment.Azure:
+
+                                (await NeonCliAsync("cluster", "deploy", clusterLogin, "--use-staged"))
+                                    .EnsureSuccess();
+
+                                break;
+                        }
                     }
 
                     KubeHelper.KubeConfig.Reload();
@@ -315,9 +361,9 @@ nodes:
                     }
 
                     //-------------------------------------------------------------
-                    // Verify: cluster logout/login
+                    // Verify PLAIN-TEXT: cluster login
 
-                    // Logout
+                    // Logout to ready the tests below.
 
                     response = (await NeonCliAsync("logout"))
                         .EnsureSuccess();
@@ -334,14 +380,14 @@ nodes:
                     response = (await NeonCliAsync("login", "list"))
                         .EnsureSuccess();
 
-                    Assert.Contains(clusterLogin, response.OutputText);
+                    Assert.True(CheckJson<ContextList>(response.OutputText, items => !items.Any(item => item.current)));
 
-                    // Ensure that [login --show] indicates that we're not logged to a cluster.
+                    // Ensure that [login] indicates that we're not logged to a cluster.
 
-                    response = (await NeonCliAsync("login", "--show"))
+                    response = (await NeonCliAsync("login"))
                         .EnsureSuccess();
 
-                    Assert.Contains("You are not logged into a cluster", response.OutputText);
+                    Assert.True(CheckJson<Context>(response.OutputText, item => item == null));
 
                     // Login
 
@@ -353,27 +399,260 @@ nodes:
                     KubeHelper.KubeConfig.Reload();
                     Assert.NotNull(KubeHelper.KubeConfig.CurrentContext);
                     Assert.Equal(clusterLogin, KubeHelper.KubeConfig.CurrentContext);
-                    Assert.Contains($"Logged into: {KubeHelper.KubeConfig.CurrentContext} namespace: default", response.OutputText);
+
+                    Assert.True(CheckJson<Context>(response.OutputText,
+                        item =>
+                        {
+                            if (item == null)
+                            {
+                                return false;
+                            }
+
+                            return item.context == KubeHelper.KubeConfig.CurrentContext &&
+                                   item.@namespace == "default";
+                        }));
+
+                    response = (await NeonCliAsync("logout"))
+                        .EnsureSuccess();
+
+                    KubeHelper.KubeConfig.Reload();
+                    Assert.Null(KubeHelper.KubeConfig.CurrentContext);
+                    Assert.Null(KubeHelper.KubeConfig.Context);
+                    Assert.Null(KubeHelper.KubeConfig.Cluster);
+                    Assert.Null(KubeHelper.KubeConfig.User);
+
+                    // Ensure that [login list] works when there's no current cluster context.
+                    // We've seen a [NullReferenceException] in the past for this scenario.
+
+                    response = (await NeonCliAsync("login", "list"))
+                        .EnsureSuccess();
+
+                    Assert.True(CheckJson<Context>(response.OutputText,
+                        item =>
+                        {
+                            if (item == null)
+                            {
+                                return false;
+                            }
+
+                            return item.context == KubeHelper.KubeConfig.CurrentContext &&
+                                   item.@namespace == "default";
+                        }));
+
+                    // Ensure that [login] indicates that we're not logged to a cluster.
+
+                    response = (await NeonCliAsync("login"))
+                        .EnsureSuccess();
+
+                    Assert.True(CheckJson<Context>(response.OutputText, item => item == null));
+
+                    // Login
+
+                    KubeHelper.KubeConfig.Reload();
+
+                    response = (await NeonCliAsync("login", clusterLogin))
+                        .EnsureSuccess();
+
+                    KubeHelper.KubeConfig.Reload();
+                    Assert.NotNull(KubeHelper.KubeConfig.CurrentContext);
+                    Assert.Equal(clusterLogin, KubeHelper.KubeConfig.CurrentContext);
+
+                    Assert.True(CheckJson<Context>(response.OutputText,
+                        item =>
+                        {
+                            if (item == null)
+                            {
+                                return false;
+                            }
+
+                            return item.context == KubeHelper.KubeConfig.CurrentContext &&
+                                   item.@namespace == "default";
+                        }));
+
+                    //-------------------------------------------------------------
+                    // Verify JSON: cluster login
+
+                    // Logout to ready the tests below.
+
+                    response = (await NeonCliAsync("logout"))
+                        .EnsureSuccess();
+
+                    KubeHelper.KubeConfig.Reload();
+                    Assert.Null(KubeHelper.KubeConfig.CurrentContext);
+                    Assert.Null(KubeHelper.KubeConfig.Context);
+                    Assert.Null(KubeHelper.KubeConfig.Cluster);
+                    Assert.Null(KubeHelper.KubeConfig.User);
+
+                    // Ensure that [login list] works when there's no current cluster context.
+                    // We've seen a [NullReferenceException] in the past for this scenario.
+
+                    response = (await NeonCliAsync("login", "list", "--output=json"))
+                        .EnsureSuccess();
+
+                    Assert.True(CheckJson<ContextList>(response.OutputText,
+                        items =>
+                        {
+                            if (items.Count == 0)
+                            {
+                                return false;
+                            }
+
+                            return items.SingleOrDefault(item => item.context == clusterLogin) != null;
+                        }));
+
+                    // Ensure that [login] indicates that we're not logged into a cluster.
+
+                    response = (await NeonCliAsync("login", "-o=json"))
+                        .EnsureSuccess();
+
+                    Assert.True(CheckJson<Context>(response.OutputText, item => item == null));
+
+                    // Login
+
+                    KubeHelper.KubeConfig.Reload();
+
+                    response = (await NeonCliAsync("login", "--namespace=default", "-o=json", clusterLogin))
+                        .EnsureSuccess();
+
+                    KubeHelper.KubeConfig.Reload();
+                    Assert.NotNull(KubeHelper.KubeConfig.CurrentContext);
+                    Assert.Equal(clusterLogin, KubeHelper.KubeConfig.CurrentContext);
+
+                    Assert.True(CheckJson<Context>(response.OutputText,
+                        item =>
+                        {
+                            if (item == null)
+                            {
+                                return false;
+                            }
+
+                            return item.context == clusterLogin && item.@namespace == "default";
+                        }));
+
+                    // Login List
+
+                    KubeHelper.KubeConfig.Reload();
+
+                    response = (await NeonCliAsync("login", "list", "-o=json", clusterLogin))
+                        .EnsureSuccess();
+
+                    KubeHelper.KubeConfig.Reload();
+                    Assert.NotNull(KubeHelper.KubeConfig.CurrentContext);
+                    Assert.Equal(clusterLogin, KubeHelper.KubeConfig.CurrentContext);
+
+                    Assert.True(CheckJson<ContextList>(response.OutputText,
+                        items =>
+                        {
+                            var currentItem = items.Single(item => item.current);
+
+                            if (currentItem == null)
+                            {
+                                return false;
+                            }
+
+                            return currentItem.context == clusterLogin && currentItem.@namespace == "default";
+                        }));
+
+                    response = (await NeonCliAsync("login", "-n=neon-system", "-o=json", clusterLogin))
+                        .EnsureSuccess();
+
+                    KubeHelper.KubeConfig.Reload();
+                    Assert.NotNull(KubeHelper.KubeConfig.CurrentContext);
+                    Assert.Equal(clusterLogin, KubeHelper.KubeConfig.CurrentContext);
+
+                    Assert.True(CheckJson<ContextList>(response.OutputText,
+                        items =>
+                        {
+                            var currentItem = items.Single(item => item.current);
+
+                            if (currentItem == null)
+                            {
+                                return false;
+                            }
+
+                            return currentItem.context == clusterLogin && currentItem.@namespace == "neon-system";
+                        }));
+
+                    // Logout
+
+                    response = (await NeonCliAsync("logout"))
+                        .EnsureSuccess();
+
+                    KubeHelper.KubeConfig.Reload();
+                    Assert.Null(KubeHelper.KubeConfig.CurrentContext);
+                    Assert.Null(KubeHelper.KubeConfig.Context);
+                    Assert.Null(KubeHelper.KubeConfig.Cluster);
+                    Assert.Null(KubeHelper.KubeConfig.User);
+
+                    // Ensure that [login list] works when there's no current cluster context.
+                    // We've seen a [NullReferenceException] in the past for this scenario.
+
+                    response = (await NeonCliAsync("login", "list", "--output=json"))
+                        .EnsureSuccess();
+
+                    Assert.True(CheckJson<ContextList>(response.OutputText,
+                        items =>
+                        {
+                            return !items.Any(item => item.current);
+                        }));
+
+                    // Ensure that [login] indicates that we're not logged to a cluster.
+
+                    response = (await NeonCliAsync("login", "-o=json"))
+                        .EnsureSuccess();
+
+                    Assert.True(CheckJson<ContextList>(response.OutputText,
+                        item =>
+                        {
+                            return item == null;
+                        }));
+
+                    // Login
+
+                    KubeHelper.KubeConfig.Reload();
+
+                    response = (await NeonCliAsync("login", clusterLogin, "-o=json"))
+                        .EnsureSuccess();
+
+                    KubeHelper.KubeConfig.Reload();
+                    Assert.NotNull(KubeHelper.KubeConfig.CurrentContext);
+                    Assert.Equal(clusterLogin, KubeHelper.KubeConfig.CurrentContext);
+
+                    Assert.True(CheckJson<Context>(response.OutputText,
+                        item =>
+                        {
+                            return item != null && item.context == clusterLogin;
+                        }));
 
                     //-------------------------------------------------------------
                     // Verify that we can change the default namespace with [--namespace] and [-n].
-                    // This also tests [--show].
+                    // This also verifies that [neon login] lists cluster contexts.
 
-                    response = (await NeonCliAsync("login", $"--namespace=default", "--show"))
+                    response = (await NeonCliAsync("login", $"--namespace=default", "-o=json"))
                         .EnsureSuccess();
 
                     KubeHelper.KubeConfig.Reload();
                     Assert.NotNull(KubeHelper.KubeConfig.CurrentContext);
                     Assert.Equal(clusterLogin, KubeHelper.KubeConfig.CurrentContext);
-                    Assert.Contains($"Logged into: {KubeHelper.KubeConfig.CurrentContext} namespace: {KubeNamespace.NeonSystem}", response.OutputText);
 
-                    response = (await NeonCliAsync("login", $"-n=default", "--show"))
+                    Assert.True(CheckJson<Context>(response.OutputText,
+                        item =>
+                        {
+                            return item != null && item.context == clusterLogin && item.@namespace == "default";
+                        }));
+
+                    response = (await NeonCliAsync("login", $"-n=neon-system", "--output=json"))
                         .EnsureSuccess();
 
                     KubeHelper.KubeConfig.Reload();
                     Assert.NotNull(KubeHelper.KubeConfig.CurrentContext);
                     Assert.Equal(clusterLogin, KubeHelper.KubeConfig.CurrentContext);
-                    Assert.Contains($"Logged into: {KubeHelper.KubeConfig.CurrentContext} namespace: default", response.OutputText);
+
+                    Assert.True(CheckJson<Context>(response.OutputText,
+                        item =>
+                        {
+                            return item != null && item.context == clusterLogin && item.@namespace == "neon-system";
+                        }));
 
                     //-------------------------------------------------------------
                     // Create a cluster proxy for use in the tests below.
@@ -381,9 +660,9 @@ nodes:
                     HostingLoader.Initialize();
 
                     using var clusterProxy = ClusterProxy.Create(
-                        kubeConfig:            KubeHelper.KubeConfig,
-                        hostingManagerFactory: new HostingManagerFactory(),
-                        operation:             ClusterProxy.Operation.LifeCycle);
+                    kubeConfig:            KubeHelper.KubeConfig,
+                    hostingManagerFactory: new HostingManagerFactory(),
+                    operation:             ClusterProxy.Operation.LifeCycle);
 
                     //-------------------------------------------------------------
                     // Verify: cluster health
@@ -674,6 +953,38 @@ nodes:
         private async Task<ExecuteResponse> NeonCliAsync(params string[] args)
         {
             return await NeonHelper.ExecuteCaptureAsync(neonCliPath, args);
+        }
+
+        /// <summary>
+        /// Used to verify JSON output by deserializing <paramref name="jsonText"/> into
+        /// a <typeparamref name="T"/> and then passing that to the <paramref name="checker"/>
+        /// function which will return <c>true</c> when the parsed <c>dynamic</c> looks good.
+        /// </summary>
+        /// <param name="jsonText">Specifies the output to be parsed.</param>
+        /// <param name="checker">Specifies the output checker method.</param>
+        /// <returns><c>true</c> when the parsed JSON looks OK.</returns>
+        private bool CheckJson<T>(string jsonText, Func<T, bool> checker)
+        {
+            Covenant.Requires<ArgumentNullException>(jsonText != null, nameof(jsonText));
+            Covenant.Requires<ArgumentNullException>(checker != null, nameof(checker));
+
+            return checker.Invoke(NeonHelper.JsonDeserialize<T>(jsonText));
+        }
+
+        /// <summary>
+        /// Used to verify YAML output by deserializing <paramref name="yamlText"/> into
+        /// a <typeparamref name="T"/> and then passing that to the <paramref name="checker"/>
+        /// function which will return <c>true</c> when the parsed <c>dynamic</c> looks good.
+        /// </summary>
+        /// <param name="yamlText">Specifies the output to be parsed.</param>
+        /// <param name="checker">Specifies the output checker method.</param>
+        /// <returns><c>true</c> when the parsed YAML looks OK.</returns>
+        private bool CheckYaml<T>(string yamlText, Func<T, bool> checker)
+        {
+            Covenant.Requires<ArgumentNullException>(yamlText != null, nameof(yamlText));
+            Covenant.Requires<ArgumentNullException>(checker != null, nameof(checker));
+
+            return checker.Invoke(NeonHelper.YamlDeserialize<T>(yamlText));
         }
     }
 }

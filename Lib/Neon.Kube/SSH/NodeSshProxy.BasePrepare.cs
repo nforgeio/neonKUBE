@@ -485,7 +485,7 @@ touch /etc/cloud/cloud-init.disabled
                     controller.LogProgress(this, verb: "configure", message: "openssh");
 
                     UploadText("/etc/ssh/sshd_config", KubeHelper.OpenSshConfig);
-                    SudoCommand("systemctl restart sshd", RunOptions.Defaults | RunOptions.FaultOnError);
+                    SudoCommand("systemctl restart ssh", RunOptions.Defaults | RunOptions.FaultOnError);
                 });
         }
 

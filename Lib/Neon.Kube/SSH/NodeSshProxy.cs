@@ -631,7 +631,7 @@ fi
 
 sed -iE 's/#*PasswordAuthentication.*/PasswordAuthentication {(enabled ? "yes" : "no")}/' /etc/ssh/sshd_config
 
-systemctl restart sshd
+systemctl restart ssh
 ";
             SudoCommand(CommandBundle.FromScript(script), RunOptions.FaultOnError);
         }

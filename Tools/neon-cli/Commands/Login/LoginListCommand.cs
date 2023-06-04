@@ -114,11 +114,7 @@ USAGE:
 
             Console.WriteLine();
 
-            if (logins.Length == 0)
-            {
-                Console.Error.WriteLine("*** No NEONKUBE logins.");
-            }
-            else if (outputFormat.HasValue)
+            if (outputFormat.HasValue)
             {
                 switch (outputFormat.Value)
                 {
@@ -139,6 +135,12 @@ USAGE:
             }
             else
             {
+                if (logins.Length == 0)
+                {
+                    Console.Error.WriteLine("No NEONKUBE logins.");
+                    return;
+                }
+
                 var maxLoginNameWidth = logins.Max(login => login.context.Length);
 
                 foreach (var login in logins)

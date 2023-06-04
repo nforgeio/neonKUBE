@@ -1792,10 +1792,9 @@ $@"
 
 echo 'sysadmin:{newPassword}' | chpasswd
 
-# Restart [sshd] and wait a bit to ensure that its picked up the change.
+# Restart [sshd] to pick the change.
 
 systemctl restart ssh
-sleep 5
 ";
             if (String.IsNullOrWhiteSpace(newPassword))
             {
@@ -1878,7 +1877,7 @@ sed -iE 's/#*PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd
 
 # Restart SSHD to pick up the changes.
 
-systemctl restart sshd
+systemctl restart ssh
 
 exit 0
 ";

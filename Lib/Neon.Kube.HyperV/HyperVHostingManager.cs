@@ -127,7 +127,7 @@ namespace Neon.Kube.Hosting.HyperV
             // out of trimmed executables and we need this type to be discoverable
             // via reflection.
             //
-            // This call does almost nothing to prevent C# optimization.
+            // This call does almost nothing to prevent C# code optimization.
 
             Load(() => new HyperVHostingManager());
         }

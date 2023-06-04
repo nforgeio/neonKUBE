@@ -87,7 +87,7 @@ OPTIONS:
 
     --debug                     - Implements cluster setup from the base rather
                                   than the node image.  This mode is useful while
-                                  developing and debugging cluster setup..
+                                  developing and debugging cluster setup.
 
                                   NOTE: This mode is not supported for cloud and
                                         bare-metal environments.

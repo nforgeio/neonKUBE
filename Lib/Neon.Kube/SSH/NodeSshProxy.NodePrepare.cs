@@ -176,7 +176,7 @@ sed -i 's!^\HostKey /etc/ssh/ssh_host_ed25519_key$!#HostKey /etc/ssh/ssh_host_ed
 
 # Restart SSHD to pick up the changes.
 
-systemctl restart sshd
+systemctl restart ssh
 ";
                     bundle = new CommandBundle("./config.sh");
 
