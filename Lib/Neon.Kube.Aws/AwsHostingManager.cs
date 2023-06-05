@@ -30,25 +30,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
-using Neon.Collections;
-using Neon.Common;
-using Neon.Cryptography;
-using Neon.Diagnostics;
-using Neon.IO;
-using Neon.Kube.ClusterDef;
-using Neon.Kube.Config;
-using Neon.Kube.Proxy;
-using Neon.Kube.Setup;
-using Neon.Net;
-using Neon.Retry;
-using Neon.SSH;
-using Neon.Tasks;
-using Neon.Time;
-
 using Amazon;
 using Amazon.EC2;
 using Amazon.EC2.Model;
@@ -58,14 +39,33 @@ using Amazon.ResourceGroups;
 using Amazon.ResourceGroups.Model;
 using Amazon.Runtime;
 
+using Neon.Collections;
+using Neon.Common;
+using Neon.Cryptography;
+using Neon.Kube.Deployment;
+using Neon.Diagnostics;
+using Neon.IO;
+using Neon.Kube.ClusterDef;
+using Neon.Kube.Config;
+using Neon.Kube.Proxy;
+using Neon.Kube.Setup;
+using Neon.Kube.SSH;
+using Neon.Net;
+using Neon.Retry;
+using Neon.SSH;
+using Neon.Tasks;
+using Neon.Time;
+
+using Newtonsoft;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 using Ec2Instance    = Amazon.EC2.Model.Instance;
 using Ec2Tag         = Amazon.EC2.Model.Tag;
 using Ec2VolumeType  = Amazon.EC2.VolumeType;
 using ElbAction      = Amazon.ElasticLoadBalancingV2.Model.Action;
 using ElbTag         = Amazon.ElasticLoadBalancingV2.Model.Tag;
 using ElbTargetGroup = Amazon.ElasticLoadBalancingV2.Model.TargetGroup;
-using Neon.Kube.SSH;
-using Neon.Kube.Deployment;
 
 namespace Neon.Kube.Hosting.Aws
 {
@@ -556,11 +556,6 @@ namespace Neon.Kube.Hosting.Aws
         /// Used to limit how many threads will be created by parallel operations.
         /// </summary>
         private static readonly ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = MaxAsyncParallelHostingOperations };
-
-        /// <summary>
-        /// Specifies the owner ID to use when querying for Canonical AMIs 
-        /// </summary>
-        private const string canonicalOwnerId = "099720109477";
 
         /// <summary>
         /// AWS generic name tag.
@@ -2124,7 +2119,6 @@ namespace Neon.Kube.Hosting.Aws
             controller.SetGlobalStepStatus("locate: node image");
 
             var neonKubeVersion = SemanticVersion.Parse(KubeVersions.NeonKube);
-            var nodeImageName   = $"neonkube-{KubeVersions.NeonKube}{KubeVersions.BranchPart}";
             var operatingSystem = "ubuntu-22.04";
             var architecture    = "amd64";
 
@@ -2134,6 +2128,8 @@ namespace Neon.Kube.Hosting.Aws
             }
             else
             {
+                var nodeImageName = $"neonkube-{KubeVersions.NeonKube}{KubeVersions.BranchPart}";
+
                 var neonImageFilter = new List<Filter>()
                 {
                     new Filter() { Name = $"tag:{neonImageTagKey}", Values = new List<string>() { "true" } }
