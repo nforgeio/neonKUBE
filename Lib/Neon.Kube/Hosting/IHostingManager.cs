@@ -220,6 +220,18 @@ namespace Neon.Kube.Hosting
         /// </remarks>
         string GetDataDisk(LinuxSshProxy node);
 
+        /// <summary>
+        /// Checks for any conflicts that might arise when provisoning a cluster.
+        /// Currently, this checks for existing machines using IP addresses that
+        /// will conflict with one or more of the cluster nodes.
+        /// </summary>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
+        /// <returns>
+        /// <c>null</c> when there are no conflicts, otherise a string detailing
+        /// the conflicts.
+        /// </returns>
+        Task<string> CheckForConflictsAsync(ClusterDefinition clusterDefinition);
+
         //---------------------------------------------------------------------
         // Cluster life cycle methods
 

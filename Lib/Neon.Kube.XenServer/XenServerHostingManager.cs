@@ -981,6 +981,14 @@ namespace Neon.Kube.Hosting.XenServer
         }
 
         /// <inheritdoc/>
+        public override async Task<string> CheckForConflictsAsync(ClusterDefinition clusterDefinition)
+        {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            return await CheckForIPConflictsAsync(clusterDefinition);
+        }
+
+        /// <inheritdoc/>
         public override IEnumerable<string> GetClusterAddresses()
         {
             if (cluster.SetupState.PublicAddresses?.Any() ?? false)

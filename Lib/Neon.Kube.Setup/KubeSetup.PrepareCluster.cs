@@ -244,6 +244,19 @@ namespace Neon.Kube.Setup
                     hostingManager.WaitSeconds = 60;
                 });
 
+            // Check for IP address conflicts.
+
+            controller.AddGlobalStep("checking IP conflicts",
+                async controller =>
+                {
+                    var conflicts = await cluster.HostingManager.CheckForConflictsAsync(clusterDefinition);
+
+                    if (conflicts != null)
+                    {
+                        throw new NeonKubeException(conflicts);
+                    }
+                });
+
             // Delete any existing cluster in the environment when requested.
 
             if (options.RemoveExisting)

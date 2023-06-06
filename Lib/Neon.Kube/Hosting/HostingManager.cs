@@ -26,6 +26,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -220,6 +221,83 @@ namespace Neon.Kube.Hosting
 
         /// <inheritdoc/>
         public abstract string GetDataDisk(LinuxSshProxy node);
+
+        /// <inheritdoc/>
+        public virtual async Task<string> CheckForConflictsAsync(ClusterDefinition clusterDefinition) => await Task.FromResult((string)null);
+
+        /// <summary>
+        /// Used by on-premise hosting managers to detect IP address related conflicts.
+        /// </summary>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
+        /// <returns>
+        /// <c>null</c> when there are no conflicts, otherise a string detailing
+        /// the conflicts.
+        /// </returns>
+        protected async Task<string> CheckForIPConflictsAsync(ClusterDefinition clusterDefinition)
+        {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            // We're to send ICMP pings to all node IP addresses and keep track of
+            // any responses (indicating conflcits) and then read the local machine's
+            // ARP table looking for any conflicts there.
+            //
+            // NOTE: It's possible for machines to have ICMP ping disabled so we
+            //       won't see a response from them, but there's a good chance that
+            //       those machines will have cached ARP records.
+
+            var nodeConflicts = new Dictionary<string, NodeDefinition>(StringComparer.InvariantCultureIgnoreCase);
+
+            using (var pinger = new Pinger())
+            {
+                await Parallel.ForEachAsync(clusterDefinition.NodeDefinitions.Values, new ParallelOptions() { MaxDegreeOfParallelism = 50 },
+                    async (nodeDefinition, cancellationToken) =>
+                    {
+                        var reply = await pinger.SendPingAsync(nodeDefinition.Address);
+
+                        if (reply.Status == IPStatus.Success)
+                        {
+                            // We got a response.
+
+                            lock (nodeConflicts)
+                            {
+                                nodeConflicts.Add(nodeDefinition.Name, nodeDefinition);
+                            }
+                        }
+                    });
+            }
+
+            // Get the ARP table for the workstation and look for any IP addresses
+            // that conflict with cluster nodes that are not already marked as
+            // conflicted.
+
+            var arpTable = await NetHelper.GetArpFlatTableAsync();
+
+            foreach (var nodeDefinition in clusterDefinition.NodeDefinitions.Values)
+            {
+                if (arpTable.ContainsKey(IPAddress.Parse(nodeDefinition.Address)))
+                {
+                    nodeConflicts[nodeDefinition.Address] = nodeDefinition;
+                }
+            }
+
+            if (nodeConflicts.Count == 0)
+            {
+                return null;
+            }
+
+            var sb = new StringBuilder();
+
+            sb.AppendLine($"[{nodeConflicts.Count}] cluster nodes have IP conflicts with other computers");
+            sb.AppendLine($"----------------------------------------------------------------------------");
+
+            foreach (var nodeDefinition in nodeConflicts.Values.
+                OrderBy(nodeDefinition => nodeDefinition.Name, StringComparer.InvariantCultureIgnoreCase))
+            {
+                sb.AppendLine($"node: {nodeDefinition.Name}/{nodeDefinition.Address}");
+            }
+
+            return sb.ToString();
+        }
 
         /// <inheritdoc/>
         public abstract IEnumerable<string> GetClusterAddresses();
