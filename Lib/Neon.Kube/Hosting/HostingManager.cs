@@ -263,11 +263,38 @@ namespace Neon.Kube.Hosting
                                 nodeConflicts.Add(nodeDefinition.Name, nodeDefinition);
                             }
                         }
+                        else
+                        {
+                            // We didn't get a response.  There are three possibilities
+                            // to consider:
+                            //
+                            //      1. There's a machine on this IP but it's configured to ignore pings
+                            //      2. There no machine on this IP but ARP table may still be caching an entry
+                            //      3. There's no machine on this IP and there's no cached ARP entry
+                            //
+                            // We're going to clear the ARP entry for this IP and then re-ping it.  This
+                            // will refresh the ARP entry if the machine exists which is important for
+                            // the check below.
+
+                            NetHelper.DeleteArpEntry(IPAddress.Parse(nodeDefinition.Address));
+
+                            await pinger.SendPingAsync(nodeDefinition.Address);
+
+                            if (reply.Status == IPStatus.Success)
+                            {
+                                // We got a response this time.
+
+                                lock (nodeConflicts)
+                                {
+                                    nodeConflicts.Add(nodeDefinition.Name, nodeDefinition);
+                                }
+                            }
+                        }
                     });
             }
 
             // Get the ARP table for the workstation and look for any IP addresses
-            // that conflict with cluster nodes that are not already marked as
+            // that conflict with cluster nodes that are not already captured as
             // conflicted.
 
             var arpTable = await NetHelper.GetArpFlatTableAsync();
@@ -276,7 +303,7 @@ namespace Neon.Kube.Hosting
             {
                 if (arpTable.ContainsKey(IPAddress.Parse(nodeDefinition.Address)))
                 {
-                    nodeConflicts[nodeDefinition.Address] = nodeDefinition;
+                    nodeConflicts[nodeDefinition.Name] = nodeDefinition;
                 }
             }
 
@@ -285,16 +312,19 @@ namespace Neon.Kube.Hosting
                 return null;
             }
 
-            var sb = new StringBuilder();
+            var sb        = new StringBuilder();
+            var separator = new string('-', 40);
 
-            sb.AppendLine($"[{nodeConflicts.Count}] cluster nodes have IP conflicts with other computers");
-            sb.AppendLine($"----------------------------------------------------------------------------");
+            sb.AppendLine($"[{nodeConflicts.Count}] cluster nodes have IP conflicts with other computers:");
+            sb.AppendLine(separator);
 
             foreach (var nodeDefinition in nodeConflicts.Values.
                 OrderBy(nodeDefinition => nodeDefinition.Name, StringComparer.InvariantCultureIgnoreCase))
             {
                 sb.AppendLine($"node: {nodeDefinition.Name}/{nodeDefinition.Address}");
             }
+
+            sb.AppendLine(separator);
 
             return sb.ToString();
         }

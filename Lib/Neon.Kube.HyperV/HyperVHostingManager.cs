@@ -1020,7 +1020,12 @@ namespace Neon.Kube.Hosting.HyperV
 
             foreach (var machine in hyperv.ListVms())
             {
-                clusterVms.Add(new ClusterVm(machine, VmNameToNodeName(machine.Name)));
+                var nodeName = VmNameToNodeName(machine.Name);
+
+                if (nodeName != null)
+                {
+                    clusterVms.Add(new ClusterVm(machine, nodeName));
+                }
             }
 
             return clusterVms;

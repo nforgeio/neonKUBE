@@ -246,7 +246,7 @@ namespace Neon.Kube.Setup
 
             // Check for IP address conflicts.
 
-            controller.AddGlobalStep("checking IP conflicts",
+            controller.AddGlobalStep("check IP conflicts",
                 async controller =>
                 {
                     var conflicts = await cluster.HostingManager.CheckForConflictsAsync(clusterDefinition);
