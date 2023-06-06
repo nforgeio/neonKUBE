@@ -558,6 +558,11 @@ namespace Neon.Kube.Hosting.Aws
         private static readonly ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = MaxAsyncParallelHostingOperations };
 
         /// <summary>
+        /// Specifies the NEONFORGE owner ID for marketplace AMIs.
+        /// </summary>
+        private const string neonforgeOwnerId = "";
+
+        /// <summary>
         /// AWS generic name tag.
         /// </summary>
         private const string nameTagKey = "Name";
@@ -2118,18 +2123,38 @@ namespace Neon.Kube.Hosting.Aws
 
             controller.SetGlobalStepStatus("locate: node image");
 
+            var nodeImageName   = $"neonkube-{KubeVersions.NeonKube}{KubeVersions.BranchPart}";
             var neonKubeVersion = SemanticVersion.Parse(KubeVersions.NeonKube);
             var operatingSystem = "ubuntu-22.04";
             var architecture    = "amd64";
 
             if (cloudMarketplace)
             {
-                throw new NotImplementedException("$todo(jefflill): Implement AWS Marketplace support.");
+                Covenant.Assert(!string.IsNullOrEmpty(KubeVersions.BranchPart), $"AWS Marketplace image name [{nodeImageName}] is invalid because marketplace image versions never specify a branch.");
+
+                var neonImageFilter = new List<Filter>()
+                {
+                    new Filter() { Name = "owner-id", Values = new List<string>() { neonforgeOwnerId } },
+                    new Filter() { Name = "name", Values = new List<string>() { nodeImageName } },
+                    new Filter() { Name = "platform", Values = new List<string>() { "linux" } },
+                    new Filter() { Name = "architecture ", Values = new List<string>() { "x86_64" } }
+                };
+
+                var response = await ec2Client.DescribeImagesAsync(
+                    new DescribeImagesRequest()
+                    {
+                        Filters = neonImageFilter,
+                    });
+
+                nodeImage = response.Images.SingleOrDefault();
+
+                if (nodeImage == null)
+                {
+                    throw new NeonKubeException($"Cannot locate the marketplace node image AMI for [{nodeImageName}: {operatingSystem}/{architecture}]");
+                }
             }
             else
             {
-                var nodeImageName = $"neonkube-{KubeVersions.NeonKube}{KubeVersions.BranchPart}";
-
                 var neonImageFilter = new List<Filter>()
                 {
                     new Filter() { Name = $"tag:{neonImageTagKey}", Values = new List<string>() { "true" } }
