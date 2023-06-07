@@ -82,7 +82,6 @@ namespace Neon.Kube
         public string Datacenter { get; set; } = string.Empty;
 
         /// <summary>
-        /// <summary>
         /// Optionally describes the cluster for humans.
         /// </summary>
         [JsonProperty(PropertyName = "Description", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
