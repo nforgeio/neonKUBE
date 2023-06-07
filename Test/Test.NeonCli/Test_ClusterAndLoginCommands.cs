@@ -385,7 +385,7 @@ nodes:
                             case HostingEnvironment.XenServer:
                             case HostingEnvironment.Azure:
 
-                                (await NeonCliAsync("cluster", "deploy", clusterLogin, "--use-staged"))
+                                (await NeonCliAsync("cluster", "deploy", clusterDefinitionPath, "--use-staged"))
                                     .EnsureSuccess();
 
                                 break;
