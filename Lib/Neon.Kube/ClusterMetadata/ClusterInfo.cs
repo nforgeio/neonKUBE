@@ -159,6 +159,7 @@ namespace Neon.Kube
         [DefaultValue(null)]
         public double? Longitude { get; set; } = null;
 
+        /// <summary>
         /// Identifies the cluster by name as specified by <see cref="ClusterDefinition.Name"/> in the cluster definition.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
