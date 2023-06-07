@@ -228,7 +228,7 @@ nodes:
             Covenant.Assert(File.Exists(neonCliPath), () => $"[neon-cli] executable does not exist at: {neonCliPath}");
         }
 
-        private const int repeatCount = 1;
+        private const int repeatCount = 10;
 
         [MaintainerTheory]
         [Repeat(repeatCount)]
