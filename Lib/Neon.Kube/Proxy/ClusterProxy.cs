@@ -896,7 +896,7 @@ namespace Neon.Kube.Proxy
             }
             else
             {
-                var configMap = await K8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterDeployment>(KubeConfigMapName.ClusterDeployment, KubeNamespace.NeonStatus);
+                var configMap = await K8s.CoreV1.ReadNamespacedTypedSecretAsync<ClusterDeployment>(KubeSecretName.ClusterDeployment, KubeNamespace.NeonStatus);
 
                 return configMap.Data;
             }

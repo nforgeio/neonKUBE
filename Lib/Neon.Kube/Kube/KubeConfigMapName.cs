@@ -75,15 +75,5 @@ namespace Neon.Kube
         /// </para>
         /// </summary>
         public const string ClusterManifest = "cluster-manifest";
-
-        /// <summary>
-        /// <para>
-        /// Identifies the configmap holding the <see cref="ClusterDeployment"/>.
-        /// </para>
-        /// <para>
-        /// This configmap is located in the <see cref="KubeNamespace.NeonSystem"/> namespace.
-        /// </para>
-        /// </summary>
-        public const string ClusterDeployment = "cluster-deployment";
     }
 }

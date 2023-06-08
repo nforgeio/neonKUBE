@@ -281,7 +281,7 @@ or when switching contexts to set the current namespace afterwards.
                 new KubernetesRetryHandler()))
             {
                 clusterInfo       = (await k8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterInfo>(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus)).Data;
-                clusterDeployment = (await k8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterDeployment>(KubeConfigMapName.ClusterDeployment, KubeNamespace.NeonStatus)).Data;
+                clusterDeployment = (await k8s.CoreV1.ReadNamespacedTypedSecretAsync<ClusterDeployment>(KubeSecretName.ClusterDeployment, KubeNamespace.NeonStatus)).Data;
 
                 try
                 {
