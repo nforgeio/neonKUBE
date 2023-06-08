@@ -321,7 +321,7 @@ namespace Neon.Kube.Hosting
             foreach (var nodeDefinition in nodeConflicts.Values.
                 OrderBy(nodeDefinition => nodeDefinition.Name, StringComparer.InvariantCultureIgnoreCase))
             {
-                sb.AppendLine($"node: {nodeDefinition.Name}/{nodeDefinition.Address}");
+                sb.AppendLine($"{nodeDefinition.Name}/{nodeDefinition.Address}");
             }
 
             sb.AppendLine(separator);
