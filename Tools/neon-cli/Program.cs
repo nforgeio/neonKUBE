@@ -52,13 +52,12 @@ using Neon.Kube.GrpcProto.Desktop;
 using Neon.Kube.Hosting;
 using Neon.SSH;
 using Neon.Windows;
-using Neon.WinTTY;
 
+using OpenTelemetry;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Resources;
 
 using ProtoBuf.Grpc.Client;
-using OpenTelemetry;
 
 namespace NeonCli
 {
