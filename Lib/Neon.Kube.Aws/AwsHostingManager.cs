@@ -560,7 +560,7 @@ namespace Neon.Kube.Hosting.Aws
         /// <summary>
         /// Specifies the NEONFORGE owner ID for marketplace AMIs.
         /// </summary>
-        private const string neonforgeOwnerId = "";
+        private const string neonforgeOwnerId = "679593333241";
 
         /// <summary>
         /// AWS generic name tag.
@@ -2134,10 +2134,7 @@ namespace Neon.Kube.Hosting.Aws
 
                 var neonImageFilter = new List<Filter>()
                 {
-                    new Filter() { Name = "owner-id", Values = new List<string>() { neonforgeOwnerId } },
-                    new Filter() { Name = "name", Values = new List<string>() { nodeImageName } },
-                    new Filter() { Name = "platform", Values = new List<string>() { "linux" } },
-                    new Filter() { Name = "architecture ", Values = new List<string>() { "x86_64" } }
+                    new Filter() { Name = "owner-id", Values = new List<string>() { neonforgeOwnerId } }
                 };
 
                 var response = await ec2Client.DescribeImagesAsync(
@@ -2146,7 +2143,7 @@ namespace Neon.Kube.Hosting.Aws
                         Filters = neonImageFilter,
                     });
 
-                nodeImage = response.Images.SingleOrDefault();
+                nodeImage = response.Images.SingleOrDefault(image => image.Name.StartsWith(nodeImageName) && image.Architecture == "x86_64");
 
                 if (nodeImage == null)
                 {
