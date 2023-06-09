@@ -36,7 +36,7 @@ namespace Neon.Kube.Deployment
     /// <summary>
     /// Holds information about the cluster deployment that is required for managing clusters
     /// after they are deployed.  This is persisted to the <see cref="KubeNamespace.NeonSystem"/>
-    /// namespace as the <see cref="KubeConfigMapName.ClusterDeployment"/> configmap.
+    /// namespace as the <see cref="KubeSecretName.ClusterDeployment"/> secret.
     /// </summary>
     public class ClusterDeployment
     {

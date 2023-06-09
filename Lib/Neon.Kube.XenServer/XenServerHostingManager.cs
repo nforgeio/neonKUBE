@@ -747,7 +747,7 @@ namespace Neon.Kube.Hosting.XenServer
 
                 if (match.Success)
                 {
-                    // The description has an encoded MD5 so compare that against the
+                    // The description includes the MD5 so compare that against the
                     // MD5 for the local template.  We're done when they match.
 
                     if (templateMd5 == match.Groups["md5"].Value)
@@ -1530,7 +1530,7 @@ namespace Neon.Kube.Hosting.XenServer
         }
 
         /// <inheritdoc/>
-        public override async Task DeleteClusterAsync()
+        public override async Task DeleteClusterAsync(ClusterDefinition clusterDefinition = null)
         {
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(XenServerHostingManager)}] was created with the wrong constructor.");

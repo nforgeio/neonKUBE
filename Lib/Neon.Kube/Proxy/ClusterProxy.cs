@@ -79,7 +79,7 @@ namespace Neon.Kube.Proxy
             /// <summary>
             /// <para>
             /// Only cluster lifecycle operations like <see cref="StartAsync()"/>, <see cref="StopAsync(StopMode)"/>,
-            /// and <see cref="DeleteClusterAsync()"/> will be enabled.
+            /// and <see cref="ClusterProxy.DeleteClusterAsync(ClusterDefinition)"/> will be enabled.
             /// </para>
             /// <note>
             /// These life cycle methods do not required a URI or file reference to a node image.
@@ -1014,33 +1014,39 @@ namespace Neon.Kube.Proxy
         /// Adds custom <see cref="V1NeonContainerRegistry"/> resources defined in the cluster definition to
         /// the cluster.  <b>neon-node-agent</b> will pick these up and regenerate the CRI-O configuration.
         /// </summary>
+        /// <param name="clusterDefinition">
+        /// Optionally specifies a cluster definitinn for situations where the cluster is already deployed
+        /// and the definition is not otherwise avalable.  This is typically used by <b>ClusterFixture</b>
+        /// based unit tests.
+        /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task AddContainerRegistryResourcesAsync()
+        public async Task AddContainerRegistryResourcesAsync(ClusterDefinition clusterDefinition = null)
         {
             await SyncContext.Clear;
-            EnsureSetupMode();
 
-            // We need to add the implict local cluster Harbor registry.
+            clusterDefinition ??= SetupState?.ClusterDefinition;
 
-            var localRegistries = new List<Registry>();
-            var harborCrioUser  = await KubeHelper.GetClusterLdapUserAsync(K8s, KubeConst.HarborCrioUser);
+            Covenant.Assert(clusterDefinition != null, $"[{nameof(ClusterDefinition)}] is not available.");
 
             // Add registries from the cluster definition.
 
-            foreach (var registry in SetupState.ClusterDefinition.Container.Registries)
+            var localRegistries = new List<Registry>();
+
+            foreach (var registry in clusterDefinition.Container.Registries)
             {
                 localRegistries.Add(registry);
             }
 
-            // Write the custom resources to the cluster.
+            // Create/update the custom resources to the cluster.
 
             foreach (var registry in localRegistries)
             {
-                var clusterRegistry              = new V1NeonContainerRegistry();
+                var clusterRegistry = new V1NeonContainerRegistry();
+
                 clusterRegistry.Metadata         = new V1ObjectMeta();
                 clusterRegistry.Metadata.Name    = registry.Name;
                 clusterRegistry.Spec             = new V1NeonContainerRegistry.RegistrySpec();
-                clusterRegistry.Spec.SearchOrder = SetupState.ClusterDefinition.Container.SearchRegistries.IndexOf(registry.Location);
+                clusterRegistry.Spec.SearchOrder = clusterDefinition.Container.SearchRegistries.IndexOf(registry.Location);
                 clusterRegistry.Spec.Prefix      = registry.Prefix;
                 clusterRegistry.Spec.Location    = registry.Location;
                 clusterRegistry.Spec.Blocked     = registry.Blocked;
@@ -1048,7 +1054,7 @@ namespace Neon.Kube.Proxy
                 clusterRegistry.Spec.Username    = registry.Username;
                 clusterRegistry.Spec.Password    = registry.Password;
 
-                await K8s.CustomObjects.CreateClusterCustomObjectAsync(clusterRegistry, registry.Name);
+                await K8s.CustomObjects.UpsertClusterCustomObjectAsync(clusterRegistry, registry.Name);
             }
         }
 
@@ -1408,9 +1414,14 @@ namespace Neon.Kube.Proxy
         /// Optionally specifies details about components to be reset.  This defaults to resetting 
         /// everything that makes sense.
         /// </param>
+        /// <param name="clusterDefinition">
+        /// Optionally specifies a cluster definitinn for situations where the cluster is already deployed
+        /// and the definition is not otherwise avalable.  This is typically used by <b>ClusterFixture</b>
+        /// based unit tests.
+        /// </param>
         /// <param name="progress">Optionally specified a callback to be called with human readable progress messages.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task ResetAsync(ClusterResetOptions options = null, Action<string> progress = null)
+        public async Task ResetAsync(ClusterResetOptions options = null, ClusterDefinition clusterDefinition = null, Action<string> progress = null)
         {
             await SyncContext.Clear;
             Covenant.Assert(HostingManager != null);
@@ -1447,65 +1458,55 @@ namespace Neon.Kube.Proxy
                     .Select(item => item.Metadata.Name)
                     .ToArray();
 
-                var controlNode = GetReachableControlNode(ReachableHostMode.Throw);
+                // Note that we're going to limit the number commands in-flight so that
+                // we don't consume too much RAM (for thread stacks) here on the client
+                // as well as not overloading the control-plane node.
 
-                try
+                var parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 10 };
+
+                Parallel.ForEach(resetNamespaces, parallelOptions,
+                    async @namespace =>
+                    {
+                        await KubeHelper.NeonCliExecuteAsync(new object[] { "delete", "all", "--all", "--cascade", "--namespace", @namespace });
+                    });
+
+                // Delete all of the cleared namespaces other than [default].
+
+                Parallel.ForEach(resetNamespaces.Where(@namespace => @namespace != "default"), parallelOptions,
+                    async @namespace =>
+                    {
+                        await KubeHelper.NeonCliExecuteAsync(new object[] { "delete", "namespace", @namespace });
+                    });
+
+                // The [kubectl] command doesn't actually delete everything in a namespace.  This isn't
+                // a problem for the non-default namespaces because we were able to delete them, but
+                // we'll need to explicitly remove any remaining resources in the [default] namespace.
+                //
+                // We're going to use the API server to list listing all namespaced resources
+                // available in the cluster, filter them to include only delete-able resources
+                // and resources without a "/" in their name.  Then we'll use [kubectl] to delete
+                // them all:
+                //
+                //      kubectl delete type0,type1,type2 --all --cascade --namespace default
+                //
+                // We're doing it this way because the API server isn't structured to make this easy.
+
+                var namespacedResourceTypes = (await K8s.CoreV1.GetAPIResourcesAsync())
+                    .Resources
+                    .Where(resource => resource.Namespaced && !resource.Name.Contains("/") && resource.Verbs.Contains("delete"))
+                    .ToArray();
+
+                var sbResourceTypes = new StringBuilder();
+
+                foreach (var resourceType in namespacedResourceTypes)
                 {
-                    controlNode.Connect();
-
-                    // Note that we're going to limit the number commands in-flight so that
-                    // we don't consume too much RAM (for thread stacks) here on the client
-                    // as well as not overloading the control-plane node.
-
-                    var parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = 10 };
-
-                    Parallel.ForEach(resetNamespaces, parallelOptions,
-                        @namespace =>
-                        {
-                            controlNode.SudoCommand("kubectl", new object[] { "delete", "all", "--all", "--cascade", "--namespace", @namespace });
-                        });
-
-                    // Delete all of the cleared namespaces other than [default].
-
-                    Parallel.ForEach(resetNamespaces.Where(@namespace => @namespace != "default"), parallelOptions,
-                        @namespace =>
-                        {
-                            controlNode.SudoCommand("kubectl", new object[] { "delete", "namespace", @namespace });
-                        });
-
-                    // The [kubectl] command doesn't actually delete everything in a namespace.  This isn't
-                    // a problem for the non-default namespaces because we were able to delete them, but
-                    // we'll need to explicitly remove any remaining resources in the [default] namespace.
-                    //
-                    // We're going to use the API server to list listing all namespaced resources
-                    // available in the cluster, filter them to include only delete-able resources
-                    // and resources without a "/" in their name.  Then we'll use [kubectl] to delete
-                    // them all:
-                    //
-                    //      kubectl delete type0,type1,type2 --all --cascade --namespace default
-                    //
-                    // We're doing it this way because the API server isn't structured to make this easy.
-
-                    var namespacedResourceTypes = (await K8s.CoreV1.GetAPIResourcesAsync())
-                        .Resources
-                        .Where(resource => resource.Namespaced && !resource.Name.Contains("/") && resource.Verbs.Contains("delete"))
-                        .ToArray();
-
-                    var sbResourceTypes = new StringBuilder();
-
-                    foreach (var resourceType in namespacedResourceTypes)
-                    {
-                        sbResourceTypes.AppendWithSeparator(resourceType.Name, ",");
-                    }
-
-                    if (sbResourceTypes.Length > 0)
-                    {
-                        controlNode.SudoCommand("kubectl", new object[] { "delete", sbResourceTypes, "--all", "--cascade", "--namespace", "default" }).EnsureSuccess();
-                    }
+                    sbResourceTypes.AppendWithSeparator(resourceType.Name, ",");
                 }
-                finally
+
+                if (sbResourceTypes.Length > 0)
                 {
-                    controlNode.Disconnect();
+                    (await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "delete", sbResourceTypes, "--all", "--cascade", "--namespace", "default" }))
+                        .EnsureSuccess();
                 }
             }
 
@@ -1538,15 +1539,25 @@ namespace Neon.Kube.Proxy
 
             if (options.ResetCrio)
             {
+                var harborCrioUser = await KubeHelper.GetClusterLdapUserAsync(K8s, KubeConst.HarborCrioUser);
+
                 await Parallel.ForEachAsync((await K8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonContainerRegistry>()).Items,
                     async (item, cancellationToken) =>
                     {
+                        // Don't remove the container registry reference to the
+                        // local Harbor registry.
+
+                        if (item.Spec.Username.Equals(harborCrioUser.Name, StringComparison.CurrentCultureIgnoreCase))
+                        {
+                            return;
+                        }
+
                         var metadata = item.GetKubernetesTypeMetadata();
 
                         await K8s.CustomObjects.DeleteClusterCustomObjectWithHttpMessagesAsync(metadata.Group, metadata.ApiVersion, metadata.PluralName, item.Name());
                     });
 
-                await AddContainerRegistryResourcesAsync();
+                await AddContainerRegistryResourcesAsync(clusterDefinition);
             }
 
             // $todo(jefflill):
@@ -1580,9 +1591,15 @@ namespace Neon.Kube.Proxy
         /// This operation may not be supported for all environments.
         /// </note>
         /// </summary>
+        /// <param name="clusterDefinition">
+        /// Optionally specifies a cluster definition.  This is used in situations where
+        /// you need to remove a cluster without having its kubeconfig context.  Use this
+        /// with <b>extreme care</b> because in the mode, the cluster cannot be queried to
+        /// determine whether it's locked or not and locked clusters will be deleted too.
+        /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        public async Task DeleteClusterAsync()
+        public async Task DeleteClusterAsync(ClusterDefinition clusterDefinition = null)
         {
             await SyncContext.Clear;
             Covenant.Assert(HostingManager != null);
@@ -1590,7 +1607,7 @@ namespace Neon.Kube.Proxy
             var contextName = KubeContextName.Parse($"{KubeConst.RootUser}@{Name}");
             var context     = KubeHelper.KubeConfig.GetContext(contextName);
 
-            await HostingManager.DeleteClusterAsync();
+            await HostingManager.DeleteClusterAsync(clusterDefinition);
 
             if (context != null)
             {

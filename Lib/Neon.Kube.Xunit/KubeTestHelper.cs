@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubeTestHelper.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -52,32 +52,6 @@ namespace Neon.Kube.Xunit
         /// <b>ghcr.io/neonrelease/test</b> image test group ID.
         /// </summary>
         public const string TestGID = "6666";
-
-        /// <summary>
-        /// Static constructor.
-        /// </summary>
-        static KubeTestHelper()
-        {
-            ClusterDefinitions =
-                new Dictionary<string, string>()
-                {
-                    { "hyperv/tiny", HyperVClusters.Tiny },
-                    { "hyperv/small", HyperVClusters.Small },
-                    { "hyperv/large", HyperVClusters.Large },
-
-                    { "xenserver/tiny", XenServerClusters.Tiny },
-                    { "xenserver/small", XenServerClusters.Small },
-                    { "xenserver/large", XenServerClusters.Large },
-                };
-        }
-
-        /// <summary>
-        /// Returns a dictionary mapping test cluster definitions keyed like <b>hyperv/tiny</b> or
-        /// <b>xenserver/large</b> to the actual cluster definition text.  This is used so that
-        /// maintainers can configure their <b>neon-assistant</b> profile to specify which cluster
-        /// definition they wish to use for running unit tests in their environment.
-        /// </summary>
-        public static IReadOnlyDictionary<string, string> ClusterDefinitions { get; private set; }
 
         /// <summary>
         /// Creates and optionally populates a temporary test folder with test files.
@@ -140,33 +114,6 @@ namespace Neon.Kube.Xunit
         public static KubeTestManager KubeTestManager()
         {
             return new KubeTestManager();
-        }
-
-        /// <summary>
-        /// Returns the path to the <b>neon-cli</b> executable.
-        /// </summary>
-        private static string NeonExePath
-        {
-            get
-            {
-                // We're going to run the command from the NK_BUILD directory.
-
-                var buildFolder = Environment.GetEnvironmentVariable("NK_BUILD");
-
-                if (string.IsNullOrEmpty(buildFolder))
-                {
-                    throw new Exception("The NK_BUILD environment variable is not defined.");
-                }
-
-                if (NeonHelper.IsWindows)
-                {
-                    return Path.Combine(buildFolder, "neon.cmd");
-                }
-                else
-                {
-                    return Path.Combine(buildFolder, "neon");
-                }
-            }
         }
     }
 }

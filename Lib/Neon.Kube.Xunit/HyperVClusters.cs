@@ -190,7 +190,11 @@ namespace Neon.Kube.Xunit
         /// <summary>
         /// <b>HYper-V:</b> single node cluster definition.
         /// </summary>
-        public const string Tiny = @"
+        public static string Tiny
+        {
+            get
+            {
+                const string clusterDefinition = @"
 name: hyperv-tiny
 datacenter: $<profile:datacenter>
 purpose: test
@@ -219,11 +223,21 @@ nodes:
     role: control-plane
     address: $<profile:hyperv.tiny0.ip>
 ";
+                using (var reader = new PreprocessReader(new StringReader(clusterDefinition)))
+                {
+                    return reader.ReadToEnd();
+                }
+            }
+        }
 
         /// <summary>
         /// <b>HYper-V:</b> 1 control-plane and 3 worker cluster definition.
         /// </summary>
-        public const string Small = @"
+        public static string Small
+        {
+            get
+            {
+                const string clusterDefinition = @"
 name: hyperv-small
 datacenter: $<profile:datacenter>
 purpose: test
@@ -261,11 +275,21 @@ nodes:
     role: worker
     address: $<profile:hyperv.small3.ip>
 ";
+                using (var reader = new PreprocessReader(new StringReader(clusterDefinition)))
+                {
+                    return reader.ReadToEnd();
+                }
+            }
+        }
 
         /// <summary>
         /// <b>HYper-V:</b> 3 control-plane and 3 worker cluster definition.
         /// </summary>
-        public const string Large = @"
+        public static string Large
+        {
+            get
+            {
+                const string clusterDefinition = @"
 name: hyperv-large
 datacenter: $<profile:datacenter>
 purpose: test
@@ -312,5 +336,11 @@ nodes:
     role: worker
     address: $<profile:hyperv.large5.ip>
 ";
+                using (var reader = new PreprocessReader(new StringReader(clusterDefinition)))
+                {
+                    return reader.ReadToEnd();
+                }
+            }
+        }
     }
 }

@@ -4333,7 +4333,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
         }
 
         /// <inheritdoc/>
-        public override async Task DeleteClusterAsync()
+        public override async Task DeleteClusterAsync(ClusterDefinition clusterDefinition = null)
         {
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");

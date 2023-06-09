@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    Test_NeonNodeTask.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -43,6 +43,7 @@ using Xunit.Abstractions;
 namespace TestKube
 {
     [Trait(TestTrait.Category, TestArea.NeonKube)]
+    [Trait(TestTrait.Category, TestTrait.Slow)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_NeonNodeTask

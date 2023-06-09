@@ -701,29 +701,54 @@ namespace Neon.Kube.Hosting.HyperV
         /// defined in the cluster definition.
         /// </summary>
         /// <param name="vmName">The virtual machine name.</param>
+        /// <param name="clusterDefinition">
+        /// Optionally specifies a cluster definition for situations where there may
+        /// not be a current KubeConfig.
+        /// </param>
         /// <returns>The corresponding node name if found, or <c>null</c>.</returns>
-        private string VmNameToNodeName(string vmName)
+        private string VmNameToNodeName(string vmName, ClusterDefinition clusterDefinition = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(vmName), nameof(vmName));
-            Covenant.Assert(cluster.KubeConfig?.Cluster != null, "The cluster must already be deployed.");
+            Covenant.Assert(cluster.KubeConfig?.Cluster != null || clusterDefinition != null, "The cluster must be deployed or a cluster definition must be specified.");
 
-            // Special case the NEONDESKTOP cluster whose
-            // name is never prefixed.
-
-            if (cluster.KubeConfig.Cluster.IsNeonDesktop &&
-                vmName.Equals(KubeConst.NeonDesktopHyperVVmName, StringComparison.InvariantCultureIgnoreCase))
+            if (clusterDefinition == null)
             {
-                return vmName;
+                // Special case the NEONDESKTOP cluster whose name is never prefixed.
+
+                if (cluster.KubeConfig.Cluster.IsNeonDesktop &&
+                    vmName.Equals(KubeConst.NeonDesktopHyperVVmName, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return vmName;
+                }
+
+                var prefix = cluster.KubeConfig.Cluster.HostingNamePrefix;
+
+                if (!vmName.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return null;
+                }
+
+                return vmName.Substring(prefix.Length);
             }
-
-            var prefix = cluster.KubeConfig.Cluster.HostingNamePrefix;
-
-            if (!vmName.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
+            else
             {
-                return null;
-            }
+                // Special case the NEONDESKTOP cluster whose name is never prefixed.
 
-            return vmName.Substring(prefix.Length);
+                if (clusterDefinition.IsDesktop &&
+                    vmName.Equals(KubeConst.NeonDesktopHyperVVmName, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return vmName;
+                }
+
+                var prefix = clusterDefinition.Hosting.Hypervisor.NamePrefix;
+
+                if (!vmName.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return null;
+                }
+
+                return vmName.Substring(prefix.Length);
+            }
         }
 
         /// <summary>
@@ -1011,8 +1036,12 @@ namespace Neon.Kube.Hosting.HyperV
         /// Returns information about the cluster virtual machines and the related node names.
         /// </summary>
         /// <param name="hyperv">The Hyper-V proxy to use.</param>
+        /// <param name="clusterDefinition">
+        /// Optionally specifies a cluster definition for situations where there may
+        /// not be a current KubeConfig.
+        /// </param>
         /// <returns>The cluster virtual machine information.</returns>
-        private List<ClusterVm> GetClusterVms(HyperVProxy hyperv)
+        private List<ClusterVm> GetClusterVms(HyperVProxy hyperv, ClusterDefinition clusterDefinition = null)
         {
             Covenant.Requires<ArgumentNullException>(hyperv != null, nameof(hyperv));
 
@@ -1020,7 +1049,7 @@ namespace Neon.Kube.Hosting.HyperV
 
             foreach (var machine in hyperv.ListVms())
             {
-                var nodeName = VmNameToNodeName(machine.Name);
+                var nodeName = VmNameToNodeName(machine.Name, clusterDefinition);
 
                 if (nodeName != null)
                 {
@@ -1276,22 +1305,22 @@ namespace Neon.Kube.Hosting.HyperV
         }
 
         /// <inheritdoc/>
-        public override async Task DeleteClusterAsync()
+        public override async Task DeleteClusterAsync(ClusterDefinition clusterDefinition = null)
         {
             await SyncContext.Clear;
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
 
             using (var hyperv = new HyperVProxy())
             {
-                Parallel.ForEach(GetClusterVms(hyperv), parallelOptions,
-                    cluserVm =>
+                Parallel.ForEach(GetClusterVms(hyperv, clusterDefinition), parallelOptions,
+                    clusterVm =>
                     {
-                        if (cluserVm.Machine.State == VirtualMachineState.Running || cluserVm.Machine.State == VirtualMachineState.Starting)
+                        if (clusterVm.Machine.State == VirtualMachineState.Running || clusterVm.Machine.State == VirtualMachineState.Starting)
                         {
-                            hyperv.StopVm(cluserVm.Machine.Name, turnOff: true);
+                            hyperv.StopVm(clusterVm.Machine.Name, turnOff: true);
                         }
 
-                        hyperv.RemoveVm(cluserVm.Machine.Name);
+                        hyperv.RemoveVm(clusterVm.Machine.Name);
                     });
             }
         }

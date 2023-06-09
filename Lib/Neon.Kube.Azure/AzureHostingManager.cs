@@ -3522,7 +3522,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
         }
 
         /// <inheritdoc/>
-        public override async Task DeleteClusterAsync()
+        public override async Task DeleteClusterAsync(ClusterDefinition clusterDefinition = null)
         {
             await SyncContext.Clear;
 

@@ -199,7 +199,11 @@ namespace Neon.Kube.Xunit
         /// <summary>
         /// <b>XenServer:</b> single node cluster definition.
         /// </summary>
-        public const string Tiny = @"
+        public static string Tiny
+        {
+            get
+            {
+                const string clusterDefinition = @"
 name: xenserver-tiny
 datacenter: $<profile:datacenter>
 purpose: test
@@ -236,11 +240,21 @@ nodes:
     hypervisor:
       host: XEN-TEST
 ";
+                using (var reader = new PreprocessReader(new StringReader(clusterDefinition)))
+                {
+                    return reader.ReadToEnd();
+                }
+            }
+        }
 
         /// <summary>
         /// <b>XenServer:</b> 1 control-plane and 3 worker cluster definition.
         /// </summary>
-        public const string Small = @"
+        public static string Small
+        {
+            get
+            {
+                const string clusterDefinition = @"
 name: xenserver-small
 datacenter: $<profile:datacenter>
 purpose: test
@@ -292,11 +306,21 @@ nodes:
     hypervisor:
       host: XEN-TEST
 ";
+                using (var reader = new PreprocessReader(new StringReader(clusterDefinition)))
+                {
+                    return reader.ReadToEnd();
+                }
+            }
+        }
 
         /// <summary>
         /// <b>XenServer:</b> 3 control-plane and 3 worker cluster definition.
         /// </summary>
-        public const string Large = @"
+        public static string Large
+        {
+            get
+            {
+                const string clusterDefinition = @"
 name: xenserver-large
 datacenter: $<profile:datacenter>
 purpose: test
@@ -361,5 +385,11 @@ nodes:
     hypervisor:
       host: XEN-TEST
 ";
+                using (var reader = new PreprocessReader(new StringReader(clusterDefinition)))
+                {
+                    return reader.ReadToEnd();
+                }
+            }
+        }
     }
 }

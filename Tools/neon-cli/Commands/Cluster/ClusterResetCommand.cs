@@ -242,7 +242,7 @@ definition or by executing this command on your cluster:
                                 ResetMinio      = minio,
                                 ResetMonitoring = monitoring
                             },
-                            progressMessage => Console.WriteLine(progressMessage));
+                            progress: progressMessage => Console.WriteLine(progressMessage));
 
                         Console.WriteLine($"RESET: {cluster.Name}");
                         break;

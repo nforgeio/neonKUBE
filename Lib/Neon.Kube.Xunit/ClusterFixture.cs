@@ -194,7 +194,7 @@ namespace Neon.Kube.Xunit
     /// <see cref="K8s"/>.
     /// </para>
     /// <para>
-    /// The fixture also provides the <see cref="NeonExecute(string[])"/> method which can be used for 
+    /// The fixture also provides the <see cref="NeonExecuteCaptureAsync(string[])"/> method which can be used for 
     /// executing <b>kubectl</b>, <b>helm</b>, and other commands using the <b>neon-cli</b>.  Commands
     /// will be executed against the test cluster (as the current config) and a <see cref="ExecuteResponse"/>
     /// will be returned holding the command exit code as well as the output text.
@@ -425,6 +425,22 @@ namespace Neon.Kube.Xunit
         {
             options ??= new ClusterFixtureOptions();
 
+            // Obtain the cluster definition from the special kubecondig cluster extension.
+            // Fail when this isn't present because the current cluster mush not be a test
+            // cluster then.
+
+            this.ClusterDefinition = KubeHelper.KubeConfig.Cluster?.TestClusterDefinition;
+
+            if (ClusterDefinition == null)
+            {
+                throw new NeonKubeException($"[{KubeHelper.KubeConfig.CurrentContext}] was not provisioned by: {nameof(ClusterFixture)}");
+            }
+
+            if (ClusterDefinition.IsLocked)
+            {
+                throw new NeonKubeException($"Cluster for [{KubeHelper.KubeConfig.CurrentContext}] is locked and cannot be used for testing.");
+            }
+
             // Make a copy of the options and then disable any settings that don't apply to
             // running tests against the current cluster.
 
@@ -530,6 +546,8 @@ namespace Neon.Kube.Xunit
         public TestFixtureStatus StartWithClusterDefinition(ClusterDefinition clusterDefinition, ClusterFixtureOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            this.ClusterDefinition = clusterDefinition;
 
             if (clusterDefinition.IsLocked)
             {
@@ -647,7 +665,7 @@ namespace Neon.Kube.Xunit
                     {
                         // We need to reset an existing cluster to ensure it's in a known state.
 
-                        cluster.ResetAsync().WaitWithoutAggregate();
+                        cluster.ResetAsync(clusterDefinition: clusterDefinition).WaitWithoutAggregate();
 
                         started   = true;
                         IsRunning = true;
@@ -667,7 +685,7 @@ namespace Neon.Kube.Xunit
 
                 using (var cluster = ClusterProxy.Create(new KubeSetupState() { ClusterDefinition = clusterDefinition }, new HostingManagerFactory(), cloudMarketplace: options.CloudMarketplace))
                 {
-                    cluster.DeleteClusterAsync().WaitWithoutAggregate();
+                    cluster.DeleteClusterAsync(clusterDefinition).WaitWithoutAggregate();
                 }
             }
 
@@ -1009,49 +1027,10 @@ namespace Neon.Kube.Xunit
         /// neon helm install -f values.yaml myapp .
         /// neon helm uninstall myapp
         /// </code>
-        /// <para><b>THROW EXCEPTION ON ERRORS</b></para>
-        /// <para>
-        /// Rather than explicitly checking the <see cref="ExecuteResponse.ExitCode"/> and throwing
-        /// exceptions yourself, you can call <see cref="ExecuteResponse.EnsureSuccess()"/> which
-        /// throws an <see cref="ExecuteException"/> for non-zero exit codes or you can use
-        /// <see cref="NeonExecuteWithCheck(string[])"/> which does this for you.
-        /// </para>
         /// </remarks>
-        public ExecuteResponse NeonExecute(params string[] args)
+        public async Task<ExecuteResponse> NeonExecuteCaptureAsync(params string[] args)
         {
-            return NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, args);
-        }
-
-        /// <summary>
-        /// Executes a <b>neon-cli</b> command against the current test cluster, throwing an
-        /// <see cref="ExecuteException"/> for non-zero exit codes.
-        /// </summary>
-        /// <param name="args">The command arguments.</param>
-        /// <returns>An <see cref="ExecuteResponse"/> with the exit code and output text.</returns>
-        /// <remarks>
-        /// <para>
-        /// <b>neon-cli</b> is a wrapper around the <b>kubectl</b> and <b>helm</b> tools.
-        /// </para>
-        /// <para><b>KUBECTL COMMANDS:</b></para>
-        /// <para>
-        /// <b>neon-cli</b> implements <b>kubectl</b> commands directly like:
-        /// </para>
-        /// <code>
-        /// neon get pods
-        /// neon apply -f myapp.yaml
-        /// </code>
-        /// <para><b>HELM COMMANDS:</b></para>
-        /// <para>
-        /// <b>neon-cli</b> implements <b>helm</b> commands like <b>neon helm...</b>:
-        /// </para>
-        /// <code>
-        /// neon helm install -f values.yaml myapp .
-        /// neon helm uninstall myapp
-        /// </code>
-        /// </remarks>
-        public ExecuteResponse NeonExecuteWithCheck(params string[] args)
-        {
-            return NeonExecute(args).EnsureSuccess();
+            return await KubeHelper.NeonCliExecuteCaptureAsync(args);
         }
 
         /// <summary>
@@ -1061,7 +1040,7 @@ namespace Neon.Kube.Xunit
         {
             if (TestHelper.IsClusterTestingEnabled)
             {
-                Cluster?.ResetAsync(options.ResetOptions, message => WriteTestOutputLine(message)).WaitWithoutAggregate();
+                Cluster?.ResetAsync(options.ResetOptions, clusterDefinition: ClusterDefinition, progress: message => WriteTestOutputLine(message)).WaitWithoutAggregate();
                 Thread.Sleep(options.ResetOptions.StabilizeSeconds);
             }
 

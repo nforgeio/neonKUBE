@@ -3492,5 +3492,31 @@ TCPKeepAlive yes
                 return cachedNeonCliPath = neonPath;
             }
         }
+
+        /// <summary>
+        /// Executes a <b>neon/kubectl</b> command using the installed executable or the
+        /// executable from the NEONCLOUD build folder.
+        /// </summary>
+        /// <param name="args">The command line arguments.</param>
+        /// <returns>The command exit code.</returns>
+        public static async Task<int> NeonCliExecuteAsync(object[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
+
+            return await NeonHelper.ExecuteAsync(NeonCliPath, args);
+        }
+
+        /// <summary>
+        /// Executes a <b>neon/kubectl</b> command using the installed executable or the
+        /// executable from the NEONCLOUD build folder, capturing the output streams.
+        /// </summary>
+        /// <param name="args">The command line arguments.</param>
+        /// <returns>The command exit code.</returns>
+        public static async Task<ExecuteResponse> NeonCliExecuteCaptureAsync(object[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
+
+            return await NeonHelper.ExecuteCaptureAsync(NeonCliPath, args);
+        }
     }
 }

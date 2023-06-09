@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:	    Test_KubeFixtureHyperv.cs
+// FILE:	    Test_ClusterFixtureXenServer.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -21,6 +21,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -38,16 +39,18 @@ using Xunit.Abstractions;
 namespace TestKube
 {
     /// <summary>
-    /// This is a somewhat limited test of <see cref="ClusterFixture"/> for Hyper-V hosted
+    /// This is a somewhat limited test of <see cref="ClusterFixture"/> for XenServer hosted
     /// clusters.  This isn't intended to be comprehensive but is intended to be temporarily 
     /// modified for manually testing corner cases.  We've decided not to make this comprehensive
     /// because that would require that we test removing clusters which would disrupt other
     /// cluster unit tests.
     /// </summary>
     [Trait(TestTrait.Category, TestArea.NeonKube)]
+    [Trait(TestTrait.Category, TestTrait.RequiresProfile)]
+    [Trait(TestTrait.Category, TestTrait.Slow)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
-    public class Test_KubeFixtureHyperv : IClassFixture<ClusterFixture>
+    public class Test_ClusterFixtureXenServer : IClassFixture<ClusterFixture>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -55,7 +58,7 @@ namespace TestKube
         /// <summary>
         /// Static constructor.
         /// </summary>
-        static Test_KubeFixtureHyperv()
+        static Test_ClusterFixtureXenServer()
         {
             if (TestHelper.IsClusterTestingEnabled)
             {
@@ -71,12 +74,12 @@ namespace TestKube
 
         private ClusterFixture fixture;
 
-        public Test_KubeFixtureHyperv(ClusterFixture fixture, ITestOutputHelper testOutputHelper)
+        public Test_ClusterFixtureXenServer(ClusterFixture fixture, ITestOutputHelper testOutputHelper)
         {
             this.fixture = fixture;
 
             var options = new ClusterFixtureOptions() { TestOutputHelper = testOutputHelper };
-            var status  = fixture.StartCluster(HyperVClusters.Tiny, options: options);
+            var status  = fixture.StartCluster(XenServerClusters.Tiny, options: options);
 
             if (status == TestFixtureStatus.Disabled)
             {
@@ -89,11 +92,13 @@ namespace TestKube
         }
 
         [ClusterFact]
-        public void KubeCtl()
+        public async Task NeonCli()
         {
             // Verify that we can execute a neon-cli command.
 
-            var response   = fixture.NeonExecute("get", "namespaces").EnsureSuccess();
+            var response = (await fixture.NeonExecuteCaptureAsync("get", "namespaces"))
+                .EnsureSuccess();
+
             var namespaces = 
                 new string[]
                 {
@@ -110,7 +115,7 @@ namespace TestKube
         }
 
         [ClusterFact]
-        public void Helm()
+        public async Task Helm()
         {
             // Verify that we can deploy a simple test pod via the Helm method.
 
@@ -158,7 +163,8 @@ appVersion: 0
 ";
                 File.WriteAllText(chartPath, chartYaml);
 
-                fixture.NeonExecute("helm", "install", "test-pod", "--namespace", "default", tempFolder.Path).EnsureSuccess();
+                (await fixture.NeonExecuteCaptureAsync("helm", "install", "test-pod", "--namespace", "default", tempFolder.Path))
+                    .EnsureSuccess();
             }
         }
     }

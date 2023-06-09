@@ -522,7 +522,7 @@ namespace Neon.Kube.Hosting
         }
 
         /// <inheritdoc/>
-        public virtual async Task DeleteClusterAsync()
+        public virtual async Task DeleteClusterAsync(ClusterDefinition clusterDefinition = null)
         {
             await SyncContext.Clear;
             throw new NotSupportedException();
