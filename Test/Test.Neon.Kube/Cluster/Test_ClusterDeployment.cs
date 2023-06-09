@@ -31,6 +31,7 @@ using Neon.Deployment;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.ClusterDef;
+using Neon.Kube.Config;
 using Neon.Kube.Xunit;
 using Neon.XenServer;
 using Neon.Xunit;
@@ -82,6 +83,21 @@ namespace TestKube
             }
         }
 
+        /// <summary>
+        /// Constructs a <see cref="XenClient"/> for the XenServer host assigned to the test runner
+        /// for its exclusive use.
+        /// </summary>
+        /// <param name="clusterDefinition">Specifies the cluster definitiion.</param>
+        /// <returns>The new <see cref="XenClient"/></returns>
+        private XenClient CreateXenClient(ClusterDefinition clusterDefinition)
+        {
+            var host         = clusterDefinition.Hosting.Hypervisor.Hosts.First();  // $hack(jefflill): assuming one dedicated XenServer host
+            var hostUsername = host.Username ?? clusterDefinition.Hosting.Hypervisor.HostUsername;
+            var hostPassword = host.Password ?? clusterDefinition.Hosting.Hypervisor.HostPassword;
+
+            return new XenClient(host.Address, hostUsername, hostPassword);
+        }
+
         [MaintainerTheory]
         [Repeat(repeatCount)]
         public async Task XenServer_Tiny(int runCount)
@@ -98,26 +114,19 @@ namespace TestKube
                 try
                 {
                     // We've seen intermittent problems uploading the node template to XenServers
-                    // so we're going to remove any existing template first to exercise this.
+                    // so we're going to remove any existing templates first to exercise this along
+                    // with removing all VMs from the dedicated XenServer host.
 
-                    var templateName = $"neonkube-{KubeVersions.NeonKubeWithBranchPart}";
-                    var host         = clusterDefinition.Hosting.Hypervisor.Hosts.First();  // $hack(jefflill): assuming one XenServer host
-                    var hostUsername = host.Username ?? clusterDefinition.Hosting.Hypervisor.HostUsername;
-                    var hostPassword = host.Password ?? clusterDefinition.Hosting.Hypervisor.HostPassword;
-
-                    using (var xenClient = new XenClient(host.Address, hostUsername, hostPassword))
+                    using (var xenClient = CreateXenClient(clusterDefinition))
                     {
-                        var template = xenClient.Template.Find(templateName);
-
-                        if (template != null)
-                        {
-                            xenClient.Template.Destroy(template);
-                        }
+                        xenClient.CleanHost(templateSelector: template => template.NameLabel.StartsWith("neon", StringComparison.InvariantCultureIgnoreCase));
                     }
 
-                    // Logout out of the current cluster (if any) and then deploy a fresh one.
+                    // Logout out of the current cluster (if any), remove any existing cluster context that
+                    // may conflict with the new cluster and then deploy a fresh cluster.
 
                     await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "logout" });
+                    KubeHelper.KubeConfig.RemoveCluster(clusterDefinition.Name);
                     (await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "cluster", "deploy", tempFile.Path }))
                         .EnsureSuccess();
                 }
@@ -125,7 +134,7 @@ namespace TestKube
                 {
                     // Delete the deployed cluster.
 
-                    await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "cluster", "delete" });
+                    await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "cluster", "delete", clusterDefinition.Name, "--force" });
                 }
             }
         }

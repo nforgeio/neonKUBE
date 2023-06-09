@@ -1274,7 +1274,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 cluster.SaveSetupState();
             }
 
-            // Update kubeconfig by setting our custom extension properties and then merging the
+            // Update kubeconfig by setting our custom extension properties and then merge the
             // new kubeconfig into the global config.
 
             var configText = cluster.SetupState.ControlNodeFiles["/etc/kubernetes/admin.conf"].Text;
@@ -1286,6 +1286,8 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             var newUser    = newConfig.Users.Single();
             var newCluster = newConfig.Clusters.Single();
             var newContext = newConfig.Contexts.Single();
+
+            newUser.ClusterName           = cluster.Name;
 
             newCluster.ClusterInfo        = cluster.SetupState.ToKubeClusterInfo();
             newCluster.HostingEnvironment = cluster.Hosting.Environment;

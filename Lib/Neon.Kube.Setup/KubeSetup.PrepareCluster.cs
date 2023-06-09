@@ -455,6 +455,7 @@ namespace Neon.Kube.Setup
                     if (options.DesktopReadyToGo)
                     {
                         setupState.ClusterId     = KubeHelper.GenerateClusterId();
+                        setupState.ClusterName   = clusterDefinition.Name;
                         setupState.ClusterDomain = KubeConst.DesktopClusterDomain;
 
                         hostName    = KubeConst.DesktopClusterDomain;

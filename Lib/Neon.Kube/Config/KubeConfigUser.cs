@@ -106,5 +106,22 @@ namespace Neon.Kube.Config
 
             User.Extensions.Set<T>(name, value);
         }
+
+        /// <summary>
+        /// <para>
+        /// Specifies the name of the referenced cluster.  NEONKUBE uses this for identifying
+        /// users to be deleted when related clusters are removed.
+        /// </para>
+        /// <para>
+        /// This will be <c>null</c> for non-NEONKUBE clusters.
+        /// </para>
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public string ClusterName
+        {
+            get => GetExtensionValue<string>(NeonKubeExtensions.ClusterName, null);
+            set => SetExtensionValue<string>(NeonKubeExtensions.ClusterName, value);
+        }
     }
 }

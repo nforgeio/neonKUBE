@@ -84,6 +84,11 @@ namespace Neon.Kube.Config
         public const string SshPassword = $"{ExtensionPrefix}ssh-password";
 
         /// <summary>
+        /// <c>string</c>: Identifies a cluster.
+        /// </summary>
+        public const string ClusterName = $"{ExtensionPrefix}cluster-name";
+
+        /// <summary>
         /// Used by our xUnit <b>ClusterFixture</b> to persist the cluster definition so
         /// the fixture can determine when to provision a new cluster when the definition
         /// has changed.

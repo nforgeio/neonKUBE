@@ -64,13 +64,13 @@ Permanently deletes a NEONKUBE cluster.
 
 USAGE:
 
-    neon cluster remove [CONTEXT-NAME] [--force]
+    neon cluster remove [CLUSTERNAME] [--force]
 
 ARGUMENTS:
 
-    CONTEXT-NAME    - Optionally identifies context identifying the cluster
-                      to be removed.  The current context's cluster will be
-                      removed when this isn't present
+    CLUSTERNAME     - Optionally identifies cluster to be removed by name.
+                      The current context's cluster will be removed when
+                      this isn't present.
 
 OPTIONS:
 

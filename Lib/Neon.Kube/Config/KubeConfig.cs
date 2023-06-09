@@ -271,8 +271,9 @@ namespace Neon.Kube.Config
 
             if (!noSave)
             {
-                // Also the setup state file for this cluster if it exists.  This may be
-                // present if cluster prepare/setup was interrupted for the cluster.
+                // Also remove the setup state file for this cluster if it exists.
+                // This may be present if cluster prepare/setup was interrupted
+                // for the cluster.
 
                 KubeSetupState.Delete(name.ToString());
             }
@@ -397,6 +398,36 @@ namespace Neon.Kube.Config
         }
 
         /// <summary>
+        /// Removes a cluster from the config as well as any contexts referencing it.
+        /// </summary>
+        /// <param name="clusterName"></param>
+        public void RemoveCluster(string clusterName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName), nameof(clusterName));
+
+            // Set the current context to NULL if it references the cluster being removed.
+
+            if (Context != null && Context.Context.Cluster == clusterName)
+            {
+                SetContext();
+            }
+
+            // Remove any users and contexts referencing the cluster.
+
+            foreach (var context in Contexts.Where(context => context.Context.Cluster == clusterName).ToArray())
+            {
+                Contexts.Remove(context);
+            }
+
+            foreach (var user in Users.Where(user => user.ClusterName == clusterName).ToArray())
+            {
+                Users.Remove(user);
+            }
+
+            Save();
+        }
+
+        /// <summary>
         /// Validates the kubeconfig.
         /// </summary>
         /// <param name="needsCurrentCluster">
@@ -433,7 +464,7 @@ namespace Neon.Kube.Config
         /// <summary>
         /// Sets the current context.
         /// </summary>
-        /// <param name="contextName">The name of the current context or <c>null</c> to deselect the context.</param>
+        /// <param name="contextName">The name of the current context or <c>null</c> to deselect the current context.</param>
         /// <exception cref="NeonKubeException">Thrown if the context does not exist.</exception>
         public void SetContext(string contextName = null)
         {

@@ -303,7 +303,7 @@ namespace Neon.Kube.Setup
 
             if (options.DesktopReadyToGo)
             {
-                controller.AddGlobalStep("wait for stable cluster...", StabilizeClusterAsync);
+                controller.AddGlobalStep("stablize cluster...", StabilizeClusterAsync);
             }
 
             // We need to dispose these after the setup controller runs.
