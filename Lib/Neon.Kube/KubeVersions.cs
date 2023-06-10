@@ -269,11 +269,6 @@ namespace Neon.Kube
         public const string Helm = "3.7.1";
 
         /// <summary>
-        /// The version of Kustomize to be installed.
-        /// </summary>
-        public const string Kustomize = "4.4.1";
-
-        /// <summary>
         /// The version of CoreDNS to be installed.
         /// </summary>
         public const string CoreDNS = "1.6.2";

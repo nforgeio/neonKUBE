@@ -1122,34 +1122,6 @@ rm -rf linux-amd64
         }
 
         /// <summary>
-        /// Installs the <b>Kustomize</b> client.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        public void NodeInstallKustomize(ISetupController controller)
-        {
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
-
-            InvokeIdempotent("setup/kustomize-client",
-                () =>
-                {
-                    controller.LogProgress(this, verb: "setup", message: "kustomize");
-
-                    var script =
-$@"
-set -euo pipefail
-
-cd /usr/local/bin
-curl {KubeHelper.CurlOptions} https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh  > install-kustomize.sh
-
-bash ./install-kustomize.sh {KubeVersions.Kustomize}
-chmod 770 kustomize
-rm  install-kustomize.sh
-";
-                    SudoCommand(CommandBundle.FromScript(script), RunOptions.Defaults | RunOptions.FaultOnError);
-                });
-        }
-
-        /// <summary>
         /// Loads the docker images onto the node. This is used for debug mode only.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
