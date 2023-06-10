@@ -292,12 +292,6 @@ NOTE: Command line arguments and options may include references to
 
             Logger.LogInformationEx(() => $"starting: {Name}");
 
-            //-----------------------------------------------------------------
-            // Use the version of Powershell Core installed with the application,
-            // if present.
-
-            PowerShell.PwshPath = KubeHelper.PwshPath;
-
             // Register a [ProfileClient] so commands will be able to pick
             // up secrets and profile information from [neon-assistant].
 

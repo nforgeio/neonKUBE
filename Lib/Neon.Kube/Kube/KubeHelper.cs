@@ -1039,36 +1039,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path to the Powershell Core executable to be used.
-        /// This will first examine the <b>NEON_INSTALL_FOLDER</b> environment
-        /// variable to see if the installed version of Powershell Core should
-        /// be used, otherwise it will simply return <b>pwsh.exe</b> so that
-        /// the <b>PATH</b> will be searched.
-        /// </summary>
-        public static string PwshPath
-        {
-            get
-            {
-                if (cachedPwshPath != null)
-                {
-                    return cachedPwshPath;
-                }
-
-                if (!string.IsNullOrEmpty(InstallFolder))
-                {
-                    var pwshPath = Path.Combine(InstallFolder, "powershell", "pwsh.exe");
-
-                    if (File.Exists(pwshPath))
-                    {
-                        return cachedPwshPath = pwshPath;
-                    }
-                }
-
-                return cachedPwshPath = "pwsh.exe";
-            }
-        }
-
-        /// <summary>
         /// Returns <c>true</c> if the current assembly was built from the production <b>PROD</b> 
         /// source code branch.
         /// </summary>
@@ -2630,10 +2600,10 @@ TCPKeepAlive yes
 
             // If the tool exists in the standard install location, then simply return its
             // path.  We're going to assume that the tool version is correct in this case
-            // when [userToolsFolder=true].
+            // [userToolsFolder=true].
             //
-            // If the tool exists and [userToolsFolder==false], we're going to verify its version
-            // and return the tool path when that's correct.
+            // If the tool exists and [userToolsFolder==false], we're going to verify its
+            // version and return the tool path when that's correct.
             // 
             // Otherwise if the tool doesn't exist or its version is incorrect, we're
             // going to drop thru to download the binaries to [installFolder] when
@@ -2642,7 +2612,7 @@ TCPKeepAlive yes
 
             var toolPath = Path.Combine(installFolder, toolFile);
 
-            if (File.Exists(toolPath) && (!userToolsFolder || toolChecker(toolPath)))
+            if (File.Exists(toolPath) && (userToolsFolder || toolChecker(toolPath)))
             {
                 return toolPath;
             }
@@ -2799,18 +2769,27 @@ TCPKeepAlive yes
                     //
                     //      version.BuildInfo{Version:"v3.3.1", GitCommit:"249e5215cde0c3fa72e27eb7a30e8d55c9696144", GitTreeState:"clean", GoVersion:"go1.14.7"}
 
-                    var response      = NeonHelper.ExecuteCapture(toolPath, new object[] { "version" }).EnsureSuccess();
-                    var versionOutput = response.OutputText;
-                    var versionRegex  = new Regex(@"Version:""v(?'version'[\d.]+)""", RegexOptions.None);
-                    var match         = versionRegex.Match(versionOutput);
+                    try
+                    {
+                        var response      = NeonHelper.ExecuteCapture(toolPath, new object[] { "version" }).EnsureSuccess();
+                        var versionOutput = response.OutputText;
+                        var versionRegex  = new Regex(@"Version:""v(?'version'[\d.]+)""", RegexOptions.None);
+                        var match         = versionRegex.Match(versionOutput);
 
-                    if (match.Success)
-                    {
-                        return match.Groups["version"].Value == KubeVersions.Helm;
+                        if (match.Success)
+                        {
+                            return match.Groups["version"].Value == KubeVersions.Helm;
+                        }
+                        else
+                        {
+                            throw new Exception($"Unable to get [helm] version from: {versionOutput}");
+                        }
                     }
-                    else
+                    catch
                     {
-                        throw new Exception($"Unable to extract [helm] version from: {versionOutput}");
+                        // [helm.exe] doesn't exist at that location or is invalid.
+
+                        return false;
                     }
                 };
 
