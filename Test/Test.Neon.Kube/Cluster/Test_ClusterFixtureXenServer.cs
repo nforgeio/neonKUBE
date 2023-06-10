@@ -79,7 +79,7 @@ namespace TestKube
             this.fixture = fixture;
 
             var options = new ClusterFixtureOptions() { TestOutputHelper = testOutputHelper };
-            var status  = fixture.StartCluster(XenServerClusters.Tiny, options: options);
+            var status  = fixture.StartCluster(XenServerClustersDefinitions.Tiny, options: options);
 
             if (status == TestFixtureStatus.Disabled)
             {

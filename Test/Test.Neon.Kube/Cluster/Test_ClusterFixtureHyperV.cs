@@ -78,7 +78,7 @@ namespace TestKube
             this.fixture = fixture;
 
             var options = new ClusterFixtureOptions() { TestOutputHelper = testOutputHelper };
-            var status  = fixture.StartCluster(HyperVClusters.Tiny, options: options);
+            var status  = fixture.StartCluster(HyperVClusterDefinitions.Tiny, options: options);
 
             if (status == TestFixtureStatus.Disabled)
             {

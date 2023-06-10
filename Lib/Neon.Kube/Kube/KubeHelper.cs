@@ -3494,14 +3494,46 @@ TCPKeepAlive yes
         }
 
         /// <summary>
+        /// Builds the <b>neon/kubectl</b> tool if it does not already exist.
+        /// </summary>
+        /// <returns></returns>
+        private static async Task EnsureNeonKubectl()
+        {
+            try
+            {
+                _ = NeonCliPath;
+            }
+            catch (FileNotFoundException)
+            {
+                var response = await NeonHelper.ExecuteCaptureAsync("neoncloud-builder",
+                    new object[]
+                    {
+                        "-dirty",
+                        "-noclean",
+                        "-nobuild",
+                        "-kubectlonly"
+                    });
+
+                response.EnsureSuccess();
+            }
+        }
+
+        /// <summary>
         /// Executes a <b>neon/kubectl</b> command using the installed executable or the
         /// executable from the NEONCLOUD build folder.
         /// </summary>
         /// <param name="args">The command line arguments.</param>
         /// <returns>The command exit code.</returns>
+        /// <remarks>
+        /// <note>
+        /// For maintainers, this method will build the <b>neon/kubectl</b> tool if it does not already exist.
+        /// </note>
+        /// </remarks>
         public static async Task<int> NeonCliExecuteAsync(object[] args)
         {
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
+
+            await EnsureNeonKubectl();
 
             return await NeonHelper.ExecuteAsync(NeonCliPath, args);
         }
@@ -3512,9 +3544,16 @@ TCPKeepAlive yes
         /// </summary>
         /// <param name="args">The command line arguments.</param>
         /// <returns>The command exit code.</returns>
+        /// <remarks>
+        /// <note>
+        /// For maintainers, this method will build the <b>neon/kubectl</b> tool if it does not already exist.
+        /// </note>
+        /// </remarks>
         public static async Task<ExecuteResponse> NeonCliExecuteCaptureAsync(object[] args)
         {
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
+
+            await EnsureNeonKubectl();
 
             return await NeonHelper.ExecuteCaptureAsync(NeonCliPath, args);
         }

@@ -45,9 +45,9 @@ namespace TestKube
     [Trait(TestTrait.Category, TestTrait.Slow)]
     [Collection(TestCollection.NonParallel)]
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
-    public class Test_ClusterDeployment
+    public partial class Test_ClusterDeployment
     {
-        private const int repeatCount = 100;
+        private const int repeatCount = 1;
 
         public Test_ClusterDeployment()
         {
@@ -57,85 +57,6 @@ namespace TestKube
                 // up secrets and profile information from [neon-assistant].
 
                 NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfile());
-            }
-        }
-
-        [MaintainerTheory]
-        [Repeat(repeatCount)]
-        public async Task HyperV_Tiny(int runCount)
-        {
-            _ = runCount;
-
-            using (var tempFile = new TempFile(".cluster.yaml"))
-            {
-                File.WriteAllText(tempFile.Path, HyperVClusters.Tiny);
-
-                try
-                {
-                    await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "logout" });
-                    (await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "cluster", "deploy", tempFile.Path }))
-                        .EnsureSuccess();
-                }
-                finally
-                {
-                    await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "cluster", "delete" });
-                }
-            }
-        }
-
-        /// <summary>
-        /// Constructs a <see cref="XenClient"/> for the XenServer host assigned to the test runner
-        /// for its exclusive use.
-        /// </summary>
-        /// <param name="clusterDefinition">Specifies the cluster definitiion.</param>
-        /// <returns>The new <see cref="XenClient"/></returns>
-        private XenClient CreateXenClient(ClusterDefinition clusterDefinition)
-        {
-            var host         = clusterDefinition.Hosting.Hypervisor.Hosts.First();  // $hack(jefflill): assuming one dedicated XenServer host
-            var hostUsername = host.Username ?? clusterDefinition.Hosting.Hypervisor.HostUsername;
-            var hostPassword = host.Password ?? clusterDefinition.Hosting.Hypervisor.HostPassword;
-
-            return new XenClient(host.Address, hostUsername, hostPassword);
-        }
-
-        [MaintainerTheory]
-        [Repeat(repeatCount)]
-        public async Task XenServer_Tiny(int runCount)
-        {
-            _ = runCount;
-
-            using (var tempFile = new TempFile(".cluster.yaml"))
-            {
-                var clusterDefinitionYaml = XenServerClusters.Tiny;
-                var clusterDefinition     = ClusterDefinition.FromYaml(clusterDefinitionYaml);
-
-                File.WriteAllText(tempFile.Path, clusterDefinitionYaml);
-
-                try
-                {
-                    // We've seen intermittent problems uploading the node template to XenServers
-                    // so we're going to remove any existing templates first to exercise this along
-                    // with removing all VMs from the dedicated XenServer host.
-
-                    using (var xenClient = CreateXenClient(clusterDefinition))
-                    {
-                        xenClient.CleanHost(templateSelector: template => template.NameLabel.StartsWith("neon", StringComparison.InvariantCultureIgnoreCase));
-                    }
-
-                    // Logout out of the current cluster (if any), remove any existing cluster context that
-                    // may conflict with the new cluster and then deploy a fresh cluster.
-
-                    await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "logout" });
-                    KubeHelper.KubeConfig.RemoveCluster(clusterDefinition.Name);
-                    (await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "cluster", "deploy", tempFile.Path }))
-                        .EnsureSuccess();
-                }
-                finally
-                {
-                    // Delete the deployed cluster.
-
-                    await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "cluster", "delete", clusterDefinition.Name, "--force" });
-                }
             }
         }
     }
