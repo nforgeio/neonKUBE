@@ -325,12 +325,12 @@ NOTE: Command line arguments and options may include references to
 
                 CommandLine = new CommandLine(args);
 
-                if (CommandLine.Items.Length == 0)
+                if (CommandLine.HasHelpOption || CommandLine.Items.Length == 0)
                 {
                     // Output our standard usage help.
 
                     Console.WriteLine(usage);
-                    Program.Exit(0);
+                    Program.Exit(CommandLine.HasHelpOption ? 0 : -1);
                 }
 
                 // Scan for enabled commands in the current assembly.
