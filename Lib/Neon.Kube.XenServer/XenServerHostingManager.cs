@@ -823,7 +823,7 @@ namespace Neon.Kube.Hosting.XenServer
             // I've seen cases where template import fails due to a transient problem
             // so we'll try this twice.
 
-            var retry = new LinearRetryPolicy(e => true, maxAttempts: 2, retryInterval: TimeSpan.FromSeconds(5));
+            var retry = new LinearRetryPolicy(e => true, maxAttempts: 3, retryInterval: TimeSpan.FromSeconds(10));
 
             retry.Invoke(() => xenClient.Template.ImportVmTemplate(driveTemplatePath, templateName, cluster.Hosting.XenServer.StorageRepository, description: $"NEONKUBE Node Image [MD5:{md5}]"));
 

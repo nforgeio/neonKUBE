@@ -47,7 +47,7 @@ namespace TestKube
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public partial class Test_ClusterDeployment
     {
-        private const int repeatCount = 1;
+        private const int repeatCount = 100;
 
         public Test_ClusterDeployment()
         {
