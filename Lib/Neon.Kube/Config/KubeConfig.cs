@@ -482,7 +482,10 @@ namespace Neon.Kube.Config
                 CurrentContext = contextName;
             }
 
-            Save();
+            if (path != null)
+            {
+                Save();
+            }
         }
 
         /// <summary>
