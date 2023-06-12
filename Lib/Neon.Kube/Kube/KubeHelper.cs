@@ -92,7 +92,6 @@ namespace Neon.Kube
         private static string               cachedToolsFolder;
         private static string               cachedDevopmentFolder;
         private static string               cachedNodeContainerImagesFolder;
-        private static string               cachedPwshPath;
         private static IStaticDirectory     cachedResources;
         private static string               cachedVmImageFolder;
         private static string               cachedUserSshFolder;
@@ -128,7 +127,6 @@ namespace Neon.Kube
             cachedToolsFolder               = null;
             cachedDevopmentFolder           = null;
             cachedNodeContainerImagesFolder = null;
-            cachedPwshPath                  = null;
             cachedResources                 = null;
             cachedVmImageFolder             = null;
             cachedUserSshFolder             = null;
