@@ -51,13 +51,17 @@ namespace TestKube
 
         public Test_ClusterDeployment()
         {
-            if (TestHelper.IsClusterTestingEnabled)
-            {
-                // Register a [ProfileClient] so tests will be able to pick
-                // up secrets and profile information from [neon-assistant].
+            // Register a [ProfileClient] so tests will be able to pick up
+            // secrets and profile information from [neon-assistant].  We're
+            // also going to ensure that [neon-assistant] is signed-in and
+            // also extend the sign-in period by 120 minutes so that we'll
+            // still be signed-in when there's a subsequent test run.
 
-                NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfile());
-            }
+            var maintainerProfile = new MaintainerProfile();
+
+            maintainerProfile.EnsureAuthenticated(TimeSpan.FromMinutes(120));
+
+            NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(maintainerProfile);
         }
     }
 }

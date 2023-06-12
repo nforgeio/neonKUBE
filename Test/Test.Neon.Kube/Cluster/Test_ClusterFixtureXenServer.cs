@@ -52,24 +52,6 @@ namespace TestKube
     [CollectionDefinition(TestCollection.NonParallel, DisableParallelization = true)]
     public class Test_ClusterFixtureXenServer : IClassFixture<ClusterFixture>
     {
-        //---------------------------------------------------------------------
-        // Static members
-
-        /// <summary>
-        /// Static constructor.
-        /// </summary>
-        static Test_ClusterFixtureXenServer()
-        {
-            if (TestHelper.IsClusterTestingEnabled)
-            {
-                // Register a [ProfileClient] so tests will be able to pick
-                // up secrets and profile information from [neon-assistant].
-
-                NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfile());
-            }
-        }
-
-        //---------------------------------------------------------------------
         // Instance members
 
         private ClusterFixture fixture;
@@ -77,6 +59,20 @@ namespace TestKube
         public Test_ClusterFixtureXenServer(ClusterFixture fixture, ITestOutputHelper testOutputHelper)
         {
             this.fixture = fixture;
+
+            // Register a [ProfileClient] so tests will be able to pick up
+            // secrets and profile information from [neon-assistant].  We're
+            // also going to ensure that [neon-assistant] is signed-in and
+            // also extend the sign-in period by 120 minutes so that we'll
+            // still be signed-in when there's a subsequent test run.
+
+            var maintainerProfile = new MaintainerProfile();
+
+            maintainerProfile.EnsureAuthenticated(TimeSpan.FromMinutes(120));
+
+            NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(maintainerProfile);
+
+            // Start/Reset the cluster
 
             var options = new ClusterFixtureOptions() { TestOutputHelper = testOutputHelper };
             var status  = fixture.StartCluster(XenServerClustersDefinitions.Tiny, options: options);
