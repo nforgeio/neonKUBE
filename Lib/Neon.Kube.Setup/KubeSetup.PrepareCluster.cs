@@ -444,8 +444,6 @@ namespace Neon.Kube.Setup
             // will be recable from this machine even when not connected to the Internet.  We'll do
             // this for NEONDESKTOP clusters as well.
 
-// $debug(jefflill): RESTORE THIS!
-#if TODO
             controller.AddGlobalStep("neoncluster.io domain",
                 async controller =>
                 {
@@ -514,7 +512,6 @@ namespace Neon.Kube.Setup
                     setupState.SshPassword = null;    // We're no longer allowing SSH password authentication so we can clear this.
                     setupState.Save();
                 });
-#endif // TODO
 
             // Some hosting managers may have to do some additional work after
             // the cluster has been otherwise prepared.
