@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    SetupClusterStatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -93,7 +93,9 @@ namespace Neon.Kube.Setup
                 Steps.Add(step);
             }
 
-            this.CurrentStep = Steps.SingleOrDefault(step => step.Number == controller.CurrentStepNumber);
+            var currentStepNumber = controller.CurrentStepNumber;
+
+            this.CurrentStep = Steps.SingleOrDefault(step => step.Number == currentStepNumber);
         }
 
         /// <summary>
