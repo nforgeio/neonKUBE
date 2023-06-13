@@ -107,14 +107,8 @@ namespace TestKube
                     await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "logout" });
                     KubeHelper.KubeConfig.RemoveCluster(clusterDefinition.Name);
 
-// $debug(jefflill): RESTORE THIS!
-#if TODO
                     (await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "cluster", "deploy", tempFile.Path, "--use-staged" }))
                         .EnsureSuccess();
-#else
-                    (await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "cluster", "prepare", tempFile.Path, "--use-staged" }))
-                        .EnsureSuccess();
-#endif
                 }
                 catch (Exception e)
                 {
