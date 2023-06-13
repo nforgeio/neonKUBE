@@ -166,7 +166,7 @@ stage process is typically used only by NEONKUBE maintainers.
             var noTelemetry       = commandLine.HasOption("--no-telemetry");
             var quiet             = commandLine.HasOption("--quiet");
             var useStaged         = commandLine.HasOption("--use-staged");
-            var stageBranch       = commandLine.GetOption("--use-staged", KubeVersions.BuildBranch);
+            var stageBranch       = commandLine.GetOption("--use-staged", useStaged ? KubeVersions.BuildBranch : null);
 
             if (useStaged && string.IsNullOrEmpty(stageBranch))
             {

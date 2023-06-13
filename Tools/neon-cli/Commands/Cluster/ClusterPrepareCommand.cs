@@ -200,7 +200,7 @@ stage process is typically used only by NEONKUBE maintainers.
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
             var disablePending    = commandLine.HasOption("--disable-pending");
             var useStaged         = commandLine.HasOption("--use-staged");
-            var stageBranch       = commandLine.GetOption("--use-staged", KubeVersions.BuildBranch);
+            var stageBranch       = commandLine.GetOption("--use-staged", useStaged ? KubeVersions.BuildBranch : null);
             var noTelemetry       = commandLine.HasOption("--no-telemetry");
 
             if (noTelemetry)
