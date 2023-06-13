@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -46,32 +47,28 @@ namespace TestKube
         [Repeat(repeatCount)]
         public async Task HyperV_Tiny(int runCount)
         {
-            _ = runCount;
-
-            await DeployHyperVCluster(HyperVClusterDefinitions.Tiny);
+            await DeployHyperVCluster(HyperVClusterDefinitions.Tiny, runCount);
         }
 
         [MaintainerTheory]
         [Repeat(repeatCount)]
         public async Task HyperV_Small(int runCount)
         {
-            _ = runCount;
-
-            await DeployHyperVCluster(HyperVClusterDefinitions.Small);
+            await DeployHyperVCluster(HyperVClusterDefinitions.Small, runCount);
         }
 
         [MaintainerTheory]
         [Repeat(repeatCount)]
         public async Task HyperV_Large(int runCount)
         {
-            _ = runCount;
-
-            await DeployHyperVCluster(HyperVClusterDefinitions.Large);
+            await DeployHyperVCluster(HyperVClusterDefinitions.Large, runCount);
         }
 
-        private async Task DeployHyperVCluster(string clusterDefinitionYaml)
+        private async Task DeployHyperVCluster(string clusterDefinitionYaml, int runCount)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterDefinitionYaml), nameof(clusterDefinitionYaml));
+
+            KubeTestHelper.CleanDeploymentLogs(typeof(Test_ClusterDeployment), nameof(DeployHyperVCluster));
 
             using (var tempFile = new TempFile(".cluster.yaml"))
             {
@@ -82,6 +79,10 @@ namespace TestKube
                     await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "logout" });
                     (await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "cluster", "deploy", tempFile.Path, "--use-staged" }))
                         .EnsureSuccess();
+                }
+                catch (Exception e)
+                {
+                    KubeTestHelper.CaptureDeploymentLogsAndThrow(e, typeof(Test_ClusterDeployment), nameof(DeployHyperVCluster), runCount);
                 }
                 finally
                 {

@@ -47,9 +47,7 @@ namespace TestKube
         [Repeat(repeatCount)]
         public async Task Azure_Tiny(int runCount)
         {
-            _ = runCount;
-
-            await DeployAzureCluster(AzureClusterDefinitions.Tiny);
+            await DeployAzureCluster(AzureClusterDefinitions.Tiny, runCount);
         }
 
         [MaintainerTheory]
@@ -57,9 +55,8 @@ namespace TestKube
         [Repeat(repeatCount)]
         public async Task Azure_Small(int runCount)
         {
-            _ = runCount;
 
-            await DeployAzureCluster(AzureClusterDefinitions.Small);
+            await DeployAzureCluster(AzureClusterDefinitions.Small, runCount);
         }
 
         [MaintainerTheory]
@@ -67,14 +64,14 @@ namespace TestKube
         [Repeat(repeatCount)]
         public async Task AzureV_Large(int runCount)
         {
-            _ = runCount;
-
-            await DeployAzureCluster(AzureClusterDefinitions.Large);
+            await DeployAzureCluster(AzureClusterDefinitions.Large, runCount);
         }
 
-        private async Task DeployAzureCluster(string clusterDefinitionYaml)
+        private async Task DeployAzureCluster(string clusterDefinitionYaml, int runCount)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterDefinitionYaml), nameof(clusterDefinitionYaml));
+
+            KubeTestHelper.CleanDeploymentLogs(typeof(Test_ClusterDeployment), nameof(DeployAzureCluster));
 
             using (var tempFile = new TempFile(".cluster.yaml"))
             {
@@ -85,6 +82,10 @@ namespace TestKube
                     await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "logout" });
                     (await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "cluster", "deploy", tempFile.Path, "--use-staged" }))
                         .EnsureSuccess();
+                }
+                catch (Exception e)
+                {
+                    KubeTestHelper.CaptureDeploymentLogsAndThrow(e, typeof(Test_ClusterDeployment), nameof(DeployAzureCluster), runCount);
                 }
                 finally
                 {

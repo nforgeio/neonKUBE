@@ -61,32 +61,28 @@ namespace TestKube
         [Repeat(repeatCount)]
         public async Task XenServer_Tiny(int runCount)
         {
-            _ = runCount;
-
-            await DeployXenServerCluster(XenServerClustersDefinitions.Tiny);
+            await DeployXenServerCluster(XenServerClustersDefinitions.Tiny, runCount);
         }
 
         [MaintainerTheory]
         [Repeat(repeatCount)]
         public async Task XenServer_Smal(int runCount)
         {
-            _ = runCount;
-
-            await DeployXenServerCluster(XenServerClustersDefinitions.Small);
+            await DeployXenServerCluster(XenServerClustersDefinitions.Small, runCount);
         }
 
         [MaintainerTheory]
         [Repeat(repeatCount)]
         public async Task XenServer_Large(int runCount)
         {
-            _ = runCount;
-
-            await DeployXenServerCluster(XenServerClustersDefinitions.Large);
+            await DeployXenServerCluster(XenServerClustersDefinitions.Large, runCount);
         }
 
-        private async Task DeployXenServerCluster(string clusterDefinitionYaml)
+        private async Task DeployXenServerCluster(string clusterDefinitionYaml, int runCount)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterDefinitionYaml), nameof(clusterDefinitionYaml));
+
+            KubeTestHelper.CleanDeploymentLogs(typeof(Test_ClusterDeployment), nameof(DeployXenServerCluster));
 
             using (var tempFile = new TempFile(".cluster.yaml"))
             {
@@ -119,6 +115,10 @@ namespace TestKube
                     (await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "cluster", "prepare", tempFile.Path, "--use-staged" }))
                         .EnsureSuccess();
 #endif
+                }
+                catch (Exception e)
+                {
+                    KubeTestHelper.CaptureDeploymentLogsAndThrow(e, typeof(Test_ClusterDeployment), nameof(DeployXenServerCluster), runCount);
                 }
                 finally
                 {

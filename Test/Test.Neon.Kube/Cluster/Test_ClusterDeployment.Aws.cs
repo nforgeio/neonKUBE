@@ -47,9 +47,7 @@ namespace TestKube
         [Repeat(repeatCount)]
         public async Task Aws_Tiny(int runCount)
         {
-            _ = runCount;
-
-            await DeployAwsCluster(AwsClusterDefinitions.Tiny);
+            await DeployAwsCluster(AwsClusterDefinitions.Tiny, runCount);
         }
 
         [MaintainerTheory]
@@ -57,9 +55,7 @@ namespace TestKube
         [Repeat(repeatCount)]
         public async Task Aws_Small(int runCount)
         {
-            _ = runCount;
-
-            await DeployAwsCluster(AwsClusterDefinitions.Small);
+            await DeployAwsCluster(AwsClusterDefinitions.Small, runCount);
         }
 
         [MaintainerTheory]
@@ -67,14 +63,14 @@ namespace TestKube
         [Repeat(repeatCount)]
         public async Task AwsV_Large(int runCount)
         {
-            _ = runCount;
-
-            await DeployAwsCluster(AwsClusterDefinitions.Large);
+            await DeployAwsCluster(AwsClusterDefinitions.Large, runCount);
         }
 
-        private async Task DeployAwsCluster(string clusterDefinitionYaml)
+        private async Task DeployAwsCluster(string clusterDefinitionYaml, int runCount)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterDefinitionYaml), nameof(clusterDefinitionYaml));
+
+            KubeTestHelper.CleanDeploymentLogs(typeof(Test_ClusterDeployment), nameof(DeployAwsCluster));
 
             using (var tempFile = new TempFile(".cluster.yaml"))
             {
@@ -85,6 +81,10 @@ namespace TestKube
                     await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "logout" });
                     (await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "cluster", "deploy", tempFile.Path, "--use-staged" }))
                         .EnsureSuccess();
+                }
+                catch (Exception e)
+                {
+                    KubeTestHelper.CaptureDeploymentLogsAndThrow(e, typeof(Test_ClusterDeployment), nameof(DeployAwsCluster), runCount);
                 }
                 finally
                 {
