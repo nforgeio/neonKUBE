@@ -59,8 +59,10 @@ using Neon.IO;
 using Neon.Kube.Clients;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Config;
+using Neon.Kube.Deployment;
 using Neon.Kube.Proxy;
 using Neon.Kube.Setup;
+using Neon.Kube.SSH;
 using Neon.Net;
 using Neon.SSH;
 using Neon.Tasks;
@@ -69,8 +71,6 @@ using Neon.Time;
 using PublicIPAddressSku     = Azure.ResourceManager.Network.Models.PublicIPAddressSku;
 using PublicIPAddressSkuName = Azure.ResourceManager.Network.Models.PublicIPAddressSkuName;
 using PublicIPAddressSkuTier = Azure.ResourceManager.Network.Models.PublicIPAddressSkuTier;
-using Neon.Kube.SSH;
-using Neon.Kube.Deployment;
 
 namespace Neon.Kube.Hosting.Azure
 {
