@@ -366,18 +366,18 @@ namespace Neon.Kube.Hosting.Azure
         }
 
         /// <summary>
-        /// Wraps a <see cref="ResourceSku"/>, adding type-safe properties to access
+        /// Wraps a <see cref="ComputeResourceSku"/>, adding type-safe properties to access
         /// the SKU capabilities.
         /// </summary>
         private class VmSku
         {
-            private ResourceSku sku;
+            private ComputeResourceSku sku;
 
             /// <summary>
             /// Constructor.
             /// </summary>
-            /// <param name="sku">The <see cref="ResourceSku"/> being wrapped.</param>
-            public VmSku(ResourceSku sku)
+            /// <param name="sku">The <see cref="ComputeResourceSku"/> being wrapped.</param>
+            public VmSku(ComputeResourceSku sku)
             {
                 Covenant.Requires<ArgumentNullException>(sku != null, nameof(sku));
 
@@ -476,18 +476,18 @@ namespace Neon.Kube.Hosting.Azure
             /// <summary>
             /// Specifies the number of virtual machines in the scale set.
             /// </summary>
-            public ResourceSkuCapacity Capacity => sku.Capacity;
+            public ComputeResourceSkuCapacity Capacity => sku.Capacity;
 
             /// <summary>
             /// Lists the locations where the SKU is available.
             /// </summary>
-            public IReadOnlyList<string> Locations => sku.Locations;
+            public IReadOnlyList<AzureLocation> Locations => sku.Locations;
 
             /// <summary>
             /// Lists the locations and availability zones in those locations where
             /// the SKU is available.
             /// </summary>
-            public IReadOnlyList<ResourceSkuLocationInfo> LocationInfo => sku.LocationInfo;
+            public IReadOnlyList<ComputeResourceSkuLocationInfo> LocationInfo => sku.LocationInfo;
 
             /// <summary>
             /// Lists the API versions that support this SKU.
@@ -502,13 +502,13 @@ namespace Neon.Kube.Hosting.Azure
             /// <summary>
             /// Returns a dictionary of SKU capabilities.
             /// </summary>
-            public IReadOnlyList<ResourceSkuCapabilities> Capabilities => sku.Capabilities;
+            public IReadOnlyList<ComputeResourceSkuCapabilities> Capabilities => sku.Capabilities;
 
             /// <summary>
             /// Lists the restrictions preventing this SKU from being used.  This will be
             /// empty when there are no restrictions.
             /// </summary>
-            public IReadOnlyList<ResourceSkuRestrictions> Restrictions => sku.Restrictions;
+            public IReadOnlyList<ComputeResourceSkuRestrictions> Restrictions => sku.Restrictions;
 
             //-----------------------------------------------------------------
             // Extended properties
@@ -796,11 +796,11 @@ namespace Neon.Kube.Hosting.Azure
         }
 
         /// <summary>
-        /// Converts a <see cref="IngressProtocol"/> to the corresponding <see cref="TransportProtocol"/>.
+        /// Converts a <see cref="IngressProtocol"/> to the corresponding <see cref="LoadBalancingTransportProtocol"/>.
         /// </summary>
         /// <param name="protocol">The input protocol.</param>
         /// <returns>The output protocol.</returns>
-        private static TransportProtocol ToTransportProtocol(IngressProtocol protocol)
+        private static LoadBalancingTransportProtocol ToTransportProtocol(IngressProtocol protocol)
         {
             switch (protocol)
             {
@@ -808,7 +808,7 @@ namespace Neon.Kube.Hosting.Azure
                 case IngressProtocol.Https:
                 case IngressProtocol.Tcp:
 
-                    return TransportProtocol.Tcp;
+                    return LoadBalancingTransportProtocol.Tcp;
 
                 default:
 
@@ -828,14 +828,15 @@ namespace Neon.Kube.Hosting.Azure
         /// for OS disks and then this method will return the next best storage type <see cref="AzureStorageType.PremiumSSD"/>
         /// for this case.
         /// </remarks>
-        private static StorageAccountTypes ToAzureStorageType(AzureStorageType azureStorageType, bool osDisk = false)
+        private static StorageAccountType ToAzureStorageType(AzureStorageType azureStorageType, bool osDisk = false)
         {
             switch (azureStorageType)
             {
-                case AzureStorageType.PremiumSSD:   return StorageAccountTypes.PremiumLRS;
-                case AzureStorageType.StandardHDD:  return StorageAccountTypes.StandardLRS;
-                case AzureStorageType.StandardSSD:  return StorageAccountTypes.StandardSSDLRS;
-                case AzureStorageType.UltraSSD:     return osDisk ? StorageAccountTypes.PremiumLRS : StorageAccountTypes.UltraSSDLRS;
+                case AzureStorageType.PremiumSSD:   return StorageAccountType.PremiumLrs;
+                case AzureStorageType.StandardHDD:  return StorageAccountType.StandardLrs;
+                case AzureStorageType.StandardSSD:  return StorageAccountType.StandardSsdLrs;
+                case AzureStorageType.PremiumSSDv2: return osDisk ? StorageAccountType.PremiumV2Lrs : StorageAccountType.UltraSsdLrs;
+                case AzureStorageType.UltraSSD:     return osDisk ? StorageAccountType.PremiumLrs : StorageAccountType.UltraSsdLrs;
                 default:                            throw new NotImplementedException();
             }
         }
@@ -1142,7 +1143,7 @@ namespace Neon.Kube.Hosting.Azure
         /// <param name="tags">Specifies any optional tags.</param>
         /// <returns>The updated <paramref name="resource"/>.</returns>
         private TResource WithNetworkTags<TResource>(TResource resource, params ResourceTag[] tags)
-            where TResource : NetworkResourceData
+            where TResource : NetworkTrackedResourceData
         {
             Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
 
@@ -1315,15 +1316,15 @@ namespace Neon.Kube.Hosting.Azure
                             var openEbsDiskSize = ByteUnits.Parse(node.Metadata.Azure.OpenEbsDiskSize);
 
                             vmPatch.StorageProfile.DataDisks.Add(
-                                new DataDisk(openEbsDiskLun, DiskCreateOptionTypes.Empty)
+                                new VirtualMachineDataDisk(openEbsDiskLun, DiskCreateOptionType.Empty)
                                 {
                                     DiskSizeGB   = (int)AzureHelper.GetDiskSizeGiB(azureVm.NodeProxy.Metadata.Azure.StorageType, openEbsDiskSize),
-                                    Caching      = CachingTypes.None,
-                                    ManagedDisk  = new ManagedDiskParameters()
+                                    Caching      = CachingType.None,
+                                    ManagedDisk  = new VirtualMachineManagedDisk()
                                     {
                                         StorageAccountType = openEbsStorageType
                                     },
-                                    DeleteOption = DiskDeleteOptionTypes.Delete,
+                                    DeleteOption = DiskDeleteOptionType.Delete,
                                 });
 
                             azureVm.Vm = (await vm.UpdateAsync(WaitUntil.Completed, vmPatch)).Value;
@@ -1904,7 +1905,7 @@ namespace Neon.Kube.Hosting.Azure
             {
                 nodeNameToVmSku = new Dictionary<string, VmSku>(StringComparer.InvariantCultureIgnoreCase);
 
-                await foreach (var resourceSku in subscription.GetResourceSkusAsync(filter: $"location eq '{region.ToLowerInvariant()}'"))
+                await foreach (var resourceSku in subscription.GetComputeResourceSkusAsync(filter: $"location eq '{region.ToLowerInvariant()}'"))
                 {
                     if (resourceSku.ResourceType == "virtualMachines")
                     {
@@ -2141,7 +2142,7 @@ namespace Neon.Kube.Hosting.Azure
                     {
                         Location                 = azureLocation,
                         DnsSettings              = new PublicIPAddressDnsSettings() { DomainNameLabel = azureOptions.DomainLabel },
-                        PublicIPAllocationMethod = IPAllocationMethod.Static,
+                        PublicIPAllocationMethod = NetworkIPAllocationMethod.Static,
                         Sku                      = new PublicIPAddressSku() { Name = PublicIPAddressSkuName.Standard, Tier = PublicIPAddressSkuTier.Regional },
                     };
 
@@ -2235,7 +2236,7 @@ namespace Neon.Kube.Hosting.Azure
                     Location               = azureLocation,
                     PrefixLength           = azureOptions.Network.EgressPublicIpPrefixLength,
                     Sku                    = new PublicIPPrefixSku() { Name = PublicIPPrefixSkuName.Standard, Tier = PublicIPPrefixSkuTier.Regional },
-                    PublicIPAddressVersion = global::Azure.ResourceManager.Network.Models.IPVersion.IPv4
+                    PublicIPAddressVersion = global::Azure.ResourceManager.Network.Models.NetworkIPVersion.IPv4
                 };
 
                 publicEgressPrefix = (await publicPrefixCollection.CreateOrUpdateAsync(WaitUntil.Completed, publicEgressPrefixName, WithNetworkTags(publicIpPrefixData))).Value;
@@ -2248,7 +2249,7 @@ namespace Neon.Kube.Hosting.Azure
                 {
                     Location                 = azureLocation,
                     DnsSettings              = new PublicIPAddressDnsSettings() { DomainNameLabel = azureOptions.DomainLabel + "-egress" },
-                    PublicIPAllocationMethod = IPAllocationMethod.Static,
+                    PublicIPAllocationMethod = NetworkIPAllocationMethod.Static,
                     Sku                      = new PublicIPAddressSku() { Name = PublicIPAddressSkuName.Standard, Tier = PublicIPAddressSkuTier.Regional }
                 };
 
@@ -2518,7 +2519,7 @@ namespace Neon.Kube.Hosting.Azure
                     Primary                   = true,
                     Subnet                    = subnet,
                     PrivateIPAddress          = azureVm.Address,
-                    PrivateIPAllocationMethod = IPAllocationMethod.Static
+                    PrivateIPAllocationMethod = NetworkIPAllocationMethod.Static
                 });
 
             azureVm.Nic = (await nicCollection.CreateOrUpdateAsync(WaitUntil.Completed, GetResourceName("nic", azureVm.NodeProxy.Name), WithNetworkTags(nicData))).Value;
@@ -2579,23 +2580,23 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
             var virtualMachineCollection = resourceGroup.GetVirtualMachines();
             var virtualMachineData       = new VirtualMachineData(azureLocation)
             {
-                HardwareProfile = new HardwareProfile()
+                HardwareProfile = new VirtualMachineHardwareProfile()
                 {
                     VmSize = azureVm.VmSize
                 },
-                OSProfile = new OSProfile()
+                OSProfile = new VirtualMachineOSProfile()
                 {
                     ComputerName  = "ubuntu",
                     AdminUsername = KubeConst.SysAdminUser,
                     AdminPassword = cluster.SetupState.SshPassword
                 },
-                NetworkProfile    = new NetworkProfile(),
-                StorageProfile    = new StorageProfile(),
+                NetworkProfile    = new VirtualMachineNetworkProfile(),
+                StorageProfile    = new VirtualMachineStorageProfile(),
                 AvailabilitySetId = nameToAvailabilitySet[azureVm.AvailabilitySetName].Id,
                 UserData          = encodedBootScript
             };
 
-            virtualMachineData.NetworkProfile.NetworkInterfaces.Add(new NetworkInterfaceReference() { Id = azureVm.Nic.Id });
+            virtualMachineData.NetworkProfile.NetworkInterfaces.Add(new VirtualMachineNetworkInterfaceReference() { Id = azureVm.Nic.Id });
 
             if (proximityPlacementGroup != null)
             {
@@ -2605,16 +2606,16 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
             virtualMachineData.StorageProfile.ImageReference = nodeImageRef;
             virtualMachineData.Plan                          = nodeImagePlan;
 
-            virtualMachineData.StorageProfile.OSDisk = new OSDisk(DiskCreateOptionTypes.FromImage)
+            virtualMachineData.StorageProfile.OSDisk = new VirtualMachineOSDisk(DiskCreateOptionType.FromImage)
             {
-                ManagedDisk = new ManagedDiskParameters()
+                ManagedDisk = new VirtualMachineManagedDisk()
                 {
                     StorageAccountType = azureOSStorageType
                 },
-                OSType       = OperatingSystemTypes.Linux,
+                OSType       = SupportedOperatingSystemType.Linux,
                 DiskSizeGB   = (int)AzureHelper.GetDiskSizeGiB(azureNodeOptions.StorageType, diskSize),
-                DeleteOption = DiskDeleteOptionTypes.Delete,
-                Caching      = CachingTypes.None
+                DeleteOption = DiskDeleteOptionType.Delete,
+                Caching      = CachingType.None
             };
 
             var nodeTags = new ResourceTag[]
@@ -2972,7 +2973,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
                         {
                             Name                      = ruleName,
                             FrontendIPConfigurationId = new ResourceIdentifier(loadBalancer.Data.FrontendIPConfigurations.Single().Id),
-                            Protocol                  = TransportProtocol.Tcp,
+                            Protocol                  = LoadBalancingTransportProtocol.Tcp,
                             FrontendPort              = azureVm.ExternalSshPort,
                             BackendPort               = NetworkPorts.SSH,
                             EnableTcpReset            = true,

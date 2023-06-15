@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    AzureStorageType.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -78,13 +78,25 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// <para>
+        /// Premium v2 managed SSD drives are intended for the very demanding I/O
+        /// workloads.  These have substantially more I/O throughput than <see cref="PremiumSSD"/>
+        /// disks and also range in size up to 64TiB (double <see cref="PremiumSSD"/>)..
+        /// </para>
+        /// <note>
+        /// Azure doesn't support using <see cref="PremiumSSDv2"/> disks as virtual machine OS
+        /// disks.  NEONKUBE will quietly substitude a <see cref="PremiumSSD"/> in this case.
+        /// </note>
+        /// </summary>
+        PremiumSSDv2,
+
+        /// <summary>
+        /// <para>
         /// Ultra managed SSD drives are intended for the most demanding I/O
         /// workloads.  These range in size up to 64TiB.
         /// </para>
         /// <note>
-        /// These are still relatively new and your region may not be able to
-        /// attach ultra drives to all VM instance types.  See this <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/windows/disks-enable-ultra-ssd">note</a>
-        /// for more information.
+        /// Azure doesn't support using <see cref="UltraSSD"/> disks as virtual machine OS
+        /// disks.  NEONKUBE will quietly substitude a <see cref="PremiumSSD"/> in this case.
         /// </note>
         /// </summary>
         UltraSSD,
