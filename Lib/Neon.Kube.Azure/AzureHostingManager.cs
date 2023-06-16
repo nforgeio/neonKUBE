@@ -637,12 +637,6 @@ namespace Neon.Kube.Hosting.Azure
         private const string neonNodeSshPortTagKey = neonTagKeyPrefix + "node.ssh-port";
 
         /// <summary>
-        /// Returns the list of Azure VM size name <see cref="Regex"/> patterns
-        /// for VMs that are known to be <b>compatible</b> with Gen2 VM images.
-        /// </summary>
-        private static IReadOnlyList<Regex> gen2VmSizeAllowedRegex;
-
-        /// <summary>
         /// Logical unit number for a node's boot disk.
         /// </summary>
         private const int bootDiskLun = 0;
@@ -661,104 +655,6 @@ namespace Neon.Kube.Hosting.Azure
         /// Maximum Azure supported TCP reset idle timeout in minutes.
         /// </summary>
         private const int maxAzureTcpIdleTimeoutMinutes = 30;
-
-        /// <summary>
-        /// Static constructor.
-        /// </summary>
-        static AzureHostingManager()
-        {
-            // IMPORTANT:
-            //
-            // This needs to be updated periodically as Azure adds new VM sizes
-            // that support Gen2 images.
-            //
-            //      https://docs.microsoft.com/en-us/azure/virtual-machines/windows/generation-2#generation-2-vm-sizes
-
-            gen2VmSizeAllowedRegex = new List<Regex>
-            {
-                new Regex(@"^Standard_B\d+", RegexOptions.IgnoreCase),                  // B
-                new Regex(@"^Standard_DC\d+s_v2$", RegexOptions.IgnoreCase),            // DCsv2
-                new Regex(@"^Standard_D\d*_v2$", RegexOptions.IgnoreCase),              // Dv2
-                new Regex(@"^Standard_DS\d+_v2$", RegexOptions.IgnoreCase),             // Dsv2
-                new Regex(@"^Standard_D\d+_v3$", RegexOptions.IgnoreCase),              // Dv3
-                new Regex(@"^Standard_D\d+s_v3$", RegexOptions.IgnoreCase),             // Dsv3
-                new Regex(@"^Standard_D\d+_v4$", RegexOptions.IgnoreCase),              // Dav4
-                new Regex(@"^Standard_D\d+s_v4$", RegexOptions.IgnoreCase),             // Dasv4
-                new Regex(@"^Standard_D\d+d_v4$", RegexOptions.IgnoreCase),             // Ddv4
-                new Regex(@"^Standard_D\dds_v4$", RegexOptions.IgnoreCase),             // Ddsv4
-                new Regex(@"^Standard_D\d+d_v4$", RegexOptions.IgnoreCase),             // Ddv4
-                new Regex(@"^Standard_D\d+ds_v4$", RegexOptions.IgnoreCase),            // Ddsv4
-                new Regex(@"^Standard_D\d+as_v5$", RegexOptions.IgnoreCase),            // Dasv5
-                new Regex(@"^Standard_D\d+ads_v5$", RegexOptions.IgnoreCase),           // Dadsv5
-                new Regex(@"^Standard_D\d+as_v5$", RegexOptions.IgnoreCase),            // Dasv5
-                new Regex(@"^Standard_D\d+ads_v5$", RegexOptions.IgnoreCase),           // Dadsv5
-                new Regex(@"^Standard_DC\d+as_v5$", RegexOptions.IgnoreCase),           // DCasv5
-                new Regex(@"^Standard_DC\d+ads_v5$", RegexOptions.IgnoreCase),          // DCadsv5
-                new Regex(@"^Standard_DC\d+as_v5$", RegexOptions.IgnoreCase),           // DCasv5
-                new Regex(@"^Standard_DC\d+ads_v5$", RegexOptions.IgnoreCase),          // DCadsv5
-                new Regex(@"^Standard_DC\d+s_v3$", RegexOptions.IgnoreCase),            // DCsv3
-                new Regex(@"^Standard_DC\d+ds_v3$", RegexOptions.IgnoreCase),           // DCdsv3
-                new Regex(@"^Standard_D\d+_v5$", RegexOptions.IgnoreCase),              // Dv5
-                new Regex(@"^Standard_D\d+s_v5$", RegexOptions.IgnoreCase),             // Dsv5
-                new Regex(@"^Standard_D\d+d_v5$", RegexOptions.IgnoreCase),             // Ddv5
-                new Regex(@"^Standard_D\d+ds_v5$", RegexOptions.IgnoreCase),            // Ddsv5
-                new Regex(@"^Standard_E\d+_v3$", RegexOptions.IgnoreCase),              // Ev3
-                new Regex(@"^Standard_E\d+s_v3$", RegexOptions.IgnoreCase),             // Esv3
-                new Regex(@"^Standard_E\d+_v4$", RegexOptions.IgnoreCase),              // Ev4
-                new Regex(@"^Standard_E\d+s_v4$", RegexOptions.IgnoreCase),             // Esv4
-                new Regex(@"^Standard_E\d+_v5$", RegexOptions.IgnoreCase),              // Ev5
-                new Regex(@"^Standard_E\d+s_v5$", RegexOptions.IgnoreCase),             // Esv5
-                new Regex(@"^Standard_E\d+a_v4$", RegexOptions.IgnoreCase),             // Eav4
-                new Regex(@"^Standard_E\d+as_v4$", RegexOptions.IgnoreCase),            // Easv4
-                new Regex(@"^Standard_E\d+d_v4$", RegexOptions.IgnoreCase),             // Edv4
-                new Regex(@"^Standard_E\d+ds_v4$", RegexOptions.IgnoreCase),            // Edsv4
-                new Regex(@"^Standard_E\d+as_v5$", RegexOptions.IgnoreCase),            // Easv5
-                new Regex(@"^Standard_E\d+ads_v5$", RegexOptions.IgnoreCase),           // Eadsv5
-                new Regex(@"^Standard_E\d+bds_v5$", RegexOptions.IgnoreCase),           // Ebdsv5
-                new Regex(@"^Standard_E\d+bs_v5$", RegexOptions.IgnoreCase),            // Ebdsv5
-                new Regex(@"^Standard_EC\d+as_v5$", RegexOptions.IgnoreCase),           // ECasv5
-                new Regex(@"^Standard_E\d+ads_v5$", RegexOptions.IgnoreCase),           // ECadsv5
-                new Regex(@"^Standard_E\d+d_v5$", RegexOptions.IgnoreCase),             // Edv5
-                new Regex(@"^Standard_E\d+ds_v5$", RegexOptions.IgnoreCase),            // Edsv5
-                new Regex(@"^Standard_E\d+_v5$", RegexOptions.IgnoreCase),              // Ev5
-                new Regex(@"^Standard_E\d+s_v5$", RegexOptions.IgnoreCase),             // Esv5
-                new Regex(@"^Standard_F\d+s_v2$", RegexOptions.IgnoreCase),             // Fsv2
-                new Regex(@"^Standard_FX\d+mds$", RegexOptions.IgnoreCase),             // FX
-                new Regex(@"^Standard_GS\d+$", RegexOptions.IgnoreCase),                // GS
-                new Regex(@"^Standard_HB\d+rs$", RegexOptions.IgnoreCase),              // HB
-                new Regex(@"^Standard_HB\d+rs_v2$", RegexOptions.IgnoreCase),           // HBv2
-                new Regex(@"^Standard_HB\d+rs_v3$", RegexOptions.IgnoreCase),           // HBv3
-                new Regex(@"^Standard_HC\d+rs$", RegexOptions.IgnoreCase),              // HC
-                new Regex(@"^Standard_L\d+s$", RegexOptions.IgnoreCase),                // Ls
-                new Regex(@"^Standard_L\d+s_v2$", RegexOptions.IgnoreCase),             // Lsv2
-                new Regex(@"^Standard_M\d+$", RegexOptions.IgnoreCase),                 // M
-                new Regex(@"^Standard_M\d+s_v2$", RegexOptions.IgnoreCase),             // Mv2 (s)
-                new Regex(@"^Standard_M\d+ms_v2$", RegexOptions.IgnoreCase),            // Mv2 (ms)
-                new Regex(@"^Standard_M\d+s_v2$", RegexOptions.IgnoreCase),             // Msv2 (s)
-                new Regex(@"^Standard_M\d+ms_v2$", RegexOptions.IgnoreCase),            // Msv2 (ms)
-                new Regex(@"^Standard_M\d+is_v2$", RegexOptions.IgnoreCase),            // Msv2 (is)
-                new Regex(@"^Standard_M\d+ims_v2$", RegexOptions.IgnoreCase),           // Msv2 (ms)
-                new Regex(@"^Standard_M\d+dms_v2$", RegexOptions.IgnoreCase),           // Mdsv2 (dms)
-                new Regex(@"^Standard_M\d+ds_v2$", RegexOptions.IgnoreCase),            // Mdsv2 (ds)
-                new Regex(@"^Standard_M\d+ids_v2$", RegexOptions.IgnoreCase),           // Mdsv2 (ids)
-                new Regex(@"^Standard_M\d+idms_v2$", RegexOptions.IgnoreCase),          // Mdsv2 (idms)
-                new Regex(@"^Standard_NC\d+s_v2$", RegexOptions.IgnoreCase),            // NCv2 (s)
-                new Regex(@"^Standard_NC\d+rs_v2$", RegexOptions.IgnoreCase),           // NCv2 (rs)
-                new Regex(@"^Standard_NC\d+s_v3$", RegexOptions.IgnoreCase),            // NCv3 (s)
-                new Regex(@"^Standard_NC\d+rs_v3$", RegexOptions.IgnoreCase),           // NCv3 (rs)
-                new Regex(@"Standard_NC\d+as_T4_v3$", RegexOptions.IgnoreCase),         // NCasT4_v3
-                new Regex(@"^Standard_ND\d+s$", RegexOptions.IgnoreCase),               // ND (s)
-                new Regex(@"^Standard_ND\d+rs$", RegexOptions.IgnoreCase),              // ND (rs)
-                new Regex(@"^Standard_ND\d+asr_v4$", RegexOptions.IgnoreCase),          // ND A100 v4
-                new Regex(@"^Standard_ND\d+rs_v2$", RegexOptions.IgnoreCase),           // NDv2
-                new Regex(@"^Standard_NV\d+s_v3$", RegexOptions.IgnoreCase),            // NDv3
-                new Regex(@"^Standard_NV\d+as_v4$", RegexOptions.IgnoreCase),           // NDv4
-                new Regex(@"^Standard_NV\d+ads_A10_v5$", RegexOptions.IgnoreCase),      // NVadsA10 v5 (ads)
-                new Regex(@"^Standard_NV\d+adms_A10_v5$", RegexOptions.IgnoreCase),     // NVadsA10 v5 (adms)
-                new Regex(@"^Standard_ND\d+amsr_A100_v4$", RegexOptions.IgnoreCase),    // NDm A100 v4
-            }
-            .AsReadOnly();
-        }
 
         /// <summary>
         /// Ensures that the assembly hosting this hosting manager is loaded.
