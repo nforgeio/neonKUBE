@@ -549,6 +549,33 @@ namespace Neon.Kube.Hosting.Aws
             }
         }
 
+        /// <summary>
+        /// Holds AWS region details.
+        /// </summary>
+        private struct RegionDetails
+        {
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="latitude">Specifies the region latitude.</param>
+            /// <param name="longitude">Specifies the region longitude.</param>
+            public RegionDetails(double? latitude, double? longitude)
+            {
+                this.Latitude  = latitude;
+                this.Longitude = longitude;
+            }
+
+            /// <summary>
+            /// Returns the region latitude.
+            /// </summary>
+            public double? Latitude { get; private set; }
+
+            /// <summary>
+            /// Returns the region longitude.
+            /// </summary>
+            public double? Longitude { get; private set; }
+        }
+
         //---------------------------------------------------------------------
         // Static members
 
@@ -684,6 +711,58 @@ namespace Neon.Kube.Hosting.Aws
         /// Polling interval for slow operations.
         /// </summary>
         private static readonly TimeSpan operationPollInternal = TimeSpan.FromSeconds(5);
+
+        /// <summary>
+        /// Maps AWS region names to associated region information.
+        /// </summary>
+        private static readonly IReadOnlyDictionary<string, RegionDetails> regionToDetails;
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static AwsHostingManager()
+        {
+            // $todo(jefflill): Check for new regions from time to time.
+            //
+            // I'm manually extracting the region lat/lon coordinates from this Rust code:
+            //
+            //      https://github.com/mlafeldt/aws-region-nearby/blob/main/aws-region-nearby/aws.rs
+            //
+            // This seems to be the latest source for this apparently secret information and
+            // was last updated Jan 2023, so somebody seems to be at least trying to keep this
+            // up to date.
+
+            regionToDetails = new Dictionary<string, RegionDetails>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "af-south-1",     new RegionDetails(-33.9648017883, 18.6016998291) },
+                { "ap-east-1",      new RegionDetails(22.308901, 113.9150010) },
+                { "ap-northeast-1", new RegionDetails(35.764702, 140.386002) },
+                { "ap-northeast-2", new RegionDetails(37.46910095214844, 126.45099639892578) },
+                { "ap-northeast-3", new RegionDetails(34.42729949951172, 135.24400329589844) },
+                { "ap-south-1",     new RegionDetails(19.0886993408, 72.8678970337) },
+                { "ap-southeast-1", new RegionDetails(1.35019, 103.9940030) },
+                { "ap-southeast-2", new RegionDetails(-33.94609832763672, 151.177001953125) },
+                { "ap-southeast-3", new RegionDetails(-6.125556, 106.655833) },
+                { "ca-central-1",   new RegionDetails(45.470556, -73.740833) },
+                { "cn-north-1",     new RegionDetails(40.080101013183594, 116.58499908447266) },
+                { "cn-northwest-1", new RegionDetails(38.321667, 106.3925) },
+                { "eu-central-1",   new RegionDetails(50.033333, 8.570556) },
+                { "eu-north-1",     new RegionDetails(59.651901245117, 17.918600082397) },
+                { "eu-south-1",     new RegionDetails(45.6306, 8.72811) },
+                { "eu-west-1",      new RegionDetails(53.421299, -6.27007) },
+                { "eu-west-2",      new RegionDetails(51.4775, -0.461389) },
+                { "eu-west-3",      new RegionDetails(49.012798, 2.55) },
+                { "me-central-1",   new RegionDetails(25.2697, 55.30940) },
+                { "me-south-1",     new RegionDetails(26.27079963684082, 50.63359832763672) },
+                { "sa-east-1",      new RegionDetails(-23.435556, -46.473056) },
+                { "us-east-1",      new RegionDetails(38.9445, -77.4558029) },
+                { "us-east-2",      new RegionDetails(39.958993960575775, -83.00219086148725) },
+                { "us-west-1",      new RegionDetails(37.61899948120117, -122.3750) },
+                { "us-west-2",      new RegionDetails(45.540394, -122.949825) },
+                { "us-gov-east-1",  new RegionDetails(38.9445, -77.45580290) },
+                { "us-gov-west-1",  new RegionDetails(37.61899948120117, -122.375) }
+            };
+        }
 
         /// <summary>
         /// Ensures that the assembly hosting this hosting manager is loaded.
@@ -1502,6 +1581,27 @@ namespace Neon.Kube.Hosting.Aws
         public override IEnumerable<string> GetClusterAddresses()
         {
             return new List<string>() { ingressAddress.PublicIp } ;
+        }
+
+        /// <inheritdoc/>
+        public override async Task<(double? Latitude, double? Longitude)> GetDatacenterCoordinatesAsync()
+        {
+            await SyncContext.Clear;
+
+            Covenant.Assert(!string.IsNullOrEmpty(region));
+
+            if (regionToDetails.TryGetValue(region, out var details))
+            {
+                return (Latitude: details.Latitude, Longitude: details.Longitude);
+            }
+            else
+            {
+                // We're going to return NULL coordinates when we can locate the region
+                // details.  This isn't the end of the world since this is somewhat of
+                // a vanity feature.
+
+                return (Latitude: null, Longitude: null);
+            }
         }
 
         /// <summary>

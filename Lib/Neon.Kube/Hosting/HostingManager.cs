@@ -223,6 +223,14 @@ namespace Neon.Kube.Hosting
         public abstract string GetDataDisk(LinuxSshProxy node);
 
         /// <inheritdoc/>
+        public virtual async Task<(double? Latitude, double? Longitude)> GetDatacenterCoordinatesAsync()
+        {
+            await SyncContext.Clear;
+
+            return (Latitude: null, Longitude: null);
+        }
+
+        /// <inheritdoc/>
         public virtual async Task<string> CheckForConflictsAsync(ClusterDefinition clusterDefinition) => await Task.FromResult((string)null);
 
         /// <summary>

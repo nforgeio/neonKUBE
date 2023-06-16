@@ -71,6 +71,7 @@ using Neon.Time;
 using PublicIPAddressSku     = Azure.ResourceManager.Network.Models.PublicIPAddressSku;
 using PublicIPAddressSkuName = Azure.ResourceManager.Network.Models.PublicIPAddressSkuName;
 using PublicIPAddressSkuTier = Azure.ResourceManager.Network.Models.PublicIPAddressSkuTier;
+using System.Security.Cryptography.Pkcs;
 
 namespace Neon.Kube.Hosting.Azure
 {
@@ -761,6 +762,7 @@ namespace Neon.Kube.Hosting.Azure
         private ComputePlan                                 nodeImagePlan;
         private Dictionary<string, AzureVm>                 nodeNameToVm;
         private Dictionary<string, VmSku>                   nodeNameToVmSku;
+        private Dictionary<string, LocationExpanded>        regionToLocation;
 
         // These names will be used to identify the cluster resources.
 
@@ -1360,6 +1362,23 @@ namespace Neon.Kube.Hosting.Azure
             return new List<string>() { publicIngressAddress.Data.IPAddress };
         }
 
+        /// <inheritdoc/>
+        public override async Task<(double? Latitude, double? Longitude)> GetDatacenterCoordinatesAsync()
+        {
+            await SyncContext.Clear;
+
+            Covenant.Assert(!string.IsNullOrEmpty(region));
+
+            if (regionToLocation.TryGetValue(region, out var location))
+            {
+                return (Latitude: location.Metadata.Latitude, Longitude: location.Metadata.Longitude);
+            }
+            else
+            {
+                throw new NeonKubeException($"Azure region [{region}] does not exist or is not available to your subscription.");
+            }
+        }
+
         /// <summary>
         /// <para>
         /// Connects to Azure if we're not already connected.
@@ -1450,6 +1469,18 @@ namespace Neon.Kube.Hosting.Azure
             if (nodeNameToVm == null)
             {
                 nodeNameToVm = new Dictionary<string, AzureVm>(StringComparer.InvariantCultureIgnoreCase);
+            }
+
+            //-----------------------------------------------------------------
+            // Load information about the Azure regions available to this subscription.
+
+            // Verify that the region exists and is available to the current subscription.
+
+            regionToLocation = new Dictionary<string, LocationExpanded>(StringComparer.InvariantCultureIgnoreCase);
+
+            await foreach (var location in subscription.GetLocationsAsync())
+            {
+                regionToLocation.Add(location.Name, location);
             }
 
             //-----------------------------------------------------------------
@@ -3037,24 +3068,16 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
         {
             await SyncContext.Clear;
 
-            var regionName = azureOptions.Region;
-
             await ConnectAzureAsync();
 
-            // $todo(jefflill): We're deferring checking quotas and current utilization for Azure:
+            // $todo(jefflill): We're deferring checking quotas and current utilization
+            // for Azure (for the time being):
             //
             //      https://github.com/nforgeio/neonKUBE/issues/1544
 
-            // Verify that the region exists and is available to the current subscription.
+            var regionName = azureOptions.Region;
 
-            var locations = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-
-            await foreach (var location in subscription.GetLocationsAsync())
-            {
-                locations.Add(location.Name);
-            }
-
-            if (!locations.Contains(regionName))
+            if (!regionToLocation.ContainsKey(regionName))
             {
                 var constraint =
                     new HostingResourceConstraint()

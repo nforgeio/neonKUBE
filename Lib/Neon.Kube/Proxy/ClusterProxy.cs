@@ -1218,9 +1218,25 @@ namespace Neon.Kube.Proxy
         /// <summary>
         /// Creates a <see cref="ClusterInfo"/> instance from information held by the cluster proxy.
         /// </summary>
-        public ClusterInfo CreateClusterInfo()
+        public async Task<ClusterInfo> CreateClusterInfoAsync()
         {
             EnsureSetupMode();
+
+            // Use the datacenter lat/lon coordinates from the cluster definition
+            // otherwise see if the hosting manager can provide these.
+
+            double? lat = SetupState.ClusterDefinition.Latitude;
+            double? lon = SetupState.ClusterDefinition.Longitude;
+
+            if (lat == null && lon == null)
+            {
+                var coordinates = await HostingManager.GetDatacenterCoordinatesAsync();
+
+                lat = coordinates.Latitude;
+                lon = coordinates.Longitude;
+            }
+
+            // Initialize the cluster information.
 
             var clusterInfo = new ClusterInfo()
             {
@@ -1235,8 +1251,8 @@ namespace Neon.Kube.Proxy
                 KubernetesVersion  = KubeVersions.Kubernetes,
                 Datacenter         = SetupState.ClusterDefinition.Datacenter,
                 IsDesktop          = SetupState.ClusterDefinition.IsDesktop,
-                Latitude           = SetupState.ClusterDefinition.Latitude,
-                Longitude          = SetupState.ClusterDefinition.Longitude,
+                Latitude           = lat,
+                Longitude          = lon,
                 FeatureOptions     = SetupState.ClusterDefinition.Features,
 
                 ClusterId          = SetupState.ClusterId,

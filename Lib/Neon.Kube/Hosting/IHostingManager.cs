@@ -221,6 +221,14 @@ namespace Neon.Kube.Hosting
         string GetDataDisk(LinuxSshProxy node);
 
         /// <summary>
+        /// Returns the <b>lat/long</b> coordinates of the region or datacenter
+        /// hosting the cluster when possible.  The coordinates will be returned
+        /// as <c>null</c> when this is unknown.
+        /// </summary>
+        /// <returns>The datacenter coordinates or <c>null</c> values.</returns>
+        Task<(double? Latitude, double? Longitude)> GetDatacenterCoordinatesAsync();
+
+        /// <summary>
         /// Checks for any conflicts that might arise when provisoning a cluster.
         /// Currently, this checks for existing machines using IP addresses that
         /// will conflict with one or more of the cluster nodes.

@@ -6017,7 +6017,7 @@ $@"- name: StorageType
                     var clusterManifestMap = new TypedConfigMap<ClusterInfo>(
                         name:       KubeConfigMapName.ClusterInfo,
                         @namespace: KubeNamespace.NeonStatus,
-                        data:       cluster.CreateClusterInfo());
+                        data:       await cluster.CreateClusterInfoAsync());
 
                     await k8s.CoreV1.CreateNamespacedTypedConfigMapAsync(clusterManifestMap);
                 });
