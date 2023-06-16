@@ -62,21 +62,21 @@
         <MSBuild Projects="$(NK_ROOT)\Tools\operator-cli\operator-cli.csproj" Targets="Publish;PublishItemsOutputGroup" Properties="Configuration=$(Configuration);RuntimeIdentifier=linux-x64;PublishSingleFile=true" RebaseOutputs="true">
             <Output TaskParameter="TargetOutputs" ItemName="_ToolsProjectOutputs" />
         </MSBuild>
-        <Copy SourceFiles="@(_ToolsProjectOutputs)" DestinationFolder="linux-x64" />
+        <Copy SourceFiles="@(_ToolsProjectOutputs)" DestinationFolder="linux-x64" Retries="$(CopyRetries)" RetryDelayMilliseconds="$(CopyRetryDelayMilliseconds)" />
     </Target>
 
     <Target Name="_GenerateOsxCli">
         <MSBuild Projects="$(NK_ROOT)\Tools\operator-cli\operator-cli.csproj" Targets="Publish;PublishItemsOutputGroup" Properties="Configuration=$(Configuration);RuntimeIdentifier=osx-x64;PublishSingleFile=true" RebaseOutputs="true">
             <Output TaskParameter="TargetOutputs" ItemName="_ToolsProjectOutputs" />
         </MSBuild>
-        <Copy SourceFiles="@(_ToolsProjectOutputs)" DestinationFolder="osx-x64" />
+        <Copy SourceFiles="@(_ToolsProjectOutputs)" DestinationFolder="osx-x64" Retries="$(CopyRetries)" RetryDelayMilliseconds="$(CopyRetryDelayMilliseconds)" />
     </Target>
 
     <Target Name="_GenerateWindowsCli">
         <MSBuild Projects="$(NK_ROOT)\Tools\operator-cli\operator-cli.csproj" Targets="Publish;PublishItemsOutputGroup" Properties="Configuration=$(Configuration);RuntimeIdentifier=win-x64;PublishSingleFile=true" RebaseOutputs="true">
             <Output TaskParameter="TargetOutputs" ItemName="_ToolsProjectOutputs" />
         </MSBuild>
-        <Copy SourceFiles="@(_ToolsProjectOutputs)" DestinationFolder="win-x64" />
+        <Copy SourceFiles="@(_ToolsProjectOutputs)" DestinationFolder="win-x64" Retries="$(CopyRetries)" RetryDelayMilliseconds="$(CopyRetryDelayMilliseconds)" />
     </Target>
 
     <ItemGroup>
@@ -84,7 +84,6 @@
     </ItemGroup>
 
     <Target Name="BuildOperatorCli" Inputs="@(OperatorCliFiles)" Outputs="@(OperatorCliFiles->'%(Filename).content')" BeforeTargets="Build;BeforeCompile;CoreCompile">
-        
         <CallTarget Condition="$([MSBuild]::IsOSPlatform('Linux'))" Targets="_GenerateLinuxCli" />
         <CallTarget Condition="$([MSBuild]::IsOSPlatform('OSX'))" Targets="_GenerateOsxCli" />
         <CallTarget Condition="$([MSBuild]::IsOSPlatform('Windows'))" Targets="_GenerateWindowsCli" />

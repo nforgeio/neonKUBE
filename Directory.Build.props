@@ -133,6 +133,17 @@
         <None Include="README.md" Pack="true" PackagePath="" />
     </ItemGroup>
 
+    <!--
+    These constants are used to control the retry behavior of the MSBUILD
+    <Copy.../> tasks.  This helps mitigate transient issues when files may
+    be locked during Visual background operations.
+    -->
+
+    <PropertyGroup>
+        <CopyRetries>10</CopyRetries>
+        <CopyRetryDelayMilliseconds>1000</CopyRetryDelayMilliseconds>
+    </PropertyGroup>
+
     <!-- 
     $hack(jefflill):
     
