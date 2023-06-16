@@ -22,6 +22,7 @@ spec:
         {{ toYaml .Values.cvcOperator.podLabels | nindent 8 }}
         {{- end }}
     spec:
+      enableServiceLinks: false
       serviceAccountName: {{ .Values.serviceAccount.cstorOperator.name }}
       containers:
         - name: {{ template "cstor.fullname" . }}-cvc-operator

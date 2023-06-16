@@ -133,6 +133,7 @@ metadata:
     app: test
   name: test
 spec:
+  enableServiceLinks: false
   replicas: 1
   selector:
     matchLabels:

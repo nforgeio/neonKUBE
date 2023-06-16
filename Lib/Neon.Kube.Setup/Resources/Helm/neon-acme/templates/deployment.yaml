@@ -17,6 +17,7 @@ spec:
       labels:
         app: neon-acme
     spec:
+      enableServiceLinks: false
       serviceAccountName: neon-acme
       priorityClassName: {{ .Values.priorityClassName }}
       containers:

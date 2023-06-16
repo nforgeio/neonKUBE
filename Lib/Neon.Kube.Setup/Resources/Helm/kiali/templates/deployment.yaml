@@ -24,6 +24,7 @@ spec:
         {{- toYaml .Values.podAnnotations | nindent 8 }}
     {{- end }}
     spec:
+      enableServiceLinks: false
       serviceAccountName: {{ include "kiali-operator.fullname" . }}
       {{- if .Values.priorityClassName }}
       priorityClassName: {{ .Values.priorityClassName | quote }}

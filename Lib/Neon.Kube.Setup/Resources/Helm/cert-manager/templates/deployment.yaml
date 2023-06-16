@@ -48,6 +48,7 @@ spec:
         prometheus.io/port: '9402'
       {{- end }}
     spec:
+      enableServiceLinks: false
       serviceAccountName: {{ template "cert-manager.serviceAccountName" . }}
       {{- with .Values.global.priorityClassName }}
       priorityClassName: {{ . | quote }}

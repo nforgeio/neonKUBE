@@ -50,6 +50,7 @@ spec:
 {{ toYaml . | indent 8 }}
 {{- end }}
     spec:
+      enableServiceLinks: false
 {{- with .Values.securityContext }}
       securityContext:
 {{ toYaml . | indent 8 }}

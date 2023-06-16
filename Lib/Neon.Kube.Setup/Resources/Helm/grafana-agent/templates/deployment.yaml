@@ -19,6 +19,7 @@ spec:
       annotations:
         sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
     spec:
+      enableServiceLinks: false
       serviceAccountName: grafana-agent-operator
       nodeSelector:
       {{- toYaml .Values.nodeSelector | nindent 8 }}

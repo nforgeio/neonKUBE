@@ -18,6 +18,7 @@ spec:
       labels:
         {{- include "minio-operator.console-selectorLabels" . | nindent 8 }}
     spec:
+      enableServiceLinks: false
     {{- with .Values.operator.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}

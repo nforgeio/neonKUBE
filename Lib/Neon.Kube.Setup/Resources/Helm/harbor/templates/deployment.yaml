@@ -23,6 +23,7 @@ spec:
       labels:
         control-plane: harbor-operator
     spec:
+      enableServiceLinks: false
       priorityClassName: {{ .Values.priorityClassName }}
       containers:
       - args:

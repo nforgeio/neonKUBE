@@ -41,6 +41,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
     spec:
+      enableServiceLinks: false
       serviceAccountName: {{ template "cainjector.serviceAccountName" . }}
       {{- with .Values.global.priorityClassName }}
       priorityClassName: {{ . | quote }}

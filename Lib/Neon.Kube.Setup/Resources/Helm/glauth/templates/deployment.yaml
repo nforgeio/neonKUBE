@@ -23,6 +23,7 @@ spec:
       labels:
         {{- include "glauth.selectorLabels" . | nindent 8 }}
     spec:
+      enableServiceLinks: false
       priorityClassName: {{ .Values.priorityClassName }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:

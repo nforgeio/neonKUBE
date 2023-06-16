@@ -23,6 +23,7 @@ spec:
         {{ toYaml .Values.admissionServer.podLabels | nindent 8 }}
         {{- end }}
     spec:
+      enableServiceLinks: false
       serviceAccountName: {{ .Values.serviceAccount.cstorOperator.name }}
       containers:
         - name: {{ template "cstor.fullname" . }}-admission-webhook

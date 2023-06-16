@@ -33,6 +33,7 @@ spec:
 {{ toYaml .Values.podLabels | indent 8 }}
       {{- end }}
     spec:
+      enableServiceLinks: false
       serviceAccountName: {{ include "postgres-operator.serviceAccountName" . }}
       containers:
       - name: {{ .Chart.Name }}

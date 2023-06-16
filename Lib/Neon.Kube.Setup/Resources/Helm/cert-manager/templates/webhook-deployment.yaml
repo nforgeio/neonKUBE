@@ -25,6 +25,7 @@ spec:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   template:
+    enableServiceLinks: false
     metadata:
       labels:
         app: {{ include "webhook.name" . }}
@@ -40,6 +41,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
     spec:
+      enableServiceLinks: false
       serviceAccountName: {{ template "webhook.serviceAccountName" . }}
       {{- with .Values.global.priorityClassName }}
       priorityClassName: {{ . | quote }}

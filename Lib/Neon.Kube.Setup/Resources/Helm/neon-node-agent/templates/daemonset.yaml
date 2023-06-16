@@ -1,4 +1,4 @@
-﻿apiVersion: apps/v1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
@@ -21,6 +21,7 @@ spec:
       {{- end }}
         sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
     spec:
+      enableServiceLinks: false
       serviceAccountName: neon-node-agent
       hostPID: true
       hostNetwork: true

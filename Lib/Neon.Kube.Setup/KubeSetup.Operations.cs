@@ -204,6 +204,7 @@ metadata:
     role: neon-etcd-proxy
     release: neon-etcd-proxy
 spec:
+  enableServiceLinks: false
   volumes:
    - name: neon-etcd-proxy-config
      hostPath:
