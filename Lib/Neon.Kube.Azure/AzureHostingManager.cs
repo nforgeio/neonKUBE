@@ -3151,14 +3151,6 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
 
             // Verify that the region exists and is available to the current subscription.
 
-            // $todo(jefflill):
-            //
-            // The [SubscriptionResource.GetAvailableLocationsAsync()] call below doesn't seem to 
-            // be working; it always returns an empty list.  We'll temporarily work around this by
-            // hardcoding known locations for the public cloud:
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/1555
-
             var locations = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
             await foreach (var location in subscription.GetLocationsAsync())
