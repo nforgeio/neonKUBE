@@ -3161,96 +3161,10 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
 
             var locations = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
-#if DISABLED
-            foreach (var location in (await subscription.GetAvailableLocationsAsync()).Value)
+            await foreach (var location in subscription.GetLocationsAsync())
             {
                 locations.Add(location.Name);
             }
-#else
-            var hardcodedLocations = new string[]
-            {
-                "eastus",
-                "eastus2",
-                "southcentralus",
-                "westus2",
-                "westus3",
-                "australiaeast",
-                "southeastasia",
-                "northeurope",
-                "swedencentral",
-                "uksouth",
-                "westeurope",
-                "centralus",
-                "southafricanorth",
-                "centralindia",
-                "eastasia",
-                "japaneast",
-                "koreacentral",
-                "canadacentral",
-                "francecentral",
-                "germanywestcentral",
-                "norwayeast",
-                "brazilsouth",
-                "eastus2euap",
-                "centralusstage",
-                "eastusstage",
-                "eastus2stage",
-                "northcentralusstage",
-                "southcentralusstage",
-                "westusstage",
-                "westus2stage",
-                "asia",
-                "asiapacific",
-                "australia",
-                "brazil",
-                "canada",
-                "europe",
-                "france",
-                "germany",
-                "global",
-                "india",
-                "japan",
-                "korea",
-                "norway",
-                "southafrica",
-                "switzerland",
-                "uae",
-                "uk",
-                "unitedstates",
-                "unitedstateseuap",
-                "eastasiastage",
-                "southeastasiastage",
-                "northcentralus",
-                "westus",
-                "jioindiawest",
-                "switzerlandnorth",
-                "uaenorth",
-                "centraluseuap",
-                "westcentralus",
-                "southafricawest",
-                "australiacentral",
-                "australiacentral2",
-                "australiasoutheast",
-                "japanwest",
-                "jioindiacentral",
-                "koreasouth",
-                "southindia",
-                "westindia",
-                "canadaeast",
-                "francesouth",
-                "germanynorth",
-                "norwaywest",
-                "switzerlandwest",
-                "ukwest",
-                "uaecentral",
-                "brazilsoutheast"
-            };
-
-            foreach (var location in hardcodedLocations)
-            {
-                locations.Add(location);
-            }
-#endif
 
             if (!locations.Contains(regionName))
             {
