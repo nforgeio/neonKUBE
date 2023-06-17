@@ -125,6 +125,35 @@ definition or by executing this command on your cluster:
 
             if (!string.IsNullOrEmpty(clusterName))
             {
+                // Special case the scenario where we're deleting a partially deployed
+                // cluster using it's temporary setup state.
+
+                if (!KubeHelper.KubeConfig.Clusters.Any(cluster => cluster.Name == clusterName))
+                {
+                    var setupStatePath = Path.Combine(KubeHelper.SetupFolder, $"{contextName}.yaml");
+
+                    if (!File.Exists(setupStatePath))
+                    {
+                        Console.Error.WriteLine($"*** ERROR: Cannot delete unknown cluster: {clusterName}");
+                        Program.Exit(1);
+                    }
+
+                    var setupState = NeonHelper.JsonDeserialize<KubeSetupState>(File.ReadAllText(setupStatePath));
+
+                    // $note(jefflill):
+                    //
+                    // The [cloudMarketplace] parameter value doesn't matter below and we're going to
+                    // pass [noLockCheck=true] to the remove call because we won't be able to query the
+                    // cluster lock state state without a context.
+
+                    using (var cluster = ClusterProxy.Create(setupState, new HostingManagerFactory(), cloudMarketplace: false))
+                    {
+                        await RemoveCluster(cluster, force: force, noLockCheck: true);
+                    }
+
+                    Program.Exit(0);
+                }
+
                 orgContext = KubeHelper.CurrentContext;
 
                 KubeHelper.SetCurrentContext(contextName);
@@ -142,54 +171,7 @@ definition or by executing this command on your cluster:
             {
                 using (var cluster = ClusterProxy.Create(KubeHelper.KubeConfig, new HostingManagerFactory()))
                 {
-                    var capabilities = cluster.Capabilities;
-
-                    if ((capabilities & HostingCapabilities.Removable) == 0)
-                    {
-                        Console.Error.WriteLine($"*** ERROR: Cluster is not removable.");
-                        Program.Exit(1);
-                    }
-
-                    if (!force)
-                    {
-                        var isLocked = await cluster.IsLockedAsync();
-
-                        if (!isLocked.HasValue)
-                        {
-                            Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] lock status is unknown.");
-                            Program.Exit(1);
-                        }
-
-                        if (isLocked.Value)
-                        {
-                            Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] is locked.");
-                            Program.Exit(1);
-                        }
-
-                        if (!Program.PromptYesNo($"Are you sure you want to remove: {cluster.Name}?"))
-                        {
-                            Program.Exit(0);
-                        }
-                    }
-
-                    try
-                    {
-                        // $todo(jefflill):
-                        //
-                        // We should probably look for other contexts that reference this cluster
-                        // and remove those as will.
-
-                        Console.WriteLine($"Removing: {cluster.Name}...");
-                        await cluster.DeleteClusterAsync();
-                        KubeHelper.KubeConfig.RemoveContext(context);
-
-                        Console.WriteLine($"REMOVED:  {cluster.Name}");
-                    }
-                    catch (TimeoutException)
-                    {
-                        Console.Error.WriteLine();
-                        Console.Error.WriteLine($"*** ERROR: Timeout waiting for cluster.");
-                    }
+                    await RemoveCluster(cluster, force);
                 }
             }
             finally
@@ -202,6 +184,69 @@ definition or by executing this command on your cluster:
                 {
                     KubeHelper.SetCurrentContext(orgContext.Name);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Removes the cluster associated with a <see cref="ClusterProxy"/>.
+        /// </summary>
+        /// <param name="cluster">The cluster proxy.</param>
+        /// <param name="force">Pass <c>true</c> when the <c>--force</c> option is specified.</param>
+        /// <param name="noLockCheck">Optionally disable the cluster lock check.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task RemoveCluster(ClusterProxy cluster, bool force, bool noLockCheck = false)
+        {
+            var capabilities = cluster.Capabilities;
+
+            if ((capabilities & HostingCapabilities.Removable) == 0)
+            {
+                Console.Error.WriteLine($"*** ERROR: Cluster is not removable.");
+                Program.Exit(1);
+            }
+
+            if (!force && !noLockCheck)
+            {
+                var isLocked = await cluster.IsLockedAsync();
+
+                if (!isLocked.HasValue)
+                {
+                    Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] lock status is unknown.");
+                    Program.Exit(1);
+                }
+
+                if (isLocked.Value)
+                {
+                    Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] is locked.");
+                    Program.Exit(1);
+                }
+            }
+
+            if (!Program.PromptYesNo($"Are you sure you want to remove cluster: {cluster.Name}?"))
+            {
+                Program.Exit(0);
+            }
+
+            try
+            {
+                Console.WriteLine($"Removing: {cluster.Name}...");
+                await cluster.DeleteClusterAsync();
+
+                // Remove all contexts that reference the cluster.
+
+                foreach (var delContext in KubeHelper.KubeConfig.Contexts
+                    .Where(context => context.Context.Cluster == context.Context.Cluster)
+                    .ToArray())
+                {
+                    KubeHelper.KubeConfig.RemoveContext(delContext);
+                }
+
+                KubeHelper.KubeConfig.Save();
+                Console.WriteLine($"REMOVED:  {cluster.Name}");
+            }
+            catch (TimeoutException)
+            {
+                Console.Error.WriteLine();
+                Console.Error.WriteLine($"*** ERROR: Timeout waiting for cluster.");
             }
         }
     }
