@@ -141,7 +141,7 @@
 
     <PropertyGroup>
         <CopyRetries>10</CopyRetries>
-        <CopyRetryDelayMilliseconds>1000</CopyRetryDelayMilliseconds>
+        <CopyRetryDelayMilliseconds>50</CopyRetryDelayMilliseconds>
     </PropertyGroup>
 
     <!-- 
