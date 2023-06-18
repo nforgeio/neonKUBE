@@ -886,32 +886,11 @@ enable_metrics = true
 metrics_port = 9090
 EOF
 
-cat <<EOF > /etc/cni/net.d/100-crio-bridge.conf
-{{
-    ""cniVersion"": ""0.3.1"",
-    ""name"": ""crio"",
-    ""type"": ""bridge"",
-    ""bridge"": ""cni0"",
-    ""isGateway"": true,
-    ""ipMasq"": true,
-    ""hairpinMode"": true,
-    ""ipam"": {{
-        ""type"": ""host-local"",
-        ""routes"": [
-            {{ ""dst"": ""0.0.0.0/0"" }}
-        ],
-        ""ranges"": [
-            [{{ ""subnet"": ""10.85.0.0/16"" }}]
-        ]
-    }}
-}}
-EOF
-
 # Remove shortnames.
 
 rm -f /etc/containers/registries.conf.d/000-shortnames.conf
 
-# Configure CRI-O to start on boot and then restart it to pick up the new options.
+# Configure CRI-O to start on boot and then restart it to pick up the new configuration.
 
 systemctl daemon-reload
 systemctl enable crio
