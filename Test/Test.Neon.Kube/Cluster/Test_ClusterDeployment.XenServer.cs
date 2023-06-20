@@ -98,7 +98,7 @@ namespace TestKube
 
                     using (var xenClient = CreateXenClient(clusterDefinition))
                     {
-                        xenClient.CleanHost(templateSelector: template => template.NameLabel.StartsWith("neon", StringComparison.InvariantCultureIgnoreCase));
+                        xenClient.WipeHost(templateSelector: template => template.NameLabel.StartsWith("neon", StringComparison.InvariantCultureIgnoreCase));
                     }
 
                     // Logout out of the current cluster (if any), remove any existing cluster context that
