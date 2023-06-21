@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    Endpoint.cs
+//-----------------------------------------------------------------------------
+// FILE:        Endpoint.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -67,7 +67,7 @@ namespace Neon.Kube.Resources.Prometheus
         public int TargetPort { get; set; }
 
         /// <summary>
-        /// Name of the service port this endpoint refers to. Mutually exclusive with targetPort.	
+        /// Name of the service port this endpoint refers to. Mutually exclusive with targetPort.   
         /// </summary>
         [DefaultValue(null)]
         public string Port { get; set; }

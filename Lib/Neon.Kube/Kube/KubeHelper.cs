@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
-// FILE:	    KubeHelper.cs
+// FILE:        KubeHelper.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -2241,7 +2241,7 @@ passphrase:
         /// Returns the OpenSSH configuration file used for cluster nodes.
         /// </summary>
         public static string OpenSshConfig =>
-@"# FILE:	       sshd_config
+@"# FILE:          sshd_config
 # CONTRIBUTOR: Jeff Lill
 # COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 #
@@ -2418,7 +2418,7 @@ Include /etc/ssh/sshd_config.d/*.conf
             var allowPasswordAuthValue = allowPasswordAuth ? "yes" : "no";
 
             return
-$@"# FILE:	       /etc/ssh/sshd_config.d/50-neonkube.conf
+$@"# FILE:         /etc/ssh/sshd_config.d/50-neonkube.conf
 # CONTRIBUTOR: Jeff Lill
 # COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 #
@@ -3191,11 +3191,11 @@ TCPKeepAlive yes
 </head>
 <body style=""background-color: #979797;"">
 <div style=""background-color: #c3c3c3; border-radius: 1em; margin: 1em; padding: 1em;"">
-	<h1>Success!</h1>
-	<p>You are now logged in. This window will close automatically in 5 seconds...</p>
+    <h1>Success!</h1>
+    <p>You are now logged in. This window will close automatically in 5 seconds...</p>
 </div>
 <script>
-	setTimeout(""window.close()"",5000) 
+    setTimeout(""window.close()"",5000) 
 </script>
 </body>
 </html>";

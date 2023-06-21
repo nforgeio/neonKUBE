@@ -1,4 +1,4 @@
-﻿using k8s;
+using k8s;
 using k8s.Models;
 using Microsoft.Extensions.Logging;
 using Neon.Kube.Operator.Finalizer;

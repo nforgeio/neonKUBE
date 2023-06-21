@@ -1,4 +1,4 @@
-﻿using Neon.Kube.Operator.Attributes;
+using Neon.Kube.Operator.Attributes;
 using Neon.Kube.Operator.Builder;
 using Neon.Kube.Operator.Controller;
 using Neon.Kube.Operator.Finalizer;

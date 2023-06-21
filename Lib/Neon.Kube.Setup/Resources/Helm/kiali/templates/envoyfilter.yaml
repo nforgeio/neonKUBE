@@ -1,4 +1,4 @@
-﻿apiVersion: networking.istio.io/v1alpha3
+apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
   name: cookie-filter-kiali

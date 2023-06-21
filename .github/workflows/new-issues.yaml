@@ -1,4 +1,4 @@
-﻿name: Add new issues to internal neonFORGE project
+name: Add new issues to internal neonFORGE project
 
 on:
   issues:

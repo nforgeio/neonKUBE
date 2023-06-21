@@ -1,4 +1,4 @@
-﻿kind: ClusterRoleBinding
+kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ include "neon-sso-session-proxy.fullname" . }}

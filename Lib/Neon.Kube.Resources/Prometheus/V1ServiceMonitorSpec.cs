@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    V1ServiceMonitorSpec.cs
+//-----------------------------------------------------------------------------
+// FILE:        V1ServiceMonitorSpec.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -77,7 +77,7 @@ namespace Neon.Kube.Resources.Prometheus
         public int? SampleLimit { get; set; }
 
         /// <summary>
-        /// TargetLimit defines a limit on the number of scraped targets that will be accepted.	
+        /// TargetLimit defines a limit on the number of scraped targets that will be accepted. 
         /// </summary>
         public int? TargetLimit { get; set; }
 

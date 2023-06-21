@@ -1,5 +1,5 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    DropUp.razor.cs
+//-----------------------------------------------------------------------------
+// FILE:        DropUp.razor.cs
 // CONTRIBUTOR: Simon Zhang, Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //

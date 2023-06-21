@@ -52,9 +52,9 @@ fi
 
 # Install some common packages:
 #
-#	jq			JSON parser (useful for shell scripts)
-#	aptitude	Apt related utilities
-#	gdebi-core	Installs .deb package files AND their dependencies
+#   jq          JSON parser (useful for shell scripts)
+#   aptitude    Apt related utilities
+#   gdebi-core  Installs .deb package files AND their dependencies
 #   mmv         Easy multiple file renaming
 
 safe-apt-get update
@@ -175,7 +175,7 @@ cat <<EOF > /etc/sysctl.conf
 # prevent zombie connections that appear to be alive but don't
 # actually transmit data.  This is described here:
 #
-#	https://github.com/moby/moby/issues/31208
+#   https://github.com/moby/moby/issues/31208
 #
 # We're going to configure TCP connections to begin sending
 # keepalives after 500 minutes of being idle and then every
@@ -974,7 +974,7 @@ max-cache-ttl=30
 # max-mthreads=2048
 
 #################################
-# max-negative-ttl	maximum number of seconds to keep a negative cached entry in memory
+# max-negative-ttl  maximum number of seconds to keep a negative cached entry in memory
 #
 max-negative-ttl=30
 

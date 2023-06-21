@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
-// FILE:	    NodeSshProxy.ClusterSetup.cs
+// FILE:        NodeSshProxy.ClusterSetup.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -928,16 +928,16 @@ case $1 in
         #------------------------------
         # This is the modification.
 
-		# This bit of voodoo disables Hyper-V time synchronization with The
-		# host server.  We don't want this because the cluster is doing its
-		# own time management and time sync will fight us.  This is described
-		# here:
-		#
-		# https://social.msdn.microsoft.com/Forums/en-US/8c0a1026-0b02-405a-848e-628e68229eaf/i-have-a-lot-of-time-has-been-changed-in-the-journal-of-my-linux-boxes?forum=WAVirtualMachinesforWindows
+        # This bit of voodoo disables Hyper-V time synchronization with The
+        # host server.  We don't want this because the cluster is doing its
+        # own time management and time sync will fight us.  This is described
+        # here:
+        #
+        # https://social.msdn.microsoft.com/Forums/en-US/8c0a1026-0b02-405a-848e-628e68229eaf/i-have-a-lot-of-time-has-been-changed-in-the-journal-of-my-linux-boxes?forum=WAVirtualMachinesforWindows
 
-		log_daemon_msg ""Start: Disabling Hyper-V time synchronization"" ""ntpd""
-		echo 2dd1ce17-079e-403c-b352-a1921ee207ee > /sys/bus/vmbus/drivers/hv_util/unbind
-		log_daemon_msg ""Finished: Disabling Hyper-V time synchronization"" ""ntpd""
+        log_daemon_msg ""Start: Disabling Hyper-V time synchronization"" ""ntpd""
+        echo 2dd1ce17-079e-403c-b352-a1921ee207ee > /sys/bus/vmbus/drivers/hv_util/unbind
+        log_daemon_msg ""Finished: Disabling Hyper-V time synchronization"" ""ntpd""
         
         log_daemon_msg ""Start: Updating current time"" ""ntpd""
         {KubeNodeFolder.Bin}/update-time --norestart
@@ -1133,7 +1133,7 @@ service ntp restart
 $@"
 # IPv4 hosts:
 
-127.0.0.1	    localhost
+127.0.0.1       localhost
 
 # IPv6 hosts:
 
@@ -1173,7 +1173,7 @@ ff02::2         ip6-allrouters
                     {
                         var proxyServiceScript =
 $@"
-set -eou pipefail	# Enable full failure detection
+set -eou pipefail   # Enable full failure detection
 
 {KubeNodeFolder.Bin}/safe-apt-get update
 {KubeNodeFolder.Bin}/safe-apt-get install -yq apt-cacher-ng
@@ -1184,7 +1184,7 @@ set -eou pipefail	# Enable full failure detection
 echo ""PassThroughPattern:^.*:443$"" >> /etc/apt-cacher-ng/acng.conf
 systemctl restart apt-cacher-ng
 
-set -eo pipefail	# Revert back to partial failure detection
+set -eo pipefail    # Revert back to partial failure detection
 
 # Give the proxy service a chance to start.
 
@@ -1226,21 +1226,21 @@ cat <<EOF > /usr/local/bin/get-package-proxy
 # This is called when the following is specified in the APT configuration,
 # as we do further below:
 #
-#		Acquire::http::Proxy-Auto-Detect ""/usr/local/bin/get-package-proxy"";
+#       Acquire::http::Proxy-Auto-Detect ""/usr/local/bin/get-package-proxy"";
 #
 # See this link for more information:
 #
-#		https://trent.utfs.org/wiki/Apt-get#Failover_Proxy
+#       https://trent.utfs.org/wiki/Apt-get#Failover_Proxy
 NEON_PACKAGE_PROXY=$(cat {KubeNodeFolder.Config}/package-proxy)
 if [ ""\${{NEON_PACKAGE_PROXY}}"" == """" ] ; then
     echo DIRECT
     exit 0
 fi
 for proxy in ${{NEON_PACKAGE_PROXY}}; do
-	if nc -w1 -z \${{proxy/:/ }}; then
-		echo http://\${{proxy}}/
-		exit 0
-	fi
+    if nc -w1 -z \${{proxy/:/ }}; then
+        echo http://\${{proxy}}/
+        exit 0
+    fi
 done
 echo DIRECT
 exit 0

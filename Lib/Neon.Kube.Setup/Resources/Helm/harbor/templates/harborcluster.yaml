@@ -1,4 +1,4 @@
-﻿apiVersion: goharbor.io/v1beta1
+apiVersion: goharbor.io/v1beta1
 kind: HarborCluster
 metadata:
   name: registry
