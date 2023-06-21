@@ -25,7 +25,6 @@ spec:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   template:
-    enableServiceLinks: false
     metadata:
       labels:
         app: {{ include "webhook.name" . }}
