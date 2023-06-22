@@ -5,7 +5,7 @@
         <OutputType>Exe</OutputType>
         <RootNamespace>NeonSsoProxy</RootNamespace>
         <IsPackable>false</IsPackable>
-        <ImplicitUsings>enable</ImplicitUsings>
+        <ImplicitUsings>disable</ImplicitUsings>
         <ServerGarbageCollection>true</ServerGarbageCollection>
         <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
         <AssemblyName>neon-sso-session-proxy</AssemblyName>
