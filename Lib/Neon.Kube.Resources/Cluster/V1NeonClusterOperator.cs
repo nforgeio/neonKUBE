@@ -145,7 +145,7 @@ namespace Neon.Kube.Resources.Cluster
             /// <summary>
             /// When the Neon Desktop certificate should be updated.
             /// </summary>
-            public UpdateStatus NeonDesktopCertificate { get; set; } = new UpdateStatus();
+            public UpdateStatus ClusterCertificate { get; set; } = new UpdateStatus();
         }
 
         /// <summary>
@@ -179,9 +179,9 @@ namespace Neon.Kube.Resources.Cluster
             public UpdateSpec Telemetry { get; set; } = new UpdateSpec();
 
             /// <summary>
-            /// When the Neon Desktop certificate should be updated.
+            /// When the cluster certificate should be updated.
             /// </summary>
-            public UpdateSpec NeonDesktopCertificate { get; set; } = new UpdateSpec();
+            public UpdateSpec ClusterCertificate { get; set; } = new UpdateSpec();
         }
 
         /// <summary>

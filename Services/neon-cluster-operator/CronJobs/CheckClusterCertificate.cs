@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:        CheckNeonDesktopCertificate.cs
+// FILE:        CheckClusterCertificate.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -52,17 +52,17 @@ namespace NeonClusterOperator
     /// Handles updating of the <b>desktop.neoncluster.io</b> certificate.
     /// </summary>
     [DisallowConcurrentExecution]
-    public class CheckNeonDesktopCertificate : CronJob, IJob
+    public class CheckClusterCertificate : CronJob, IJob
     {
-        private static readonly ILogger logger = TelemetryHub.CreateLogger<CheckNeonDesktopCertificate>();
+        private static readonly ILogger logger = TelemetryHub.CreateLogger<CheckClusterCertificate>();
 
         private static Random random   = new Random();
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public CheckNeonDesktopCertificate()
-            : base(typeof(CheckNeonDesktopCertificate))
+        public CheckClusterCertificate()
+            : base(typeof(CheckClusterCertificate))
         {
         }
         
@@ -75,13 +75,14 @@ namespace NeonClusterOperator
 
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
-                Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckNeonDesktopCertificate)));
+                Tracer.CurrentSpan?.AddEvent("execute", attributes => attributes.Add("cronjob", nameof(CheckClusterCertificate)));
 
                 try
                 {
                     var dataMap       = context.MergedJobDataMap;
                     var k8s           = (IKubernetes)dataMap["Kubernetes"];
                     var headendClient = (HeadendClient)dataMap["HeadendClient"];
+                    var clusterInfo   = (ClusterInfo)dataMap["ClusterInfo"];
                     var ingressSecret = await k8s.CoreV1.ReadNamespacedSecretAsync("neon-cluster-certificate", KubeNamespace.NeonIngress);
                     var systemSecret  = await k8s.CoreV1.ReadNamespacedSecretAsync("neon-cluster-certificate", KubeNamespace.NeonSystem);
 
@@ -97,7 +98,15 @@ namespace NeonClusterOperator
                     {
                         await Task.Delay(TimeSpan.FromMinutes(random.Next(90)));
 
-                        var cert = await headendClient.NeonDesktop.GetNeonDesktopCertificateAsync();
+                        IDictionary<string, byte[]> cert;
+                        if (clusterInfo.IsDesktop)
+                        {
+                            cert = await headendClient.NeonDesktop.GetNeonDesktopCertificateAsync();
+                        }
+                        else
+                        {
+                            cert = await headendClient.Cluster.GetCertificateAsync(clusterInfo.ClusterId);
+                        }
 
                         ingressSecret.Data = cert;
                         systemSecret.Data  = cert;
@@ -114,8 +123,8 @@ namespace NeonClusterOperator
                         patch.Replace(path => path.Status, new V1NeonClusterOperator.OperatorStatus());
                     }
 
-                    patch.Replace(path => path.Status.NeonDesktopCertificate, new V1NeonClusterOperator.UpdateStatus());
-                    patch.Replace(path => path.Status.NeonDesktopCertificate.LastCompleted, DateTime.UtcNow);
+                    patch.Replace(path => path.Status.ClusterCertificate, new V1NeonClusterOperator.UpdateStatus());
+                    patch.Replace(path => path.Status.ClusterCertificate.LastCompleted, DateTime.UtcNow);
 
                     await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterOperator>(
                         patch: OperatorHelper.ToV1Patch<V1NeonClusterOperator>(patch),

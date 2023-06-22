@@ -2185,33 +2185,39 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         values:       values);
                 });
 
-            if (cluster.SetupState.ClusterDefinition.IsDesktop)
-            {
-                controller.ThrowIfCancelled();
-                await controlNode.InvokeIdempotentAsync("setup/cluster-certificates",
-                    async () =>
+            controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/cluster-certificates",
+                async () =>
+                {
+                    controller.LogProgress(controlNode, verb: "setup", message: "neon-cluster-certificate");
+
+                    IDictionary<string, byte[]> cert;
+                    if (cluster.SetupState.ClusterDefinition.IsDesktop)
                     {
-                        controller.LogProgress(controlNode, verb: "setup", message: "neon-cluster-certificate");
+                        cert = await headencClient.NeonDesktop.GetNeonDesktopCertificateAsync();
+                    }
+                    else
+                    {
+                        cert = await headencClient.Cluster.GetCertificateAsync(cluster.Id);
+                    }
 
-                        var cert   = await headencClient.NeonDesktop.GetNeonDesktopCertificateAsync();
-                        var secret = new V1Secret()
+                    var secret = new V1Secret()
+                    {
+                        Metadata = new V1ObjectMeta()
                         {
-                            Metadata = new V1ObjectMeta()
-                            {
-                                Name              = "neon-cluster-certificate",
-                                NamespaceProperty = KubeNamespace.NeonIngress
-                            },
-                            Data = cert,
-                            Type = "kubernetes.io/tls"
-                        };
+                            Name              = "neon-cluster-certificate",
+                            NamespaceProperty = KubeNamespace.NeonIngress
+                        },
+                        Data = cert,
+                        Type = "kubernetes.io/tls"
+                    };
 
-                        await k8s.CoreV1.CreateNamespacedSecretAsync(secret, secret.Namespace());
+                    await k8s.CoreV1.CreateNamespacedSecretAsync(secret, secret.Namespace());
 
-                        secret.Metadata.NamespaceProperty = KubeNamespace.NeonSystem;
+                    secret.Metadata.NamespaceProperty = KubeNamespace.NeonSystem;
 
-                        await k8s.CoreV1.CreateNamespacedSecretAsync(secret, secret.Namespace());
-                    });
-            }
+                    await k8s.CoreV1.CreateNamespacedSecretAsync(secret, secret.Namespace());
+                });
         }
 
         /// <summary>
@@ -5023,7 +5029,7 @@ $@"- name: StorageType
 
                     if (cluster.SetupState.ClusterDefinition.IsDesktop)
                     {
-                        nco.Spec.Updates.NeonDesktopCertificate = new V1NeonClusterOperator.UpdateSpec()
+                        nco.Spec.Updates.ClusterCertificate = new V1NeonClusterOperator.UpdateSpec()
                         {
                             Enabled  = true,
                             Schedule = "0 0 * ? * *"

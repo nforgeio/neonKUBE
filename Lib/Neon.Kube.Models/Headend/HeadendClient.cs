@@ -96,6 +96,10 @@ namespace Neon.Kube.Models.Headend
         [HttpGet]
         [Route("{clusterId}/token/renew")]
         string GetTokenAsync([FromRoute] string clusterId);
+
+        [HttpGet]
+        [Route("{clusterId}/certificate")]
+        IDictionary<string, byte[]> GetCertificateAsync([FromRoute] string clusterId);
     }
 
     /// <summary>

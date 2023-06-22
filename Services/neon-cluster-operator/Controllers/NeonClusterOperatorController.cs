@@ -103,10 +103,11 @@ namespace NeonClusterOperator
         private static CheckControlPlaneCertificates    checkControlPlaneCertificates;
         private static CheckRegistryImages              checkRegistryImages;
         private static SendClusterTelemetry             sendClusterTelemetry;
-        private static CheckNeonDesktopCertificate      checkNeonDesktopCert;
+        private static CheckClusterCertificate          checkClusterCert;
 
         private HeadendClient headendClient;
         private HarborClient  harborClient;
+        private ClusterInfo   clusterInfo;
 
         /// <summary>
         /// Static constructor.
@@ -118,7 +119,7 @@ namespace NeonClusterOperator
             checkControlPlaneCertificates = new CheckControlPlaneCertificates();
             checkRegistryImages           = new CheckRegistryImages();
             sendClusterTelemetry          = new SendClusterTelemetry();
-            checkNeonDesktopCert          = new CheckNeonDesktopCertificate();
+            checkClusterCert              = new CheckClusterCertificate();
         }
 
         //---------------------------------------------------------------------
@@ -134,7 +135,8 @@ namespace NeonClusterOperator
             IKubernetes                              k8s,
             ILogger<NeonClusterOperatorController>   logger,
             HeadendClient                            headendClient,
-            HarborClient                             harborClient)
+            HarborClient                             harborClient,
+            ClusterInfo                              clusterInfo)
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             Covenant.Requires<ArgumentNullException>(logger != null, nameof(logger));
@@ -145,6 +147,7 @@ namespace NeonClusterOperator
             this.logger        = logger;
             this.headendClient = headendClient;
             this.harborClient  = harborClient;
+            this.clusterInfo   = clusterInfo;
         }
 
         /// <summary>
@@ -230,20 +233,23 @@ namespace NeonClusterOperator
                         });
                 }
 
-                if (resource.Spec.Updates.NeonDesktopCertificate.Enabled)
+                if (resource.Spec.Updates.ClusterCertificate.Enabled)
                 {
-                    var neonDesktopCertExpression = resource.Spec.Updates.NeonDesktopCertificate.Schedule;
+                    
+
+                    var neonDesktopCertExpression = resource.Spec.Updates.ClusterCertificate.Schedule;
 
                     CronExpression.ValidateExpression(neonDesktopCertExpression);
 
-                    await checkNeonDesktopCert.DeleteFromSchedulerAsync(scheduler);
-                    await checkNeonDesktopCert.AddToSchedulerAsync(
+                    await checkClusterCert.DeleteFromSchedulerAsync(scheduler);
+                    await checkClusterCert.AddToSchedulerAsync(
                         scheduler, 
                         k8s, 
                         neonDesktopCertExpression,
                         new Dictionary<string, object>()
                         {
-                            { "HeadendClient", headendClient }
+                            { "HeadendClient", headendClient },
+                            { "ClusterInfo", clusterInfo}
                         });
                 }
 
