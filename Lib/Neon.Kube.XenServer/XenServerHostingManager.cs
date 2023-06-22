@@ -343,9 +343,7 @@ namespace Neon.Kube.Hosting.XenServer
             foreach (var node in cluster.SetupState.ClusterDefinition.Nodes)
             {
                 node.Labels.PhysicalMachine = node.Hypervisor.Host;
-                node.Labels.ComputeCores    = node.Hypervisor.GetCores(cluster.SetupState.ClusterDefinition);
-                node.Labels.ComputeRam      = (int)(node.Hypervisor.GetMemory(cluster.SetupState.ClusterDefinition) / ByteUnits.MebiBytes);
-                node.Labels.StorageSize     = ByteUnits.ToGiB(node.Hypervisor.GetOsDisk(cluster.SetupState.ClusterDefinition));
+                node.Labels.StorageOSDiskSize     = ByteUnits.ToGiB(node.Hypervisor.GetOsDisk(cluster.SetupState.ClusterDefinition));
             }
 
             // Create [NodeSshProxy] instances that use the [XenClient] instances as proxy metadata.

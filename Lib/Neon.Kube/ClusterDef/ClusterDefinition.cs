@@ -84,6 +84,16 @@ namespace Neon.Kube.ClusterDef
         public const string ReservedPrefix = "neonkube.io/";
 
         /// <summary>
+        /// The prefix reserved for NEONKUBE specific <b>node</b> annotations and labels.
+        /// </summary>
+        public const string ReservedNodePrefix = "node." + ReservedKubernetesPrefix;
+
+        /// <summary>
+        /// The prefix reserved for Kubernetes specific annotations and labels.
+        /// </summary>
+        public const string ReservedKubernetesPrefix = "kubernetes.io/";
+
+        /// <summary>
         /// Parses and validates a YAML cluster definition file.
         /// </summary>
         /// <param name="path">The file path.</param>
@@ -272,9 +282,7 @@ namespace Neon.Kube.ClusterDef
             foreach (var node in definition.Nodes)
             {
                 node.Ingress                        = true;
-                node.Labels.StorageSize             = null;
-                node.Labels.ComputeCores            = 0;
-                node.Labels.ComputeRam              = 0;
+                node.Labels.StorageOSDiskSize             = null;
                 node.Labels.PhysicalLocation        = null;
                 node.Labels.PhysicalMachine         = null;
                 node.Labels.PhysicalAvailabilitySet = null;

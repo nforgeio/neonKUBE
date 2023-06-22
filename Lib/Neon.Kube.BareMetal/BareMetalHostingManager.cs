@@ -189,38 +189,6 @@ namespace Neon.Kube.Hosting.BareMetal
         {
             CommandResponse result;
 
-            // Download [/proc/meminfo] and extract the [MemTotal] value (in kB).
-
-            result = node.SudoCommand("cat /proc/meminfo", RunOptions.FaultOnError);
-
-            if (result.ExitCode == 0)
-            {
-                var memInfo       = result.OutputText;
-                var memTotalRegex = new Regex(@"^MemTotal:\s*(?<size>\d+)\s*kB", RegexOptions.Multiline);
-                var memMatch      = memTotalRegex.Match(memInfo);
-
-                if (memMatch.Success && long.TryParse(memMatch.Groups["size"].Value, out var memSizeKiB))
-                {
-                    // Note that the RAM reported by Linux is somewhat less than the
-                    // physical RAM installed.
-
-                    node.Metadata.Labels.ComputeRam = (int)(memSizeKiB / 1024);  // Convert KiB --> MiB
-                }
-            }
-
-            // Download [/proc/cpuinfo] and count the number of processors.
-
-            result = node.SudoCommand("cat /proc/cpuinfo", RunOptions.FaultOnError);
-
-            if (result.ExitCode == 0)
-            {
-                var cpuInfo          = result.OutputText;
-                var processorRegex   = new Regex(@"^processor\s*:\s*\d+", RegexOptions.Multiline);
-                var processorMatches = processorRegex.Matches(cpuInfo);
-
-                node.Metadata.Labels.ComputeCores = processorMatches.Count;
-            }
-
             // Determine the primary disk size.
 
             // $hack(jefflill):
@@ -253,7 +221,7 @@ namespace Neon.Kube.Hosting.BareMetal
                 {
                     if (long.TryParse(result.OutputText.Trim(), out var deviceSize) && deviceSize > 0)
                     {
-                        node.Metadata.Labels.StorageSize = ByteUnits.ToGiB(deviceSize);
+                        node.Metadata.Labels.StorageOSDiskSize = ByteUnits.ToGiB(deviceSize);
                         break;
                     }
                 }

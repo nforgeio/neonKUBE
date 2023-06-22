@@ -48,6 +48,9 @@ using Azure.ResourceManager.Resources;
 using Azure.ResourceManager.Resources.Models;
 using Azure.ResourceManager.Storage;
 
+using k8s;
+using k8s.Models;
+
 using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -1247,6 +1250,43 @@ namespace Neon.Kube.Hosting.Azure
                     await ConnectAzureAsync();
                 });
 
+            //controller.AddGlobalStep("node labels (cloud)",
+            //    async controller =>
+            //    {
+            //        controller.LogProgress(verb: "label", message: "nodes (cloud)");
+
+            //        var k8s               = controller.Get<IKubernetes>(KubeSetupProperty.K8sClient);
+            //        var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            //        var clusterDefinition = cluster.SetupState.ClusterDefinition;
+            //        var k8sNodes          = (await k8s.CoreV1.ListNodeAsync()).Items;
+
+            //        foreach (var nodeDefinition in clusterDefinition.NodeDefinitions.Values)
+            //        {
+            //            controller.ThrowIfCancelled();
+
+            //            var k8sNode = k8sNodes.Where(n => n.Metadata.Name == nodeDefinition.Name).Single();
+
+            //            var patch = new V1Node()
+            //            {
+            //                Metadata = new V1ObjectMeta()
+            //                {
+            //                    Labels = k8sNode.Labels()
+            //                }
+            //            };
+
+            //            var vm = nodeNameToVm[nodeDefinition.Name];
+
+            //            patch.Metadata.Labels.Add("node.kubernetes.io/instance-type", vm.VmSize);
+            //            patch.Metadata.Labels.Add("topology.kubernetes.io/region", vm.Vm.Data.Location.Name);
+
+            //            // $todo(jefflill): How do I determine the VM's zone?
+
+            //            // patch.Metadata.Labels.Add("topology.kubernetes.io/zone", vm.Vm.Data.Zones.First());
+
+            //            await k8s.CoreV1.PatchNodeAsync(new V1Patch(patch, V1Patch.PatchType.StrategicMergePatch), k8sNode.Metadata.Name);
+            //        }
+            //    });
+
             controller.AddGlobalStep("ssh port mappings",
                 async controller =>
                 {
@@ -1917,13 +1957,11 @@ namespace Neon.Kube.Hosting.Azure
 
                 // Update the node labels to match the actual VM capabilities.
 
-                node.Metadata.Labels.ComputeCores     = vmSku.VirtualCpus;
-                node.Metadata.Labels.ComputeRam       = (int)(vmSku.MemoryGiB / 1024);
-                node.Metadata.Labels.StorageSize      = $"{AzureHelper.GetDiskSizeGiB(node.Metadata.Azure.StorageType, ByteUnits.Parse(node.Metadata.Azure.DiskSize))} GiB";
-                node.Metadata.Labels.StorageHDD       = node.Metadata.Azure.StorageType == AzureStorageType.StandardHDD;
-                node.Metadata.Labels.StorageEphemeral = false;
-                node.Metadata.Labels.StorageLocal     = false;
-                node.Metadata.Labels.StorageRedundant = true;
+                node.Metadata.Labels.StorageOSDiskSize      = $"{AzureHelper.GetDiskSizeGiB(node.Metadata.Azure.StorageType, ByteUnits.Parse(node.Metadata.Azure.DiskSize))} GiB";
+                node.Metadata.Labels.StorageOSDiskHDD       = node.Metadata.Azure.StorageType == AzureStorageType.StandardHDD;
+                node.Metadata.Labels.StorageOSDiskEphemeral = false;
+                node.Metadata.Labels.StorageOSDiskLocal     = false;
+                node.Metadata.Labels.StorageOSDiskRedundant = true;
             }
         }
 
