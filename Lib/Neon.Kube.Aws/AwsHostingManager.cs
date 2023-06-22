@@ -39,6 +39,9 @@ using Amazon.ResourceGroups;
 using Amazon.ResourceGroups.Model;
 using Amazon.Runtime;
 
+using k8s;
+using k8s.Models;
+
 using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
@@ -1461,6 +1464,38 @@ namespace Neon.Kube.Hosting.Aws
                     await ConnectAwsAsync(controller);
                 });
 
+            //controller.AddGlobalStep("node labels (cloud)",
+            //    async controller =>
+            //    {
+            //        controller.LogProgress(verb: "label", message: "nodes (cloud)");
+
+            //        var k8s               = controller.Get<IKubernetes>(KubeSetupProperty.K8sClient);
+            //        var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            //        var clusterDefinition = cluster.SetupState.ClusterDefinition;
+            //        var k8sNodes          = (await k8s.CoreV1.ListNodeAsync()).Items;
+
+            //        foreach (var nodeDefinition in clusterDefinition.NodeDefinitions.Values)
+            //        {
+            //            controller.ThrowIfCancelled();
+
+            //            var k8sNode = k8sNodes.Where(n => n.Metadata.Name == nodeDefinition.Name).Single();
+
+            //            var patch = new V1Node()
+            //            {
+            //                Metadata = new V1ObjectMeta()
+            //                {
+            //                    Labels = k8sNode.Labels()
+            //                }
+            //            };
+
+            //            patch.Metadata.Labels.Add("node.kubernetes.io/instance-type", nodeDefinition.Aws.InstanceType ?? clusterDefinition.Hosting.Aws.DefaultInstanceType);
+            //            patch.Metadata.Labels.Add("topology.kubernetes.io/region", region);
+            //            patch.Metadata.Labels.Add("topology.kubernetes.io/zone", availabilityZone);
+
+            //            await k8s.CoreV1.PatchNodeAsync(new V1Patch(patch, V1Patch.PatchType.StrategicMergePatch), k8sNode.Metadata.Name);
+            //        }
+            //    });
+
             controller.AddGlobalStep("ssh port mappings",
                 async controller =>
                 {
@@ -2189,13 +2224,11 @@ namespace Neon.Kube.Hosting.Aws
 
                 // Update the node labels to match the actual VM capabilities.
 
-                node.Metadata.Labels.ComputeCores     = instanceTypeInfo.VCpuInfo.DefaultVCpus;
-                node.Metadata.Labels.ComputeRam       = (int)instanceTypeInfo.MemoryInfo.SizeInMiB;
-                node.Metadata.Labels.StorageSize      = $"{AwsHelper.GetVolumeSizeGiB(node.Metadata.Aws.VolumeType, ByteUnits.Parse(node.Metadata.Aws.VolumeSize))} GiB";
-                node.Metadata.Labels.StorageHDD       = node.Metadata.Aws.VolumeType == AwsVolumeType.St1 || node.Metadata.Aws.VolumeType == AwsVolumeType.Sc1;
-                node.Metadata.Labels.StorageEphemeral = false;
-                node.Metadata.Labels.StorageLocal     = false;
-                node.Metadata.Labels.StorageRedundant = true;
+                node.Metadata.Labels.StorageOSDiskSize      = $"{AwsHelper.GetVolumeSizeGiB(node.Metadata.Aws.VolumeType, ByteUnits.Parse(node.Metadata.Aws.VolumeSize))} GiB";
+                node.Metadata.Labels.StorageOSDiskHDD       = node.Metadata.Aws.VolumeType == AwsVolumeType.St1 || node.Metadata.Aws.VolumeType == AwsVolumeType.Sc1;
+                node.Metadata.Labels.StorageOSDiskEphemeral = false;
+                node.Metadata.Labels.StorageOSDiskLocal     = false;
+                node.Metadata.Labels.StorageOSDiskRedundant = true;
             }
         }
 

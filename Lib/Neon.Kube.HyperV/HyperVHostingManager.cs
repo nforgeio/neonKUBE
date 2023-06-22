@@ -243,9 +243,7 @@ namespace Neon.Kube.Hosting.HyperV
             foreach (var node in cluster.SetupState.ClusterDefinition.Nodes)
             {
                 node.Labels.PhysicalMachine = Environment.MachineName;
-                node.Labels.ComputeCores    = cluster.Hosting.Hypervisor.Cores;
-                node.Labels.ComputeRam      = (int)(ClusterDefinition.ValidateSize(cluster.Hosting.Hypervisor.Memory, typeof(HostingOptions), nameof(HostingOptions.Hypervisor.Memory))/ ByteUnits.MebiBytes);
-                node.Labels.StorageSize     = ByteUnits.ToGiB(node.Hypervisor.GetMemory(cluster.SetupState.ClusterDefinition));
+                node.Labels.StorageOSDiskSize     = ByteUnits.ToGiB(node.Hypervisor.GetMemory(cluster.SetupState.ClusterDefinition));
             }
 
             // Add the provisioning steps to the controller.

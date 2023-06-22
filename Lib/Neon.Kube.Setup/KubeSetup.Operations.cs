@@ -256,7 +256,7 @@ spec:
                         {
                             controller.ThrowIfCancelled();
 
-                            var k8sNode = k8sNodes.Where(n => n.Metadata.Name == node.Name).FirstOrDefault();
+                            var k8sNode = k8sNodes.Where(n => n.Metadata.Name == node.Name).Single();
 
                             var patch = new V1Node()
                             {
@@ -272,9 +272,6 @@ spec:
 
                                 patch.Metadata.Labels.Add("kubernetes.io/role", "worker");
                             }
-
-                            patch.Metadata.Labels.Add(NodeLabels.LabelDatacenter, cluster.SetupState.ClusterDefinition.Datacenter.ToLowerInvariant());
-                            patch.Metadata.Labels.Add(NodeLabels.LabelEnvironment, cluster.SetupState.ClusterDefinition.Purpose.ToString().ToLowerInvariant());
 
                             foreach (var label in node.Metadata.Labels.All)
                             {
@@ -1848,9 +1845,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             var ingressAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioIngressGateway);
             var proxyAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioProxy);
             var pilotAdvice   = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioPilot);
-
-            controller.ThrowIfCancelled();
-            await CreateNamespaceAsync(controller, controlNode, KubeNamespace.NeonIngress, false);
 
             controller.ThrowIfCancelled();
             await controlNode.InvokeIdempotentAsync("setup/ingress",
@@ -5254,7 +5248,7 @@ $@"- name: StorageType
         /// <param name="controller">The setup controller.</param>
         /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task<List<Task>> CreateNamespacesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        public static async Task CreateNamespacesAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
@@ -5266,12 +5260,13 @@ $@"- name: StorageType
 
             var tasks = new List<Task>();
 
+            tasks.Add(CreateNamespaceAsync(controller, controlNode, KubeNamespace.NeonIngress, true));
             tasks.Add(CreateNamespaceAsync(controller, controlNode, KubeNamespace.NeonMonitor, true));
             tasks.Add(CreateNamespaceAsync(controller, controlNode, KubeNamespace.NeonStorage, false));
-            tasks.Add(CreateNamespaceAsync(controller, controlNode, KubeNamespace.NeonSystem, true));
             tasks.Add(CreateNamespaceAsync(controller, controlNode, KubeNamespace.NeonStatus, false));
+            tasks.Add(CreateNamespaceAsync(controller, controlNode, KubeNamespace.NeonSystem, true));
 
-            return await Task.FromResult(tasks);
+            await Task.FromResult(tasks);
         }
 
         /// <summary>

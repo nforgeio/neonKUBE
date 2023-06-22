@@ -77,14 +77,14 @@ namespace Neon.Kube
         public const string NeonStorage = "neon-storage";
 
         /// <summary>
-        /// Hosts NEONKUBE infrastructure.
-        /// </summary>
-        public const string NeonSystem = "neon-system";
-
-        /// <summary>
         /// Hosts cluster status information.
         /// </summary>
         public const string NeonStatus = "neon-status";
+
+        /// <summary>
+        /// Hosts NEONKUBE infrastructure.
+        /// </summary>
+        public const string NeonSystem = "neon-system";
 
         /// <summary>
         /// Returns the set of stock Kubernetes clusters namespaces.

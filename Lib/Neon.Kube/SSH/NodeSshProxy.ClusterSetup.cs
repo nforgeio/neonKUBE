@@ -1070,7 +1070,7 @@ service ntp restart
             {
                 sb.AppendLine($"NEON_NODE_ROLE={nodeDefinition.Role}");
                 sb.AppendLine($"NEON_NODE_IP={nodeDefinition.Address}");
-                sb.AppendLine($"NEON_NODE_HDD={nodeDefinition.Labels.StorageHDD.ToString().ToLowerInvariant()}");
+                sb.AppendLine($"NEON_NODE_HDD={nodeDefinition.Labels.StorageOSDiskHDD.ToString().ToLowerInvariant()}");
             }
 
             sb.AppendLine($"NEON_BIN_FOLDER={KubeNodeFolder.Bin}");
