@@ -101,8 +101,7 @@ containerSecurityContext: {}
 
 ## Node labels for pod assignment
 ## Ref: https://kubernetes.io/docs/user-guide/node-selection/
-nodeSelector:
-  neonkube.io/monitor.metrics-internal: 'true'
+nodeSelector: {}
 
 ## Affinity settings for pod assignment
 ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/

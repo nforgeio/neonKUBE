@@ -106,22 +106,22 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// Reserved label name that identifies the node's private IP address.
         /// </summary>
-        public const string LabelAddress = ClusterDefinition.ReservedNodePrefix + "node.address";
+        public const string LabelAddress = ClusterDefinition.ReservedNodePrefix + "address";
 
         /// <summary>
         /// Reserved label name that identifies the node role.
         /// </summary>
-        public const string LabelRole = ClusterDefinition.ReservedNodePrefix + "node.role";
+        public const string LabelRole = ClusterDefinition.ReservedNodePrefix + "role";
 
         /// <summary>
         /// Reserved label name used to indicate that a node should route external traffic into the cluster.
         /// </summary>
-        public const string LabelIngress = ClusterDefinition.ReservedNodePrefix + "node.ingress";
+        public const string LabelIngress = ClusterDefinition.ReservedNodePrefix + "system.ingress";
 
         /// <summary>
         /// Reserved label name used to indicate that a node hosts an OpenEBS cStor block device.
         /// </summary>
-        public const string LabelOpenEbs = ClusterDefinition.ReservedNodePrefix + "node.openebs";
+        public const string LabelOpenEbs = ClusterDefinition.ReservedNodePrefix + "system.openebs";
 
         /// <summary>
         /// <b>node.neonkube.io/openEbs.enabled</b> [<c>bool</c>]: Indicates that OpenEBS 
@@ -331,7 +331,7 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// Reserved label name for <see cref="Istio"/>.
         /// </summary>
-        public const string LabelIstio = ClusterDefinition.ReservedNodePrefix + "istio";
+        public const string LabelIstio = ClusterDefinition.ReservedNodePrefix + "system.istio";
 
         /// <summary>
         /// <b>node.neonkube.io/istio.enabled</b> [<c>bool</c>]: Indicates that Istio 
@@ -348,7 +348,7 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// Reserved label name for core NEONKUBE system components.
         /// </summary>
-        public const string LabelNeonSystem = ClusterDefinition.ReservedNodePrefix + "neon-system";
+        public const string LabelNeonSystem = ClusterDefinition.ReservedNodePrefix + "system";
 
         /// <summary>
         /// <b>node.neonkube.io/neon-system</b> [<c>bool</c>]: Indicates that general neon-system 
@@ -362,7 +362,7 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// Reserved label name for <see cref="LabelNeonSystemDb"/>.
         /// </summary>
-        public const string LabelNeonSystemDb = ClusterDefinition.ReservedNodePrefix + "neon-system.db";
+        public const string LabelNeonSystemDb = ClusterDefinition.ReservedNodePrefix + "system.db";
 
         /// <summary>
         /// <b>node.neonkube.io/neon-system.db</b> [<c>bool</c>]: Indicates that the neon-system 
@@ -376,7 +376,7 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// Reserved label name for <see cref="LabelNeonSystemDb"/>.
         /// </summary>
-        public const string LabelNeonSystemRegistry = ClusterDefinition.ReservedNodePrefix + "neon-system.registry";
+        public const string LabelNeonSystemRegistry = ClusterDefinition.ReservedNodePrefix + "system.registry";
 
         /// <summary>
         /// <b>node.neonkube.io/neon-system.registry</b> [<c>bool</c>]: Indicates that the neon-system 
@@ -559,7 +559,6 @@ namespace Neon.Kube.ClusterDef
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalAvailabilitytSet,    PhysicalAvailabilitySet));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalPower,               PhysicalPower));
 
-                list.Add(new KeyValuePair<string, object>(LabelNeonSystem,                  NeonHelper.ToBoolString(NeonSystem)));
                 list.Add(new KeyValuePair<string, object>(LabelNeonSystemDb,                NeonHelper.ToBoolString(NeonSystemDb)));
                 list.Add(new KeyValuePair<string, object>(LabelNeonSystemRegistry,          NeonHelper.ToBoolString(NeonSystemRegistry)));
 

@@ -78,8 +78,10 @@ spec:
       securityContext:
         runAsUser: 65532
       terminationGracePeriodSeconds: 10
+      {{- with .Values.nodeSelector }}
       nodeSelector:
-        neonkube.io/neon-system.registry: 'true'
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- if .Values.tolerations }}
       {{- with .Values.tolerations }}
       tolerations:

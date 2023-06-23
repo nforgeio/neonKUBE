@@ -17,8 +17,7 @@ image:
 
 
 # Deployment options for the operator pod.
-nodeSelector: 
-  neonkube.io/istio: "true"
+nodeSelector: {}
 podAnnotations: {}
 env: []
 tolerations: []

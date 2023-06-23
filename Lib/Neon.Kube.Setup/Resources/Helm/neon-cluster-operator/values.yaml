@@ -34,6 +34,7 @@ serviceMesh:
   enabled: true
 
 podAnnotations: {}
+nodeSelector: {}
 
 # Log level: none, critical, serror, error, warn, sinfo, info, transient, debug
 

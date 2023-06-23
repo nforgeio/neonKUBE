@@ -22,8 +22,10 @@ spec:
         sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
     spec:
       enableServiceLinks: false
-      nodeSelector: 
-        neonkube.io/node.role: control-plane
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       serviceAccountName: neon-cluster-operator
       tolerations:
       - operator: Exists
