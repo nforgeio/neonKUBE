@@ -76,8 +76,7 @@ autoscaling:
 serviceMesh:
   enabled: true
 
-nodeSelector:
-  neonkube.io/monitor.metrics-internal: 'true'
+nodeSelector: {}
 
 tolerations: []
 

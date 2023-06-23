@@ -71,8 +71,7 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
 
-nodeSelector:
-  neonkube.io/neon-system: 'true'
+nodeSelector: {}
 
 tolerations: []
 

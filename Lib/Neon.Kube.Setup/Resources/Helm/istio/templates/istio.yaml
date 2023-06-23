@@ -151,8 +151,10 @@ spec:
           requests:
             cpu: "{{ .Values.resources.proxy.requests.cpu }}"
             memory: "{{ .Values.resources.proxy.requests.memory }}"
-      defaultNodeSelector: 
-        neonkube.io/istio: true
+      {{- with .Values.defaultNodeSelector }}
+      defaultNodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
     gateways:
       istio-ingressgateway:
         type: NodePort

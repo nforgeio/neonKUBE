@@ -425,18 +425,9 @@ spec:
                     controller.ThrowIfCancelled();
                     await ConfigureApiserverIngressAsync(controller, controlNode);
 
-                    // [neon-dashboard]: is not really usable in its current form as
-                    // a thin wrapper around other opensource dashboards using an
-                    // iframe.  This ended up being clunkly in practice and we've
-                    // decided to implement our own fully integrated dashboard in
-                    // the future.
-                    //
-                    // There's no sense in deploying the existing implementation, so
-                    // we'll comment this out to conserve memory.
-#if TODO
                     controller.ThrowIfCancelled();
                     await InstallKubeDashboardAsync(controller, controlNode);
-#endif
+
                     if (cluster.SetupState.ClusterDefinition.Features.NodeProblemDetector)
                     {
                         controller.ThrowIfCancelled();
@@ -1893,6 +1884,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add($"resources.pilot.limits.memory", $"{ToSiString(proxyAdvice.PodMemoryLimit)}");
                     values.Add($"resources.pilot.requests.cpu", $"{ToSiString(proxyAdvice.PodCpuRequest)}");
                     values.Add($"resources.pilot.requests.memory", $"{ToSiString(proxyAdvice.PodMemoryRequest)}");
+                    values.Add($"nodeSelector.{NodeLabels.LabelIstio}", "true");
 
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
                     
@@ -2170,6 +2162,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add("dotnetGcConserveMemory", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 9 : 3);
                     values.Add("dotnetGcServer", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 0 : 1);
                     values.Add("dotnetGcHighMemPercent", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 15.ToString("x") : 50.ToString("x"));
+                    values.Add($"nodeSelector.{NodeLabels.LabelRole}", NodeRole.ControlPlane);
 
                     int i = 0;
 
@@ -2194,15 +2187,31 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 {
                     controller.LogProgress(controlNode, verb: "setup", message: "neon-cluster-certificate");
 
-                    IDictionary<string, byte[]> cert;
-                    if (cluster.SetupState.ClusterDefinition.IsDesktop)
+
+                    IDictionary<string, byte[]> cert = null;
+
+                    await NeonHelper.WaitForAsync(async () =>
                     {
-                        cert = await headencClient.NeonDesktop.GetNeonDesktopCertificateAsync();
-                    }
-                    else
-                    {
-                        cert = await headencClient.Cluster.GetCertificateAsync(cluster.Id);
-                    }
+                        try
+                        {
+                            if (cluster.SetupState.ClusterDefinition.IsDesktop)
+                            {
+                                cert = await headencClient.NeonDesktop.GetNeonDesktopCertificateAsync();
+                                return true;
+                            }
+                            else
+                            {
+                                cert = await headencClient.Cluster.GetCertificateAsync(cluster.Id);
+                                return true;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            return false;
+                        }
+                    },
+                    timeout: TimeSpan.FromMinutes(10),
+                    pollInterval: TimeSpan.FromSeconds(5));
 
                     var secret = new V1Secret()
                     {
@@ -2620,6 +2629,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     values.Add("grafanaPassword", NeonHelper.GetCryptoRandomPassword(cluster.SetupState.ClusterDefinition.Security.PasswordLength));
                     values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.serviceMonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"nodeSelector.{NodeLabels.LabelIstio}", "true");
 
                     int i = 0;
 
@@ -3392,6 +3402,7 @@ $@"- name: StorageType
                     values.Add($"metrics.cadvisor.scrapeInterval", clusterAdvice.MetricsInterval);
                     values.Add($"tracing.enabled", cluster.SetupState.ClusterDefinition.Features.Tracing);
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
+                    values.Add($"nodeSelector.{NodeLabels.LabelMetricsInternal}", "true");
 
                     values.Add($"resources.agent.requests.memory", ToSiString(agentAdvice.PodMemoryRequest));
                     values.Add($"resources.agent.limits.memory", ToSiString(agentAdvice.PodMemoryLimit));
@@ -3575,51 +3586,61 @@ $@"- name: StorageType
 
                     values.Add("cluster.name", cluster.Name);
                     values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
+                    values.Add($"nodeSelector.{NodeLabels.LabelMetricsInternal}", "true");
 
                     values.Add($"alertmanager.replicas", alertmanagerAdvice.ReplicaCount);
                     values.Add($"alertmanager.resources.requests.memory", ToSiString(alertmanagerAdvice.PodMemoryRequest));
                     values.Add($"alertmanager.resources.limits.memory", ToSiString(alertmanagerAdvice.PodMemoryLimit));
                     values.Add($"alertmanager.priorityClassName", PriorityClass.NeonMonitor.Name);
+                    values.Add($"alertmanager.nodeSelector.{NodeLabels.LabelMetricsInternal}", "true");
 
                     values.Add($"compactor.replicas", compactorAdvice.ReplicaCount);
                     values.Add($"compactor.resources.requests.memory", ToSiString(compactorAdvice.PodMemoryRequest));
                     values.Add($"compactor.resources.limits.memory", ToSiString(compactorAdvice.PodMemoryLimit));
                     values.Add($"compactor.priorityClassName", PriorityClass.NeonMonitor.Name);
+                    values.Add($"compactor.nodeSelector.{NodeLabels.LabelMetricsInternal}", "true");
 
                     values.Add($"distributor.replicas", distributorAdvice.ReplicaCount);
                     values.Add($"distributor.resources.requests.memory", ToSiString(distributorAdvice.PodMemoryRequest));
                     values.Add($"distributor.resources.limits.memory", ToSiString(distributorAdvice.PodMemoryLimit));
                     values.Add($"distributor.priorityClassName", PriorityClass.NeonMonitor.Name);
+                    values.Add($"distributor.nodeSelector.{NodeLabels.LabelMetricsInternal}", "true");
 
                     values.Add($"ingester.replicas", ingesterAdvice.ReplicaCount);
                     values.Add($"ingester.resources.requests.memory", ToSiString(ingesterAdvice.PodMemoryRequest));
                     values.Add($"ingester.resources.limits.memory", ToSiString(ingesterAdvice.PodMemoryLimit));
                     values.Add($"ingester.priorityClassName", PriorityClass.NeonMonitor.Name);
+                    values.Add($"ingester.nodeSelector.{NodeLabels.LabelMetricsInternal}", "true");
 
                     values.Add($"overrides_exporter.replicas", overridesAdvice.ReplicaCount);
                     values.Add($"overrides_exporter.resources.requests.memory", ToSiString(overridesAdvice.PodMemoryRequest));
                     values.Add($"overrides_exporter.resources.limits.memory", ToSiString(overridesAdvice.PodMemoryLimit));
                     values.Add($"overrides_exporter.priorityClassName", PriorityClass.NeonMonitor.Name);
+                    values.Add($"overrides_exporter.nodeSelector.{NodeLabels.LabelMetricsInternal}", "true");
 
                     values.Add($"querier.replicas", querierAdvice.ReplicaCount);
                     values.Add($"querier.resources.requests.memory", ToSiString(querierAdvice.PodMemoryRequest));
                     values.Add($"querier.resources.limits.memory", ToSiString(querierAdvice.PodMemoryLimit));
                     values.Add($"querier.priorityClassName", PriorityClass.NeonMonitor.Name);
+                    values.Add($"querier.nodeSelector.{NodeLabels.LabelMetricsInternal}", "true");
 
                     values.Add($"query_frontend.replicas", queryFrontendAdvice.ReplicaCount);
                     values.Add($"query_frontend.resources.requests.memory", ToSiString(queryFrontendAdvice.PodMemoryRequest));
                     values.Add($"query_frontend.resources.limits.memory", ToSiString(queryFrontendAdvice.PodMemoryLimit));
                     values.Add($"query_frontend.priorityClassName", PriorityClass.NeonMonitor.Name);
+                    values.Add($"query_frontend.nodeSelector.{NodeLabels.LabelMetricsInternal}", "true");
 
                     values.Add($"ruler.replicas", rulerAdvice.ReplicaCount);
                     values.Add($"ruler.resources.requests.memory", ToSiString(rulerAdvice.PodMemoryRequest));
                     values.Add($"ruler.resources.limits.memory", ToSiString(rulerAdvice.PodMemoryLimit));
                     values.Add($"ruler.priorityClassName", PriorityClass.NeonMonitor.Name);
+                    values.Add($"ruler.nodeSelector.{NodeLabels.LabelMetricsInternal}", "true");
 
                     values.Add($"store_gateway.replicas", storeGatewayAdvice.ReplicaCount);
                     values.Add($"store_gateway.resources.requests.memory", ToSiString(storeGatewayAdvice.PodMemoryRequest));
                     values.Add($"store_gateway.resources.limits.memory", ToSiString(storeGatewayAdvice.PodMemoryLimit));
                     values.Add($"store_gateway.priorityClassName", PriorityClass.NeonMonitor.Name);
+                    values.Add($"store_gateway.nodeSelector.{NodeLabels.LabelMetricsInternal}", "true");
 
                     values.Add($"serviceMonitor.enabled", mimirAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"serviceMonitor.interval", mimirAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
@@ -3740,41 +3761,49 @@ $@"- name: StorageType
 
                     values.Add("cluster.name", cluster.Name);
                     values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
+                    values.Add($"nodeSelector.{NodeLabels.LabelLogsInternal}", "true");
 
                     values.Add($"compactor.replicas", compactorAdvice.ReplicaCount);
                     values.Add($"compactor.resources.requests.memory", ToSiString(compactorAdvice.PodMemoryRequest));
                     values.Add($"compactor.resources.limits.memory", ToSiString(compactorAdvice.PodMemoryLimit));
                     values.Add($"compactor.priorityClassName", PriorityClass.NeonMonitor.Name);
+                    values.Add($"compactor.nodeSelector.{NodeLabels.LabelLogsInternal}", "true");
 
                     values.Add($"distributor.replicas", distributorAdvice.ReplicaCount);
                     values.Add($"distributor.resources.requests.memory", ToSiString(distributorAdvice.PodMemoryRequest));
                     values.Add($"distributor.resources.limits.memory", ToSiString(distributorAdvice.PodMemoryLimit));
                     values.Add($"distributor.priorityClassName", PriorityClass.NeonMonitor.Name);
+                    values.Add($"distributor.nodeSelector.{NodeLabels.LabelLogsInternal}", "true");
 
                     values.Add($"indexGateway.replicas", indexGatewayAdvice.ReplicaCount);
                     values.Add($"indexGateway.resources.requests.memory", ToSiString(indexGatewayAdvice.PodMemoryRequest));
                     values.Add($"indexGateway.resources.limits.memory", ToSiString(indexGatewayAdvice.PodMemoryLimit));
                     values.Add($"indexGateway.priorityClassName", PriorityClass.NeonMonitor.Name);
+                    values.Add($"indexGateway.nodeSelector.{NodeLabels.LabelLogsInternal}", "true");
 
                     values.Add($"ingester.replicas", ingesterAdvice.ReplicaCount);
                     values.Add($"ingester.resources.requests.memory", ToSiString(ingesterAdvice.PodMemoryRequest));
                     values.Add($"ingester.resources.limits.memory", ToSiString(ingesterAdvice.PodMemoryLimit));
                     values.Add($"ingester.priorityClassName", PriorityClass.NeonMonitor.Name);
+                    values.Add($"ingester.nodeSelector.{NodeLabels.LabelLogsInternal}", "true");
 
                     values.Add($"querier.replicas", querierAdvice.ReplicaCount);
                     values.Add($"querier.resources.requests.memory", ToSiString(querierAdvice.PodMemoryRequest));
                     values.Add($"querier.resources.limits.memory", ToSiString(querierAdvice.PodMemoryLimit));
                     values.Add($"querier.priorityClassName", PriorityClass.NeonMonitor.Name);
+                    values.Add($"querier.nodeSelector.{NodeLabels.LabelLogsInternal}", "true");
 
                     values.Add($"queryFrontend.replicas", queryFrontendAdvice.ReplicaCount);
                     values.Add($"queryFrontend.resources.requests.memory", ToSiString(queryFrontendAdvice.PodMemoryRequest));
                     values.Add($"queryFrontend.resources.limits.memory", ToSiString(queryFrontendAdvice.PodMemoryLimit));
                     values.Add($"queryFrontend.priorityClassName", PriorityClass.NeonMonitor.Name);
+                    values.Add($"queryFrontend.nodeSelector.{NodeLabels.LabelLogsInternal}", "true");
 
                     values.Add($"ruler.replicas", rulerAdvice.ReplicaCount);
                     values.Add($"ruler.resources.requests.memory", ToSiString(rulerAdvice.PodMemoryRequest));
                     values.Add($"ruler.resources.limits.memory", ToSiString(rulerAdvice.PodMemoryLimit));
                     values.Add($"ruler.priorityClassName", PriorityClass.NeonMonitor.Name);
+                    values.Add($"ruler.nodeSelector.{NodeLabels.LabelLogsInternal}", "true");
 
                     values.Add($"serviceMonitor.enabled", lokiAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"serviceMonitor.interval", lokiAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
@@ -3885,31 +3914,37 @@ $@"- name: StorageType
 
                     values.Add("cluster.name", cluster.Name);
                     values.Add("cluster.domain", cluster.SetupState.ClusterDomain);
+                    values.Add($"nodeSelector.{NodeLabels.LabelTracesInternal}", "true");
 
                     values.Add($"compactor.replicas", compactorAdvice.ReplicaCount);
                     values.Add($"compactor.resources.requests.memory", ToSiString(compactorAdvice.PodMemoryRequest));
                     values.Add($"compactor.resources.limits.memory", ToSiString(compactorAdvice.PodMemoryLimit));
                     values.Add($"compactor.priorityClassName", PriorityClass.NeonMonitor.Name);
+                    values.Add($"compactor.nodeSelector.{NodeLabels.LabelTracesInternal}", "true");
 
                     values.Add($"distributor.replicas", distributorAdvice.ReplicaCount);
                     values.Add($"distributor.resources.requests.memory", ToSiString(distributorAdvice.PodMemoryRequest));
                     values.Add($"distributor.resources.limits.memory", ToSiString(distributorAdvice.PodMemoryLimit));
                     values.Add($"distributor.priorityClassName", PriorityClass.NeonMonitor.Name);
+                    values.Add($"distributor.nodeSelector.{NodeLabels.LabelTracesInternal}", "true");
 
                     values.Add($"ingester.replicas", ingesterAdvice.ReplicaCount);
                     values.Add($"ingester.resources.requests.memory", ToSiString(ingesterAdvice.PodMemoryRequest));
                     values.Add($"ingester.resources.limits.memory", ToSiString(ingesterAdvice.PodMemoryLimit));
                     values.Add($"ingester.priorityClassName", PriorityClass.NeonMonitor.Name);
+                    values.Add($"ingester.nodeSelector.{NodeLabels.LabelTracesInternal}", "true");
 
                     values.Add($"querier.replicas", querierAdvice.ReplicaCount);
                     values.Add($"querier.resources.requests.memory", ToSiString(querierAdvice.PodMemoryRequest));
                     values.Add($"querier.resources.limits.memory", ToSiString(querierAdvice.PodMemoryLimit));
                     values.Add($"querier.priorityClassName", PriorityClass.NeonMonitor.Name);
+                    values.Add($"querier.nodeSelector.{NodeLabels.LabelTracesInternal}", "true");
 
                     values.Add($"queryFrontend.replicas", queryFrontendAdvice.ReplicaCount);
                     values.Add($"queryFrontend.resources.requests.memory", ToSiString(queryFrontendAdvice.PodMemoryRequest));
                     values.Add($"queryFrontend.resources.limits.memory", ToSiString(queryFrontendAdvice.PodMemoryLimit));
                     values.Add($"queryFrontend.priorityClassName", PriorityClass.NeonMonitor.Name);
+                    values.Add($"queryFrontend.nodeSelector.{NodeLabels.LabelTracesInternal}", "true");
 
                     values.Add($"serviceMonitor.enabled", tempoAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"serviceMonitor.interval", tempoAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
@@ -3988,6 +4023,7 @@ $@"- name: StorageType
                     values.Add($"prometheus.monitor.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"prometheus.monitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
+                    values.Add($"nodeSelector.{NodeLabels.LabelMetricsInternal}", "true");
 
                     int i = 0;
                     foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelMetricsInternal, "true"))
@@ -4098,6 +4134,7 @@ $@"- name: StorageType
                     values.Add($"tracing.enabled", cluster.SetupState.ClusterDefinition.Features.Tracing);
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
                     values.Add("replicas", serviceAdvice.ReplicaCount);
+                    values.Add($"nodeSelector.{NodeLabels.LabelMetricsInternal}", "true");
 
                     controller.ThrowIfCancelled();
                     await controlNode.InvokeIdempotentAsync("setup/db-credentials-grafana",
@@ -4299,6 +4336,9 @@ $@"- name: StorageType
                             values.Add("helmKubectlJqImage.registry", KubeConst.LocalClusterRegistry);
                             values.Add($"tenants[0].pools[0].servers", serviceAdvice.ReplicaCount);
                             values.Add($"tenants[0].pools[0].volumesPerServer", cluster.SetupState.ClusterDefinition.Storage.Minio.VolumesPerNode);
+                            values.Add($"operator.nodeSelector.{NodeLabels.LabelMinioInternal}", "true");
+                            values.Add($"console.nodeSelector.{NodeLabels.LabelMinioInternal}", "true");
+                            values.Add($"tenants[0].pools[0].nodeSelector.{NodeLabels.LabelMinioInternal}", "true");
 
                             var volumesize = ByteUnits.Humanize(
                                 size:            ByteUnits.Parse(cluster.SetupState.ClusterDefinition.Storage.Minio.VolumeSize),
@@ -4648,6 +4688,7 @@ $@"- name: StorageType
                     values.Add($"metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add($"metrics.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
                     values.Add("serviceMesh.enabled", cluster.SetupState.ClusterDefinition.Features.ServiceMesh);
+                    values.Add($"nodeSelector.{NodeLabels.LabelNeonSystemRegistry}", "true");
 
                     values.Add($"components.chartMuseum.enabled", cluster.SetupState.ClusterDefinition.Features.Harbor.ChartMuseum);
                     values.Add($"components.notary.enabled", cluster.SetupState.ClusterDefinition.Features.Harbor.Notary);
@@ -4957,6 +4998,7 @@ $@"- name: StorageType
                     values.Add("dotnetGcHighMemPercent", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 15.ToString("x") : 50.ToString("x"));
                     values.Add("metrics.enabled", serviceAdvice.MetricsEnabled ?? clusterAdvice.MetricsEnabled);
                     values.Add("metrics.servicemonitor.interval", serviceAdvice.MetricsInterval ?? clusterAdvice.MetricsInterval);
+                    values.Add($"nodeSelector.{NodeLabels.LabelRole}", NodeRole.ControlPlane);
 
                     await controlNode.InstallHelmChartAsync(controller, "neon-cluster-operator",
                         releaseName: "neon-cluster-operator",

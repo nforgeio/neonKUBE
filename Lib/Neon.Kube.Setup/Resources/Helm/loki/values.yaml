@@ -375,8 +375,7 @@ ingester:
                 app.kubernetes.io/component: ingester
             topologyKey: failure-domain.beta.kubernetes.io/zone
   # -- Node selector for ingester pods
-  nodeSelector:
-    neonkube.io/monitor.logs-internal: 'true'
+  nodeSelector: {}
   # -- Tolerations for ingester pods
   tolerations: []
   persistence:
@@ -470,8 +469,7 @@ distributor:
                 app.kubernetes.io/component: distributor
             topologyKey: failure-domain.beta.kubernetes.io/zone
   # -- Node selector for distributor pods
-  nodeSelector:
-    neonkube.io/monitor.logs-internal: 'true'
+  nodeSelector: {}
   # -- Tolerations for distributor pods
   tolerations: []
 
@@ -554,8 +552,7 @@ querier:
                 app.kubernetes.io/component: querier
             topologyKey: failure-domain.beta.kubernetes.io/zone
   # -- Node selector for querier pods
-  nodeSelector:
-    neonkube.io/monitor.logs-internal: 'true'
+  nodeSelector: {}
   # -- Tolerations for querier pods
   tolerations: []
   persistence:
@@ -649,8 +646,7 @@ queryFrontend:
                 app.kubernetes.io/component: query-frontend
             topologyKey: failure-domain.beta.kubernetes.io/zone
   # -- Node selector for query-frontend pods
-  nodeSelector:
-    neonkube.io/monitor.logs-internal: 'true'
+  nodeSelector: {}
   # -- Tolerations for query-frontend pods
   tolerations: []
 
@@ -722,8 +718,7 @@ tableManager:
                 app.kubernetes.io/component: table-manager
             topologyKey: failure-domain.beta.kubernetes.io/zone
   # -- Node selector for table-manager pods
-  nodeSelector:
-    neonkube.io/monitor.logs-internal: 'true'
+  nodeSelector: {}
   # -- Tolerations for table-manager pods
   tolerations: []
 
@@ -791,8 +786,7 @@ compactor:
   # -- Grace period to allow the compactor to shutdown before it is killed
   terminationGracePeriodSeconds: 30
   # -- Node selector for compactor pods
-  nodeSelector:
-    neonkube.io/monitor.logs-internal: 'true'
+  nodeSelector: {}
   # -- Tolerations for compactor pods
   tolerations: []
   affinity:
@@ -909,8 +903,7 @@ ruler:
                 app.kubernetes.io/component: ruler
             topologyKey: failure-domain.beta.kubernetes.io/zone
   # -- Node selector for ruler pods
-  nodeSelector:
-    neonkube.io/monitor.logs-internal: 'true'
+  nodeSelector: {}
   # -- Tolerations for ruler pods
   tolerations: []
   persistence:
@@ -1061,8 +1054,7 @@ indexGateway:
                 app.kubernetes.io/component: index-gateway
             topologyKey: failure-domain.beta.kubernetes.io/zone
   # -- Node selector for index-gateway pods
-  nodeSelector:
-    neonkube.io/monitor.logs-internal: 'true'
+  nodeSelector: {}
   # -- Tolerations for index-gateway pods
   tolerations: []
   persistence:
