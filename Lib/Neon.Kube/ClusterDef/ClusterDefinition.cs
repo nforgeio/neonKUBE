@@ -86,14 +86,8 @@ namespace Neon.Kube.ClusterDef
         /// <summary>
         /// The prefix reserved for NEONKUBE specific <b>node</b> annotations and labels.
         /// </summary>
-        public const string ReservedNodePrefix = "node." + ReservedKubernetesPrefix;
+        public const string ReservedNodePrefix = "node." + ReservedPrefix;
 
-        /// <summary>
-        /// The prefix reserved for Kubernetes specific annotations and labels.
-        /// </summary>
-        public const string ReservedKubernetesPrefix = "kubernetes.io/";
-
-        /// <summary>
         /// Parses and validates a YAML cluster definition file.
         /// </summary>
         /// <param name="path">The file path.</param>
