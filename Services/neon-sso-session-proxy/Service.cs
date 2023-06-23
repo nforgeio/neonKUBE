@@ -15,13 +15,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Net;
-using System;
+using System.Net.Http;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+
+using k8s;
+using k8s.Models;
 
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
@@ -43,9 +47,6 @@ using Neon.Tasks;
 
 using Prometheus;
 using Prometheus.DotNetRuntime;
-
-using k8s;
-using k8s.Models;
 
 using OpenTelemetry.Trace;
 using OpenTelemetry;

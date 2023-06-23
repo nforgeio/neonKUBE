@@ -425,9 +425,18 @@ spec:
                     controller.ThrowIfCancelled();
                     await ConfigureApiserverIngressAsync(controller, controlNode);
 
+                    // [neon-dashboard]: is not really usable in its current form as
+                    // a thin wrapper around other opensource dashboards using an
+                    // iframe.  This ended up being clunkly in practice and we've
+                    // decided to implement our own fully integrated dashboard in
+                    // the future.
+                    //
+                    // There's no sense in deploying the existing implementation, so
+                    // we'll comment this out to conserve memory.
+#if TODO
                     controller.ThrowIfCancelled();
                     await InstallKubeDashboardAsync(controller, controlNode);
-
+#endif
                     if (cluster.SetupState.ClusterDefinition.Features.NodeProblemDetector)
                     {
                         controller.ThrowIfCancelled();
