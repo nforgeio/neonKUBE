@@ -1464,38 +1464,6 @@ namespace Neon.Kube.Hosting.Aws
                     await ConnectAwsAsync(controller);
                 });
 
-            //controller.AddGlobalStep("node labels (cloud)",
-            //    async controller =>
-            //    {
-            //        controller.LogProgress(verb: "label", message: "nodes (cloud)");
-
-            //        var k8s               = controller.Get<IKubernetes>(KubeSetupProperty.K8sClient);
-            //        var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            //        var clusterDefinition = cluster.SetupState.ClusterDefinition;
-            //        var k8sNodes          = (await k8s.CoreV1.ListNodeAsync()).Items;
-
-            //        foreach (var nodeDefinition in clusterDefinition.NodeDefinitions.Values)
-            //        {
-            //            controller.ThrowIfCancelled();
-
-            //            var k8sNode = k8sNodes.Where(n => n.Metadata.Name == nodeDefinition.Name).Single();
-
-            //            var patch = new V1Node()
-            //            {
-            //                Metadata = new V1ObjectMeta()
-            //                {
-            //                    Labels = k8sNode.Labels()
-            //                }
-            //            };
-
-            //            patch.Metadata.Labels.Add("node.kubernetes.io/instance-type", nodeDefinition.Aws.InstanceType ?? clusterDefinition.Hosting.Aws.DefaultInstanceType);
-            //            patch.Metadata.Labels.Add("topology.kubernetes.io/region", region);
-            //            patch.Metadata.Labels.Add("topology.kubernetes.io/zone", availabilityZone);
-
-            //            await k8s.CoreV1.PatchNodeAsync(new V1Patch(patch, V1Patch.PatchType.StrategicMergePatch), k8sNode.Metadata.Name);
-            //        }
-            //    });
-
             controller.AddGlobalStep("ssh port mappings",
                 async controller =>
                 {
@@ -1522,6 +1490,38 @@ namespace Neon.Kube.Hosting.Aws
             this.controller = controller;
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+
+            controller.AddGlobalStep("node labels (cloud)",
+                async controller =>
+                {
+                    controller.LogProgress(verb: "label", message: "nodes (cloud)");
+
+                    var k8s               = controller.Get<IKubernetes>(KubeSetupProperty.K8sClient);
+                    var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+                    var clusterDefinition = cluster.SetupState.ClusterDefinition;
+                    var k8sNodes          = (await k8s.CoreV1.ListNodeAsync()).Items;
+
+                    foreach (var nodeDefinition in clusterDefinition.NodeDefinitions.Values)
+                    {
+                        controller.ThrowIfCancelled();
+
+                        var k8sNode = k8sNodes.Where(n => n.Metadata.Name == nodeDefinition.Name).Single();
+
+                        var patch = new V1Node()
+                        {
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Labels = k8sNode.Labels()
+                            }
+                        };
+
+                        patch.Metadata.Labels.Add("node.kubernetes.io/instance-type", nodeDefinition.Aws.InstanceType ?? clusterDefinition.Hosting.Aws.DefaultInstanceType);
+                        patch.Metadata.Labels.Add("topology.kubernetes.io/region", region);
+                        patch.Metadata.Labels.Add("topology.kubernetes.io/zone", availabilityZone);
+
+                        await k8s.CoreV1.PatchNodeAsync(new V1Patch(patch, V1Patch.PatchType.StrategicMergePatch), k8sNode.Metadata.Name);
+                    }
+                });
 
             controller.AddGlobalStep("ssh block ingress",
                 async controller =>

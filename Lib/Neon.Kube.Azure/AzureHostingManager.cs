@@ -74,7 +74,6 @@ using Neon.Time;
 using PublicIPAddressSku     = Azure.ResourceManager.Network.Models.PublicIPAddressSku;
 using PublicIPAddressSkuName = Azure.ResourceManager.Network.Models.PublicIPAddressSkuName;
 using PublicIPAddressSkuTier = Azure.ResourceManager.Network.Models.PublicIPAddressSkuTier;
-using System.Security.Cryptography.Pkcs;
 
 namespace Neon.Kube.Hosting.Azure
 {
@@ -1250,43 +1249,6 @@ namespace Neon.Kube.Hosting.Azure
                     await ConnectAzureAsync();
                 });
 
-            //controller.AddGlobalStep("node labels (cloud)",
-            //    async controller =>
-            //    {
-            //        controller.LogProgress(verb: "label", message: "nodes (cloud)");
-
-            //        var k8s               = controller.Get<IKubernetes>(KubeSetupProperty.K8sClient);
-            //        var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            //        var clusterDefinition = cluster.SetupState.ClusterDefinition;
-            //        var k8sNodes          = (await k8s.CoreV1.ListNodeAsync()).Items;
-
-            //        foreach (var nodeDefinition in clusterDefinition.NodeDefinitions.Values)
-            //        {
-            //            controller.ThrowIfCancelled();
-
-            //            var k8sNode = k8sNodes.Where(n => n.Metadata.Name == nodeDefinition.Name).Single();
-
-            //            var patch = new V1Node()
-            //            {
-            //                Metadata = new V1ObjectMeta()
-            //                {
-            //                    Labels = k8sNode.Labels()
-            //                }
-            //            };
-
-            //            var vm = nodeNameToVm[nodeDefinition.Name];
-
-            //            patch.Metadata.Labels.Add("node.kubernetes.io/instance-type", vm.VmSize);
-            //            patch.Metadata.Labels.Add("topology.kubernetes.io/region", vm.Vm.Data.Location.Name);
-
-            //            // $todo(jefflill): How do I determine the VM's zone?
-
-            //            // patch.Metadata.Labels.Add("topology.kubernetes.io/zone", vm.Vm.Data.Zones.First());
-
-            //            await k8s.CoreV1.PatchNodeAsync(new V1Patch(patch, V1Patch.PatchType.StrategicMergePatch), k8sNode.Metadata.Name);
-            //        }
-            //    });
-
             controller.AddGlobalStep("ssh port mappings",
                 async controller =>
                 {
@@ -1313,6 +1275,58 @@ namespace Neon.Kube.Hosting.Azure
             this.controller = controller;
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+
+            controller.AddGlobalStep("node labels (cloud)",
+                async controller =>
+                {
+                    controller.LogProgress(verb: "label", message: "nodes (cloud)");
+
+                    var k8s               = controller.Get<IKubernetes>(KubeSetupProperty.K8sClient);
+                    var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+                    var clusterDefinition = cluster.SetupState.ClusterDefinition;
+                    var k8sNodes          = (await k8s.CoreV1.ListNodeAsync()).Items;
+
+                    foreach (var nodeDefinition in clusterDefinition.NodeDefinitions.Values)
+                    {
+                        controller.ThrowIfCancelled();
+
+                        var k8sNode = k8sNodes.Where(n => n.Metadata.Name == nodeDefinition.Name).Single();
+
+                        var patch = new V1Node()
+                        {
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Labels = k8sNode.Labels()
+                            }
+                        };
+
+                        var vm = nodeNameToVm[nodeDefinition.Name];
+
+                        patch.Metadata.Labels.Add("node.kubernetes.io/instance-type", vm.VmSize);
+                        patch.Metadata.Labels.Add("topology.kubernetes.io/region", vm.Vm.Data.Location.Name);
+
+                        // For Azure, the [AvailabilitySetId] is a long URI path, longer than the 63 maximum
+                        // characters allowed by Kubernetes labels.  It looks like the availablty set name is
+                        // the last segment of this path.  We're going to extract ant use that, which will be
+                        // cleaner anyway.
+                        //
+                        // NOTE: We're converting set name to lowercase and stripping off the "avail-" prefix
+                        // if present.
+
+                        const string prefix = "avail-";
+
+                        var availabilitySetName = vm.Vm.Data.AvailabilitySetId.ToString().Split('/').Last().ToLowerInvariant();
+
+                        if (availabilitySetName.StartsWith(prefix))
+                        {
+                            availabilitySetName = availabilitySetName.Substring(prefix.Length);
+                        }
+
+                        patch.Metadata.Labels.Add("topology.kubernetes.io/zone", availabilitySetName);
+
+                        await k8s.CoreV1.PatchNodeAsync(new V1Patch(patch, V1Patch.PatchType.StrategicMergePatch), k8sNode.Metadata.Name);
+                    }
+                });
 
             controller.AddGlobalStep("ssh block ingress",
                 async controller =>
