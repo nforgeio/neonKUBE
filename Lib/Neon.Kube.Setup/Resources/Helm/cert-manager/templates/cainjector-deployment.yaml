@@ -88,9 +88,9 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- with .Values.cainjector.nodeSelector }}
+      {{- if eq (include "nodeSelectorEnabled" .) "true" }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
+        {{- include "cert-manager.nodeSelector" . | nindent 8 }}
       {{- end }}
       {{- with .Values.cainjector.affinity }}
       affinity:

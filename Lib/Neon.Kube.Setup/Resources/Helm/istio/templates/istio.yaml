@@ -151,9 +151,9 @@ spec:
           requests:
             cpu: "{{ .Values.resources.proxy.requests.cpu }}"
             memory: "{{ .Values.resources.proxy.requests.memory }}"
-      {{- with .Values.defaultNodeSelector }}
+      {{- if eq (include "defaultNodeSelectorEnabled" .) "true" }}
       defaultNodeSelector:
-        {{- toYaml . | nindent 8 }}
+        {{- include "istio.defaultNodeSelector" . | nindent 8 }}
       {{- end }}
     gateways:
       istio-ingressgateway:

@@ -1,0 +1,38 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  annotations:
+    goharbor.io/deploy-mode: harbor
+    goharbor.io/operator-version: v1.0.1
+  name: serving-cert
+  namespace: neon-system
+spec:
+  dnsNames:
+  - registry-webhook-service.neon-system.svc
+  - registry-webhook-service.neon-system.svc.cluster.local
+  duration: {{ .Values.certficateDuration }}
+  renewBefore: {{ .Values.certficateRenewBefore }}
+  issuerRef:
+    kind: Issuer
+    name: neon-system-selfsigned-issuer
+  secretName: webhook-server-cert
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  annotations:
+    goharbor.io/deploy-mode: harbor
+    goharbor.io/operator-version: v1.0.1
+  name: neon-sso
+  namespace: neon-system
+spec:
+  dnsNames:
+  - {{ .Values.cluster.domain }}
+  - "*.{{ .Values.cluster.domain }}"
+  duration: {{ .Values.certficateDuration }}
+  renewBefore: {{ .Values.certficateRenewBefore }}
+  issuerRef:
+    kind: Issuer
+    name: neon-system-selfsigned-issuer
+  secretName: neon-sso-certificate

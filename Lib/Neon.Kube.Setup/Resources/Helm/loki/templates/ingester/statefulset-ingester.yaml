@@ -101,9 +101,9 @@ spec:
         {{- end }}
       affinity:
         {{- toYaml .Values.ingester.affinity | nindent 8 }}
-      {{- with .Values.ingester.nodeSelector }}
+      {{- if eq (include "nodeSelectorEnabled" .) "true" }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
+        {{- include "loki.nodeSelector" . | nindent 8 }}
       {{- end }}
       {{- with .Values.ingester.tolerations }}
       tolerations:

@@ -24,6 +24,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
@@ -169,6 +170,8 @@ namespace Neon.Kube.Setup
             var desktopServiceProxy = new DesktopServiceProxy();
 
             // Configure the setup controller state.
+            var headendClient = HeadendClient.Create();
+            headendClient.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", setupState.NeonCloudToken);
 
             controller.Add(KubeSetupProperty.Preparing, false);
             controller.Add(KubeSetupProperty.ReleaseMode, KubeHelper.IsRelease);
@@ -177,7 +180,7 @@ namespace Neon.Kube.Setup
             controller.Add(KubeSetupProperty.ClusterProxy, cluster);
             controller.Add(KubeSetupProperty.HostingManager, cluster.HostingManager);
             controller.Add(KubeSetupProperty.HostingEnvironment, cluster.HostingManager.HostingEnvironment);
-            controller.Add(KubeSetupProperty.NeonCloudHeadendClient, HeadendClient.Create());
+            controller.Add(KubeSetupProperty.NeonCloudHeadendClient, headendClient);
             controller.Add(KubeSetupProperty.Redact, !options.Unredacted);
             controller.Add(KubeSetupProperty.DesktopReadyToGo, options.DesktopReadyToGo);
             controller.Add(KubeSetupProperty.DesktopServiceProxy, desktopServiceProxy);

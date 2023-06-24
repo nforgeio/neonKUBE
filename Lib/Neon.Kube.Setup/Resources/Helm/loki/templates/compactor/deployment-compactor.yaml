@@ -94,9 +94,9 @@ spec:
         {{- if .Values.compactor.extraContainers }}
         {{- toYaml .Values.compactor.extraContainers | nindent 8}}
         {{- end }}
-      {{- with .Values.compactor.nodeSelector }}
+      {{- if eq (include "nodeSelectorEnabled" .) "true" }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
+        {{- include "loki.nodeSelector" . | nindent 8 }}
       {{- end }}
       {{- with .Values.compactor.tolerations }}
       tolerations:

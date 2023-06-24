@@ -242,9 +242,9 @@ spec:
       affinity:
 {{ toYaml .Values.affinity | indent 8 }}
     {{- end }}
-    {{- if .Values.nodeSelector }}
+    {{- if eq (include "nodeSelectorEnabled" .) "true" }}
       nodeSelector:
-{{ toYaml .Values.nodeSelector | indent 8 }}
+        {{- include "oauth2-proxy.nodeSelector" . | nindent 8 }}
     {{- end }}
       tolerations:
 {{ toYaml .Values.tolerations | indent 8 }}

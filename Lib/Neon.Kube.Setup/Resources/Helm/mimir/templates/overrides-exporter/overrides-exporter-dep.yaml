@@ -95,8 +95,10 @@ spec:
         {{- with .Values.overrides_exporter.extraContainers }}
         {{ toYaml . | nindent 8 }}
         {{- end }}
+      {{- if eq (include "nodeSelectorEnabled" .) "true" }}
       nodeSelector:
-        {{- toYaml .Values.overrides_exporter.nodeSelector | nindent 8 }}
+        {{- include "mimir.nodeSelector" . | nindent 8 }}
+      {{- end }}
       affinity:
         {{- toYaml .Values.overrides_exporter.affinity | nindent 8 }}
       tolerations:
