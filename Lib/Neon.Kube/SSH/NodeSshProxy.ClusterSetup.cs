@@ -1570,14 +1570,11 @@ systemctl enable kubelet
 
                     helmChartScript.AppendLineLinux(
 $@"
-set -euo pipefail
-
-cd {KubeNodeFolder.Helm}
-");
+set -euo pipefail");
 
                     if (controller.Get<bool>(KubeSetupProperty.MaintainerMode))
                     {
-                        helmChartScript.AppendLineLinux(
+                        helmChartScript.AppendLine(
 $@"
 if `helm list --namespace {@namespace} | awk '{{print $1}}' | grep -q ""^{releaseName}$""`; then
     helm uninstall {releaseName} --namespace {@namespace}
@@ -1591,14 +1588,14 @@ helmLogPath=/tmp/{chartName}.helm.log
 
 set +e
 
-helm install {releaseName} --debug --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} ./{chartName} > $helmLogPath 2>&1
+helm install {releaseName} --debug --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} {KubeNodeFolder.Helm}/{chartName} > $helmLogPath 2>&1
 exitcode=$?
 
 if ! $exitcode ; then
 
     echo ""==============================================================================="" >&2
-    echo ""HELM INSTALL ERROR:"" >&2
-    echo ""-------------------"" >&2
+    echo ""HELM INSTALL ERROR: $exitcode"" >&2
+    echo ""---------------------"" >&2
     cat $helmLogPath >&2
     echo ""==============================================================================="" >&2
 
