@@ -1587,7 +1587,8 @@ fi
 $@"
 helmLogPath=/tmp/{chartName}.helm.log
 
-helm install {releaseName} --debug --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} {KubeNodeFolder.Helm}/{chartName} > $helmLogPath 2>&1
+cd {KubeNodeFolder.Helm}
+helm install {releaseName} --debug --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} ./{chartName} > $helmLogPath 2>&1
 exitcode=$?
 
 if ! $exitcode ; then
