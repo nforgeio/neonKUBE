@@ -1571,7 +1571,10 @@ systemctl enable kubelet
 
                     helmChartScript.AppendLineLinux(
 $@"
-set +e");
+set +e
+
+cd { KubeNodeFolder.Helm}"
+);
 
                     if (controller.Get<bool>(KubeSetupProperty.MaintainerMode))
                     {
@@ -1587,11 +1590,10 @@ fi
 $@"
 helmLogPath=/tmp/{chartName}.helm.log
 
-cd {KubeNodeFolder.Helm}
 helm install {releaseName} --debug --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} ./{chartName} > $helmLogPath 2>&1
 exitcode=$?
 
-if ! $exitcode ; then
+if [ ! $exitcode ] ; then
 
     echo ""==============================================================================="" >&2
     echo ""HELM INSTALL ERROR: $exitcode"" >&2
