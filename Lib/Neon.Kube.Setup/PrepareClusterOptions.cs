@@ -120,5 +120,17 @@ namespace Neon.Kube.Setup
         /// be created and run afterwards).
         /// </summary>
         public bool DesktopReadyToGo { get; set; } = false;
+
+        /// <summary>
+        /// <para>
+        /// Optionally indicates that the cluster should not be secure nodes with a
+        /// generated secure password and also that we should allow SSH password
+        /// authentication, for cluster debugging purposes.
+        /// </para>
+        /// <note>
+        /// <b>WARNING!</b> This should never be used for production clusters.
+        /// </note>
+        /// </summary>
+        public bool Insecure { get; set; } = false;
     }
 }

@@ -147,5 +147,17 @@ namespace Neon.Kube
         /// specific privileged operations from a non-privileged process.
         /// </summary>
         public const string DesktopServiceProxy = "desktop-service-proxy";
+
+        /// <summary>
+        /// <para>
+        /// Property name for a <c>bool</c> value indicating we should not secure the cluster
+        /// nodes with a generated secure password and also that we should allow SSH password
+        /// authentication, for cluster debugging purposes.
+        /// </para>
+        /// <note>
+        /// <b>WARNING!</b> This should never be used for production clusters.
+        /// </note>
+        /// </summary>
+        public const string Insecure = "insecure";
     }
 }

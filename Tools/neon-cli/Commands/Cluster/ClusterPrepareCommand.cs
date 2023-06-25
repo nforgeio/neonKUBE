@@ -96,6 +96,12 @@ OPTIONS:
                                   This is generally intended for use while debugging
                                   cluster setup and may slow down setup substantially.
 
+    --insecure                  - MAINTAINER ONLY: Prevents the cluster node [sysadmin]
+                                  account from being set to a secure password and also
+                                  enables SSH password authentication.  Used for debugging.
+
+                                  WARNING: NEVER USE FOR PRODUCTION CLUSTERS!
+
     --max-parallel=#            - Specifies the maximum number of node related operations
                                   to perform in parallel.  This defaults to [6].
 
@@ -152,18 +158,19 @@ stage process is typically used only by NEONKUBE maintainers.
 
         /// <inheritdoc/>
         public override string[] ExtendedOptions => new string[] 
-        { 
-            "--node-image-uri", 
-            "--node-image-path",
-            "--package-cache",
-            "--unredacted", 
-            "--max-parallel", 
-            "--disable-pending", 
-            "--debug",
-            "--quiet",
+        {
             "--base-image-name",
-            "--use-staged",
-            "--no-telemetry"
+            "--debug",
+            "--disable-pending", 
+            "--insecure",
+            "--max-parallel", 
+            "--node-image-path",
+            "--node-image-uri", 
+            "--no-telemetry",
+            "--package-cache",
+            "--quiet",
+            "--unredacted", 
+            "--use-staged"
         };
 
         /// <inheritdoc/>
@@ -192,16 +199,18 @@ stage process is typically used only by NEONKUBE maintainers.
 
             NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfile());
            
-            var nodeImageUri      = commandLine.GetOption("--node-image-uri");
-            var nodeImagePath     = commandLine.GetOption("--node-image-path");
-            var debug             = commandLine.HasOption("--debug");
-            var quiet             = commandLine.HasOption("--quiet");
             var baseImageName     = commandLine.GetOption("--base-image-name");
-            var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
+            var debug             = commandLine.HasOption("--debug");
             var disablePending    = commandLine.HasOption("--disable-pending");
+            var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
+            var insecure          = commandLine.HasOption("--insecure");
+            var nodeImagePath     = commandLine.GetOption("--node-image-path");
+            var nodeImageUri      = commandLine.GetOption("--node-image-uri");
+            var noTelemetry       = commandLine.HasOption("--no-telemetry");
+            var quiet             = commandLine.HasOption("--quiet");
             var useStaged         = commandLine.HasOption("--use-staged");
             var stageBranch       = commandLine.GetOption("--use-staged", useStaged ? KubeVersions.BuildBranch : null);
-            var noTelemetry       = commandLine.HasOption("--no-telemetry");
+            var unredacted        = commandLine.HasOption("--unredacted");
 
             if (noTelemetry)
             {
@@ -314,14 +323,15 @@ stage process is typically used only by NEONKUBE maintainers.
 
             var prepareOptions = new PrepareClusterOptions()
             {
-                NodeImageUri          = nodeImageUri,
-                NodeImagePath         = nodeImagePath,
-                MaxParallel           = maxParallel,
-                PackageCacheEndpoints = packageCacheEndpoints,
-                Unredacted            = commandLine.HasOption("--unredacted"),
-                DebugMode             = debug,
                 BaseImageName         = baseImageName,
-                DisableConsoleOutput  = quiet
+                DisableConsoleOutput  = quiet,
+                DebugMode             = debug,
+                Insecure              = insecure,
+                MaxParallel           = maxParallel,
+                NodeImagePath         = nodeImagePath,
+                NodeImageUri          = nodeImageUri,
+                PackageCacheEndpoints = packageCacheEndpoints,
+                Unredacted            = unredacted,
             };
 
             if (clusterDefinition.Hosting.Environment == HostingEnvironment.HyperV &&

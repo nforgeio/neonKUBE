@@ -221,6 +221,7 @@ namespace Neon.Kube.Setup
             controller.Add(KubeSetupProperty.DesktopReadyToGo, options.DesktopReadyToGo);
             controller.Add(KubeSetupProperty.BuildDesktopImage, options.BuildDesktopImage);
             controller.Add(KubeSetupProperty.DesktopServiceProxy, desktopServiceProxy);
+            controller.Add(KubeSetupProperty.Insecure, options.Insecure);
 
             // Configure the cluster preparation steps.
 
@@ -271,44 +272,55 @@ namespace Neon.Kube.Setup
             controller.AddGlobalStep("generate credentials",
                 controller =>
                 {
-                    // We're going to generate a secure random password and we're going to append
-                    // an extra 4-character string to ensure that the password meets Azure (and probably
-                    // other cloud) minimum requirements:
-                    //
-                    // The supplied password must be between 6-72 characters long and must 
-                    // satisfy at least 3 of password complexity requirements from the following: 
-                    //
-                    //      1. Contains an uppercase character
-                    //      2. Contains a lowercase character
-                    //      3. Contains a numeric digit
-                    //      4. Contains a special character
-                    //      5. Control characters are not allowed
-                    //
-                    // For on-premise hypervisor environments such as Hyper-V and XenServer, we're
-                    // going use the [neon-init] service to mount a virtual DVD that will change
-                    // the password before configuring the network on first boot.
-                    //
-                    // For cloud environments, we're going to use the cloud APIs to interact with
-                    // [cloud-init] to provision the [sysadmin] account's SSH key.
-
-                    var hostingManager   = controller.Get<IHostingManager>(KubeSetupProperty.HostingManager);
                     var desktopReadyToGo = controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo);
 
-                    controller.SetGlobalStepStatus("generate: SSH password");
-
-                    if (desktopReadyToGo)
+                    if (options.Insecure)
                     {
-                        // We're going to configure a fixed password for NEONDESKTOP clusters.
+                        // This mode is used by maintainers so they can easily SSH into cluster nodes
+                        // for debugging purposes.
+                        //
+                        // WARNING: This should never be used for production clusters!
 
                         setupState.SshPassword = KubeConst.SysAdminPassword;
                     }
                     else
                     {
-                        // Generate a secure SSH password and append a string that guarantees that
-                        // the generated password meets minimum cloud requirements.
+                        // We're going to generate a secure random password and we're going to append
+                        // an extra 4-character string to ensure that the password meets Azure (and probably
+                        // other cloud) minimum requirements:
+                        //
+                        // The supplied password must be between 6-72 characters long and must 
+                        // satisfy at least 3 of password complexity requirements from the following: 
+                        //
+                        //      1. Contains an uppercase character
+                        //      2. Contains a lowercase character
+                        //      3. Contains a numeric digit
+                        //      4. Contains a special character
+                        //      5. Control characters are not allowed
+                        //
+                        // For on-premise hypervisor environments such as Hyper-V and XenServer, we're
+                        // going use the [neon-init] service to mount a virtual DVD that will change
+                        // the password before configuring the network on first boot.
+                        //
+                        // For cloud environments, we're going to use the cloud APIs to interact with
+                        // [cloud-init] to provision the [sysadmin] account's SSH key.
 
-                        setupState.SshPassword  = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
-                        setupState.SshPassword += ".Aa0";
+                        controller.SetGlobalStepStatus("generate: SSH password");
+
+                        if (desktopReadyToGo)
+                        {
+                            // We're going to configure a fixed password for NEONDESKTOP clusters.
+
+                            setupState.SshPassword = KubeConst.SysAdminPassword;
+                        }
+                        else
+                        {
+                            // Generate a secure SSH password and append a string that guarantees that
+                            // the generated password meets minimum cloud requirements.
+
+                            setupState.SshPassword  = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
+                            setupState.SshPassword += ".Aa0";
+                        }
                     }
 
                     // We're also going to generate the server's SSH key here and pass that to the hosting
@@ -422,7 +434,7 @@ namespace Neon.Kube.Setup
                 (controller, node) =>
                 {
                     node.ConfigureSshKey(controller);
-                    node.AllowSshPasswordLogin(false);
+                    node.AllowSshPasswordLogin(options.Insecure);
 
                     // Update node proxies with the generated SSH credentials.
 

@@ -1559,6 +1559,7 @@ systemctl enable kubelet
                                     break;
 
                                 default:
+
                                     valueOverrides.AppendWithSeparator($"--set {value.Key}={value.Value}");
                                     break;
                             }
@@ -1570,7 +1571,7 @@ systemctl enable kubelet
 
                     helmChartScript.AppendLineLinux(
 $@"
-set -euo pipefail");
+set +e");
 
                     if (controller.Get<bool>(KubeSetupProperty.MaintainerMode))
                     {
@@ -1585,8 +1586,6 @@ fi
                     helmChartScript.AppendLineLinux(
 $@"
 helmLogPath=/tmp/{chartName}.helm.log
-
-set +e
 
 helm install {releaseName} --debug --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} {KubeNodeFolder.Helm}/{chartName} > $helmLogPath 2>&1
 exitcode=$?
