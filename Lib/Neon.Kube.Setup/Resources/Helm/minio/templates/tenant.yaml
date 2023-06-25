@@ -1,4 +1,6 @@
 {{- $clusterDomain := .Values.cluster.domain -}}
+{{- $nodeSelectorEnabled := (include "nodeSelectorEnabled" .) -}}
+{{- $nodeSelector := (include "minio.nodeSelector" .) -}}
 {{ range .Values.tenants }}
 ---
 apiVersion: minio.min.io/v2
@@ -43,10 +45,10 @@ spec:
       tolerations:
         {{ toYaml . | nindent 8 }}
       {{ end }}
-      {{- with .nodeSelector }}
+      {{- if eq $nodeSelectorEnabled "true" }}
       nodeSelector:
-        {{ toYaml . | nindent 8 }}
-      {{ end }}
+        {{- $nodeSelector | nindent 8 }}
+      {{- end }}
       {{- with .affinity }}
       affinity:
         {{ toYaml . | nindent 8 }}

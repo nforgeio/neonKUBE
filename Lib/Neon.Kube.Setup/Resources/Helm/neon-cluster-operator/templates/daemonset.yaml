@@ -22,9 +22,9 @@ spec:
         sidecar.istio.io/inject: '{{ .Values.serviceMesh.enabled }}'
     spec:
       enableServiceLinks: false
-      {{- with .Values.nodeSelector }}
+      {{- if eq (include "nodeSelectorEnabled" .) "true" }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
+        {{- include "neon-cluster-operator.nodeSelector" . | nindent 8 }}
       {{- end }}
       serviceAccountName: neon-cluster-operator
       tolerations:

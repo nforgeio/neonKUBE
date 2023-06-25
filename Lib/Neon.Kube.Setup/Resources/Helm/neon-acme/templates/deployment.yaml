@@ -20,6 +20,10 @@ spec:
       enableServiceLinks: false
       serviceAccountName: neon-acme
       priorityClassName: {{ .Values.priorityClassName }}
+      {{- if eq (include "nodeSelectorEnabled" .) "true" }}
+      nodeSelector:
+        {{- include "neon-acme.nodeSelector" . | nindent 8 }}
+      {{- end }}
       containers:
         - name: neon-acme
           image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"

@@ -140,9 +140,9 @@ spec:
       affinity:
 {{ toYaml .Values.affinity | indent 8 }}
       {{- end }}
-      {{- if .Values.nodeSelector }}
+      {{- if eq (include "nodeSelectorEnabled" .) "true" }}
       nodeSelector:
-{{ toYaml .Values.nodeSelector | indent 8 }}
+        {{- include "kube-state-metrics.nodeSelector" . | nindent 8 }}
       {{- end }}
       {{- if .Values.tolerations }}
       tolerations:

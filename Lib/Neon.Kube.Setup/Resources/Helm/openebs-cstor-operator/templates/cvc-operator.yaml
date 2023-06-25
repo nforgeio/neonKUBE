@@ -66,9 +66,9 @@ spec:
       imagePullSecrets:
 {{ toYaml .Values.imagePullSecrets | indent 2 }}
 {{- end }}
-{{- if .Values.cvcOperator.nodeSelector }}
+{{- if eq (include "nodeSelectorEnabled" .) "true" }}
       nodeSelector:
-{{ toYaml .Values.cvcOperator.nodeSelector | indent 8 }}
+        {{- include "openebs-cstor-operator.nodeSelector" . | nindent 8 }}
 {{- end }}
 {{- if .Values.cvcOperator.securityContext }}
       securityContext:

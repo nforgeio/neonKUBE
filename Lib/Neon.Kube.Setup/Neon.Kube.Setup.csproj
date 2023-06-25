@@ -58,6 +58,7 @@
         <None Remove="Resources\Helm\grafana-agent\templates\neon-dashboard.yaml" />
         <None Remove="Resources\Helm\grafana\templates\datasource-loki.yaml" />
         <None Remove="Resources\Helm\grafana\templates\datasource-mimir.yaml" />
+        <None Remove="resources\helm\grafana\templates\_helpers.tpl" />
         <None Remove="Resources\Helm\harbor\assets\registry-config.yaml" />
         <None Remove="Resources\Helm\harbor\templates\buckets.yaml" />
         <None Remove="Resources\Helm\harbor\templates\core.yaml" />
@@ -69,6 +70,7 @@
         <None Remove="Resources\Helm\harbor\templates\registry.yaml" />
         <None Remove="Resources\Helm\harbor\templates\registrycontroller.yaml" />
         <None Remove="Resources\Helm\harbor\templates\trivy.yaml" />
+        <None Remove="Resources\Helm\istio\templates\_helpers.tpl" />
         <None Remove="Resources\Helm\kiali\templates\service-operator.yaml" />
         <None Remove="Resources\Helm\kiali\templates\servicemonitor-operator.yaml" />
         <None Remove="Resources\Helm\kiali\templates\servicemonitor.yaml" />
@@ -120,6 +122,8 @@
         <None Remove="Resources\Helm\minio\templates\console-config-env.yaml" />
         <None Remove="Resources\Helm\minio\templates\grafana-dashboard.yaml" />
         <None Remove="Resources\Helm\minio\templates\tenant-service.yaml" />
+        <None Remove="resources\helm\neon-acme\templates\cluster-certificates.yaml" />
+        <None Remove="Resources\Helm\neon-acme\templates\_helpers.tpl" />
         <None Remove="Resources\Helm\neon-cluster-operator\.helmignore" />
         <None Remove="Resources\Helm\neon-cluster-operator\Chart.yaml" />
         <None Remove="Resources\Helm\neon-cluster-operator\templates\configmap.yaml" />

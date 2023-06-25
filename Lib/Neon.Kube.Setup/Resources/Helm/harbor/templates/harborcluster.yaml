@@ -7,8 +7,10 @@ spec:
   version: {{ .Values.harbor.version }}
   {{- if .Values.metrics.enabled }}
   exporter:
+    {{- if eq (include "nodeSelectorEnabled" .) "true" }}
     nodeSelector:
-    {{- toYaml .Values.nodeSelector | nindent 8 }}
+      {{- include "chart.nodeSelector" . | nindent 6 }}
+    {{- end }}
     {{- if .Values.tolerations }}
     {{- with .Values.tolerations }}
     tolerations:
@@ -20,8 +22,10 @@ spec:
   chartmuseum:
     absoluteUrl: false
     image: {{ .Values.image.registry }}/harbor-chartmuseum-photon:v{{ .Values.harbor.version }}
+    {{- if eq (include "nodeSelectorEnabled" .) "true" }}
     nodeSelector:
-    {{- toYaml .Values.nodeSelector | nindent 8 }}
+      {{- include "chart.nodeSelector" . | nindent 6 }}
+    {{- end }}
     {{- if .Values.tolerations }}
     {{- with .Values.tolerations }}
     tolerations:
@@ -33,8 +37,10 @@ spec:
   core:
     image: {{ .Values.image.registry }}/harbor-core:v{{ .Values.harbor.version }}
     resources: {}
+    {{- if eq (include "nodeSelectorEnabled" .) "true" }}
     nodeSelector:
-    {{- toYaml .Values.nodeSelector | nindent 8 }}
+      {{- include "chart.nodeSelector" . | nindent 6 }}
+    {{- end }}
     {{- if .Values.tolerations }}
     {{- with .Values.tolerations }}
     tolerations:
@@ -91,8 +97,10 @@ spec:
     enabled: false
   jobservice:
     image: {{ .Values.image.registry }}/harbor-jobservice:v{{ .Values.harbor.version }}
+    {{- if eq (include "nodeSelectorEnabled" .) "true" }}
     nodeSelector:
-    {{- toYaml .Values.nodeSelector | nindent 6 }}
+      {{- include "chart.nodeSelector" . | nindent 6 }}
+    {{- end }}
     {{- if .Values.tolerations }}
     {{- with .Values.tolerations }}
     tolerations:
@@ -107,8 +115,10 @@ spec:
     migrationEnabled: true
     server:
       image: {{ .Values.image.registry }}/harbor-notary-server-photon:v{{ .Values.harbor.version }}
+      {{- if eq (include "nodeSelectorEnabled" .) "true" }}
       nodeSelector:
-      {{- toYaml .Values.nodeSelector | nindent 8 }}
+        {{- include "chart.nodeSelector" . | nindent 8 }}
+      {{- end }}
       {{- if .Values.tolerations }}
       {{- with .Values.tolerations }}
       tolerations:
@@ -117,8 +127,10 @@ spec:
       {{- end }}
     signer:
       image: {{ .Values.image.registry }}/harbor-notary-signer-photon:v{{ .Values.harbor.version }}
+      {{- if eq (include "nodeSelectorEnabled" .) "true" }}
       nodeSelector:
-      {{- toYaml .Values.nodeSelector | nindent 8 }}
+        {{- include "chart.nodeSelector" . | nindent 8 }}
+      {{- end }}
       {{- if .Values.tolerations }}
       {{- with .Values.tolerations }}
       tolerations:
@@ -137,8 +149,10 @@ spec:
         sentinelMasterSet: master
   registry:
     image: {{ .Values.image.registry }}/harbor-registry-photon:v{{ .Values.harbor.version }}
+    {{- if eq (include "nodeSelectorEnabled" .) "true" }}
     nodeSelector:
-    {{- toYaml .Values.nodeSelector | nindent 6 }}
+      {{- include "chart.nodeSelector" . | nindent 6 }}
+    {{- end }}
     {{- if .Values.tolerations }}
     {{- with .Values.tolerations }}
     tolerations:
@@ -154,8 +168,10 @@ spec:
   {{- if .Values.components.trivy.enabled }}
   trivy:
     image: {{ .Values.image.registry }}/harbor-trivy-adapter-photon:v{{ .Values.harbor.version }}
+    {{- if eq (include "nodeSelectorEnabled" .) "true" }}
     nodeSelector:
-    {{- toYaml .Values.nodeSelector | nindent 6 }}
+      {{- include "chart.nodeSelector" . | nindent 6 }}
+    {{- end }}
     {{- if .Values.tolerations }}
     {{- with .Values.tolerations }}
     tolerations:

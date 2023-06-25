@@ -92,9 +92,9 @@ spec:
         {{- end }}
       affinity:
         {{- toYaml .Values.tableManager.affinity | nindent 8 }}
-      {{- with .Values.tableManager.nodeSelector }}
+      {{- if eq (include "nodeSelectorEnabled" .) "true" }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
+        {{- include "loki.nodeSelector" . | nindent 8 }}
       {{- end }}
       {{- with .Values.tableManager.tolerations }}
       tolerations:

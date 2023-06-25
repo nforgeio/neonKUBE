@@ -65,8 +65,10 @@ spec:
       {{- end }}
       affinity:
 {{ toYaml .Values.affinity | indent 8 }}
+      {{- if eq (include "nodeSelectorEnabled" .) "true" }}
       nodeSelector:
-{{ toYaml .Values.nodeSelector | indent 8 }}
+        {{- include "postgres-operator.nodeSelector" . | nindent 8 }}
+      {{- end }}
       tolerations:
 {{ toYaml .Values.tolerations | indent 8 }}
     {{- if .Values.priorityClassName }}

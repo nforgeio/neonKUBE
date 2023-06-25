@@ -78,9 +78,9 @@ spec:
       securityContext:
         runAsUser: 65532
       terminationGracePeriodSeconds: 10
-      {{- with .Values.nodeSelector }}
+      {{- if eq (include "nodeSelectorEnabled" .) "true" }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
+        {{- include "chart.nodeSelector" . | nindent 8 }}
       {{- end }}
       {{- if .Values.tolerations }}
       {{- with .Values.tolerations }}
