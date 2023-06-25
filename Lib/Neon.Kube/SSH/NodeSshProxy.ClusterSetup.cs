@@ -1590,26 +1590,26 @@ $@"
 helmLogPath=/tmp/{chartName}.helm.log
 
 set +e
+
 helm install {releaseName} --debug --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} ./{chartName} > $helmLogPath 2>&1
 exitcode=$?
-set -e
 
-if [ ! $exitcode ] ; then
+if ! $exitcode ; then
 
-    echo ===============================================================================
-    echo HELM INSTALL ERROR:
-    echo -------------------
-    cat $helmLogPath
-    echo ===============================================================================
+    echo ""==============================================================================="" >&2
+    echo ""HELM INSTALL ERROR:"" >&2
+    echo ""-------------------"" >&2
+    cat $helmLogPath >&2
+    echo ""==============================================================================="" >&2
 
+    rm $helmLogPath
     exit $exitcode
 fi
+
 rm $helmLogPath
 
 START=`date +%s`
 DEPLOY_END=$((START+{timeoutSeconds}))
-
-set +e
 
 until [ `helm status {releaseName} --namespace {@namespace} | grep ""STATUS: deployed"" | wc -l` -eq 1  ];
 do
