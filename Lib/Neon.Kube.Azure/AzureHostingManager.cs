@@ -921,7 +921,6 @@ namespace Neon.Kube.Hosting.Azure
             this.loadbalancerIngressBackendName      = "ingress-nodes";
             this.loadbalancerControlPlaneBackendName = "control-plane";
 
-
             // This identifies the cluster manager instance with the cluster proxy
             // so that the proxy can have the hosting manager perform some operations
             // like managing the SSH port mappings on the load balancer.
@@ -1067,20 +1066,16 @@ namespace Neon.Kube.Hosting.Azure
         public override void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
-
-            if (clusterDefinition.Hosting.Environment != HostingEnvironment.Azure)
-            {
-                throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Environment)}] must be set to [{HostingEnvironment.Azure}].");
-            }
+            Covenant.Assert(clusterDefinition.Hosting.Environment == HostingEnvironment.Azure, $"{nameof(HostingOptions)}.{nameof(HostingOptions.Environment)}] must be set to [{HostingEnvironment.Azure}].");
 
             if (string.IsNullOrEmpty(clusterDefinition.Hosting.Azure.ClientId))
             {
-                throw new ClusterDefinitionException($"{nameof(AzureHostingOptions)}.{nameof(AzureHostingOptions.ClientId)}] must be specified for Azure clusters.");
+                throw new ClusterDefinitionException($"{nameof(AzureHostingOptions)}.{nameof(AzureHostingOptions.ClientId)}] is required for Azure clusters.");
             }
 
             if (string.IsNullOrEmpty(clusterDefinition.Hosting.Azure.ClientSecret))
             {
-                throw new ClusterDefinitionException($"{nameof(AzureHostingOptions)}.{nameof(AzureHostingOptions.ClientSecret)}] must be specified for Azure clusters.");
+                throw new ClusterDefinitionException($"{nameof(AzureHostingOptions)}.{nameof(AzureHostingOptions.ClientSecret)}] is required for Azure clusters.");
             }
 
             AssignNodeAddresses(clusterDefinition);
@@ -1092,6 +1087,43 @@ namespace Neon.Kube.Hosting.Azure
             {
                 clusterDefinition.Datacenter = clusterDefinition.Hosting.Azure.Region.ToUpperInvariant();
             }
+        }
+
+        /// <inheritdoc/>
+        public override async Task FinalValidationAsync(ClusterDefinition clusterDefinition)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            // Connect to Azure and lookup the node instance types to determine the number
+            // of cores and memory available for each and then call a common method to
+            // verify that NEONKUBE actually supports those instance types.
+
+            await ConnectAzureAsync();
+
+            var nameToVmSku = new Dictionary<string, VmSku>(StringComparer.InvariantCultureIgnoreCase);
+
+            await foreach (var resourceSku in subscription.GetComputeResourceSkusAsync())
+            {
+                if (resourceSku.ResourceType == "virtualMachines")
+                {
+                    nameToVmSku[resourceSku.Name] = new VmSku(resourceSku);
+                }
+            }
+
+            var hostedNodes = new List<HostedNodeInfo>();
+
+            foreach (var nodeDefinition in clusterDefinition.Nodes)
+            {
+                if (!nameToVmSku.TryGetValue(nodeDefinition.Azure.VmSize, out var vmSizeInfo))
+                {
+                    throw new ClusterDefinitionException($"Node [{nodeDefinition.Name}] specifies [VMSize={nodeDefinition.Azure.VmSize}] which does not exist.");
+                }
+
+                hostedNodes.Add(new HostedNodeInfo(nodeDefinition.Name, nodeDefinition.Role, vmSizeInfo.VirtualCpus, (long)(vmSizeInfo.MemoryGiB * ByteUnits.GibiBytes)));
+            }
+
+            ValidateCluster(clusterDefinition, hostedNodes);
         }
 
         /// <inheritdoc/>

@@ -95,7 +95,7 @@ namespace Neon.Kube.Hosting.HyperV
                 Covenant.Requires<ArgumentNullException>(machine != null, nameof(machine));
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
 
-                this.Machine  = machine;
+                this.Machine = machine;
                 this.NodeName = nodeName;
             }
 
@@ -178,9 +178,9 @@ namespace Neon.Kube.Hosting.HyperV
 
             cluster.HostingManager = this;
 
-            this.cluster        = cluster;
-            this.nodeImageUri   = nodeImageUri;
-            this.nodeImagePath  = nodeImagePath;
+            this.cluster = cluster;
+            this.nodeImageUri = nodeImageUri;
+            this.nodeImagePath = nodeImagePath;
             this.hostingOptions = cluster.Hosting.HyperV;
 
             // Determine where we're going to place the VM hard drive files and
@@ -217,11 +217,30 @@ namespace Neon.Kube.Hosting.HyperV
         public override void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Assert(clusterDefinition.Hosting.Environment == HostingEnvironment.HyperV, $"{nameof(HostingOptions)}.{nameof(HostingOptions.Environment)}] must be set to [{HostingEnvironment.HyperV}].");
 
             if (clusterDefinition.Hosting.Environment != HostingEnvironment.HyperV)
             {
                 throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Environment)}] must be set to [{HostingEnvironment.HyperV}].");
             }
+        }
+
+        /// <inheritdoc/>
+        public override async Task FinalValidationAsync(ClusterDefinition clusterDefinition)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            // Collect information about the cluster nodes so we can verify that
+            //cluster makes sense.
+
+            var hostedNodes = clusterDefinition.Nodes
+                .Select(nodeDefinition => new HostedNodeInfo(nodeDefinition.Name, nodeDefinition.Role, nodeDefinition.Hypervisor.Cores, nodeDefinition.Hypervisor.GetMemory(clusterDefinition)))
+                .ToList();
+
+            ValidateCluster(clusterDefinition, hostedNodes);
+
+            await Task.CompletedTask;
         }
 
         /// <inheritdoc/>
@@ -242,8 +261,8 @@ namespace Neon.Kube.Hosting.HyperV
 
             foreach (var node in cluster.SetupState.ClusterDefinition.Nodes)
             {
-                node.Labels.PhysicalMachine = Environment.MachineName;
-                node.Labels.StorageOSDiskSize     = ByteUnits.ToGiB(node.Hypervisor.GetMemory(cluster.SetupState.ClusterDefinition));
+                node.Labels.PhysicalMachine   = Environment.MachineName;
+                node.Labels.StorageOSDiskSize = ByteUnits.ToGiB(node.Hypervisor.GetMemory(cluster.SetupState.ClusterDefinition));
             }
 
             // Add the provisioning steps to the controller.

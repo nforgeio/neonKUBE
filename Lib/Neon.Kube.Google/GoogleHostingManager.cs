@@ -168,6 +168,18 @@ namespace Neon.Kube.Hosting.Google
         }
 
         /// <inheritdoc/>
+        public override async Task FinalValidationAsync(ClusterDefinition clusterDefinition)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            await Task.CompletedTask;
+
+            throw new NotImplementedException("$todo(jefflill)");
+        }
+
+
+        /// <inheritdoc/>
         public override void AddProvisioningSteps(SetupController<NodeDefinition> controller)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));

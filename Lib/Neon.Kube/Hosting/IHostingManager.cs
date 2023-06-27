@@ -68,9 +68,19 @@ namespace Neon.Kube.Hosting
         /// Verifies that a cluster is valid for the hosting manager, customizing 
         /// properties as required.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <paramref name="clusterDefinition">Specifies the cluster definition.</paramref>
         /// <exception cref="ClusterDefinitionException">Thrown if any problems were detected.</exception>
         void Validate(ClusterDefinition clusterDefinition);
+
+        /// <summary>
+        /// Performs any final cluster definition validation before deploying a cluster.
+        /// This is <b>async</b> so the validator can perform async queries against the
+        /// hosting environment to obtain information about instance types/sizes, etc.
+        /// </summary>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="ClusterDefinitionException">Thrown if any problems were detected.</exception>
+        public Task FinalValidationAsync(ClusterDefinition clusterDefinition);
 
         /// <summary>
         /// Returns <c>true</c> if the hosting manager requires that the LAN be scanned

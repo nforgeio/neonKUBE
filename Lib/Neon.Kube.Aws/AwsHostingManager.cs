@@ -1229,20 +1229,16 @@ namespace Neon.Kube.Hosting.Aws
         public override void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
-
-            if (clusterDefinition.Hosting.Environment != HostingEnvironment.Aws)
-            {
-                throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Environment)}] must be set to [{HostingEnvironment.Aws}].");
-            }
+            Covenant.Assert(clusterDefinition.Hosting.Environment == HostingEnvironment.Aws, $"{nameof(HostingOptions)}.{nameof(HostingOptions.Environment)}] must be set to [{HostingEnvironment.Aws}].");
 
             if (string.IsNullOrEmpty(clusterDefinition.Hosting.Aws.AccessKeyId))
             {
-                throw new ClusterDefinitionException($"{nameof(AwsHostingOptions)}.{nameof(AwsHostingOptions.AccessKeyId)}] must be specified for AWS clusters.");
+                throw new ClusterDefinitionException($"{nameof(AwsHostingOptions)}.{nameof(AwsHostingOptions.AccessKeyId)}] is required for AWS clusters.");
             }
 
             if (string.IsNullOrEmpty(clusterDefinition.Hosting.Aws.SecretAccessKey))
             {
-                throw new ClusterDefinitionException($"{nameof(AwsHostingOptions)}.{nameof(AwsHostingOptions.SecretAccessKey)}] must be specified for AWS clusters.");
+                throw new ClusterDefinitionException($"{nameof(AwsHostingOptions)}.{nameof(AwsHostingOptions.SecretAccessKey)}] is required for AWS clusters.");
             }
 
             AssignNodeAddresses(clusterDefinition);
@@ -1254,6 +1250,41 @@ namespace Neon.Kube.Hosting.Aws
             {
                 clusterDefinition.Datacenter = clusterDefinition.Hosting.Aws.Region.ToUpperInvariant();
             }
+        }
+
+        /// <inheritdoc/>
+        public override async Task FinalValidationAsync(ClusterDefinition clusterDefinition)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            // Connect to AWS and lookup the node instance types to determine the number
+            // of cores and memory available for each and then call a common method to
+            // verify that NEONKUBE actually supports those instance types.
+
+            await ConnectAwsAsync();
+
+            var nameToInstanceTypeInfo = new Dictionary<string, InstanceTypeInfo>(StringComparer.InvariantCultureIgnoreCase);
+            var instanceTypePaginator  = ec2Client.Paginators.DescribeInstanceTypes(new DescribeInstanceTypesRequest());
+
+            await foreach (var instanceTypeInfo in instanceTypePaginator.InstanceTypes)
+            {
+                nameToInstanceTypeInfo[instanceTypeInfo.InstanceType] = instanceTypeInfo;
+            }
+
+            var hostedNodes = new List<HostedNodeInfo>();
+
+            foreach (var nodeDefinition in clusterDefinition.Nodes)
+            {
+                if (!nameToInstanceTypeInfo.TryGetValue(nodeDefinition.Aws.InstanceType, out var instanceTypeInfo))
+                {
+                    throw new ClusterDefinitionException($"Node [{nodeDefinition.Name}] specifies [instanceType={nodeDefinition.Aws.InstanceType}] which does not exist.");
+                }
+
+                hostedNodes.Add(new HostedNodeInfo(nodeDefinition.Name, nodeDefinition.Role, instanceTypeInfo.VCpuInfo.DefaultVCpus, (long)(instanceTypeInfo.MemoryInfo.SizeInMiB * ByteUnits.MebiBytes)));
+            }
+
+            ValidateCluster(clusterDefinition, hostedNodes);
         }
 
         /// <summary>

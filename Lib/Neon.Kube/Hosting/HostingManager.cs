@@ -173,6 +173,9 @@ namespace Neon.Kube.Hosting
         public abstract void Validate(ClusterDefinition clusterDefinition);
 
         /// <inheritdoc/>
+        public abstract Task FinalValidationAsync(ClusterDefinition clusterDefinition);
+
+        /// <inheritdoc/>
         public virtual bool RequiresNodeAddressCheck => false;
 
         /// <inheritdoc/>
@@ -481,6 +484,83 @@ namespace Neon.Kube.Hosting
                         break;
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Performs final cluster definition validation including ensuring that the vCPUs and
+        /// memory assigned to each node supported.
+        /// </summary>
+        /// <param name="clusterDefinition">Specifies the cluster definition.</param>
+        /// <param name="hostedNodes">
+        /// Specifies information about each cluster node including the number of vCPUs
+        /// and memory (derived from the instance type/size for cloud environments).
+        /// </param>
+        /// <exception cref="ClusterDefinitionException">Thrown when the defined cluster is not supported.</exception>
+        /// <remarks>
+        /// <para>
+        /// NEONKUBE clusters supports control-plane nodes with 2+ cores and at least 8GB RAM.
+        /// All worker nodes must have at least 4 cores and at least 8GiB RAM.
+        /// </para>
+        /// <note>
+        /// For cloud environments, we don't charge an extra hourly fee for 2-core VMs hosting
+        /// control-plane nodes to be more competitive with cloud integrated Kubernetes offerings
+        /// like AKS/EKS where the control-plane is entirely free.  We need to ensure users can't
+        /// workaround our fees by deploying 2-core worker nodes.
+        /// </note>
+        /// </remarks>
+        protected void ValidateCluster(ClusterDefinition clusterDefinition, List<HostedNodeInfo> hostedNodes)
+        {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Requires<ArgumentNullException>(hostedNodes != null, nameof(hostedNodes));
+            Covenant.Requires<ArgumentException>(hostedNodes.Count == 0, nameof(hostedNodes));
+
+            var minMemory = 4 * ByteUnits.GigaBytes;
+            var sbError   = new StringBuilder();
+
+            // Verify that control-plane nodes have at least 2 vCPUs and 8GB RAM.
+
+            foreach (var node in hostedNodes.Where(node => node.Role == NodeRole.ControlPlane))
+            {
+                if (node.VCpus < 2 && node.Memory < minMemory)
+                {
+                    sbError.AppendLine($"Control-plane node [{node.Name}] has only [{node.VCpus}] vCPUs and [{ByteUnits.Humanize(node.Memory, powerOfTwo: false)}] memory.  At least [2] vCPUs and [{ByteUnits.Humanize(minMemory, powerOfTwo: false)}] memory is required.");
+                }
+                else if (node.VCpus < 2)
+                {
+                    sbError.AppendLine($"Control-plane node [{node.Name}] has only [{node.VCpus}] vCPUs.  At least [2] vCPUs are required.");
+                }
+                else if (node.Memory < minMemory)
+                {
+                    sbError.AppendLine($"Control-plane node [{node.Name}] has only [{ByteUnits.Humanize(node.Memory, powerOfTwo: false)}] memory.  At least [{ByteUnits.Humanize(minMemory, powerOfTwo: false)}] memory is required.");
+                }
+            }
+
+            // Verify that worker nodes have at least 4 vCPUs and 8GB RAM.
+
+            foreach (var node in hostedNodes.Where(node => node.Role == NodeRole.Worker))
+            {
+                if (node.VCpus < 4 && node.Memory < minMemory)
+                {
+                    sbError.AppendLine($"Worker node [{node.Name}] has too only [{node.VCpus}] vCPUs and [{ByteUnits.Humanize(node.Memory, powerOfTwo: false)}] memory.  At least [4] vCPUs and [{ByteUnits.Humanize(minMemory, powerOfTwo: false)}] memory is required.");
+                }
+                else if (node.VCpus < 4)
+                {
+                    sbError.AppendLine($"Worker node [{node.Name}] has too only [{node.VCpus}] vCPUs.  At least [4] vCPUs are required.");
+                }
+                else if (node.Memory < minMemory)
+                {
+                    sbError.AppendLine($"Worker node [{node.Name}] has [{ByteUnits.Humanize(node.Memory, powerOfTwo: false)}] memory.  At least [{ByteUnits.Humanize(minMemory, powerOfTwo: false)}] memory is required.");
+                }
+            }
+
+            if (sbError.Length > 0)
+            {
+                sbError.AppendLine();
+                sbError.AppendLine($"* Control-plane nodes require at least [2] vCPUs each and worker nodes require at lest [4] vCPUs.");
+                sbError.AppendLine($"* All nodes require at least [{ByteUnits.Humanize(minMemory, powerOfTwo: false)}] memory.");
+
+                throw new ClusterDefinitionException(sbError.ToString());
             }
         }
 

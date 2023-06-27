@@ -32,7 +32,6 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Cryptography;
@@ -40,6 +39,8 @@ using Neon.IO;
 using Neon.Kube.Hosting;
 using Neon.Kube.Setup;
 using Neon.Net;
+
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube.ClusterDef
 {
@@ -225,7 +226,7 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// Ensures that a VM memory or disk size specification is valid and also
-        /// converts the value to the corresponding long count.
+        /// converts the value to the corresponding long byte count.
         /// </summary>
         /// <param name="sizeValue">The size value string.</param>
         /// <param name="optionsType">Type of the property holding the size property (used for error reporting).</param>
@@ -277,7 +278,7 @@ namespace Neon.Kube.ClusterDef
             foreach (var node in definition.Nodes)
             {
                 node.Ingress                        = true;
-                node.Labels.StorageOSDiskSize             = null;
+                node.Labels.StorageOSDiskSize       = null;
                 node.Labels.PhysicalLocation        = null;
                 node.Labels.PhysicalMachine         = null;
                 node.Labels.PhysicalAvailabilitySet = null;

@@ -273,14 +273,17 @@ namespace Neon.Kube.ClusterDef
                 }
             }
 
+            // Check the default number of cores.
+
             if (Cores <= 0)
             {
                 throw new ClusterDefinitionException($"[{nameof(HyperVHostingOptions)}.{nameof(Cores)}={Cores}] must be positive.");
             }
 
-            Memory = Memory ?? DefaultMemory;
-            OsDisk = OsDisk ?? DefaultOsDisk;
-            Hosts  = Hosts ?? new List<HypervisorHost>();
+            // Check memory and disk sizes.
+
+            Memory ??= DefaultMemory;
+            OsDisk ??= DefaultOsDisk;
 
             ClusterDefinition.ValidateSize(Memory, this.GetType(), $"{vmHostingOptionsPrefix}.{nameof(Memory)}");
             ClusterDefinition.ValidateSize(OsDisk, this.GetType(), $"{vmHostingOptionsPrefix}.{nameof(OsDisk)}");
@@ -291,28 +294,36 @@ namespace Neon.Kube.ClusterDef
             var hostNameSet    = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
             var hostAddressSet = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
+            Hosts  = Hosts ?? new List<HypervisorHost>();
+
             foreach (var vmHost in clusterDefinition.Hosting.Hypervisor.Hosts)
             {
                 if (hostNameSet.Contains(vmHost.Name))
                 {
-                    throw new ClusterDefinitionException($"One or more hypervisor hosts are assigned the [{vmHost.Name}] name.");
+                    throw new ClusterDefinitionException($"Multiple hypervisor hosts are assigned the [{vmHost.Name}] name.");
                 }
 
                 hostNameSet.Add(vmHost.Name);
 
                 if (hostAddressSet.Contains(vmHost.Address))
                 {
-                    throw new ClusterDefinitionException($"One or more hypervisor hosts are assigned the [{vmHost.Address}] address.");
+                    throw new ClusterDefinitionException($"Multiple hypervisor hosts are assigned the [{vmHost.Address}] address.");
                 }
 
                 hostAddressSet.Add(vmHost.Address);
             }
 
-            // Ensure that some hypervisor hosts have been specified if we're deploying
-            // to remote hypervisors.
+            // Ensure that at least one hypervisor hosts have been specified if we're deploying
+            // to remote hypervisors and that this host references are valid.
 
             if (clusterDefinition.Hosting.IsHostedHypervisor)
             {
+                if (Hosts.Count == 0)
+                {
+                    
+                    throw new ClusterDefinitionException($"At least one hypervisor host must be specified fpr the[{ clusterDefinition.Hosting.Environment }] environment.");
+                }
+
                 foreach (var vmHost in Hosts)
                 {
                     vmHost.Validate(clusterDefinition);

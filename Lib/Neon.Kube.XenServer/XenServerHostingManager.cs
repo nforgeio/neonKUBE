@@ -274,6 +274,7 @@ namespace Neon.Kube.Hosting.XenServer
         public override void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Assert(clusterDefinition.Hosting.Environment == HostingEnvironment.XenServer, $"{nameof(HostingOptions)}.{nameof(HostingOptions.Environment)}] must be set to [{HostingEnvironment.XenServer}].");
 
             if (clusterDefinition.Hosting.Environment != HostingEnvironment.XenServer)
             {
@@ -325,6 +326,24 @@ namespace Neon.Kube.Hosting.XenServer
                     throw new ClusterDefinitionException($"Cluster node [{node.Name}] references [host={node.Hypervisor.Host}] which is not defined.");
                 }
             }
+        }
+
+        /// <inheritdoc/>
+        public override async Task FinalValidationAsync(ClusterDefinition clusterDefinition)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            // Collect information about the cluster nodes so we can verify that
+            //cluster makes sense.
+
+            var hostedNodes = clusterDefinition.Nodes
+                .Select(nodeDefinition => new HostedNodeInfo(nodeDefinition.Name, nodeDefinition.Role, nodeDefinition.Hypervisor.Cores, nodeDefinition.Hypervisor.GetMemory(clusterDefinition)))
+                .ToList();
+
+            ValidateCluster(clusterDefinition, hostedNodes);
+
+            await Task.CompletedTask;
         }
 
         /// <inheritdoc/>

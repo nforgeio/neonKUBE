@@ -155,11 +155,20 @@ namespace Neon.Kube.Hosting.BareMetal
         public override void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Assert(clusterDefinition.Hosting.Environment == HostingEnvironment.BareMetal, $"{nameof(HostingOptions)}.{nameof(HostingOptions.Environment)}] must be set to [{HostingEnvironment.BareMetal}].");
 
-            if (clusterDefinition.Hosting.Environment != HostingEnvironment.BareMetal)
-            {
-                throw new ClusterDefinitionException($"{nameof(HostingOptions)}.{nameof(HostingOptions.Environment)}] must be set to [{HostingEnvironment.BareMetal}].");
-            }
+            throw new NotImplementedException("$todo(jefflill)");
+        }
+
+        /// <inheritdoc/>
+        public override async Task FinalValidationAsync(ClusterDefinition clusterDefinition)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            await Task.CompletedTask;
+
+            throw new NotImplementedException("$todo(jefflill)");
         }
 
         /// <inheritdoc/>
