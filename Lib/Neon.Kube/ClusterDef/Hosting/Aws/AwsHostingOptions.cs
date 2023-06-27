@@ -438,9 +438,9 @@ namespace Neon.Kube.ClusterDef
 
             // Check AWS cluster limits.
 
-            if (clusterDefinition.ControlNodes.Count() > KubeConst.MaxControlNodes)
+            if (clusterDefinition.ControlNodes.Count() > KubeConst.MaxControlPlaneNodes)
             {
-                throw new ClusterDefinitionException($"cluster control-plane count [{awsHostionOptionsPrefix}.{clusterDefinition.ControlNodes.Count()}] exceeds the [{KubeConst.MaxControlNodes}] limit for clusters.");
+                throw new ClusterDefinitionException($"cluster control-plane count [{awsHostionOptionsPrefix}.{clusterDefinition.ControlNodes.Count()}] exceeds the [{KubeConst.MaxControlPlaneNodes}] limit for clusters.");
             }
 
             if (clusterDefinition.Nodes.Count() > AwsHelper.MaxClusterNodes)

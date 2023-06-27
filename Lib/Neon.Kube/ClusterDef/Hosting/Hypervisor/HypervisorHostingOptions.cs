@@ -93,16 +93,16 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// <para>
-        /// The default number of virtual processors to assign to each cluster virtual machine.  
+        /// The default number of processors to assign to each cluster virtual machine.  
         /// </para>
         /// <note>
         /// NEONKUBE requires that each control-plane and worker node have at least 4 CPUs.
         /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "Cores", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "cores", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "VCpus", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "vcpus", ApplyNamingConventions = false)]
         [DefaultValue(4)]
-        public int Cores { get; set; } = 4;
+        public int VCpus { get; set; } = 4;
 
         /// <summary>
         /// <para>
@@ -275,9 +275,9 @@ namespace Neon.Kube.ClusterDef
 
             // Check the default number of cores.
 
-            if (Cores <= 0)
+            if (VCpus <= 0)
             {
-                throw new ClusterDefinitionException($"[{nameof(HyperVHostingOptions)}.{nameof(Cores)}={Cores}] must be positive.");
+                throw new ClusterDefinitionException($"[{nameof(HyperVHostingOptions)}.{nameof(VCpus)}={VCpus}] must be positive.");
             }
 
             // Check memory and disk sizes.

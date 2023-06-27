@@ -1259,7 +1259,7 @@ namespace Neon.Kube.Hosting.Aws
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             // Connect to AWS and lookup the node instance types to determine the number
-            // of cores and memory available for each and then call a common method to
+            // of vCPUs and memory available for each and then call a common method to
             // verify that NEONKUBE actually supports those instance types.
 
             await ConnectAwsAsync();
@@ -2168,7 +2168,7 @@ namespace Neon.Kube.Hosting.Aws
         /// <para>
         /// Verifies that the requested AWS region and availability zone exists and supports 
         /// the requested VM sizes.  We'll also verify that the requested VMs have the minimum 
-        /// required number or cores and RAM.
+        /// required number of vCPUs and RAM.
         /// </para>
         /// <para>
         /// This also updates the node labels to match the capabilities of their VMs.
@@ -2224,27 +2224,27 @@ namespace Neon.Kube.Hosting.Aws
                 {
                     case NodeRole.ControlPlane:
 
-                        if (instanceTypeInfo.VCpuInfo.DefaultVCpus < KubeConst.MinControlNodeCores)
+                        if (instanceTypeInfo.VCpuInfo.DefaultVCpus < KubeConst.MinControlNodeVCpus)
                         {
-                            throw new NeonKubeException($"Control-plane node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [Cores={instanceTypeInfo.VCpuInfo.DefaultVCpus}] which is lower than the required [{KubeConst.MinControlNodeCores}] cores.]");
+                            throw new NeonKubeException($"Control-plane node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [vcpus={instanceTypeInfo.VCpuInfo.DefaultVCpus}] which is lower than the required [{KubeConst.MinControlNodeVCpus}] vcpus.]");
                         }
 
-                        if (instanceTypeInfo.MemoryInfo.SizeInMiB < KubeConst.MinControlNodeRamMiB)
+                        if (instanceTypeInfo.MemoryInfo.SizeInMiB < KubeConst.MinControlPlaneNodeRamMiB)
                         {
-                            throw new NeonKubeException($"Control-plane node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [RAM={instanceTypeInfo.MemoryInfo.SizeInMiB} MiB] which is lower than the required [{KubeConst.MinControlNodeRamMiB} MiB].]");
+                            throw new NeonKubeException($"Control-plane node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [memory={instanceTypeInfo.MemoryInfo.SizeInMiB} MiB] which is lower than the required [{KubeConst.MinControlPlaneNodeRamMiB} MiB].]");
                         }
                         break;
 
                     case NodeRole.Worker:
 
-                        if (instanceTypeInfo.VCpuInfo.DefaultVCpus < KubeConst.MinWorkerCores)
+                        if (instanceTypeInfo.VCpuInfo.DefaultVCpus < KubeConst.MinWorkerNodeVCpus)
                         {
-                            throw new NeonKubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [Cores={instanceTypeInfo.VCpuInfo.DefaultVCpus}] which is lower than the required [{KubeConst.MinWorkerCores}] cores.]");
+                            throw new NeonKubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [vcpus={instanceTypeInfo.VCpuInfo.DefaultVCpus}] which is lower than the required [{KubeConst.MinWorkerNodeVCpus}] vcpus.]");
                         }
 
-                        if (instanceTypeInfo.MemoryInfo.SizeInMiB < KubeConst.MinWorkerRamMiB)
+                        if (instanceTypeInfo.MemoryInfo.SizeInMiB < KubeConst.MinWorkerNodeRamMiB)
                         {
-                            throw new NeonKubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [RAM={instanceTypeInfo.MemoryInfo.SizeInMiB} MiB] which is lower than the required [{KubeConst.MinWorkerRamMiB} MiB].]");
+                            throw new NeonKubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Aws.InstanceType)}={instanceType}] with [memory={instanceTypeInfo.MemoryInfo.SizeInMiB} MiB] which is lower than the required [{KubeConst.MinWorkerNodeRamMiB} MiB].]");
                         }
                         break;
 

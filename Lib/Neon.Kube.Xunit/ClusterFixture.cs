@@ -96,8 +96,8 @@ namespace Neon.Kube.Xunit
     ///     useInternalSwitch: true
     ///   hypervisor:
     ///     namePrefix: "test"
-    ///     cores: 4
-    ///     memory: 12 GiB
+    ///     vcpus: 4
+    ///     memory: 8 GiB
     ///     osDisk: 64 GiB
     /// network:
     ///   premiseSubnet: 100.64.0.0/24

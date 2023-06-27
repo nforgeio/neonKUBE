@@ -142,6 +142,11 @@ namespace Neon.Kube.Setup
 
             clusterDefinition.ValidatePrivateNodeAddresses();
 
+            // Perform final cluster definition validation.  This gives hosting managers
+            // the chance verify that cloud VM sizes are valid.
+
+            await hostingManager.FinalValidationAsync(clusterDefinition);
+
             // Override the cluster definition package caches when requested.
 
             if (options.PackageCacheEndpoints != null && options.PackageCacheEndpoints.Count() > 0)

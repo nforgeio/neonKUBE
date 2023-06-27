@@ -338,7 +338,7 @@ namespace Neon.Kube.Hosting.XenServer
             //cluster makes sense.
 
             var hostedNodes = clusterDefinition.Nodes
-                .Select(nodeDefinition => new HostedNodeInfo(nodeDefinition.Name, nodeDefinition.Role, nodeDefinition.Hypervisor.Cores, nodeDefinition.Hypervisor.GetMemory(clusterDefinition)))
+                .Select(nodeDefinition => new HostedNodeInfo(nodeDefinition.Name, nodeDefinition.Role, nodeDefinition.Hypervisor.GetVCpus(clusterDefinition), nodeDefinition.Hypervisor.GetMemory(clusterDefinition)))
                 .ToList();
 
             ValidateCluster(clusterDefinition, hostedNodes);
@@ -885,14 +885,14 @@ namespace Neon.Kube.Hosting.XenServer
             foreach (var node in GetHostedNodes(xenClient))
             {
                 var vmName      = GetVmName(node);
-                var cores       = node.Metadata.Hypervisor.GetCores(cluster.SetupState.ClusterDefinition);
+                var vcpus       = node.Metadata.Hypervisor.GetVCpus(cluster.SetupState.ClusterDefinition);
                 var memoryBytes = node.Metadata.Hypervisor.GetMemory(cluster.SetupState.ClusterDefinition);
                 var osDiskBytes = node.Metadata.Hypervisor.GetOsDisk(cluster.SetupState.ClusterDefinition);
 
                 xenSshProxy.Status = FormatVmStatus(vmName, "create: virtual machine");
 
                 var vm = xenClient.Machine.Create(vmName, $"neonkube-{KubeVersions.NeonKubeWithBranchPart}",
-                    cores:                      cores,
+                    vcpus:                      vcpus,
                     memoryBytes:                memoryBytes,
                     diskBytes:                  osDiskBytes,
                     snapshot:                   cluster.Hosting.XenServer.Snapshot,

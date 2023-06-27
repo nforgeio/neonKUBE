@@ -983,6 +983,11 @@ namespace Neon.Kube.ClusterDef
 
             // Validate the node definitions.
 
+            if (ControlNodes.Count() == 0)
+            {
+                throw new ClusterDefinitionException("At least one control-plane node is required.");
+            }
+
             foreach (var nodeDefinition in NodeDefinitions.Values)
             {
                 nodeDefinition.Validate(this);
@@ -1052,9 +1057,9 @@ namespace Neon.Kube.ClusterDef
             {
                 throw new ClusterDefinitionException("Clusters must have at least one control-plane node.");
             }
-            else if (controlNodeCount > KubeConst.MaxControlNodes)
+            else if (controlNodeCount > KubeConst.MaxControlPlaneNodes)
             {
-                throw new ClusterDefinitionException($"Clusters may not have more than [{KubeConst.MaxControlNodes}] control-plane nodes.");
+                throw new ClusterDefinitionException($"Clusters may not have more than [{KubeConst.MaxControlPlaneNodes}] control-plane nodes.");
             }
             else if (!NeonHelper.IsOdd(controlNodeCount))
             {

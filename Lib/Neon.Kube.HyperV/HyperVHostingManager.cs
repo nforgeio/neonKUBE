@@ -32,11 +32,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using YamlDotNet.Serialization;
-
 using Neon.Collections;
 using Neon.Common;
 using Neon.Cryptography;
@@ -53,6 +48,12 @@ using Neon.SSH;
 using Neon.Tasks;
 using Neon.Time;
 using Neon.Windows;
+
+using Newtonsoft;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube.Hosting.HyperV
 {
@@ -235,7 +236,7 @@ namespace Neon.Kube.Hosting.HyperV
             //cluster makes sense.
 
             var hostedNodes = clusterDefinition.Nodes
-                .Select(nodeDefinition => new HostedNodeInfo(nodeDefinition.Name, nodeDefinition.Role, nodeDefinition.Hypervisor.Cores, nodeDefinition.Hypervisor.GetMemory(clusterDefinition)))
+                .Select(nodeDefinition => new HostedNodeInfo(nodeDefinition.Name, nodeDefinition.Role, nodeDefinition.Hypervisor.GetVCpus(clusterDefinition), nodeDefinition.Hypervisor.GetMemory(clusterDefinition)))
                 .ToList();
 
             ValidateCluster(clusterDefinition, hostedNodes);
@@ -935,10 +936,10 @@ namespace Neon.Kube.Hosting.HyperV
 
                                 var percentComplete = (int)((double)cbRead / (double)input.Length * 100.0);
 
-                                controller.SetGlobalStepStatus($"decompress: node VHDX [{percentComplete}%]");
+                                node.Status = $"decompress: node VHDX [{percentComplete}%]";
                             }
 
-                            controller.SetGlobalStepStatus($"decompress: node VHDX [100%]");
+                            node.Status = $"decompress: node VHDX [100%]";
                         }
                     }
 
@@ -947,14 +948,14 @@ namespace Neon.Kube.Hosting.HyperV
 
                 // Create the virtual machine.
 
-                var processors  = node.Metadata.Hypervisor.GetCores(cluster.SetupState.ClusterDefinition);
+                var vcpus       = node.Metadata.Hypervisor.GetVCpus(cluster.SetupState.ClusterDefinition);
                 var memoryBytes = node.Metadata.Hypervisor.GetMemory(cluster.SetupState.ClusterDefinition);
                 var osDiskBytes = node.Metadata.Hypervisor.GetOsDisk(cluster.SetupState.ClusterDefinition);
 
                 node.Status = $"create: virtual machine";
                 hyperv.AddVm(
                     vmName,
-                    processorCount: processors,
+                    processorCount: vcpus,
                     driveSize:      osDiskBytes.ToString(),
                     memorySize:     memoryBytes.ToString(),
                     drivePath:      osDrivePath,

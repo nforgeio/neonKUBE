@@ -531,7 +531,7 @@ namespace Neon.Kube.Hosting.Azure
             /// Returns the number of virtual CPUs for the SKU.
             /// </para>
             /// <note>
-            /// The number of virtual CPUs may be larger than the number of virtual cores for
+            /// The number of virtual CPUs may be larger than the number of vCPUS for
             /// a virtual machine SKU.  For example, most modern AMD64 based SKUs support
             /// hyper-threading which effectively results in 2 virtual CPUs per core.
             /// </note>
@@ -1096,7 +1096,7 @@ namespace Neon.Kube.Hosting.Azure
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             // Connect to Azure and lookup the node instance types to determine the number
-            // of cores and memory available for each and then call a common method to
+            // of vCPUs and memory available for each and then call a common method to
             // verify that NEONKUBE actually supports those instance types.
 
             await ConnectAzureAsync();
@@ -1932,7 +1932,7 @@ namespace Neon.Kube.Hosting.Azure
         /// <para>
         /// Verifies that the requested Azure region exists, supports the requested VM sizes,
         /// and that VMs for nodes that specify UltraSSD actually support UltraSSD.  We'll also
-        /// verify that the requested VMs have the minimum required number or cores and RAM.
+        /// verify that the requested VMs have the minimum required number or vCPUs and RAM.
         /// </para>
         /// <para>
         /// This also updates the node labels to match the capabilities of their VMs.
@@ -1962,14 +1962,14 @@ namespace Neon.Kube.Hosting.Azure
                 {
                     case NodeRole.ControlPlane:
 
-                        if (vmSku.VirtualCpus < KubeConst.MinControlNodeCores)
+                        if (vmSku.VirtualCpus < KubeConst.MinControlNodeVCpus)
                         {
-                            throw new NeonKubeException($"Control-plane node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSkuName}] with [Cores={vmSku.VirtualCpus} MiB] which is lower than the required [{KubeConst.MinControlNodeCores}] cores.]");
+                            throw new NeonKubeException($"Control-plane node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSkuName}] with [vcpus={vmSku.VirtualCpus} MiB] which is lower than the required [{KubeConst.MinControlNodeVCpus}] vcpus.]");
                         }
 
-                        if (vmSku.MemoryGiB < KubeConst.MinControlNodeRamMiB / 1024)
+                        if (vmSku.MemoryGiB < KubeConst.MinControlPlaneNodeRamMiB / 1024)
                         {
-                            throw new NeonKubeException($"Control-plane node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSkuName}] with [RAM={vmSku.MemoryGiB} MiB] which is lower than the required [{KubeConst.MinControlNodeRamMiB * 1024} MiB].]");
+                            throw new NeonKubeException($"Control-plane node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSkuName}] with [memory={vmSku.MemoryGiB} MiB] which is lower than the required [{KubeConst.MinControlPlaneNodeRamMiB * 1024} MiB].]");
                         }
 
                         if (vmSku.MaxDataDisks < 1)
@@ -1980,14 +1980,14 @@ namespace Neon.Kube.Hosting.Azure
 
                     case NodeRole.Worker:
 
-                        if (vmSku.VirtualCpus < KubeConst.MinWorkerCores)
+                        if (vmSku.VirtualCpus < KubeConst.MinWorkerNodeVCpus)
                         {
-                            throw new NeonKubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSkuName}] with [Cores={vmSku.VirtualCpus} MiB] which is lower than the required [{KubeConst.MinWorkerCores}] cores.]");
+                            throw new NeonKubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSkuName}] with [vcpus={vmSku.VirtualCpus} MiB] which is lower than the required [{KubeConst.MinWorkerNodeVCpus}] vcpus.]");
                         }
 
-                        if (vmSku.MemoryGiB < KubeConst.MinWorkerRamMiB / 1024)
+                        if (vmSku.MemoryGiB < KubeConst.MinWorkerNodeRamMiB / 1024)
                         {
-                            throw new NeonKubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSkuName}] with [RAM={vmSku.MemoryGiB * 1024} MiB] which is lower than the required [{KubeConst.MinWorkerRamMiB} MiB].]");
+                            throw new NeonKubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSkuName}] with [memory={vmSku.MemoryGiB * 1024} MiB] which is lower than the required [{KubeConst.MinWorkerNodeRamMiB} MiB].]");
                         }
 
                         if (vmSku.MaxDataDisks < 1)

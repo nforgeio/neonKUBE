@@ -70,21 +70,10 @@ using Metrics = Prometheus.Metrics;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// <para>
-    /// Removes <see cref="V1NeonClusterOperator"/> resources assigned to nodes that don't exist.
-    /// </para>
+    /// Manages global cluster CRON jobes including updating node CA certificates, checking
+    /// control-plane certificates, ensuring that required container images are present,
+    /// sending cluster temelemetry to NEONCLOUD and checking cluster certificates.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// This controller relies on a lease named <b>neon-cluster-operator.operatorsettings</b>.  
-    /// This lease will be persisted in the <see cref="KubeNamespace.NeonSystem"/> namespace
-    /// and will be used to a leader to manage these resources.
-    /// </para>
-    /// <para>
-    /// The <b>neon-cluster-operator</b> won't conflict with node agents because we're only 
-    /// removing tasks that don't belong to an existing node.
-    /// </para>
-    /// </remarks>
     [RbacRule<V1NeonClusterOperator>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1Node>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1NeonNodeTask>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
@@ -235,8 +224,6 @@ namespace NeonClusterOperator
 
                 if (resource.Spec.Updates.ClusterCertificate.Enabled)
                 {
-                    
-
                     var neonDesktopCertExpression = resource.Spec.Updates.ClusterCertificate.Schedule;
 
                     CronExpression.ValidateExpression(neonDesktopCertExpression);

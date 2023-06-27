@@ -72,7 +72,7 @@ hosting:
     hostUsername: $<secret:XENSERVER_LOGIN[username]>
     hostPassword: $<secret:XENSERVER_LOGIN[password]>
     namePrefix: test-tiny
-    cores: 4
+    vcpus: 4
     memory: 16 GiB
     osDisk: 64 GiB
     openEbsDisk: 32 GiB
@@ -120,7 +120,7 @@ hosting:
     hostUsername: $<secret:XENSERVER_LOGIN[username]>
     hostPassword: $<secret:XENSERVER_LOGIN[password]>
     namePrefix: test-small
-    cores: 4
+    vcpus: 4
     memory: 16 GiB
     osDisk: 64 GiB
     openEbsDisk: 32 GiB
@@ -183,7 +183,7 @@ hosting:
     hostUsername: $<secret:XENSERVER_LOGIN[username]>
     hostPassword: $<secret:XENSERVER_LOGIN[password]>
     namePrefix: test-large
-    cores: 4
+    vcpus: 4
     memory: 16 GiB
     osDisk: 64 GiB
     openEbsDisk: 32 GiB

@@ -67,7 +67,7 @@ hosting:
   environment: hyperv
   hypervisor:
     namePrefix: test-tiny
-    cores: 4
+    vcpus: 4
     memory: 16 GiB
     osDisk: 64 GiB
     openEbsDisk: 32 GiB
@@ -107,7 +107,7 @@ hosting:
   environment: hyperv
   hypervisor:
     namePrefix: test-small
-    cores: 4
+    vcpus: 4
     memory: 16 GiB
     osDisk: 64 GiB
     openEbsDisk: 32 GiB
@@ -156,7 +156,7 @@ hosting:
   environment: hyperv
   hypervisor:
     namePrefix: test-large
-    cores: 4
+    vcpus: 4
     memory: 16 GiB
     osDisk: 64 GiB
     openEbsDisk: 32 GiB
