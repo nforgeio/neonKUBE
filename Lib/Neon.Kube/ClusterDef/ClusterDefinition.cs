@@ -88,6 +88,7 @@ namespace Neon.Kube.ClusterDef
         /// </summary>
         public const string ReservedNodePrefix = "node." + ReservedPrefix;
 
+        /// <summary>
         /// Parses and validates a YAML cluster definition file.
         /// </summary>
         /// <param name="path">The file path.</param>
