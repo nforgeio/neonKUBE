@@ -110,7 +110,7 @@ namespace NeonClusterOperator
                     }
                 }
 
-                // Trigger the job to run now, and then repeat every 10 seconds
+                // Trigger the job to run now, and then repeat as scheduled.
 
                 ITrigger trigger = TriggerBuilder.Create()
                     .WithIdentity(Name, Group)
