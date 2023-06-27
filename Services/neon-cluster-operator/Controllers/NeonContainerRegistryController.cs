@@ -26,13 +26,19 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
+using Dex;
+
+using k8s;
+using k8s.Autorest;
+using k8s.Models;
+
+using JsonDiffPatch;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.JsonPatch.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-
-using JsonDiffPatch;
 
 using Neon.Common;
 using Neon.Diagnostics;
@@ -44,17 +50,12 @@ using Neon.Kube.Operator.Attributes;
 using Neon.Kube.Operator.ResourceManager;
 using Neon.Kube.Operator.Controller;
 using Neon.Kube.Operator.Rbac;
+using Neon.Kube.Operator.Util;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Retry;
 using Neon.Tasks;
 using Neon.Time;
-
-using Dex;
-
-using k8s;
-using k8s.Autorest;
-using k8s.Models;
 
 using Newtonsoft.Json;
 
@@ -62,7 +63,6 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 using Prometheus;
-using Neon.Kube.Operator.Util;
 
 namespace NeonClusterOperator
 {

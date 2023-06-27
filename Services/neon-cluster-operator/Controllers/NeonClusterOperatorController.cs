@@ -26,12 +26,16 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
+using JsonDiffPatch;
+
+using k8s;
+using k8s.Autorest;
+using k8s.Models;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Extensions.Logging;
-
-using JsonDiffPatch;
 
 using Neon.Common;
 using Neon.Diagnostics;
@@ -49,10 +53,6 @@ using Neon.Tasks;
 using Neon.Time;
 
 using NeonClusterOperator.Harbor;
-
-using k8s;
-using k8s.Autorest;
-using k8s.Models;
 
 using Newtonsoft.Json;
 

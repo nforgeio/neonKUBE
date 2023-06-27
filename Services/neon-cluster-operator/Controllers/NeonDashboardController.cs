@@ -26,6 +26,10 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
+using k8s;
+using k8s.Autorest;
+using k8s.Models;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.JsonPatch;
@@ -35,6 +39,10 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Operator.ResourceManager;
+using Neon.Kube.Operator.Controller;
+using Neon.Kube.Operator.Finalizer;
+using Neon.Kube.Operator.Rbac;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Retry;
@@ -43,20 +51,12 @@ using Neon.Time;
 
 using NeonClusterOperator.Harbor;
 
-using k8s;
-using k8s.Autorest;
-using k8s.Models;
-
 using Newtonsoft.Json;
 
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 using Prometheus;
-using Neon.Kube.Operator.Finalizer;
-using Neon.Kube.Operator.ResourceManager;
-using Neon.Kube.Operator.Controller;
-using Neon.Kube.Operator.Rbac;
 
 using Task    = System.Threading.Tasks.Task;
 using Metrics = Prometheus.Metrics;

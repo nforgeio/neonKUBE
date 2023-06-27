@@ -17,10 +17,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net.Http.Headers;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+
+using k8s;
+using k8s.Models;
 
 using Microsoft.Extensions.Logging;
 
@@ -32,9 +36,6 @@ using Neon.Net;
 using Neon.Kube.Resources.Cluster;
 using Neon.Tasks;
 
-using k8s;
-using k8s.Models;
-
 using OpenTelemetry;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -42,7 +43,6 @@ using OpenTelemetry.Trace;
 using Prometheus;
 
 using Quartz;
-using System.Net.Http.Headers;
 
 namespace NeonClusterOperator
 {
@@ -81,15 +81,15 @@ namespace NeonClusterOperator
 
                     foreach (var k8sNode in nodes) 
                     {
-                        var node                          = new Node();
-                        node.KernelVersion                = k8sNode.Status.NodeInfo.KernelVersion;
-                        node.OsImage                      = k8sNode.Status.NodeInfo.OsImage;
-                        node.ContainerRuntimeVersion      = k8sNode.Status.NodeInfo.ContainerRuntimeVersion;
-                        node.KubeletVersion               = k8sNode.Status.NodeInfo.KubeletVersion;
-                        node.KubeProxyVersion             = k8sNode.Status.NodeInfo.KubeProxyVersion;
-                        node.OperatingSystem              = k8sNode.Status.NodeInfo.OperatingSystem;
-                        node.CpuArchitecture              = k8sNode.Status.NodeInfo.Architecture;
-                        node.Role                         = k8sNode.Metadata.GetLabel("neonkube.io/node.role");
+                        var node                     = new Node();
+                        node.KernelVersion           = k8sNode.Status.NodeInfo.KernelVersion;
+                        node.OsImage                 = k8sNode.Status.NodeInfo.OsImage;
+                        node.ContainerRuntimeVersion = k8sNode.Status.NodeInfo.ContainerRuntimeVersion;
+                        node.KubeletVersion          = k8sNode.Status.NodeInfo.KubeletVersion;
+                        node.KubeProxyVersion        = k8sNode.Status.NodeInfo.KubeProxyVersion;
+                        node.OperatingSystem         = k8sNode.Status.NodeInfo.OperatingSystem;
+                        node.CpuArchitecture         = k8sNode.Status.NodeInfo.Architecture;
+                        node.Role                    = k8sNode.Metadata.GetLabel("neonkube.io/node.role");
 
                         if (k8sNode.Status.Capacity.TryGetValue("cpu", out var cores))
                         {

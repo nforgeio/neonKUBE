@@ -26,27 +26,26 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
 using JsonDiffPatch;
-
-using Neon.Common;
-using Neon.Diagnostics;
-using Neon.IO;
-using Neon.Kube;
-using Neon.Kube.Resources;
-using Neon.Kube.Resources.Cluster;
-using Neon.Retry;
-using Neon.Tasks;
-using Neon.Time;
 
 using k8s;
 using k8s.Autorest;
 using k8s.Models;
 
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+using Neon.Common;
+using Neon.Diagnostics;
+using Neon.IO;
+using Neon.Kube;
 using Neon.Kube.Operator.Controller;
 using Neon.Kube.Operator.Rbac;
+using Neon.Kube.Resources;
+using Neon.Kube.Resources.Cluster;
+using Neon.Retry;
+using Neon.Tasks;
+using Neon.Time;
 
 using Newtonsoft.Json;
 

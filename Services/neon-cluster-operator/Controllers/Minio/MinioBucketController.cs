@@ -28,10 +28,18 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s;
+using k8s.Autorest;
+using k8s.Models;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Extensions.Logging;
+
+using Minio;
+using Minio.DataModel;
+using Minio.Exceptions;
 
 using Neon.Common;
 using Neon.Diagnostics;
@@ -49,20 +57,12 @@ using Neon.Retry;
 using Neon.Tasks;
 using Neon.Time;
 
-using k8s;
-using k8s.Autorest;
-using k8s.Models;
-
 using Newtonsoft.Json;
 
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 using Prometheus;
-
-using Minio;
-using Minio.DataModel;
-using Minio.Exceptions;
 
 namespace NeonClusterOperator
 {
