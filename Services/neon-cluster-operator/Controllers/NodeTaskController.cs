@@ -113,7 +113,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            logger?.LogInformationEx("[IDLE]");
+            logger?.LogDebugEx("[IDLE]");
 
             // We're going to handle this by looking at each node task and checking
             // to see whether the target node actually exists.  Rather than listing

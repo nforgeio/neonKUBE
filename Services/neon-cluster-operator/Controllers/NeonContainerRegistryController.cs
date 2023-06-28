@@ -114,7 +114,7 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            logger?.LogInformationEx("[IDLE]");
+            logger?.LogDebugEx("[IDLE]");
 
             try
             {

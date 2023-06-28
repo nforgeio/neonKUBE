@@ -113,17 +113,6 @@ namespace NeonClusterOperator
             this.logger           = logger;
         }
 
-        /// <summary>
-        /// Called periodically to allow the operator to perform global events.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task IdleAsync()
-        {
-            await SyncContext.Clear;
-
-            logger?.LogInformationEx("[IDLE]");
-        }
-
         /// <inheritdoc/>
         public async Task<ResourceControllerResult> ReconcileAsync(V1NeonSsoCallbackUrl resource)
         {

@@ -177,7 +177,7 @@ rm $0
         /// <inheritdoc/>
         public async Task IdleAsync()
         {
-            logger.LogInformationEx("[IDLE]");
+            logger.LogDebugEx("[IDLE]");
 
             // Handle execution of scheduled tasks.
 

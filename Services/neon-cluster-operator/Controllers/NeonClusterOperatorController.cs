@@ -72,7 +72,7 @@ namespace NeonClusterOperator
     /// <summary>
     /// Manages global cluster CRON jobes including updating node CA certificates, checking
     /// control-plane certificates, ensuring that required container images are present,
-    /// sending cluster temelemetry to NEONCLOUD and checking cluster certificates.
+    /// sending cluster telemetry to NEONCLOUD and checking cluster certificates.
     /// </summary>
     [RbacRule<V1NeonClusterOperator>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1Node>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
@@ -146,8 +146,6 @@ namespace NeonClusterOperator
         public async Task IdleAsync()
         {
             await SyncContext.Clear;
-
-            logger?.LogInformationEx("[IDLE]");
 
             if (!initialized)
             {
