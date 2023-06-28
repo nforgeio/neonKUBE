@@ -1233,9 +1233,11 @@ namespace Neon.Kube.Hosting.XenServer
             {
                 foreach (var machine in xenClient.Machine.List())
                 {
-                    if (machine.NameLabel.StartsWith(cluster.Hosting.Hypervisor.NamePrefix))
+                    var nodeName = VmNameToNodeName(machine.NameLabel);
+
+                    if (nodeName != null)
                     {
-                        clusterVms.Add(new ClusterVm(machine, xenClient, VmNameToNodeName(machine.NameLabel)));
+                        clusterVms.Add(new ClusterVm(machine, xenClient, nodeName));
                     }
                 }
             }
