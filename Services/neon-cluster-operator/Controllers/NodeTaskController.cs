@@ -88,14 +88,14 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Instance members
 
-        private readonly IKubernetes                 k8s;
-        private readonly ILogger<NodeTaskController> logger;
+        private readonly IKubernetes                    k8s;
+        private readonly ILogger<NodeTaskController>    logger;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public NodeTaskController(
-            IKubernetes k8s,
+            IKubernetes                 k8s,
             ILogger<NodeTaskController> logger)
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
