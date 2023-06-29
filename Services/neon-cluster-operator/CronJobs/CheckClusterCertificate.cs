@@ -24,6 +24,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s;
+using k8s.Models;
+
 using Microsoft.Extensions.Logging;
 
 using Neon.Common;
@@ -34,9 +37,6 @@ using Neon.Kube.Operator.Util;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Tasks;
-
-using k8s;
-using k8s.Models;
 
 using OpenTelemetry;
 using OpenTelemetry.Resources;
@@ -129,7 +129,8 @@ namespace NeonClusterOperator
                     await k8s.CustomObjects.PatchClusterCustomObjectStatusAsync<V1NeonClusterOperator>(
                         patch: OperatorHelper.ToV1Patch<V1NeonClusterOperator>(patch),
                         name: clusterOperator.Name());
-                } catch (Exception e)
+                }
+                catch (Exception e)
                 {
                     logger?.LogErrorEx(e);
                 }

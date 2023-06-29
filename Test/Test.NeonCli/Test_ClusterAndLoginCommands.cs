@@ -143,7 +143,7 @@ hosting:
   environment: hyperv
   hypervisor:
     namePrefix: {namePrefix}
-    cores: 4
+    vcpus: 4
     memory: 16 GiB
     osDisk: 64 GiB
     diskLocation: $<profile:hyperv.diskfolder>
@@ -174,7 +174,7 @@ hosting:
     hostUsername: $<secret:XENSERVER_LOGIN[username]>
     hostPassword: $<secret:XENSERVER_LOGIN[password]>
     namePrefix: {namePrefix}
-    cores: 4
+    vcpus: 4
     memory: 18 GiB
     osDisk: 64 GiB
     hosts:

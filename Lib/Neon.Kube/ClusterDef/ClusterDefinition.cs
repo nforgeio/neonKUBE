@@ -32,7 +32,6 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Cryptography;
@@ -40,6 +39,8 @@ using Neon.IO;
 using Neon.Kube.Hosting;
 using Neon.Kube.Setup;
 using Neon.Net;
+
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube.ClusterDef
 {
@@ -88,6 +89,7 @@ namespace Neon.Kube.ClusterDef
         /// </summary>
         public const string ReservedNodePrefix = "node." + ReservedPrefix;
 
+        /// <summary>
         /// Parses and validates a YAML cluster definition file.
         /// </summary>
         /// <param name="path">The file path.</param>
@@ -224,7 +226,7 @@ namespace Neon.Kube.ClusterDef
 
         /// <summary>
         /// Ensures that a VM memory or disk size specification is valid and also
-        /// converts the value to the corresponding long count.
+        /// converts the value to the corresponding long byte count.
         /// </summary>
         /// <param name="sizeValue">The size value string.</param>
         /// <param name="optionsType">Type of the property holding the size property (used for error reporting).</param>
@@ -276,7 +278,7 @@ namespace Neon.Kube.ClusterDef
             foreach (var node in definition.Nodes)
             {
                 node.Ingress                        = true;
-                node.Labels.StorageOSDiskSize             = null;
+                node.Labels.StorageOSDiskSize       = null;
                 node.Labels.PhysicalLocation        = null;
                 node.Labels.PhysicalMachine         = null;
                 node.Labels.PhysicalAvailabilitySet = null;
@@ -981,6 +983,11 @@ namespace Neon.Kube.ClusterDef
 
             // Validate the node definitions.
 
+            if (ControlNodes.Count() == 0)
+            {
+                throw new ClusterDefinitionException("At least one control-plane node is required.");
+            }
+
             foreach (var nodeDefinition in NodeDefinitions.Values)
             {
                 nodeDefinition.Validate(this);
@@ -1050,9 +1057,9 @@ namespace Neon.Kube.ClusterDef
             {
                 throw new ClusterDefinitionException("Clusters must have at least one control-plane node.");
             }
-            else if (controlNodeCount > KubeConst.MaxControlNodes)
+            else if (controlNodeCount > KubeConst.MaxControlPlaneNodes)
             {
-                throw new ClusterDefinitionException($"Clusters may not have more than [{KubeConst.MaxControlNodes}] control-plane nodes.");
+                throw new ClusterDefinitionException($"Clusters may not have more than [{KubeConst.MaxControlPlaneNodes}] control-plane nodes.");
             }
             else if (!NeonHelper.IsOdd(controlNodeCount))
             {

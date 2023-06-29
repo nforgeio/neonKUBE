@@ -23,6 +23,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s;
+using k8s.Models;
+
 using Microsoft.Extensions.Logging;
 
 using Neon.Common;
@@ -34,9 +37,6 @@ using Neon.Kube.Resources.Cluster;
 using Neon.Tasks;
 
 using NeonClusterOperator.Harbor;
-
-using k8s;
-using k8s.Models;
 
 using OpenTelemetry;
 using OpenTelemetry.Resources;

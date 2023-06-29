@@ -35,6 +35,15 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using DnsClient;
+
+using Grpc.Net.Client;
+
+using k8s;
+using k8s.Models;
+
+using Minio;
+
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -61,17 +70,10 @@ using Neon.Tasks;
 
 using NeonClusterOperator.Harbor;
 
-using DnsClient;
-
-using Grpc.Net.Client;
-
-using k8s;
-using k8s.Models;
+using Npgsql;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
-using Npgsql;
 
 using OpenTelemetry;
 using OpenTelemetry.Instrumentation.Quartz;
@@ -84,7 +86,6 @@ using Prometheus;
 using Quartz;
 using Quartz.Impl;
 using Quartz.Logging;
-using Minio;
 
 using Task    = System.Threading.Tasks.Task;
 using Metrics = Prometheus.Metrics;

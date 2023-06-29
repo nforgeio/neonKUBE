@@ -50,37 +50,37 @@ namespace Neon.Kube
         /// <summary>
         /// The maximum number of cluster control-plane nodes.
         /// </summary>
-        public const int MaxControlNodes = 5;
+        public const int MaxControlPlaneNodes = 5;
 
         /// <summary>
-        /// The minimum number of cores required by control-plane nodes.
+        /// The minimum number of vCPUs required by control-plane nodes.
         /// </summary>
-        public const int MinControlNodeCores = 4;
+        public const int MinControlNodeVCpus = 2;
 
         /// <summary>
-        /// The minimum number of cores required by worker nodes.
+        /// The minimum number of vCPUs required by worker nodes.
         /// </summary>
-        public const int MinWorkerCores = 4;
+        public const int MinWorkerNodeVCpus = 4;
 
         /// <summary>
         /// The minimum RAM (MiB) required for control-plane nodes.
         /// </summary>
-        public const int MinControlNodeRamMiB = 8192;
+        public const int MinControlPlaneNodeRamMiB = 8192;
 
         /// <summary>
         /// The minimum RAM (MiB) required for worker nodes.
         /// </summary>
-        public const int MinWorkerRamMiB = 8192;
+        public const int MinWorkerNodeRamMiB = 8192;
 
         /// <summary>
         /// The minimum required network interface cards for control-plane nodes.
         /// </summary>
-        public const int MinControlNodeNics = 1;
+        public const int MinControlPlaneNodeNics = 1;
 
         /// <summary>
         /// The minimum required network interface cards for worker nodes.
         /// </summary>
-        public const int MinWorkerNics = 1;
+        public const int MinWorkerNodeNics = 1;
 
         /// <summary>
         /// The root Kubernetes context username for provisioned clusters. 

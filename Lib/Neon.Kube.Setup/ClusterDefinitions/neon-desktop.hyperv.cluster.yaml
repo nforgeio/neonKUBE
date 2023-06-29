@@ -14,7 +14,7 @@ hosting:
     useInternalSwitch: true
   hypervisor:
     namePrefix: ""
-    cores: 4
+    vcpus: 4
     memory: 8 GiB
     osDisk: 48 GiB
 network:

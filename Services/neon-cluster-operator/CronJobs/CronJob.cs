@@ -23,14 +23,14 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s;
+using k8s.Models;
+
 using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
-
-using k8s;
-using k8s.Models;
 
 using OpenTelemetry.Trace;
 
@@ -110,7 +110,7 @@ namespace NeonClusterOperator
                     }
                 }
 
-                // Trigger the job to run now, and then repeat every 10 seconds
+                // Trigger the job to run now, and then repeat as scheduled.
 
                 ITrigger trigger = TriggerBuilder.Create()
                     .WithIdentity(Name, Group)

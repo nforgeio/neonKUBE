@@ -24,10 +24,14 @@ using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
 
+using k8s;
+using k8s.Models;
+
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
+using Neon.Diagnostics;
 using Neon.Common;
 using Neon.IO;
 using Neon.Kube;
@@ -35,9 +39,6 @@ using Neon.Kube.Operator;
 using Neon.Net;
 using Neon.Service;
 
-using k8s;
-using k8s.Models;
-using Neon.Diagnostics;
 using Prometheus.DotNetRuntime;
 
 namespace NeonClusterOperator

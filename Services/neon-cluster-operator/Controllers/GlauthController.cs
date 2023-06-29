@@ -26,6 +26,10 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
+using k8s;
+using k8s.Autorest;
+using k8s.Models;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.JsonPatch;
@@ -48,9 +52,7 @@ using Neon.Kube.Resources;
 using Neon.Tasks;
 using Neon.Time;
 
-using k8s;
-using k8s.Autorest;
-using k8s.Models;
+using Npgsql;
 
 using Newtonsoft.Json;
 
@@ -58,8 +60,6 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 using Prometheus;
-
-using Npgsql;
 
 namespace NeonClusterOperator
 {

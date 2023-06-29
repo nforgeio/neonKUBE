@@ -26,12 +26,16 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
+using JsonDiffPatch;
+
+using k8s;
+using k8s.Autorest;
+using k8s.Models;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Extensions.Logging;
-
-using JsonDiffPatch;
 
 using Neon.Common;
 using Neon.Diagnostics;
@@ -50,10 +54,6 @@ using Neon.Time;
 
 using NeonClusterOperator.Harbor;
 
-using k8s;
-using k8s.Autorest;
-using k8s.Models;
-
 using Newtonsoft.Json;
 
 using OpenTelemetry.Resources;
@@ -70,21 +70,10 @@ using Metrics = Prometheus.Metrics;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// <para>
-    /// Removes <see cref="V1NeonClusterOperator"/> resources assigned to nodes that don't exist.
-    /// </para>
+    /// Manages global cluster CRON jobes including updating node CA certificates, checking
+    /// control-plane certificates, ensuring that required container images are present,
+    /// sending cluster temelemetry to NEONCLOUD and checking cluster certificates.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// This controller relies on a lease named <b>neon-cluster-operator.operatorsettings</b>.  
-    /// This lease will be persisted in the <see cref="KubeNamespace.NeonSystem"/> namespace
-    /// and will be used to a leader to manage these resources.
-    /// </para>
-    /// <para>
-    /// The <b>neon-cluster-operator</b> won't conflict with node agents because we're only 
-    /// removing tasks that don't belong to an existing node.
-    /// </para>
-    /// </remarks>
     [RbacRule<V1NeonClusterOperator>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1Node>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1NeonNodeTask>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
@@ -189,28 +178,28 @@ namespace NeonClusterOperator
                     await InitializeSchedulerAsync();
                 }
 
-                var nodeCaExpression = resource.Spec.Updates.NodeCaCertificates.Schedule;
+                var nodeCaSchedule = resource.Spec.Updates.NodeCaCertificates.Schedule;
 
-                CronExpression.ValidateExpression(nodeCaExpression);
+                CronExpression.ValidateExpression(nodeCaSchedule);
 
                 await updateCaCertificates.DeleteFromSchedulerAsync(scheduler);
-                await updateCaCertificates.AddToSchedulerAsync(scheduler, k8s, nodeCaExpression);
+                await updateCaCertificates.AddToSchedulerAsync(scheduler, k8s, nodeCaSchedule);
 
-                var controlPlaneCertExpression = resource.Spec.Updates.ControlPlaneCertificates.Schedule;
+                var controlPlaneCertSchedule = resource.Spec.Updates.ControlPlaneCertificates.Schedule;
 
-                CronExpression.ValidateExpression(controlPlaneCertExpression);
+                CronExpression.ValidateExpression(controlPlaneCertSchedule);
                 await checkControlPlaneCertificates.DeleteFromSchedulerAsync(scheduler);
-                await checkControlPlaneCertificates.AddToSchedulerAsync(scheduler, k8s, controlPlaneCertExpression);
+                await checkControlPlaneCertificates.AddToSchedulerAsync(scheduler, k8s, controlPlaneCertSchedule);
 
-                var containerImageExpression = resource.Spec.Updates.ContainerImages.Schedule;
+                var containerImageSchedule = resource.Spec.Updates.ContainerImages.Schedule;
 
-                CronExpression.ValidateExpression(containerImageExpression);
+                CronExpression.ValidateExpression(containerImageSchedule);
 
                 await checkRegistryImages.DeleteFromSchedulerAsync(scheduler);
                 await checkRegistryImages.AddToSchedulerAsync(
                     scheduler,
                     k8s,
-                    containerImageExpression,
+                    containerImageSchedule,
                     new Dictionary<string, object>()
                     {
                         { "HarborClient", harborClient }
@@ -218,15 +207,15 @@ namespace NeonClusterOperator
 
                 if (resource.Spec.Updates.Telemetry.Enabled)
                 {
-                    var clusterTelemetryExpression = resource.Spec.Updates.Telemetry.Schedule;
+                    var clusterTelemetrySchedule = resource.Spec.Updates.Telemetry.Schedule;
 
-                    CronExpression.ValidateExpression(clusterTelemetryExpression);
+                    CronExpression.ValidateExpression(clusterTelemetrySchedule);
 
                     await sendClusterTelemetry.DeleteFromSchedulerAsync(scheduler);
                     await sendClusterTelemetry.AddToSchedulerAsync(
                         scheduler, 
                         k8s, 
-                        clusterTelemetryExpression,
+                        clusterTelemetrySchedule,
                         new Dictionary<string, object>()
                         {
                             { "AuthHeader", headendClient.DefaultRequestHeaders.Authorization }
@@ -235,17 +224,15 @@ namespace NeonClusterOperator
 
                 if (resource.Spec.Updates.ClusterCertificate.Enabled)
                 {
-                    
+                    var neonDesktopCertSchedule = resource.Spec.Updates.ClusterCertificate.Schedule;
 
-                    var neonDesktopCertExpression = resource.Spec.Updates.ClusterCertificate.Schedule;
-
-                    CronExpression.ValidateExpression(neonDesktopCertExpression);
+                    CronExpression.ValidateExpression(neonDesktopCertSchedule);
 
                     await checkClusterCert.DeleteFromSchedulerAsync(scheduler);
                     await checkClusterCert.AddToSchedulerAsync(
                         scheduler, 
                         k8s, 
-                        neonDesktopCertExpression,
+                        neonDesktopCertSchedule,
                         new Dictionary<string, object>()
                         {
                             { "HeadendClient", headendClient },

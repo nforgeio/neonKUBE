@@ -24,22 +24,23 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
+using Dex;
+
+using k8s;
+using k8s.Models;
+
+using Minio;
+
 using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Oauth2Proxy;
+using Neon.Kube.Operator.Finalizer;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Tasks;
-
-using k8s;
-using k8s.Models;
-
-using Minio;
-using Dex;
-using Neon.Kube.Operator.Finalizer;
 
 namespace NeonClusterOperator
 {

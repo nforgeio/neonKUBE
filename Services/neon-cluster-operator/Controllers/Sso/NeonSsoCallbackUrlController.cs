@@ -26,13 +26,22 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
+using Dex;
+
+using Grpc.Core;
+using Grpc.Net.Client;
+
+using JsonDiffPatch;
+
+using k8s;
+using k8s.Autorest;
+using k8s.Models;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.JsonPatch.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-
-using JsonDiffPatch;
 
 using Neon.Common;
 using Neon.Diagnostics;
@@ -48,12 +57,6 @@ using Neon.Retry;
 using Neon.Tasks;
 using Neon.Time;
 
-using Dex;
-
-using k8s;
-using k8s.Autorest;
-using k8s.Models;
-
 using Neon.Kube.Operator.Attributes;
 using Neon.Kube.Operator.Util;
 using Neon.Kube.Resources.Cluster;
@@ -62,9 +65,6 @@ using Newtonsoft.Json;
 
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-
-using Grpc.Core;
-using Grpc.Net.Client;
 
 using Prometheus;
 

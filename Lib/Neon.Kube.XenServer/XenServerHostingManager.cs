@@ -274,6 +274,7 @@ namespace Neon.Kube.Hosting.XenServer
         public override void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Assert(clusterDefinition.Hosting.Environment == HostingEnvironment.XenServer, $"{nameof(HostingOptions)}.{nameof(HostingOptions.Environment)}] must be set to [{HostingEnvironment.XenServer}].");
 
             if (clusterDefinition.Hosting.Environment != HostingEnvironment.XenServer)
             {
@@ -325,6 +326,24 @@ namespace Neon.Kube.Hosting.XenServer
                     throw new ClusterDefinitionException($"Cluster node [{node.Name}] references [host={node.Hypervisor.Host}] which is not defined.");
                 }
             }
+        }
+
+        /// <inheritdoc/>
+        public override async Task FinalValidationAsync(ClusterDefinition clusterDefinition)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            // Collect information about the cluster nodes so we can verify that
+            //cluster makes sense.
+
+            var hostedNodes = clusterDefinition.Nodes
+                .Select(nodeDefinition => new HostedNodeInfo(nodeDefinition.Name, nodeDefinition.Role, nodeDefinition.Hypervisor.GetVCpus(clusterDefinition), nodeDefinition.Hypervisor.GetMemory(clusterDefinition)))
+                .ToList();
+
+            ValidateCluster(clusterDefinition, hostedNodes);
+
+            await Task.CompletedTask;
         }
 
         /// <inheritdoc/>
@@ -866,14 +885,14 @@ namespace Neon.Kube.Hosting.XenServer
             foreach (var node in GetHostedNodes(xenClient))
             {
                 var vmName      = GetVmName(node);
-                var cores       = node.Metadata.Hypervisor.GetCores(cluster.SetupState.ClusterDefinition);
+                var vcpus       = node.Metadata.Hypervisor.GetVCpus(cluster.SetupState.ClusterDefinition);
                 var memoryBytes = node.Metadata.Hypervisor.GetMemory(cluster.SetupState.ClusterDefinition);
                 var osDiskBytes = node.Metadata.Hypervisor.GetOsDisk(cluster.SetupState.ClusterDefinition);
 
                 xenSshProxy.Status = FormatVmStatus(vmName, "create: virtual machine");
 
                 var vm = xenClient.Machine.Create(vmName, $"neonkube-{KubeVersions.NeonKubeWithBranchPart}",
-                    cores:                      cores,
+                    vcpus:                      vcpus,
                     memoryBytes:                memoryBytes,
                     diskBytes:                  osDiskBytes,
                     snapshot:                   cluster.Hosting.XenServer.Snapshot,
@@ -1214,9 +1233,11 @@ namespace Neon.Kube.Hosting.XenServer
             {
                 foreach (var machine in xenClient.Machine.List())
                 {
-                    if (machine.NameLabel.StartsWith(cluster.Hosting.Hypervisor.NamePrefix))
+                    var nodeName = VmNameToNodeName(machine.NameLabel);
+
+                    if (nodeName != null)
                     {
-                        clusterVms.Add(new ClusterVm(machine, xenClient, VmNameToNodeName(machine.NameLabel)));
+                        clusterVms.Add(new ClusterVm(machine, xenClient, nodeName));
                     }
                 }
             }

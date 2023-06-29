@@ -509,9 +509,9 @@ namespace Neon.Kube.ClusterDef
 
             // Check Azure cluster limits.
 
-            if (clusterDefinition.ControlNodes.Count() > KubeConst.MaxControlNodes)
+            if (clusterDefinition.ControlNodes.Count() > KubeConst.MaxControlPlaneNodes)
             {
-                throw new ClusterDefinitionException($"cluster control-plane count [{clusterDefinition.ControlNodes.Count()}] exceeds the [{KubeConst.MaxControlNodes}] limit for clusters.");
+                throw new ClusterDefinitionException($"cluster control-plane count [{clusterDefinition.ControlNodes.Count()}] exceeds the [{KubeConst.MaxControlPlaneNodes}] limit for clusters.");
             }
 
             if (clusterDefinition.Nodes.Count() > AzureHelper.MaxClusterNodes)

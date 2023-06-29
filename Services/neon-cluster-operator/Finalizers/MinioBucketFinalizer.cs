@@ -19,24 +19,24 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-using Microsoft.Extensions.Logging;
-
-using Neon.Diagnostics;
-using Neon.Kube;
-using Neon.Kube.Resources;
-using Neon.Kube.Resources.Minio;
-using Neon.Tasks;
-
 using k8s;
 using k8s.Models;
 
+using Microsoft.Extensions.Logging;
+
 using Minio;
+
+using Neon.Diagnostics;
+using Neon.Kube;
 using Neon.Kube.Operator.Finalizer;
-using System.Reactive.Linq;
+using Neon.Kube.Resources;
+using Neon.Kube.Resources.Minio;
+using Neon.Tasks;
 
 namespace NeonClusterOperator
 {

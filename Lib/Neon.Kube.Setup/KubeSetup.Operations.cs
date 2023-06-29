@@ -2222,10 +2222,11 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             else
                             {
                                 cert = await headencClient.Cluster.GetCertificateAsync(cluster.Id);
+
                                 return true;
                             }
                         }
-                        catch (Exception e)
+                        catch
                         {
                             return false;
                         }
