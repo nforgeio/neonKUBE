@@ -31,7 +31,7 @@
     <!-- Non-NEONFORGE package references -->
 
     <ItemGroup>
-        <PackageReference Include="KubernetesClient" Version="10.1.19" />
+        <PackageReference Include="KubernetesClient" Version="11.0.21" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.5" />
         <PackageReference Include="xunit.extensibility.core" Version="2.4.2" />
         <PackageReference Include="xunit.extensibility.execution" Version="2.4.2" />

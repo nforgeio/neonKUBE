@@ -29,7 +29,7 @@
     <!-- Non-NEONFORGE package references -->
 
     <ItemGroup>
-        <PackageReference Include="KubernetesClient.Models" Version="10.1.19" />
+        <PackageReference Include="KubernetesClient.Models" Version="11.0.21" />
         <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="NJsonSchema" Version="10.8.0" />

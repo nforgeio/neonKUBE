@@ -62,7 +62,7 @@
 
     <ItemGroup>
         <PackageReference Include="IdentityModel.OidcClient" Version="5.2.1" />
-        <PackageReference Include="KubernetesClient" Version="10.1.19" />
+        <PackageReference Include="KubernetesClient" Version="11.0.21" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
         <PackageReference Include="Microsoft.Windows.Compatibility" Version="7.0.1" />
         <PackageReference Include="System.Diagnostics.StackTrace" Version="4.3.0" />
