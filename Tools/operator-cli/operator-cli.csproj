@@ -36,8 +36,8 @@
     <ItemGroup>
         <PackageReference Include="AsyncKeyedLock" Version="6.2.1" />
         <PackageReference Include="CompareNETObjects" Version="4.79.0" />
-        <PackageReference Include="KubernetesClient" Version="10.1.19" />
-        <PackageReference Include="KubernetesClient.Models" Version="10.1.19" />
+        <PackageReference Include="KubernetesClient" Version="11.0.21" />
+        <PackageReference Include="KubernetesClient.Models" Version="11.0.21" />
         <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="7.0.5" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
         <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.24" />
