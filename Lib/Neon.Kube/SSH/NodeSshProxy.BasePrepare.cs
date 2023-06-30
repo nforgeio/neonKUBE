@@ -356,46 +356,6 @@ echo '. /etc/environment' > /etc/profile.d/env.sh
         }
 
         /// <summary>
-        /// Installs hypervisor guest integration services.
-        /// </summary>
-        /// <param name="controller">The setup controller.</param>
-        public void BaseInstallGuestIntegrationServices(ISetupController controller)
-        {
-            Covenant.Requires<ArgumentException>(controller != null, nameof(controller));
-
-            var hostingEnvironment = controller.Get<HostingEnvironment>(KubeSetupProperty.HostingEnvironment);
-
-            // This currently applies only to on-premise hypervisors.
-
-            if (!KubeHelper.IsOnPremiseHypervisorEnvironment(hostingEnvironment))
-            {
-                return;
-            }
-
-            InvokeIdempotent("base/guest-integration",
-                () =>
-                {
-                    controller.LogProgress(this, verb: "setup", message: "guest integration");
-
-                    var guestServicesScript =
-$@"#!/bin/bash
-set -euo pipefail
-
-cat <<EOF >> /etc/initramfs-tools/modules
-hv_vmbus
-hv_storvsc
-hv_blkvsc
-hv_netvsc
-EOF
-
-{KubeNodeFolder.Bin}/safe-apt-get install -yq linux-virtual linux-cloud-tools-virtual linux-tools-virtual
-update-initramfs -u
-";
-                    SudoCommand(CommandBundle.FromScript(guestServicesScript), RunOptions.Defaults | RunOptions.FaultOnError);
-                });
-        }
-
-        /// <summary>
         /// Disables DHCP.
         /// </summary>
         /// <param name="controller">The setup controller.</param>

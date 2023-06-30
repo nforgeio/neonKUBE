@@ -323,7 +323,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="version">The XenServer version being checked.</param>
         /// <exception cref="NotSupportedException">Thrown for unsupported versions.</exception>
-        public static void CheckXenServerVersionForImageBuilding(SemanticVersion version)
+        public static void CheckXenServerHostVersion(SemanticVersion version)
         {
             if (version.Major != MinXenServerVersion.Major || version.Minor != MinXenServerVersion.Minor)
             {
