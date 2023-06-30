@@ -346,131 +346,169 @@ spec:
             await retry.InvokeAsync(
                 async () =>
                 {
-                    cluster.ClearNodeStatus();
+                    controller.ClearStatus();
                     controller.SetGlobalStepStatus();
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     UploadCopyright(controller);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     ConfigureKubernetes(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     ConfigureKubelet(controller, cluster.ControlNodes);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     ConfigureWorkstation(controller, cluster.DeploymentControlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     ConnectCluster(controller);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await ConfigureControlPlaneTaintsAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await TaintNodesAsync(controller);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await LabelNodesAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await CreateNamespacesAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await UploadClusterInfoAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await UploadClusterManifestAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await UploadClusterManifestAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await SetClusterLockAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await SetClusterHealthAsync(controller, controlNode, ready: false);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await InstallCrdsAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await CreateRootUserAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await ConfigurePriorityClassesAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await InstallCalicoCniAsync(controller, controlNode);
 
                     controller.ThrowIfCancelled();
                     await InstallMetricsServerAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await InstallIstioAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await InstallPrometheusAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await InstallNeonCloudTokenAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await InstallCertManagerAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await ConfigureApiserverIngressAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await InstallKubeDashboardAsync(controller, controlNode);
 
                     if (cluster.SetupState.ClusterDefinition.Features.NodeProblemDetector)
                     {
+                        controller.ClearStatus();
                         controller.ThrowIfCancelled();
                         await InstallNodeProblemDetectorAsync(controller, controlNode);
                     }
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await InstallOpenEbsAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await InstallReloaderAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await InstallSystemDbAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await InstallRedisAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await InstallClusterOperatorAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await InstallNodeAgentAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await InstallSsoAsync(controller, controlNode);
 
                     if (cluster.SetupState.ClusterDefinition.Features.Kiali)
                     {
+                        controller.ClearStatus();
                         controller.ThrowIfCancelled();
                         await InstallKialiAsync(controller, controlNode);
                     }
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await InstallMinioAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await InstallHarborAsync(controller, controlNode);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await InstallMonitoringAsync(controller);
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await InstallContainerRegistryResourcesAsync(controller, controlNode);
 
                     if (controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo))
                     {
+                        controller.ClearStatus();
                         controller.ThrowIfCancelled();
                         await WaitForHarborImagePushAsync(controller, controlNode);
                     }
@@ -480,6 +518,7 @@ spec:
                     // This must be the last step because it indicates that the cluster
                     // has been successfully deployed.
 
+                    controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await SetClusterHealthAsync(controller, controlNode, ready: true);
                 });
@@ -2010,7 +2049,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
             var cluster            = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
             var k8s                = GetK8sClient(controller);
-            var headencClient      = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
+            var headendClient      = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
             var clusterAdvice      = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
             var serviceAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.CertManager);
             var ingressAdvice      = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.IstioIngressGateway);
@@ -2207,7 +2246,6 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 {
                     controller.LogProgress(controlNode, verb: "setup", message: "neon-cluster-certificate");
 
-
                     IDictionary<string, byte[]> cert = null;
 
                     await NeonHelper.WaitForAsync(async () =>
@@ -2216,12 +2254,12 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         {
                             if (cluster.SetupState.ClusterDefinition.IsDesktop)
                             {
-                                cert = await headencClient.NeonDesktop.GetNeonDesktopCertificateAsync();
+                                cert = await headendClient.NeonDesktop.GetNeonDesktopCertificateAsync();
                                 return true;
                             }
                             else
                             {
-                                cert = await headencClient.Cluster.GetCertificateAsync(cluster.Id);
+                                cert = await headendClient.Cluster.GetCertificateAsync(cluster.Id);
 
                                 return true;
                             }
@@ -2231,7 +2269,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             return false;
                         }
                     },
-                    timeout: TimeSpan.FromMinutes(10),
+                    timeout:      TimeSpan.FromMinutes(10),
                     pollInterval: TimeSpan.FromSeconds(5));
 
                     var secret = new V1Secret()

@@ -81,7 +81,8 @@ namespace NeonClusterOperator
 
                     foreach (var k8sNode in nodes) 
                     {
-                        var node                     = new Node();
+                        var node = new Node();
+
                         node.KernelVersion           = k8sNode.Status.NodeInfo.KernelVersion;
                         node.OsImage                 = k8sNode.Status.NodeInfo.OsImage;
                         node.ContainerRuntimeVersion = k8sNode.Status.NodeInfo.ContainerRuntimeVersion;
@@ -107,12 +108,10 @@ namespace NeonClusterOperator
                     clusterTelemetry.ClusterInfo             = (await k8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterInfo>(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus)).Data;
                     clusterTelemetry.ClusterInfo.Description = null;
 
-                    using (var jsonClient = new JsonClient() 
-                    { 
-                        BaseAddress = KubeEnv.HeadendUri 
-                    })
+                    using (var jsonClient = new JsonClient() { BaseAddress = KubeEnv.HeadendUri })
                     {
                         jsonClient.DefaultRequestHeaders.Authorization = authHeader;
+
                         await jsonClient.PostAsync("/telemetry/cluster?api-version=2023-04-06", clusterTelemetry);
                     }
 

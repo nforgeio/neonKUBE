@@ -1308,7 +1308,7 @@ namespace Neon.Kube.Hosting.Azure
 
             var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
 
-            controller.AddGlobalStep("node labels (cloud)",
+            controller.AddGlobalStep("node topology",
                 async controller =>
                 {
                     controller.LogProgress(verb: "label", message: "nodes (cloud)");
@@ -1334,29 +1334,42 @@ namespace Neon.Kube.Hosting.Azure
 
                         var vm = nodeNameToVm[nodeDefinition.Name];
 
-                        patch.Metadata.Labels.Add("node.kubernetes.io/instance-type", vm.VmSize);
-                        patch.Metadata.Labels.Add("topology.kubernetes.io/region", vm.Vm.Data.Location.Name);
-
-                        // For Azure, the [AvailabilitySetId] is a long URI path, longer than the 63 maximum
-                        // characters allowed by Kubernetes labels.  It looks like the availablty set name is
-                        // the last segment of this path.  We're going to extract ant use that, which will be
-                        // cleaner anyway.
-                        //
-                        // NOTE: We're converting set name to lowercase and stripping off the "avail-" prefix
-                        // if present.
-
-                        const string prefix = "avail-";
-
-                        var availabilitySetName = vm.Vm.Data.AvailabilitySetId.ToString().Split('/').Last().ToLowerInvariant();
-
-                        if (availabilitySetName.StartsWith(prefix))
+                        if (!nodeDefinition.Labels.Custom.ContainsKey("node.kubernetes.io/instance-type"))
                         {
-                            availabilitySetName = availabilitySetName.Substring(prefix.Length);
+                            patch.Metadata.Labels.Add("node.kubernetes.io/instance-type", vm.VmSize);
                         }
 
-                        patch.Metadata.Labels.Add("topology.kubernetes.io/zone", availabilitySetName);
+                        if (!nodeDefinition.Labels.Custom.ContainsKey("topology.kubernetes.io/region"))
+                        {
+                            patch.Metadata.Labels.Add("topology.kubernetes.io/region", vm.Vm.Data.Location.Name);
+                        }
 
-                        await k8s.CoreV1.PatchNodeAsync(new V1Patch(patch, V1Patch.PatchType.StrategicMergePatch), k8sNode.Metadata.Name);
+                        if (!nodeDefinition.Labels.Custom.ContainsKey("topology.kubernetes.io/zone"))
+                        {
+                            // For Azure, the [AvailabilitySetId] is a long URI path, longer than the 63 maximum
+                            // characters allowed by Kubernetes labels.  It looks like the availablty set name is
+                            // the last segment of this path.  We're going to extract ant use that, which will be
+                            // cleaner anyway.
+                            //
+                            // NOTE: We're converting set name to lowercase and stripping off the "avail-" prefix
+                            // if present.
+
+                            const string prefix = "avail-";
+
+                            var availabilitySetName = vm.Vm.Data.AvailabilitySetId.ToString().Split('/').Last().ToLowerInvariant();
+
+                            if (availabilitySetName.StartsWith(prefix))
+                            {
+                                availabilitySetName = availabilitySetName.Substring(prefix.Length);
+                            }
+
+                            patch.Metadata.Labels.Add("topology.kubernetes.io/zone", availabilitySetName);
+                        }
+
+                        if (patch.Metadata.Labels.Count > 0)
+                        {
+                            await k8s.CoreV1.PatchNodeAsync(new V1Patch(patch, V1Patch.PatchType.StrategicMergePatch), k8sNode.Metadata.Name);
+                        }
                     }
                 });
 

@@ -1525,7 +1525,7 @@ namespace Neon.Kube.Hosting.Aws
             controller.AddGlobalStep("node labels (cloud)",
                 async controller =>
                 {
-                    controller.LogProgress(verb: "label", message: "nodes (cloud)");
+                    controller.LogProgress(verb: "label", message: "node topology");
 
                     var k8s               = controller.Get<IKubernetes>(KubeSetupProperty.K8sClient);
                     var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
@@ -1546,11 +1546,25 @@ namespace Neon.Kube.Hosting.Aws
                             }
                         };
 
-                        patch.Metadata.Labels.Add("node.kubernetes.io/instance-type", nodeDefinition.Aws.InstanceType ?? clusterDefinition.Hosting.Aws.DefaultInstanceType);
-                        patch.Metadata.Labels.Add("topology.kubernetes.io/region", region);
-                        patch.Metadata.Labels.Add("topology.kubernetes.io/zone", availabilityZone);
+                        if (!nodeDefinition.Labels.Custom.ContainsKey("node.kubernetes.io/instance-type"))
+                        {
+                            patch.Metadata.Labels.Add("node.kubernetes.io/instance-type", nodeDefinition.Aws.InstanceType ?? clusterDefinition.Hosting.Aws.DefaultInstanceType);
+                        }
 
-                        await k8s.CoreV1.PatchNodeAsync(new V1Patch(patch, V1Patch.PatchType.StrategicMergePatch), k8sNode.Metadata.Name);
+                        if (!nodeDefinition.Labels.Custom.ContainsKey("topology.kubernetes.io/region"))
+                        {
+                            patch.Metadata.Labels.Add("topology.kubernetes.io/region", region);
+                        }
+
+                        if (!nodeDefinition.Labels.Custom.ContainsKey("topology.kubernetes.io/zone"))
+                        {
+                            patch.Metadata.Labels.Add("topology.kubernetes.io/zone", availabilityZone);
+                        }
+
+                        if (patch.Metadata.Labels.Count > 0)
+                        {
+                            await k8s.CoreV1.PatchNodeAsync(new V1Patch(patch, V1Patch.PatchType.StrategicMergePatch), k8sNode.Metadata.Name);
+                        }
                     }
                 });
 

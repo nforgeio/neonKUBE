@@ -1345,6 +1345,17 @@ namespace Neon.Kube.Setup
         }
 
         /// <inheritdoc/>
+        public void ClearStatus()
+        {
+            SetGlobalStepStatus();
+
+            foreach (var node in nodes)
+            {
+                node.Status = string.Empty;
+            }
+        }
+
+        /// <inheritdoc/>
         public bool IsFaulted => isFaulted || nodes.Any(node => node.IsFaulted);
 
         /// <inheritdoc/>

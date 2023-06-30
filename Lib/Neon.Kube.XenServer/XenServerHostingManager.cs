@@ -28,9 +28,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s;
 using k8s.Models;
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Collections;
 using Neon.Common;
@@ -46,8 +45,11 @@ using Neon.XenServer;
 using Neon.IO;
 using Neon.SSH;
 using Neon.Tasks;
-using YamlDotNet.Serialization.ObjectGraphVisitors;
 using Neon.Retry;
+
+using Newtonsoft.Json;
+
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube.Hosting.XenServer
 {
@@ -514,6 +516,58 @@ namespace Neon.Kube.Hosting.XenServer
                     },
                     (controller, node) => node.Metadata.OpenEbsStorage);
             }
+        }
+
+        /// <inheritdoc/>
+        public override void AddPostSetupSteps(SetupController<NodeDefinition> controller)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            var cluster = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+
+            controller.AddGlobalStep("node topology",
+                async controller =>
+                {
+                    controller.LogProgress(verb: "label", message: "node topology");
+
+                    var k8s               = controller.Get<IKubernetes>(KubeSetupProperty.K8sClient);
+                    var cluster           = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+                    var clusterDefinition = cluster.SetupState.ClusterDefinition;
+                    var k8sNodes          = (await k8s.CoreV1.ListNodeAsync()).Items;
+
+                    foreach (var nodeDefinition in clusterDefinition.NodeDefinitions.Values)
+                    {
+                        controller.ThrowIfCancelled();
+
+                        var k8sNode = k8sNodes.Where(n => n.Metadata.Name == nodeDefinition.Name).Single();
+
+                        var patch = new V1Node()
+                        {
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Labels = k8sNode.Labels()
+                            }
+                        };
+
+                        // We're going to set the region to the cluster name and the zone to the name of
+                        // the XenServer host, by default.
+
+                        if (!nodeDefinition.Labels.Custom.ContainsKey("topology.kubernetes.io/region"))
+                        {
+                            patch.Metadata.Labels.Add("topology.kubernetes.io/region", clusterDefinition.Name);
+                        }
+
+                        if (!nodeDefinition.Labels.Custom.ContainsKey("topology.kubernetes.io/zone"))
+                        {
+                            patch.Metadata.Labels.Add("topology.kubernetes.io/zone", nodeDefinition.Hypervisor.Host);
+                        }
+
+                        if (patch.Metadata.Labels.Count > 0)
+                        {
+                            await k8s.CoreV1.PatchNodeAsync(new V1Patch(patch, V1Patch.PatchType.StrategicMergePatch), k8sNode.Metadata.Name);
+                        }
+                    }
+                });
         }
 
         /// <summary>
