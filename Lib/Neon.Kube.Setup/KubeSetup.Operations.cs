@@ -1225,22 +1225,22 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                         manifestText = NeonHelper.YamlSerialize(manifest);
 
-                        var sb = new StringBuilder();
+                        var sbManifest = new StringBuilder();
+
                         using (var reader = new StringReader(manifestText))
                         {
                             foreach (var line in reader.Lines())
                             {
-                                sb.AppendLine(line);
+                                sbManifest.AppendLine(line);
+
                                 if (line.Contains("- name: GOGC"))
                                 {
-                                    sb.AppendLine(line.Replace("- name: GOGC", @"  value: ""25"""));
+                                    sbManifest.AppendLine(line.Replace("- name: GOGC", @"  value: ""25"""));
                                 }
                             }
                         }
 
-                        manifestText = sb.ToString();
-
-                        controlNode.UploadText(manifestPath, manifestText, permissions: "600", owner: "root");
+                        controlNode.UploadText(manifestPath, sbManifest, permissions: "600", owner: "root");
                     });
             }
         }
