@@ -43,6 +43,7 @@ using OpenTelemetry.Trace;
 using Prometheus;
 
 using Quartz;
+using Neon.Kube.ClusterDef;
 
 namespace NeonClusterOperator
 {
@@ -78,23 +79,35 @@ namespace NeonClusterOperator
                     var authHeader       = (AuthenticationHeaderValue)dataMap["AuthHeader"];
                     var clusterTelemetry = new ClusterTelemetry();
                     var nodes            = await k8s.CoreV1.ListNodeAsync();
+                    var hasWorkers       = nodes.Items.Count(node => node.Metadata.GetLabel("neonkube.io/node.role") == NodeRole.Worker) > 0;
 
                     foreach (var k8sNode in nodes) 
                     {
-                        var node = new Node();
+                        var node = new ClusterNodeTelemetry();
 
-                        node.KernelVersion           = k8sNode.Status.NodeInfo.KernelVersion;
-                        node.OsImage                 = k8sNode.Status.NodeInfo.OsImage;
                         node.ContainerRuntimeVersion = k8sNode.Status.NodeInfo.ContainerRuntimeVersion;
+                        node.CpuArchitecture         = k8sNode.Status.NodeInfo.Architecture;
+                        node.KernelVersion           = k8sNode.Status.NodeInfo.KernelVersion;
                         node.KubeletVersion          = k8sNode.Status.NodeInfo.KubeletVersion;
                         node.KubeProxyVersion        = k8sNode.Status.NodeInfo.KubeProxyVersion;
                         node.OperatingSystem         = k8sNode.Status.NodeInfo.OperatingSystem;
-                        node.CpuArchitecture         = k8sNode.Status.NodeInfo.Architecture;
+                        node.OsImage                 = k8sNode.Status.NodeInfo.OsImage;
+                        node.PrivateAddress          = k8sNode.Status.Addresses.FirstOrDefault(address => address.Type == "InternalIP").Address;
                         node.Role                    = k8sNode.Metadata.GetLabel("neonkube.io/node.role");
+
+                        // $todo(jefflill):
+                        //
+                        // We need to really figure this out from the node status and Istio config.
+                        // We're currently assuming that only worker nodes support ingress unless
+                        // there are no workers and we're not checking node health either.
+                        //
+                        //      https://github.com/nforgeio/neonKUBE/issues/1816
+
+                        node.Ingress = !hasWorkers || node.Role == NodeRole.Worker;
 
                         if (k8sNode.Status.Capacity.TryGetValue("cpu", out var cores))
                         {
-                            node.Cores = cores.ToInt32();
+                            node.VCpus = cores.ToInt32();
                         }
 
                         if (k8sNode.Status.Capacity.TryGetValue("memory", out var memory))

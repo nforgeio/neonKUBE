@@ -55,70 +55,92 @@ namespace Neon.Kube
         /// <summary>
         /// Cluster information
         /// </summary>
-        [JsonProperty(PropertyName = "ClusterInfo", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.Include)]
+        [JsonProperty(PropertyName = "ClusterInfo", Required = Required.Always)]
         public ClusterInfo ClusterInfo { get; set; }
 
         /// <summary>
         /// Node status information.
         /// </summary>
-        [JsonProperty(PropertyName = "Nodes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public List<Node> Nodes { get; set; } = new List<Node>();
+        [JsonProperty(PropertyName = "Nodes", Required = Required.Always)]
+        public List<ClusterNodeTelemetry> Nodes { get; set; } = new List<ClusterNodeTelemetry>();
     }
 
     /// <summary>
     /// Node Telemetry
     /// </summary>
-    public class Node
+    public class ClusterNodeTelemetry
     {
         /// <summary>
-        /// Node role
+        /// Identifies the node role
         /// </summary>
+        [JsonProperty(PropertyName = "Role", Required = Required.Always)]
         public string Role { get; set; }
-        
+
         /// <summary>
-        /// The CUP Arch.
+        /// Identifies the CPU architecture.
         /// </summary>
+        [JsonProperty(PropertyName = "CpuArchitecture", Required = Required.Always)]
         public string CpuArchitecture { get; set; }
         
         /// <summary>
-        /// The number of cores.
+        /// Reports number of node vCPUs.
         /// </summary>
-        public int Cores { get; set; }
+        [JsonProperty(PropertyName = "VCpus", Required = Required.Always)]
+        public int VCpus { get; set; }
 
         /// <summary>
         /// The memory available.
         /// </summary>
+        [JsonProperty(PropertyName = "Memory", Required = Required.Always | Required.AllowNull)]
         public string Memory { get; set; }
 
         /// <summary>
-        /// The current kernel version.
+        /// Identifies the node kernel version.
         /// </summary>
+        [JsonProperty(PropertyName = "KernelVersion", Required = Required.Always | Required.AllowNull)]
         public string KernelVersion { get; set; }
 
         /// <summary>
-        /// the current OS Image.
+        /// Identifies the node operation system.
         /// </summary>
+        [JsonProperty(PropertyName = "OperatingSystem", Required = Required.Always)]
+        public string OperatingSystem { get; set; }
+
+        /// <summary>
+        /// Identifies the node operating system for Linux systems from: <b>/etc/os-release</b>
+        /// </summary>
+        [JsonProperty(PropertyName = "OsImage", Required = Required.Always | Required.AllowNull)]
         public string OsImage { get; set; }
 
         /// <summary>
-        /// The current Container runtime version.
+        /// Identifies the node's container runtime version.
         /// </summary>
+        [JsonProperty(PropertyName = "ContainerRuntimeVersion", Required = Required.Always)]
         public string ContainerRuntimeVersion { get; set; }
 
         /// <summary>
-        /// The current Kubelet version.
+        /// Identifies the node's Kubelet version.
         /// </summary>
+        [JsonProperty(PropertyName = "KubeletVersion", Required = Required.Always)]
         public string KubeletVersion { get; set; }
-        
+
         /// <summary>
-        /// the current kube proxy version.
+        /// Identifies the node's kube-proxy version.
         /// </summary>
+        [JsonProperty(PropertyName = "KubeProxyVersion", Required = Required.Always)]
         public string KubeProxyVersion { get; set; }
 
         /// <summary>
-        /// The current OS.
+        /// Identifies the node's private address.
         /// </summary>
-        public string OperatingSystem { get; set; }
+        [JsonProperty(PropertyName = "PrivateAddress", Required = Required.Always | Required.AllowNull)]
+        public string PrivateAddress { get; set; }
+
+        /// <summary>
+        /// Indicates whether the node is configured and is ready to accept external network traffic
+        /// for the cluster.
+        /// </summary>
+        [JsonProperty(PropertyName = "Ingress", Required = Required.Always)]
+        public bool Ingress { get; set; }
     }
 }
