@@ -72,7 +72,7 @@ namespace NeonClusterOperator
             {
                 try
                 {
-                    logger.LogInformationEx(() => "Sending cluster telemetry.");
+                    logger.LogInformationEx(() => "Send cluster telemetry.");
 
                     var dataMap          = context.MergedJobDataMap;
                     var k8s              = (IKubernetes)dataMap["Kubernetes"];
