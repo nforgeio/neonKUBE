@@ -999,7 +999,7 @@ namespace Neon.Kube.Hosting.HyperV
 
                     if (controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo))
                     {
-                        node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
+                        node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, KubeHelper.GetBuiltinDesktopSshKey().PrivatePEM));
                     }
                     else
                     {

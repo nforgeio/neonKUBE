@@ -296,7 +296,14 @@ stage process is typically used only by NEONKUBE maintainers.
 
                 if (string.IsNullOrEmpty(nodeImageUri) && string.IsNullOrEmpty(nodeImagePath))
                 {
-                    nodeImageUri = await KubeDownloads.GetNodeImageUriAsync(clusterDefinition.Hosting.Environment, stageBranch: stageBranch);
+                    if (clusterDefinition.IsDesktop)
+                    {
+                        nodeImageUri = await KubeDownloads.GetDesktopImageUriAsync(clusterDefinition.Hosting.Environment, stageBranch: stageBranch);
+                    }
+                    else
+                    {
+                        nodeImageUri = await KubeDownloads.GetNodeImageUriAsync(clusterDefinition.Hosting.Environment, stageBranch: stageBranch);
+                    }
                 }
             }
 

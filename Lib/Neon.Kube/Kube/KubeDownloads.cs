@@ -140,7 +140,25 @@ namespace Neon.Kube
 
             using (var headendClient = HeadendClient.Create())
             {
+                // $debug(jefflill): Temporary hack!
+                // $todo(jefflill): Temporary hack!
+                //
+                // The Headend is incorrectly returning the stage branch multiple times
+                // in the URI returned.   I've fixed the Headend service but it hasn't
+                // beenr redeployed yet.  We can restore this code after that happens.
+
+#if !TODO
+                var uri = await headendClient.ClusterSetup.GetDesktopImageManifestUriAsync(hostingEnvironment.ToMemberString(), KubeVersions.NeonKube, architecture, stageBranch);
+
+                if (!string.IsNullOrEmpty(stageBranch))
+                {
+                    uri = uri.Replace($"{stageBranch}.{stageBranch}", stageBranch);
+                }
+
+                return uri;
+#else
                 return await headendClient.ClusterSetup.GetDesktopImageManifestUriAsync(hostingEnvironment.ToMemberString(), KubeVersions.NeonKube, architecture, stageBranch);
+#endif
             }
         }
     }
