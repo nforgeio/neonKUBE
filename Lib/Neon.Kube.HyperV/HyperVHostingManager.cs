@@ -250,8 +250,7 @@ namespace Neon.Kube.Hosting.HyperV
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Requires<NotSupportedException>(cluster != null, $"[{nameof(HyperVHostingManager)}] was created with the wrong constructor.");
 
-            this.controller        = controller;
-            this.secureSshPassword = cluster.SetupState.SshPassword;
+            this.controller = controller;
 
             // We need to ensure that the cluster has at least one ingress node.
 
@@ -1000,7 +999,7 @@ namespace Neon.Kube.Hosting.HyperV
 
                     if (controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo))
                     {
-                        node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUser, KubeHelper.GetBuiltinDesktopSshKey().PrivatePEM));
+                        node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUser, secureSshPassword));
                     }
                     else
                     {
