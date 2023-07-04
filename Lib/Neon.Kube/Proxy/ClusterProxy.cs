@@ -117,18 +117,23 @@ namespace Neon.Kube.Proxy
         /// <see cref="LinuxSshProxy.DefaultRunOptions"/> property for the nodes managed
         /// by the cluster proxy.  This defaults to <see cref="RunOptions.None"/>.
         /// </param>
+        /// <param name="needsCurrentContext"
+        /// >Optionally used to disable checks for a current cluster context.  This defaults to
+        /// <c>true</c> and can be passed as <c>false</c> for situations where co current context
+        /// is required, like having the hosting manager check for resource availability.
+        /// </param>
         /// <returns>The <see cref="ClusterProxy"/>.</returns>
         public static ClusterProxy Create(
             KubeConfig              kubeConfig,
             IHostingManagerFactory  hostingManagerFactory,
-            Operation               operation         = Operation.LifeCycle,
-            NodeProxyCreator        nodeProxyCreator  = null,
-            RunOptions              defaultRunOptions = RunOptions.None)
+            Operation               operation           = Operation.LifeCycle,
+            NodeProxyCreator        nodeProxyCreator    = null,
+            RunOptions              defaultRunOptions   = RunOptions.None,
+            bool                    needsCurrentContext = true)
         {
             Covenant.Requires<ArgumentNullException>(kubeConfig != null, nameof(kubeConfig));
-            Covenant.Requires<ArgumentNullException>(kubeConfig.Cluster != null, $"[{nameof(kubeConfig)}.{nameof(kubeConfig.Cluster)}] cannot be NULL.");
             Covenant.Requires<ArgumentNullException>(hostingManagerFactory != null, nameof(hostingManagerFactory));
-            kubeConfig.Validate(needsCurrentCluster: true);
+            kubeConfig.Validate(needsCurrentCluster: needsCurrentContext);
 
             kubeConfig = kubeConfig.Clone(currentOnly: true);
 
@@ -178,7 +183,6 @@ namespace Neon.Kube.Proxy
             RunOptions              defaultRunOptions = RunOptions.None)
         {
             Covenant.Requires<ArgumentNullException>(kubeConfig != null, nameof(kubeConfig));
-            Covenant.Requires<ArgumentNullException>(kubeConfig.Cluster != null, $"[{nameof(kubeConfig)}.{nameof(kubeConfig.Cluster)}] cannot be NULL.");
             Covenant.Requires<ArgumentNullException>(context != null, nameof(context));
             Covenant.Requires<ArgumentException>(kubeConfig.Contexts.Contains(context), nameof(context));
             Covenant.Requires<ArgumentNullException>(hostingManagerFactory != null, nameof(hostingManagerFactory));
