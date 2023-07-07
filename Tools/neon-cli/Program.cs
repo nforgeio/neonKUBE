@@ -167,7 +167,7 @@ namespace NeonCli
         /// <returns>The exit code.</returns>
         public static async Task<int> Main(string[] args)
         {
-            const string usage = $@"
+            var usage = $@"
 {Program.Name} [v{Program.Version}]
 {Build.Copyright}
 
