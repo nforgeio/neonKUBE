@@ -334,22 +334,19 @@ nodes:
                             return items.Any(item => item.context == clusterLogin);
                         });
 
-                    if (clusterExists)
+                    if (clusterExists && !debugMode)
                     {
-                        if (!debugMode)
+                        (await NeonCliAsync("cluster", "delete", "--force", clusterName)).EnsureSuccess();
+
+                        response = (await NeonCliAsync("login", "list", outputOption))
+                            .EnsureSuccess();
+
+                        if (response.OutputText.Contains(clusterLogin))
                         {
-                            (await NeonCliAsync("cluster", "delete", "--force", clusterName)).EnsureSuccess();
-
-                            response = (await NeonCliAsync("login", "list", outputOption))
-                                .EnsureSuccess();
-
-                            if (response.OutputText.Contains(clusterLogin))
-                            {
-                                Covenant.Assert(false, $"Cluster [{clusterName}] delete failed.");
-                            }
-
-                            clusterExists = false;
+                            Covenant.Assert(false, $"Cluster [{clusterName}] delete failed.");
                         }
+
+                        clusterExists = false;
                     }
 
                     //-------------------------------------------------------------
