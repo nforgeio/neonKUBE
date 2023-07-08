@@ -61,7 +61,7 @@ namespace TestKube
         [MaintainerTheory]
         [Trait(TestTrait.Category, TestTrait.CloudExpense)]
         [Repeat(repeatCount)]
-        public async Task AwsV_Large(int runCount)
+        public async Task Aws_Large(int runCount)
         {
             await DeployAwsCluster(AwsClusterDefinitions.Large, runCount);
         }
