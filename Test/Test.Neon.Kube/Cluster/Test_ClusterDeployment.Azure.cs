@@ -62,7 +62,7 @@ namespace TestKube
         [MaintainerTheory]
         [Trait(TestTrait.Category, TestTrait.CloudExpense)]
         [Repeat(repeatCount)]
-        public async Task AzureV_Large(int runCount)
+        public async Task Azure_Large(int runCount)
         {
             await DeployAzureCluster(AzureClusterDefinitions.Large, runCount);
         }
