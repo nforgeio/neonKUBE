@@ -55,7 +55,6 @@ namespace TestKube
         [Repeat(repeatCount)]
         public async Task Azure_Small(int runCount)
         {
-
             await DeployAzureCluster(AzureClusterDefinitions.Small, runCount);
         }
 
