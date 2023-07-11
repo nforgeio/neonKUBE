@@ -386,7 +386,7 @@ namespace Neon.Kube.Setup
             //
             // The log files will include logs from any failed pod containers.
 
-            using (var k8s = KubeHelper.GetKubernetesClient())
+            using (var k8s = KubeHelper.CreateKubernetesClient())
             {
                 var pods = k8s.CoreV1.ListAllPodsAsync().Result;
 

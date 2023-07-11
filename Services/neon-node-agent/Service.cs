@@ -199,7 +199,7 @@ namespace NeonNodeAgent
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
-            K8s = KubeHelper.GetKubernetesClient();
+            K8s = KubeHelper.CreateKubernetesClient();
 
             await WatchClusterInfoAsync();
             

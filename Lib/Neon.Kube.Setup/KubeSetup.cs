@@ -296,7 +296,7 @@ namespace Neon.Kube.Setup
 
             Covenant.Assert(!string.IsNullOrEmpty(configPath) && File.Exists(configPath), $"Cannot locate Kubernetes config at [{configPath}].");
 
-            controller.Add(KubeSetupProperty.K8sClient, KubeHelper.GetKubernetesClient());
+            controller.Add(KubeSetupProperty.K8sClient, KubeHelper.CreateKubernetesClient());
         }
 
         /// <summary>
