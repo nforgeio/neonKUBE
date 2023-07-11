@@ -197,6 +197,10 @@ namespace Neon.Kube.Setup
             controller.AddNodeStep("check image version",
                 (controller, node) =>
                 {
+                    // Log the cluster ID for debugging purposes.
+
+                    controller.LogGlobal($"CLUSTER-ID: {setupState.ClusterId}");
+
                     // Ensure that the node image version matches the current NEONKUBE (build) version.
 
                     var imageVersion = node.ImageVersion;
