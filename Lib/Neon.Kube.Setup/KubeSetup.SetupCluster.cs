@@ -192,15 +192,20 @@ namespace Neon.Kube.Setup
             cluster.HostingManager.AddSetupSteps(controller);
 
             controller.AddWaitUntilOnlineStep("connect nodes");
-            controller.AddNodeStep("check node OS", (controller, node) => node.VerifyNodeOS());
 
-            controller.AddNodeStep("check image version",
+            controller.AddNodeStep("check node OS",
                 (controller, node) =>
                 {
                     // Log the cluster ID for debugging purposes.
 
                     controller.LogGlobal($"CLUSTER-ID: {setupState.ClusterId}");
 
+                    node.VerifyNodeOS();
+                });
+
+            controller.AddNodeStep("check image version",
+                (controller, node) =>
+                {
                     // Ensure that the node image version matches the current NEONKUBE (build) version.
 
                     var imageVersion = node.ImageVersion;
