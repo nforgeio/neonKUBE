@@ -205,13 +205,11 @@ namespace NeonNodeAgent
             
             // Start the web service.
 
-            var port = 11006;
-
             var operatorHost = KubernetesOperatorHost
                .CreateDefaultBuilder()
                .ConfigureOperator(settings =>
                {
-                   settings.Port                    = port;
+                   settings.Port                    = KubePort.NeonNodeAgent;
                    settings.AssemblyScanningEnabled = true;
                    settings.Name                    = Name;
                })
@@ -222,7 +220,7 @@ namespace NeonNodeAgent
 
             _ = operatorHost.RunAsync();
 
-            Logger.LogInformationEx(() => $"Listening on: {IPAddress.Any}:{port}");
+            Logger.LogInformationEx(() => $"Listening on: {IPAddress.Any}:{KubePort.NeonNodeAgent}");
 
             // Indicate that the service is running.
 
