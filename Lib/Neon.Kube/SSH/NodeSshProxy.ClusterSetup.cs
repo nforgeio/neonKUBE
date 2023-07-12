@@ -346,7 +346,7 @@ net.core.optmem_max = 4194304
 net.core.somaxconn = 65535
 
 # Specify the range of TCP ports that can be used by client sockets.
-net.ipv4.ip_local_port_range = 9000 65535
+net.ipv4.ip_local_port_range = 10000 65535
 
 # queue length of completely established sockets waiting for accept
 net.ipv4.tcp_max_syn_backlog = 4096
