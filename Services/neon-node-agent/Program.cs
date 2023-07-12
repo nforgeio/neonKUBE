@@ -16,25 +16,12 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
-
 using Neon.Common;
-using Neon.IO;
 using Neon.Kube;
-using Neon.Kube.Operator;
 using Neon.Service;
 
-using k8s;
-using k8s.Models;
-using System.Xml.Linq;
 using Prometheus.DotNetRuntime;
 
 namespace NeonNodeAgent
@@ -60,7 +47,8 @@ namespace NeonNodeAgent
             {
                 Service = new Service(KubeService.NeonNodeAgent);
 
-                Service.MetricsOptions.Mode = MetricsMode.Scrape;
+                Service.MetricsOptions.Mode         = MetricsMode.Scrape;
+                Service.MetricsOptions.Port         = KubePort.NeonNodeAgent;
                 Service.MetricsOptions.GetCollector =
                     () =>
                     {

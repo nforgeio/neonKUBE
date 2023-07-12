@@ -5374,6 +5374,11 @@ $@"- name: StorageType
                     values.Add("dotnetGcConserveMemory", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 9 : 3);
                     values.Add("dotnetGcServer", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 0 : 1);
                     values.Add("dotnetGcHighMemPercent", cluster.SetupState.ClusterDefinition.Nodes.Count() == 1 ? 15.ToString("x") : 50.ToString("x"));
+                    values.Add("service.ports[0].name", "https-web");
+                    values.Add("service.ports[0].protocol", "TCP");
+                    values.Add("service.ports[0].port", 443);
+                    values.Add("service.ports[0].targetPort", KubePort.NeonNodeAgent);
+                    values.Add("metrics.port", KubePort.NeonNodeAgent);
 
                     await controlNode.InstallHelmChartAsync(controller, "neon-node-agent",
                         releaseName:  "neon-node-agent",

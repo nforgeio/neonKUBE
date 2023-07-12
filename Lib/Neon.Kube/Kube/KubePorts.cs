@@ -31,6 +31,11 @@ namespace Neon.Kube
     public static class KubePort
     {
         /// <summary>
+        /// Neon Node agent host network port.
+        /// </summary>
+        public const int NeonNodeAgent = 11006;
+
+        /// <summary>
         /// The first port reserved by NeonKUBE SSO redirects.
         /// </summary>
         public const int KubeFirstSsoPort = 13051;

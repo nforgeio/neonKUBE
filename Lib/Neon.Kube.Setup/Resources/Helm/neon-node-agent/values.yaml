@@ -30,20 +30,16 @@ logLevel: info
 service:
   type: ClusterIP
   ports:
-    - name: http-web
-      port: 80
-      protocol: TCP
-      targetPort: 5000
     - name: https-web
       protocol: TCP
       port: 443
-      targetPort: 5001
+      targetPort: 11006
 
 metrics:
   # Enable Prometheus metrics endpoint
   enabled: true
   # Serve Prometheus metrics on this port
-  port: 9762
+  port: 11006
   servicemonitor:
     # Enable Prometheus Operator ServiceMonitor
     enabled: true
