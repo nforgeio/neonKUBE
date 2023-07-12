@@ -291,7 +291,7 @@ namespace Neon.Kube.Operator.ResourceManager
             {
                 this.leaderConfig =
                     new LeaderElectionConfig(
-                        @namespace: operatorSettings.DeployedNamespace,
+                        @namespace: operatorSettings.OperatorNamespace,
                         leaseName: controller.LeaseName,
                         identity: Pod.Name);
             }

@@ -97,7 +97,7 @@ namespace OperatorCli.Commands.Generate
 
             var operatorSettings = new OperatorSettings()
             {
-                DeployedNamespace = args.DeployedNamespace,
+                OperatorNamespace = args.DeployedNamespace,
                 Name               = args.Name
             };
 

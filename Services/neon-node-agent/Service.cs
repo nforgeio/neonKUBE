@@ -207,21 +207,20 @@ namespace NeonNodeAgent
 
             var port = 11006;
 
-
-            var k8s = KubernetesOperatorHost
+            var operatorHost = KubernetesOperatorHost
                .CreateDefaultBuilder()
-               .ConfigureOperator(configure =>
+               .ConfigureOperator(settings =>
                {
-                   configure.Port = port;
-                   configure.AssemblyScanningEnabled = true;
-                   configure.Name = Name;
+                   settings.Port                    = port;
+                   settings.AssemblyScanningEnabled = true;
+                   settings.Name                    = Name;
                })
                .ConfigureNeonKube()
                .AddSingleton(typeof(Service), this)
                .UseStartup<OperatorStartup>()
                .Build();
 
-            _ = k8s.RunAsync();
+            _ = operatorHost.RunAsync();
 
             Logger.LogInformationEx(() => $"Listening on: {IPAddress.Any}:{port}");
 
@@ -250,7 +249,8 @@ namespace NeonNodeAgent
                             return true;
                         }
 
-                        // filter out leader election since it's really chatty
+                        // Filter out leader election since it's really chatty.
+
                         if (httpcontext.RequestUri.Host == "10.253.0.1")
                         {
                             return false;
@@ -264,11 +264,12 @@ namespace NeonNodeAgent
                 .AddOtlpExporter(
                 options =>
                 {
-                    options.ExportProcessorType = ExportProcessorType.Batch;
+                    options.ExportProcessorType         = ExportProcessorType.Batch;
                     options.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>();
-                    options.Endpoint = new Uri(NeonHelper.NeonKubeOtelCollectorUri);
-                    options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
+                    options.Endpoint                    = new Uri(NeonHelper.NeonKubeOtelCollectorUri);
+                    options.Protocol                    = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
                 });
+
             return true;
         }
 

@@ -226,20 +226,20 @@ namespace NeonClusterOperator
 
             // Start the web service.
 
-            var k8s = KubernetesOperatorHost
+            var operatorHost = KubernetesOperatorHost
                .CreateDefaultBuilder()
-               .ConfigureOperator(configure =>
+               .ConfigureOperator(settings =>
                {
-                   configure.AssemblyScanningEnabled = true;
-                   configure.Name                    = Name;
-                   configure.DeployedNamespace       = KubeNamespace.NeonSystem;
+                   settings.AssemblyScanningEnabled = true;
+                   settings.Name                    = Name;
+                   settings.OperatorNamespace       = KubeNamespace.NeonSystem;
                })
                .ConfigureNeonKube()
                .AddSingleton(typeof(Service), this)
                .UseStartup<OperatorStartup>()
                .Build();
 
-            _ = k8s.RunAsync();
+            _ = operatorHost.RunAsync();
 
             // Indicate that the service is running.
 

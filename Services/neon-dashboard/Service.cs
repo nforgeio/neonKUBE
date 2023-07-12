@@ -165,7 +165,7 @@ namespace NeonDashboard
                 },
                 KubeNamespace.NeonStatus,
                 fieldSelector: $"metadata.name={KubeConfigMapName.ClusterInfo}",
-                logger: Logger);
+                logger:        Logger);
 
             Dashboards = new List<Dashboard>();
             Dashboards.Add(
@@ -210,6 +210,7 @@ namespace NeonDashboard
             if (NeonHelper.IsDevWorkstation)
             {
                 port = 11001;
+
                 SetEnvironmentVariable("LOG_LEVEL", "debug");
                 SetEnvironmentVariable("DO_NOT_TRACK", "true");
                 SetEnvironmentVariable("COOKIE_CIPHER", "/HwPfpfACC70Rh1DeiMdubHINQHRGfc4JP6DYcSkAQ8=");
@@ -299,13 +300,12 @@ namespace NeonDashboard
                     url:          dashboard.Spec.Url,
                     displayOrder: dashboard.Spec.DisplayOrder));
         }
+
         private async Task RemoveDashboardAsync(V1NeonDashboard dashboard)
         {
             await SyncContext.Clear;
 
-            Dashboards.Remove(
-                Dashboards.Where(
-                    d => d.Id == dashboard.Name())?.First());
+            Dashboards.Remove(Dashboards.Where(d => d.Id == dashboard.Name())?.First());
         }
 
         public async Task ConfigureDevAsync()
@@ -330,7 +330,7 @@ namespace NeonDashboard
 
                 var ssoClient = await Kubernetes.CustomObjects.ReadClusterCustomObjectAsync<V1NeonSsoClient>("neon-sso");
 
-                if (!ssoClient.Spec.RedirectUris.Contains("http://localhost:11001/oauth2/callback"))
+                if (!ssoClient.Spec.RedirectUris.Contains($"http://localhost:11001/oauth2/callback"))
                 {
                     ssoClient.Spec.RedirectUris.Add("http://localhost:11001/oauth2/callback");
                     await Kubernetes.CustomObjects.UpsertClusterCustomObjectAsync<V1NeonSsoClient>(ssoClient, ssoClient.Name());

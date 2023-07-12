@@ -117,7 +117,7 @@ namespace Neon.Kube.Operator.Builder
 
                 if (NeonHelper.IsDevWorkstation || Debugger.IsAttached)
                 {
-                    k8s.HttpClient.DefaultRequestHeaders.Add("Impersonate-User", $"system:serviceaccount:{operatorSettings.DeployedNamespace}:{operatorSettings.Name}"); 
+                    k8s.HttpClient.DefaultRequestHeaders.Add("Impersonate-User", $"system:serviceaccount:{operatorSettings.OperatorNamespace}:{operatorSettings.Name}"); 
                 }
 
                 Services.AddSingleton<IKubernetes>(k8s);

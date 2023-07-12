@@ -131,7 +131,7 @@ namespace OperatorCli.Commands.Generate
             var operatorSettings = new OperatorSettings()
             {
                 AssemblyScanningEnabled = args.AssemblyScanningEnabled,
-                DeployedNamespace       = args.DeployedNamespace,
+                OperatorNamespace       = args.DeployedNamespace,
                 Name                    = args.Name,
                 ResourceManagerOptions  = new Neon.Kube.Operator.ResourceManager.ResourceManagerOptions()
                 {

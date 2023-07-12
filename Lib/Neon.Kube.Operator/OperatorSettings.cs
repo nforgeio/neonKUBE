@@ -78,15 +78,17 @@ namespace Neon.Kube.Operator
         /// <summary>
         /// The namespace where the operator is deployed.
         /// </summary>
-        public string DeployedNamespace { get; set; } = Pod.Namespace;
+        public string OperatorNamespace { get; set; } = Pod.Namespace;
 
         /// <summary>
-        /// The IP address to listen on.
+        /// The network interface IP address where the operator will listen for web hook requests.
+        /// This dewfaults to <see cref="IPAddress.Any"/> to listen on all network interfaces.
         /// </summary>
         public IPAddress ListenAddress { get; set; } = IPAddress.Any;
 
         /// <summary>
-        /// The port to listen on.
+        /// The network port where the operator will listen for web hook requests.  This
+        /// defaults to port <b>443</b>.
         /// </summary>
         public int Port { get; set; } = 443;
 

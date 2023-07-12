@@ -63,10 +63,10 @@ namespace Neon.Kube.Xunit.Operator
 
             hostBuilder = (KubernetesOperatorTestHostBuilder)KubernetesOperatorTestHost
                 .CreateDefaultBuilder()
-                .ConfigureOperator(configure =>
+                .ConfigureOperator(settings =>
                 {
-                    configure.AssemblyScanningEnabled = operatorSettings.AssemblyScanningEnabled;
-                    configure.KubernetesClientConfiguration = operatorSettings.KubernetesClientConfiguration;
+                    settings.AssemblyScanningEnabled       = operatorSettings.AssemblyScanningEnabled;
+                    settings.KubernetesClientConfiguration = operatorSettings.KubernetesClientConfiguration;
                 });
 
             hostBuilder.Services.AddSingleton(operatorSettings);

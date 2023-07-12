@@ -76,7 +76,7 @@ namespace Neon.Kube.Operator.Rbac
         {
             Covenant.Requires<ArgumentNullException>(assemblyPath != null, nameof(assemblyPath));
 
-            this.@namespace            = operatorSettings.DeployedNamespace;
+            this.@namespace            = operatorSettings.OperatorNamespace;
             this.operatorSettings      = operatorSettings;
             this.ServiceAccounts       = new List<V1ServiceAccount>();
             this.ClusterRoles          = new List<V1ClusterRole>();

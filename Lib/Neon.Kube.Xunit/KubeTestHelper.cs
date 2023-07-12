@@ -238,7 +238,7 @@ namespace Neon.Kube.Xunit
                             response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "logs", pod.Name(), $"--namespace={pod.Namespace()}" })
                                 .EnsureSuccess();
 
-                            File.WriteAllText(Path.Combine(podFolder, $"{pod.Name()} @{pod.Namespace()}.log"), response.OutputText);
+                            File.WriteAllText(Path.Combine(podFolder, $"{pod.Name()}@{pod.Namespace()}.log"), response.OutputText);
                         }
                     }
                 }
