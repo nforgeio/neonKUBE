@@ -11,17 +11,17 @@ namespace TestOperator
         public static string Namespace = null;
         public static async Task Main(string[] args)
         {
-            var k8s = KubernetesOperatorHost
+            var operatorHost = KubernetesOperatorHost
                 .CreateDefaultBuilder(args)
-                .ConfigureOperator(o =>
+                .ConfigureOperator(settings =>
                 {
-                    o.WatchNamespace = "default,services";
+                    settings.WatchNamespace = "default,services";
                 })
                 .ConfigureNeonKube()
                 .UseStartup<OperatorStartup>()
                 .Build();
 
-            await k8s.RunAsync();
+            await operatorHost.RunAsync();
         }
     }
 }
