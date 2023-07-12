@@ -192,7 +192,16 @@ namespace Neon.Kube.Setup
             cluster.HostingManager.AddSetupSteps(controller);
 
             controller.AddWaitUntilOnlineStep("connect nodes");
-            controller.AddNodeStep("check node OS", (controller, node) => node.VerifyNodeOS());
+
+            controller.AddNodeStep("check node OS",
+                (controller, node) =>
+                {
+                    // Log the cluster ID for debugging purposes.
+
+                    controller.LogGlobal($"CLUSTER-ID: {setupState.ClusterId}");
+
+                    node.VerifyNodeOS();
+                });
 
             controller.AddNodeStep("check image version",
                 (controller, node) =>
@@ -386,7 +395,7 @@ namespace Neon.Kube.Setup
             //
             // The log files will include logs from any failed pod containers.
 
-            using (var k8s = KubeHelper.GetKubernetesClient())
+            using (var k8s = KubeHelper.CreateKubernetesClient())
             {
                 var pods = k8s.CoreV1.ListAllPodsAsync().Result;
 

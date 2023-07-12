@@ -141,7 +141,7 @@ This command returns a non-zero exit code when one or more checks fail.
 
             // Perform the requested checks.
 
-            var k8s   = KubeHelper.GetKubernetesClient(kubeConfigPath: KubeHelper.KubeConfigPath);
+            var k8s   = KubeHelper.CreateKubernetesClient(kubeConfigPath: KubeHelper.KubeConfigPath);
             var error = false;
 
             if (containerImages && !await ClusterChecker.CheckNodeContainerImagesAsync(k8s, details: details))

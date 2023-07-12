@@ -25,6 +25,8 @@ using System.Threading.Tasks;
 
 using Grpc.Core;
 
+using k8s.Models;
+
 using Neon.Common;
 using Neon.IO;
 using Neon.Kube;
@@ -198,6 +200,8 @@ namespace Neon.Kube.Xunit
             Covenant.Requires<ArgumentNullException>(testClassType != null, nameof(testClassType));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(testName), nameof(testName));
 
+            // Capture the deployment logs.
+
             var archiveFolder = Path.Combine(KubeHelper.DevelopmentFolder, "test-logs", $"{testClassType.FullName}.{testName}");
 
             if (iteration.HasValue)
@@ -207,6 +211,38 @@ namespace Neon.Kube.Xunit
 
             Directory.CreateDirectory(archiveFolder);
             NeonHelper.CopyFolder(KubeHelper.LogFolder, archiveFolder);
+
+            // Capture additional information about the cluster state, including pod status
+            // and logs from failing pods.
+
+            var response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "get", "pods", "-A" });
+
+            if (response.ExitCode == 0)
+            {
+                // Capture basic information for all cluster pods.
+
+                var podFolder = Path.Combine(archiveFolder, "pod-info");
+
+                Directory.CreateDirectory(podFolder);
+                File.WriteAllText(Path.Combine(podFolder, "all-pods.txt"), response.OutputText);
+
+                // Capture logs from any pods with at least one container reporting
+                // that it's not ready.
+
+                using (var k8s = KubeHelper.CreateKubernetesClient())
+                {
+                    foreach (var pod in k8s.CoreV1.ListAllPodsAsync().Result.Items)
+                    {
+                        if (!pod.Status.ContainerStatuses.Any(status => status.Ready))
+                        {
+                            response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "logs", pod.Name(), $"--namespace={pod.Namespace()}" })
+                                .EnsureSuccess();
+
+                            File.WriteAllText(Path.Combine(podFolder, $"{pod.Name()} @{pod.Namespace()}.log"), response.OutputText);
+                        }
+                    }
+                }
+            }
 
             throw new NeonKubeException($"Cluster deployment failed.  Deployment logs archived here:\r\n\r\n{archiveFolder}", e);
         }

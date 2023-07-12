@@ -127,7 +127,7 @@ namespace NeonSsoSessionProxy
 
             KubeHelper.InitializeJson(); 
             
-            k8s = KubeHelper.GetKubernetesClient();
+            k8s = KubeHelper.CreateKubernetesClient();
 
             if (NeonHelper.IsDevWorkstation)
             {

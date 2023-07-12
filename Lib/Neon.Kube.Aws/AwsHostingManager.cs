@@ -4571,7 +4571,7 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
                 .ToList();
 
             //-----------------------------------------------------------------
-            // Step 1: Terminate all cluster instances
+            // Step 1: Terminate all cluster VM instances
 
             if (instanceIds.Count > 0)
             {

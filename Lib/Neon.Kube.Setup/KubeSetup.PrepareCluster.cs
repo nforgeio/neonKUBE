@@ -506,6 +506,10 @@ namespace Neon.Kube.Setup
                         hostAddress = IPAddress.Parse(cluster.HostingManager.GetClusterAddresses().First());
                     }
 
+                    // Log the cluster ID for debugging purposes.
+
+                    controller.LogGlobal($"CLUSTER-ID: {setupState.ClusterId}");
+
                     // For the NEONDESKTOP cluster, add these records to both the
                     // node's local [/etc/hosts] file.  Note that the node is named
                     // "neon-desktop".

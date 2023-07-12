@@ -66,7 +66,7 @@ namespace TestKube
 
         [MaintainerTheory]
         [Repeat(repeatCount)]
-        public async Task XenServer_Smal(int runCount)
+        public async Task XenServer_Small(int runCount)
         {
             await DeployXenServerCluster(XenServerClustersDefinitions.Small, runCount);
         }

@@ -143,12 +143,12 @@ definition or by executing this command on your cluster:
                     // $note(jefflill):
                     //
                     // The [cloudMarketplace] parameter value doesn't matter below and we're going to
-                    // pass [noLockCheck=true] to the remove call because we won't be able to query the
+                    // pass [force=true] to the remove call because we won't be able to query the
                     // cluster lock state state without a context.
 
                     using (var cluster = ClusterProxy.Create(setupState, new HostingManagerFactory(), cloudMarketplace: false))
                     {
-                        await RemoveCluster(cluster, force: force, noLockCheck: true);
+                        await RemoveCluster(cluster, force: true);
                     }
 
                     Program.Exit(0);
@@ -192,9 +192,8 @@ definition or by executing this command on your cluster:
         /// </summary>
         /// <param name="cluster">The cluster proxy.</param>
         /// <param name="force">Pass <c>true</c> when the <c>--force</c> option is specified.</param>
-        /// <param name="noLockCheck">Optionally disable the cluster lock check.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task RemoveCluster(ClusterProxy cluster, bool force, bool noLockCheck = false)
+        private async Task RemoveCluster(ClusterProxy cluster, bool force)
         {
             var capabilities = cluster.Capabilities;
 
@@ -204,7 +203,7 @@ definition or by executing this command on your cluster:
                 Program.Exit(1);
             }
 
-            if (!force && !noLockCheck)
+            if (!force)
             {
                 var isLocked = await cluster.IsLockedAsync();
 
@@ -219,11 +218,11 @@ definition or by executing this command on your cluster:
                     Console.Error.WriteLine($"*** ERROR: [{cluster.Name}] is locked.");
                     Program.Exit(1);
                 }
-            }
 
-            if (!Program.PromptYesNo($"Are you sure you want to remove cluster: {cluster.Name}?"))
-            {
-                Program.Exit(0);
+                if (!Program.PromptYesNo($"Are you sure you want to remove cluster: {cluster.Name}?"))
+                {
+                    Program.Exit(0);
+                }
             }
 
             try

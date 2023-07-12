@@ -253,8 +253,8 @@ namespace Neon.Kube.Hosting
             // ARP table looking for any conflicts there.
             //
             // NOTE: It's possible for machines to have ICMP ping disabled so we
-            //       won't see a response from them, but there's a good chance that
-            //       those machines will have cached ARP records.
+            //       won't see a response from them, but there's a decent chance that
+            //       those machines will have locally cached ARP records.
 
             var nodeConflicts = new Dictionary<string, NodeDefinition>(StringComparer.InvariantCultureIgnoreCase);
 

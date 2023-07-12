@@ -3227,7 +3227,7 @@ TCPKeepAlive yes
         /// from that path and return a client for the current context or the specific context identified
         /// by <paramref name="currentContext"/>.
         /// </remarks>
-        public static IKubernetes GetKubernetesClient(string kubeConfigPath = null, string currentContext = null)
+        public static IKubernetes CreateKubernetesClient(string kubeConfigPath = null, string currentContext = null)
         {
             KubernetesClientConfiguration   k8sConfig;
 

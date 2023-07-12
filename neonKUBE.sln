@@ -70,6 +70,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Hosting", "Lib\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj", "{08B7000C-F261-4543-B611-5710D12263DB}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Kube", "Test\Test.Neon.Kube\Test.Neon.Kube.csproj", "{41302EE4-1607-4BE1-A2C6-C881C3D05740}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7EC9D996-B464-4493-BF68-8A4A95AA3C83} = {7EC9D996-B464-4493-BF68-8A4A95AA3C83}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{9BF7513A-5219-4862-A290-7D2A00589312}"
 EndProject
