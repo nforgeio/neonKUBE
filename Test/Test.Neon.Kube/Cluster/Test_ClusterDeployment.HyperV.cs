@@ -29,6 +29,7 @@ using Microsoft.VisualBasic;
 
 using Neon.Common;
 using Neon.Deployment;
+using Neon.HyperV;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.ClusterDef;
@@ -76,9 +77,25 @@ namespace TestKube
 
                 try
                 {
+                    // Remove any VMs that appear to belong to a previous test run.
+
+                    using (var hyperv = new HyperVClient())
+                    {
+                        var clusterDefinition = ClusterDefinition.FromYaml(clusterDefinitionYaml);
+
+                        hyperv.RemoveVmsWithPrefix(clusterDefinition.Hosting.Hypervisor.NamePrefix);
+                    }
+
+                    // Deploy the cluster.
+
                     await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "logout" });
                     (await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "cluster", "deploy", tempFile.Path, "--use-staged" }))
                         .EnsureSuccess();
+
+                    //###############################
+                    // $debug(jefflill): DELETE THIS!
+                    throw new Exception("Test");
+                    //###############################
                 }
                 catch (Exception e)
                 {

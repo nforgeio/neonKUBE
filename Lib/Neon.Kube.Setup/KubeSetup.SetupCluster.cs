@@ -356,11 +356,11 @@ namespace Neon.Kube.Setup
             Directory.CreateDirectory(logDetailsFolder);
 
             //-----------------------------------------------------------------
-            // FILE: pods.txt (output from: kubectl get pods -A
+            // FILE: pods.txt (output from: kubectl get pods -A)
 
             var result = clusterProxy.DeploymentControlNode.SudoCommand("kubectl", "get", "pods", "-A");
 
-            using (var stream = File.Create(Path.Combine(logDetailsFolder, "all-pods.txt")))
+            using (var stream = File.Create(Path.Combine(logDetailsFolder, "pods.txt")))
             {
                 using (var writer = new StreamWriter(stream, Encoding.UTF8))
                 {

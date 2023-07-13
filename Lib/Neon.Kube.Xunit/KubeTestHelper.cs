@@ -212,35 +212,72 @@ namespace Neon.Kube.Xunit
             Directory.CreateDirectory(archiveFolder);
             NeonHelper.CopyFolder(KubeHelper.LogFolder, archiveFolder);
 
-            // Capture additional information about the cluster state, including pod status
-            // and logs from failing pods.
+            var detailsFolder = Path.Combine(archiveFolder, "details");
+
+            Directory.CreateDirectory(detailsFolder);
+
+            // Capture additional information about the cluster state, including pod status, pod logs,
+            // as well as deployment, daemonset, and satefulset status.  Note that we're going to
+            // capture basic high-level information as text as well as detailed YAML status information.
+
+            // Capture current pod status.
 
             var response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "get", "pods", "-A" });
 
-            if (response.ExitCode == 0)
+            File.WriteAllText(Path.Combine(detailsFolder, "pods.txt"), response.OutputText);
+
+            response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "get", "pods", "-A", "-o=yaml" });
+
+            File.WriteAllText(Path.Combine(detailsFolder, "pods.yaml"), response.OutputText);
+
+            // Capture current deployment status.
+
+            response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "get", "deployments", "-A" });
+
+            File.WriteAllText(Path.Combine(detailsFolder, "deployments.txt"), response.OutputText);
+
+            response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "get", "deployments", "-A", "-o=yaml" });
+
+            File.WriteAllText(Path.Combine(detailsFolder, "deployments.yaml"), response.OutputText);
+
+            // Capture current statefulset status.
+
+            response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "get", "statefulsets", "-A" });
+
+            File.WriteAllText(Path.Combine(detailsFolder, "statefulsets.txt"), response.OutputText);
+
+            response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "get", "statefulsets", "-A", "-o=yaml" });
+
+            File.WriteAllText(Path.Combine(detailsFolder, "statefulsets.yaml"), response.OutputText);
+
+            // Capture current daemonset status.
+
+            response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "get", "daemonsets", "-A" });
+
+            File.WriteAllText(Path.Combine(detailsFolder, "daemonsets.txt"), response.OutputText);
+
+            response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "get", "daemonsets", "-A", "-o=yaml" });
+
+            File.WriteAllText(Path.Combine(detailsFolder, "daemonsets.yaml"), response.OutputText);
+
+            // Capture logs from all pods, adding "(not-ready)" to the log file name for
+            // pods with containers that aren't ready yet.
+
+            using (var k8s = KubeHelper.CreateKubernetesClient())
             {
-                // Capture basic information for all cluster pods.
-
-                var podFolder = Path.Combine(archiveFolder, "pod-info");
-
-                Directory.CreateDirectory(podFolder);
-                File.WriteAllText(Path.Combine(podFolder, "all-pods.txt"), response.OutputText);
-
-                // Capture logs from any pods with at least one container reporting
-                // that it's not ready.
-
-                using (var k8s = KubeHelper.CreateKubernetesClient())
+                foreach (var pod in k8s.CoreV1.ListAllPodsAsync().Result.Items)
                 {
-                    foreach (var pod in k8s.CoreV1.ListAllPodsAsync().Result.Items)
-                    {
-                        if (!pod.Status.ContainerStatuses.Any(status => status.Ready))
-                        {
-                            response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "logs", pod.Name(), $"--namespace={pod.Namespace()}" })
-                                .EnsureSuccess();
+                    var notReady = string.Empty;
 
-                            File.WriteAllText(Path.Combine(podFolder, $"{pod.Name()}@{pod.Namespace()}.log"), response.OutputText);
-                        }
+                    if (!pod.Status.ContainerStatuses.Any(status => status.Ready))
+                    {
+                        notReady = " (not-ready)";
                     }
+
+                    response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "logs", pod.Name(), $"--namespace={pod.Namespace()}" })
+                        .EnsureSuccess();
+
+                    File.WriteAllText(Path.Combine(detailsFolder, $"{pod.Name()}@{pod.Namespace()}{notReady}.log"), response.OutputText);
                 }
             }
 
