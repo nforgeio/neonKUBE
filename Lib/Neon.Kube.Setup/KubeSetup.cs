@@ -305,16 +305,21 @@ namespace Neon.Kube.Setup
         /// the headend for potential failure analysis.
         /// </para>
         /// <note>
-        /// This method does nothing when <see cref="KubeEnv.DisableTelemetryVariable"/> returns <b>true</b>
-        /// or when the cluster was deployed with unredacted logs.
+        /// This method does nothing when <see cref="KubeEnv.DisableTelemetryVariable"/> returns <b>true</b>,
+        /// when the cluster was deployed with unredacted logs or when there's no error.
         /// </note>
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="e">Optionally passed as the exception thrown for the problem.</param>
         /// <returns>The tracing <see cref="Task"/>.</returns>
-        private static void UploadDeploymentLogs(ISetupController controller, Exception e = null)
+        private static void UploadFailedDeploymentLogs(ISetupController controller, Exception e = null)
         {
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+
+            if (!controller.IsFaulted && e == null)
+            {
+                return;
+            }
 
             var logFolder = KubeHelper.LogFolder;
 

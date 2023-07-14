@@ -200,8 +200,6 @@ namespace Neon.Kube.Xunit
             Covenant.Requires<ArgumentNullException>(testClassType != null, nameof(testClassType));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(testName), nameof(testName));
 
-            // Capture the deployment logs.
-
             var archiveFolder = Path.Combine(KubeHelper.DevelopmentFolder, "test-logs", $"{testClassType.FullName}.{testName}");
 
             if (iteration.HasValue)
@@ -211,75 +209,6 @@ namespace Neon.Kube.Xunit
 
             Directory.CreateDirectory(archiveFolder);
             NeonHelper.CopyFolder(KubeHelper.LogFolder, archiveFolder);
-
-            var detailsFolder = Path.Combine(archiveFolder, "details");
-
-            Directory.CreateDirectory(detailsFolder);
-
-            // Capture additional information about the cluster state, including pod status, pod logs,
-            // as well as deployment, daemonset, and satefulset status.  Note that we're going to
-            // capture basic high-level information as text as well as detailed YAML status information.
-
-            // Capture current pod status.
-
-            var response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "get", "pods", "-A" });
-
-            File.WriteAllText(Path.Combine(detailsFolder, "pods.txt"), response.OutputText);
-
-            response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "get", "pods", "-A", "-o=yaml" });
-
-            File.WriteAllText(Path.Combine(detailsFolder, "pods.yaml"), response.OutputText);
-
-            // Capture current deployment status.
-
-            response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "get", "deployments", "-A" });
-
-            File.WriteAllText(Path.Combine(detailsFolder, "deployments.txt"), response.OutputText);
-
-            response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "get", "deployments", "-A", "-o=yaml" });
-
-            File.WriteAllText(Path.Combine(detailsFolder, "deployments.yaml"), response.OutputText);
-
-            // Capture current statefulset status.
-
-            response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "get", "statefulsets", "-A" });
-
-            File.WriteAllText(Path.Combine(detailsFolder, "statefulsets.txt"), response.OutputText);
-
-            response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "get", "statefulsets", "-A", "-o=yaml" });
-
-            File.WriteAllText(Path.Combine(detailsFolder, "statefulsets.yaml"), response.OutputText);
-
-            // Capture current daemonset status.
-
-            response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "get", "daemonsets", "-A" });
-
-            File.WriteAllText(Path.Combine(detailsFolder, "daemonsets.txt"), response.OutputText);
-
-            response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "get", "daemonsets", "-A", "-o=yaml" });
-
-            File.WriteAllText(Path.Combine(detailsFolder, "daemonsets.yaml"), response.OutputText);
-
-            // Capture logs from all pods, adding "(not-ready)" to the log file name for
-            // pods with containers that aren't ready yet.
-
-            using (var k8s = KubeHelper.CreateKubernetesClient())
-            {
-                foreach (var pod in k8s.CoreV1.ListAllPodsAsync().Result.Items)
-                {
-                    var notReady = string.Empty;
-
-                    if (!pod.Status.ContainerStatuses.Any(status => status.Ready))
-                    {
-                        notReady = " (not-ready)";
-                    }
-
-                    response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "logs", pod.Name(), $"--namespace={pod.Namespace()}" })
-                        .EnsureSuccess();
-
-                    File.WriteAllText(Path.Combine(detailsFolder, $"{pod.Name()}@{pod.Namespace()}{notReady}.log"), response.OutputText);
-                }
-            }
 
             throw new NeonKubeException($"Cluster deployment failed.  Deployment logs archived here:\r\n\r\n{archiveFolder}", e);
         }

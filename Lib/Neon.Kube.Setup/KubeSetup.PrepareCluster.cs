@@ -47,7 +47,6 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Tasks;
-using Namotion.Reflection;
 
 namespace Neon.Kube.Setup
 {

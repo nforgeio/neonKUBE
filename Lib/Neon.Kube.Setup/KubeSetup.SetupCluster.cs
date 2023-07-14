@@ -290,10 +290,6 @@ namespace Neon.Kube.Setup
 
                     setupState.DeploymentStatus = ClusterDeploymentStatus.Ready;
                     setupState.Save();
-
-                    // Persist additional cluster setup details to the log folder.
-
-                    CaptureClusterState(controller);
                 });
 
             //-----------------------------------------------------------------
@@ -318,10 +314,15 @@ namespace Neon.Kube.Setup
             controller.AddDisposable(desktopServiceProxy);
 
             // Add a [Finished] event handler that uploads cluster deployment logs and
-            // details to the headend for manalysis.  Note that we don't do this when telemetry
-            // is disabled or when the cluster was deployed without redaction.
+            // details to the headend for analysis for deployment failures.  Note that
+            // we don't do this when telemetry is disabled or when the cluster was
+            // deployed without redaction.
 
-            controller.Finished += (s, a) => UploadDeploymentLogs((ISetupController)s, a);
+            controller.Finished += (s, a) =>
+            {
+                CaptureClusterState(controller);
+                UploadFailedDeploymentLogs((ISetupController)s, a);
+            };
 
             // Add a [Finished] event handler that removes the cluster setup state
             // when cluster setup completed successfully.
@@ -339,34 +340,27 @@ namespace Neon.Kube.Setup
         }
 
         /// <summary>
-        /// Captures additional information about the cluster including things like cluster pod status
-        /// and logs from failed cluster pod containers and persisting that to the logs folder.
+        /// Executes a <b>kubectl</b> command on the cluster's first control-plane node and then
+        /// writes a summary of the command and its output to a file.
         /// </summary>
-        private static void CaptureClusterState(ISetupController controller)
+        /// <param name="cluster">Specifies the cluster proxy.</param>
+        /// <param name="folder">Specifies the path to the output folder.</param>
+        /// <param name="fileName">Specifies the output file name.</param>
+        /// <param name="args">Specifies the command arguments.</param>
+        private static void CaptureKubectl(ClusterProxy cluster, string folder, string fileName, params object[] args)
         {
-            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
 
-            const string header = "===============================================================================";
+            var result = cluster.DeploymentControlNode.SudoCommand("kubectl", args);
 
-            var clusterProxy              = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
-            var redactedClusterDefinition = clusterProxy.SetupState.ClusterDefinition.Redact();
-            var logFolder                 = KubeHelper.LogFolder;
-            var logDetailsFolder          = KubeHelper.LogDetailsFolder;
-
-            Directory.CreateDirectory(logDetailsFolder);
-
-            //-----------------------------------------------------------------
-            // FILE: pods.txt (output from: kubectl get pods -A)
-
-            var result = clusterProxy.DeploymentControlNode.SudoCommand("kubectl", "get", "pods", "-A");
-
-            using (var stream = File.Create(Path.Combine(logDetailsFolder, "pods.txt")))
+            using (var stream = File.Create(Path.Combine(folder, fileName)))
             {
                 using (var writer = new StreamWriter(stream, Encoding.UTF8))
                 {
-                    writer.WriteLine(header);
-                    writer.WriteLine($"# kubectl get pods -A");
+                    writer.WriteLine($"# kubectl {NeonHelper.NormalizeExecArgs(args)}");
                     writer.WriteLine($"# EXITCODE: {result.ExitCode}");
+                    writer.WriteLine("---------------------------------------");
                     writer.WriteLine();
 
                     using (var reader = new StringReader(result.AllText))
@@ -378,73 +372,91 @@ namespace Neon.Kube.Setup
                     }
                 }
             }
+        }
 
-            if (!result.Success)
-            {
-                // Don't bother with capturing any additional status if the [kubectl] command failed.
+        /// <summary>
+        /// Captures additional information about the cluster including things like cluster pod status
+        /// and logs from failed cluster pod containers and persisting that to the logs folder.
+        /// </summary>
+        private static void CaptureClusterState(ISetupController controller)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
 
-                return;
-            }
+            var clusterProxy              = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var redactedClusterDefinition = clusterProxy.SetupState.ClusterDefinition.Redact();
+            var logFolder                 = KubeHelper.LogFolder;
+            var logDetailsFolder          = KubeHelper.LogDetailsFolder;
+
+            Directory.CreateDirectory(logDetailsFolder);
+
+            //-----------------------------------------------------------------
+            // Capture information about all pods.
+
+            CaptureKubectl(clusterProxy, logDetailsFolder, "pods.txt", "get", "pods", "-A");
+            CaptureKubectl(clusterProxy, logDetailsFolder, "pods.yaml", "get", "pods", "-A", "-o=yaml");
 
             //-----------------------------------------------------------------
             // Query the pod status and write files detailing information about
             // failed pods and their pod and containers.
             //
-            //      pod-NAMESPACE-PODNAME.yaml  - pod spec and status
-            //      pod-NAMESPACE-PODNAME.log   -lists the failed pod containers and their logs
+            //      pod-PODNAME@NAMESPACE[READY-STATUS].txt     - pod summary as text
+            //      pod-PODNAME@NAMESPACE[READY-STATUS].yaml    - pod spec and status
+            //      pod-PODNAME@NAMESPACE[READY-STATUS].log     - pod container logs
             //
-            // The log files will include logs from any failed pod containers.
+            // NOTE: READY-STATUS will be set to " (not-ready)" when one or more
+            //       of the pod containers aren't ready.
 
             using (var k8s = KubeHelper.CreateKubernetesClient())
             {
-                var pods = k8s.CoreV1.ListAllPodsAsync().Result;
+                var pods = k8s.CoreV1.ListAllPodsAsync().Result.Items;
 
-                foreach (var failedPod in pods.Items.Where(pod => pod.Status.Phase == "Error"))
+                foreach (var pod in pods)
                 {
-                    // Write the [pod-NAMESPACE-PODNAME.yaml] file with the pod spec/status.
+                    var filePrefix = $"pod-{pod.Name()}@{pod.Namespace()}";
 
-                    File.WriteAllText(Path.Combine(logDetailsFolder, $"pod-{failedPod.Namespace()}-{failedPod.Name()}.yaml"), NeonHelper.YamlSerialize(failedPod));
-
-                    // Write the [pod-NAMESPACE-PODNAME.log] with logs from any failed pod containers.
-
-                    using (var stream = File.Create(Path.Combine(logDetailsFolder, $"pod-{failedPod.Namespace()}-{failedPod.Name()}.log")))
+                    if (!pod.Status.ContainerStatuses.Any(status => status.Ready))
                     {
-                        using (var writer = new StreamWriter(stream, Encoding.UTF8))
-                        {
-                            writer.WriteLine(header);
-                            writer.WriteLine($"# FAILED POD: {failedPod.Namespace()}/{failedPod.Name()}");
-
-                            var failedPodStatuses = failedPod.Status.ContainerStatuses.Where(status => !status.Ready).ToList();
-
-                            if (failedPodStatuses.Count == 0)
-                            {
-                                writer.WriteLine("# All pod containers are READY.");
-                            }
-                            else
-                            {
-                                writer.WriteLine($"# [{failedPodStatuses.Count}] containers are NOT READY.");
-
-                                foreach (var failedContainerStatus in failedPodStatuses)
-                                {
-                                    writer.WriteLine();
-                                    writer.WriteLine(header);
-                                    writer.WriteLine($"# FAILED CONTAINER: name={failedContainerStatus.Name} image={failedContainerStatus.Image}");
-                                    writer.WriteLine();
-
-                                    using (var logStream = k8s.CoreV1.ReadNamespacedPodLog(failedPod.Name(), failedPod.Namespace(), failedContainerStatus.Name))
-                                    {
-                                        using (var reader = new StreamReader(logStream, Encoding.UTF8))
-                                        {
-                                            foreach (var line in reader.Lines())
-                                            {
-                                                writer.WriteLine(line);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        filePrefix += " (not-ready)";
                     }
+
+                    CaptureKubectl(clusterProxy, logDetailsFolder, "pods.txt", "get", "pods", "-A");
+                }
+            }
+
+            // Capture high-level (text) information and then detailed (YAML) information
+            // about all of the cluster deployments, statefulsets, and daemonsets.
+
+            CaptureKubectl(clusterProxy, logDetailsFolder, "deployments.txt", "get", "deployments", "-A");
+            CaptureKubectl(clusterProxy, logDetailsFolder, "deployments.yaml", "get", "deployments", "-A", "-o=yaml");
+
+            CaptureKubectl(clusterProxy, logDetailsFolder, "statefulsets.txt", "get", "statefulsets", "-A");
+            CaptureKubectl(clusterProxy, logDetailsFolder, "statefulsets.yaml", "get", "statefulsets", "-A", "-o=yaml");
+
+            CaptureKubectl(clusterProxy, logDetailsFolder, "daemonsets.txt", "get", "daemonsets", "-A");
+            CaptureKubectl(clusterProxy, logDetailsFolder, "daemonsets.yaml", "get", "daemonsets", "-A", "-o=yaml");
+
+            // Capture logs from all pods, adding "(not-ready)" to the log file name for
+            // pods with containers that aren't ready yet.
+
+            using (var k8s = KubeHelper.CreateKubernetesClient())
+            {
+                var podLogsFolder = Path.Combine(logDetailsFolder, "pod-logs");
+
+                Directory.CreateDirectory(podLogsFolder);
+
+                foreach (var pod in k8s.CoreV1.ListAllPodsAsync().Result.Items)
+                {
+                    var notReady = string.Empty;
+
+                    if (!pod.Status.ContainerStatuses.Any(status => status.Ready))
+                    {
+                        notReady = " (not-ready)";
+                    }
+
+                    var response = NeonHelper.ExecuteCapture(KubeHelper.NeonCliPath, new object[] { "logs", pod.Name(), $"--namespace={pod.Namespace()}" })
+                        .EnsureSuccess();
+
+                    File.WriteAllText(Path.Combine(podLogsFolder, $"{pod.Name()}@{pod.Namespace()}{notReady}.log"), response.OutputText);
                 }
             }
         }

@@ -91,11 +91,6 @@ namespace TestKube
                     await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "logout" });
                     (await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "cluster", "deploy", tempFile.Path, "--use-staged" }))
                         .EnsureSuccess();
-
-                    //###############################
-                    // $debug(jefflill): DELETE THIS!
-                    throw new Exception("Test");
-                    //###############################
                 }
                 catch (Exception e)
                 {
