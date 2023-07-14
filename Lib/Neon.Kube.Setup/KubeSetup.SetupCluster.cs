@@ -396,7 +396,7 @@ namespace Neon.Kube.Setup
             CaptureKubectl(clusterProxy, logDetailsFolder, "pods.yaml", "get", "pods", "-A", "-o=yaml");
 
             // Capture high-level (text) information and then detailed (YAML) information
-            // about all of the cluster deployments, statefulsets, and daemonsets.
+            // about all of the cluster deployments, statefulsets, daemonsets, and services.
 
             CaptureKubectl(clusterProxy, logDetailsFolder, "deployments.txt", "get", "deployments", "-A");
             CaptureKubectl(clusterProxy, logDetailsFolder, "deployments.yaml", "get", "deployments", "-A", "-o=yaml");
@@ -406,6 +406,9 @@ namespace Neon.Kube.Setup
 
             CaptureKubectl(clusterProxy, logDetailsFolder, "daemonsets.txt", "get", "daemonsets", "-A");
             CaptureKubectl(clusterProxy, logDetailsFolder, "daemonsets.yaml", "get", "daemonsets", "-A", "-o=yaml");
+
+            CaptureKubectl(clusterProxy, logDetailsFolder, "services.txt", "get", "services", "-A");
+            CaptureKubectl(clusterProxy, logDetailsFolder, "services.yaml", "get", "services", "-A", "-o=yaml");
 
             // Capture logs from all pods, adding "(not-ready)" to the log file name for
             // pods with containers that aren't ready yet.
