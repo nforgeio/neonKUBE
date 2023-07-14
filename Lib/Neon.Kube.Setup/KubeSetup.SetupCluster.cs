@@ -395,34 +395,6 @@ namespace Neon.Kube.Setup
             CaptureKubectl(clusterProxy, logDetailsFolder, "pods.txt", "get", "pods", "-A");
             CaptureKubectl(clusterProxy, logDetailsFolder, "pods.yaml", "get", "pods", "-A", "-o=yaml");
 
-            //-----------------------------------------------------------------
-            // Query the pod status and write files detailing information about
-            // failed pods and their pod and containers.
-            //
-            //      pod-PODNAME@NAMESPACE[READY-STATUS].txt     - pod summary as text
-            //      pod-PODNAME@NAMESPACE[READY-STATUS].yaml    - pod spec and status
-            //      pod-PODNAME@NAMESPACE[READY-STATUS].log     - pod container logs
-            //
-            // NOTE: READY-STATUS will be set to " (not-ready)" when one or more
-            //       of the pod containers aren't ready.
-
-            using (var k8s = KubeHelper.CreateKubernetesClient())
-            {
-                var pods = k8s.CoreV1.ListAllPodsAsync().Result.Items;
-
-                foreach (var pod in pods)
-                {
-                    var filePrefix = $"pod-{pod.Name()}@{pod.Namespace()}";
-
-                    if (!pod.Status.ContainerStatuses.Any(status => status.Ready))
-                    {
-                        filePrefix += " (not-ready)";
-                    }
-
-                    CaptureKubectl(clusterProxy, logDetailsFolder, "pods.txt", "get", "pods", "-A");
-                }
-            }
-
             // Capture high-level (text) information and then detailed (YAML) information
             // about all of the cluster deployments, statefulsets, and daemonsets.
 
