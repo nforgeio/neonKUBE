@@ -1611,15 +1611,9 @@ namespace Neon.Kube.Proxy
         /// This operation may not be supported for all environments.
         /// </note>
         /// </summary>
-        /// <param name="clusterDefinition">
-        /// Optionally specifies a cluster definition.  This is used in situations where
-        /// you need to remove a cluster without having its kubeconfig context.  Use this
-        /// with <b>extreme care</b> because in the mode, the cluster cannot be queried to
-        /// determine whether it's locked or not and locked clusters will be deleted too.
-        /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="NotSupportedException">Thrown if the hosting environment doesn't support this operation.</exception>
-        public async Task DeleteClusterAsync(ClusterDefinition clusterDefinition = null)
+        public async Task DeleteClusterAsync()
         {
             await SyncContext.Clear;
             Covenant.Assert(HostingManager != null);
@@ -1627,7 +1621,7 @@ namespace Neon.Kube.Proxy
             var contextName = KubeContextName.Parse($"{KubeConst.RootUser}@{Name}");
             var context     = KubeHelper.KubeConfig.GetContext(contextName);
 
-            await HostingManager.DeleteClusterAsync(clusterDefinition);
+            await HostingManager.DeleteClusterAsync(SetupState?.ClusterDefinition);
 
             if (context != null)
             {
