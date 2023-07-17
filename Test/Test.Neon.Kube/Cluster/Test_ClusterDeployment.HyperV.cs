@@ -88,8 +88,8 @@ namespace TestKube
 
                     // Deploy the cluster.
 
-                    await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "logout" });
-                    (await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "cluster", "deploy", tempFile.Path, "--use-staged" }))
+                    await KubeHelper.NeonCliExecuteCaptureAsync("logout");
+                    (await KubeHelper.NeonCliExecuteCaptureAsync("cluster", "deploy", tempFile.Path, "--use-staged"))
                         .EnsureSuccess();
                 }
                 catch (Exception e)
@@ -98,7 +98,7 @@ namespace TestKube
                 }
                 finally
                 {
-                    await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "cluster", "delete", "--force" });
+                    await KubeHelper.NeonCliExecuteCaptureAsync("cluster", "delete", "--force");
                 }
             }
         }

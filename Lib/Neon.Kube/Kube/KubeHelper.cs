@@ -3526,7 +3526,7 @@ TCPKeepAlive yes
         /// For maintainers, this method will build the <b>neon/kubectl</b> tool if it does not already exist.
         /// </note>
         /// </remarks>
-        public static async Task<ExecuteResponse> NeonCliExecuteCaptureAsync(object[] args)
+        public static async Task<ExecuteResponse> NeonCliExecuteCaptureAsync(params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 

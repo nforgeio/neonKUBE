@@ -1525,7 +1525,7 @@ namespace Neon.Kube.Proxy
 
                 if (sbResourceTypes.Length > 0)
                 {
-                    (await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "delete", sbResourceTypes, "--all", "--cascade", "--namespace", "default" }))
+                    (await KubeHelper.NeonCliExecuteCaptureAsync("delete", sbResourceTypes, "--all", "--cascade", "--namespace", "default"))
                         .EnsureSuccess();
                 }
             }
