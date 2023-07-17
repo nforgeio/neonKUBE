@@ -104,10 +104,10 @@ namespace TestKube
                     // Logout out of the current cluster (if any), remove any existing cluster context that
                     // may conflict with the new cluster and then deploy a fresh cluster.
 
-                    await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "logout" });
+                    await KubeHelper.NeonCliExecuteCaptureAsync("logout");
                     KubeHelper.KubeConfig.RemoveCluster(clusterDefinition.Name);
 
-                    (await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "cluster", "deploy", tempFile.Path, "--use-staged" }))
+                    (await KubeHelper.NeonCliExecuteCaptureAsync("cluster", "deploy", tempFile.Path, "--use-staged"))
                         .EnsureSuccess();
                 }
                 catch (Exception e)
@@ -118,7 +118,7 @@ namespace TestKube
                 {
                     // Delete the deployed cluster.
 
-                    await KubeHelper.NeonCliExecuteCaptureAsync(new object[] { "cluster", "delete", clusterDefinition.Name, "--force" });
+                    await KubeHelper.NeonCliExecuteCaptureAsync("cluster", "delete", clusterDefinition.Name, "--force");
                 }
             }
         }
