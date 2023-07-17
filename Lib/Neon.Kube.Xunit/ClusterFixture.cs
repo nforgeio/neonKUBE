@@ -685,7 +685,7 @@ namespace Neon.Kube.Xunit
 
                 using (var cluster = ClusterProxy.Create(new KubeSetupState() { ClusterDefinition = clusterDefinition }, new HostingManagerFactory(), cloudMarketplace: options.CloudMarketplace))
                 {
-                    cluster.DeleteClusterAsync(clusterDefinition).WaitWithoutAggregate();
+                    cluster.DeleteClusterAsync().WaitWithoutAggregate();
                 }
             }
 

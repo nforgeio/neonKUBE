@@ -3293,7 +3293,7 @@ echo '{cluster.SetupState.SshKey.PublicPUB}' > /home/sysadmin/.ssh/authorized_ke
                 // There are no deployed VMs: looks like the cluster isn't running.
 
                 clusterHealth.State   = ClusterState.NotFound;
-                clusterHealth.Summary = "Cluster is offline";
+                clusterHealth.Summary = "Cluster not found.";
 
                 return clusterHealth;
             }

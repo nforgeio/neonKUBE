@@ -4295,8 +4295,8 @@ echo 'network: {{config: disabled}}' > /etc/cloud/cloud.cfg.d/99-disable-network
             {
                 // There are no deployed VMs: looks like the cluster isn't running.
 
-                clusterHealth.State   = ClusterState.Off;
-                clusterHealth.Summary = "Cluster is offline.";
+                clusterHealth.State   = ClusterState.NotFound;
+                clusterHealth.Summary = "Cluster not found.";
 
                 return clusterHealth;
             }

@@ -1156,6 +1156,14 @@ namespace Neon.Kube.Hosting.HyperV
                 // short-circuit the health check when the cluster nodes are not provisioned,
                 // are paused or appear to be transitioning between states.
 
+                if (clusterHealth.Nodes.Values.Count == 0)
+                {
+                    clusterHealth.State   = ClusterState.NotFound;
+                    clusterHealth.Summary = "Cluster not found.";
+
+                    return clusterHealth;
+                }
+
                 var commonNodeState = clusterHealth.Nodes.Values.First();
 
                 foreach (var nodeState in clusterHealth.Nodes.Values)

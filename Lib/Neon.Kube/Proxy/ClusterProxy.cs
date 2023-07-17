@@ -79,7 +79,7 @@ namespace Neon.Kube.Proxy
             /// <summary>
             /// <para>
             /// Only cluster lifecycle operations like <see cref="StartAsync()"/>, <see cref="StopAsync(StopMode)"/>,
-            /// and <see cref="ClusterProxy.DeleteClusterAsync(ClusterDefinition)"/> will be enabled.
+            /// and <see cref="ClusterProxy.DeleteClusterAsync()"/> will be enabled.
             /// </para>
             /// <note>
             /// These life cycle methods do not required a URI or file reference to a node image.
