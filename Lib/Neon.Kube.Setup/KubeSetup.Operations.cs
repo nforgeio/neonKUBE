@@ -4392,28 +4392,28 @@ $@"- name: StorageType
 
                     string dashboardId = "";
                     await NeonHelper.WaitForAsync(
-                            async () =>
+                        async () =>
+                        {
+                            try
                             {
-                                try
-                                {
-                                    var defaultDashboard = (await k8s.NamespacedPodExecWithRetryAsync(
-                                        retryPolicy:        podExecRetry,
-                                        name:               grafanaPod.Name(),
-                                        namespaceParameter: grafanaPod.Namespace(),
-                                        container:          "grafana",
-                                        command:            cmd)).EnsureSuccess();
+                                var defaultDashboard = (await k8s.NamespacedPodExecWithRetryAsync(
+                                    retryPolicy:        podExecRetry,
+                                    name:               grafanaPod.Name(),
+                                    namespaceParameter: grafanaPod.Namespace(),
+                                    container:          "grafana",
+                                    command:            cmd)).EnsureSuccess();
 
-                                    dashboardId = NeonHelper.JsonDeserialize<dynamic>(defaultDashboard.OutputText)["dashboard"]["id"];
+                                dashboardId = NeonHelper.JsonDeserialize<dynamic>(defaultDashboard.OutputText)["dashboard"]["id"];
 
-                                    return true;
-                                }
-                                catch
-                                {
-                                    return false;
-                                }
-                            },
-                            timeout: TimeSpan.FromSeconds(300),
-                            pollInterval: TimeSpan.FromMilliseconds(250));
+                                return true;
+                            }
+                            catch
+                            {
+                                return false;
+                            }
+                        },
+                        timeout:      TimeSpan.FromSeconds(300),
+                        pollInterval: TimeSpan.FromMilliseconds(250));
 
                     cmd = new string[]
                         {
