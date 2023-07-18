@@ -58,10 +58,6 @@ namespace Neon.Kube.Setup
 {
     public static partial class KubeSetup
     {
-        // Used for retrying operations within steps when presumably transient errors occur.
-
-        private static IRetryPolicy operationRetryPolicy = new LinearRetryPolicy(e => true, maxAttempts: 10, retryInterval: TimeSpan.FromSeconds(30));
-
         /// <summary>
         /// Converts a <c>decimal</c> into a nice byte units string.
         /// </summary>
@@ -339,9 +335,10 @@ spec:
                     }
 
                     return true;
-                }, 
-                maxAttempts:   maxRetries,
-                retryInterval: TimeSpan.FromSeconds(60));
+                },
+                maxAttempts:       maxRetries,
+                retryInterval:     TimeSpan.FromSeconds(60),
+                cancellationToken: controller.CancellationToken);
 
             await retry.InvokeAsync(
                 async () =>
@@ -770,8 +767,9 @@ NeonKube™, Neon Desktop™, and NeonCli™ are trademarked by NEONFORGE LLC.
 
                                     return socketResponse.Success && socketResponse.OutputText.Contains(KubeConst.CrioSocketPath);
                                 },
-                                pollInterval: TimeSpan.FromSeconds(0.5),
-                                timeout:      TimeSpan.FromSeconds(60));
+                                pollInterval:      TimeSpan.FromSeconds(0.5),
+                                timeout:           TimeSpan.FromSeconds(60),
+                                cancellationToken: controller.CancellationToken);
 
                             // $note(jefflill):
                             //
@@ -1642,8 +1640,9 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                         return false;
                                     }
                                 },
-                                timeout:      TimeSpan.FromSeconds(300),
-                                pollInterval: TimeSpan.FromMilliseconds(500));
+                                timeout:           TimeSpan.FromSeconds(300),
+                                pollInterval:      TimeSpan.FromMilliseconds(500),
+                                cancellationToken: controller.CancellationToken);
 
                             await k8s.CoreV1.DeleteNamespacedPodAsync("dnsutils", KubeNamespace.NeonSystem);
                         });
@@ -1980,8 +1979,9 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                 return false;
                             }
                         },
-                        timeout:      TimeSpan.FromSeconds(300),
-                        pollInterval: TimeSpan.FromMilliseconds(500));
+                        timeout:           TimeSpan.FromSeconds(300),
+                        pollInterval:      TimeSpan.FromMilliseconds(500),
+                        cancellationToken: controller.CancellationToken);
                 });
 
             controller.ThrowIfCancelled();
@@ -2269,8 +2269,9 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             return false;
                         }
                     },
-                    timeout:      TimeSpan.FromMinutes(10),
-                    pollInterval: TimeSpan.FromSeconds(5));
+                    timeout:           TimeSpan.FromMinutes(10),
+                    pollInterval:      TimeSpan.FromSeconds(5),
+                    cancellationToken: controller.CancellationToken);
 
                     var secret = new V1Secret()
                     {
@@ -2952,7 +2953,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                 {
                                     k8s.AppsV1.WaitForDeploymentAsync(KubeNamespace.NeonStorage, "openebs-nfs-provisioner", timeout: clusterOpTimeout, pollInterval: clusterOpPollInterval, cancellationToken: controller.CancellationToken),
                                 },
-                                timeoutMessage: "setup/openebs-ready",
+                                timeoutMessage:    "setup/openebs-ready",
                                 cancellationToken: controller.CancellationToken);
                         });
 
@@ -4412,8 +4413,9 @@ $@"- name: StorageType
                                 return false;
                             }
                         },
-                        timeout:      TimeSpan.FromSeconds(300),
-                        pollInterval: TimeSpan.FromMilliseconds(250));
+                        timeout:           TimeSpan.FromSeconds(300),
+                        pollInterval:      TimeSpan.FromMilliseconds(250),
+                        cancellationToken: controller.CancellationToken);
 
                     cmd = new string[]
                         {
@@ -4423,11 +4425,11 @@ $@"- name: StorageType
                         };
 
                     (await k8s.NamespacedPodExecWithRetryAsync(
-                                retryPolicy:        podExecRetry,
-                                name:               grafanaPod.Name(),
-                                namespaceParameter: grafanaPod.Namespace(),
-                                container:          "grafana",
-                                command:            cmd)).EnsureSuccess();
+                        retryPolicy:        podExecRetry,
+                        name:               grafanaPod.Name(),
+                        namespaceParameter: grafanaPod.Namespace(),
+                        container:          "grafana",
+                        command:            cmd)).EnsureSuccess();
                 });
         }
 
@@ -4592,6 +4594,8 @@ $@"- name: StorageType
                         async () =>
                         {
                             controller.LogProgress(controlNode, verb: "wait for", message: "minio");
+
+                            var operationRetryPolicy = new LinearRetryPolicy(e => true, maxAttempts: 10, retryInterval: TimeSpan.FromSeconds(30), cancellationToken: controller.CancellationToken);
 
                             await operationRetryPolicy.InvokeAsync(
                                 async () =>
@@ -4984,8 +4988,9 @@ $@"- name: StorageType
                                     return false;
                                 }
                             },
-                            timeout:      TimeSpan.FromSeconds(600),
-                            pollInterval: TimeSpan.FromSeconds(1));
+                            timeout:           TimeSpan.FromSeconds(600),
+                            pollInterval:      TimeSpan.FromSeconds(1),
+                            cancellationToken: controller.CancellationToken);
                     }
                 });
 
@@ -5051,8 +5056,9 @@ $@"- name: StorageType
 
                         return clusterOperator?.Status?.ContainerImages?.LastCompleted != null;
                     },
-                    timeout:      TimeSpan.FromMinutes(10),
-                    pollInterval: TimeSpan.FromMilliseconds(250));
+                    timeout:           TimeSpan.FromMinutes(10),
+                    pollInterval:      TimeSpan.FromMilliseconds(250),
+                    cancellationToken: controller.CancellationToken);
 
                     // Wait for node tasks to complete.
 
@@ -5069,8 +5075,9 @@ $@"- name: StorageType
 
                         return !tasks.Items.Any(nodeTask => nodeTask.Status == null || nodeTask.Status.Phase != V1NeonNodeTask.Phase.Success);
                     },
-                    timeout:      TimeSpan.FromMinutes(10),
-                    pollInterval: TimeSpan.FromSeconds(5));
+                    timeout:           TimeSpan.FromMinutes(10),
+                    pollInterval:      TimeSpan.FromSeconds(5),
+                    cancellationToken: controller.CancellationToken);
 
                     // Reset schedule to default value after completion.
 
@@ -6338,8 +6345,9 @@ $@"- name: StorageType
 
                     return pods.Items.All(pod => pod.Status.Phase.Equals("Running", StringComparison.InvariantCultureIgnoreCase));
                 },
-                timeout:      TimeSpan.FromMinutes(10),
-                pollInterval: TimeSpan.FromSeconds(5));
+                timeout:           TimeSpan.FromMinutes(10),
+                pollInterval:      TimeSpan.FromSeconds(5),
+                cancellationToken: controller.CancellationToken);
         }
     }
 }
