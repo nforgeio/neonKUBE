@@ -5241,8 +5241,8 @@ $@"- name: StorageType
                             {
                                 ContainerImages = new V1NeonClusterOperator.UpdateSpec()
                                 {
-                                    Enabled  = true,
-                                    Schedule = cluster.SetupState.ClusterDefinition.IsDesktop ? "0 * * ? * *" : "0 0 0 ? * *"
+                                    Enabled  = !cluster.SetupState.ClusterDefinition.IsDesktop,
+                                    Schedule = cluster.SetupState.ClusterDefinition.IsDesktop ? string.Empty : "0 0 0 ? * *"
                                 },
                                 ControlPlaneCertificates = new V1NeonClusterOperator.UpdateSpec()
                                 {
