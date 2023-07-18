@@ -3077,7 +3077,7 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Returns the <see cref="KubeVersions.NeonKube"/> contant value extracted from the 
+        /// Returns the <see cref="KubeVersions.NeonKube"/> constant value extracted from the 
         /// <b>$/TEMPKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file.  Note that the
         /// <b>NK_ROOT</b> environment variable must reference the root of the <b>NEONKUBE</b>
         /// git repository.
