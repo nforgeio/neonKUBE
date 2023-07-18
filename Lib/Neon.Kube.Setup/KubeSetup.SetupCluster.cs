@@ -352,7 +352,7 @@ namespace Neon.Kube.Setup
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
 
-            var result = cluster.DeploymentControlNode.SudoCommand("kubectl", args);
+            var result = cluster.DeploymentControlNode.SudoCommand("kubectl", RunOptions.RunWhenFaulted, args);
 
             using (var stream = File.Create(Path.Combine(folder, fileName)))
             {
