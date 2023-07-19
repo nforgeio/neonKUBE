@@ -340,8 +340,8 @@ namespace Neon.Kube.Setup
         }
 
         /// <summary>
-        /// Executes a <b>kubectl</b> command on the cluster's first control-plane node and then
-        /// writes a summary of the command and its output to a file.
+        /// Executes a <b>kubectl/neon</b> command on the cluster node and then writes a summary of
+        /// the command and its output to a file.
         /// </summary>
         /// <param name="cluster">Specifies the cluster proxy.</param>
         /// <param name="folder">Specifies the path to the output folder.</param>
@@ -352,7 +352,7 @@ namespace Neon.Kube.Setup
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
 
-            var result = cluster.DeploymentControlNode.SudoCommand("kubectl", RunOptions.RunWhenFaulted, args);
+            var result = KubeHelper.NeonCliExecuteCapture(args);
 
             using (var stream = File.Create(Path.Combine(folder, fileName)))
             {
