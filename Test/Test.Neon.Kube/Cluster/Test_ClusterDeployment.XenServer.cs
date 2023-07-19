@@ -92,7 +92,6 @@ namespace TestKube
 
                 File.WriteAllText(tempFile.Path, clusterDefinitionYaml);
 
-
                 try
                 {
                     // We've seen intermittent problems uploading the node template to XenServers
