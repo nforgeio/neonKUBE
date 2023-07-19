@@ -121,7 +121,7 @@ namespace TestKube
                 finally
                 {
                     // Break for deployment errors and when the debugger is attached.  This is a
-                    // good way to [revent the cluster from, being deleted for further investigation. 
+                    // good way to [prevent the cluster from being deleted for further investigation. 
 
                     if (error && Debugger.IsAttached)
                     {
