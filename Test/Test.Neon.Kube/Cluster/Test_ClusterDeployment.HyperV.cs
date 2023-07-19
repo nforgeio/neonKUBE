@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -73,6 +74,8 @@ namespace TestKube
 
             using (var tempFile = new TempFile(".cluster.yaml"))
             {
+                var error = false;
+
                 File.WriteAllText(tempFile.Path, clusterDefinitionYaml);
 
                 try
@@ -94,10 +97,20 @@ namespace TestKube
                 }
                 catch (Exception e)
                 {
+                    error = true;
+
                     KubeTestHelper.CaptureDeploymentLogsAndThrow(e, typeof(Test_ClusterDeployment), nameof(DeployHyperVCluster), runCount);
                 }
                 finally
                 {
+                    // Break for deployment errors and when the debugger is attached.  This is a
+                    // good way to [revent the cluster from, being deleted for further investigation. 
+
+                    if (error && Debugger.IsAttached)
+                    {
+                        Debugger.Break();
+                    }
+
                     await KubeHelper.NeonCliExecuteCaptureAsync("cluster", "delete", "--force");
                 }
             }
