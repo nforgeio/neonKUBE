@@ -4166,7 +4166,7 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Installs Reloader to the Neon system nnamespace.
+        /// Installs Reloader to the Neon system namespace.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
@@ -4211,9 +4211,9 @@ $@"- name: StorageType
 
                     foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelRole, NodeRole.ControlPlane))
                     {
-                        values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
-                        values.Add($"tolerations[{i}].effect", taint.Effect);
-                        values.Add($"tolerations[{i}].operator", "Exists");
+                        values.Add($"reloader.deployment.tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                        values.Add($"reloader.deployment.tolerations[{i}].effect", taint.Effect);
+                        values.Add($"reloader.deployment.tolerations[{i}].operator", "Exists");
                         i++;
                     }
 
