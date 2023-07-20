@@ -284,7 +284,7 @@ nodes:
             NeonHelper.ServiceContainer.AddSingleton<IProfileClient>(new MaintainerProfile());
 
             // We're going to exercise the neon-cli output format option by using
-            // "-o=json" for AWS and XenServer hosting environments and "--outout=yaml"
+            // "-o=json" for AWS and XenServer hosting environments and "-o=yaml"
             // for Azure and Hyper-V Azure hosting environments.
 
             string outputOption;
