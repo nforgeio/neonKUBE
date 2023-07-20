@@ -740,31 +740,40 @@ namespace Neon.Kube.Hosting.HyperV
 
                 var prefix = cluster.KubeConfig.Cluster.HostingNamePrefix;
 
-                if (!vmName.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
+                if (prefix != null)
                 {
-                    return null;
+                    if (!vmName.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return null;
+                    }
+
+                    return vmName.Substring(prefix.Length);
                 }
 
-                return vmName.Substring(prefix.Length);
+                return null;
             }
             else
             {
                 // Special case the NEONDESKTOP cluster whose name is never prefixed.
 
-                if (clusterDefinition.IsDesktop &&
-                    vmName.Equals(KubeConst.NeonDesktopHyperVVmName, StringComparison.InvariantCultureIgnoreCase))
+                if (clusterDefinition.IsDesktop && vmName.Equals(KubeConst.NeonDesktopHyperVVmName, StringComparison.InvariantCultureIgnoreCase))
                 {
                     return vmName;
                 }
 
                 var prefix = clusterDefinition.Hosting.Hypervisor.NamePrefix;
 
-                if (!vmName.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
+                if (prefix != null)
                 {
-                    return null;
+                    if (!vmName.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return null;
+                    }
+
+                    return vmName.Substring(prefix.Length);
                 }
 
-                return vmName.Substring(prefix.Length);
+                return null;
             }
         }
 

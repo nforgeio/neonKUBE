@@ -3473,8 +3473,7 @@ TCPKeepAlive yes
         /// <summary>
         /// Builds the <b>neon/kubectl</b> tool if it does not already exist.
         /// </summary>
-        /// <returns></returns>
-        private static async Task EnsureNeonKubectl()
+        private static void EnsureNeonKubectl()
         {
             try
             {
@@ -3482,7 +3481,7 @@ TCPKeepAlive yes
             }
             catch (FileNotFoundException)
             {
-                var response = await NeonHelper.ExecuteCaptureAsync("neoncloud-builder",
+                var response = NeonHelper.ExecuteCapture("neoncloud-builder",
                     new object[]
                     {
                         "-dirty",
@@ -3510,7 +3509,7 @@ TCPKeepAlive yes
         {
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
-            await EnsureNeonKubectl();
+            EnsureNeonKubectl();
 
             return await NeonHelper.ExecuteAsync(NeonCliPath, args);
         }
@@ -3530,9 +3529,29 @@ TCPKeepAlive yes
         {
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
-            await EnsureNeonKubectl();
+            EnsureNeonKubectl();
 
             return await NeonHelper.ExecuteCaptureAsync(NeonCliPath, args);
+        }
+
+        /// <summary>
+        /// Executes a <b>neon/kubectl</b> command using the installed executable or the
+        /// executable from the NEONCLOUD build folder, capturing the output streams.
+        /// </summary>
+        /// <param name="args">The command line arguments.</param>
+        /// <returns>The command exit code.</returns>
+        /// <remarks>
+        /// <note>
+        /// For maintainers, this method will build the <b>neon/kubectl</b> tool if it does not already exist.
+        /// </note>
+        /// </remarks>
+        public static ExecuteResponse NeonCliExecuteCapture(params object[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
+
+            EnsureNeonKubectl();
+
+            return NeonHelper.ExecuteCapture(NeonCliPath, args);
         }
     }
 }

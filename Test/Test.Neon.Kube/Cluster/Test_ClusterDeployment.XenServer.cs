@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -87,6 +88,7 @@ namespace TestKube
             using (var tempFile = new TempFile(".cluster.yaml"))
             {
                 var clusterDefinition = ClusterDefinition.FromYaml(clusterDefinitionYaml);
+                var error             = false;
 
                 File.WriteAllText(tempFile.Path, clusterDefinitionYaml);
 
@@ -112,10 +114,20 @@ namespace TestKube
                 }
                 catch (Exception e)
                 {
+                    error = true;
+
                     KubeTestHelper.CaptureDeploymentLogsAndThrow(e, typeof(Test_ClusterDeployment), nameof(DeployXenServerCluster), runCount);
                 }
                 finally
                 {
+                    // Break for deployment errors and when the debugger is attached.  This is a
+                    // good way to [prevent the cluster from being deleted for further investigation. 
+
+                    if (error && Debugger.IsAttached)
+                    {
+                        Debugger.Break();
+                    }
+
                     // Delete the deployed cluster.
 
                     await KubeHelper.NeonCliExecuteCaptureAsync("cluster", "delete", clusterDefinition.Name, "--force");

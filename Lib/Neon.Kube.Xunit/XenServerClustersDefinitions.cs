@@ -220,8 +220,8 @@ nodes:
   worker-0:
     role: worker
     address: $<profile:xenserver.large3.ip>
-     hypervisor:
-       host: XEN-TEST
+    hypervisor:
+      host: XEN-TEST
   worker-1:
     role: worker
     address: $<profile:xenserver.large4.ip>
