@@ -2225,7 +2225,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     }
 
                     i = 0;
-                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelIngress, "true"))
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelRole, NodeRole.ControlPlane))
                     {
                         values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
                         values.Add($"tolerations[{i}].effect", taint.Effect);
@@ -4204,6 +4204,16 @@ $@"- name: StorageType
                     {
                         values.Add($"nodeSelectors[{i}].key", selector.Key);
                         values.Add($"nodeSelectors[{i}].value", selector.Value);
+                        i++;
+                    }
+
+                    i = 0;
+
+                    foreach (var taint in await GetTaintsAsync(controller, NodeLabels.LabelRole, NodeRole.ControlPlane))
+                    {
+                        values.Add($"tolerations[{i}].key", $"{taint.Key.Split("=")[0]}");
+                        values.Add($"tolerations[{i}].effect", taint.Effect);
+                        values.Add($"tolerations[{i}].operator", "Exists");
                         i++;
                     }
 
