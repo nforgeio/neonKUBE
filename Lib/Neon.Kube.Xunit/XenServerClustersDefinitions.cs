@@ -73,7 +73,7 @@ hosting:
     hostPassword: $<secret:XENSERVER_LOGIN[password]>
     namePrefix: test-tiny
     vcpus: 4
-    memory: 8 GiB
+    memory: 16 GiB
     osDisk: 64 GiB
     openEbsDisk: 32 GiB
     hosts:
@@ -121,7 +121,7 @@ hosting:
     hostPassword: $<secret:XENSERVER_LOGIN[password]>
     namePrefix: test-small
     vcpus: 4
-    memory: 8 GiB
+    memory: 16 GiB
     osDisk: 64 GiB
     openEbsDisk: 32 GiB
     hosts:
@@ -184,7 +184,7 @@ hosting:
     hostPassword: $<secret:XENSERVER_LOGIN[password]>
     namePrefix: test-large
     vcpus: 4
-    memory: 8 GiB
+    memory: 16 GiB
     osDisk: 64 GiB
     openEbsDisk: 32 GiB
     hosts:
