@@ -144,7 +144,7 @@ hosting:
   hypervisor:
     namePrefix: {namePrefix}
     vcpus: 4
-    memory: 16 GiB
+    memory: 8 GiB
     osDisk: 64 GiB
     diskLocation: $<profile:hyperv.diskfolder>
 network:
