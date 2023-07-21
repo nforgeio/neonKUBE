@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -121,8 +122,9 @@ namespace Neon.Kube.Xunit
         }
 
         /// <summary>
-        /// Call this method in your unit test, passing the type of your test class to clear
-        /// any existing logs captured from a previous test run.
+        /// Resets deployment test related logs and also kills any <b>neon.exe</b> and <b>neon-cli.exe</b>
+        /// processes to prepare for another test run.  Call this method in your unit test, passing the type
+        /// of your test class.
         /// </summary>
         /// <param name="testClassType">Identifies the unit test class type.</param>
         /// <param name="testName">Identifies the unit test.</param>
@@ -144,7 +146,7 @@ namespace Neon.Kube.Xunit
         /// won't clear logs.
         /// </para>
         /// </remarks>
-        public static void CleanDeploymentLogs(Type testClassType, string testName)
+        public static void ResetDeploymentTest(Type testClassType, string testName)
         {
             Covenant.Requires<ArgumentNullException>(testClassType != null, nameof(testClassType));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(testName), nameof(testName));
@@ -158,6 +160,23 @@ namespace Neon.Kube.Xunit
             }
 
             Environment.SetEnvironmentVariable(variable, "CLEANED");
+            KillNeonCli();
+        }
+
+        /// <summary>
+        /// Kills any <b>neon.exe</b> and <b>neon-cli.exe</b> processes.  Call this when handling
+        /// cluster deployment unit test failures to ensure that any orhpaned tool processes don't
+        /// hand around.
+        /// </summary>
+        public static void KillNeonCli()
+        {
+            foreach (var process in Process.GetProcesses())
+            {
+                if (process.ProcessName == "neon.exe" || process.ProcessName == "neon-cli.exe")
+                {
+                    process.KillNow();
+                }
+            }
         }
 
         /// <summary>
@@ -178,7 +197,7 @@ namespace Neon.Kube.Xunit
         /// </para>
         /// <list type="number">
         /// <item>
-        /// Call <see cref="CleanDeploymentLogs(Type, string)"/> at the top of your test
+        /// Call <see cref="ResetDeploymentTest(Type, string)"/> at the top of your test
         /// methods, passing your test class type as well as the test method's name.
         /// </item>
         /// <item>
@@ -186,7 +205,7 @@ namespace Neon.Kube.Xunit
         /// </item>
         /// </list>
         /// <para>
-        /// That's all there is to it.  The <see cref="CleanDeploymentLogs(Type, string)"/>
+        /// That's all there is to it.  The <see cref="ResetDeploymentTest(Type, string)"/>
         /// call will clear any previously captured logs the first time it's called by
         /// the test runner and will do nothing thereafter.  When called, this method
         /// copies the deployment log files from <b>~/.neonkube/logs/**</b> to the

@@ -70,11 +70,11 @@ namespace TestKube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterDefinitionYaml), nameof(clusterDefinitionYaml));
 
-            KubeTestHelper.CleanDeploymentLogs(typeof(Test_ClusterDeployment), nameof(DeployHyperVCluster));
+            KubeTestHelper.ResetDeploymentTest(typeof(Test_ClusterDeployment), nameof(DeployHyperVCluster));
 
             using (var tempFile = new TempFile(".cluster.yaml"))
             {
-                var error = false;
+                Exception error = null;
 
                 File.WriteAllText(tempFile.Path, clusterDefinitionYaml);
 
@@ -97,16 +97,18 @@ namespace TestKube
                 }
                 catch (Exception e)
                 {
-                    error = true;
+                    error = e;
 
                     KubeTestHelper.CaptureDeploymentLogsAndThrow(e, typeof(Test_ClusterDeployment), nameof(DeployHyperVCluster), runCount);
                 }
                 finally
                 {
                     // Break for deployment errors and when the debugger is attached.  This is a
-                    // good way to [prevent the cluster from being deleted for further investigation. 
+                    // good way to [prevent the cluster from being deleted for further investigation.
 
-                    if (error && Debugger.IsAttached)
+                    KubeTestHelper.KillNeonCli();
+
+                    if (error != null && Debugger.IsAttached)
                     {
                         Debugger.Break();
                     }

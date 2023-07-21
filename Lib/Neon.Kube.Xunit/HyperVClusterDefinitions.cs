@@ -171,15 +171,12 @@ nodes:
   control-0:
     role: control-plane
     address: $<profile:hyperv.large0.ip>
-    memory: 4 GiB
   control-1:
     role: control-plane
     address: $<profile:hyperv.large1.ip>
-    memory: 4 GiB
   control-2:
     role: control-plane
     address: $<profile:hyperv.large2.ip>
-    memory: 4 GiB
   worker-0:
     role: worker
     address: $<profile:hyperv.large3.ip>

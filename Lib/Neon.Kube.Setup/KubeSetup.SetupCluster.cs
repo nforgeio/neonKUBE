@@ -193,13 +193,18 @@ namespace Neon.Kube.Setup
 
             controller.AddWaitUntilOnlineStep("connect nodes");
 
-            controller.AddNodeStep("check node OS",
+            controller.AddNodeStep("log cluster-id",
                 (controller, node) =>
                 {
                     // Log the cluster ID for debugging purposes.
 
                     controller.LogGlobal($"CLUSTER-ID: {setupState.ClusterId}");
+                },
+                quiet: true);
 
+            controller.AddNodeStep("check node OS",
+                (controller, node) =>
+                {
                     node.VerifyNodeOS();
                 });
 
