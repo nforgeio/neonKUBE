@@ -88,7 +88,7 @@ namespace TestKube
             using (var tempFile = new TempFile(".cluster.yaml"))
             {
                 var clusterDefinition = ClusterDefinition.FromYaml(clusterDefinitionYaml);
-                var error             = false;
+                var error             = (Exception)null;
 
                 File.WriteAllText(tempFile.Path, clusterDefinitionYaml);
 
@@ -114,7 +114,7 @@ namespace TestKube
                 }
                 catch (Exception e)
                 {
-                    error = true;
+                    error = e;
 
                     KubeTestHelper.CaptureDeploymentLogsAndThrow(e, typeof(Test_ClusterDeployment), nameof(DeployXenServerCluster), runCount);
                 }
@@ -123,7 +123,7 @@ namespace TestKube
                     // Break for deployment errors and when the debugger is attached.  This is a
                     // good way to [prevent the cluster from being deleted for further investigation. 
 
-                    if (error && Debugger.IsAttached)
+                    if (error != null && Debugger.IsAttached)
                     {
                         Debugger.Break();
                     }
