@@ -185,7 +185,7 @@ nodes:
   control-2:
     role: control-plane
     address: $<profile:hyperv.large2.ip>
-      hypervisor:
+    hypervisor:
       memory: 8 GiB
 worker-0:
     role: worker
