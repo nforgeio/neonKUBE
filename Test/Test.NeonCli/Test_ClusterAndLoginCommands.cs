@@ -157,6 +157,8 @@ nodes:
   node:
     role: control-plane
     address: $<profile:hyperv.tiny0.ip>
+    hypervisor:
+      memory: 8 GiB
 ";
 
         private const string xenServerClusterDefinition =
@@ -175,7 +177,7 @@ hosting:
     hostPassword: $<secret:XENSERVER_LOGIN[password]>
     namePrefix: {namePrefix}
     vcpus: 4
-    memory: 18 GiB
+    memory: 16 GiB
     osDisk: 64 GiB
     hosts:
     - name: XENHOST

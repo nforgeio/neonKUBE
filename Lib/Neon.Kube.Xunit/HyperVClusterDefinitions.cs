@@ -82,6 +82,8 @@ nodes:
   control-0:
     role: control-plane
     address: $<profile:hyperv.tiny0.ip>
+    hypervisor:
+      memory: 8 GiB
 ";
                 return Preprocess(clusterDefinition);
             }
@@ -122,6 +124,8 @@ nodes:
   control-0:
     role: control-plane
     address: $<profile:hyperv.small0.ip>
+    hypervisor:
+      memory: 8 GiB
   worker-0:
     role: worker
     address: $<profile:hyperv.small1.ip>
@@ -171,13 +175,19 @@ nodes:
   control-0:
     role: control-plane
     address: $<profile:hyperv.large0.ip>
+    hypervisor:
+      memory: 8 GiB
   control-1:
     role: control-plane
     address: $<profile:hyperv.large1.ip>
+    hypervisor:
+      memory: 8 GiB
   control-2:
     role: control-plane
     address: $<profile:hyperv.large2.ip>
-  worker-0:
+      hypervisor:
+      memory: 8 GiB
+worker-0:
     role: worker
     address: $<profile:hyperv.large3.ip>
   worker-1:

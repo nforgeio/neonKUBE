@@ -93,6 +93,7 @@ nodes:
     address: $<profile:xenserver.tiny0.ip>
     hypervisor:
       host: XEN-TEST
+      memory: 8 GiB
 ";
                 return Preprocess(clusterDefinition);
             }
@@ -141,6 +142,7 @@ nodes:
     address: $<profile:xenserver.small0.ip>
     hypervisor:
       host: XEN-TEST
+      memory: 8 GiB
   worker-0:
     role: worker
     address: $<profile:xenserver.small1.ip>
@@ -204,16 +206,19 @@ nodes:
     address: $<profile:xenserver.large0.ip>
     hypervisor:
       host: XEN-TEST
+      memory: 8 GiB
   control-1:
     role: control-plane
     address: $<profile:xenserver.large1.ip>
     hypervisor:
       host: XEN-TEST
-  control-2:
+      memory: 8 GiB
+control-2:
     role: control-plane
     address: $<profile:xenserver.large2.ip>
     hypervisor:
       host: XEN-TEST
+      memory: 8 GiB
   worker-0:
     role: worker
     address: $<profile:xenserver.large3.ip>
