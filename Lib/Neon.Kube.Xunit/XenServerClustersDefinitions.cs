@@ -206,19 +206,16 @@ nodes:
     address: $<profile:xenserver.large0.ip>
     hypervisor:
       host: XEN-TEST
-      memory: 8 GiB
   control-1:
     role: control-plane
     address: $<profile:xenserver.large1.ip>
     hypervisor:
       host: XEN-TEST
-      memory: 8 GiB
-control-2:
+  control-2:
     role: control-plane
     address: $<profile:xenserver.large2.ip>
     hypervisor:
       host: XEN-TEST
-      memory: 8 GiB
   worker-0:
     role: worker
     address: $<profile:xenserver.large3.ip>
