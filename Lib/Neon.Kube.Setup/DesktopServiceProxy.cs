@@ -150,6 +150,8 @@ namespace Neon.Kube.Setup
         /// <returns>A <see cref="Dictionary{TKey, TValue}"/> mapping feature names to <see cref="WindowsFeatureStatus"/>"/> instances.</returns>
         public async Task<Dictionary<string, WindowsFeatureStatus>> GetWindowsOptionalFeaturesAsync()
         {
+            await SyncContext.Clear;
+
             if (isAdmin)
             {
                 return NeonHelper.GetWindowsOptionalFeatures();
