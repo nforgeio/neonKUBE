@@ -98,7 +98,7 @@ namespace Neon.Kube.Hosting
         int MaxParallel { get; set; }
 
         /// <summary>
-        /// Number of seconds to delay after specific operations (e.g. to allow services to stablize).
+        /// Number of seconds to delay after specific operations (e.g. to allow services to stabilize).
         /// This defaults to <b>0.0</b>.
         /// </summary>
         double WaitSeconds { get; set; }

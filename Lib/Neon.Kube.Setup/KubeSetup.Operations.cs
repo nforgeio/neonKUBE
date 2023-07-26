@@ -6336,7 +6336,7 @@ $@"- name: StorageType
         }
 
         /// <summary>
-        /// Waits for the a NEONDESKTOP cluster to stablize.
+        /// Waits for the a NEONDESKTOP cluster to stabilize.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>

@@ -230,7 +230,7 @@ namespace Neon.Kube.ClusterDef
         /// domains and when it's necessary to perform planned maintenance on the underlying
         /// hardware or to relocate a VM to another host, Azure guarantees that it will
         /// reboot hosts in only one update domain at a time and then wait 30 minutes between
-        /// update domains to give the application a chance to stablize.
+        /// update domains to give the application a chance to stabilize.
         /// </para>
         /// <para>
         /// A value of <b>2</b> indicates that one half of the cluster servers may be rebooted
