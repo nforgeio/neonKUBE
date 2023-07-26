@@ -143,7 +143,7 @@ namespace Neon.Kube.Setup
         /// </para>
         /// </param>
         /// <returns>The cluster definition.</returns>
-        public static ClusterDefinition GetBuiltInClusterDefinition(HostingEnvironment hostEnvironment, string deploymentPrefix = null)
+        public static ClusterDefinition GetDesktopClusterDefinition(HostingEnvironment hostEnvironment, string deploymentPrefix = null)
         {
             var resourceName = "Neon.Kube.Setup.ClusterDefinitions.";
 
