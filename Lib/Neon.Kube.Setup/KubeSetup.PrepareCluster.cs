@@ -30,6 +30,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
 
 using Neon.Collections;
 using Neon.Common;
@@ -536,7 +537,7 @@ namespace Neon.Kube.Setup
             // Some hosting managers may have to do some additional work after
             // the cluster has been otherwise prepared.
             //
-            // NOTE: This isn't required for pre-built clusters.
+            // NOTE: This isn't required for NEONDESKTOP clusters.
 
             if (!options.DesktopReadyToGo)
             {
@@ -548,6 +549,49 @@ namespace Neon.Kube.Setup
             if (options.DesktopReadyToGo)
             {
                 controller.AddNodeStep("configure: workstation", KubeSetup.ConfigureWorkstation, (controller, node) => node == cluster.DeploymentControlNode); ;
+            }
+
+            // We need to wait for pods to start and stabilize for NEONDESKTOP clusters.
+
+            if (options.DesktopReadyToGo)
+            {
+                controller.AddGlobalStep("stabilizing: cluster...",
+                    async controller =>
+                    {
+                        setupState.Save();
+
+                        // Wait a bit to give the cluster a chance to start pods and containers.
+
+                        await Task.Delay(TimeSpan.FromSeconds(60));
+
+                        // Wait for the pods to stabilize.
+
+                        using (var k8s = KubeHelper.CreateKubernetesClient())
+                        {
+                            var delay = TimeSpan.FromSeconds(5);
+                            var pods  = (await k8s.CoreV1.ListAllPodsAsync()).Items;
+
+                            while (pods.Any(
+                                pod =>
+                                {
+                                    // Return TRUE when the pod or any of it's containers aren't ready.
+
+                                    if (pod.Status.Phase != "Running")
+                                    {
+                                        return true;
+                                    }
+
+                                    if (pod.Status.ContainerStatuses.Any(status => !status.Ready))
+                                    {
+                                    }
+
+                                    return pod.Status.ContainerStatuses.Any(status => !status.Ready);
+                                }))
+                            {
+                                await Task.Delay(delay);
+                            }
+                        }
+                    });
             }
 
             // Indicate that cluster prepare succeeded in the cluster setup state.  Cluster setup
