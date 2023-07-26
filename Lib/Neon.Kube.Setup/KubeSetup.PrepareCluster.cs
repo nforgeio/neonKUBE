@@ -581,10 +581,6 @@ namespace Neon.Kube.Setup
                                         return true;
                                     }
 
-                                    if (pod.Status.ContainerStatuses.Any(status => !status.Ready))
-                                    {
-                                    }
-
                                     return pod.Status.ContainerStatuses.Any(status => !status.Ready);
                                 }))
                             {
