@@ -1,4 +1,4 @@
-//-----------------------------------------------------------------------------
+ //-----------------------------------------------------------------------------
 // FILE:        KubeSetup.PrepareCluster.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -30,6 +30,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
+
+using k8s.Models;
 
 using Neon.Collections;
 using Neon.Common;
@@ -536,7 +539,7 @@ namespace Neon.Kube.Setup
             // Some hosting managers may have to do some additional work after
             // the cluster has been otherwise prepared.
             //
-            // NOTE: This isn't required for pre-built clusters.
+            // NOTE: This isn't required for NEONDESKTOP clusters.
 
             if (!options.DesktopReadyToGo)
             {
@@ -548,6 +551,80 @@ namespace Neon.Kube.Setup
             if (options.DesktopReadyToGo)
             {
                 controller.AddNodeStep("configure: workstation", KubeSetup.ConfigureWorkstation, (controller, node) => node == cluster.DeploymentControlNode); ;
+            }
+
+            // We need to wait for pods to start and stabilize for NEONDESKTOP clusters.
+            // We're going to waita maximum of 10 minutes before giving up.
+
+            if (options.DesktopReadyToGo)
+            {
+                controller.AddGlobalStep("stabilizing: cluster...",
+                    async controller =>
+                    {
+                        controller.SetGlobalStepStatus("Waiting for cluster to stabilize");
+                        setupState.Save();
+
+                        // Wait a bit to give the cluster a chance to start pods and containers.
+
+                        await Task.Delay(TimeSpan.FromSeconds(60));
+
+                        // Wait for the pods to stabilize.
+
+                        using (var k8s = KubeHelper.CreateKubernetesClient())
+                        {
+                            var startedUtc      = DateTime.UtcNow;
+                            var maxWaitInterval = TimeSpan.FromMinutes(10);
+                            var pauseInterval   = TimeSpan.FromSeconds(5);
+                            var badPods         = new List<V1Pod>();
+
+                            while (true)
+                            {
+                                var pods = (await k8s.CoreV1.ListAllPodsAsync()).Items;
+
+                                badPods.Clear();
+
+                                foreach (var pod in pods)
+                                {
+                                    if (pod.Status.Phase != "Running" || pod.Status.ContainerStatuses.Any(status => !status.Ready))
+                                    {
+                                        badPods.Add(pod);
+                                    }
+                                }
+
+                                if (badPods.Count == 0)
+                                {
+                                    return;
+                                }
+
+                                // Fail if we've exceeded the maximum wait time, logging info
+                                // about the failed pods.
+
+                                if (DateTime.UtcNow - startedUtc >= maxWaitInterval)
+                                {
+                                    var sb = new StringBuilder();
+
+                                    controller.LogGlobalError($"[{badPods.Count}] unhealthy pods are preventing cluster stabilization.");
+
+                                    foreach (var badPod in badPods
+                                        .OrderBy(pod => pod.Namespace())
+                                        .ThenBy(pod => pod.Name()))
+                                    {
+                                        sb.Clear();
+                                        sb.AppendLine();
+                                        sb.AppendLine($"POD: {badPod.Name()}@{badPod.Namespace()}");
+                                        sb.AppendLine("-----------------------------");
+                                        sb.AppendLine(NeonHelper.YamlSerialize(badPod));
+                                    }
+
+                                    throw new TimeoutException($"The cluster hasn't stabilized ");
+                                }
+
+                                // Otherwise wait a bit and retry.
+
+                                await Task.Delay(pauseInterval);
+                            }
+                        }
+                    });
             }
 
             // Indicate that cluster prepare succeeded in the cluster setup state.  Cluster setup

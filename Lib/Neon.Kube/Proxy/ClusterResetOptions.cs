@@ -141,7 +141,7 @@ namespace Neon.Kube.Proxy
 
         /// <summary>
         /// <para>
-        /// Specifies the number of seconds to wait for the cluster to stablize after performing
+        /// Specifies the number of seconds to wait for the cluster to stabilize after performing
         /// the reset.  This defaults to <b>30 seconds</b>.
         /// </para>
         /// </summary>
