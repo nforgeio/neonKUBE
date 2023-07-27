@@ -200,6 +200,7 @@ namespace NeonClusterOperator
                         var controlPlaneCertSchedule = resource.Spec.Updates.ControlPlaneCertificates.Schedule;
 
                         CronExpression.ValidateExpression(controlPlaneCertSchedule);
+
                         await checkControlPlaneCertificates.DeleteFromSchedulerAsync(scheduler);
                         await checkControlPlaneCertificates.AddToSchedulerAsync(scheduler, k8s, controlPlaneCertSchedule);
                     }
@@ -224,10 +225,10 @@ namespace NeonClusterOperator
                             containerImageSchedule,
                             new Dictionary<string, object>()
                             {
-                        { "HarborClient", harborClient }
+                                { "HarborClient", harborClient }
                             });
                     }
-                    catch
+                    catch (Exception e)
                     {
                         logger.LogErrorEx(e);
                     }
@@ -248,7 +249,7 @@ namespace NeonClusterOperator
                             clusterTelemetrySchedule,
                             new Dictionary<string, object>()
                             {
-                            { "AuthHeader", headendClient.DefaultRequestHeaders.Authorization }
+                                { "AuthHeader", headendClient.DefaultRequestHeaders.Authorization }
                             });
                     }
                     catch (Exception e)
