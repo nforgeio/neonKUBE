@@ -176,32 +176,41 @@ namespace NeonClusterOperator
                     await InitializeSchedulerAsync();
                 }
 
-                var nodeCaSchedule = resource.Spec.Updates.NodeCaCertificates.Schedule;
+                if (resource.Spec.Updates.NodeCaCertificates.Enabled)
+                {
+                    var nodeCaSchedule = resource.Spec.Updates.NodeCaCertificates.Schedule;
 
-                CronExpression.ValidateExpression(nodeCaSchedule);
+                    CronExpression.ValidateExpression(nodeCaSchedule);
 
-                await updateCaCertificates.DeleteFromSchedulerAsync(scheduler);
-                await updateCaCertificates.AddToSchedulerAsync(scheduler, k8s, nodeCaSchedule);
+                    await updateCaCertificates.DeleteFromSchedulerAsync(scheduler);
+                    await updateCaCertificates.AddToSchedulerAsync(scheduler, k8s, nodeCaSchedule);
+                }
 
-                var controlPlaneCertSchedule = resource.Spec.Updates.ControlPlaneCertificates.Schedule;
+                if (resource.Spec.Updates.ControlPlaneCertificates.Enabled)
+                {
+                    var controlPlaneCertSchedule = resource.Spec.Updates.ControlPlaneCertificates.Schedule;
 
-                CronExpression.ValidateExpression(controlPlaneCertSchedule);
-                await checkControlPlaneCertificates.DeleteFromSchedulerAsync(scheduler);
-                await checkControlPlaneCertificates.AddToSchedulerAsync(scheduler, k8s, controlPlaneCertSchedule);
+                    CronExpression.ValidateExpression(controlPlaneCertSchedule);
+                    await checkControlPlaneCertificates.DeleteFromSchedulerAsync(scheduler);
+                    await checkControlPlaneCertificates.AddToSchedulerAsync(scheduler, k8s, controlPlaneCertSchedule);
+                }
 
-                var containerImageSchedule = resource.Spec.Updates.ContainerImages.Schedule;
+                if (resource.Spec.Updates.ContainerImages.Enabled)
+                {
+                    var containerImageSchedule = resource.Spec.Updates.ContainerImages.Schedule;
 
-                CronExpression.ValidateExpression(containerImageSchedule);
+                    CronExpression.ValidateExpression(containerImageSchedule);
 
-                await checkRegistryImages.DeleteFromSchedulerAsync(scheduler);
-                await checkRegistryImages.AddToSchedulerAsync(
-                    scheduler,
-                    k8s,
-                    containerImageSchedule,
-                    new Dictionary<string, object>()
-                    {
+                    await checkRegistryImages.DeleteFromSchedulerAsync(scheduler);
+                    await checkRegistryImages.AddToSchedulerAsync(
+                        scheduler,
+                        k8s,
+                        containerImageSchedule,
+                        new Dictionary<string, object>()
+                        {
                         { "HarborClient", harborClient }
-                    });
+                        });
+                }
 
                 if (resource.Spec.Updates.Telemetry.Enabled)
                 {
