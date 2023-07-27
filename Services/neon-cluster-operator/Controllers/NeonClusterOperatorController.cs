@@ -178,73 +178,108 @@ namespace NeonClusterOperator
 
                 if (resource.Spec.Updates.NodeCaCertificates.Enabled)
                 {
-                    var nodeCaSchedule = resource.Spec.Updates.NodeCaCertificates.Schedule;
+                    try
+                    {
+                        var nodeCaSchedule = resource.Spec.Updates.NodeCaCertificates.Schedule;
 
-                    CronExpression.ValidateExpression(nodeCaSchedule);
+                        CronExpression.ValidateExpression(nodeCaSchedule);
 
-                    await updateCaCertificates.DeleteFromSchedulerAsync(scheduler);
-                    await updateCaCertificates.AddToSchedulerAsync(scheduler, k8s, nodeCaSchedule);
+                        await updateCaCertificates.DeleteFromSchedulerAsync(scheduler);
+                        await updateCaCertificates.AddToSchedulerAsync(scheduler, k8s, nodeCaSchedule);
+                    }
+                    catch (Exception e)
+                    {
+                        logger.LogErrorEx(e);
+                    }
                 }
 
                 if (resource.Spec.Updates.ControlPlaneCertificates.Enabled)
                 {
-                    var controlPlaneCertSchedule = resource.Spec.Updates.ControlPlaneCertificates.Schedule;
+                    try
+                    {
+                        var controlPlaneCertSchedule = resource.Spec.Updates.ControlPlaneCertificates.Schedule;
 
-                    CronExpression.ValidateExpression(controlPlaneCertSchedule);
-                    await checkControlPlaneCertificates.DeleteFromSchedulerAsync(scheduler);
-                    await checkControlPlaneCertificates.AddToSchedulerAsync(scheduler, k8s, controlPlaneCertSchedule);
+                        CronExpression.ValidateExpression(controlPlaneCertSchedule);
+                        await checkControlPlaneCertificates.DeleteFromSchedulerAsync(scheduler);
+                        await checkControlPlaneCertificates.AddToSchedulerAsync(scheduler, k8s, controlPlaneCertSchedule);
+                    }
+                    catch (Exception e)
+                    {
+                        logger.LogErrorEx(e);
+                    }
                 }
 
                 if (resource.Spec.Updates.ContainerImages.Enabled)
                 {
-                    var containerImageSchedule = resource.Spec.Updates.ContainerImages.Schedule;
+                    try
+                    {
+                        var containerImageSchedule = resource.Spec.Updates.ContainerImages.Schedule;
 
-                    CronExpression.ValidateExpression(containerImageSchedule);
+                        CronExpression.ValidateExpression(containerImageSchedule);
 
-                    await checkRegistryImages.DeleteFromSchedulerAsync(scheduler);
-                    await checkRegistryImages.AddToSchedulerAsync(
-                        scheduler,
-                        k8s,
-                        containerImageSchedule,
-                        new Dictionary<string, object>()
-                        {
+                        await checkRegistryImages.DeleteFromSchedulerAsync(scheduler);
+                        await checkRegistryImages.AddToSchedulerAsync(
+                            scheduler,
+                            k8s,
+                            containerImageSchedule,
+                            new Dictionary<string, object>()
+                            {
                         { "HarborClient", harborClient }
-                        });
+                            });
+                    }
+                    catch
+                    {
+                        logger.LogErrorEx(e);
+                    }
                 }
 
                 if (resource.Spec.Updates.Telemetry.Enabled)
                 {
-                    var clusterTelemetrySchedule = resource.Spec.Updates.Telemetry.Schedule;
+                    try
+                    {
+                        var clusterTelemetrySchedule = resource.Spec.Updates.Telemetry.Schedule;
 
-                    CronExpression.ValidateExpression(clusterTelemetrySchedule);
+                        CronExpression.ValidateExpression(clusterTelemetrySchedule);
 
-                    await sendClusterTelemetry.DeleteFromSchedulerAsync(scheduler);
-                    await sendClusterTelemetry.AddToSchedulerAsync(
-                        scheduler, 
-                        k8s, 
-                        clusterTelemetrySchedule,
-                        new Dictionary<string, object>()
-                        {
+                        await sendClusterTelemetry.DeleteFromSchedulerAsync(scheduler);
+                        await sendClusterTelemetry.AddToSchedulerAsync(
+                            scheduler,
+                            k8s,
+                            clusterTelemetrySchedule,
+                            new Dictionary<string, object>()
+                            {
                             { "AuthHeader", headendClient.DefaultRequestHeaders.Authorization }
-                        });
+                            });
+                    }
+                    catch (Exception e)
+                    {
+                        logger.LogErrorEx(e);
+                    }
                 }
 
                 if (resource.Spec.Updates.ClusterCertificate.Enabled)
                 {
-                    var neonDesktopCertSchedule = resource.Spec.Updates.ClusterCertificate.Schedule;
+                    try
+                    {
+                        var neonDesktopCertSchedule = resource.Spec.Updates.ClusterCertificate.Schedule;
 
-                    CronExpression.ValidateExpression(neonDesktopCertSchedule);
+                        CronExpression.ValidateExpression(neonDesktopCertSchedule);
 
-                    await checkClusterCert.DeleteFromSchedulerAsync(scheduler);
-                    await checkClusterCert.AddToSchedulerAsync(
-                        scheduler, 
-                        k8s, 
-                        neonDesktopCertSchedule,
-                        new Dictionary<string, object>()
-                        {
-                            { "HeadendClient", headendClient },
-                            { "ClusterInfo", clusterInfo}
-                        });
+                        await checkClusterCert.DeleteFromSchedulerAsync(scheduler);
+                        await checkClusterCert.AddToSchedulerAsync(
+                            scheduler, 
+                            k8s, 
+                            neonDesktopCertSchedule,
+                            new Dictionary<string, object>()
+                            {
+                                { "HeadendClient", headendClient },
+                                { "ClusterInfo", clusterInfo}
+                            });
+                    }
+                    catch (Exception e)
+                    {
+                        logger.LogErrorEx(e);
+                    }
                 }
 
                 logger?.LogInformationEx(() => $"RECONCILED: {resource.Name()}");
