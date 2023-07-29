@@ -268,11 +268,9 @@ namespace NeonClusterOperator
                 await ExecuteMcCommandAsync(
                     new string[]
                     {
-                        "admin",
-                        "bucket",
                         "quota",
-                        $"{GetTenantAlias(resource)}/{resource.Name()}",
-                        "--clear"
+                        "clear",
+                        $"{GetTenantAlias(resource)}/{resource.Name()}"
                     });
             }
             else
@@ -280,11 +278,10 @@ namespace NeonClusterOperator
                 await ExecuteMcCommandAsync(
                     new string[]
                     {
-                        "admin",
-                        "bucket",
                         "quota",
+                        "set",
                         $"{GetTenantAlias(resource)}/{resource.Name()}",
-                        resource.Spec.Quota.Hard ? "--hard" : null,
+                        "--size",
                         resource.Spec.Quota.Limit
                     });
             }
