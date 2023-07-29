@@ -7,15 +7,19 @@ rules:
   - neonkube.io
   resources:
   - crioconfigurations
+  - crioconfigurations/status
   - neonclusteroperators
+  - neonclusteroperators/status
   - neonnodetasks
   - neonnodetasks/status
   - neoncontainerregistries
+  - neoncontainerregistries/status
   - neonssoclients
   - neonssoclients/status
   - neonssoconnectors
+  - neonssoconnectors/status
   - neondashboards
-  - neondashboards
+  - neondashboards/status
   - neonssocallbackurls
   - neonssocallbackurls/status
   verbs:
