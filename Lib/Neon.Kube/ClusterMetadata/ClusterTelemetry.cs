@@ -55,13 +55,13 @@ namespace Neon.Kube
         /// <summary>
         /// Cluster information
         /// </summary>
-        [JsonProperty(PropertyName = "ClusterInfo", Required = Required.Always)]
+        [JsonProperty(PropertyName = "ClusterInfo", Required = Required.Always | Required.AllowNull)]
         public ClusterInfo ClusterInfo { get; set; }
 
         /// <summary>
         /// Node status information.
         /// </summary>
-        [JsonProperty(PropertyName = "Nodes", Required = Required.Always)]
+        [JsonProperty(PropertyName = "Nodes", Required = Required.Always | Required.AllowNull)]
         public List<ClusterNodeTelemetry> Nodes { get; set; } = new List<ClusterNodeTelemetry>();
     }
 
@@ -73,19 +73,19 @@ namespace Neon.Kube
         /// <summary>
         /// Identifies the node role
         /// </summary>
-        [JsonProperty(PropertyName = "Role", Required = Required.Always)]
+        [JsonProperty(PropertyName = "Role", Required = Required.Always | Required.AllowNull)]
         public string Role { get; set; }
 
         /// <summary>
         /// Identifies the CPU architecture.
         /// </summary>
-        [JsonProperty(PropertyName = "CpuArchitecture", Required = Required.Always)]
+        [JsonProperty(PropertyName = "CpuArchitecture", Required = Required.Always | Required.AllowNull)]
         public string CpuArchitecture { get; set; }
         
         /// <summary>
         /// Reports number of node vCPUs.
         /// </summary>
-        [JsonProperty(PropertyName = "VCpus", Required = Required.Always)]
+        [JsonProperty(PropertyName = "VCpus", Required = Required.Always | Required.AllowNull)]
         public int VCpus { get; set; }
 
         /// <summary>
@@ -103,7 +103,7 @@ namespace Neon.Kube
         /// <summary>
         /// Identifies the node operation system.
         /// </summary>
-        [JsonProperty(PropertyName = "OperatingSystem", Required = Required.Always)]
+        [JsonProperty(PropertyName = "OperatingSystem", Required = Required.Always | Required.AllowNull)]
         public string OperatingSystem { get; set; }
 
         /// <summary>
@@ -115,19 +115,19 @@ namespace Neon.Kube
         /// <summary>
         /// Identifies the node's container runtime version.
         /// </summary>
-        [JsonProperty(PropertyName = "ContainerRuntimeVersion", Required = Required.Always)]
+        [JsonProperty(PropertyName = "ContainerRuntimeVersion", Required = Required.Always | Required.AllowNull)]
         public string ContainerRuntimeVersion { get; set; }
 
         /// <summary>
         /// Identifies the node's Kubelet version.
         /// </summary>
-        [JsonProperty(PropertyName = "KubeletVersion", Required = Required.Always)]
+        [JsonProperty(PropertyName = "KubeletVersion", Required = Required.Always | Required.AllowNull)]
         public string KubeletVersion { get; set; }
 
         /// <summary>
         /// Identifies the node's kube-proxy version.
         /// </summary>
-        [JsonProperty(PropertyName = "KubeProxyVersion", Required = Required.Always)]
+        [JsonProperty(PropertyName = "KubeProxyVersion", Required = Required.Always | Required.AllowNull)]
         public string KubeProxyVersion { get; set; }
 
         /// <summary>
@@ -140,7 +140,7 @@ namespace Neon.Kube
         /// Indicates whether the node is configured and is ready to accept external network traffic
         /// for the cluster.
         /// </summary>
-        [JsonProperty(PropertyName = "Ingress", Required = Required.Always)]
+        [JsonProperty(PropertyName = "Ingress", Required = Required.Always | Required.AllowNull)]
         public bool Ingress { get; set; }
     }
 }
