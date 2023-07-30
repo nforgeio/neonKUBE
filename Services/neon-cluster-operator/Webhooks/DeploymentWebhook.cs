@@ -28,8 +28,8 @@ using Microsoft.Extensions.Logging;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
-using Neon.Kube.Operator;
-using Neon.Kube.Operator.Webhook;
+using Neon.Operator;
+using Neon.Operator.Webhooks;
 using Neon.Tasks;
 
 using k8s;
@@ -53,7 +53,7 @@ namespace NeonClusterOperator
         operations:  AdmissionOperations.Create | AdmissionOperations.Update, 
         resources:   V1Deployment.KubePluralName,
         scope:       "*")]
-    public class DeploymentWebhook : IMutatingWebhook<V1Deployment>
+    public class DeploymentWebhook : MutatingWebhookBase<V1Deployment>
     {
         private ILogger<IMutatingWebhook<V1Deployment>> logger { get; set; }
         private bool                                    modified = false;
@@ -74,7 +74,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task<MutationResult> CreateAsync(V1Deployment deployment, bool dryRun)
+        public override async Task<MutationResult> CreateAsync(V1Deployment deployment, bool dryRun)
         {
             await SyncContext.Clear;
 
@@ -108,7 +108,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task<MutationResult> UpdateAsync(V1Deployment deployment, V1Deployment oldDeployment, bool dryRun)
+        public override async Task<MutationResult> UpdateAsync(V1Deployment deployment, V1Deployment oldDeployment, bool dryRun)
         {
             await SyncContext.Clear;
 

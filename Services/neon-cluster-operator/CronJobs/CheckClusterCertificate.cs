@@ -33,8 +33,7 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Clients;
-using Neon.Kube.Operator.Util;
-using Neon.Kube.Resources;
+using Neon.Operator.Util;
 using Neon.Kube.Resources.Cluster;
 using Neon.Tasks;
 

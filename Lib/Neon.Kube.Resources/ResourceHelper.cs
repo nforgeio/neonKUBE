@@ -27,7 +27,7 @@ namespace Neon.Kube.Resources
     /// <summary>
     /// Internal helpers.
     /// </summary>
-    internal static class ResourceHelper
+    public static class ResourceHelper
     {
         /// <summary>
         /// Identifies the standard NEONKUBE Kubernetes resource group.

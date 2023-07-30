@@ -33,10 +33,9 @@ using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
-using Neon.Kube.Operator.Attributes;
-using Neon.Kube.Operator.ResourceManager;
-using Neon.Kube.Operator.Controller;
-using Neon.Kube.Resources;
+using Neon.Operator.Attributes;
+using Neon.Operator.ResourceManager;
+using Neon.Operator.Controllers;
 using Neon.Kube.Resources.Cluster;
 using Neon.Retry;
 using Neon.Tasks;
@@ -47,7 +46,7 @@ using k8s.Models;
 using Newtonsoft.Json;
 using Prometheus;
 using Tomlyn;
-using Neon.Kube.Operator.Rbac;
+using Neon.Operator.Rbac;
 
 namespace NeonNodeAgent
 {
@@ -97,10 +96,10 @@ namespace NeonNodeAgent
     /// </note>
     /// </remarks>
     [RbacRule<V1CrioConfiguration>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
-    public class CrioConfigController : IResourceController<V1CrioConfiguration>
+    public class CrioConfigController : ResourceControllerBase<V1CrioConfiguration>
     {
         /// <inheritdoc/>
-        public string LeaseName { get; } = $"{KubeService.NeonNodeAgent}.crioconfiguration-{Node.Name}";
+        public new string LeaseName { get; } = $"{KubeService.NeonNodeAgent}.crioconfiguration-{Node.Name}";
 
         //---------------------------------------------------------------------
         // Local types
@@ -303,7 +302,7 @@ namespace NeonNodeAgent
         /// </summary>
         /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task StartAsync(IServiceProvider serviceProvider)
+        public override async Task StartAsync(IServiceProvider serviceProvider)
         {
             if (NeonHelper.IsLinux)
             {
@@ -382,7 +381,7 @@ rm $0
         }
 
         /// <inheritdoc/>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1CrioConfiguration resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1CrioConfiguration resource)
         {
             await SyncContext.Clear;
 
@@ -635,7 +634,7 @@ blocked  = {NeonHelper.ToBoolString(registry.Blocked)}
         }
 
         /// <inheritdoc/>
-        public async Task DeletedAsync(V1CrioConfiguration resource)
+        public override async Task DeletedAsync(V1CrioConfiguration resource)
         {
             await SyncContext.Clear;
             

@@ -43,7 +43,6 @@
     <ItemGroup>
         <ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
         <ProjectReference Include="..\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
-        <ProjectReference Include="..\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
         <ProjectReference Include="..\Neon.Kube.Setup\Neon.Kube.Setup.csproj" />
         <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
     </ItemGroup>

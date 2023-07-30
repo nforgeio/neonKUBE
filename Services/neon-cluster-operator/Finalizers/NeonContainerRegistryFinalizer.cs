@@ -30,11 +30,10 @@ using Microsoft.Extensions.Logging;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
-using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
 using Neon.Tasks;
-using Neon.Kube.Operator.Finalizer;
-using Neon.Kube.Operator.Util;
+using Neon.Operator.Finalizers;
+using Neon.Operator.Util;
 
 using OpenTelemetry.Resources;
 
@@ -43,7 +42,7 @@ namespace NeonClusterOperator
     /// <summary>
     /// Finalizes deletion of <see cref="V1NeonContainerRegistry"/> resources.
     /// </summary>
-    public class NeonContainerRegistryFinalizer : IResourceFinalizer<V1NeonContainerRegistry>
+    public class NeonContainerRegistryFinalizer : ResourceFinalizerBase<V1NeonContainerRegistry>
     {
         private readonly IKubernetes                             k8s;
         private readonly ILogger<NeonContainerRegistryFinalizer> logger;
@@ -65,7 +64,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task FinalizeAsync(V1NeonContainerRegistry resource)
+        public override async Task FinalizeAsync(V1NeonContainerRegistry resource)
         {
             await SyncContext.Clear;
 

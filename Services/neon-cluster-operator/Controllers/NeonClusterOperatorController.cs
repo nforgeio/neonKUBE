@@ -17,55 +17,32 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 
-using JsonDiffPatch;
-
 using k8s;
-using k8s.Autorest;
 using k8s.Models;
 
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Extensions.Logging;
 
-using Neon.Common;
 using Neon.Diagnostics;
-using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Clients;
-using Neon.Kube.Operator.Finalizer;
-using Neon.Kube.Operator.ResourceManager;
-using Neon.Kube.Operator.Controller;
-using Neon.Kube.Operator.Rbac;
-using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
-using Neon.Retry;
+using Neon.Operator.Attributes;
+using Neon.Operator.Controllers;
+using Neon.Operator.Rbac;
 using Neon.Tasks;
-using Neon.Time;
 
 using NeonClusterOperator.Harbor;
 
-using Newtonsoft.Json;
-
-using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-
-using Prometheus;
 
 using Quartz;
 using Quartz.Impl;
 
-using Task    = System.Threading.Tasks.Task;
-using Metrics = Prometheus.Metrics;
+using Task = System.Threading.Tasks.Task;
 
 namespace NeonClusterOperator
 {
@@ -80,7 +57,7 @@ namespace NeonClusterOperator
     [RbacRule<V1Secret>(Verbs = RbacVerb.Get | RbacVerb.Update, Scope = EntityScope.Cluster)]
     [RbacRule<V1NeonContainerRegistry>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1ConfigMap>(Verbs = RbacVerb.Get, Scope = EntityScope.Cluster)]
-    public class NeonClusterOperatorController : IResourceController<V1NeonClusterOperator>
+    public class NeonClusterOperatorController : ResourceControllerBase<V1NeonClusterOperator>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -154,7 +131,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonClusterOperator resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonClusterOperator resource)
         {
             await SyncContext.Clear;
 
@@ -290,7 +267,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task DeletedAsync(V1NeonClusterOperator resource)
+        public override async Task DeletedAsync(V1NeonClusterOperator resource)
         {
             await SyncContext.Clear;
 
@@ -309,7 +286,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task OnDemotionAsync()
+        public override async Task OnDemotionAsync()
         {
             await SyncContext.Clear;
             await ShutDownAsync();

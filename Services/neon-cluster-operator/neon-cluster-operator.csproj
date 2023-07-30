@@ -17,6 +17,10 @@
         <Compile Include="$(NK_ROOT)\Lib\Neon.Kube.BuildInfo\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
     </ItemGroup>
 
+    <PropertyGroup>
+        <NeonOperatorCrdOutputDir>$(NK_ROOT)\Lib\Neon.Kube.Setup\Resources\Helm\neon-cluster-operator\crds\</NeonOperatorCrdOutputDir>
+    </PropertyGroup>
+
     <ItemGroup>
         <Protobuf Include="Protos/**/*.proto" OutputDir="$(ProjectDir)" GrpcServices="Client" />
     </ItemGroup>
@@ -58,6 +62,7 @@
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Minio" Version="4.0.7" />
+        <PackageReference Include="Neon.Operator" Version="10000.1.3808-dev-main" />
         <PackageReference Include="NSwag.MSBuild" Version="13.18.2">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -75,7 +80,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
-        <ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
     </ItemGroup>

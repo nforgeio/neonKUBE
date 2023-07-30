@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-using Neon.Kube.Operator;
-using Neon.Kube.Operator.Rbac;
-using Neon.Kube.Operator.ResourceManager;
+using Neon.Operator;
+using Neon.Operator.Rbac;
+using Neon.Operator.ResourceManager;
 
 using k8s.Models;
 using Microsoft.Extensions.Logging;

@@ -37,6 +37,7 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="7.0.5" />
+        <PackageReference Include="Neon.Operator" Version="10000.1.3808-dev-main" />
         <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
         <PackageReference Include="Tomlyn" Version="0.15.0" />
     </ItemGroup>
@@ -45,7 +46,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
-        <ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
     </ItemGroup>

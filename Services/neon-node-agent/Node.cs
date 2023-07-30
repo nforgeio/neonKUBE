@@ -32,7 +32,7 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
-using Neon.Kube.Operator;
+using Neon.Operator;
 using Neon.Retry;
 using Neon.Tasks;
 

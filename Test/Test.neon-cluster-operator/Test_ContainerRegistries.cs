@@ -25,7 +25,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Common;
 using Neon.IO;
-using Neon.Kube.Xunit.Operator;
+using Neon.Operator.Xunit;
 using Neon.Kube.Resources.Cluster;
 using NeonClusterOperator;
 

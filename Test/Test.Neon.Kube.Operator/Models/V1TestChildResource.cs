@@ -24,8 +24,9 @@ using k8s;
 using k8s.Models;
 
 using Neon.Kube;
-using Neon.Kube.Operator;
-using Neon.Kube.Resources;
+using Neon.Operator;
+using Neon.Operator.Attributes;
+
 using Newtonsoft.Json;
 
 namespace Test.Neon.Kube.Operator

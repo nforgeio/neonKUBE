@@ -1,6 +1,7 @@
 using k8s;
 using k8s.Models;
-using Neon.Kube.Operator.Attributes;
+
+using Neon.Operator.Attributes;
 
 namespace TestOperator
 {

@@ -36,6 +36,7 @@
     <ItemGroup>
         <EmbeddedResource Remove="Resources\Helm\README.md" />
         <Folder Include="Resources\Helm\crd-cluster\templates\" />
+        <Folder Include="Resources\Helm\neon-cluster-operator\crds\" />
     </ItemGroup>
 
     <ItemGroup>

@@ -42,7 +42,7 @@ using Neon.Common;
 using Neon.Data;
 using Neon.Diagnostics;
 using Neon.Kube;
-using Neon.Kube.Operator;
+using Neon.Operator;
 using Neon.Kube.Resources;
 using Neon.Kube.Resources.CertManager;
 using Neon.Net;

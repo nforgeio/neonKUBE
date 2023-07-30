@@ -30,9 +30,9 @@ using k8s;
 using k8s.Models;
 
 using Neon.Kube;
-using Neon.Kube.Operator;
-using Neon.Kube.Xunit.Operator;
-using Neon.Kube.Operator.Controller;
+using Neon.Operator;
+using Neon.Operator.Xunit;
+using Neon.Operator.Controllers;
 using Neon.Kube.Resources.Cluster;
 
 using Xunit;

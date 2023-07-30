@@ -40,10 +40,9 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.ClusterDef;
-using Neon.Kube.Operator.Controller;
-using Neon.Kube.Operator.Rbac;
-using Neon.Kube.Operator.ResourceManager;
-using Neon.Kube.Resources;
+using Neon.Operator.Controllers;
+using Neon.Operator.Rbac;
+using Neon.Operator.ResourceManager;
 using Neon.Kube.Resources.Cluster;
 using Neon.Retry;
 using Neon.Tasks;
@@ -54,6 +53,7 @@ using Newtonsoft.Json;
 using OpenTelemetry.Trace;
 
 using Prometheus;
+using Neon.Operator.Attributes;
 
 // $todo(jefflill):
 //
@@ -79,7 +79,7 @@ namespace NeonClusterOperator
     /// free.
     /// </remarks>
     [RbacRule<V1Node>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
-    public class NodeController : IResourceController<V1Node>
+    public class NodeController : ResourceControllerBase<V1Node>
     {
         //---------------------------------------------------------------------
         // Static members
