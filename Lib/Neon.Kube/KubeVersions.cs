@@ -136,7 +136,7 @@ namespace Neon.Kube
         /// caused by differing per-developer version numbers.
         /// </note>
         /// </remarks>
-        public const string NeonKube = "0.10.0-beta.2";
+        public const string NeonKube = "0.10.0-beta.1";
 
         /// <summary>
         /// Returns the branch part of the NEONKUBE version.  This will be blank for release
