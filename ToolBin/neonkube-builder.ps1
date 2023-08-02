@@ -44,7 +44,7 @@ if ($codedoc)
     Write-Error "ERROR: Code documentation builds are temporarily disabled until we"
     Write-Error "       port to DocFX.  SHFB doesn't work for multi-targeted projects."
     Write-Error " "
-    Write-Error "       https://github.com/nforgeio/TEMPKUBE/issues/1206"
+    Write-Error "       https://github.com/nforgeio/neonkube/issues/1206"
     Write-Error " "
     exit 1
 }
