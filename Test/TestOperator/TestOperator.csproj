@@ -10,8 +10,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Neon.Operator" Version="10000.1.3808-dev-main" />
-        <PackageReference Include="Neon.Operator.Xunit" Version="10000.1.3808-dev-main" />
+        <PackageReference Include="Neon.Operator" Version="10000.1.3828-dev-main" />
+        <PackageReference Include="Neon.Operator.Xunit" Version="10000.1.3828-dev-main" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(JUSTMOCK_ENABLED)' == 'true'">

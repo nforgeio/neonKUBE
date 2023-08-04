@@ -53,6 +53,7 @@ namespace NeonClusterOperator
     [RbacRule<V1MinioTenant>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1Secret>(Verbs = RbacVerb.Get)]
     [RbacRule<V1Pod>(Verbs = RbacVerb.List)]
+    [ResourceController(ManageCustomResourceDefinitions = true)]
     public class MinioBucketController : ResourceControllerBase<V1MinioBucket>
     {
         //---------------------------------------------------------------------

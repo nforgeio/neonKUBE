@@ -9,6 +9,17 @@
         <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
         <AssemblyName>neon-node-agent</AssemblyName>
         <Configurations>Debug;Release</Configurations>
+        <NoWarn>$(NoWarn);CS8034</NoWarn>
+    </PropertyGroup>
+
+    <Import Project="$(NO_ROOT)\src\Neon.Operator\build\Neon.Operator.targets" />
+
+    <PropertyGroup>
+        <NeonOperatorCrdOutputDir>$(NK_ROOT)\Lib\Neon.Kube.Setup\Resources\Helm\neon-node-agent\crds</NeonOperatorCrdOutputDir>
+        <NeonOperatorRbacOutputDir>$(NK_ROOT)\Lib\Neon.Kube.Setup\Resources\Helm\neon-node-agent\templates</NeonOperatorRbacOutputDir>
+        <NeonOperatorWebhookOutputDir>$(NK_ROOT)\Lib\Neon.Kube.Setup\Resources\Helm\neon-node-agent\templates</NeonOperatorWebhookOutputDir>
+        <NeonOperatorAnalyzerLoggingEnabled>True</NeonOperatorAnalyzerLoggingEnabled>
+        <NeonOperatorAnalyzerLoggingDir>C:\tmp</NeonOperatorAnalyzerLoggingDir>
     </PropertyGroup>
 
     <ItemGroup>
@@ -37,7 +48,6 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="7.0.5" />
-        <PackageReference Include="Neon.Operator" Version="10000.1.3808-dev-main" />
         <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
         <PackageReference Include="Tomlyn" Version="0.15.0" />
     </ItemGroup>
@@ -65,6 +75,10 @@
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Cryptography\Neon.Cryptography.csproj" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Service\Neon.Service.csproj" />
+                <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Analyzers\Neon.Operator.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+                <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Core\Neon.Operator.Core.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+                <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator\Neon.Operator.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Roslyn\Neon.Roslyn.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
             </ItemGroup>
         </Otherwise>
     </Choose>
