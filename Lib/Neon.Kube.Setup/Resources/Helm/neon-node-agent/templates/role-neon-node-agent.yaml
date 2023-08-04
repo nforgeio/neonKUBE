@@ -4,12 +4,6 @@ metadata:
   name: neon-node-agent
 rules:
 - apiGroups:
-  - cert-manager.io
-  resources:
-  - certificates
-  verbs:
-  - '*'
-- apiGroups:
   - ""
   resourceNames:
   - neon-node-agent-webhook-tls
@@ -17,3 +11,9 @@ rules:
   - secrets
   verbs:
   - watch
+- apiGroups:
+  - cert-manager.io
+  resources:
+  - certificates
+  verbs:
+  - '*'

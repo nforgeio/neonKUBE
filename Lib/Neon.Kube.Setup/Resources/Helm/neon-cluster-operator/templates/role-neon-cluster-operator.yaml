@@ -4,11 +4,20 @@ metadata:
   name: neon-cluster-operator
 rules:
 - apiGroups:
-  - cert-manager.io
+  - ""
+  resourceNames:
+  - neon-sso-oauth2-proxy
   resources:
-  - certificates
+  - configmaps
   verbs:
-  - '*'
+  - get
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - list
 - apiGroups:
   - ""
   resourceNames:
@@ -20,6 +29,20 @@ rules:
 - apiGroups:
   - ""
   resourceNames:
+  - glauth-users
+  resources:
+  - secrets
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resourceNames:
   - neon-admin.neon-system-db.credentials.postgresql
   - glauth-users
   - glauth-groups
@@ -28,31 +51,8 @@ rules:
   verbs:
   - get
 - apiGroups:
-  - ""
+  - cert-manager.io
   resources:
-  - pods
+  - certificates
   verbs:
-  - list
-- apiGroups:
-  - ""
-  resources:
-  - secrets
-  verbs:
-  - get
-- apiGroups:
-  - ""
-  resourceNames:
-  - glauth-users
-  resources:
-  - secrets
-  verbs:
-  - get
-- apiGroups:
-  - ""
-  resourceNames:
-  - neon-sso-oauth2-proxy
-  resources:
-  - configmaps
-  verbs:
-  - get
-  - update
+  - '*'

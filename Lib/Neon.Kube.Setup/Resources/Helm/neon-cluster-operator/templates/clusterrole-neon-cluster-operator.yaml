@@ -4,6 +4,25 @@ metadata:
   name: neon-cluster-operator
 rules:
 - apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - update
+- apiGroups:
   - apiextensions.k8s.io
   resources:
   - customresourcedefinitions
@@ -16,16 +35,16 @@ rules:
   verbs:
   - '*'
 - apiGroups:
+  - minio.min.io
+  resources:
+  - tenants
+  verbs:
+  - '*'
+- apiGroups:
   - minio.neonkube.io
   resources:
   - miniobuckets
   - miniobuckets/status
-  verbs:
-  - '*'
-- apiGroups:
-  - minio.min.io
-  resources:
-  - tenants
   verbs:
   - '*'
 - apiGroups:
@@ -47,22 +66,3 @@ rules:
   - neonssoclients/status
   verbs:
   - '*'
-- apiGroups:
-  - ""
-  resources:
-  - nodes
-  verbs:
-  - '*'
-- apiGroups:
-  - ""
-  resources:
-  - secrets
-  verbs:
-  - get
-  - update
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  verbs:
-  - get
