@@ -4395,13 +4395,14 @@ $@"- name: StorageType
                     var grafanaPod      = await k8s.CoreV1.GetNamespacedRunningPodAsync(KubeNamespace.NeonMonitor, labelSelector: "app=grafana");
 
                     var cmd = new string[]
-                        {
-                            "/bin/bash",
-                            "-c",
-                            $@"curl -X GET -H 'Content-Type: application/json' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/dashboards/uid/neonkube-default-dashboard"
-                        };
+                    {
+                        "/bin/bash",
+                        "-c",
+                        $@"curl -X GET -H 'Content-Type: application/json' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/dashboards/uid/neonkube-default-dashboard"
+                    };
 
-                    string dashboardId = "";
+                    var dashboardId = "";
+
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
@@ -4428,11 +4429,11 @@ $@"- name: StorageType
                         cancellationToken: controller.CancellationToken);
 
                     cmd = new string[]
-                        {
-                            "/bin/bash",
-                            "-c",
-                            $@"curl -X PUT -H 'Content-Type: application/json' -d '{{""theme"":"""",""homeDashboardId"":{dashboardId},""timezone"":"""",""weekStart"":""""}}' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/org/preferences"
-                        };
+                    {
+                        "/bin/bash",
+                        "-c",
+                        $@"curl -X PUT -H 'Content-Type: application/json' -d '{{""theme"":"""",""homeDashboardId"":{dashboardId},""timezone"":"""",""weekStart"":""""}}' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/org/preferences"
+                    };
 
                     (await k8s.NamespacedPodExecWithRetryAsync(
                         retryPolicy:        podExecRetry,

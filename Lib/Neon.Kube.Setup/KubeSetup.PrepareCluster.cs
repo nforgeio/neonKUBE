@@ -561,7 +561,7 @@ namespace Neon.Kube.Setup
                 controller.AddGlobalStep("stabilizing: cluster...",
                     async controller =>
                     {
-                        controller.SetGlobalStepStatus("Waiting for cluster to stabilize");
+                        controller.SetGlobalStepStatus("Waiting for cluster to stabilize...");
                         setupState.Save();
 
                         // Wait a bit to give the cluster a chance to start pods and containers.
