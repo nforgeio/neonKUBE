@@ -248,8 +248,17 @@ namespace Neon.Kube.Hosting
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            // We're to send ICMP pings to all node IP addresses and keep track of
-            // any responses (indicating conflcits) and then read the local machine's
+            // $todo(jefflill):
+            //
+            // The ARP cache lookups need more testing and will be disabled until then.
+            // We've seen situations when deploying a neon-desktop cluster when the
+            // cluster IP is reported as being in use.  This may also impact other
+            // clusters as well.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1838
+
+            // We're going to send ICMP pings to all node IP addresses and keep track
+            // of any responses (indicating conflcits) and then read the local machine's
             // ARP table looking for any conflicts there.
             //
             // NOTE: It's possible for machines to have ICMP ping disabled so we
@@ -258,6 +267,7 @@ namespace Neon.Kube.Hosting
 
             var nodeConflicts = new Dictionary<string, NodeDefinition>(StringComparer.InvariantCultureIgnoreCase);
 
+#if TODO
             using (var pinger = new Pinger())
             {
                 await Parallel.ForEachAsync(clusterDefinition.NodeDefinitions.Values, new ParallelOptions() { MaxDegreeOfParallelism = 50 },
@@ -316,6 +326,25 @@ namespace Neon.Kube.Hosting
                 {
                     nodeConflicts[nodeDefinition.Name] = nodeDefinition;
                 }
+            }
+#endif
+            using (var pinger = new Pinger())
+            {
+                await Parallel.ForEachAsync(clusterDefinition.NodeDefinitions.Values, new ParallelOptions() { MaxDegreeOfParallelism = 50 },
+                    async (nodeDefinition, cancellationToken) =>
+                    {
+                        var reply = await pinger.SendPingAsync(nodeDefinition.Address);
+
+                        if (reply.Status == IPStatus.Success)
+                        {
+                            // We got a response.
+
+                            lock (nodeConflicts)
+                            {
+                                nodeConflicts.Add(nodeDefinition.Name, nodeDefinition);
+                            }
+                        }
+                    });
             }
 
             if (nodeConflicts.Count == 0)
