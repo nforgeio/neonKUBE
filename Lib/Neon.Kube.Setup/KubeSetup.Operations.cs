@@ -336,9 +336,8 @@ spec:
 
                     return true;
                 },
-                maxAttempts:       maxRetries,
-                retryInterval:     TimeSpan.FromSeconds(60),
-                cancellationToken: controller.CancellationToken);
+                maxAttempts:   maxRetries,
+                retryInterval: TimeSpan.FromSeconds(60));
 
             await retry.InvokeAsync(
                 async () =>
@@ -518,7 +517,8 @@ spec:
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
                     await SetClusterHealthAsync(controller, controlNode, ready: true);
-                });
+                },
+                controller.CancellationToken);
         }
 
         /// <summary>
@@ -758,17 +758,24 @@ NeonKube™, Neon Desktop™, and NeonCli™ are trademarked by NEONFORGE LLC.
 
                             controller.LogProgress(firstControlNode, verb: "wait", message: "for cri-o");
 
-                            NeonHelper.WaitFor(
+                            var retry = new LinearRetryPolicy(
+                                transientDetector: null,
+                                retryInterval:     TimeSpan.FromSeconds(1),
+                                timeout:           TimeSpan.FromSeconds(60));
+
+                            retry.Invoke(
                                 () =>
                                 {
                                     controller.ThrowIfCancelled();
 
-                                    var socketResponse = firstControlNode.SudoCommand("cat", new object[] { "/proc/net/unix" });
+                                    var socketResponse = firstControlNode.SudoCommand("cat", new object[] { "/proc/net/unix" })
+                                        .EnsureSuccess();
 
-                                    return socketResponse.Success && socketResponse.OutputText.Contains(KubeConst.CrioSocketPath);
+                                    if (!socketResponse.OutputText.Contains(KubeConst.CrioSocketPath))
+                                    {
+                                        throw new TimeoutException("Cannot locate CRI-O socket.");
+                                    }
                                 },
-                                pollInterval:      TimeSpan.FromSeconds(0.5),
-                                timeout:           TimeSpan.FromSeconds(60),
                                 cancellationToken: controller.CancellationToken);
 
                             // $note(jefflill):
@@ -1611,9 +1618,12 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                             var pod = await k8s.CoreV1.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "neonkube.io/setup-pod=dnsutils");
 
-                            controller.ThrowIfCancelled();
+                            var retry = new LinearRetryPolicy(
+                                transientDetector: null,
+                                retryInterval:     clusterOpPollInterval,
+                                timeout:           clusterOpTimeout);
 
-                            await NeonHelper.WaitForAsync(
+                            await retry.InvokeAsync(
                                 async () =>
                                 {
                                     try
@@ -1626,22 +1636,17 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                                             command:            cmd);
 
                                         result.EnsureSuccess();
-                                        return true;
                                     }
                                     catch
                                     {
-                                        // Restart coredns and try again.
+                                        // Restart COREDNS and try again.
 
                                         var coredns = await k8s.AppsV1.ReadNamespacedDaemonSetAsync("coredns", KubeNamespace.KubeSystem);
 
                                         await coredns.RestartAsync(k8s);
-                                        await Task.Delay(TimeSpan.FromSeconds(20));
-
-                                        return false;
+                                        throw;
                                     }
                                 },
-                                timeout:           TimeSpan.FromSeconds(300),
-                                pollInterval:      TimeSpan.FromMilliseconds(500),
                                 cancellationToken: controller.CancellationToken);
 
                             await k8s.CoreV1.DeleteNamespacedPodAsync("dnsutils", KubeNamespace.NeonSystem);
@@ -1652,15 +1657,21 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
             await controlNode.InvokeIdempotentAsync("setup/calico-metrics",
                 async () =>
                 {
-                    await NeonHelper.WaitForAsync(
+                    var retry = new LinearRetryPolicy(
+                        transientDetector: null,
+                        retryInterval:     clusterOpPollInterval,
+                        timeout:           clusterOpTimeout);
+
+                    await retry.InvokeAsync(
                         async () =>
                         {
                             var configs = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1FelixConfiguration>();
 
-                            return configs.Items.Count() > 0;
+                            if (configs.Items.Count() == 0)
+                            {
+                                throw new TimeoutException($"No [{nameof(V1FelixConfiguration)}] objects found.");
+                            }
                         },
-                        timeout:           clusterOpTimeout,
-                        pollInterval:      clusterOpPollInterval,
                         cancellationToken: controller.CancellationToken);
 
                     var configs          = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1FelixConfiguration>();
@@ -1770,16 +1781,21 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     if (cluster.SetupState.ClusterDefinition.Kubernetes.AllowPodsOnControlPlane.GetValueOrDefault())
                     {
                         var nodes = new V1NodeList();
+                        var retry = new LinearRetryPolicy(
+                            transientDetector: null,
+                            retryInterval:     clusterOpPollInterval,
+                            timeout:           clusterOpTimeout);
 
-                        await NeonHelper.WaitForAsync(
+                        await retry.InvokeAsync(
                            async () =>
                            {
                                nodes = await k8s.CoreV1.ListNodeAsync(labelSelector: "node-role.kubernetes.io/control-plane=");
 
-                               return nodes.Items.All(n => n.Status.Conditions.Any(c => c.Type == "Ready" && c.Status == "True"));
+                               if (!(nodes.Items.All(n => n.Status.Conditions.Any(condition => condition.Type == "Ready" && condition.Status == "True"))))
+                               {
+                                   throw new TimeoutException("Waiting for control-plane nodes.");
+                               }
                            },
-                           timeout:           TimeSpan.FromMinutes(5),
-                           pollInterval:      TimeSpan.FromSeconds(5),
                            cancellationToken: controller.CancellationToken);
 
                         foreach (var controlNode in nodes.Items)
@@ -1966,21 +1982,16 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 {
                     controller.LogProgress(controlNode, verb: "wait for", message: "istio CRDs");
 
-                    await NeonHelper.WaitForAsync(
+                    var retry = new LinearRetryPolicy(
+                        transientDetector: null,
+                        retryInterval:     clusterOpPollInterval,
+                        timeout:           clusterOpTimeout);
+
+                    await retry.InvokeAsync(
                         async () =>
                         {
-                            try
-                            {
-                                await k8s.CustomObjects.ListNamespacedCustomObjectAsync<V1Telemetry>(KubeNamespace.NeonIngress);
-                                return true;
-                            }
-                            catch
-                            {
-                                return false;
-                            }
+                            await k8s.CustomObjects.ListNamespacedCustomObjectAsync<V1Telemetry>(KubeNamespace.NeonIngress);
                         },
-                        timeout:           TimeSpan.FromSeconds(300),
-                        pollInterval:      TimeSpan.FromMilliseconds(500),
                         cancellationToken: controller.CancellationToken);
                 });
 
@@ -2246,32 +2257,26 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                 {
                     controller.LogProgress(controlNode, verb: "setup", message: "neon-cluster-certificate");
 
+                    var retry = new LinearRetryPolicy(
+                        transientDetector: null,
+                        retryInterval:     clusterOpPollInterval,
+                        timeout:           clusterOpTimeout);
+
                     IDictionary<string, byte[]> cert = null;
 
-                    await NeonHelper.WaitForAsync(async () =>
-                    {
-                        try
+                    await retry.InvokeAsync(
+                        async () =>
                         {
                             if (cluster.SetupState.ClusterDefinition.IsDesktop)
                             {
                                 cert = await headendClient.NeonDesktop.GetNeonDesktopCertificateAsync();
-                                return true;
                             }
                             else
                             {
                                 cert = await headendClient.Cluster.GetCertificateAsync(cluster.Id);
-
-                                return true;
                             }
-                        }
-                        catch
-                        {
-                            return false;
-                        }
-                    },
-                    timeout:           TimeSpan.FromMinutes(10),
-                    pollInterval:      TimeSpan.FromSeconds(5),
-                    cancellationToken: controller.CancellationToken);
+                        },
+                        cancellationToken: controller.CancellationToken);
 
                     var secret = new V1Secret()
                     {
@@ -4401,31 +4406,25 @@ $@"- name: StorageType
                         $@"curl -X GET -H 'Content-Type: application/json' http://{grafanaUser}:{grafanaPassword}@localhost:3000/api/dashboards/uid/neonkube-default-dashboard"
                     };
 
+                    var retry = new LinearRetryPolicy(
+                        transientDetector: null,
+                        retryInterval:     clusterOpPollInterval,
+                        timeout:           clusterOpTimeout);
+
                     var dashboardId = "";
 
-                    await NeonHelper.WaitForAsync(
+                    await retry.InvokeAsync(
                         async () =>
                         {
-                            try
-                            {
-                                var defaultDashboard = (await k8s.NamespacedPodExecWithRetryAsync(
-                                    retryPolicy:        podExecRetry,
-                                    name:               grafanaPod.Name(),
-                                    namespaceParameter: grafanaPod.Namespace(),
-                                    container:          "grafana",
-                                    command:            cmd)).EnsureSuccess();
+                            var defaultDashboard = (await k8s.NamespacedPodExecWithRetryAsync(
+                                retryPolicy:        podExecRetry,
+                                name:               grafanaPod.Name(),
+                                namespaceParameter: grafanaPod.Namespace(),
+                                container:          "grafana",
+                                command:            cmd)).EnsureSuccess();
 
-                                dashboardId = NeonHelper.JsonDeserialize<dynamic>(defaultDashboard.OutputText)["dashboard"]["id"];
-
-                                return true;
-                            }
-                            catch
-                            {
-                                return false;
-                            }
+                            dashboardId = NeonHelper.JsonDeserialize<dynamic>(defaultDashboard.OutputText)["dashboard"]["id"];
                         },
-                        timeout:           TimeSpan.FromSeconds(300),
-                        pollInterval:      TimeSpan.FromMilliseconds(250),
                         cancellationToken: controller.CancellationToken);
 
                     cmd = new string[]
@@ -4606,9 +4605,12 @@ $@"- name: StorageType
                         {
                             controller.LogProgress(controlNode, verb: "wait for", message: "minio");
 
-                            var operationRetryPolicy = new LinearRetryPolicy(e => true, maxAttempts: 10, retryInterval: TimeSpan.FromSeconds(30), cancellationToken: controller.CancellationToken);
+                            var retry = new LinearRetryPolicy(
+                                transientDetector: null,
+                                retryInterval:     clusterOpPollInterval,
+                                timeout:           clusterOpTimeout);
 
-                            await operationRetryPolicy.InvokeAsync(
+                            await retry.InvokeAsync(
                                 async () =>
                                 {
                                     var minioPod = await k8s.CoreV1.GetNamespacedRunningPodAsync(KubeNamespace.NeonSystem, labelSelector: "app.kubernetes.io/name=minio-operator");
@@ -4628,7 +4630,8 @@ $@"- name: StorageType
                                     (await cluster.ExecMinioCommandAsync(
                                         retryPolicy:    podExecRetry,
                                         mcCommand:      "admin policy create minio superadmin /tmp/superadmin.json")).EnsureSuccess();
-                                });
+                                },
+                                controller.CancellationToken);
                         });
                 });
         }
@@ -4980,27 +4983,19 @@ $@"- name: StorageType
                     var password = user.Password;
                     var command  = $"echo '{password}' | podman login registry.neon.local --username {user.Name} --password-stdin";
 
+                    var retry = new LinearRetryPolicy(
+                        transientDetector: null,
+                        retryInterval:     clusterOpPollInterval,
+                        timeout:           clusterOpTimeout);
+
                     foreach (var node in cluster.Nodes)
                     {
-                        controller.ThrowIfCancelled();
-
-                        NeonHelper.WaitFor(
+                        retry.Invoke(
                             () =>
                             {
-                                try
-                                {
-                                    controlNode.SudoCommand(CommandBundle.FromScript(command), RunOptions.None)
-                                        .EnsureSuccess();
-
-                                    return true;
-                                }
-                                catch
-                                {
-                                    return false;
-                                }
+                                controlNode.SudoCommand(CommandBundle.FromScript(command), RunOptions.None)
+                                    .EnsureSuccess();
                             },
-                            timeout:           TimeSpan.FromSeconds(600),
-                            pollInterval:      TimeSpan.FromSeconds(1),
                             cancellationToken: controller.CancellationToken);
                     }
                 });
@@ -5061,34 +5056,43 @@ $@"- name: StorageType
 
                     // Wait for cron schedule to run.
 
-                    await NeonHelper.WaitForAsync(async () =>
-                    {
-                        await SyncContext.Clear;
+                    var retry = new LinearRetryPolicy(
+                        transientDetector: null,
+                        retryInterval:     clusterOpPollInterval,
+                        timeout:           clusterOpTimeout);
 
-                        return clusterOperator?.Status?.ContainerImages?.LastCompleted != null;
-                    },
-                    timeout:           TimeSpan.FromMinutes(10),
-                    pollInterval:      TimeSpan.FromMilliseconds(250),
-                    cancellationToken: controller.CancellationToken);
+                    await retry.InvokeAsync(
+                        async () =>
+                        {
+                            await SyncContext.Clear;
+
+                            if (clusterOperator?.Status?.ContainerImages?.LastCompleted == null)
+                            {
+                                throw new TimeoutException("Waiting for [neon-cluster-operator] import Harbor container images.");
+                            }
+                        },
+                        cancellationToken: controller.CancellationToken);
 
                     // Wait for node tasks to complete.
 
-                    await NeonHelper.WaitForAsync(async () =>
-                    {
-                        var labels = new Dictionary<string, string>
+                    await retry.InvokeAsync(
+                        async () =>
                         {
-                            { NeonLabel.ManagedBy, KubeService.NeonClusterOperator },
-                            { NeonLabel.NodeTaskType, NeonNodeTaskType.ContainerImageSync }
-                        };
-                        var selector       = labels.Keys.Select(k => $"{k}={labels[k]}");
-                        var selectorString = string.Join(",", selector.ToArray());
-                        var tasks          = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>(labelSelector: selectorString);
+                            var labels = new Dictionary<string, string>
+                            {
+                                { NeonLabel.ManagedBy, KubeService.NeonClusterOperator },
+                                { NeonLabel.NodeTaskType, NeonNodeTaskType.ContainerImageSync }
+                            };
+                            var selector       = labels.Keys.Select(k => $"{k}={labels[k]}");
+                            var selectorString = string.Join(",", selector.ToArray());
+                            var tasks          = await k8s.CustomObjects.ListClusterCustomObjectAsync<V1NeonNodeTask>(labelSelector: selectorString);
 
-                        return !tasks.Items.Any(nodeTask => nodeTask.Status == null || nodeTask.Status.Phase != V1NeonNodeTask.Phase.Success);
-                    },
-                    timeout:           TimeSpan.FromMinutes(10),
-                    pollInterval:      TimeSpan.FromSeconds(5),
-                    cancellationToken: controller.CancellationToken);
+                            if (tasks.Items.Any(nodeTask => nodeTask.Status == null || nodeTask.Status.Phase != V1NeonNodeTask.Phase.Success))
+                            {
+                                throw new TimeoutException("Waiting for [neon-node-agent] NodeTask completions.");
+                            }
+                        },
+                        cancellationToken: controller.CancellationToken);
 
                     // Reset schedule to default value after completion.
 
@@ -6041,8 +6045,12 @@ $@"- name: StorageType
                     // by quering the three tables we'll be modifying later below.  The database
                     // will be ready when these queries succeed.
 
-                    controller.ThrowIfCancelled();
-                    await NeonHelper.WaitForAsync(
+                    var retry = new LinearRetryPolicy(
+                        transientDetector: null,
+                        retryInterval:     clusterOpPollInterval,
+                        timeout:           clusterOpTimeout);
+
+                    await retry.InvokeAsync(
                         async () =>
                         {
                             // Verify [groups] table.
@@ -6051,7 +6059,7 @@ $@"- name: StorageType
 
                             if (result.ExitCode != 0)
                             {
-                                return false;
+                                throw new TimeoutException("Waiting for glauth [groups] table.");
                             }
 
                             // Verify [users] table.
@@ -6062,7 +6070,7 @@ $@"- name: StorageType
 
                             if (result.ExitCode != 0)
                             {
-                                return false;
+                                throw new TimeoutException("Waiting for glauth [users] table.");
                             }
 
                             // Verify [capabilities] table.
@@ -6073,13 +6081,9 @@ $@"- name: StorageType
 
                             if (result.ExitCode != 0)
                             {
-                                return false;
+                                throw new TimeoutException("Waiting for glauth [capabilities] table.");
                             }
-
-                            return true;
                         },
-                        timeout:           clusterOpTimeout, 
-                        pollInterval:      clusterOpPollInterval,
                         cancellationToken: controller.CancellationToken);
                 });
 
@@ -6347,17 +6351,22 @@ $@"- name: StorageType
             Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
             Covenant.Assert(!controller.Get<bool>(KubeSetupProperty.DesktopReadyToGo), $"[{nameof(StabilizeClusterAsync)}()] cannot be used for non NEONDESKTOP clusters.");
 
-            var k8s = GetK8sClient(controller);
+            var k8s   = GetK8sClient(controller);
+            var retry = new LinearRetryPolicy(
+                transientDetector: null,
+                retryInterval:     clusterOpPollInterval,
+                timeout:           clusterOpTimeout);
 
-            await NeonHelper.WaitForAsync(
+            await retry.InvokeAsync(
                 async () =>
                 {
                     var pods = await k8s.CoreV1.ListAllPodsAsync();
 
-                    return pods.Items.All(pod => pod.Status.Phase.Equals("Running", StringComparison.InvariantCultureIgnoreCase));
+                    if (!pods.Items.All(pod => pod.Status.Phase.Equals("Running", StringComparison.InvariantCultureIgnoreCase)))
+                    {
+                        throw new TimeoutException("Waiting for all cluster pods to report as running.");
+                    }
                 },
-                timeout:           TimeSpan.FromMinutes(10),
-                pollInterval:      TimeSpan.FromSeconds(5),
                 cancellationToken: controller.CancellationToken);
         }
     }
