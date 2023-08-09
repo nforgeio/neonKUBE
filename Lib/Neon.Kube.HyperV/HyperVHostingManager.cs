@@ -454,11 +454,11 @@ namespace Neon.Kube.Hosting.HyperV
         }
 
         /// <inheritdoc/>
-        public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reservedMemory = 0, long reserveDisk = 0)
+        public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reservedMemory = 0, long reservedDisk = 0)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(reservedMemory >= 0, nameof(reservedMemory));
-            Covenant.Requires<ArgumentNullException>(reserveDisk >= 0, nameof(reserveDisk));
+            Covenant.Requires<ArgumentNullException>(reservedDisk >= 0, nameof(reservedDisk));
 
             var hostMachineName = Environment.MachineName;
             var allNodeNames    = cluster.SetupState.ClusterDefinition.NodeDefinitions.Keys.ToList();
@@ -553,7 +553,7 @@ namespace Neon.Kube.Hosting.HyperV
 
             // Verify that we have enough disk, taking the reservation into account.
 
-            if (availableDisk - reserveDisk < requiredDisk)
+            if (availableDisk - reservedDisk < requiredDisk)
             {
                 if (!deploymentCheck.Constraints.TryGetValue(hostMachineName, out var hostContraintList))
                 {
@@ -563,15 +563,15 @@ namespace Neon.Kube.Hosting.HyperV
                 }
 
                 var humanRequiredDisk  = ByteUnits.Humanize(requiredDisk, powerOfTwo: true);
-                var humanReservedDisk  = ByteUnits.Humanize(reserveDisk, powerOfTwo: true);
-                var humanAvailableDisk = ByteUnits.Humanize(availableDisk, powerOfTwo: true);
+                var humanReservedDisk  = ByteUnits.Humanize(reservedDisk, powerOfTwo: true);
+                var humanAllowedDisk   = ByteUnits.Humanize(availableDisk - reservedDisk, powerOfTwo: true);
 
                 hostContraintList.Add(
                     new HostingResourceConstraint()
                     {
                          ResourceType = HostingConstrainedResourceType.Disk,
                          Nodes        = allNodeNames,
-                         Details      = $"[{humanRequiredDisk}] disk is required but only [{humanAvailableDisk}] is available after reserving [{humanReservedDisk}]."
+                         Details      = $"[{humanRequiredDisk}] disk is required but only [{humanAllowedDisk}] is available after reserving [{humanReservedDisk}]."
                     });
             }
 

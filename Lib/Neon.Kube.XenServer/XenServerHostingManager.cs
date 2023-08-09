@@ -1071,11 +1071,11 @@ namespace Neon.Kube.Hosting.XenServer
         }
 
         /// <inheritdoc/>
-        public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
+        public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reservedDisk = 0)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentException>(reserveMemory >= 0, nameof(reserveMemory));
-            Covenant.Requires<ArgumentException>(reserveDisk >= 0, nameof(reserveDisk));
+            Covenant.Requires<ArgumentException>(reservedDisk >= 0, nameof(reservedDisk));
 
             // NOTE: We're going to allow CPUs to be over subscribed but not RAM or disk.
             //       We will honor the memory and disk reservations for XenServer.

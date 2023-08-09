@@ -262,11 +262,11 @@ namespace Neon.Kube.Hosting
         /// Returns the availability of resources required to deploy a cluster.
         /// </summary>
         /// <param name="reserveMemory">Optionally specifies the amount of host memory (in bytes) to be reserved for host operations.</param>
-        /// <param name="reserveDisk">Optionally specifies the amount of host disk disk (in bytes) to be reserved for host operations.</param>
+        /// <param name="reservedDisk">Optionally specifies the amount of host disk disk (in bytes) to be reserved for host operations.</param>
         /// <returns>Details about whether cluster deployment can proceed.</returns>
         /// <remarks>
         /// <para>
-        /// The optional <paramref name="reserveMemory"/> and <paramref name="reserveDisk"/> parameters
+        /// The optional <paramref name="reserveMemory"/> and <paramref name="reservedDisk"/> parameters
         /// can be used to specify memory and disk that are to be reserved for the host environment.  Hosting 
         /// manager implementations are free to ignore this when they don't really makse sense.
         /// </para>
@@ -279,7 +279,7 @@ namespace Neon.Kube.Hosting
         /// those environemnts will still work well when all available resources are consumed.
         /// </para>
         /// </remarks>
-        Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0);
+        Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reservedDisk = 0);
 
         /// <summary>
         /// Retrieves the health status of the current cluster from the hosting manager's perspective

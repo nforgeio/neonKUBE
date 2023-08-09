@@ -1216,7 +1216,7 @@ namespace Neon.Kube.Proxy
             await SyncContext.Clear;
             Covenant.Assert(HostingManager != null);
 
-            return await HostingManager.GetResourceAvailabilityAsync(reserveMemory: reserveMemory, reserveDisk: reserveDisk);
+            return await HostingManager.GetResourceAvailabilityAsync(reserveMemory: reserveMemory, reservedDisk: reserveDisk);
         }
 
         /// <summary>
