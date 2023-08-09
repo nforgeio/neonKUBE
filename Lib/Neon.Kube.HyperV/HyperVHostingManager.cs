@@ -634,7 +634,7 @@ namespace Neon.Kube.Hosting.HyperV
                     }
 
                     var humanPhysicalMemory  = ByteUnits.Humanize(physicalMemory,  powerOfTwo: true);
-                    var humanAvailableMemory = ByteUnits.Humanize(physicalMemory, powerOfTwo: true);
+                    var humanAvailableMemory = ByteUnits.Humanize(physicalMemory - reservedMemory, powerOfTwo: true);
                     var humanRequiredMemory  = ByteUnits.Humanize(requiredMemory, powerOfTwo: true);
                     var humanReservedMemory  = ByteUnits.Humanize(reservedMemory, powerOfTwo: true);
 
@@ -643,7 +643,7 @@ namespace Neon.Kube.Hosting.HyperV
                         {
                              ResourceType = HostingConstrainedResourceType.Memory,
                              Nodes        = allNodeNames,
-                             Details      = $"[{humanRequiredMemory}] physical memory is required but only [{humanAvailableMemory}] out of [{humanPhysicalMemory}] is available after reserving [{humanReservedMemory}] for the system and other apps."
+                             Details      = $"[{humanRequiredMemory}] physical memory is required but only [{humanAvailableMemory}] out of [{humanPhysicalMemory}] is available after reserving [{humanReservedMemory}] for the host and other apps."
                         });
                 }
             }
