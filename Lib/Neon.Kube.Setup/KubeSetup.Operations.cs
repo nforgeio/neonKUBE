@@ -4411,7 +4411,7 @@ $@"- name: StorageType
                         retryInterval:     clusterOpPollInterval,
                         timeout:           clusterOpTimeout);
 
-                    var dashboardId = "";
+                    var dashboardId = string.Empty;
 
                     await retry.InvokeAsync(
                         async () =>
