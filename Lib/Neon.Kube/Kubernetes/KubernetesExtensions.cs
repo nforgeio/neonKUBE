@@ -604,7 +604,7 @@ namespace Neon.Kube
         /// <param name="labelSelector">Optionally specifies a label selector.</param>
         /// <param name="fieldSelector">Optionally specifies a field selector.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
-        /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30 seconds.</param>
+        /// <param name="timeout">Optionally specifies the operation timeout.  This defaults to 30 seconds.</param>
         /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
@@ -680,7 +680,7 @@ namespace Neon.Kube
         /// <param name="labelSelector">Optionally specifies a label selector.</param>
         /// <param name="fieldSelector">Optionally specifies a field selector.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
-        /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30 seconds.</param>
+        /// <param name="timeout">Optionally specifies the operation timeout.  This defaults to 30 seconds.</param>
         /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
@@ -754,7 +754,7 @@ namespace Neon.Kube
         /// <param name="name">The pod name.</param>
         /// <param name="namespaceParameter">The namespace.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
-        /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30 seconds.</param>
+        /// <param name="timeout">Optionally specifies the operation timeout.  This defaults to 30 seconds.</param>
         /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>x
         public static async Task WaitForPodAsync(
