@@ -147,7 +147,7 @@ namespace Neon.Kube.Setup
             // Perform final cluster definition validation.  This gives hosting managers
             // the chance verify that cloud VM sizes are valid.
 
-            await hostingManager.FinalValidationAsync(clusterDefinition);
+            await hostingManager.CheckDeploymentReadinessAsync(clusterDefinition);
 
             // Override the cluster definition package caches when requested.
 
@@ -561,7 +561,7 @@ namespace Neon.Kube.Setup
                 controller.AddGlobalStep("stabilizing: cluster...",
                     async controller =>
                     {
-                        controller.SetGlobalStepStatus("Waiting for cluster to stabilize");
+                        controller.SetGlobalStepStatus("Waiting for cluster to stabilize...");
                         setupState.Save();
 
                         // Wait a bit to give the cluster a chance to start pods and containers.

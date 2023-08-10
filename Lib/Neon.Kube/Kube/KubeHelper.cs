@@ -3039,7 +3039,7 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Returns the path to the <b>$/TEMPKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file.
+        /// Returns the path to the <b>$/NEONKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file.
         /// </summary>
         /// <returns>The <b>KubeVersions.cd</b> path.</returns>
         /// <exception cref="InvalidOperationException">
@@ -3078,7 +3078,7 @@ TCPKeepAlive yes
 
         /// <summary>
         /// Returns the <see cref="KubeVersions.NeonKube"/> constant value extracted from the 
-        /// <b>$/TEMPKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file.  Note that the
+        /// <b>$/NEONKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file.  Note that the
         /// <b>NK_ROOT</b> environment variable must reference the root of the <b>NEONKUBE</b>
         /// git repository.
         /// </summary>
@@ -3104,7 +3104,7 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Edits the <b>$/TEMPKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file by setting
+        /// Edits the <b>$/NEONKUBE/Lib/Neon.Kube/KubeVersions.cs</b> source file by setting
         /// the <see cref="KubeVersions.NeonKube"/> constant to the version passed.
         /// </summary>
         /// <param name="version">The new version number.</param>

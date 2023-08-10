@@ -179,9 +179,9 @@ namespace Neon.Kube.Hosting.HyperV
 
             cluster.HostingManager = this;
 
-            this.cluster = cluster;
-            this.nodeImageUri = nodeImageUri;
-            this.nodeImagePath = nodeImagePath;
+            this.cluster        = cluster;
+            this.nodeImageUri   = nodeImageUri;
+            this.nodeImagePath  = nodeImagePath;
             this.hostingOptions = cluster.Hosting.HyperV;
 
             // Determine where we're going to place the VM hard drive files and
@@ -227,21 +227,37 @@ namespace Neon.Kube.Hosting.HyperV
         }
 
         /// <inheritdoc/>
-        public override async Task FinalValidationAsync(ClusterDefinition clusterDefinition)
+        public override async Task CheckDeploymentReadinessAsync(ClusterDefinition clusterDefinition)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
+            var readiness = new HostingReadiness();
+
             // Collect information about the cluster nodes so we can verify that
-            //cluster makes sense.
+            // cluster makes sense.
 
             var hostedNodes = clusterDefinition.Nodes
                 .Select(nodeDefinition => new HostedNodeInfo(nodeDefinition.Name, nodeDefinition.Role, nodeDefinition.Hypervisor.GetVCpus(clusterDefinition), nodeDefinition.Hypervisor.GetMemory(clusterDefinition)))
                 .ToList();
 
-            ValidateCluster(clusterDefinition, hostedNodes);
+            ValidateCluster(clusterDefinition, hostedNodes, readiness);
 
-            await Task.CompletedTask;
+            // Verify that Hyper-V is available.
+
+            try
+            {
+                using (var hyperv = new HyperVProxy())
+                {
+                    hyperv.ListVms();
+                }
+            }
+            catch
+            {
+                readiness.AddProblem(type: HostingReadinessProblem.HyperVType, "Hyper-V is not available locally.");
+            }
+
+            readiness.ThrowIfNotReady();
         }
 
         /// <inheritdoc/>
@@ -454,11 +470,11 @@ namespace Neon.Kube.Hosting.HyperV
         }
 
         /// <inheritdoc/>
-        public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reservedMemory = 0, long reserveDisk = 0)
+        public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reservedMemory = 0, long reservedDisk = 0)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(reservedMemory >= 0, nameof(reservedMemory));
-            Covenant.Requires<ArgumentNullException>(reserveDisk >= 0, nameof(reserveDisk));
+            Covenant.Requires<ArgumentNullException>(reservedDisk >= 0, nameof(reservedDisk));
 
             var hostMachineName = Environment.MachineName;
             var allNodeNames    = cluster.SetupState.ClusterDefinition.NodeDefinitions.Keys.ToList();
@@ -553,7 +569,7 @@ namespace Neon.Kube.Hosting.HyperV
 
             // Verify that we have enough disk, taking the reservation into account.
 
-            if (availableDisk - reserveDisk < requiredDisk)
+            if (availableDisk - reservedDisk < requiredDisk)
             {
                 if (!deploymentCheck.Constraints.TryGetValue(hostMachineName, out var hostContraintList))
                 {
@@ -563,15 +579,15 @@ namespace Neon.Kube.Hosting.HyperV
                 }
 
                 var humanRequiredDisk  = ByteUnits.Humanize(requiredDisk, powerOfTwo: true);
-                var humanReservedDisk  = ByteUnits.Humanize(reserveDisk, powerOfTwo: true);
-                var humanAvailableDisk = ByteUnits.Humanize(availableDisk, powerOfTwo: true);
+                var humanReservedDisk  = ByteUnits.Humanize(reservedDisk, powerOfTwo: true);
+                var humanAllowedDisk   = ByteUnits.Humanize(availableDisk - reservedDisk, powerOfTwo: true);
 
                 hostContraintList.Add(
                     new HostingResourceConstraint()
                     {
                          ResourceType = HostingConstrainedResourceType.Disk,
                          Nodes        = allNodeNames,
-                         Details      = $"[{humanRequiredDisk}] disk is required but only [{humanAvailableDisk}] is available after reserving [{humanReservedDisk}]."
+                         Details      = $"[{humanRequiredDisk}] disk is required but only [{humanAllowedDisk}] is available after reserving [{humanReservedDisk}]."
                     });
             }
 
@@ -634,7 +650,7 @@ namespace Neon.Kube.Hosting.HyperV
                     }
 
                     var humanPhysicalMemory  = ByteUnits.Humanize(physicalMemory,  powerOfTwo: true);
-                    var humanAvailableMemory = ByteUnits.Humanize(physicalMemory, powerOfTwo: true);
+                    var humanAvailableMemory = ByteUnits.Humanize(physicalMemory - reservedMemory, powerOfTwo: true);
                     var humanRequiredMemory  = ByteUnits.Humanize(requiredMemory, powerOfTwo: true);
                     var humanReservedMemory  = ByteUnits.Humanize(reservedMemory, powerOfTwo: true);
 
@@ -643,7 +659,7 @@ namespace Neon.Kube.Hosting.HyperV
                         {
                              ResourceType = HostingConstrainedResourceType.Memory,
                              Nodes        = allNodeNames,
-                             Details      = $"[{humanRequiredMemory}] physical memory is required but only [{humanAvailableMemory}] out of [{humanPhysicalMemory}] is available after reserving [{humanReservedMemory}] for the system and other apps."
+                             Details      = $"[{humanRequiredMemory}] physical memory is required but only [{humanAvailableMemory}] out of [{humanPhysicalMemory}] is available after reserving [{humanReservedMemory}] for the host and other apps."
                         });
                 }
             }

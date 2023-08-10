@@ -95,6 +95,9 @@ OPTIONS:
     --quiet                     - Only print the currently executing step rather than
                                   displaying detailed setup status.
 
+    --upload-charts             - Upload Helm charts from your workstation rather than using
+                                  the charts baked into the node image.
+
     --use-staged[=branch]       - MAINTAINERS ONLY: Specifies that the staged node image 
                                   should be used as opposed to the public release image.
 
@@ -129,6 +132,7 @@ stage process is typically used only by NEONKUBE maintainers.
             "--no-telemetry",
             "--package-cache",
             "--quiet",
+            "--upload-charts",
             "--use-staged",
         };
 
@@ -165,6 +169,7 @@ stage process is typically used only by NEONKUBE maintainers.
             var maxParallelOption = commandLine.GetOption("--max-parallel", "6");
             var noTelemetry       = commandLine.HasOption("--no-telemetry");
             var quiet             = commandLine.HasOption("--quiet");
+            var uploadCharts      = commandLine.HasOption("--upload-charts");
             var useStaged         = commandLine.HasOption("--use-staged");
             var stageBranch       = commandLine.GetOption("--use-staged", useStaged ? KubeVersions.BuildBranch : null);
 
@@ -239,6 +244,11 @@ stage process is typically used only by NEONKUBE maintainers.
             if (quiet)
             {
                 args.Add($"--quiet");
+            }
+
+            if (uploadCharts)
+            {
+                args.Add("--upload-charts");
             }
 
             if (useStaged)

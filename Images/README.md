@@ -7,6 +7,6 @@ execute the **publish.ps1** script there to build and publish just that image.
 
 Container images are tagged like `neonkube-0.3.0-alpha` for NEONKUBE release branches
 like **release-***, where the semantic version is specified by **KubeVersions.NeonKube** 
-in `$/TEMPKUBE/Lib/Neon.Kube/KubeVersions.cs`.
+in `$/NEONKUBE/Lib/Neon.Kube/KubeVersions.cs`.
 
 For non-release NEONKUBE branches, images will be tagged like: `neonkube-0.3.0-alpha.BRANCH`

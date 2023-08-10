@@ -116,11 +116,11 @@ OPTIONS:
                           logs.  This is useful  for debugging cluster setup  issues.
                           Do not use for production clusters.
 
-    --upload-charts     - Upload Helm charts from your workstation rather than using
-                          the charts baked into the node image.
+    --upload-charts     - MAINTAINERS ONLY: Upload Helm charts from your workstation
+                          rather than using the charts baked into the node image.
 
-    --use-staged        - Specifies that the private node image should be deployed.
-                          Only NEONFORGE maintainers should use this.
+    --use-staged        - MAINTAINERS ONLY: Specifies that the private node image
+                          should be deployed.
 
 REMARKS:
 
@@ -137,16 +137,16 @@ stage process is typically used only by NEONKUBE maintainers.
         /// <inheritdoc/>
         public override string[] ExtendedOptions => new string[]
         {
-            "--unredacted",
-            "--max-parallel",
+            "--check",
+            "--debug",
             "--disable-pending",
             "--force",
-            "--upload-charts",
-            "--debug",
+            "--max-parallel",
+            "--no-telemetry",
             "--quiet",
-            "--check",
+            "--unredacted",
+            "--upload-charts",
             "--use-staged",
-            "--no-telemetry"
         };
 
         /// <inheritdoc/>

@@ -331,10 +331,12 @@ namespace Neon.Kube.Hosting.XenServer
         }
 
         /// <inheritdoc/>
-        public override async Task FinalValidationAsync(ClusterDefinition clusterDefinition)
+        public override async Task CheckDeploymentReadinessAsync(ClusterDefinition clusterDefinition)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            var readiness = new HostingReadiness();
 
             // Collect information about the cluster nodes so we can verify that
             //cluster makes sense.
@@ -343,9 +345,37 @@ namespace Neon.Kube.Hosting.XenServer
                 .Select(nodeDefinition => new HostedNodeInfo(nodeDefinition.Name, nodeDefinition.Role, nodeDefinition.Hypervisor.GetVCpus(clusterDefinition), nodeDefinition.Hypervisor.GetMemory(clusterDefinition)))
                 .ToList();
 
-            ValidateCluster(clusterDefinition, hostedNodes);
+            ValidateCluster(clusterDefinition, hostedNodes, readiness);
 
-            await Task.CompletedTask;
+            // Verify that the XenServer hosts required by the cluster are available.
+
+            Parallel.ForEach(cluster.Hosting.Hypervisor.Hosts, parallelOptions,
+                host =>
+                {
+                    var hostAddress  = GetHostIpAddress(host);
+                    var hostname     = host.Name;
+                    var hostUsername = host.Username ?? cluster.Hosting.Hypervisor.HostUsername;
+                    var hostPassword = host.Password ?? cluster.Hosting.Hypervisor.HostPassword;
+
+                    if (string.IsNullOrEmpty(hostname))
+                    {
+                        hostname = host.Address;
+                    }
+
+                    try
+                    {
+                        using (var xenClient = new XenClient(hostAddress, hostUsername, hostPassword, name: host.Name, logFolder: logFolder))
+                        {
+                            xenClient.Connect();
+                        }
+                    }
+                    catch (XenException)
+                    {
+                        readiness.AddProblem(HostingReadinessProblem.XenServerType, $"Host unavailable: {host.Address}");
+                    }
+                });
+
+            readiness.ThrowIfNotReady();
         }
 
         /// <inheritdoc/>
@@ -363,8 +393,8 @@ namespace Neon.Kube.Hosting.XenServer
 
             foreach (var node in cluster.SetupState.ClusterDefinition.Nodes)
             {
-                node.Labels.PhysicalMachine = node.Hypervisor.Host;
-                node.Labels.StorageOSDiskSize     = ByteUnits.ToGiB(node.Hypervisor.GetOsDisk(cluster.SetupState.ClusterDefinition));
+                node.Labels.PhysicalMachine   = node.Hypervisor.Host;
+                node.Labels.StorageOSDiskSize = ByteUnits.ToGiB(node.Hypervisor.GetOsDisk(cluster.SetupState.ClusterDefinition));
             }
 
             // Create [NodeSshProxy] instances that use the [XenClient] instances as proxy metadata.
@@ -1071,11 +1101,11 @@ namespace Neon.Kube.Hosting.XenServer
         }
 
         /// <inheritdoc/>
-        public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0)
+        public override async Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reservedDisk = 0)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentException>(reserveMemory >= 0, nameof(reserveMemory));
-            Covenant.Requires<ArgumentException>(reserveDisk >= 0, nameof(reserveDisk));
+            Covenant.Requires<ArgumentException>(reservedDisk >= 0, nameof(reservedDisk));
 
             // NOTE: We're going to allow CPUs to be over subscribed but not RAM or disk.
             //       We will honor the memory and disk reservations for XenServer.

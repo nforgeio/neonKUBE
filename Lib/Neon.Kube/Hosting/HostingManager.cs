@@ -173,7 +173,7 @@ namespace Neon.Kube.Hosting
         public abstract void Validate(ClusterDefinition clusterDefinition);
 
         /// <inheritdoc/>
-        public abstract Task FinalValidationAsync(ClusterDefinition clusterDefinition);
+        public abstract Task CheckDeploymentReadinessAsync(ClusterDefinition clusterDefinition);
 
         /// <inheritdoc/>
         public virtual bool RequiresNodeAddressCheck => false;
@@ -248,8 +248,17 @@ namespace Neon.Kube.Hosting
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            // We're to send ICMP pings to all node IP addresses and keep track of
-            // any responses (indicating conflcits) and then read the local machine's
+            // $todo(jefflill):
+            //
+            // The ARP cache lookups need more testing and will be disabled until then.
+            // We've seen situations when deploying a neon-desktop cluster when the
+            // cluster IP is reported as being in use.  This may also impact other
+            // clusters as well.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/1838
+
+            // We're going to send ICMP pings to all node IP addresses and keep track
+            // of any responses (indicating conflcits) and then read the local machine's
             // ARP table looking for any conflicts there.
             //
             // NOTE: It's possible for machines to have ICMP ping disabled so we
@@ -258,6 +267,7 @@ namespace Neon.Kube.Hosting
 
             var nodeConflicts = new Dictionary<string, NodeDefinition>(StringComparer.InvariantCultureIgnoreCase);
 
+#if TODO
             using (var pinger = new Pinger())
             {
                 await Parallel.ForEachAsync(clusterDefinition.NodeDefinitions.Values, new ParallelOptions() { MaxDegreeOfParallelism = 50 },
@@ -316,6 +326,25 @@ namespace Neon.Kube.Hosting
                 {
                     nodeConflicts[nodeDefinition.Name] = nodeDefinition;
                 }
+            }
+#endif
+            using (var pinger = new Pinger())
+            {
+                await Parallel.ForEachAsync(clusterDefinition.NodeDefinitions.Values, new ParallelOptions() { MaxDegreeOfParallelism = 50 },
+                    async (nodeDefinition, cancellationToken) =>
+                    {
+                        var reply = await pinger.SendPingAsync(nodeDefinition.Address);
+
+                        if (reply.Status == IPStatus.Success)
+                        {
+                            // We got a response.
+
+                            lock (nodeConflicts)
+                            {
+                                nodeConflicts.Add(nodeDefinition.Name, nodeDefinition);
+                            }
+                        }
+                    });
             }
 
             if (nodeConflicts.Count == 0)
@@ -489,14 +518,15 @@ namespace Neon.Kube.Hosting
 
         /// <summary>
         /// Performs final cluster definition validation including ensuring that the vCPUs and
-        /// memory assigned to each node supported.
+        /// memory assigned to each node is supported, adding any details to the <see cref="HostingReadiness"/>
+        /// instance passed.
         /// </summary>
         /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         /// <param name="hostedNodes">
         /// Specifies information about each cluster node including the number of vCPUs
         /// and memory (derived from the instance type/size for cloud environments).
         /// </param>
-        /// <exception cref="ClusterDefinitionException">Thrown when the defined cluster is not supported.</exception>
+        /// <param name="readiness">Used to return discovered readiness problems.</param>
         /// <remarks>
         /// <para>
         /// NEONKUBE clusters supports control-plane nodes with 2+ cores and at least 8GB RAM.
@@ -511,14 +541,14 @@ namespace Neon.Kube.Hosting
         /// workaround our fees by deploying 2-core worker nodes.
         /// </note>
         /// </remarks>
-        protected void ValidateCluster(ClusterDefinition clusterDefinition, List<HostedNodeInfo> hostedNodes)
+        protected void ValidateCluster(ClusterDefinition clusterDefinition, List<HostedNodeInfo> hostedNodes, HostingReadiness readiness)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentNullException>(hostedNodes != null, nameof(hostedNodes));
             Covenant.Requires<ArgumentException>(hostedNodes.Count > 0, nameof(hostedNodes));
+            Covenant.Requires<ArgumentNullException>(readiness != null, nameof(readiness));
 
             var minMemory = 4 * ByteUnits.GigaBytes;
-            var sbError   = new StringBuilder();
 
             // Verify that control-plane nodes have at least 2 vCPUs and 8GB RAM.
 
@@ -526,15 +556,15 @@ namespace Neon.Kube.Hosting
             {
                 if (node.VCpus < KubeConst.MinControlNodeVCpus && node.Memory < minMemory)
                 {
-                    sbError.AppendLine($"Control-plane node [{node.Name}] has only [{node.VCpus}] vCPUs and [{ByteUnits.Humanize(node.Memory, powerOfTwo: false)}] memory.  At least [{KubeConst.MinControlNodeVCpus}] vCPUs and [{ByteUnits.Humanize(minMemory, powerOfTwo: false)}] memory is required.");
+                    readiness.AddProblem(type: HostingReadinessProblem.ClusterDefinitionType, details: $"Control-plane node [{node.Name}] has only [{node.VCpus}] vCPUs and [{ByteUnits.Humanize(node.Memory, powerOfTwo: false)}] memory.  At least [{KubeConst.MinControlNodeVCpus}] vCPUs and [{ByteUnits.Humanize(minMemory, powerOfTwo: false)}] memory is required.");
                 }
                 else if (node.VCpus < KubeConst.MinControlNodeVCpus)
                 {
-                    sbError.AppendLine($"Control-plane node [{node.Name}] has only [{node.VCpus}] vCPUs.  At least [{KubeConst.MinControlNodeVCpus}] vCPUs are required.");
+                    readiness.AddProblem(type: HostingReadinessProblem.ClusterDefinitionType, details: $"Control-plane node [{node.Name}] has only [{node.VCpus}] vCPUs.  At least [{KubeConst.MinControlNodeVCpus}] vCPUs are required.");
                 }
                 else if (node.Memory < minMemory)
                 {
-                    sbError.AppendLine($"Control-plane node [{node.Name}] has only [{ByteUnits.Humanize(node.Memory, powerOfTwo: false)}] memory.  At least [{ByteUnits.Humanize(minMemory, powerOfTwo: false)}] memory is required.");
+                    readiness.AddProblem(type: HostingReadinessProblem.ClusterDefinitionType, details: $"Control-plane node [{node.Name}] has only [{ByteUnits.Humanize(node.Memory, powerOfTwo: false)}] memory.  At least [{ByteUnits.Humanize(minMemory, powerOfTwo: false)}] memory is required.");
                 }
             }
 
@@ -544,25 +574,16 @@ namespace Neon.Kube.Hosting
             {
                 if (node.VCpus < KubeConst.MinWorkerNodeVCpus && node.Memory < minMemory)
                 {
-                    sbError.AppendLine($"Worker node [{node.Name}] has too only [{node.VCpus}] vCPUs and [{ByteUnits.Humanize(node.Memory, powerOfTwo: false)}] memory.  At least [{KubeConst.MinWorkerNodeVCpus}] vCPUs and [{ByteUnits.Humanize(minMemory, powerOfTwo: false)}] memory is required.");
+                    readiness.AddProblem(type: HostingReadinessProblem.ClusterDefinitionType, details: $"Worker node [{node.Name}] has too only [{node.VCpus}] vCPUs and [{ByteUnits.Humanize(node.Memory, powerOfTwo: false)}] memory.  At least [{KubeConst.MinWorkerNodeVCpus}] vCPUs and [{ByteUnits.Humanize(minMemory, powerOfTwo: false)}] memory is required.");
                 }
                 else if (node.VCpus < KubeConst.MinWorkerNodeVCpus)
                 {
-                    sbError.AppendLine($"Worker node [{node.Name}] has too only [{node.VCpus}] vCPUs.  At least [{KubeConst.MinWorkerNodeVCpus}] vCPUs are required.");
+                    readiness.AddProblem(type: HostingReadinessProblem.ClusterDefinitionType, details: $"Worker node [{node.Name}] has too only [{node.VCpus}] vCPUs.  At least [{KubeConst.MinWorkerNodeVCpus}] vCPUs are required.");
                 }
                 else if (node.Memory < minMemory)
                 {
-                    sbError.AppendLine($"Worker node [{node.Name}] has [{ByteUnits.Humanize(node.Memory, powerOfTwo: false)}] memory.  At least [{ByteUnits.Humanize(minMemory, powerOfTwo: false)}] memory is required.");
+                    readiness.AddProblem(type: HostingReadinessProblem.ClusterDefinitionType, details: $"Worker node [{node.Name}] has [{ByteUnits.Humanize(node.Memory, powerOfTwo: false)}] memory.  At least [{ByteUnits.Humanize(minMemory, powerOfTwo: false)}] memory is required.");
                 }
-            }
-
-            if (sbError.Length > 0)
-            {
-                sbError.AppendLine();
-                sbError.AppendLine($"* Control-plane nodes require at least [{KubeConst.MinControlNodeVCpus}] vCPUs each and worker nodes require at lest [{KubeConst.MinWorkerNodeVCpus}] vCPUs.");
-                sbError.AppendLine($"* All nodes require at least [{ByteUnits.Humanize(minMemory, powerOfTwo: false)}] memory.");
-
-                throw new ClusterDefinitionException(sbError.ToString());
             }
 
             // Clusters that have control-plane nodes with just 2 cores require at
@@ -570,7 +591,7 @@ namespace Neon.Kube.Hosting
 
             if (hostedNodes.Any(node => node.Role == NodeRole.ControlPlane && node.VCpus <= 2) && hostedNodes.Count(node => node.Role == NodeRole.Worker) == 0)
             {
-                throw new ClusterDefinitionException("Clusters must have at least one worker node when any of the control-plane nodes has only 2 vCPUs.");
+                readiness.AddProblem(type: HostingReadinessProblem.ClusterDefinitionType, details: "Clusters must have at least one worker node when any of the control-plane nodes has only 2 vCPUs.");
             }
         }
 

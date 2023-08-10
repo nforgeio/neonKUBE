@@ -30,15 +30,13 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.Kube;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Setup;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Time;
-
-using Renci.SshNet;
-using Renci.SshNet.Common;
 
 namespace Neon.Kube.Hosting
 {
@@ -73,14 +71,12 @@ namespace Neon.Kube.Hosting
         void Validate(ClusterDefinition clusterDefinition);
 
         /// <summary>
-        /// Performs any final cluster definition validation before deploying a cluster.
-        /// This is <b>async</b> so the validator can perform async queries against the
-        /// hosting environment to obtain information about instance types/sizes, etc.
+        /// Performs any final hosting environmet readiness check before deploying a cluster.
         /// </summary>
         /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="ClusterDefinitionException">Thrown if any problems were detected.</exception>
-        public Task FinalValidationAsync(ClusterDefinition clusterDefinition);
+        /// <exception cref="HostingReadinessException">Thrown if any problems were detected.</exception>
+        public Task CheckDeploymentReadinessAsync(ClusterDefinition clusterDefinition);
 
         /// <summary>
         /// Returns <c>true</c> if the hosting manager requires that the LAN be scanned
@@ -262,11 +258,11 @@ namespace Neon.Kube.Hosting
         /// Returns the availability of resources required to deploy a cluster.
         /// </summary>
         /// <param name="reserveMemory">Optionally specifies the amount of host memory (in bytes) to be reserved for host operations.</param>
-        /// <param name="reserveDisk">Optionally specifies the amount of host disk disk (in bytes) to be reserved for host operations.</param>
+        /// <param name="reservedDisk">Optionally specifies the amount of host disk disk (in bytes) to be reserved for host operations.</param>
         /// <returns>Details about whether cluster deployment can proceed.</returns>
         /// <remarks>
         /// <para>
-        /// The optional <paramref name="reserveMemory"/> and <paramref name="reserveDisk"/> parameters
+        /// The optional <paramref name="reserveMemory"/> and <paramref name="reservedDisk"/> parameters
         /// can be used to specify memory and disk that are to be reserved for the host environment.  Hosting 
         /// manager implementations are free to ignore this when they don't really makse sense.
         /// </para>
@@ -279,7 +275,7 @@ namespace Neon.Kube.Hosting
         /// those environemnts will still work well when all available resources are consumed.
         /// </para>
         /// </remarks>
-        Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reserveDisk = 0);
+        Task<HostingResourceAvailability> GetResourceAvailabilityAsync(long reserveMemory = 0, long reservedDisk = 0);
 
         /// <summary>
         /// Retrieves the health status of the current cluster from the hosting manager's perspective
