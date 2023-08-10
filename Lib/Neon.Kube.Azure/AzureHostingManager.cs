@@ -1890,7 +1890,8 @@ namespace Neon.Kube.Hosting.Azure
                 const string galleryResourceGroupName = "neonkube-images";
                 const string galleryName              = "neonkube.images";
 
-                var nodeImageName           = neonKubeVersion.Prerelease == null ? $"neonkube-node-{cpuArchitecture}{KubeVersions.BranchPart}" : $"neonkube-node-{cpuArchitecture}-{neonKubeVersion.Prerelease}{KubeVersions.BranchPart}";
+                var nodeImageName           = neonKubeVersion.IsPrerelease ? $"neonkube-node-{cpuArchitecture}-{neonKubeVersion.Prerelease}{KubeVersions.BranchPart}"
+                                                                           : $"neonkube-node-{cpuArchitecture}{KubeVersions.BranchPart}";
                 var nodeImageVersionName    = $"{neonKubeVersion.Major}.{neonKubeVersion.Minor}.{neonKubeVersion.Patch}";
                 var resourceGroupCollection = subscription.GetResourceGroups();
 
