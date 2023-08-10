@@ -331,10 +331,12 @@ namespace Neon.Kube.Hosting.XenServer
         }
 
         /// <inheritdoc/>
-        public override async Task FinalValidationAsync(ClusterDefinition clusterDefinition)
+        public override async Task CheckDeploymentReadinessAsync(ClusterDefinition clusterDefinition)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            var readiness = new HostingReadiness();
 
             // Collect information about the cluster nodes so we can verify that
             //cluster makes sense.
@@ -343,9 +345,37 @@ namespace Neon.Kube.Hosting.XenServer
                 .Select(nodeDefinition => new HostedNodeInfo(nodeDefinition.Name, nodeDefinition.Role, nodeDefinition.Hypervisor.GetVCpus(clusterDefinition), nodeDefinition.Hypervisor.GetMemory(clusterDefinition)))
                 .ToList();
 
-            ValidateCluster(clusterDefinition, hostedNodes);
+            ValidateCluster(clusterDefinition, hostedNodes, readiness);
 
-            await Task.CompletedTask;
+            // Verify that the XenServer hosts required by the cluster are available.
+
+            Parallel.ForEach(cluster.Hosting.Hypervisor.Hosts, parallelOptions,
+                host =>
+                {
+                    var hostAddress  = GetHostIpAddress(host);
+                    var hostname     = host.Name;
+                    var hostUsername = host.Username ?? cluster.Hosting.Hypervisor.HostUsername;
+                    var hostPassword = host.Password ?? cluster.Hosting.Hypervisor.HostPassword;
+
+                    if (string.IsNullOrEmpty(hostname))
+                    {
+                        hostname = host.Address;
+                    }
+
+                    try
+                    {
+                        using (var xenClient = new XenClient(hostAddress, hostUsername, hostPassword, name: host.Name, logFolder: logFolder))
+                        {
+                            xenClient.Connect();
+                        }
+                    }
+                    catch (XenException)
+                    {
+                        readiness.AddProblem(HostingReadinessProblem.XenServerType, $"Host unavailable: {host.Address}");
+                    }
+                });
+
+            readiness.ThrowIfNotReady();
         }
 
         /// <inheritdoc/>

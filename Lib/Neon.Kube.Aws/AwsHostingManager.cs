@@ -1253,16 +1253,26 @@ namespace Neon.Kube.Hosting.Aws
         }
 
         /// <inheritdoc/>
-        public override async Task FinalValidationAsync(ClusterDefinition clusterDefinition)
+        public override async Task CheckDeploymentReadinessAsync(ClusterDefinition clusterDefinition)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            var readiness = new HostingReadiness();
 
             // Connect to AWS and lookup the node instance types to determine the number
             // of vCPUs and memory available for each and then call a common method to
             // verify that NEONKUBE actually supports those instance types.
 
-            await ConnectAwsAsync();
+            try
+            {
+                await ConnectAwsAsync();
+            }
+            catch (Exception e)
+            {
+                readiness.AddProblem(type: HostingReadinessProblem.AwsType, details: NeonHelper.ExceptionError(e));
+                readiness.ThrowIfNotReady();
+            }
 
             var nameToInstanceTypeInfo = new Dictionary<string, InstanceTypeInfo>(StringComparer.InvariantCultureIgnoreCase);
             var instanceTypePaginator  = ec2Client.Paginators.DescribeInstanceTypes(new DescribeInstanceTypesRequest());
@@ -1278,13 +1288,15 @@ namespace Neon.Kube.Hosting.Aws
             {
                 if (!nameToInstanceTypeInfo.TryGetValue(nodeDefinition.Aws.InstanceType, out var instanceTypeInfo))
                 {
-                    throw new ClusterDefinitionException($"Node [{nodeDefinition.Name}] specifies [instanceType={nodeDefinition.Aws.InstanceType}] which does not exist.");
+                    readiness.AddProblem(type: "cluster-definition", details: $"Node [{nodeDefinition.Name}] specifies [instanceType={nodeDefinition.Aws.InstanceType}] which does not exist.");
                 }
 
                 hostedNodes.Add(new HostedNodeInfo(nodeDefinition.Name, nodeDefinition.Role, instanceTypeInfo.VCpuInfo.DefaultVCpus, (long)(instanceTypeInfo.MemoryInfo.SizeInMiB * ByteUnits.MebiBytes)));
             }
 
-            ValidateCluster(clusterDefinition, hostedNodes);
+            ValidateCluster(clusterDefinition, hostedNodes, readiness);
+
+            readiness.ThrowIfNotReady();
         }
 
         /// <summary>

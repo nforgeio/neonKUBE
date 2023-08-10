@@ -1090,16 +1090,26 @@ namespace Neon.Kube.Hosting.Azure
         }
 
         /// <inheritdoc/>
-        public override async Task FinalValidationAsync(ClusterDefinition clusterDefinition)
+        public override async Task CheckDeploymentReadinessAsync(ClusterDefinition clusterDefinition)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            var readiness = new HostingReadiness();
 
             // Connect to Azure and lookup the node instance types to determine the number
             // of vCPUs and memory available for each and then call a common method to
             // verify that NEONKUBE actually supports those instance types.
 
-            await ConnectAzureAsync();
+            try
+            {
+                await ConnectAzureAsync();
+            }
+            catch (Exception e)
+            {
+                readiness.AddProblem(type: HostingReadinessProblem.AzureType, details: NeonHelper.ExceptionError(e));
+                readiness.ThrowIfNotReady();
+            }
 
             var nameToVmSku = new Dictionary<string, VmSku>(StringComparer.InvariantCultureIgnoreCase);
 
@@ -1123,7 +1133,9 @@ namespace Neon.Kube.Hosting.Azure
                 hostedNodes.Add(new HostedNodeInfo(nodeDefinition.Name, nodeDefinition.Role, vmSizeInfo.VirtualCpus, (long)(vmSizeInfo.MemoryGiB * ByteUnits.GibiBytes)));
             }
 
-            ValidateCluster(clusterDefinition, hostedNodes);
+            ValidateCluster(clusterDefinition, hostedNodes, readiness);
+
+            readiness.ThrowIfNotReady();
         }
 
         /// <inheritdoc/>

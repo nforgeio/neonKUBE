@@ -179,9 +179,9 @@ namespace Neon.Kube.Hosting.HyperV
 
             cluster.HostingManager = this;
 
-            this.cluster = cluster;
-            this.nodeImageUri = nodeImageUri;
-            this.nodeImagePath = nodeImagePath;
+            this.cluster        = cluster;
+            this.nodeImageUri   = nodeImageUri;
+            this.nodeImagePath  = nodeImagePath;
             this.hostingOptions = cluster.Hosting.HyperV;
 
             // Determine where we're going to place the VM hard drive files and
@@ -227,21 +227,37 @@ namespace Neon.Kube.Hosting.HyperV
         }
 
         /// <inheritdoc/>
-        public override async Task FinalValidationAsync(ClusterDefinition clusterDefinition)
+        public override async Task CheckDeploymentReadinessAsync(ClusterDefinition clusterDefinition)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
+            var readiness = new HostingReadiness();
+
             // Collect information about the cluster nodes so we can verify that
-            //cluster makes sense.
+            // cluster makes sense.
 
             var hostedNodes = clusterDefinition.Nodes
                 .Select(nodeDefinition => new HostedNodeInfo(nodeDefinition.Name, nodeDefinition.Role, nodeDefinition.Hypervisor.GetVCpus(clusterDefinition), nodeDefinition.Hypervisor.GetMemory(clusterDefinition)))
                 .ToList();
 
-            ValidateCluster(clusterDefinition, hostedNodes);
+            ValidateCluster(clusterDefinition, hostedNodes, readiness);
 
-            await Task.CompletedTask;
+            // Verify that Hyper-V is available.
+
+            try
+            {
+                using (var hyperv = new HyperVProxy())
+                {
+                    hyperv.ListVms();
+                }
+            }
+            catch
+            {
+                readiness.AddProblem(type: HostingReadinessProblem.HyperVType, "Hyper-V is not available locally.");
+            }
+
+            readiness.ThrowIfNotReady();
         }
 
         /// <inheritdoc/>

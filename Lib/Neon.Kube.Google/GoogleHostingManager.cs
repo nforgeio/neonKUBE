@@ -168,7 +168,7 @@ namespace Neon.Kube.Hosting.Google
         }
 
         /// <inheritdoc/>
-        public override async Task FinalValidationAsync(ClusterDefinition clusterDefinition)
+        public override async Task CheckDeploymentReadinessAsync(ClusterDefinition clusterDefinition)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));

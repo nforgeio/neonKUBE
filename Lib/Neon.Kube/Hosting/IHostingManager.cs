@@ -30,15 +30,13 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.Kube;
 using Neon.Kube.ClusterDef;
 using Neon.Kube.Setup;
 using Neon.Net;
 using Neon.Retry;
 using Neon.SSH;
 using Neon.Time;
-
-using Renci.SshNet;
-using Renci.SshNet.Common;
 
 namespace Neon.Kube.Hosting
 {
@@ -73,14 +71,12 @@ namespace Neon.Kube.Hosting
         void Validate(ClusterDefinition clusterDefinition);
 
         /// <summary>
-        /// Performs any final cluster definition validation before deploying a cluster.
-        /// This is <b>async</b> so the validator can perform async queries against the
-        /// hosting environment to obtain information about instance types/sizes, etc.
+        /// Performs any final hosting environmet readiness check before deploying a cluster.
         /// </summary>
         /// <param name="clusterDefinition">Specifies the cluster definition.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="ClusterDefinitionException">Thrown if any problems were detected.</exception>
-        public Task FinalValidationAsync(ClusterDefinition clusterDefinition);
+        /// <exception cref="HostingReadinessException">Thrown if any problems were detected.</exception>
+        public Task CheckDeploymentReadinessAsync(ClusterDefinition clusterDefinition);
 
         /// <summary>
         /// Returns <c>true</c> if the hosting manager requires that the LAN be scanned
