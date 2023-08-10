@@ -2871,6 +2871,11 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             values.Add($"ndm.resources.requests.memory", ToSiString(ndmAdvice.PodMemoryRequest));
                             values.Add($"ndm.resources.limits.memory", ToSiString(ndmAdvice.PodMemoryLimit));
 
+                            if (cluster.SetupState.ClusterDefinition.IsDesktop)
+                            {
+                                values.Add($"ndm.filters.excludePaths", "/dev/loop,/dev/fd0,/dev/sr0,/dev/ram,/dev/dm-,/dev/md,/dev/rbd,/dev/zd,/dev/sda2");
+                            }
+
                             await controlNode.InstallHelmChartAsync(controller, "openebs",
                                 releaseName:  "openebs",
                                 @namespace:   KubeNamespace.NeonStorage,
