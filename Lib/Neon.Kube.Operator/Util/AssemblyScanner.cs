@@ -55,8 +55,7 @@ namespace Neon.Kube.Operator.Util
             }
 
             var types = assemblyTypes
-                .Where(type => type.GetInterfaces().Count() > 0
-                        && type.GetInterfaces().Any(@interface => @interface.GetCustomAttributes<OperatorComponentAttribute>()
+                .Where(type => type.GetInterfaces().Count() > 0 && type.GetInterfaces().Any(@interface => @interface.GetCustomAttributes<OperatorComponentAttribute>()
                     .Any())).ToList();
 
             foreach (var type in types)
@@ -69,8 +68,9 @@ namespace Neon.Kube.Operator.Util
                 {
                     case OperatorComponentType.Controller:
 
-                        if (type.GetCustomAttribute<ControllerAttribute>()?.Ignore == true
-                                || type == typeof(ResourceControllerBase<>))
+                        if (type.GetCustomAttribute<ControllerAttribute>()?.Ignore == true ||
+                            type.GetCustomAttribute<ControllerAttribute>()?.IgnoreWhenNotInPod == true ||
+                            type == typeof(ResourceControllerBase<>))
                         {
                             break;
                         }

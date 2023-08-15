@@ -169,8 +169,9 @@ namespace Neon.Kube.Operator.Builder
 
                             controllerArgs[0] = this;
 
-                            if (controllerAttribute?.Ignore == true
-                                || type == typeof(ResourceControllerBase<>))
+                            if (controllerAttribute?.Ignore == true ||
+                                controllerAttribute?.IgnoreWhenNotInPod == true ||
+                                type == typeof(ResourceControllerBase<>))
                             {
                                 break;
                             }

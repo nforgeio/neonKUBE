@@ -33,6 +33,13 @@ namespace Neon.Kube.Operator.Attributes
         public bool Ignore { get; set; } = false;
 
         /// <summary>
+        /// Ignore the controller when it is not running inside of a cluster pod, typically
+        /// when debugging the operator when it's running outside of the cluster.  This is
+        /// a handy way to disable controllers that only work when running in a cluster pod.
+        /// </summary>
+        public bool IgnoreWhenNotInPod { get; set; } = false;
+
+        /// <summary>
         /// Optionally disable automatic finalizer registration. If enabled, all finalizers currently deployed by the operator
         /// will be registered when a resource is reconciled.
         /// </summary>
