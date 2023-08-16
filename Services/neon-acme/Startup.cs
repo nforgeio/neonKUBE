@@ -77,16 +77,7 @@ namespace NeonAcme
             services
                 .AddSingleton(NeonAcmeService)
                 .AddSingleton<ILogger>(Program.Service.Logger)
-                .AddSwaggerGen(
-                    options =>
-                    {
-                        options.SwaggerDoc("v3",
-                            new OpenApiInfo
-                            {
-                                Title   = "v1",
-                                Version = "v1"
-                            });
-                    });
+                .AddSwaggerGen();
 
             services.AddControllers()
                 .AddNeon();
@@ -104,11 +95,7 @@ namespace NeonAcme
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseSwagger(
-                options =>
-                {
-                    options.RouteTemplate = "/openapi/{documentName}";
-                });
+            app.UseSwagger();
             app.UseRouting();
             app.UseHttpMetrics();
             app.UseEndpoints
