@@ -1,14 +1,16 @@
-using Neon.Kube.Operator.Attributes;
-using Neon.Kube.Operator.Builder;
-using Neon.Kube.Operator.Controller;
-using Neon.Kube.Operator.Finalizer;
-using Neon.Kube.Operator.Webhook;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+
+using Neon.Common;
+using Neon.Kube.Operator.Attributes;
+using Neon.Kube.Operator.Builder;
+using Neon.Kube.Operator.Controller;
+using Neon.Kube.Operator.Finalizer;
+using Neon.Kube.Operator.Webhook;
 
 namespace Neon.Kube.Operator.Util
 {
@@ -69,7 +71,7 @@ namespace Neon.Kube.Operator.Util
                     case OperatorComponentType.Controller:
 
                         if (type.GetCustomAttribute<ControllerAttribute>()?.Ignore == true ||
-                            type.GetCustomAttribute<ControllerAttribute>()?.IgnoreWhenNotInPod == true ||
+                            (NeonHelper.IsKubernetes && type.GetCustomAttribute<ControllerAttribute>()?.IgnoreWhenNotInPod == true) ||
                             type == typeof(ResourceControllerBase<>))
                         {
                             break;
