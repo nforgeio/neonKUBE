@@ -71,7 +71,7 @@ namespace Neon.Kube.Operator.Util
                     case OperatorComponentType.Controller:
 
                         if (type.GetCustomAttribute<ControllerAttribute>()?.Ignore == true ||
-                            (NeonHelper.IsKubernetes && type.GetCustomAttribute<ControllerAttribute>()?.IgnoreWhenNotInPod == true) ||
+                            (!NeonHelper.IsKubernetes && type.GetCustomAttribute<ControllerAttribute>()?.IgnoreWhenNotInPod == true) ||
                             type == typeof(ResourceControllerBase<>))
                         {
                             break;

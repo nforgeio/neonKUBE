@@ -170,7 +170,7 @@ namespace Neon.Kube.Operator.Builder
                             controllerArgs[0] = this;
 
                             if (controllerAttribute?.Ignore == true ||
-                                controllerAttribute?.IgnoreWhenNotInPod == true ||
+                                (!NeonHelper.IsKubernetes && type.GetCustomAttribute<ControllerAttribute>()?.IgnoreWhenNotInPod == true) ||
                                 type == typeof(ResourceControllerBase<>))
                             {
                                 break;
