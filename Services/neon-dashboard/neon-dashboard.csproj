@@ -5,12 +5,17 @@
         <OutputType>Exe</OutputType>
         <RootNamespace>NeonDashboard</RootNamespace>
         <IsPackable>false</IsPackable>
-        <ServerGarbageCollection>true</ServerGarbageCollection>
-        <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
         <AssemblyName>neon-dashboard</AssemblyName>
         <Configurations>Debug;Release</Configurations>
         <GenerateDocumentationFile>false</GenerateDocumentationFile>
         <NoWarn>$(NoWarn);RZ10012</NoWarn>
+    </PropertyGroup>
+
+    <!-- Runtime settings -->
+
+    <PropertyGroup>
+        <ServerGarbageCollection>true</ServerGarbageCollection>
+        <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
     </PropertyGroup>
 
     <ItemGroup>

@@ -5,10 +5,15 @@
         <OutputType>Exe</OutputType>
         <RootNamespace>NeonNodeAgent</RootNamespace>
         <IsPackable>false</IsPackable>
-        <ServerGarbageCollection>true</ServerGarbageCollection>
-        <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
         <AssemblyName>neon-node-agent</AssemblyName>
         <Configurations>Debug;Release</Configurations>
+    </PropertyGroup>
+
+    <!-- Runtime settings -->
+
+    <PropertyGroup>
+        <ServerGarbageCollection>true</ServerGarbageCollection>
+        <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
     </PropertyGroup>
 
     <ItemGroup>
