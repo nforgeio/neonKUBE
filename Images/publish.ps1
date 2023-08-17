@@ -44,7 +44,7 @@ $image_root = [System.IO.Path]::Combine($env:NK_ROOT, "Images")
 #----------------------------------------------------------
 
 # Take care to ensure that you order the image builds such that
-# dependant images are built before any dependancies.
+# dependencies are built before images that rely on them.
 
 function Publish
 {
