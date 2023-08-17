@@ -83,12 +83,14 @@ namespace Neon.Kube.Resources.CertManager
         [DefaultValue(null)]
         public AcmeSecretKeySelector KeySecretRef { get; set; } = null;
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Validates the properties.
+        /// </summary>
         public void Validate() 
         {
             KeySecretRef = KeySecretRef ?? new AcmeSecretKeySelector()
             {
-                Key = "secret",
+                Key  = "secret",
                 Name = "neon-acme-secret"
             };
         }

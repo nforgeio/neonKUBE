@@ -71,7 +71,11 @@ namespace Neon.Kube.Resources.CertManager
         [DefaultValue(null)]
         public Dictionary<string, object> Config { get; set; } = null;
 
-        /// <inheritdoc/>
-        public void Validate() { }
+        /// <summary>
+        /// Validates the properties.
+        /// </summary>
+        public void Validate()
+        {
+        }
     }
 }

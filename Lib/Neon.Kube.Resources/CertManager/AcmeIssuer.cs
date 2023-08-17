@@ -141,7 +141,9 @@ namespace Neon.Kube.Resources.CertManager
         [DefaultValue(null)]
         public bool? EnableDurationFeature { get; set; }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Validates the peoperties.
+        /// </summary>
         public void Validate()
         {
             var acmeIssuerPrefix = $"{nameof(AcmeIssuer)}";
