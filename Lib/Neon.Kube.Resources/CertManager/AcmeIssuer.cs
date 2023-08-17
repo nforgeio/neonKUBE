@@ -153,10 +153,10 @@ namespace Neon.Kube.Resources.CertManager
                 var neonWebhookSolver = new AcmeIssuerDns01ProviderWebhook()
                 {
                     Config = new Dictionary<string, object>()
-                {
-                    { "Registrar", "route53" }
-                },
-                    GroupName = "acme.neoncloud.io",
+                    {
+                        { "Registrar", "route53" }
+                    },
+                    GroupName  = "acme.neoncloud.io",
                     SolverName = "neoncluster_io"
                 };
 
@@ -181,7 +181,7 @@ namespace Neon.Kube.Resources.CertManager
             PrivateKeySecretRef = PrivateKeySecretRef ?? new AcmeSecretKeySelector()
             {
                 Name = "neon-acme-issuer-account-key",
-                Key = "tls.key"
+                Key  = "tls.key"
             };
 
             if (ExternalAccountBinding != null)
