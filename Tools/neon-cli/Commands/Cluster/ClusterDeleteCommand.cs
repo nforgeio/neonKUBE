@@ -219,7 +219,7 @@ definition or by executing this command on your cluster:
                     Program.Exit(1);
                 }
 
-                if (!Program.PromptYesNo($"Are you sure you want to remove cluster: {cluster.Name}?"))
+                if (!Program.PromptYesNo($"Are you sure you want to delete cluster: {cluster.Name}?"))
                 {
                     Program.Exit(0);
                 }

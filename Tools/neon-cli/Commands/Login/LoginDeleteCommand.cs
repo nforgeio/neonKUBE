@@ -138,7 +138,7 @@ This command removes the current login when CONTEXT-NAME is not specified.
                 contextName = (KubeContextName)context.Name;
             }
 
-            if (!force && !Program.PromptYesNo($"*** Are you sure you want to remove: {contextName}?"))
+            if (!force && !Program.PromptYesNo($"*** Are you sure you want to delete: {contextName}?"))
             {
                 return;
             }
@@ -160,7 +160,7 @@ This command removes the current login when CONTEXT-NAME is not specified.
             // Remove the login and kubecontext
 
             KubeHelper.KubeConfig.RemoveContext(context);
-            Console.WriteLine($"Removed: {contextName}");
+            Console.WriteLine($"Deleted: {contextName}");
             Console.WriteLine();
 
             await Task.CompletedTask;

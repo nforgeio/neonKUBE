@@ -113,9 +113,8 @@ USAGE:
                     case ClusterState.Healthy:
                     case ClusterState.Unhealthy:
 
-                        Console.WriteLine($"Locking: {cluster.Name}...");
                         await cluster.LockAsync();
-                        Console.WriteLine($"LOCKED:  {cluster.Name}");
+                        Console.WriteLine($"{cluster.Name}: is LOCKED");
                         break;
 
                     default:
