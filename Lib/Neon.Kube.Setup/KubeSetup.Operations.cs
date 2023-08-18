@@ -1096,7 +1096,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         }
 
         /// <summary>
-        /// Configures the Kubernetes feature gates specified by the <see cref="ClusterDefinition.FeatureGates"/> dictionary.
+        /// Configures the Kubernetes feature gates specified by the <see cref="KubernetesOptions.FeatureGates"/> dictionary.
         /// It does this by editing the API server's static pod manifest located at <b>/etc/kubernetes/manifests/kube-apiserver.yaml</b>
         /// on the control-plane nodes as required.  This also tweaks the <b>--service-account-issuer</b> option.
         /// </summary>
@@ -1214,7 +1214,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         var command      = (List<object>)container["command"];
                         var sbFeatures   = new StringBuilder();
 
-                        foreach (var featureGate in clusterDefinition.FeatureGates)
+                        foreach (var featureGate in clusterDefinition.Kubernetes.FeatureGates)
                         {
                             sbFeatures.AppendWithSeparator($"{featureGate.Key}={NeonHelper.ToBoolString(featureGate.Value)}", ",");
                         }

@@ -162,7 +162,6 @@ spec:
     cni:
       excludeNamespaces:
        - {{.Release.Namespace}}
-       - kube-system
        - kube-node-lease
        - kube-public
       logLevel: info
