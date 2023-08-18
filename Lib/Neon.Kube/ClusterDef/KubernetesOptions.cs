@@ -78,6 +78,48 @@ namespace Neon.Kube.ClusterDef
         public string DashboardVersion { get; set; } = defaultDashboardVersion;
 
         /// <summary>
+        /// Enables or disables specific Kubernetes features.  This can be used to enable
+        /// alpha quality or other features that are disabled by default for the Kubernetes
+        /// version being deployed or to disable features.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This is a dictionary that maps feature names a boolean where <c>true</c>
+        /// enables the feature and <c>false</c> disables it.  You can find a description
+        /// of the available Kubernetes feature gates here:
+        /// </para>
+        /// <para>
+        /// https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/#feature-gates
+        /// </para>
+        /// <note>
+        /// Your NEONKUBE cluster may be somewhat older than the current Kubernetes version,
+        /// so some of the features listed may not apply to your cluster.
+        /// </note>
+        /// <para>
+        /// NEONKUBE clusters enables specific features by default when you you haven't
+        /// explicitly disabled them via this property.  Note that some features are 
+        /// required and cannot be disabled.
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        ///     <term><b>EphemeralContainers</b></term>
+        ///     <description>
+        ///     <para>
+        ///     Enables the ability to add ephemeral containers to running pods.
+        ///     </para>
+        ///     <para>
+        ///     This is very handy for debugging pods.
+        ///     </para>
+        ///     </description>
+        /// </item>
+        /// </list>
+        /// </remarks>
+        [JsonProperty(PropertyName = "FeatureGates", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "featureGates", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public Dictionary<string, bool> FeatureGates = new Dictionary<string, bool>();
+
+        /// <summary>
         /// The version of Helm to be installed.  This defaults to <b>default</b> which
         /// will install a reasonable version for the Kubernetes release being inbstalled.
         /// </summary>
@@ -260,6 +302,15 @@ namespace Neon.Kube.ClusterDef
                 {
                     throw new ClusterDefinitionException($"[{kubernetesOptionsPrefix}.{nameof(DashboardVersion)}={DashboardVersion}] is not a valid version number.");
                 }
+            }
+
+            // Add default NEONKUBE feature gates when the user has not already configured them.
+
+            FeatureGates = FeatureGates ?? new Dictionary<string, bool>();
+
+            if (!FeatureGates.ContainsKey("EphemeralContainers"))
+            {
+                FeatureGates["EphemeralContainers"] = true;
             }
 
             if (HelmVersion != "default" && !System.Version.TryParse(HelmVersion, out var vHelm))
