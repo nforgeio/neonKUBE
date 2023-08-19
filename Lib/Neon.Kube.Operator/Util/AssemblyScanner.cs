@@ -70,9 +70,19 @@ namespace Neon.Kube.Operator.Util
                 {
                     case OperatorComponentType.Controller:
 
-                        if (type.GetCustomAttribute<ControllerAttribute>()?.Ignore == true ||
-                            (!NeonHelper.IsKubernetes && type.GetCustomAttribute<ControllerAttribute>()?.IgnoreWhenNotInPod == true) ||
-                            type == typeof(ResourceControllerBase<>))
+                        // Ignore the controller when specifically disabled or is disabled when the
+                        // service isn't running in the debugger.
+
+                        var controllerAttribute = type.GetCustomAttribute<ControllerAttribute>();
+
+                        if (controllerAttribute != null && (controllerAttribute.Ignore || (!NeonHelper.IsKubernetes && controllerAttribute.IgnoreWhenNotInPod)))
+                        {
+                            break;
+                        }
+
+                        // Ignore controller base classes. 
+
+                        if (type == typeof(ResourceControllerBase<>))
                         {
                             break;
                         }
@@ -80,7 +90,6 @@ namespace Neon.Kube.Operator.Util
                         var entityTypes = type.GetInterfaces()
                             .Where(@interface => @interface.IsConstructedGenericType && @interface.GetGenericTypeDefinition().IsEquivalentTo(typeof(IResourceController<>)))
                             .Select(@interface => @interface.GenericTypeArguments[0]);
-
 
                         foreach (var entityType in entityTypes)
                         {

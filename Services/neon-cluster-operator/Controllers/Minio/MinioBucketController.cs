@@ -68,7 +68,7 @@ using Prometheus;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// Manages MinioBucket LDAP database.
+    /// Manages cluster Minio buckets.
     /// </summary>
     [Controller(IgnoreWhenNotInPod = true)]
     [RbacRule<V1MinioBucket>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
@@ -143,7 +143,7 @@ namespace NeonClusterOperator
 
                     // Create bucket if it doesn't exist.
 
-                    bool exists = await minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(resource.Name()));
+                    var exists = await minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(resource.Name()));
 
                     if (exists)
                     {

@@ -24,7 +24,7 @@ resources:
 serviceMesh:
   enabled: true
 
-# Log level: none, trace, debug, information, warning, error, critical
+# Log level: none, trace, debug, information/info, warning/warn, error, critical
 
 logLevel: information
 

@@ -169,9 +169,17 @@ namespace Neon.Kube.Operator.Builder
 
                             controllerArgs[0] = this;
 
-                            if (controllerAttribute?.Ignore == true ||
-                                (!NeonHelper.IsKubernetes && type.GetCustomAttribute<ControllerAttribute>()?.IgnoreWhenNotInPod == true) ||
-                                type == typeof(ResourceControllerBase<>))
+                            // Ignore the controller when specifically disabled or is disabled when the
+                            // service isn't running in the debugger.
+
+                            if (controllerAttribute != null && (controllerAttribute.Ignore || (!NeonHelper.IsKubernetes && controllerAttribute.IgnoreWhenNotInPod)))
+                            {
+                                break;
+                            }
+
+                            // Ignore controller base classes. 
+
+                            if (type == typeof(ResourceControllerBase<>))
                             {
                                 break;
                             }

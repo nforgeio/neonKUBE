@@ -4856,8 +4856,6 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(controlNode, verb: "configure", message: "harbor minio");
 
-                    // Create the Harbor Minio bucket.
-
                     var minioSecret = await k8s.CoreV1.ReadNamespacedSecretAsync("minio", KubeNamespace.NeonSystem);
                     var accessKey   = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
                     var secretKey   = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
