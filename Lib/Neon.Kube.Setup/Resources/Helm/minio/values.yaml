@@ -180,8 +180,6 @@ tenants:
         value: public
       - name: MINIO_PROMETHEUS_JOB_ID
         value: minio
-      - name: MINIO_STORAGE_CLASS_STANDARD
-        value: EC:3
     ## PriorityClassName indicates the Pod priority and hence importance of a Pod relative to other Pods.
     ## This is applied to MinIO pods only.
     ## Refer Kubernetes documentation for details https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/#priorityclass/
