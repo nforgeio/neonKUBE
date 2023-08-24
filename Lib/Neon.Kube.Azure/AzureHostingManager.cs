@@ -1730,8 +1730,6 @@ namespace Neon.Kube.Hosting.Azure
 
                     azureVm.Nic             = await nicResource.GetAsync();
                     azureVm.ExternalSshPort = sshPort;
-
-
                 }
             }
             else
