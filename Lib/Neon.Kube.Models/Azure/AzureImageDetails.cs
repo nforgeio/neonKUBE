@@ -28,13 +28,22 @@ using Newtonsoft.Json;
 
 namespace Neon.Kube.Models
 {
+    /// <summary>
+    /// Holds the information required to deploy a node from an Azure VM image.
+    /// </summary>
     [Target("all")]
     public interface AzureImageDetails
     {
+        /// <summary>
+        /// Identifies the Azure marketplace compute plan.
+        /// </summary>
         [JsonProperty(PropertyName = "ComputePlan", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         AzureComputePlan ComputePlan { get; set; }
 
+        /// <summary>
+        /// Identifies the Azure VM image.
+        /// </summary>
         [JsonProperty(PropertyName = "ImageReference", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         AzureImageReference ImageReference { get; set; }

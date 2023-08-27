@@ -28,21 +28,36 @@ using Newtonsoft.Json;
 
 namespace Neon.Kube.Models
 {
+    /// <summary>
+    /// Identifies an Azure image.
+    /// </summary>
     [Target("all")]
     public interface AzureImageReference
     {
+        /// <summary>
+        /// Identifies the Azure publisher.
+        /// </summary>
         [JsonProperty(PropertyName = "Publisher", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         string Publisher { get; set; }
 
+        /// <summary>
+        /// Identifies the Azure marketplace product/offer.
+        /// </summary>
         [JsonProperty(PropertyName = "Offer", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         string Offer { get; set; }
 
+        /// <summary>
+        /// Identifies the image SKU.
+        /// </summary>
         [JsonProperty(PropertyName = "Sku", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         string Sku { get; set; }
 
+        /// <summary>
+        /// Identifies the image version.
+        /// </summary>
         [JsonProperty(PropertyName = "Version", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         string Version { get; set; }

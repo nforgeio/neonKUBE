@@ -60,7 +60,7 @@ namespace NeonCli
     public class ClusterSetupCommand : CommandBase
     {
         private const string usage = @"
-MAINTAINERS ONLY: Sets up a NEONKUBE cluster as described in the cluster
+MAINTAINER ONLY: Sets up a NEONKUBE cluster as described in the cluster
 definition file.  This is the second part of deploying a cluster in two
 stages, where you first prepare the cluster to provision any virtual
 machines and network infrastructure and then you setup NEONKUBE, like:
@@ -116,10 +116,10 @@ OPTIONS:
                           logs.  This is useful  for debugging cluster setup  issues.
                           Do not use for production clusters.
 
-    --upload-charts     - MAINTAINERS ONLY: Upload Helm charts from your workstation
+    --upload-charts     - MAINTAINER ONLY: Upload Helm charts from your workstation
                           rather than using the charts baked into the node image.
 
-    --use-staged        - MAINTAINERS ONLY: Specifies that the private node image
+    --use-staged        - MAINTAINER ONLY: Specifies that the private node image
                           should be deployed.
 
 REMARKS:

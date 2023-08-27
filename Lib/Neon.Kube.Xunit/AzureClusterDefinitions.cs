@@ -34,7 +34,7 @@ using Xunit;
 namespace Neon.Kube.Xunit
 {
     /// <summary>
-    /// <b>MAINTAINERS ONLY:</b> <b>Azure</b> cluster definitions used by maintainers for
+    /// <b>MAINTAINER ONLY:</b> <b>Azure</b> cluster definitions used by maintainers for
     /// unit test clusters deployed by <see cref="ClusterFixture"/> on <b>Azure</b>.
     /// </summary>
     public static class AzureClusterDefinitions

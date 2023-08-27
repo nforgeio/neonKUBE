@@ -37,7 +37,7 @@ using Xunit;
 namespace Neon.Kube.Xunit
 {
     /// <summary>
-    /// <b>MAINTAINERS ONLY:</b> <b>XenServer</b> cluster definitions used by maintainers for
+    /// <b>MAINTAINER ONLY:</b> <b>XenServer</b> cluster definitions used by maintainers for
     /// unit test clusters deployed by <see cref="ClusterFixture"/> on <b>XenServer</b>.
     /// </summary>
     public static class XenServerClustersDefinitions

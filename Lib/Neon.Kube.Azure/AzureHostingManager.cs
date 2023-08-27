@@ -1860,7 +1860,7 @@ namespace Neon.Kube.Hosting.Azure
 
             if (cloudMarketplace)
             {
-                // Query the headend to locate the Marketplace offer to use.
+                // Query the headend to locate the marketplace offer to use.
 
                 var headendClient = controller.Get<HeadendClient>(KubeSetupProperty.NeonCloudHeadendClient);
                 var imageDetails  = await headendClient.ClusterSetup.GetAzureImageDetailsAsync(KubeVersions.NeonKube, CpuArchitecture.amd64);
@@ -1876,8 +1876,8 @@ namespace Neon.Kube.Hosting.Azure
                 nodeImagePlan = new ComputePlan()
                 {
                     Name      = imageDetails.ComputePlan.Name,
+                    Publisher = imageDetails.ComputePlan.Publisher,
                     Product   = imageDetails.ComputePlan.Product,
-                    Publisher = imageDetails.ComputePlan.Publisher
                 };
             }
             else
