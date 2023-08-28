@@ -400,7 +400,7 @@ namespace Neon.Kube
         /// <summary>
         /// Determines whether a cluster hosting environment deploys to the cloud.
         /// </summary>
-        /// <param name="hostingEnvironment">The hosting environment.</param>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <returns><c>true</c> for cloud environments.</returns>
         public static bool IsCloudEnvironment(HostingEnvironment hostingEnvironment)
         {
@@ -427,6 +427,13 @@ namespace Neon.Kube
                     throw new NotImplementedException("Unexpected hosting environment.");
             }
         }
+
+        /// <summary>
+        /// Determines whether NEONFORGE collects revenue from a cluster hosting environment.
+        /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
+        /// <returns><c>true</c> for paid environments.</returns>
+        public static bool IsPaidHostingEnvironment(HostingEnvironment hostingEnvironment) => IsCloudEnvironment(hostingEnvironment);
 
         /// <summary>
         /// Determines whether a cluster hosting environment is available only for NEONFORGE
