@@ -55,28 +55,24 @@ using OpenTelemetry.Trace;
 
 using Prometheus;
 
-// $todo(jefflill):
-//
-// I'm going to temporarily comment this out for the first private beta and we'll
-// address this for GA.  Here's the related issue:
-//
-//  https://github.com/nforgeio/neonCLOUD/issues/381#issuecomment-1612082723
-
-#if TODO
-
 namespace NeonClusterOperator
 {
     /// <summary>
     /// Monitors cluster nodes and reacts to any changes as required.
     /// </summary>
     /// <remarks>
-    /// Currently, this controller looks for worker nodes with fewer than 4 vCPUs and removes them
-    /// from the cluster.  This is done to block users from working around our hourly CPU fees for
-    /// worker nodes for cloud deployments by first provisioning the clusterworkers with 4 vCPU VM
-    /// sizes and then resizing the workers down to 2 vCPUs.  Our cloud marketplace VM images don't
-    /// allow 2-vCPU VM sizes but don't charge hourly fees for VMs with only 2 vCPUs (to be more
-    /// competitive with cloud integrated platforms like AKS/EKS where the entire control-plane is
-    /// free.
+    /// <para>
+    /// Currently, this controller looks for worker nodes for cloud deployed clusters with fewer than
+    /// 4 vCPUs and then removes them from the cluster.  This is done to block users from working around
+    /// our hourly CPU fees for worker nodes for cloud deployments by first provisioning the clusterworkers
+    /// with 4 vCPU VM sizes and then resizing the workers down to 2 vCPUs.  Our cloud marketplace VM
+    /// images allow 2-vCPU VM sizes so we can provision control-plane VMs with 2 vCPUs (to be more
+    /// competitive with cloud integrated platforms like AKS/EKS where the entire control-plane is free.
+    /// </para>
+    /// <note>
+    /// This controller removes these nodes from the cluster but does not remove the host VMs from the
+    /// cloud so the user can have a chance to rejoin these VMs to the cluster or otherwise recover data.
+    /// </note>
     /// </remarks>
     [RbacRule<V1Node>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     public class NodeController : IResourceController<V1Node>
@@ -96,7 +92,8 @@ namespace NeonClusterOperator
 
         private readonly IKubernetes                    k8s;
         private readonly ILogger<NodeTaskController>    logger;
-        private readonly TimeSpan                       minNodeRemovalAge = TimeSpan.FromHours(2);
+        private readonly TimeSpan                       requeueDelay;
+        private ClusterInfo                             clusterInfo;
 
         /// <summary>
         /// Constructor.
@@ -108,8 +105,9 @@ namespace NeonClusterOperator
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             Covenant.Requires<ArgumentNullException>(logger != null, nameof(logger));
 
-            this.k8s    = k8s;
-            this.logger = logger;
+            this.k8s          = k8s;
+            this.logger       = logger;
+            this.requeueDelay = TimeSpan.FromSeconds(60);
         }
 
         /// <inheritdoc/>
@@ -117,26 +115,39 @@ namespace NeonClusterOperator
         {
             await SyncContext.Clear;
 
-            await CheckNodeAsync(node);
+            // We're going to fetch the cluster info configmap so we can use its
+            // [HostingEnvironment] property to determine whether the cluster is
+            // hosted in a cloud.
+
+            // $note(jefflill):
+            //
+            // In theory, users could defeat the 2-vCPU check by manually editing
+            // the cluster info configmap hosting environment to an on-premise
+            // alternative.  This would break future cloud features like scaling
+            // and perhaps repair, so I'm not going to worry about this now.
+
+            if (clusterInfo == null)
+            {
+                clusterInfo = (await k8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterInfo>(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus)).Data;
+            }
+
+            if (KubeHelper.IsPaidHostingEnvironment(clusterInfo.HostingEnvironment) || true)    // $debug(jefflill): REMOVE THE TRUE
+            {
+                // Perform this check only for hosting environments where NEONFORGE collects revenue.
+
+                return await CheckNodeAsync(node);
+            }
 
             return ResourceControllerResult.Ok();
         }
 
-        /// <inheritdoc/>
-        public async Task StatusModifiedAsync(V1Node node)
-        {
-            await SyncContext.Clear;
-
-            await CheckNodeAsync(node);
-        }
-
         /// <summary>
-        /// Checks the node passed and removes it from the cluster if it's a worker node
-        /// with fewer then 4 vCPUS.
+        /// Checks the node passed and removes it from the cluster if the cluster is running
+        /// in a cloud and the worker node has fewer than 4 vCPUS.
         /// </summary>
         /// <param name="node"></param>
-        /// <returns></returns>
-        private async Task CheckNodeAsync(V1Node node)
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task<ResourceControllerResult> CheckNodeAsync(V1Node node)
         {
             await SyncContext.Clear;
 
@@ -145,18 +156,19 @@ namespace NeonClusterOperator
             if (!nodeCreationTimestamp.HasValue)
             {
                 logger.LogInformationEx(() => $"Node [{node.Name}] has not been created yet.");
-                return;
+
+                return ResourceControllerResult.RequeueEvent(requeueDelay);
             }
 
             // We can identify control plane nodes by checking for the existence of the
             // well-known [node-role.kubernetes.io/control-plane] label which is configured
             // by [kubeadm].
 
-            if (!node.Metadata.Labels.ContainsKey("node-role.kubernetes.io/control-plane"))
+            if (node.Metadata.Labels.ContainsKey("node-role.kubernetes.io/control-plane"))
             {
                 // Don't check control-plane nodes.
 
-                return;
+                return ResourceControllerResult.Ok();
             }
 
             // Remove worker nodes with fewer than 4 vCPUs from the cluster.
@@ -165,19 +177,18 @@ namespace NeonClusterOperator
             {
                 // Looks like Kublet hasn't reported the number of CPUs yet.
 
-                return;
+                return ResourceControllerResult.RequeueEvent(requeueDelay);
             }
 
-            var nodeCpus = allocatableCpu.ToInt32();
+            var vCpus = allocatableCpu.ToInt32();
 
-            if (nodeCpus < KubeConst.MinWorkerNodeVCpus)
+            if (vCpus < KubeConst.MinWorkerNodeVCpus)
             {
-                logger.LogWarningEx(() => $"Removing worker node [{node.Name()}] because it has only [{nodeCpus}] vCPUs when at least [{KubeConst.MinWorkerNodeVCpus}] are required.");
-
+                logger.LogCriticalEx(() => $"Removing worker node [{node.Name()}] because it has only [{vCpus}] vCPUs when at least [{KubeConst.MinWorkerNodeVCpus}] are required.");
                 await k8s.CoreV1.DeleteNodeAsync(node.Name());
             }
+
+            return ResourceControllerResult.Ok();
         }
     }
 }
-
-#endif // TODO

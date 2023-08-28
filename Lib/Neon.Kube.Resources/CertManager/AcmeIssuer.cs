@@ -141,7 +141,9 @@ namespace Neon.Kube.Resources.CertManager
         [DefaultValue(null)]
         public bool? EnableDurationFeature { get; set; }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Validates the peoperties.
+        /// </summary>
         public void Validate()
         {
             var acmeIssuerPrefix = $"{nameof(AcmeIssuer)}";
@@ -153,10 +155,10 @@ namespace Neon.Kube.Resources.CertManager
                 var neonWebhookSolver = new AcmeIssuerDns01ProviderWebhook()
                 {
                     Config = new Dictionary<string, object>()
-                {
-                    { "Registrar", "route53" }
-                },
-                    GroupName = "acme.neoncloud.io",
+                    {
+                        { "Registrar", "route53" }
+                    },
+                    GroupName  = "acme.neoncloud.io",
                     SolverName = "neoncluster_io"
                 };
 
@@ -181,7 +183,7 @@ namespace Neon.Kube.Resources.CertManager
             PrivateKeySecretRef = PrivateKeySecretRef ?? new AcmeSecretKeySelector()
             {
                 Name = "neon-acme-issuer-account-key",
-                Key = "tls.key"
+                Key  = "tls.key"
             };
 
             if (ExternalAccountBinding != null)

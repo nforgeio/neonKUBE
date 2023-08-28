@@ -437,48 +437,6 @@ namespace Neon.Kube.ClusterDef
         public List<ResourceTag> ResourceTags { get; set; } = null;
 
         /// <summary>
-        /// Enables or disables specific Kubernetes features.  This can be used to enable
-        /// alpha quality or other features that are disabled by default for the Kubernetes
-        /// version being deployed or to disable features.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// This is a dictionary that maps feature names a boolean where <c>true</c>
-        /// enables the feature and <c>false</c> disables it.  You can find a description
-        /// of the available Kubernetes feature gates here:
-        /// </para>
-        /// <para>
-        /// https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/#feature-gates
-        /// </para>
-        /// <note>
-        /// Your NEONKUBE cluster may be somewhat older than the current Kubernetes version,
-        /// so some of the features listed may not apply to your cluster.
-        /// </note>
-        /// <para>
-        /// NEONKUBE clusters enables specific features by default when you you haven't
-        /// explicitly disabled them via this property.  Note that some features are 
-        /// required and cannot be disabled.
-        /// </para>
-        /// <list type="table">
-        /// <item>
-        ///     <term><b>EphemeralContainers</b></term>
-        ///     <description>
-        ///     <para>
-        ///     Enables the ability to add ephemeral containers to running pods.
-        ///     </para>
-        ///     <para>
-        ///     This is very handy for debugging pods.
-        ///     </para>
-        ///     </description>
-        /// </item>
-        /// </list>
-        /// </remarks>
-        [JsonProperty(PropertyName = "FeatureGates", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "featureGates", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public Dictionary<string, bool> FeatureGates = new Dictionary<string, bool>();
-
-        /// <summary>
         /// Optionally specifies options used by <b>ClusterFixture</b> and possibly
         /// custom tools for customizing cluster and node names to avoid conflicts.
         /// </summary>
@@ -905,7 +863,6 @@ namespace Neon.Kube.ClusterDef
             // Allocate the cluster definition properties when necessary.
 
             Annotations        = Annotations ?? new Dictionary<string, string>();
-            FeatureGates       = FeatureGates ?? new Dictionary<string, bool>();
             Deployment         = Deployment ?? new DeploymentOptions();
             Storage            = Storage ?? new StorageOptions();
             Security           = Security ?? new SecurityOptions();
@@ -1024,13 +981,6 @@ namespace Neon.Kube.ClusterDef
             // Have the hosting manager perform its own validation.
 
             new HostingManagerFactory().Validate(this);
-
-            // Add default NEONKUBE feature gates when the user has not already configured them.
-
-            if (!FeatureGates.ContainsKey("EphemeralContainers"))
-            {
-                FeatureGates["EphemeralContainers"] = true;
-            }
 
             // Validate the NTP time sources.
 

@@ -1413,6 +1413,30 @@ systemctl enable kubelet
         }
 
         /// <summary>
+        /// Helm doesn't like values with embedded commas (I believe it treats this as a list of key/value
+        /// pairs which we don't ever take advantage of.  This method escapes any commas that are not already
+        /// excaped in the value passed by prefixing the commas with a backslash <b>(\)</b>.
+        /// </summary>
+        /// <param name="value">The input balue to be escaped.</param>
+        /// <returns>The escaped string.</returns>
+        private string EscapeHelmValueCommas(string value)
+        {
+            // We're going to make this easy by first replacing any already escaped commas
+            // with a special string that'll be extermely unlikely to appear in any value,
+            // then we'll replace any remaining commas with escaped command and then finally,
+            // we'll replace any special strings with escaped commas.
+
+            const string escapedCommaMarker = "[{209c1cb9-92a8-40d6-9c96-bd2432daee3d}]]";
+            const string escapedComma       = @"\,";
+
+            value = value.Replace(escapedComma, escapedCommaMarker);
+            value = value.Replace(",", escapedComma);
+            value = value.Replace(escapedCommaMarker, escapedComma);
+
+            return value;
+        }
+
+        /// <summary>
         /// Installs a prepositioned Helm chart from a control-plane node.
         /// </summary>
         /// <param name="controller">The setup controller.</param>
@@ -1550,7 +1574,7 @@ systemctl enable kubelet
                             {
                                 case string s:
 
-                                    valueOverrides.AppendWithSeparator($"--set-string {value.Key}=\"{value.Value}\"");
+                                    valueOverrides.AppendWithSeparator($"--set-string {value.Key}=\"{EscapeHelmValueCommas((string)value.Value)}\"");
                                     break;
 
                                 case Boolean b:
@@ -1595,11 +1619,11 @@ exitcode=$?
 
 if [ ! $exitcode ] ; then
 
-    echo ""==============================================================================="" >&2
-    echo ""HELM INSTALL ERROR: $exitcode"" >&2
-    echo ""---------------------"" >&2
-    cat $helmLogPath >&2
-    echo ""==============================================================================="" >&2
+    echo ""===============================================================================""
+    echo ""HELM INSTALL ERROR: $exitcode""
+    echo ""---------------------""
+    cat $helmLogPath
+    echo ""===============================================================================""
 
     rm $helmLogPath
     exit $exitcode
@@ -1613,7 +1637,7 @@ DEPLOY_END=$((START+{timeoutSeconds}))
 until [ `helm status {releaseName} --namespace {@namespace} | grep ""STATUS: deployed"" | wc -l` -eq 1  ];
 do
     if [ $((`date +%s`)) -gt $DEPLOY_END ]; then
-        echo 'ERROR: Helm chart for [{@namespace}/{releaseName}] failed to deploy after [{timeoutSeconds}] seconds.' >&2
+        echo 'ERROR: Helm chart for [{@namespace}/{releaseName}] failed to deploy after [{timeoutSeconds}] seconds.'
         helm uninstall {releaseName} --namespace {@namespace} || true
         exit 1
    fi
@@ -1639,8 +1663,8 @@ done
                                     return await Task.FromResult(false);
                                 }
                             },
-                            timeout: TimeSpan.FromSeconds(300),
-                            pollInterval: TimeSpan.FromSeconds(1),
+                            timeout:           TimeSpan.FromSeconds(300),
+                            pollInterval:      TimeSpan.FromSeconds(1),
                             cancellationToken: controller.CancellationToken);
                     }
                     catch (Exception e)

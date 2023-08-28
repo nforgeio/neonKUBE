@@ -5,11 +5,16 @@
         <OutputType>Exe</OutputType>
         <RootNamespace>NeonClusterOperator</RootNamespace>
         <IsPackable>false</IsPackable>
-        <ServerGarbageCollection>true</ServerGarbageCollection>
-        <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
         <AssemblyName>neon-cluster-operator</AssemblyName>
         <Configurations>Debug;Release</Configurations>
         <NoWarn>$(NoWarn);CS2002</NoWarn>
+    </PropertyGroup>
+
+    <!-- Runtime settings -->
+
+    <PropertyGroup>
+        <ServerGarbageCollection>true</ServerGarbageCollection>
+        <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
     </PropertyGroup>
 
     <ItemGroup>

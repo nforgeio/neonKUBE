@@ -132,8 +132,8 @@ namespace Neon.Kube
         /// </para>
         /// <note>
         /// <b>IMPORTANT: </b>This convention allows multiple developers to work with their 
-        /// own versions of intermediate releases in parallel while avoiding merge conflicts 
-        /// caused by differing per-developer version numbers.
+        /// own versions of intermediate releases in parallel while avoiding conflicts with
+        /// other developers.
         /// </note>
         /// </remarks>
         public const string NeonKube = "0.10.0-beta.3";

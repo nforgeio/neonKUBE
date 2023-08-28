@@ -4,5 +4,5 @@ metadata:
   name: harbor
   namespace: neon-system
 spec:
-  region: us-west-2
+  region: cluster
   tenant: minio

@@ -564,7 +564,7 @@ namespace Neon.Kube.Setup
                         controller.SetGlobalStepStatus("Waiting for cluster to stabilize...");
                         setupState.Save();
 
-                        // Wait a bit to give the cluster a chance to start pods and containers.
+                        // Wait a bit to give the cluster a chance to restart the pods.
 
                         await Task.Delay(TimeSpan.FromSeconds(60));
 
@@ -573,7 +573,7 @@ namespace Neon.Kube.Setup
                         using (var k8s = KubeHelper.CreateKubernetesClient())
                         {
                             var startedUtc      = DateTime.UtcNow;
-                            var maxWaitInterval = TimeSpan.FromMinutes(10);
+                            var maxWaitInterval = TimeSpan.FromMinutes(15);
                             var pauseInterval   = TimeSpan.FromSeconds(5);
                             var badPods         = new List<V1Pod>();
 

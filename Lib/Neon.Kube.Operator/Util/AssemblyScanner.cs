@@ -1,14 +1,16 @@
-using Neon.Kube.Operator.Attributes;
-using Neon.Kube.Operator.Builder;
-using Neon.Kube.Operator.Controller;
-using Neon.Kube.Operator.Finalizer;
-using Neon.Kube.Operator.Webhook;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+
+using Neon.Common;
+using Neon.Kube.Operator.Attributes;
+using Neon.Kube.Operator.Builder;
+using Neon.Kube.Operator.Controller;
+using Neon.Kube.Operator.Finalizer;
+using Neon.Kube.Operator.Webhook;
 
 namespace Neon.Kube.Operator.Util
 {
@@ -55,8 +57,7 @@ namespace Neon.Kube.Operator.Util
             }
 
             var types = assemblyTypes
-                .Where(type => type.GetInterfaces().Count() > 0
-                        && type.GetInterfaces().Any(@interface => @interface.GetCustomAttributes<OperatorComponentAttribute>()
+                .Where(type => type.GetInterfaces().Count() > 0 && type.GetInterfaces().Any(@interface => @interface.GetCustomAttributes<OperatorComponentAttribute>()
                     .Any())).ToList();
 
             foreach (var type in types)
@@ -69,8 +70,19 @@ namespace Neon.Kube.Operator.Util
                 {
                     case OperatorComponentType.Controller:
 
-                        if (type.GetCustomAttribute<ControllerAttribute>()?.Ignore == true
-                                || type == typeof(ResourceControllerBase<>))
+                        // Ignore the controller when specifically disabled or is disabled when the
+                        // service isn't running in the debugger.
+
+                        var controllerAttribute = type.GetCustomAttribute<ControllerAttribute>();
+
+                        if (controllerAttribute != null && (controllerAttribute.Ignore || (!NeonHelper.IsKubernetes && controllerAttribute.IgnoreWhenNotInPod)))
+                        {
+                            break;
+                        }
+
+                        // Ignore controller base classes. 
+
+                        if (type == typeof(ResourceControllerBase<>))
                         {
                             break;
                         }
@@ -78,7 +90,6 @@ namespace Neon.Kube.Operator.Util
                         var entityTypes = type.GetInterfaces()
                             .Where(@interface => @interface.IsConstructedGenericType && @interface.GetGenericTypeDefinition().IsEquivalentTo(typeof(IResourceController<>)))
                             .Select(@interface => @interface.GenericTypeArguments[0]);
-
 
                         foreach (var entityType in entityTypes)
                         {

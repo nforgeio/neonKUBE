@@ -106,7 +106,13 @@ namespace Neon.Kube.Hosting.HyperV
             else
             {
                 desktopServiceChannel = NeonGrpcServices.CreateDesktopServiceChannel(socketPath);
-                desktopService        = desktopServiceChannel.CreateGrpcService<IGrpcDesktopService>();
+
+                if (desktopServiceChannel == null)
+                {
+                    throw new NeonKubeException("[neon-desktop-service] is not running.");
+                }
+
+                desktopService = desktopServiceChannel.CreateGrpcService<IGrpcDesktopService>();
             }
         }
 

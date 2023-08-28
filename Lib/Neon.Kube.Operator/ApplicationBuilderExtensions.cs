@@ -92,15 +92,9 @@ namespace Neon.Kube.Operator
                         })
                     });
 
-                    NgrokWebhookTunnel tunnel = null;
-
-                    try
-                    {
-                        tunnel = app.ApplicationServices.GetServices<IHostedService>()
-                            .OfType<NgrokWebhookTunnel>()
-                            .Single();
-                    }
-                    catch { }
+                    var tunnel = app.ApplicationServices.GetServices<IHostedService>()
+                        .OfType<NgrokWebhookTunnel>()
+                        .SingleOrDefault();
 
                     var componentRegistrar = app.ApplicationServices.GetRequiredService<ComponentRegister>();
 

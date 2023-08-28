@@ -131,7 +131,7 @@ OPTIONS:
                                   cluster setup issues.  Do not use for production
                                   clusters.
 
-    --use-staged[=branch]       - MAINTAINERS ONLY: Specifies that the staged node image 
+    --use-staged[=branch]       - MAINTAINER ONLY: Specifies that the staged node image 
                                   should be used as opposed to the public release image.
 
                                   [--use-staged] by itself will prepare the cluster using
@@ -143,6 +143,10 @@ OPTIONS:
                                   [--use-staged=branch] allows you to override the branch
                                   so you can base your cluster off of a specific image
                                   build.
+
+    --use-preview               - MAINTAINER ONLY: Uses the preview VM image from the
+                                  Azure Marketplace to provision the cluster.  This is
+                                  ignored by other hosting environments.
 
 REMARKS:
 
@@ -169,7 +173,8 @@ stage process is typically used only by NEONKUBE maintainers.
             "--no-telemetry",
             "--package-cache",
             "--quiet",
-            "--unredacted", 
+            "--unredacted",
+            "--use-preview",
             "--use-staged"
         };
 
@@ -210,6 +215,7 @@ stage process is typically used only by NEONKUBE maintainers.
             var quiet             = commandLine.HasOption("--quiet");
             var useStaged         = commandLine.HasOption("--use-staged");
             var stageBranch       = commandLine.GetOption("--use-staged", useStaged ? KubeVersions.BuildBranch : null);
+            var usePreview        = commandLine.HasOption("--use-preview");
             var unredacted        = commandLine.HasOption("--unredacted");
 
             if (noTelemetry)
@@ -339,6 +345,7 @@ stage process is typically used only by NEONKUBE maintainers.
                 NodeImageUri          = nodeImageUri,
                 PackageCacheEndpoints = packageCacheEndpoints,
                 Unredacted            = unredacted,
+                UsePreview            = usePreview
             };
 
             if (clusterDefinition.Hosting.Environment == HostingEnvironment.HyperV &&

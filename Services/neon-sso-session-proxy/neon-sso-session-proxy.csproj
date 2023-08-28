@@ -6,10 +6,15 @@
         <RootNamespace>NeonSsoProxy</RootNamespace>
         <IsPackable>false</IsPackable>
         <ImplicitUsings>disable</ImplicitUsings>
-        <ServerGarbageCollection>true</ServerGarbageCollection>
-        <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
         <AssemblyName>neon-sso-session-proxy</AssemblyName>
         <Configurations>Debug;Release</Configurations>
+    </PropertyGroup>
+
+    <!-- Runtime settings -->
+
+    <PropertyGroup>
+        <ServerGarbageCollection>true</ServerGarbageCollection>
+        <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
     </PropertyGroup>
 
     <ItemGroup>

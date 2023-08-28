@@ -51,7 +51,7 @@ namespace Test.Neon.Kube.Operator
     public class Test_CustomResources
     {
         /// <summary>
-        /// Ensures that the CRD can be written to a Yaml file.
+        /// Ensures that the CRD can be written to a YAML file.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         [Fact]
@@ -68,7 +68,7 @@ namespace Test.Neon.Kube.Operator
         }
 
         /// <summary>
-        /// Ensures that the CRD can be written to a Yaml file.
+        /// Ensures that the CRD can be written to a YAML file.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         [Fact]

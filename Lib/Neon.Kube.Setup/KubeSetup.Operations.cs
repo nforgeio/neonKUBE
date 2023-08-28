@@ -473,6 +473,10 @@ spec:
 
                     controller.ClearStatus();
                     controller.ThrowIfCancelled();
+                    await CreateDashboardsAsync(controller, controlNode);
+
+                    controller.ClearStatus();
+                    controller.ThrowIfCancelled();
                     await InstallNodeAgentAsync(controller, controlNode);
 
                     controller.ClearStatus();
@@ -1092,7 +1096,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
         }
 
         /// <summary>
-        /// Configures the Kubernetes feature gates specified by the <see cref="ClusterDefinition.FeatureGates"/> dictionary.
+        /// Configures the Kubernetes feature gates specified by the <see cref="KubernetesOptions.FeatureGates"/> dictionary.
         /// It does this by editing the API server's static pod manifest located at <b>/etc/kubernetes/manifests/kube-apiserver.yaml</b>
         /// on the control-plane nodes as required.  This also tweaks the <b>--service-account-issuer</b> option.
         /// </summary>
@@ -1210,7 +1214,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         var command      = (List<object>)container["command"];
                         var sbFeatures   = new StringBuilder();
 
-                        foreach (var featureGate in clusterDefinition.FeatureGates)
+                        foreach (var featureGate in clusterDefinition.Kubernetes.FeatureGates)
                         {
                             sbFeatures.AppendWithSeparator($"{featureGate.Key}={NeonHelper.ToBoolString(featureGate.Value)}", ",");
                         }
@@ -4852,8 +4856,6 @@ $@"- name: StorageType
                 {
                     controller.LogProgress(controlNode, verb: "configure", message: "harbor minio");
 
-                    // Create the Harbor Minio bucket.
-
                     var minioSecret = await k8s.CoreV1.ReadNamespacedSecretAsync("minio", KubeNamespace.NeonSystem);
                     var accessKey   = Encoding.UTF8.GetString(minioSecret.Data["accesskey"]);
                     var secretKey   = Encoding.UTF8.GetString(minioSecret.Data["secretkey"]);
@@ -5302,6 +5304,88 @@ $@"- name: StorageType
                     }
 
                     await k8s.CustomObjects.CreateClusterCustomObjectAsync<V1NeonClusterOperator>(nco, nco.Name());
+                });
+        }
+
+        /// <summary>
+        /// Creates the standard dashboard resources.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="controlNode">The control-plane node where the operation will be performed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task CreateDashboardsAsync(ISetupController controller, NodeSshProxy<NodeDefinition> controlNode)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(controller != null, nameof(controller));
+            Covenant.Requires<ArgumentNullException>(controlNode != null, nameof(controlNode));
+
+            var k8s           = GetK8sClient(controller);
+            var cluster       = controller.Get<ClusterProxy>(KubeSetupProperty.ClusterProxy);
+            var clusterAdvice = controller.Get<KubeClusterAdvice>(KubeSetupProperty.ClusterAdvice);
+            var serviceAdvice = clusterAdvice.GetServiceAdvice(KubeClusterAdvice.NeonNodeAgent);
+            
+            controller.ThrowIfCancelled();
+            await controlNode.InvokeIdempotentAsync("setup/neon-dashboard-resources",
+                async () =>
+                {
+                    controller.LogProgress(controlNode, verb: "setup", message: "neon-dashboard");
+
+                    await CreateNeonDashboardAsync(
+                            controller,
+                            controlNode,
+                            name:         "kubernetes",
+                            url:          $"https://{ClusterHost.KubernetesDashboard}.{cluster.SetupState.ClusterDomain}",
+                            displayName: "Kubernetes",
+                            enabled:      true,
+                            displayOrder: 1);
+
+                    if (cluster.SetupState.ClusterDefinition.Features.Grafana)
+                    {
+                        await CreateNeonDashboardAsync(
+                            controller,
+                            controlNode,
+                            name:         "grafana",
+                            url:          $"https://{ClusterHost.Grafana}.{cluster.SetupState.ClusterDomain}",
+                            displayName:  "Grafana",
+                            enabled:      true,
+                            displayOrder: 10);
+                    }
+
+                    if (cluster.SetupState.ClusterDefinition.Features.Minio)
+                    {
+                        await CreateNeonDashboardAsync(
+                            controller,
+                            controlNode,
+                            name:         "minio",
+                            url:          $"https://{ClusterHost.Minio}.{cluster.SetupState.ClusterDomain}",
+                            displayName:  "Minio",
+                            enabled:      true,
+                            displayOrder: 10);
+                    }
+
+                    if (cluster.SetupState.ClusterDefinition.Features.Harbor.Enabled)
+                    {
+                        await CreateNeonDashboardAsync(
+                            controller,
+                            controlNode,
+                            name:         "harbor",
+                            url:          $"https://{ClusterHost.HarborRegistry}.{cluster.SetupState.ClusterDomain}",
+                            displayName:  "Harbor",
+                            enabled:      true,
+                            displayOrder: 10);
+                    }
+                     
+                    if (cluster.SetupState.ClusterDefinition.Features.Kiali)
+                    {
+                        await CreateNeonDashboardAsync(
+                            controller,
+                            controlNode,
+                            name:         "kiali",
+                            url:          $"https://{ClusterHost.Kiali}.{cluster.SetupState.ClusterDomain}",
+                            displayName:  "Kiali",
+                            enabled:      true,
+                            displayOrder: 10);
+                    }
                 });
         }
 

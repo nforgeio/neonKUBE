@@ -80,11 +80,11 @@ namespace NeonAcme
                 .AddSwaggerGen(
                     options =>
                     {
-                        options.SwaggerDoc("v3",
+                        options.SwaggerDoc("v1alpha1",
                             new OpenApiInfo
                             {
-                                Title   = "v1",
-                                Version = "v1"
+                                Title   = "neon-acme",
+                                Version = "v1alpha1"
                             });
                     });
 
@@ -107,7 +107,7 @@ namespace NeonAcme
             app.UseSwagger(
                 options =>
                 {
-                    options.RouteTemplate = "/openapi/{documentName}";
+                    options.RouteTemplate = "/apis/{documentName}";
                 });
             app.UseRouting();
             app.UseHttpMetrics();

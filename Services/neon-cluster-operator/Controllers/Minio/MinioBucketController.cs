@@ -45,6 +45,7 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
+using Neon.Kube.Operator.Attributes;
 using Neon.Kube.Operator.Controller;
 using Neon.Kube.Operator.Finalizer;
 using Neon.Kube.Operator.Rbac;
@@ -67,8 +68,9 @@ using Prometheus;
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// Manages MinioBucket LDAP database.
+    /// Manages cluster Minio buckets.
     /// </summary>
+    [Controller(IgnoreWhenNotInPod = true)]
     [RbacRule<V1MinioBucket>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1MinioTenant>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1Secret>(Verbs = RbacVerb.Get)]
@@ -78,9 +80,7 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Static members
 
-        private const string            MinioExe = "mc";
-        private MinioClient             minioClient;
-        private CancellationTokenSource portForwardCts;
+        private const string MinioExe = "mc";
 
         /// <summary>
         /// Static constructor.
@@ -92,9 +92,12 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Instance members
 
-        private readonly IKubernetes                      k8s;
-        private readonly ILogger<MinioBucketController>   logger;
-        private readonly Service                          service;
+        private readonly IKubernetes                        k8s;
+        private readonly ILogger<MinioBucketController>     logger;
+        private readonly Service                            service;
+        private MinioClient                                 minioClient;
+        private CancellationTokenSource                     portForwardCts;
+
 
         /// <summary>
         /// Constructor.
@@ -140,7 +143,7 @@ namespace NeonClusterOperator
 
                     // Create bucket if it doesn't exist.
 
-                    bool exists = await minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(resource.Name()));
+                    var exists = await minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(resource.Name()));
 
                     if (exists)
                     {
@@ -159,7 +162,6 @@ namespace NeonClusterOperator
                         {
                             args.WithObjectLock();
                         }
-
 
                         await minioClient.MakeBucketAsync(args);
                         logger?.LogInformationEx(() => $"BUCKET [{resource.Name()}] created successfully.");
@@ -287,20 +289,19 @@ namespace NeonClusterOperator
             }
         }
 
-        private async Task ExecuteMcCommandAsync(string[] args)
+        private async Task<ExecuteResponse> ExecuteMcCommandAsync(string[] args)
         {
             try
             {
                 logger?.LogDebugEx(() => $"command: {MinioExe} {string.Join(" ", args)}");
 
-                var response = await NeonHelper.ExecuteCaptureAsync(MinioExe,
-                    args);
-
-                response.EnsureSuccess();
+                return (await NeonHelper.ExecuteCaptureAsync(MinioExe, args))
+                    .EnsureSuccess();
             }
             catch (Exception e)
             {
                 logger?.LogErrorEx(e);
+                throw;
             }
         }
 

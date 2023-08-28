@@ -44,7 +44,7 @@ $image_root = [System.IO.Path]::Combine($env:NK_ROOT, "Images")
 #----------------------------------------------------------
 
 # Take care to ensure that you order the image builds such that
-# dependant images are built before any dependancies.
+# dependencies are built before images that rely on them.
 
 function Publish
 {
@@ -187,7 +187,6 @@ try
     {
         Publish "$image_root\neon-acme"
         Publish "$image_root\neon-cluster-operator"
-        Publish "$image_root\neon-dashboard"
         Publish "$image_root\neon-node-agent"
         Publish "$image_root\neon-sso-session-proxy"
     }

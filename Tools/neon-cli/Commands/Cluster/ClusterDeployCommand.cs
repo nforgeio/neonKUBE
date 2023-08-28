@@ -98,7 +98,7 @@ OPTIONS:
     --upload-charts             - Upload Helm charts from your workstation rather than using
                                   the charts baked into the node image.
 
-    --use-staged[=branch]       - MAINTAINERS ONLY: Specifies that the staged node image 
+    --use-staged[=branch]       - MAINTAINER ONLY: Specifies that the staged node image 
                                   should be used as opposed to the public release image.
 
                                   [--use-staged] by itself will prepare the cluster using
@@ -133,6 +133,7 @@ stage process is typically used only by NEONKUBE maintainers.
             "--package-cache",
             "--quiet",
             "--upload-charts",
+            "--use-preview",
             "--use-staged",
         };
 
@@ -172,6 +173,7 @@ stage process is typically used only by NEONKUBE maintainers.
             var uploadCharts      = commandLine.HasOption("--upload-charts");
             var useStaged         = commandLine.HasOption("--use-staged");
             var stageBranch       = commandLine.GetOption("--use-staged", useStaged ? KubeVersions.BuildBranch : null);
+            var usePreview        = commandLine.HasOption("--use-preview");
 
             if (useStaged && string.IsNullOrEmpty(stageBranch))
             {
@@ -212,6 +214,11 @@ stage process is typically used only by NEONKUBE maintainers.
             if (useStaged)
             {
                 args.Add($"--use-staged={stageBranch}");
+            }
+
+            if (usePreview)
+            {
+                args.Add($"--use-preview");
             }
 
             var exitcode = await Program.Main(args.ToArray());

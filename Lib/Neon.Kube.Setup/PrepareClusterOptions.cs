@@ -132,5 +132,16 @@ namespace Neon.Kube.Setup
         /// </note>
         /// </summary>
         public bool Insecure { get; set; } = false;
+
+        /// <summary>
+        /// <para>
+        /// Optionally specifies that the preview VM image from the cloud marketplace
+        /// should be used to provision the cluster.
+        /// </para>
+        /// <note>
+        /// Currently, this is recognized only for Azure marketplace deployments.
+        /// </note>
+        /// </summary>
+        public bool UsePreview { get; set; } = false;
     }
 }
