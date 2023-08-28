@@ -215,7 +215,7 @@ namespace Neon.Kube
                     catch (OperationCanceledException)
                     {
                         // This is the signal to quit.
-                        logger?.LogDebugEx(() => "Operation canceled, restarting watch.");
+                        logger?.LogWarningEx(() => "Operation canceled, restarting watch.");
 
                         return;
                     }
@@ -242,6 +242,8 @@ namespace Neon.Kube
                             case HttpStatusCode.ServiceUnavailable:
                             case (HttpStatusCode)423:   // Locked
                             case (HttpStatusCode)429:   // Too many requests
+
+                                logger?.LogErrorEx(e);
 
                                 return;
 
