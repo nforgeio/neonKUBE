@@ -250,14 +250,7 @@ namespace Neon.Kube.Operator.Entities
         {
             Covenant.Requires<ArgumentNullException>(resourceType != null, nameof(resourceType));
 
-            try
-            {
-                return resourceType.GetCustomAttribute<EntityScopeAttribute>().Scope;
-            }
-            catch
-            {
-                return null;
-            }
+            return resourceType.GetCustomAttribute<EntityScopeAttribute>()?.Scope;
         }
 
         /// <summary>
@@ -340,21 +333,9 @@ namespace Neon.Kube.Operator.Entities
                         continue;
                     }
 
-                    if (property.Key == "additionalProperties")
+                    if (property.Key == "additionalProperties" && property.Value is JsonValue && !property.Value.GetValue<bool>())
                     {
-                        try
-                        {
-                            var pValue = property.Value.GetValue<bool>();
-
-                            if (!pValue)
-                            {
-                                continue;
-                            }
-                        }
-                        catch
-                        {
-                            // Ignoring
-                        }
+                        continue;
                     }
 
                     if (property.Key == "oneOf" && property.Value is JsonArray && property.Value.AsArray().Count == 1)
@@ -364,6 +345,7 @@ namespace Neon.Kube.Operator.Entities
                         queue.Enqueue(RewriteObject((JsonObject)property.Value.AsArray().Single()));
 
                         // ...and don't add the [oneOf] property
+
                         continue;
                     }
 
