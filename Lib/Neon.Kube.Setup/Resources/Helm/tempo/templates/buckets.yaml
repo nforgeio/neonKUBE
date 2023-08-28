@@ -7,5 +7,5 @@ spec:
   quota:
     hard: true
     limit: {{ .Values.minio.bucket.quota }}
-  region: us-west-2
+  region: neonkube
   tenant: minio
