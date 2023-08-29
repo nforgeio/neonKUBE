@@ -265,9 +265,9 @@ or when switching contexts to set the current namespace afterwards.
                 clientId:  KubeConst.NeonSsoPublicClientId,
                 scopes:    new string[] { "openid", "email", "profile", "groups", "offline_access", "audience:server:client_id:neon-sso" });
 
-            ClusterInfo         clusterInfo;
-            ClusterDeployment   clusterDeployment;
-            GlauthUser          registryUser = null;
+            ClusterInfo       clusterInfo       = null;
+            ClusterDeployment clusterDeployment = null;
+            GlauthUser        registryUser      = null;
 
             using var store = new X509Store(StoreName.CertificateAuthority,StoreLocation.CurrentUser);
 
@@ -276,16 +276,15 @@ or when switching contexts to set the current namespace afterwards.
                 AccessToken   = result.AccessToken,
                 SslCaCerts    = store.Certificates,
                 SkipTlsVerify = false,
-                Host          = ssoHost,
+                Host          = ssoUri,
             },
                 new KubernetesRetryHandler()))
             {
-                clusterInfo       = (await k8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterInfo>(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus)).Data;
-                clusterDeployment = (await k8s.CoreV1.ReadNamespacedTypedSecretAsync<ClusterDeployment>(KubeSecretName.ClusterDeployment, KubeNamespace.NeonStatus)).Data;
-
                 try
                 {
-                    registryUser = await KubeHelper.GetClusterLdapUserAsync(k8s, "root");
+                    clusterInfo       = (await k8s.CoreV1.ReadNamespacedTypedConfigMapAsync<ClusterInfo>(KubeConfigMapName.ClusterInfo, KubeNamespace.NeonStatus)).Data;
+                    clusterDeployment = (await k8s.CoreV1.ReadNamespacedTypedSecretAsync<ClusterDeployment>(KubeSecretName.ClusterDeployment, KubeNamespace.NeonStatus)).Data;
+                    registryUser      = await KubeHelper.GetClusterLdapUserAsync(k8s, "root");
                 }
                 catch
                 {
@@ -294,10 +293,11 @@ or when switching contexts to set the current namespace afterwards.
                 }
             }
 
+            var clusterName    = clusterInfo?.Name ?? clusterDomain;
             var user           = result.User;
             var userName       = user.Identity.Name.Split("via").First().Trim();
             var config         = KubeHelper.KubeConfig;
-            var newContextName = $"{userName}@{clusterInfo.Name}";
+            var newContextName = $"{userName}@{clusterName}";
 
             // $todo(jefflill): We may to revist this:
 
@@ -311,21 +311,21 @@ or when switching contexts to set the current namespace afterwards.
 
             // Add update the config cluster.
 
-            var configCluster = config.GetCluster(clusterInfo.Name);
+            var configCluster = config.GetCluster(clusterName);
 
             var clusterConfig =
-                new KubeConfigClusterConfig()
-                {
-                    Server                = clusterDomain,
-                    InsecureSkipTlsVerify = false
-                };
+            new KubeConfigClusterConfig()
+            {
+                Server                =  $"https://{clusterDomain}",
+                InsecureSkipTlsVerify = false
+            };
 
             if (configCluster == null)
             {
                 config.Clusters.Add(
                     new KubeConfigCluster()
                     {
-                        Name    = clusterInfo.Name,
+                        Name    = clusterName,
                         Cluster = clusterConfig
                     });
             }
@@ -334,12 +334,15 @@ or when switching contexts to set the current namespace afterwards.
                 configCluster.Cluster = clusterConfig;
             }
 
-            configCluster.IsNeonDesktop      = clusterInfo.IsDesktop;
-            configCluster.IsNeonKube         = true;
-            configCluster.HostingEnvironment = clusterInfo.HostingEnvironment;
-            configCluster.Hosting            = clusterDeployment.Hosting;
-            configCluster.HostingNamePrefix  = clusterInfo.HostingNamePrefix;
-
+            if (clusterInfo != null
+                && clusterDeployment != null)
+            {
+                configCluster.IsNeonDesktop      = clusterInfo.IsDesktop;
+                configCluster.IsNeonKube         = true;
+                configCluster.HostingEnvironment = clusterInfo.HostingEnvironment;
+                configCluster.Hosting            = clusterDeployment.Hosting;
+                configCluster.HostingNamePrefix  = clusterInfo.HostingNamePrefix;
+            }
             // Add/update the config user.
 
             var configUser   = config.GetUser(newContextName);
@@ -374,7 +377,7 @@ or when switching contexts to set the current namespace afterwards.
             var configContext     = config.GetContext(newContextName);
             var contextProperties = new KubeConfigContextConfig
             {
-                Cluster = clusterInfo.Name,
+                Cluster = clusterDomain,
                 User    = newContextName
             };
 

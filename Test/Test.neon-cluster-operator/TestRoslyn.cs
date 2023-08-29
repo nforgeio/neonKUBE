@@ -1,9 +1,10 @@
-// FILE:        TestApiServerOptions.cs
-// CONTRIBUTOR: Marcus Bowyer
+﻿// -----------------------------------------------------------------------------
+// FILE:	    TestRoslyn.cs
+// CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
+// Licensed under the Apache License, Version 2.0 (the "License").
+// You may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
 //     http://www.apache.org/licenses/LICENSE-2.0
@@ -16,23 +17,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net.Http;
-using System.Threading;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-
-using k8s;
-using k8s.KubeConfigModels;
-using k8s.Models;
-
-namespace Neon.Kube.Xunit.Operator
+namespace TestNeonClusterOperator
 {
-    /// <summary>
-    /// Test API Server options.
-    /// </summary>
-    public class TestApiServerOptions
+    internal class TestRoslyn
     {
     }
 }

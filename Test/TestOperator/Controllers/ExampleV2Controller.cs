@@ -7,12 +7,11 @@ using Microsoft.Extensions.Logging;
 using k8s;
 using k8s.Models;
 
-using Neon.Kube.Operator.Attributes;
-using Neon.Kube.Operator.Controller;
-using Neon.Kube.Operator.Finalizer;
-using Neon.Kube.Operator.Rbac;
-using Neon.Kube.Operator.ResourceManager;
-using Neon.Kube.Resources;
+using Neon.Operator.Attributes;
+using Neon.Operator.Controllers;
+using Neon.Operator.Finalizers;
+using Neon.Operator.Rbac;
+using Neon.Operator.ResourceManager;
 using Neon.Tasks;
 
 namespace TestOperator
@@ -23,7 +22,7 @@ namespace TestOperator
     [RbacRule<V2ExampleEntity>(Verbs = RbacVerb.All)]
     [RbacRule<V1ExampleClusterEntity>(Verbs = RbacVerb.All)]
     [DependentResource<V1ExampleClusterEntity>]
-    public class ExampleV2Controller : IResourceController<V2ExampleEntity>
+    public class ExampleV2Controller : ResourceControllerBase<V2ExampleEntity>
     {
         private readonly IKubernetes k8s;
         private readonly IFinalizerManager<V2ExampleEntity> finalizerManager;

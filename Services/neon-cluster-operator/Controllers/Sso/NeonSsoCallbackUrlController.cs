@@ -17,56 +17,26 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 
-using Dex;
-
-using Grpc.Core;
-using Grpc.Net.Client;
-
-using JsonDiffPatch;
-
 using k8s;
-using k8s.Autorest;
 using k8s.Models;
 
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.JsonPatch;
-using Microsoft.AspNetCore.JsonPatch.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
-using Neon.IO;
 using Neon.Kube;
-using Neon.Kube.Oauth2Proxy;
-using Neon.Kube.Operator.Controller;
-using Neon.Kube.Operator.Finalizer;
-using Neon.Kube.Operator.Rbac;
-using Neon.Kube.Operator.ResourceManager;
-using Neon.Kube.Resources;
-using Neon.Retry;
-using Neon.Tasks;
-using Neon.Time;
-
-using Neon.Kube.Operator.Attributes;
-using Neon.Kube.Operator.Util;
 using Neon.Kube.Resources.Cluster;
-
-using Newtonsoft.Json;
-
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
-
-using Prometheus;
+using Neon.Operator.Attributes;
+using Neon.Operator.Controllers;
+using Neon.Operator.Finalizers;
+using Neon.Operator.Rbac;
+using Neon.Operator.Util;
+using Neon.Tasks;
 
 namespace NeonClusterOperator
 {
@@ -76,7 +46,8 @@ namespace NeonClusterOperator
     /// </para>
     /// </summary>
     [RbacRule<V1NeonSsoCallbackUrl>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
-    public class NeonSsoCallbackUrlController : IResourceController<V1NeonSsoCallbackUrl>
+    [ResourceController(ManageCustomResourceDefinitions = true)]
+    public class NeonSsoCallbackUrlController : ResourceControllerBase<V1NeonSsoCallbackUrl>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -114,7 +85,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonSsoCallbackUrl resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonSsoCallbackUrl resource)
         {
             await SyncContext.Clear;
 
@@ -144,7 +115,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task DeletedAsync(V1NeonSsoCallbackUrl resource)
+        public override async Task DeletedAsync(V1NeonSsoCallbackUrl resource)
         {
             await SyncContext.Clear;
 

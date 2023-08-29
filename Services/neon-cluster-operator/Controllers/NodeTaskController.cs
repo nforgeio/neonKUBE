@@ -17,16 +17,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
-
-using JsonDiffPatch;
 
 using k8s;
 using k8s.Autorest;
@@ -37,21 +31,14 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
-using Neon.IO;
 using Neon.Kube;
-using Neon.Kube.Operator.Controller;
-using Neon.Kube.Operator.Rbac;
-using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
-using Neon.Retry;
+using Neon.Operator.Attributes;
+using Neon.Operator.Controllers;
+using Neon.Operator.Rbac;
 using Neon.Tasks;
-using Neon.Time;
-
-using Newtonsoft.Json;
 
 using OpenTelemetry.Trace;
-
-using Prometheus;
 
 namespace NeonClusterOperator
 {
@@ -71,9 +58,10 @@ namespace NeonClusterOperator
     /// removing tasks that don't belong to an existing node.
     /// </para>
     /// </remarks>
-    [RbacRule<V1NeonNodeTask>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
+    [RbacRule<V1NeonNodeTask>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1Node>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
-    public class NodeTaskController : IResourceController<V1NeonNodeTask>
+    [ResourceController(ManageCustomResourceDefinitions = true)]
+    public class NodeTaskController : ResourceControllerBase<V1NeonNodeTask>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -197,7 +185,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task StatusModifiedAsync(V1NeonNodeTask resource)
+        public override async Task StatusModifiedAsync(V1NeonNodeTask resource)
         {
             await SyncContext.Clear;
 

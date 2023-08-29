@@ -9,13 +9,16 @@
         <Folder Include="Manifests\" />
     </ItemGroup>
 
+    <ItemGroup>
+        <PackageReference Include="Neon.Operator" Version="10000.1.3828-dev-main" />
+        <PackageReference Include="Neon.Operator.Xunit" Version="10000.1.3828-dev-main" />
+    </ItemGroup>
+
     <ItemGroup Condition="'$(JUSTMOCK_ENABLED)' == 'true'">
         <Reference Include="Telerik.JustMock">
             <HintPath>C:\Program Files (x86)\Progress\Telerik JustMock\Libraries\netcoreapp2.0\Telerik.JustMock.dll</HintPath>
         </Reference>
     </ItemGroup>
-
-    <Import Project="..\..\Lib\Neon.Kube.Operator.MSBuild\Build\build.targets" />
 
     <PropertyGroup>
         <OperatorDeployedNamespace>test-namespace</OperatorDeployedNamespace>
@@ -25,7 +28,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
-        <ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube.Resources\Neon.Kube.Resources.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
     </ItemGroup>

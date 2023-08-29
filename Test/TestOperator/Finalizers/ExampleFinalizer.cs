@@ -1,14 +1,17 @@
-using k8s;
-using k8s.Models;
-using Microsoft.Extensions.Logging;
-using Neon.Kube.Operator.Finalizer;
-using Neon.Tasks;
 using System;
 using System.Threading.Tasks;
 
+using k8s;
+using k8s.Models;
+
+using Microsoft.Extensions.Logging;
+
+using Neon.Operator.Finalizers;
+using Neon.Tasks;
+
 namespace TestOperator
 {
-    public class ExampleFinalizer : IResourceFinalizer<V1ExampleEntity>
+    public class ExampleFinalizer : ResourceFinalizerBase<V1ExampleEntity>
     {
         private readonly IKubernetes k8s;
         private readonly ILogger<ExampleV1Controller> logger;

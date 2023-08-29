@@ -37,8 +37,7 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Oauth2Proxy;
-using Neon.Kube.Operator.Finalizer;
-using Neon.Kube.Resources;
+using Neon.Operator.Finalizers;
 using Neon.Kube.Resources.Cluster;
 using Neon.Tasks;
 
@@ -47,7 +46,7 @@ namespace NeonClusterOperator
     /// <summary>
     /// Finalizes deletion of <see cref="V1NeonSsoClient"/> resources.
     /// </summary>
-    public class NeonSsoClientFinalizer : IResourceFinalizer<V1NeonSsoClient>
+    public class NeonSsoClientFinalizer : ResourceFinalizerBase<V1NeonSsoClient>
     {
         private readonly IKubernetes                     k8s;
         private readonly ILogger<NeonSsoClientFinalizer> logger;
@@ -74,7 +73,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task FinalizeAsync(V1NeonSsoClient resource)
+        public override async Task FinalizeAsync(V1NeonSsoClient resource)
         {
             await SyncContext.Clear;
 

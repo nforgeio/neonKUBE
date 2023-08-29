@@ -16,79 +16,53 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Net.Sockets;
-using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
-
-using DnsClient;
 
 using Grpc.Net.Client;
 
 using k8s;
 using k8s.Models;
 
-using Minio;
-
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Common;
-using Neon.Data;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.Kube.Clients;
 using Neon.Kube.Glauth;
-using Neon.Kube.Operator;
-using Neon.Kube.Operator.ResourceManager;
-using Neon.Kube.Operator.Rbac;
-using Neon.Kube.Resources;
-using Neon.Kube.Resources.CertManager;
-using Neon.Net;
 using Neon.Kube.PortForward;
+using Neon.Net;
+using Neon.Operator;
+using Neon.Operator.Attributes;
+using Neon.Operator.Rbac;
 using Neon.Retry;
 using Neon.Service;
 using Neon.Tasks;
 
 using NeonClusterOperator.Harbor;
 
-using Npgsql;
-
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+using Npgsql;
+
 using OpenTelemetry;
-using OpenTelemetry.Instrumentation.Quartz;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-using Prometheus;
-
-using Quartz;
-using Quartz.Impl;
 using Quartz.Logging;
 
-using Task    = System.Threading.Tasks.Task;
-using Metrics = Prometheus.Metrics;
+using Task = System.Threading.Tasks.Task;
 
 namespace NeonClusterOperator
 {
@@ -230,9 +204,9 @@ namespace NeonClusterOperator
                .CreateDefaultBuilder()
                .ConfigureOperator(settings =>
                {
-                   settings.AssemblyScanningEnabled = true;
+                   settings.AssemblyScanningEnabled = false;
                    settings.Name                    = Name;
-                   settings.OperatorNamespace       = KubeNamespace.NeonSystem;
+                   settings.DeployedNamespace       = KubeNamespace.NeonSystem;
                })
                .ConfigureNeonKube()
                .AddSingleton(typeof(Service), this)

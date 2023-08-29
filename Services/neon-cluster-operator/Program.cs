@@ -35,7 +35,7 @@ using Neon.Diagnostics;
 using Neon.Common;
 using Neon.IO;
 using Neon.Kube;
-using Neon.Kube.Operator;
+using Neon.Operator;
 using Neon.Net;
 using Neon.Service;
 
