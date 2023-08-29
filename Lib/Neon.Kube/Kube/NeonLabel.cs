@@ -42,7 +42,7 @@ namespace Neon.Kube
         /// <summary>
         /// Used to identify which service manages the entity.
         /// </summary>
-        public const string ManagedBy = ClusterDefinition.ReservedPrefix + "managed-by";
+        public const string ManagedBy = "app.kubernetes.io/managed-by";
 
         /// <summary>
         /// Specifies the type of node task.
