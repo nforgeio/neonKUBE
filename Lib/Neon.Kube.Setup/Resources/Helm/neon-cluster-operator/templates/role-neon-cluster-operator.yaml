@@ -28,16 +28,16 @@ rules:
   - watch
 - apiGroups:
   - ""
-  resourceNames:
-  - neon-admin.neon-system-db.credentials.postgresql
-  - glauth-users
-  - glauth-groups
   resources:
   - secrets
   verbs:
   - get
 - apiGroups:
   - ""
+  resourceNames:
+  - neon-admin.neon-system-db.credentials.postgresql
+  - glauth-users
+  - glauth-groups
   resources:
   - secrets
   verbs:
