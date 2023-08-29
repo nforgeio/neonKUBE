@@ -28,14 +28,6 @@ rules:
   - watch
 - apiGroups:
   - ""
-  resourceNames:
-  - glauth-users
-  resources:
-  - secrets
-  verbs:
-  - get
-- apiGroups:
-  - ""
   resources:
   - secrets
   verbs:

@@ -49,7 +49,6 @@ namespace NeonClusterOperator
     /// </summary>
     [RbacRule<V1CrioConfiguration>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1NeonContainerRegistry>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
-    [RbacRule<V1Secret>(Verbs = RbacVerb.Get, Scope = EntityScope.Namespaced, Namespace = KubeNamespace.NeonSystem, ResourceNames = "glauth-users")]
     [ResourceController(MaxConcurrentReconciles = 1, ManageCustomResourceDefinitions = true)]
     public class NeonContainerRegistryController : ResourceControllerBase<V1NeonContainerRegistry>
     {
