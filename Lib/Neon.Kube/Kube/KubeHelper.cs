@@ -2955,7 +2955,7 @@ TCPKeepAlive yes
         /// and <see cref="IKubernetesObject.Kind"/> properties by reflecting <typeparamref name="T"/> and using
         /// the constant <b>KubeGroup</b>, <b>KubeApiVersion</b> and <b>KubeKind</b> values.  This is very convenient 
         /// but will be somwehat slower than setting these values explicitly but is probably worth the cost in most
-        /// situations because Kubernetes objects are typically read much more often than created.
+        /// situations because Kubernetes objects are typically read much more often than being created.
         /// </para>
         /// <note>
         /// This method requires that <typeparamref name="T"/> define string <b>KubeGroup</b> <b>KubeApiVersion</b> 
