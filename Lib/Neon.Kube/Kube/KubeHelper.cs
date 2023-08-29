@@ -1743,12 +1743,12 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(nameServers.Count() > 0, nameof(nameServers));
             Covenant.Requires<ArgumentNullException>(nodeMtu == 0 || (512 <= nodeMtu && nodeMtu <= 9000), nameof(nodeMtu));
 
-            var sbNameservers = new StringBuilder();
-
             if (nodeMtu == 0)
             {
                 nodeMtu = NetConst.DefaultMTU;
             }
+
+            var sbNameservers = new StringBuilder();
 
             // Generate the [neon-init.sh] script.
 
@@ -1776,6 +1776,20 @@ systemctl restart ssh
                 // Clear the change password script when there's no password.
 
                 changePasswordScript = "\r\n";
+            }
+
+            var sbResolvConf = new StringBuilder();
+
+            sbResolvConf.AppendLineLinux(
+@"#------------------------------------------------------------------------------
+# NEONKUBE explicitly manages the [/etc/resolv.conf] file to prevent DHCP from
+# messing with this even though we're using a STATIC netplan config.  We delete
+# the original symlinked file during cluster setup and replace it with this file.
+");
+
+            foreach (var nameServer in nameServers)
+            {
+                sbResolvConf.AppendLineLinux($"nameserver {nameServer}");
             }
 
             var nodePrepScript =
@@ -1829,6 +1843,16 @@ network:
      nameservers:
        addresses: [{sbNameservers}]
 EOF
+
+# Replace [/etc/resolv.conf] with our manually managed file.
+
+rm /etc/resolv.conf
+cat <<EOF > /etc/resolv.conf
+{sbResolvConf}
+EOF
+chmod 644 /etc/resolv.conf
+
+# Restart the network.
 
 echo ""Restart network""
 

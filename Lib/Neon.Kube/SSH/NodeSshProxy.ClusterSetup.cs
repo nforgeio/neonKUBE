@@ -1417,7 +1417,7 @@ systemctl enable kubelet
         /// pairs which we don't ever take advantage of.  This method escapes any commas that are not already
         /// excaped in the value passed by prefixing the commas with a backslash <b>(\)</b>.
         /// </summary>
-        /// <param name="value">The input balue to be escaped.</param>
+        /// <param name="value">The input value to be escaped.</param>
         /// <returns>The escaped string.</returns>
         private string EscapeHelmValueCommas(string value)
         {
