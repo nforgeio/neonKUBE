@@ -204,7 +204,7 @@ namespace NeonClusterOperator
                .CreateDefaultBuilder()
                .ConfigureOperator(settings =>
                {
-                   settings.AssemblyScanningEnabled = true;
+                   settings.AssemblyScanningEnabled = false;
                    settings.Name                    = Name;
                    settings.DeployedNamespace       = KubeNamespace.NeonSystem;
                })

@@ -53,7 +53,7 @@ namespace NeonClusterOperator
         scope:       "*")]
     public class PodWebhook : MutatingWebhookBase<V1Pod>
     {
-        private ILogger<IMutatingWebhook<V1Pod>> logger { get; set; }
+        private ILogger<PodWebhook> logger { get; set; }
 
         private bool modified = false;
 
@@ -69,7 +69,7 @@ namespace NeonClusterOperator
         /// </summary>
         /// <param name="logger">Optionally specifies the logger.</param>
         public PodWebhook(
-            ILogger<IMutatingWebhook<V1Pod>> logger = null)
+            ILogger<PodWebhook> logger = null)
             : base()
         {
             this.logger = logger;

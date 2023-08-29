@@ -55,9 +55,9 @@ namespace NeonClusterOperator
         scope:       "*")]
     public class DeploymentWebhook : MutatingWebhookBase<V1Deployment>
     {
-        private ILogger<IMutatingWebhook<V1Deployment>> logger { get; set; }
-        private bool                                    modified = false;
-        private readonly Service                        service;
+        private ILogger<DeploymentWebhook> logger { get; set; }
+        private bool                       modified = false;
+        private readonly Service           service;
 
         /// <summary>
         /// Constructor.
@@ -65,8 +65,8 @@ namespace NeonClusterOperator
         /// <param name="service">Specifies the parent neon-cluster-operator service.</param>
         /// <param name="logger">Optionally specifies a logger.</param>
         public DeploymentWebhook(
-            Service                                 service,
-            ILogger<IMutatingWebhook<V1Deployment>> logger = null)
+            Service                    service,
+            ILogger<DeploymentWebhook> logger = null)
             : base()
         {
             this.service = service;
