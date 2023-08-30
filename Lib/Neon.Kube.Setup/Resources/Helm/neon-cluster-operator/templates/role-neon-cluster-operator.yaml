@@ -20,14 +20,6 @@ rules:
   - list
 - apiGroups:
   - ""
-  resourceNames:
-  - neon-cluster-operator-webhook-tls
-  resources:
-  - secrets
-  verbs:
-  - watch
-- apiGroups:
-  - ""
   resources:
   - secrets
   verbs:
@@ -42,6 +34,14 @@ rules:
   - secrets
   verbs:
   - get
+- apiGroups:
+  - ""
+  resourceNames:
+  - neon-cluster-operator-webhook-tls
+  resources:
+  - secrets
+  verbs:
+  - watch
 - apiGroups:
   - cert-manager.io
   resources:
