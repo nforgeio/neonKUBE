@@ -1,0 +1,31 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  annotations:
+    cert-manager.io/inject-ca-from: '{{ .Release.Namespace }}/neon-cluster-operator'
+  name: deployment-policy.neonkube.io
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: neon-cluster-operator
+      namespace: '{{ .Release.Namespace }}'
+      path: /apps/v1/deployments/mutatingwebhookgenerator/mutate
+  failurePolicy: Ignore
+  matchPolicy: Equivalent
+  name: deployment-policy.neonkube.io
+  reinvocationPolicy: Never
+  rules:
+  - apiGroups:
+    - apps
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - deployments
+    scope: '*'
+  sideEffects: None
+  timeoutSeconds: 5

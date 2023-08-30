@@ -36,6 +36,7 @@
     <ItemGroup>
         <EmbeddedResource Remove="Resources\Helm\README.md" />
         <Folder Include="Resources\Helm\crd-cluster\templates\" />
+        <Folder Include="Resources\Helm\neon-cluster-operator\crds\" />
     </ItemGroup>
 
     <ItemGroup>
@@ -141,7 +142,6 @@
         <None Remove="Resources\Helm\neon-node-agent\Chart.yaml" />
         <None Remove="Resources\Helm\neon-node-agent\templates\configmap.yaml" />
         <None Remove="Resources\Helm\neon-node-agent\templates\daemonset.yaml" />
-        <None Remove="Resources\Helm\neon-node-agent\templates\rbac.yaml" />
         <None Remove="Resources\Helm\neon-node-agent\templates\service.yaml" />
         <None Remove="Resources\Helm\neon-node-agent\templates\serviceaccount.yaml" />
         <None Remove="Resources\Helm\neon-node-agent\templates\servicemonitor.yaml" />

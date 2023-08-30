@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net7.0</TargetFramework>
@@ -35,7 +35,7 @@
         <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.5" />
         <PackageReference Include="xunit.extensibility.core" Version="2.4.2" />
         <PackageReference Include="xunit.extensibility.execution" Version="2.4.2" />
-        <PackageReference Include="YamlDotNet" Version="13.0.2" />
+        <PackageReference Include="YamlDotNet" Version="13.1.0" />
     </ItemGroup>
 
     <!-- Local solution project references -->
@@ -43,7 +43,6 @@
     <ItemGroup>
         <ProjectReference Include="..\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
         <ProjectReference Include="..\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
-        <ProjectReference Include="..\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
         <ProjectReference Include="..\Neon.Kube.Setup\Neon.Kube.Setup.csproj" />
         <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
     </ItemGroup>

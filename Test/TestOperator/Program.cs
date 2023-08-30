@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Neon.Kube.Operator;
+using Neon.Operator;
 using System.Threading.Tasks;
 
 namespace TestOperator

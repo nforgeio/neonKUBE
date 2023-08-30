@@ -33,8 +33,7 @@ using Minio;
 
 using Neon.Diagnostics;
 using Neon.Kube;
-using Neon.Kube.Operator.Finalizer;
-using Neon.Kube.Resources;
+using Neon.Operator.Finalizers;
 using Neon.Kube.Resources.Minio;
 using Neon.Tasks;
 
@@ -43,7 +42,7 @@ namespace NeonClusterOperator
     /// <summary>
     /// Finalizes deletion of <see cref="V1MinioBucket"/> resources.
     /// </summary>
-    public class MinioBucketFinalizer : IResourceFinalizer<V1MinioBucket>
+    public class MinioBucketFinalizer : ResourceFinalizerBase<V1MinioBucket>
     {
         private readonly IKubernetes                   k8s;
         private readonly ILogger<MinioBucketFinalizer> logger;
@@ -65,7 +64,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task FinalizeAsync(V1MinioBucket resource)
+        public override async Task FinalizeAsync(V1MinioBucket resource)
         {
             await SyncContext.Clear;
 

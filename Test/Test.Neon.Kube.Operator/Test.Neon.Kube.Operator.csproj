@@ -46,7 +46,6 @@
         <ProjectReference Include="..\..\Lib\Neon.Kube.BuildInfo\Neon.Kube.BuildInfo.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube.Xunit\Neon.Kube.Xunit.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
-        <ProjectReference Include="..\..\Lib\Neon.Kube.Operator\Neon.Kube.Operator.csproj" />
         <ProjectReference Include="..\..\Lib\Neon.Kube.Xunit\Neon.Kube.Xunit.csproj" />
     </ItemGroup>
 
@@ -57,12 +56,19 @@
             <ItemGroup>
                 <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
                 <PackageReference Include="Neon.Xunit" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.Operator" Version="$(NeonOperatorPackageVersion)" />
+                <PackageReference Include="Neon.Operator.Xunit" Version="$(NeonOperatorPackageVersion)" />
             </ItemGroup>
         </When>
         <Otherwise>
             <ItemGroup>
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Xunit\Neon.Xunit.csproj" />
+                <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator\Neon.Operator.csproj" />
+                <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Analyzers\Neon.Operator.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+                <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Core\Neon.Operator.Core.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Roslyn\Neon.Roslyn.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+                <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Xunit\Neon.Operator.Xunit.csproj" />
             </ItemGroup>
         </Otherwise>
     </Choose>

@@ -43,12 +43,11 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Kube.Glauth;
-using Neon.Kube.Operator.Attributes;
-using Neon.Kube.Operator.ResourceManager;
-using Neon.Kube.Operator.Controller;
-using Neon.Kube.Operator.Rbac;
+using Neon.Operator.Attributes;
+using Neon.Operator.ResourceManager;
+using Neon.Operator;
+using Neon.Operator.Rbac;
 using Neon.Net;
-using Neon.Kube.Resources;
 using Neon.Tasks;
 using Neon.Time;
 
@@ -60,13 +59,14 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 using Prometheus;
+using Neon.Operator.Controllers;
 
 namespace NeonClusterOperator
 {
     /// <summary>
     /// Manages Glauth LDAP database.
     /// </summary>
-    [Controller(
+    [ResourceController(
         ManageCustomResourceDefinitions = false,
         LabelSelector = "neonkube.io/managed-by=neon-cluster-operator,neonkube.io/controlled-by=glauth-controller")]
     [RbacRule<V1Secret>(
@@ -75,7 +75,7 @@ namespace NeonClusterOperator
         Namespace     = KubeNamespace.NeonSystem,
         ResourceNames = "neon-admin.neon-system-db.credentials.postgresql,glauth-users,glauth-groups")]
     [RbacRule<V1Pod>(Verbs = RbacVerb.List)]
-    public class GlauthController : IResourceController<V1Secret>
+    public class GlauthController : ResourceControllerBase<V1Secret>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -87,7 +87,7 @@ namespace NeonClusterOperator
         /// </summary>
         /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task StartAsync(IServiceProvider serviceProvider)
+        public override async Task StartAsync(IServiceProvider serviceProvider)
         {
             using (var activity = TelemetryHub.ActivitySource?.StartActivity())
             {
@@ -144,7 +144,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1Secret resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1Secret resource)
         {
             await SyncContext.Clear;
 
@@ -176,7 +176,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task DeletedAsync(V1Secret resource)
+        public override async Task DeletedAsync(V1Secret resource)
         {
             await SyncContext.Clear;
 

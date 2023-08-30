@@ -20,12 +20,12 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
+using k8s;
+using k8s.Models;
+
 using Microsoft.Extensions.Logging;
 
 using Neon.Common;
@@ -33,24 +33,21 @@ using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
-using Neon.Kube.Operator.Attributes;
-using Neon.Kube.Operator.ResourceManager;
-using Neon.Kube.Operator.Controller;
-using Neon.Kube.Resources;
 using Neon.Kube.Resources.Cluster;
+using Neon.Operator.Attributes;
+using Neon.Operator.Controllers;
+using Neon.Operator.Rbac;
+using Neon.Operator.Util;
 using Neon.Retry;
 using Neon.Tasks;
 
-using k8s;
-using k8s.Models;
-
 using Newtonsoft.Json;
-using Prometheus;
-using Tomlyn;
-using Neon.Kube.Operator.Rbac;
+
 using OpenTelemetry.Trace;
-using Neon.Kube.Operator.Util;
-using Neon.Kube.Resources.Minio;
+
+using Prometheus;
+
+using Tomlyn;
 
 namespace NeonNodeAgent
 {
@@ -100,10 +97,11 @@ namespace NeonNodeAgent
     /// </note>
     /// </remarks>
     [RbacRule<V1NeonContainerRegistry>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
-    public class ContainerRegistryController : IResourceController<V1NeonContainerRegistry>
+    [ResourceController(ManageCustomResourceDefinitions = true)]
+    public class ContainerRegistryController : ResourceControllerBase<V1NeonContainerRegistry>
     {
         /// <inheritdoc/>
-        public string LeaseName { get; } = $"{KubeService.NeonNodeAgent}.containerregistry-{Node.Name}";
+        public new string LeaseName { get; } = $"{KubeService.NeonNodeAgent}.containerregistry-{Node.Name}";
 
         //---------------------------------------------------------------------
         // Local types
@@ -306,7 +304,7 @@ namespace NeonNodeAgent
         /// </summary>
         /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task StartAsync(IServiceProvider serviceProvider)
+        public override async Task StartAsync(IServiceProvider serviceProvider)
         {
             if (NeonHelper.IsLinux)
             {
@@ -384,7 +382,7 @@ rm $0
         }
 
         /// <inheritdoc/>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonContainerRegistry resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonContainerRegistry resource)
         {
             await SyncContext.Clear;
 
@@ -459,7 +457,7 @@ rm $0
         }
 
         /// <inheritdoc/>
-        public async Task DeletedAsync(V1NeonContainerRegistry resource)
+        public override async Task DeletedAsync(V1NeonContainerRegistry resource)
         {
             await SyncContext.Clear;
             

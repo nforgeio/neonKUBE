@@ -16,71 +16,52 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
 using k8s;
-using k8s.Autorest;
 using k8s.Models;
 
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Extensions.Logging;
 
 using Minio;
-using Minio.DataModel;
-using Minio.Exceptions;
 
 using Neon.Common;
 using Neon.Diagnostics;
-using Neon.IO;
 using Neon.Kube;
-using Neon.Kube.Operator.Attributes;
-using Neon.Kube.Operator.Controller;
-using Neon.Kube.Operator.Finalizer;
-using Neon.Kube.Operator.Rbac;
-using Neon.Kube.Operator.ResourceManager;
-using Neon.Kube.Operator.Util;
-using Neon.Kube.Resources;
 using Neon.Kube.Resources.Minio;
 using Neon.Net;
-using Neon.Retry;
+using Neon.Operator.Attributes;
+using Neon.Operator.Controllers;
+using Neon.Operator.Rbac;
+using Neon.Operator.Util;
 using Neon.Tasks;
-using Neon.Time;
 
-using Newtonsoft.Json;
-
-using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-
-using Prometheus;
 
 namespace NeonClusterOperator
 {
     /// <summary>
-    /// Manages cluster Minio buckets.
+    /// Manages MinioBucket LDAP database.
     /// </summary>
-    [Controller(IgnoreWhenNotInPod = true)]
     [RbacRule<V1MinioBucket>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster, SubResources = "status")]
     [RbacRule<V1MinioTenant>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1Secret>(Verbs = RbacVerb.Get)]
     [RbacRule<V1Pod>(Verbs = RbacVerb.List)]
-    public class MinioBucketController : IResourceController<V1MinioBucket>
+    [ResourceController(ManageCustomResourceDefinitions = true)]
+    public class MinioBucketController : ResourceControllerBase<V1MinioBucket>
     {
         //---------------------------------------------------------------------
         // Static members
 
-        private const string MinioExe = "mc";
+        private const string            MinioExe = "mc";
+        private MinioClient             minioClient;
+        private CancellationTokenSource portForwardCts;
 
         /// <summary>
         /// Static constructor.
@@ -92,12 +73,9 @@ namespace NeonClusterOperator
         //---------------------------------------------------------------------
         // Instance members
 
-        private readonly IKubernetes                        k8s;
-        private readonly ILogger<MinioBucketController>     logger;
-        private readonly Service                            service;
-        private MinioClient                                 minioClient;
-        private CancellationTokenSource                     portForwardCts;
-
+        private readonly IKubernetes                      k8s;
+        private readonly ILogger<MinioBucketController>   logger;
+        private readonly Service                          service;
 
         /// <summary>
         /// Constructor.
@@ -117,7 +95,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1MinioBucket resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1MinioBucket resource)
         {
             await SyncContext.Clear;
 
@@ -143,7 +121,7 @@ namespace NeonClusterOperator
 
                     // Create bucket if it doesn't exist.
 
-                    var exists = await minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(resource.Name()));
+                    bool exists = await minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(resource.Name()));
 
                     if (exists)
                     {
@@ -162,6 +140,7 @@ namespace NeonClusterOperator
                         {
                             args.WithObjectLock();
                         }
+
 
                         await minioClient.MakeBucketAsync(args);
                         logger?.LogInformationEx(() => $"BUCKET [{resource.Name()}] created successfully.");
@@ -199,7 +178,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task DeletedAsync(V1MinioBucket resource)
+        public override async Task DeletedAsync(V1MinioBucket resource)
         {
             await SyncContext.Clear;
 
@@ -289,19 +268,20 @@ namespace NeonClusterOperator
             }
         }
 
-        private async Task<ExecuteResponse> ExecuteMcCommandAsync(string[] args)
+        private async Task ExecuteMcCommandAsync(string[] args)
         {
             try
             {
                 logger?.LogDebugEx(() => $"command: {MinioExe} {string.Join(" ", args)}");
 
-                return (await NeonHelper.ExecuteCaptureAsync(MinioExe, args))
-                    .EnsureSuccess();
+                var response = await NeonHelper.ExecuteCaptureAsync(MinioExe,
+                    args);
+
+                response.EnsureSuccess();
             }
             catch (Exception e)
             {
                 logger?.LogErrorEx(e);
-                throw;
             }
         }
 

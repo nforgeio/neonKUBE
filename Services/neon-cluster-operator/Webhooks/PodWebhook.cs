@@ -27,8 +27,8 @@ using Microsoft.Extensions.Logging;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
-using Neon.Kube.Operator;
-using Neon.Kube.Operator.Webhook;
+using Neon.Operator;
+using Neon.Operator.Webhooks;
 using Neon.Tasks;
 
 using k8s;
@@ -51,9 +51,9 @@ namespace NeonClusterOperator
         operations:  AdmissionOperations.Create, 
         resources:   V1Pod.KubePluralName,
         scope:       "*")]
-    public class PodWebhook : IMutatingWebhook<V1Pod>
+    public class PodWebhook : MutatingWebhookBase<V1Pod>
     {
-        private ILogger<IMutatingWebhook<V1Pod>> logger { get; set; }
+        private ILogger<PodWebhook> logger { get; set; }
 
         private bool modified = false;
 
@@ -69,14 +69,14 @@ namespace NeonClusterOperator
         /// </summary>
         /// <param name="logger">Optionally specifies the logger.</param>
         public PodWebhook(
-            ILogger<IMutatingWebhook<V1Pod>> logger = null)
+            ILogger<PodWebhook> logger = null)
             : base()
         {
             this.logger = logger;
         }
 
         /// <inheritdoc/>
-        public async Task<MutationResult> CreateAsync(V1Pod pod, bool dryRun)
+        public override async Task<MutationResult> CreateAsync(V1Pod pod, bool dryRun)
         {
             await SyncContext.Clear;
 

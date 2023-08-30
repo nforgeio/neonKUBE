@@ -400,7 +400,7 @@ namespace Neon.Kube
         /// <summary>
         /// Determines whether a cluster hosting environment deploys to the cloud.
         /// </summary>
-        /// <param name="hostingEnvironment">The hosting environment.</param>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
         /// <returns><c>true</c> for cloud environments.</returns>
         public static bool IsCloudEnvironment(HostingEnvironment hostingEnvironment)
         {
@@ -427,6 +427,13 @@ namespace Neon.Kube
                     throw new NotImplementedException("Unexpected hosting environment.");
             }
         }
+
+        /// <summary>
+        /// Determines whether NEONFORGE collects revenue from a cluster hosting environment.
+        /// </summary>
+        /// <param name="hostingEnvironment">Specifies the hosting environment.</param>
+        /// <returns><c>true</c> for paid environments.</returns>
+        public static bool IsPaidHostingEnvironment(HostingEnvironment hostingEnvironment) => IsCloudEnvironment(hostingEnvironment);
 
         /// <summary>
         /// Determines whether a cluster hosting environment is available only for NEONFORGE
@@ -1736,12 +1743,12 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(nameServers.Count() > 0, nameof(nameServers));
             Covenant.Requires<ArgumentNullException>(nodeMtu == 0 || (512 <= nodeMtu && nodeMtu <= 9000), nameof(nodeMtu));
 
-            var sbNameservers = new StringBuilder();
-
             if (nodeMtu == 0)
             {
                 nodeMtu = NetConst.DefaultMTU;
             }
+
+            var sbNameservers = new StringBuilder();
 
             // Generate the [neon-init.sh] script.
 
@@ -1769,6 +1776,20 @@ systemctl restart ssh
                 // Clear the change password script when there's no password.
 
                 changePasswordScript = "\r\n";
+            }
+
+            var sbResolvConf = new StringBuilder();
+
+            sbResolvConf.AppendLineLinux(
+@"#------------------------------------------------------------------------------
+# NEONKUBE explicitly manages the [/etc/resolv.conf] file to prevent DHCP from
+# messing with this even though we're using a STATIC netplan config.  We delete
+# the original symlinked file during cluster setup and replace it with this file.
+");
+
+            foreach (var nameServer in nameServers)
+            {
+                sbResolvConf.AppendLineLinux($"nameserver {nameServer}");
             }
 
             var nodePrepScript =
@@ -1822,6 +1843,16 @@ network:
      nameservers:
        addresses: [{sbNameservers}]
 EOF
+
+# Replace [/etc/resolv.conf] with our manually managed file.
+
+rm /etc/resolv.conf
+cat <<EOF > /etc/resolv.conf
+{sbResolvConf}
+EOF
+chmod 644 /etc/resolv.conf
+
+# Restart the network.
 
 echo ""Restart network""
 
@@ -2924,7 +2955,7 @@ TCPKeepAlive yes
         /// and <see cref="IKubernetesObject.Kind"/> properties by reflecting <typeparamref name="T"/> and using
         /// the constant <b>KubeGroup</b>, <b>KubeApiVersion</b> and <b>KubeKind</b> values.  This is very convenient 
         /// but will be somwehat slower than setting these values explicitly but is probably worth the cost in most
-        /// situations because Kubernetes objects are typically read much more often than created.
+        /// situations because Kubernetes objects are typically read much more often than being created.
         /// </para>
         /// <note>
         /// This method requires that <typeparamref name="T"/> define string <b>KubeGroup</b> <b>KubeApiVersion</b> 

@@ -16,40 +16,18 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
-
-using Neon.Common;
-using Neon.Diagnostics;
-using Neon.IO;
-using Neon.Kube;
-using Neon.Kube.Operator.Attributes;
-using Neon.Kube.Operator.ResourceManager;
-using Neon.Kube.Operator.Controller;
-using Neon.Kube.Operator.Util;
-using Neon.Kube.Resources;
-using Neon.Kube.Resources.Cluster;
-using Neon.Retry;
-using Neon.Tasks;
-using Neon.Time;
 
 using k8s;
 using k8s.Models;
 
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Prometheus;
-using System.Xml.Linq;
+using Neon.Kube;
+using Neon.Operator.Controllers;
 
 namespace Test.Neon.Kube.Operator
 {
-    public class TestResourceController : IResourceController<V1TestResource>
+    public class TestResourceController : ResourceControllerBase<V1TestResource>
     {
         //---------------------------------------------------------------------
         // Instance members

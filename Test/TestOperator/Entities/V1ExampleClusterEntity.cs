@@ -1,6 +1,7 @@
 using k8s;
 using k8s.Models;
-using Neon.Kube.Resources;
+
+using Neon.Operator.Attributes;
 
 namespace TestOperator
 {
@@ -9,6 +10,7 @@ namespace TestOperator
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
     [EntityScope(EntityScope.Cluster)]
+    [EntityVersion(Served = true, Storage = true)]
     public class V1ExampleClusterEntity : IKubernetesObject<V1ObjectMeta>, ISpec<V1ExampleClusterEntity.V1ExampleSpec>, IStatus<V1ExampleClusterEntity.V1ExampleStatus>
     {
         /// <summary>

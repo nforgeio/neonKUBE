@@ -27,13 +27,13 @@ using Microsoft.Extensions.Logging;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
-using Neon.Kube.Operator;
-using Neon.Kube.Operator.Webhook;
-using Neon.Kube.Resources;
+using Neon.Operator;
+using Neon.Operator.Attributes;
+using Neon.Operator.Webhooks;
 
 using k8s;
 using k8s.Models;
-using Neon.Kube.Operator.Rbac;
+using Neon.Operator.Rbac;
 
 namespace TestOperator
 {
@@ -51,7 +51,7 @@ namespace TestOperator
         resources:   V1Pod.KubePluralName,
         scope:       "*")]
     [RbacRule<V1Pod>(Verbs = RbacVerb.All)]
-    public class PodWebhook : IMutatingWebhook<V1Pod>
+    public class PodWebhook : MutatingWebhookBase<V1Pod>
     {
         private ILogger<IMutatingWebhook<V1Pod>>    logger;
         private bool                                modified = false;

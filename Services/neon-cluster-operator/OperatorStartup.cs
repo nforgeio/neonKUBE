@@ -33,11 +33,10 @@ using Microsoft.Extensions.Logging;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
-using Neon.Kube.Operator;
-using Neon.Kube.Resources;
+using Neon.Operator;
 using Neon.Kube.Resources.Cluster;
 using Neon.Kube.Resources.Minio;
-using Neon.Kube.Operator.ResourceManager;
+using Neon.Operator.ResourceManager;
 
 using NeonClusterOperator.Harbor;
 

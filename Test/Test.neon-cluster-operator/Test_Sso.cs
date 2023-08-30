@@ -19,7 +19,7 @@ using k8s;
 using k8s.Models;
 using Moq;
 using Neon.Kube.Resources.Cluster;
-using Neon.Kube.Xunit.Operator;
+using Neon.Operator.Xunit;
 
 using NeonClusterOperator;
 using System.Collections.Generic;

@@ -29,11 +29,10 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Kube;
-using Neon.Kube.Operator.Attributes;
-using Neon.Kube.Operator.ResourceManager;
-using Neon.Kube.Operator.Controller;
-using Neon.Kube.Operator.Util;
-using Neon.Kube.Resources;
+using Neon.Operator.Attributes;
+using Neon.Operator.ResourceManager;
+using Neon.Operator.Controllers;
+using Neon.Operator.Util;
 using Neon.Kube.Resources.Cluster;
 using Neon.Retry;
 using Neon.Tasks;
@@ -45,7 +44,7 @@ using k8s.Models;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Prometheus;
-using Neon.Kube.Operator.Rbac;
+using Neon.Operator.Rbac;
 
 namespace NeonNodeAgent
 {
@@ -67,10 +66,11 @@ namespace NeonNodeAgent
     /// </note>
     /// </remarks>
     [RbacRule<V1NeonNodeTask>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
-    public class NodeTaskController : IResourceController<V1NeonNodeTask>
+    [ResourceController(ManageCustomResourceDefinitions = false)]
+    public class NodeTaskController : ResourceControllerBase<V1NeonNodeTask>
     {
         /// <inheritdoc/>
-        public string LeaseName { get; } = $"{Program.Service.Name}.nodetask-{Node.Name}";
+        public new string LeaseName { get; } = $"{Program.Service.Name}.nodetask-{Node.Name}";
         
         //---------------------------------------------------------------------
         // Static members
@@ -96,7 +96,7 @@ namespace NeonNodeAgent
         /// </summary>
         /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task StartAsync(IServiceProvider serviceProvider)
+        public override async Task StartAsync(IServiceProvider serviceProvider)
         {
             if (NeonHelper.IsLinux)
             {
@@ -207,7 +207,7 @@ rm $0
         }
 
         /// <inheritdoc/>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1NeonNodeTask resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1NeonNodeTask resource)
         {
             var name = resource.Name();
 
