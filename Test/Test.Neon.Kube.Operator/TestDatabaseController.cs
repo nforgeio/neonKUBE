@@ -64,7 +64,7 @@ namespace Test.Neon.Kube.Operator
         }
 
         /// <inheritdoc/>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1TestDatabase resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1TestDatabase resource)
         {
             var statefulSet = new V1StatefulSet().Initialize();
             statefulSet.Metadata.Name = resource.Name();
