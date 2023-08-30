@@ -111,7 +111,7 @@ namespace NeonClusterOperator
         }
 
         /// <inheritdoc/>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1Node node)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1Node node)
         {
             await SyncContext.Clear;
 
