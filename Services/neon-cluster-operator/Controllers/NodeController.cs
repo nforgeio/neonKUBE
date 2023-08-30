@@ -55,6 +55,14 @@ using OpenTelemetry.Trace;
 using Prometheus;
 using Neon.Operator.Attributes;
 
+// $todo(jefflill):
+//
+// This needs to be converted into a cron job
+//
+//      https://github.com/nforgeio/neonKUBE/issues/1858
+
+#if TODO
+
 namespace NeonClusterOperator
 {
     /// <summary>
@@ -192,3 +200,5 @@ namespace NeonClusterOperator
         }
     }
 }
+
+#endif
