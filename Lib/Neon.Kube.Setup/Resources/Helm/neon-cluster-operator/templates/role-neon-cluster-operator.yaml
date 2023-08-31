@@ -27,9 +27,9 @@ rules:
 - apiGroups:
   - ""
   resourceNames:
-  - neon-admin.neon-system-db.credentials.postgresql
-  - glauth-users
   - glauth-groups
+  - glauth-users
+  - neon-admin.neon-system-db.credentials.postgresql
   resources:
   - secrets
   verbs:

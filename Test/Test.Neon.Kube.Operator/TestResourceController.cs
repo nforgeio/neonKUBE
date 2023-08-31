@@ -45,7 +45,7 @@ namespace Test.Neon.Kube.Operator
         }
 
         /// <inheritdoc/>
-        public async Task<ResourceControllerResult> ReconcileAsync(V1TestResource resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1TestResource resource)
         {
             var childResource = new V1TestChildResource();
             childResource.Metadata = new V1ObjectMeta()
